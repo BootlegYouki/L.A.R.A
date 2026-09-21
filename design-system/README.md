@@ -1,11 +1,9 @@
 # L.A.R.A Material Design 3 UI System
 
-> **Live Deployment:** [https://lara-design-system.vercel.app](https://lara-design-system.vercel.app)
+This directory contains the visual and technical design system reference for the **L.A.R.A** project, tailored for Philippine Public Elementary Schools (DepEd Grades 1 to 6).
 
+> **Design Authority Note:** This local design system reference is an architectural inspiration and component token reference. The actual screens and mockups crafted by the project's **Design Team** are the primary authority that must be implemented. However, developers should leverage Google Material Design 3 (Material You) primitives to realize the Design Team's vision with consistent elevation, tactile feedback, and accessibility.
 
-This directory contains the visual and technical design system reference website for the **L.A.R.A** project, tailored for Philippine Public Elementary Schools (DepEd Grades 1 to 6).
-
-> **Design Authority Note:** This deployed design system is an architectural inspiration and component token reference. The actual screens and mockups crafted by the project's **Design Team** are the primary authority that must be implemented. However, developers should leverage Google Material Design 3 (Material You) primitives to realize the Design Team's vision with consistent elevation, tactile feedback, and accessibility.
 
 ---
 

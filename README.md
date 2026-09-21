@@ -156,7 +156,7 @@ L.A.R.A/
 │   ├── events/             # WebSocket event payload schemas
 │   └── naming_rules.md     # snake_case serialization rules
 │
-├── design-system/          # Material Design 3 Interactive Reference (https://lara-design-system.vercel.app)
+├── design-system/          # Material Design 3 Interactive Reference (`design-system/index.html`)
 ├── scripts/                # Developer Automation & Tooling
 │   ├── mock_hub.py         # Zero-dependency Standalone Local Hub Simulator
 │   └── verify_invariants.py# Pre-push offline & string parity scanner
@@ -172,10 +172,9 @@ L.A.R.A/
 
 ---
 
-## Live Material Design 3 Reference
+## Material Design 3 UI System Reference
 
-* **Live Interactive Design System:** [https://lara-design-system.vercel.app](https://lara-design-system.vercel.app)
-* **Local Source:** [`design-system/index.html`](./design-system/index.html)
+* **Local Interactive Reference:** [`design-system/index.html`](./design-system/index.html) — Open directly in any web browser (`xdg-open design-system/index.html`). Zero build steps, 100% offline.
 
 ## Full Product Requirements Document
 
