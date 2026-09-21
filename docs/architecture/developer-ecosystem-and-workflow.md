@@ -137,21 +137,9 @@ Executes isolated build checks only for subsystems with modified files:
   * Environment: Rust toolchain.
   * Command: `cargo clippy -- -D warnings && cargo test`.
 
-### 4.3 Automated PR Companion Comment
-When a PR is opened targeting `staging`, GitHub Actions posts the Lead Companion Review Checklist:
-```markdown
-### 🛡️ L.A.R.A Lead Companion Automated Audit
-- [x] Automated compilation and linting: **PASSED**
-- [x] Zero-Internet invariant scan: **PASSED (No cloud libraries detected)**
-- [x] Bilingual string parity: **PASSED**
+### 4.3 Clean PR Template Integration
+Rather than posting noisy automated comments on every PR, GitHub natively loads the pre-configured checklist from `.github/PULL_REQUEST_TEMPLATE.md` directly into the PR description upon creation.
 
-**Manual Review Checklist for Lead Developer (@BootlegYouki):**
-- [ ] Offline LAN test log or screenshot attached
-- [ ] Mobile heap allocations < 250MB (if mobile PR)
-- [ ] Socratic prompt never provides direct solutions (if AI PR)
-- [ ] AI tutor is unmounted during active quiz sessions (if quiz PR)
-- [ ] Touch targets >= 48dp on all interactive elements
-```
 
 ---
 
