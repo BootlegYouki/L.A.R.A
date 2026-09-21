@@ -10,7 +10,7 @@ assignees: ''
 - [ ] `mobile/` (Android Native Client)
 - [ ] `desktop/` (Tauri Desktop Client)
 - [ ] `server/` (Local Hub Host)
-- [ ] `design-system/` (Design System Reference)
+- [ ] `contracts/` (API & Event Schemas)
 
 ## 2. Test Environment
 - **Device Model:** (e.g., realme Note 50, Infinix Smart 8, Lenovo Laptop, PC Lab)

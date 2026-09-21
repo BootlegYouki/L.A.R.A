@@ -51,7 +51,8 @@ server/src-tauri/WixTools/
 *.AppImage
 
 # ------------------------------------------------------------------------------
-# 3. Node.js, Web & Frontend (desktop/, server/, design-system/)
+# 3. Node.js, Web & Frontend (desktop/, server/)
+
 # ------------------------------------------------------------------------------
 node_modules/
 **/node_modules/

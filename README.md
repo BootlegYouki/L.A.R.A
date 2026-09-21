@@ -156,12 +156,11 @@ L.A.R.A/
 │   ├── events/             # WebSocket event payload schemas
 │   └── naming_rules.md     # snake_case serialization rules
 │
-├── design-system/          # Material Design 3 Interactive Reference (`design-system/index.html`)
 ├── scripts/                # Developer Automation & Tooling
 │   ├── mock_hub.py         # Zero-dependency Standalone Local Hub Simulator
 │   └── verify_invariants.py# Pre-push offline & string parity scanner
 │
-├── tests/                  # Automated Contract & Tooling Test Suite (python3 -m unittest discover tests)
+├── tests/                  # Automated Contract & Tooling Test Suite (13 tests)
 ├── rules/                  # Modular Architecture Guardrails & Developer Policies
 ├── docs/                   # Complete Specifications & Architecture Plans
 │   ├── PRD.md              # Full Product Requirements Document
@@ -172,11 +171,8 @@ L.A.R.A/
 
 ---
 
-## Material Design 3 UI System Reference
-
-* **Local Interactive Reference:** [`design-system/index.html`](./design-system/index.html) — Open directly in any web browser (`xdg-open design-system/index.html`). Zero build steps, 100% offline.
-
 ## Full Product Requirements Document
 
 The complete, exhaustive engineering and academic specification is documented in [docs/PRD.md](./docs/PRD.md).
+
 

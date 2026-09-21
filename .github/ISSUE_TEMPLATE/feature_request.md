@@ -11,7 +11,7 @@ Select all that apply:
 - [ ] `mobile/` (Android Native Client)
 - [ ] `desktop/` (Tauri Desktop Client)
 - [ ] `server/` (Local Hub Host)
-- [ ] `design-system/` (Material Design 3 tokens)
+- [ ] `contracts/` (API & Event Schemas)
 
 ## 2. Feature Description
 A clear and concise description of what the feature does and why it is needed for the offline classroom.
