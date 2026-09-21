@@ -132,4 +132,6 @@ The mobile Android application is a **dual-role client** supporting both Student
 * **Standalone Mock Hub:** Run `python3 scripts/mock_hub.py` to simulate UDP beacon (`:8888`), HTTP REST (`:8080`), byte-range video streaming, and teacher mobile triggers.
 * **Pre-Push Invariant Scanner:** Run `python3 scripts/verify_invariants.py` before opening PRs to catch forbidden cloud imports or missing Filipino string keys.
 * **Automated Test Suite:** Run `python3 -m unittest discover tests` (13/13 tests must pass).
+* **Folder-Level Documentation Invariant:** Major PRs must include updated architectural notes in the assigned folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`) to preserve context for the Lead Developer.
 * **GitFlow Standard:** All feature branches branch off `staging` and open PRs targeting `staging`. Merges to `main` occur only upon sprint milestone completion.
+

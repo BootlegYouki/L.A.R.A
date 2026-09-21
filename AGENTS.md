@@ -131,6 +131,13 @@ While **MiniCPM5-2B (Int4)** serves as our primary baseline candidate, the syste
 * **Rate Limiting:** Enforce 2 MB/s per client stream for videos to protect local Wi-Fi routers.
 * **Verification:** Run `cargo check` and `cargo test` on the server backend.
 
+### 4.4 Mandatory Folder-Level Documentation
+To ensure the Lead Developer and future teammates have immediate technical context:
+* **Mobile Developers:** Document architecture, Room schemas, and CameraX gotchas in `mobile/docs/` (or update `mobile/README.md`).
+* **Desktop Developers:** Document components, state flows, and Tauri sidecars in `desktop/docs/` (or update `desktop/README.md`).
+* **Server Developers:** Document routes, SQLite migrations, and `llama-server` queues in `server/docs/` (or update `server/README.md`).
+* Every PR introducing major features must include updated documentation within its assigned folder.
+
 ---
 
 ## 5. Code Hygiene & Anti-Slop Standards

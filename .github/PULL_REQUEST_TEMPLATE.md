@@ -21,6 +21,8 @@ Describe the tests executed to verify these changes:
 
 ## Non-Regression Checklist
 - [ ] Zero external cloud/CDN dependencies added
+- [ ] Subsystem documentation updated in assigned folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`)
 - [ ] No direct answers output by Socratic AI tutor
 - [ ] AI tutor is completely locked out during active quiz sessions
 - [ ] No compile warnings or type errors
+
