@@ -1,0 +1,383 @@
+openapi: 3.1.0
+info:
+  title: L.A.R.A Local Hub REST API
+  description: Offline-first LAN classroom management and assessment API for Philippine elementary schools.
+  version: 1.0.0
+servers:
+  - url: http://{hub_ip}:8080
+    description: Local Hub Server
+    variables:
+      hub_ip:
+        default: 192.168.1.50
+paths:
+  /download:
+    get:
+      summary: Captive download portal for client APK and desktop installers
+      responses:
+        "200":
+          description: HTML portal page or binary application package
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/classrooms:
+    get:
+      summary: List all active classrooms on this Local Hub
+      responses:
+        "200":
+          description: List of classrooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Classroom"
+
+  /api/classrooms/join:
+    post:
+      summary: Request to enroll in a classroom using a 6-character Class Code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - class_code
+                - student_id
+                - full_name
+                - lrn
+              properties:
+                class_code:
+                  type: string
+                  example: "SCI4-AG"
+                student_id:
+                  type: string
+                  format: uuid
+                full_name:
+                  type: string
+                  example: "Juan dela Cruz"
+                lrn:
+                  type: string
+                  example: "123456789012"
+      responses:
+        "200":
+          description: Enrollment status receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["PENDING", "ACTIVE", "REJECTED"]
+                  classroom_id:
+                    type: string
+                    format: uuid
+
+  /api/sync/pull:
+    post:
+      summary: Delta-sync pull handshake for client offline storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student_id
+                - last_synced_at
+              properties:
+                student_id:
+                  type: string
+                  format: uuid
+                last_synced_at:
+                  type: integer
+                  description: Epoch millisecond timestamp
+      responses:
+        "200":
+          description: Delta updates modified after last_synced_at
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server_time:
+                    type: integer
+                  announcements:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Announcement"
+                  materials:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Material"
+                  assignments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Assignment"
+
+  /api/sync/push:
+    post:
+      summary: Delta-sync push handshake for offline submissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submissions:
+                  type: array
+                  items:
+                    type: object
+                quiz_attempts:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "200":
+          description: Sync confirmation receipts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  acknowledged:
+                    type: boolean
+                  synced_ids:
+                    type: array
+                    items:
+                      type: string
+
+  /api/quizzes/active:
+    get:
+      summary: Fetch the currently active quiz for student desks (ANSWER KEYS STRIPPED)
+      responses:
+        "200":
+          description: Active quiz payload without correct_answer fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentQuizResponse"
+
+  /api/quizzes/{id}/submit:
+    post:
+      summary: Submit student answers for instant auto-grading
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - student_id
+                - started_at
+                - submitted_at
+                - answers
+              properties:
+                student_id:
+                  type: string
+                  format: uuid
+                started_at:
+                  type: integer
+                submitted_at:
+                  type: integer
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question_id:
+                        type: string
+                        format: uuid
+                      selected_option:
+                        type: string
+      responses:
+        "200":
+          description: Graded receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: integer
+                  total_points:
+                    type: integer
+                  submitted_at:
+                    type: integer
+
+  /api/materials/{id}/stream:
+    get:
+      summary: HTTP 206 Byte-Range streaming for educational videos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+            example: "bytes=0-1048576"
+      responses:
+        "206":
+          description: Partial video content
+        "200":
+          description: Full video content
+
+components:
+  schemas:
+    Classroom:
+      type: object
+      required:
+        - id
+        - name
+        - section
+        - class_code
+        - teacher_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Science 4"
+        section:
+          type: string
+          example: "Aguinaldo"
+        class_code:
+          type: string
+          example: "SCI4-AG"
+        teacher_id:
+          type: string
+          format: uuid
+
+    Announcement:
+      type: object
+      required:
+        - id
+        - classroom_id
+        - title
+        - content
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        classroom_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        allow_comments:
+          type: boolean
+        created_at:
+          type: integer
+
+    Material:
+      type: object
+      required:
+        - id
+        - classroom_id
+        - title
+        - file_type
+        - file_size_bytes
+      properties:
+        id:
+          type: string
+          format: uuid
+        classroom_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        file_type:
+          type: string
+          enum: ["VIDEO", "DOCUMENT", "WORKSHEET"]
+        file_size_bytes:
+          type: integer
+        download_url:
+          type: string
+
+    Assignment:
+      type: object
+      required:
+        - id
+        - classroom_id
+        - title
+        - max_points
+        - due_date
+      properties:
+        id:
+          type: string
+          format: uuid
+        classroom_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        instructions:
+          type: string
+        max_points:
+          type: integer
+        due_date:
+          type: integer
+
+    StudentQuizResponse:
+      type: object
+      required:
+        - id
+        - title
+        - time_limit_minutes
+        - questions
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        time_limit_minutes:
+          type: integer
+        questions:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - order_index
+              - question_text
+              - question_type
+              - options
+              - points
+            properties:
+              id:
+                type: string
+                format: uuid
+              order_index:
+                type: integer
+              question_text:
+                type: string
+              question_type:
+                type: string
+                enum: ["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"]
+              options:
+                type: array
+                items:
+                  type: string
+              points:
+                type: integer

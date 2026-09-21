@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JoinRequestEvent",
+  "type": "object",
+  "required": ["event", "class_code", "student_id", "full_name", "lrn", "timestamp"],
+  "properties": {
+    "event": { "type": "string", "const": "EVENT_JOIN_REQUEST" },
+    "class_code": { "type": "string" },
+    "student_id": { "type": "string" },
+    "full_name": { "type": "string" },
+    "lrn": { "type": "string" },
+    "timestamp": { "type": "integer" }
+  }
+}

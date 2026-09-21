@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QueueStatusEvent",
+  "type": "object",
+  "required": ["event", "position", "estimated_wait_seconds", "message"],
+  "properties": {
+    "event": { "type": "string", "const": "EVENT_QUEUE_STATUS" },
+    "position": { "type": "integer" },
+    "estimated_wait_seconds": { "type": "integer" },
+    "message": { "type": "string" }
+  }
+}

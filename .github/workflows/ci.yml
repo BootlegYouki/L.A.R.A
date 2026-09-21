@@ -1,0 +1,117 @@
+name: Continuous Integration Matrix
+
+on:
+  pull_request:
+    branches:
+      - staging
+      - main
+  push:
+    branches:
+      - staging
+
+jobs:
+  contracts-and-tools:
+    name: Contracts & Mock Hub Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Run Contract & Tooling Test Suite
+        run: python3 -m unittest discover tests
+
+  mobile-ci:
+    name: Android Mobile CI
+    runs-on: ubuntu-latest
+    # Run only if mobile files changed
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check if mobile directory exists
+        id: check_mobile
+        run: |
+          if [ -f "mobile/app/build.gradle.kts" ] || [ -f "mobile/build.gradle.kts" ]; then
+            echo "has_mobile=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_mobile=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 17
+        if: steps.check_mobile.outputs.has_mobile == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Build & Lint Android App
+        if: steps.check_mobile.outputs.has_mobile == 'true'
+        working-directory: mobile
+        run: |
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew lintDebug --stacktrace
+          fi
+
+  desktop-ci:
+    name: Desktop Client CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check if desktop directory exists
+        id: check_desktop
+        run: |
+          if [ -f "desktop/package.json" ]; then
+            echo "has_desktop=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_desktop=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node.js
+        if: steps.check_desktop.outputs.has_desktop == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & Validate Desktop Client
+        if: steps.check_desktop.outputs.has_desktop == 'true'
+        working-directory: desktop
+        run: |
+          npm ci || npm install
+          npm run lint || true
+
+  server-ci:
+    name: Server Local Hub CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check if server cargo exists
+        id: check_server
+        run: |
+          if [ -f "server/Cargo.toml" ] || [ -f "server/backend/Cargo.toml" ]; then
+            echo "has_server=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_server=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Rust
+        if: steps.check_server.outputs.has_server == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Cargo Check
+        if: steps.check_server.outputs.has_server == 'true'
+        working-directory: server
+        run: |
+          cargo check --all-targets

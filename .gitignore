@@ -151,3 +151,12 @@ desktop.ini
 *.swo
 *.bak
 *.tmp
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Agent & Workspace Scratch
+.superpowers/
+.pi/
+
