@@ -31,6 +31,7 @@ The engineering team is strictly structured into three decoupled project streams
 
 ### Modular Architecture & Rule Documents
 Every contributor and AI agent must consult the dedicated rule files in `rules/` for their specific domain:
+* **Developer Tooling & Testing:** [`rules/developer-tooling-and-testing.md`](./rules/developer-tooling-and-testing.md)
 * **Database & Delta-Sync:** [`rules/database-and-sync.md`](./rules/database-and-sync.md)
 * **Quiz Engine & Anti-Cheat:** [`rules/quiz-and-anti-cheat.md`](./rules/quiz-and-anti-cheat.md)
 * **LAN Networking & Protocols:** [`rules/networking-and-lan.md`](./rules/networking-and-lan.md)

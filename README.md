@@ -141,11 +141,43 @@ The project is structured into 6 chronological sprints where Mobile, Desktop, an
 | **[Sprint 5](https://github.com/BootlegYouki/L.A.R.A/milestone/5): Socratic AI Tutor** | RAM detection router, Socratic chat sheet, llama.cpp JNI | Laptop CPU/GPU llama.cpp sidecar, Socratic chat drawer | llama-server (MiniCPM5-2B) with FIFO queue, quiz lockout | AI tutor guides without giving direct answers |
 | **[Sprint 6](https://github.com/BootlegYouki/L.A.R.A/milestone/6): Usability & Defense** | Physical phone profiling (battery, heap <250MB) | Lab PC testing & contrast audit | 40-device local router stress test (WAN unplugged) | DepEd teacher SUS survey (>=80), manuscript tables |
 
+---
+
+## Repository Structure Map
+
+```
+L.A.R.A/
+├── mobile/                 # Native Android Client (Kotlin 2.x + Jetpack Compose M3 + Room DB)
+├── desktop/                # Cross-Platform Desktop Client (Tauri 2.x + React 19 + TypeScript)
+├── server/                 # Local Hub Server & Teacher Host (Tauri + Rust/Axum + SQLite)
+│
+├── contracts/              # Canonical API & WebSocket Specifications (OpenAPI 3.1 + JSON Schemas)
+│   ├── openapi.yaml        # Authoritative REST specification
+│   ├── events/             # WebSocket event payload schemas
+│   └── naming_rules.md     # snake_case serialization rules
+│
+├── design-system/          # Material Design 3 Interactive Reference (https://lara-design-system.vercel.app)
+├── scripts/                # Developer Automation & Tooling
+│   ├── mock_hub.py         # Zero-dependency Standalone Local Hub Simulator
+│   └── verify_invariants.py# Pre-push offline & string parity scanner
+│
+├── tests/                  # Automated Contract & Tooling Test Suite (python3 -m unittest discover tests)
+├── rules/                  # Modular Architecture Guardrails & Developer Policies
+├── docs/                   # Complete Specifications & Architecture Plans
+│   ├── PRD.md              # Full Product Requirements Document
+│   ├── architecture/       # Technical design specifications
+│   └── plans/              # Implementation plans
+└── .github/                # GitHub Actions Workflows (CI/CD) & Issue/PR Templates
+```
+
+---
+
 ## Live Material Design 3 Reference
 
 * **Live Interactive Design System:** [https://lara-design-system.vercel.app](https://lara-design-system.vercel.app)
-* **Local Source:** [](./design-system/index.html)
+* **Local Source:** [`design-system/index.html`](./design-system/index.html)
 
 ## Full Product Requirements Document
 
-The complete, exhaustive engineering and academic specification is documented in [PRD.md](./PRD.md).
+The complete, exhaustive engineering and academic specification is documented in [docs/PRD.md](./docs/PRD.md).
+
