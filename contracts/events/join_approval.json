@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JoinApprovalEvent",
+  "type": "object",
+  "required": ["event", "classroom_id", "student_id", "status", "timestamp"],
+  "properties": {
+    "event": { "type": "string", "const": "EVENT_JOIN_APPROVAL" },
+    "classroom_id": { "type": "string" },
+    "student_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["ACTIVE", "REJECTED"] },
+    "timestamp": { "type": "integer" }
+  }
+}

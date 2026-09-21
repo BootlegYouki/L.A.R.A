@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AIStreamEvent",
+  "type": "object",
+  "required": ["event", "request_id", "token", "is_finished"],
+  "properties": {
+    "event": { "type": "string", "const": "EVENT_AI_TOKEN_STREAM" },
+    "request_id": { "type": "string" },
+    "token": { "type": "string" },
+    "is_finished": { "type": "boolean" },
+    "grounded_chunk_id": { "type": "string" }
+  }
+}

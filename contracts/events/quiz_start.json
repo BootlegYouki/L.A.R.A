@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QuizStartEvent",
+  "type": "object",
+  "required": ["event", "quiz_id", "title", "start_epoch_ms", "duration_seconds"],
+  "properties": {
+    "event": { "type": "string", "const": "EVENT_QUIZ_START" },
+    "quiz_id": { "type": "string" },
+    "title": { "type": "string" },
+    "start_epoch_ms": { "type": "integer" },
+    "duration_seconds": { "type": "integer" }
+  }
+}

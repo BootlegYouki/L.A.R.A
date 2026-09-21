@@ -90,9 +90,11 @@ The AI tutor (**L.A.R.A AI**) is engineered for Filipino elementary pupils (Grad
 
 ## 3. UI/UX Guidelines (Elementary School Accessibility)
 
+* **Design Authority:** The mockups, screen layouts, and assets produced by the project's **Design Team** are the primary authority that developers must implement. The deployed design system reference at `https://lara-design-system.vercel.app` serves as architectural inspiration and component token reference.
+* **Material Design 3 Best Practice:** Developers should implement screens using Google Material Design 3 (Material You) tokens and components (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) to realize the Design Team's layouts with built-in accessibility.
 * **Target Audience:** Filipino elementary pupils (Grades 1 to 6) and public school teachers (DepEd).
-* **Design System:** Google Material Design 3 (Material You) across both mobile and desktop.
 * **Touch Targets:** Minimum 48dp (preferred 56dp) on mobile for young learners' touch accuracy.
+
 * **Visual Hierarchy:** Large, high-contrast typography, clear iconography accompanied by text labels, and clean cards. Avoid dense nested menus or complex technical terminology.
 * **Bilingual UI:** All user-facing text must be localized into English and Filipino. Never hardcode strings in UI components.
 * **Camera Capture:** CameraX integration must include document framing guides and automatic compression to JPEG (<800KB target).

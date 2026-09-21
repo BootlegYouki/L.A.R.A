@@ -1,0 +1,46 @@
+name: PR Lead Companion Review Checklist
+
+on:
+  pull_request_target:
+    types: [opened]
+    branches:
+      - staging
+      - main
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  post-lead-checklist:
+    name: Post Lead Review Checklist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Lead Companion Checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request.user.login;
+            const body = `### 🛡️ L.A.R.A Lead Companion Automated Gatekeeper
+
+            Hello @${prAuthor}! Thank you for your submission.
+
+            Automated compilation and offline invariant checks are now running. Before Tech Lead (@BootlegYouki) audits and merges this pull request into \`staging\`, please ensure the following:
+
+            #### Author Submission Checklist
+            - [ ] **Issue Linked:** PR description includes \`Closes #X\`
+            - [ ] **Zero Internet:** Code operates 100% within offline LAN (no Firebase, Google Play, external CDNs, or Prisma)
+            - [ ] **Verification Evidence Attached:** Terminal logs, screenshots, or local test runs attached
+            - [ ] **Hardware Memory Safety:** Mobile heap allocation verified < 250MB (if mobile PR)
+            - [ ] **Socratic Pedagogy:** AI prompt strictly guides step-by-step without providing direct answers (if AI PR)
+            - [ ] **Quiz Anti-Cheat:** AI tutor is completely unmounted during active test sessions (if quiz PR)
+            - [ ] **Accessibility:** Touch targets are >= 48dp and strings have Filipino translations in \`values-tl/strings.xml\`
+
+            *The Lead Developer reviews PRs using the \`lead-companion\` protocol.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: body
+            });

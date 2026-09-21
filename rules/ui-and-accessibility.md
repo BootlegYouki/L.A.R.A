@@ -6,11 +6,12 @@ All AI agents and contributors must follow these rules.
 
 ---
 
-## 1. Design System & Tokens
+## 1. Design Authority & Design System Hierarchy
 
-* **System Standard:** Google Material Design 3 (Material You) across Android and Desktop.
-* **Component References:** Consult the live design system at `https://lara-design-system.vercel.app` or `design-system/index.html`.
-* **Icons:** Use official Google Material Symbols exclusively.
+* **Design Team Authority (Primary):** The visual designs, wireframes, and prototypes provided by the project's **Design Team** are the authoritative specification that must be implemented. Teammates must adhere to the design team's screen layouts and user journeys.
+* **Design System as Inspiration & Baseline:** The deployed design system reference at [`https://lara-design-system.vercel.app`](https://lara-design-system.vercel.app) serves as an interactive foundation, architectural reference, and inspiration for tokens, touch targets, and component states.
+* **Material Design 3 Best Practice:** While following the Design Team's creative direction, developers should implement screens using Google's **Material Design 3 (Material You)** component library (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) whenever possible to guarantee native accessibility, elevation, and tactile child-friendly feedback.
+* **Icons:** Use official Google Material Symbols exclusively. Bundled locally without external CDN links.
 
 ---
 
