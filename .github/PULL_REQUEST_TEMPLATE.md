@@ -7,8 +7,9 @@ Closes #(issue number)
 - [ ] `mobile/` (Android Native Jetpack Compose)
 - [ ] `desktop/` (Tauri + React Desktop Client)
 - [ ] `server/` (Local Hub Tauri/Rust Server)
-- [ ] `design-system/` (Material Design 3 Reference)
+- [ ] `contracts/` (API & Event Schemas)
 - [ ] Documentation / Specs
+
 
 ## Verification & Testing
 Describe the tests executed to verify these changes:
