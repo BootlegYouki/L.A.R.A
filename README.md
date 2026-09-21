@@ -7,13 +7,15 @@
 
 ## Overview
 
-**L.A.R.A.** is a zero-internet, local-area-network (LAN) classroom platform designed as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an embedded, local Small Language Model (SLM) based on **MiniCPM5-2B**.
+**L.A.R.A.** is a zero-internet, local-area-network (LAN) classroom platform designed as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an embedded, pluggable local Small Language Model (SLM) runtime (benchmarking **MiniCPM5-2B** as baseline candidate alongside **Qwen2.5**, **Llama 3.2**, and **SmolLM2**).
 
 Addressing the Philippine reality where **over 50% of student smartphones are entry-level 3GB/4GB RAM devices (Infinix, TECNO, itel, realme)** and public school teachers shoulder out-of-pocket photocopying expenses, L.A.R.A.:
 1. Operates **100% offline** over a standard Wi-Fi router or teacher's laptop hotspot.
 2. Eliminates paper test questionnaires through a synchronized, **timed paperless quiz engine** with instant auto-grading.
 3. Provides a **Socratic AI Tutor (L.A.R.A. AI)** grounded in teacher-provided lesson materials that guides pupils step-by-step in English and Filipino without revealing direct answers.
 4. Uses an **adaptive hybrid AI pipeline**: streams tokens over WebSocket from the Local Hub for budget 3GB/4GB phones, while capable devices (≥6GB RAM) execute 100% on-device via `llama.cpp`.
+5. Features an **experimental model evaluation pipeline**: uses standard GGUF quantization to test and benchmark candidate sub-3B SLMs directly on local classroom hardware.
+
 
 ---
 
@@ -30,7 +32,7 @@ flowchart TD
  RestEngine["REST API & File Server (Port 8080)<br/>• Handouts (PDF/TXT)<br/>• Videos (HTTP Range 206)<br/>• Photo Submissions"]
  WsBroker["WebSocket Realtime Broker (Port 8081)<br/>• Live Quiz Sync & Timers<br/>• Announcements Push<br/>• Student Presence"]
  Discovery["Discovery Service<br/>• mDNS (_lara._tcp.local)<br/>• UDP Subnet Beacon (255.255.255.255:8888)"]
- HubAI["Hub SLM Engine (MiniCPM5-2B)<br/>• llama-server (4-bit GGUF)<br/>• FIFO Inference Queue"]
+ HubAI["Hub SLM Engine (Pluggable GGUF)<br/>• llama-server (MiniCPM / Qwen2.5 / Llama 3.2)<br/>• FIFO Inference Queue"]
  CentralDB[("Central SQLite DB<br/>• Authoritative Store<br/>• Gradebook Exporter (.xlsx/.csv)")]
  end
 
@@ -114,7 +116,7 @@ flowchart TD
  MobPrompt --> HubMode
 
  HubMode --> HubQueue["Local Hub Inference Slots"]
- HubQueue -->|"Slot Available (1-4)"| Infer["Execute MiniCPM on Hub Host"]
+ HubQueue -->|"Slot Available (1-4)"| Infer["Execute Candidate SLM on Hub Host"]
  HubQueue -->|"Slots Busy"| QueueWait["FIFO Queue: Pangalawa ka sa pila - est. 4s"]
  QueueWait --> Infer
  Infer --> StreamTokens["Stream Socratic Hints over WebSocket"]
@@ -138,7 +140,7 @@ The project is structured into 6 chronological sprints where Mobile, Desktop, an
 | **[Sprint 2](https://github.com/BootlegYouki/L.A.R.A/milestone/2): Roles & Delta-Sync** | Student/Teacher login, Class Code join, Approval UI | Login UI, Course cards, Teacher roster table | Class Code generator, approval queue, delta-sync endpoints | Students join class with teacher approval |
 | **[Sprint 3](https://github.com/BootlegYouki/L.A.R.A/milestone/3): Content & Media** | Announcement feed, Media3 player, CameraX photo capture | Announcements list, HTML5 video player, homework upload | PDF text chunker, HTTP 206 video stream (2MB/s), photo receiver | Video streaming & handwritten homework submission |
 | **[Sprint 4](https://github.com/BootlegYouki/L.A.R.A/milestone/4): Paperless Quizzes** | Full-screen timed quiz, countdown pill, anti-cheat lock | Timed quiz runner, Teacher Quiz Builder, score matrix | WebSocket quiz sync, auto-grader, DepEd Excel export, USB backup | Synchronized paperless quiz with instant grades |
-| **[Sprint 5](https://github.com/BootlegYouki/L.A.R.A/milestone/5): Socratic AI Tutor** | RAM detection router, Socratic chat sheet, llama.cpp JNI | Laptop CPU/GPU llama.cpp sidecar, Socratic chat drawer | llama-server (MiniCPM5-2B) with FIFO queue, quiz lockout | AI tutor guides without giving direct answers |
+| **[Sprint 5](https://github.com/BootlegYouki/L.A.R.A/milestone/5): Socratic AI Tutor** | RAM detection router, Socratic chat sheet, llama.cpp JNI | Laptop CPU/GPU llama.cpp sidecar, Socratic chat drawer | llama-server (Pluggable GGUF) with FIFO queue, quiz lockout | AI tutor guides without giving direct answers |
 | **[Sprint 6](https://github.com/BootlegYouki/L.A.R.A/milestone/6): Usability & Defense** | Physical phone profiling (battery, heap <250MB) | Lab PC testing & contrast audit | 40-device local router stress test (WAN unplugged) | DepEd teacher SUS survey (>=80), manuscript tables |
 
 ---

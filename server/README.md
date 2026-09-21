@@ -14,7 +14,8 @@ The **L.A.R.A Local Hub Server** is a standalone host application engineered to 
   * **HTTP File & API Server (Port 8080):** Axum / Actix-Web / Fastify serving REST endpoints, static files, and HTTP Byte-Range video streaming (`206 Partial Content`).
   * **Realtime Event Broker (Port 8081):** WebSockets (`tokio-tungstenite` / `ws`) for low-latency live events, quiz timers, and token streaming.
   * **Discovery Beacon:** mDNS service responder registering `_lara._tcp.local` on port 8080 + UDP broadcast service sending JSON heartbeats to `255.255.255.255:8888`.
-* **Embedded SLM Engine:** Quantized `llama-server` process hosting **MiniCPM5-2B (Int4 / Q4_K_M GGUF)** with continuous batching (2 to 4 parallel slots) and a FIFO request queue.
+* **Embedded SLM Engine:** Pluggable `llama-server` process hosting candidate GGUF models (benchmarking **MiniCPM5-2B (Int4)** alongside **Qwen2.5**, **Llama 3.2**, and **SmolLM2**) with continuous batching (2 to 4 parallel slots) and a FIFO request queue.
+
 * **Target Host OS:** Windows 10/11, Linux (Ubuntu/Debian), macOS. Minimal dependencies; runs self-contained without requiring internet access.
 
 ---

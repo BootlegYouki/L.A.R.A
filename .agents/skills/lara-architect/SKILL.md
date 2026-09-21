@@ -41,13 +41,14 @@ Both clients (Android Room and Desktop SQLite) mirror classroom data locally for
 
 ---
 
-## 3. MiniCPM5-2B Socratic AI Tutor Guardrails
+## 3. Pluggable Socratic AI Tutor & Experimental SLM Guardrails
 
-The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary students (Grades 1 to 6), not an answer engine.
+The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary students (Grades 1 to 6), not an answer engine. The inference runtime is **pluggable and model-agnostic via GGUF and `llama.cpp`**, benchmarking baseline candidate **MiniCPM5-2B (Int4)** alongside **Qwen2.5**, **Llama 3.2**, and **SmolLM2**.
 
 ### Hardware Routing Decision
 * **Android Phones with < 6GB physical RAM:** Must route inference to the Local Hub over WebSockets (port 8081). Client heap must stay < 250MB to prevent Android Low Memory Killer (OOM) crashes on 3GB/4GB budget devices (Infinix, TECNO, itel, realme).
-* **Phones with ≥ 6GB RAM & Laptops:** Can execute MiniCPM5-2B (Int4 GGUF, ~1.55GB) 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
+* **Phones with ≥ 6GB RAM & Laptops:** Can execute supported candidate GGUF models (MiniCPM5-2B, Qwen2.5, Llama 3.2) 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
+
 * **Hub Queue:** Hub manages concurrent low-RAM requests using a FIFO queue with 2 to 4 parallel `llama-server` slots, pushing queue estimates (`"Pangalawa ka sa pila - est. 4s"`) over WebSockets.
 
 ### Pedagogical System Prompt Directives

@@ -194,12 +194,19 @@ sequenceDiagram
 
 ## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
 
-### 5.1 Model Specifications
-* **Target Model:** **MiniCPM5-2B (Int4 Quantized / Q4_K_M GGUF)**
-* **Parameter Count:** ~2.5 Billion
-* **Quantized File Size:** ~1.55 GB
-* **Active RAM Consumption:** ~2.2 GB (weights + KV cache + context buffer)
-* **Context Window:** 2,048 tokens
+### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
+The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
+
+To identify the optimal Small Language Model for Philippine elementary classrooms, the project experimentally benchmarks candidate sub-3B models:
+* **Primary Baseline Candidate:** **MiniCPM5-2B (Int4 / Q4_K_M GGUF, ~1.55GB)** — High multimodal and bilingual capability.
+* **Alternative Experimental Candidates:**
+  * **Qwen2.5-1.5B / 3B (Instruct GGUF)** — Exceptional reasoning density and multilingual instruction following.
+  * **Llama-3.2-1B / 3B (Instruct GGUF)** — Ultra-lightweight edge execution and high CPU throughput.
+  * **SmolLM2-1.7B (Instruct GGUF)** — Minimal memory overhead designed for constrained devices.
+  * **Gemma-2-2B (IT GGUF)** — Factual grounding and textbook reasoning.
+
+All models operate within a standardized **2,048 token context window** to maintain predictable RAM and latency bounds.
+
 
 ### 5.2 Adaptive Hybrid Execution Logic
 
