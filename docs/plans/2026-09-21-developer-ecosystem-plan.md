@@ -270,27 +270,7 @@ git commit -m "ci: configure path-filtered matrix build pipeline for mobile, des
 
 ---
 
-### Task 5: Automated PR Review Companion Comment (`.github/workflows/pr-comment.yml`)
+### Task 5: Streamlined PR Experience (Clean PR Template)
 
-**Files:**
-- Create: `.github/workflows/pr-comment.yml`
+Instead of a noisy automated comment bot, the PR experience uses the clean, native GitHub PR template (`.github/PULL_REQUEST_TEMPLATE.md`) to avoid discussion thread clutter.
 
-**Interfaces:**
-- Consumes: Pull request open / synchronize events.
-- Produces: Automated Lead Companion audit checklist comment on PR.
-
-- [ ] **Step 1: Create `.github/workflows/pr-comment.yml`**
-
-Configure GitHub Action that posts a sticky comment on newly opened PRs with the Lead Companion Five Fatal Rejection Rules checklist and local verification instructions.
-
-- [ ] **Step 2: Validate workflow syntax**
-
-Run: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/pr-comment.yml'))"`
-Expected: Clean load without YAML syntax errors.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add .github/workflows/pr-comment.yml
-git commit -m "ci(pr): add automated lead companion audit checklist comment"
-```
