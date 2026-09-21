@@ -57,7 +57,8 @@ For pupils, it features offline materials, video streaming, paperless assessment
 * Strict pedagogical behavior: Socratic guidance only; refuses to output direct solutions or homework answers.
 * Adaptive Dual Execution:
   * If Physical RAM < 6GB: Streams hints from the Local Hub over WebSockets with real-time queue position display.
-  * If Physical RAM >= 6GB and model bundle exists: Executes MiniCPM5-2B (Int4) 100% locally via `llama.cpp` JNI without network usage.
+  * If Physical RAM >= 6GB and candidate model bundle exists: Executes active GGUF model (MiniCPM5-2B, Qwen2.5, Llama 3.2) 100% locally via `llama.cpp` JNI without network usage.
+
 
 ---
 

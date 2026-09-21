@@ -16,7 +16,8 @@ The **L.A.R.A Desktop Client** is a lightweight, cross-platform desktop applicat
   * WebSockets: Native WebSocket API connecting to Local Hub port 8081.
   * Network Discovery: Rust background thread for mDNS browsing and UDP broadcast listener on port 8888.
 * **Media Engine:** HTML5 Video Player with hardware accelerated decoding and HTTP byte-range scrub streaming.
-* **Local SLM Engine:** Embedded `llama.cpp` CLI binary / dynamic library executed via Tauri sidecar command for on-device MiniCPM5-2B (Int4) inference on laptops with >= 4GB RAM.
+* **Local SLM Engine:** Embedded `llama.cpp` CLI binary / dynamic library executed via Tauri sidecar command for pluggable on-device GGUF inference (MiniCPM5-2B, Qwen2.5, Llama 3.2) on laptops with >= 4GB RAM.
+
 * **Target Platforms:** Windows 10/11 (64-bit), Ubuntu/Debian Linux (DepEd lab PCs), and macOS. Binary size target: < 20MB installer.
 
 ---

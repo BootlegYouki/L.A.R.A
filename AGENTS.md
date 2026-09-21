@@ -68,13 +68,15 @@ Every contributor and AI agent must consult the dedicated rule files in `rules/`
 
 ---
 
-## 2. Socratic AI Tutor & Pedagogical Guardrails (MiniCPM5-2B)
+## 2. Pluggable Socratic AI Tutor & Model Benchmarking (GGUF / llama.cpp)
 
-The AI tutor (**L.A.R.A AI**) is engineered for Filipino elementary pupils (Grades 1 to 6). It is a pedagogical guide, not an answer generator.
+The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary pupils (Grades 1 to 6). The inference architecture is **pluggable and model-agnostic**, executing quantized GGUF models via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on Local Hub).
+
+While **MiniCPM5-2B (Int4)** serves as our primary baseline candidate, the system is designed to experimentally benchmark other candidate edge SLMs (e.g. **Qwen2.5-1.5B/3B**, **Llama-3.2-1B/3B**, **Gemma-2-2B**, **SmolLM2-1.7B**) to find the optimal combination of Filipino/English comprehension, Socratic reasoning, and memory efficiency.
 
 ### 2.1 Hardware-Adaptive Dual Routing
 * **Android Phones with < 6GB physical RAM:** Must strictly route inference to the Local Hub over WebSockets (port 8081). Client heap must stay < 250MB to prevent Android Low Memory Killer (LMK/OOM) crashes on 3GB/4GB budget devices (Infinix, TECNO, itel, realme).
-* **Phones with ≥ 6GB RAM & Student Laptops:** Can execute MiniCPM5-2B (Int4 GGUF, ~1.55GB) 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
+* **Phones with ≥ 6GB RAM & Student Laptops:** Can execute supported candidate GGUF models 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
 * **Hub Queue:** The Local Hub manages concurrent low-RAM requests using a FIFO queue with 2 to 4 parallel `llama-server` slots, pushing queue status (`"Pangalawa ka sa pila - est. 4s"`) over WebSockets.
 
 ### 2.2 Socratic Prompt Directives
