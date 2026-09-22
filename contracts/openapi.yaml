@@ -118,6 +118,77 @@ paths:
                     items:
                       $ref: "#/components/schemas/Assignment"
 
+  /api/announcements/{id}/comments:
+    get:
+      summary: Retrieve comments for a specific announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of announcement comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    announcement_id:
+                      type: string
+                      format: uuid
+                    author_id:
+                      type: string
+                      format: uuid
+                    content:
+                      type: string
+                    created_at:
+                      type: integer
+    post:
+      summary: Post a comment on an announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - author_id
+                - content
+              properties:
+                author_id:
+                  type: string
+                  format: uuid
+                content:
+                  type: string
+      responses:
+        "200":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  success:
+                    type: boolean
+
   /api/sync/push:
     post:
       summary: Delta-sync push handshake for offline submissions
@@ -322,6 +393,7 @@ components:
         - title
         - max_points
         - due_date
+        - deped_category
       properties:
         id:
           type: string
@@ -333,6 +405,9 @@ components:
           type: string
         instructions:
           type: string
+        deped_category:
+          type: string
+          enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
         max_points:
           type: integer
         due_date:
@@ -344,6 +419,7 @@ components:
         - id
         - title
         - time_limit_minutes
+        - deped_category
         - questions
       properties:
         id:
@@ -353,6 +429,12 @@ components:
           type: string
         time_limit_minutes:
           type: integer
+        started_at:
+          type: integer
+          description: Nullable epoch ms when quiz was officially started by teacher
+        deped_category:
+          type: string
+          enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
         questions:
           type: array
           items:
@@ -381,3 +463,4 @@ components:
                   type: string
               points:
                 type: integer
+

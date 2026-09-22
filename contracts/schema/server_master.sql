@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT')),
     pin_hash TEXT NOT NULL,                    -- 4-digit PIN hash (bcrypt / argon2)
-    created_at INTEGER NOT NULL                -- Epoch ms
+    created_at INTEGER NOT NULL,               -- Epoch ms
+    updated_at INTEGER NOT NULL                -- Monotonic epoch ms
 );
 
 -- 2. Classrooms (Subjects / Sections)
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS classrooms (
     class_code TEXT UNIQUE NOT NULL,           -- 6-character alphanumeric code (e.g. "SCI4-AG")
     teacher_id TEXT NOT NULL,
     created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED')),
     joined_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,                -- Tracks when teacher changes status PENDING -> ACTIVE
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(classroom_id, student_id)
@@ -52,7 +55,19 @@ CREATE TABLE IF NOT EXISTS announcements (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 5. Lesson Materials & Text Extraction
+-- 5. Announcement Comments (Pupils & Teachers)
+CREATE TABLE IF NOT EXISTS announcement_comments (
+    id TEXT PRIMARY KEY NOT NULL,
+    announcement_id TEXT NOT NULL,
+    author_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 6. Lesson Materials & Text Extraction
 CREATE TABLE IF NOT EXISTS materials (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -66,12 +81,13 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 6. Assignments
+-- 7. Assignments (DepEd Categorized)
 CREATE TABLE IF NOT EXISTS assignments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT NOT NULL,
+    deped_category TEXT NOT NULL DEFAULT 'PERFORMANCE_TASK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
     due_date INTEGER NOT NULL,                 -- Epoch ms
     max_points INTEGER NOT NULL DEFAULT 100,
     created_at INTEGER NOT NULL,
@@ -79,7 +95,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Assignment Submissions (CameraX photos / worksheets)
+-- 8. Assignment Submissions (CameraX photos / worksheets)
 CREATE TABLE IF NOT EXISTS assignment_submissions (
     id TEXT PRIMARY KEY NOT NULL,
     assignment_id TEXT NOT NULL,
@@ -89,25 +105,28 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     submitted_at INTEGER NOT NULL,
     score INTEGER,                             -- Nullable until graded
     teacher_feedback TEXT,
+    updated_at INTEGER NOT NULL,                -- Tracks when teacher updates grade/feedback
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(assignment_id, student_id)
 );
 
--- 8. Quizzes (Assessments)
+-- 9. Quizzes (Assessments with DepEd Category & Synchronized Start)
 CREATE TABLE IF NOT EXISTS quizzes (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
+    deped_category TEXT NOT NULL DEFAULT 'WRITTEN_WORK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
     time_limit_minutes INTEGER NOT NULL,       -- Global overall duration
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
+    started_at INTEGER,                        -- Authoritative epoch ms when teacher activated quiz
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 9. Quiz Questions (With Server Master Answer Key)
+-- 10. Quiz Questions (With Server Master Answer Key)
 CREATE TABLE IF NOT EXISTS quiz_questions (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -119,10 +138,11 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     image_path TEXT,                           -- Optional reference diagram path
     correct_answer TEXT NOT NULL,              -- Authoritative answer key (NEVER sent to student clients during test)
     created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
 );
 
--- 10. Student Quiz Attempts & Scores
+-- 11. Student Quiz Attempts & Scores
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -132,16 +152,32 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     score INTEGER NOT NULL,
     total_points INTEGER NOT NULL,
     answers_json TEXT NOT NULL,                -- JSON object of student submitted answers
+    updated_at INTEGER NOT NULL,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(quiz_id, student_id)
 );
 
--- 11. Delta-Sync Monotonic Changelog
+-- 12. Socratic AI Chat History (Persistent Home & Class Conversations)
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id TEXT PRIMARY KEY NOT NULL,
+    classroom_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    material_id TEXT,                          -- Lesson module chunk context
+    role TEXT NOT NULL CHECK(role IN ('USER', 'TUTOR')),
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE SET NULL
+);
+
+-- 13. Delta-Sync Monotonic Changelog (Handles UPSERT and DELETE Actions)
 CREATE TABLE IF NOT EXISTS sync_revisions (
     id TEXT PRIMARY KEY NOT NULL,
-    entity_table TEXT NOT NULL,                -- e.g. 'announcements', 'materials'
-    entity_id TEXT NOT NULL,                   -- UUID of modified record
+    entity_table TEXT NOT NULL,                -- e.g. 'announcements', 'materials', 'quizzes'
+    entity_id TEXT NOT NULL,                   -- UUID of modified/deleted record
+    action TEXT NOT NULL DEFAULT 'UPSERT' CHECK(action IN ('UPSERT', 'DELETE')),
     updated_at INTEGER NOT NULL                -- Monotonic epoch timestamp
 );
 
@@ -149,8 +185,12 @@ CREATE TABLE IF NOT EXISTS sync_revisions (
 CREATE INDEX IF NOT EXISTS idx_classrooms_code ON classrooms(class_code);
 CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_class ON announcements(classroom_id);
+CREATE INDEX IF NOT EXISTS idx_announcement_comments_ann ON announcement_comments(announcement_id);
 CREATE INDEX IF NOT EXISTS idx_materials_class ON materials(classroom_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_class ON assignments(classroom_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_assign ON assignment_submissions(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz ON quiz_questions(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id);
 CREATE INDEX IF NOT EXISTS idx_sync_revisions_time ON sync_revisions(updated_at);
