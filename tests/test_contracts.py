@@ -36,5 +36,24 @@ class TestContracts(unittest.TestCase):
         self.assertIn("snake_case", content)
         self.assertIn("correct_answer", content)
 
+    def test_sqlite_schemas_valid_and_executable(self):
+        import sqlite3
+        schema_files = [
+            "contracts/schema/server_master.sql",
+            "contracts/schema/client_offline.sql"
+        ]
+        for path in schema_files:
+            self.assertTrue(os.path.exists(path), f"Missing {path}")
+            conn = sqlite3.connect(":memory:")
+            with open(path, "r", encoding="utf-8") as f:
+                sql = f.read()
+            conn.executescript(sql)
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = [r[0] for r in cur.fetchall()]
+            self.assertTrue(len(tables) >= 10, f"Expected at least 10 tables in {path}")
+            conn.close()
+
 if __name__ == "__main__":
+
     unittest.main()
