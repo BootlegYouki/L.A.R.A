@@ -47,3 +47,13 @@ All JSON keys serialized across HTTP REST responses and WebSocket event envelope
 * **Rule:** The field `correct_answer` is strictly restricted to teacher authorized sessions and server-side evaluation.
 * When student endpoints serve active quiz payloads (`/api/quizzes/active` or `GET /api/quizzes/:id`), `correct_answer` must be completely omitted from the JSON payload.
 * Student clients must never contain parsing fields or Room columns for unsubmitted quiz answer keys.
+
+---
+
+## 3. Canonical SQLite Schemas (`contracts/schema/`)
+
+The database DDL is standardized in `contracts/schema/` to guarantee 1:1 delta-sync parity across all clients and the Local Hub:
+
+* **`contracts/schema/server_master.sql`:** The master authoritative schema for the Local Hub. Contains all master entity tables, indexes, the monotonic `sync_revisions` ledger, and the grading `correct_answer` column.
+* **`contracts/schema/client_offline.sql`:** The offline-first client schema for Android Room and Desktop SQLite. Adds offline tracking columns (`sync_status`, `local_file_path`) and strictly redacts `correct_answer`.
+
