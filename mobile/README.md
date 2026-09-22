@@ -82,7 +82,29 @@ The app switches navigation graphs depending on authenticated role:
 
 ---
 
-## 3. Directory Structure
+## 3. Client Offline Database Schema (Android Room)
+
+Mobile developers must model their Room Database (`@Database`) strictly on the canonical SQL DDL at [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).
+
+### The 12 Room Entities (`org.lara.app.data.local.entities.*`):
+1. **`UserEntity` (`users`):** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
+2. **`ClassroomEntity` (`classrooms`):** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
+3. **`EnrollmentEntity` (`enrollments`):** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
+4. **`AnnouncementEntity` (`announcements`):** `id`, `classroom_id`, `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
+5. **`AnnouncementCommentEntity` (`announcement_comments`):** `id`, `announcement_id`, `author_id`, `content`, `created_at`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
+6. **`MaterialEntity` (`materials`):** `id`, `classroom_id`, `title`, `file_type`, `file_size_bytes`, `extracted_text`, `download_url`, `local_file_path` (cached disk path for home study), `created_at`, `updated_at`.
+7. **`AssignmentEntity` (`assignments`):** `id`, `classroom_id`, `title`, `instructions`, `deped_category` (`WRITTEN_WORK` | `PERFORMANCE_TASK` | `QUARTERLY_ASSESSMENT`), `due_date`, `max_points`, `created_at`, `updated_at`.
+8. **`AssignmentSubmissionEntity` (`assignment_submissions`):** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
+9. **`QuizEntity` (`quizzes`):** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (server synchronized epoch ms), `created_at`, `updated_at`.
+10. **`QuizQuestionEntity` (`quiz_questions`):** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. **Strictly omits `correct_answer`.**
+11. **`QuizAttemptEntity` (`quiz_attempts`):** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
+12. **`AiChatMessageEntity` (`ai_chat_messages`):** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at` (persists conversation during offline home study).
+
+*All delta-sync batch operations in Room DAOs must be wrapped in `@Transaction`.*
+
+---
+
+## 4. Directory Structure
 
 ```
 mobile/
@@ -113,7 +135,7 @@ mobile/
 
 ---
 
-## 4. Mobile Team Sprint Roadmap & Execution Order
+## 5. Mobile Team Sprint Roadmap & Execution Order
 
 All mobile issues on GitHub follow the `[MOBILE Sprint.Step]` naming convention:
 
