@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT')),
     pin_hash TEXT NOT NULL,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
 );
 
 -- 2. Classrooms (Enrolled Subjects)
@@ -25,7 +26,8 @@ CREATE TABLE IF NOT EXISTS classrooms (
     section TEXT NOT NULL,
     class_code TEXT NOT NULL,
     teacher_id TEXT NOT NULL,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
 );
 
 -- 3. Enrollments Status
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED')),
     joined_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
     UNIQUE(classroom_id, student_id)
 );
@@ -51,7 +54,19 @@ CREATE TABLE IF NOT EXISTS announcements (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 5. Lesson Materials & Offline Disk Cache
+-- 5. Announcement Comments (With Offline Sync Queue for Pupil Comments)
+CREATE TABLE IF NOT EXISTS announcement_comments (
+    id TEXT PRIMARY KEY NOT NULL,
+    announcement_id TEXT NOT NULL,
+    author_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
+);
+
+-- 6. Lesson Materials & Offline Disk Cache
 CREATE TABLE IF NOT EXISTS materials (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -66,12 +81,13 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 6. Assignments
+-- 7. Assignments (DepEd Categorized)
 CREATE TABLE IF NOT EXISTS assignments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT NOT NULL,
+    deped_category TEXT NOT NULL DEFAULT 'PERFORMANCE_TASK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
     due_date INTEGER NOT NULL,
     max_points INTEGER NOT NULL DEFAULT 100,
     created_at INTEGER NOT NULL,
@@ -79,7 +95,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Assignment Submissions (With Offline Sync Queue)
+-- 8. Assignment Submissions (With Offline Sync Queue)
 CREATE TABLE IF NOT EXISTS assignment_submissions (
     id TEXT PRIMARY KEY NOT NULL,
     assignment_id TEXT NOT NULL,
@@ -89,25 +105,28 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     submitted_at INTEGER NOT NULL,
     score INTEGER,                             -- Graded score receipt from server
     teacher_feedback TEXT,
+    updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     UNIQUE(assignment_id, student_id)
 );
 
--- 8. Quizzes
+-- 9. Quizzes
 CREATE TABLE IF NOT EXISTS quizzes (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
+    deped_category TEXT NOT NULL DEFAULT 'WRITTEN_WORK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
     time_limit_minutes INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
+    started_at INTEGER,                        -- Server synchronized epoch ms
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 9. Quiz Questions (STRICT ANTI-CHEAT: correct_answer is completely omitted)
+-- 10. Quiz Questions (STRICT ANTI-CHEAT: correct_answer is completely omitted)
 CREATE TABLE IF NOT EXISTS quiz_questions (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -118,10 +137,11 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     points INTEGER NOT NULL DEFAULT 1,
     image_path TEXT,
     created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
 );
 
--- 10. Student Quiz Attempts (With Offline Sync Queue)
+-- 11. Student Quiz Attempts (With Offline Sync Queue)
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -131,15 +151,30 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     score INTEGER NOT NULL DEFAULT 0,          -- Graded score receipt from server
     total_points INTEGER NOT NULL DEFAULT 0,
     answers_json TEXT NOT NULL,                -- JSON object of student answers
+    updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     UNIQUE(quiz_id, student_id)
+);
+
+-- 12. Local Socratic AI Chat History (Persistent Home & School Study)
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id TEXT PRIMARY KEY NOT NULL,
+    classroom_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    material_id TEXT,
+    role TEXT NOT NULL CHECK(role IN ('USER', 'TUTOR')),
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
 -- High-Performance Query Indexes
 CREATE INDEX IF NOT EXISTS idx_client_enrollments ON enrollments(classroom_id);
 CREATE INDEX IF NOT EXISTS idx_client_materials ON materials(classroom_id);
 CREATE INDEX IF NOT EXISTS idx_client_announcements ON announcements(classroom_id);
+CREATE INDEX IF NOT EXISTS idx_client_comments ON announcement_comments(announcement_id);
 CREATE INDEX IF NOT EXISTS idx_client_questions ON quiz_questions(quiz_id);
 CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status);
 CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status);
+CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id);

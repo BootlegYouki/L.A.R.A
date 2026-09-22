@@ -8,18 +8,21 @@ All AI agents and contributors must follow these rules.
 
 ## 1. Schema Entity Parity (1:1 Core Mapping)
 
-Core tables must share identical column names and primary keys across Server, Mobile, and Desktop:
+Core tables share identical column names and types across Server, Mobile, and Desktop:
 
-* **`users`:** `id` (UUID PK), `lrn_or_id` (Unique), `full_name`, `role` (`'TEACHER'` | `'STUDENT'`), `pin_hash`, `created_at` (Epoch ms).
-* **`classrooms`:** `id` (UUID PK), `name`, `section`, `class_code` (Unique 6-char), `teacher_id` (FK), `created_at`.
-* **`enrollments`:** `id` (UUID PK), `classroom_id` (FK), `student_id` (FK), `status` (`'PENDING'` | `'ACTIVE'` | `'REJECTED'`), `joined_at`.
+* **`users`:** `id` (UUID PK), `lrn_or_id` (Unique), `full_name`, `role` (`'TEACHER'` | `'STUDENT'`), `pin_hash`, `created_at`, `updated_at`.
+* **`classrooms`:** `id` (UUID PK), `name`, `section`, `class_code` (Unique 6-char), `teacher_id` (FK), `created_at`, `updated_at`.
+* **`enrollments`:** `id` (UUID PK), `classroom_id` (FK), `student_id` (FK), `status` (`'PENDING'` | `'ACTIVE'` | `'REJECTED'`), `joined_at`, `updated_at`.
 * **`announcements`:** `id` (UUID PK), `classroom_id` (FK), `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
-* **`materials`:** `id` (UUID PK), `classroom_id` (FK), `title`, `file_type`, `file_path`, `file_size_bytes`, `extracted_text`, `created_at`.
-* **`assignments`:** `id` (UUID PK), `classroom_id` (FK), `title`, `instructions`, `due_date`, `max_points`, `created_at`.
-* **`assignment_submissions`:** `id` (UUID PK), `assignment_id` (FK), `student_id` (FK), `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`.
-* **`quizzes`:** `id` (UUID PK), `classroom_id` (FK), `title`, `instructions`, `time_limit_minutes`, `status` (`'DRAFT'` | `'ACTIVE'` | `'CLOSED'`), `created_at`.
-* **`quiz_questions`:** `id` (UUID PK), `quiz_id` (FK), `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`.
-* **`quiz_attempts`:** `id` (UUID PK), `quiz_id` (FK), `student_id` (FK), `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`.
+* **`announcement_comments`:** `id` (UUID PK), `announcement_id` (FK), `author_id` (FK), `content`, `created_at`, `updated_at`.
+* **`materials`:** `id` (UUID PK), `classroom_id` (FK), `title`, `file_type` (`'DOCUMENT'` | `'VIDEO'` | `'WORKSHEET'`), `file_path`, `file_size_bytes`, `extracted_text`, `created_at`, `updated_at`.
+* **`assignments`:** `id` (UUID PK), `classroom_id` (FK), `title`, `instructions`, `deped_category` (`'WRITTEN_WORK'` | `'PERFORMANCE_TASK'` | `'QUARTERLY_ASSESSMENT'`), `due_date`, `max_points`, `created_at`, `updated_at`.
+* **`assignment_submissions`:** `id` (UUID PK), `assignment_id` (FK), `student_id` (FK), `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
+* **`quizzes`:** `id` (UUID PK), `classroom_id` (FK), `title`, `instructions`, `deped_category` (`'WRITTEN_WORK'` | `'PERFORMANCE_TASK'` | `'QUARTERLY_ASSESSMENT'`), `time_limit_minutes`, `status` (`'DRAFT'` | `'ACTIVE'` | `'CLOSED'`), `started_at` (Epoch ms), `created_at`, `updated_at`.
+* **`quiz_questions`:** `id` (UUID PK), `quiz_id` (FK), `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. (Server adds `correct_answer`).
+* **`quiz_attempts`:** `id` (UUID PK), `quiz_id` (FK), `student_id` (FK), `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
+* **`ai_chat_messages`:** `id` (UUID PK), `classroom_id` (FK), `student_id` (FK), `material_id` (FK), `role` (`'USER'` | `'TUTOR'`), `content`, `created_at`.
+
 
 ---
 
@@ -47,7 +50,8 @@ Client databases store an offline slice and must include these helper columns:
 ## 4. Delta-Sync Handshake & Master Ledger
 
 1. **Server Ledger (`sync_revisions`):**
-   * The Hub maintains a monotonic record of changes: `(id, entity_table, entity_id, updated_at)`.
+   * The Hub maintains a monotonic record of changes: `(id, entity_table, entity_id, action, updated_at)`.
+   * `action` is `'UPSERT'` or `'DELETE'`. This allows clients to reliably purge deleted announcements and materials.
 2. **Pull Phase (`POST /api/sync/pull`):**
    * Client transmits `{ student_id, last_synced_at }`.
    * Server returns all records where `updated_at > last_synced_at` for the student's enrolled classes.
@@ -56,6 +60,7 @@ Client databases store an offline slice and must include these helper columns:
    * Client uploads queued records (`QUEUED_FOR_SYNC`).
    * Server validates, processes grades, commits to master DB, and returns confirmation receipts (`ack: true`).
    * Client marks local rows as `'SYNCED'`.
+
 
 ---
 
