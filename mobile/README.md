@@ -33,6 +33,8 @@
    python3 ../scripts/verify_invariants.py
    ```
 8. **Mandatory Documentation:** Every major feature PR must include updated architectural notes in [`mobile/docs/`](./docs/).
+9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error screen on launch. When disconnected from the classroom server (e.g. at home), pupils must be able to view enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline. Homework photos queue locally as `'QUEUED_FOR_SYNC'`. If the device has ≥6GB RAM and has downloaded a GGUF model, Socratic AI works 100% offline at home too; otherwise, AI features gracefully indicate they unlock upon reconnecting to the classroom Hub.
+
 
 ---
 

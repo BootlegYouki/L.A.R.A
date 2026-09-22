@@ -64,3 +64,17 @@ Client databases store an offline slice and must include these helper columns:
 * **Server:** Must use **SQLx (Rust)** or **Drizzle + `better-sqlite3` (Node)**.
 * **Desktop:** Must use **`@tauri-apps/plugin-sql`**.
 * **Forbidden:** Never use Prisma.
+
+---
+
+## 6. Offline-First Default Access (Home Study Mode)
+
+The client applications (Android Room and Desktop SQLite) are strictly **offline-first by default**:
+
+* **Zero Network Blocking Screens:** When launched without Wi-Fi or when disconnected from the Dedicated Server (e.g. at home), the app must NEVER present a blocking "No Connection" error dialog.
+* **Full Local Read Access:** Students must always be able to browse their enrolled classrooms, read announcements, study pre-extracted lesson text chunks, view cached PDFs, and play downloaded video lessons completely offline.
+* **Offline Homework Capture:** Pupils can take homework photos via CameraX or write responses while offline at home; these are stored locally with status `'QUEUED_FOR_SYNC'`.
+* **Graceful AI Layering:**
+  * **Capable Devices (RAM ≥ 6GB on mobile, or laptop with ≥ 4GB RAM) with model installed:** Socratic AI tutoring is **100% accessible offline at home**.
+  * **Low-RAM Devices (< 6GB) or model not installed:** All classroom materials, handouts, and announcements remain 100% accessible, while the AI chat sheet displays: *"L.A.R.A AI is available when connected to the classroom Hub."*
+
