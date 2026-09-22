@@ -28,6 +28,11 @@ All applications operate strictly within an isolated local area network (router 
   * **UDP Subnet Beacon:** Broadcast lightweight JSON heartbeat every 3 seconds to `255.255.255.255:8888`:
     `{"app": "lara", "version": "1.0.0", "name": "Grade 4 - Science", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}`
   * **Manual Fallback:** Always provide an elementary-friendly input box to type the host IP manually if router client isolation blocks broadcast.
+* **Firewall & AP Isolation Countermeasures:**
+  * **Windows Defender Firewall:** Server installer must automatically register inbound TCP rules (`8080`, `8081`) and UDP (`8888`) via `netsh advfirewall`.
+  * **Router AP Isolation:** If router blocks peer-to-peer traffic, use manual IP entry or switch teacher laptop to Mobile Hotspot mode.
+  * **Android MulticastLock:** Mobile client must explicitly acquire `WifiManager.MulticastLock` to prevent the OS from dropping UDP discovery beacons.
+
 
 ---
 
