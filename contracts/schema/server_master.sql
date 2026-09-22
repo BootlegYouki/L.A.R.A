@@ -3,9 +3,14 @@
 -- ==============================================================================
 -- Technology Invariant: Embedded SQLite via SQLx (Rust) or Drizzle (Node).
 -- Security Invariant: Stores master answer keys and the monotonic sync_revisions ledger.
+-- Concurrency Best Practice: WAL mode + NORMAL synchronous + 5s busy timeout.
 -- ==============================================================================
 
+-- High-Concurrency Engine Pragmas
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 PRAGMA foreign_keys = ON;
+PRAGMA busy_timeout = 5000;
 
 -- 1. Users (Teachers & Pupils)
 CREATE TABLE IF NOT EXISTS users (
@@ -49,7 +54,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    allow_comments INTEGER NOT NULL DEFAULT 1, -- 0 = false, 1 = true
+    allow_comments INTEGER NOT NULL DEFAULT 1 CHECK(allow_comments IN (0, 1)),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -181,16 +186,18 @@ CREATE TABLE IF NOT EXISTS sync_revisions (
     updated_at INTEGER NOT NULL                -- Monotonic epoch timestamp
 );
 
--- High-Performance Query Indexes
+-- ==============================================================================
+-- COMPOSITE & COVERING INDEXES FOR HIGH-CONCURRENCY CLASSROOM QUERIES
+-- ==============================================================================
 CREATE INDEX IF NOT EXISTS idx_classrooms_code ON classrooms(class_code);
 CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id);
-CREATE INDEX IF NOT EXISTS idx_announcements_class ON announcements(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_announcement_comments_ann ON announcement_comments(announcement_id);
-CREATE INDEX IF NOT EXISTS idx_materials_class ON materials(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_assignments_class ON assignments(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_submissions_assign ON assignment_submissions(assignment_id);
-CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz ON quiz_questions(quiz_id);
-CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id);
-CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id);
-CREATE INDEX IF NOT EXISTS idx_sync_revisions_time ON sync_revisions(updated_at);
+CREATE INDEX IF NOT EXISTS idx_announcements_feed ON announcements(classroom_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcement_comments_order ON announcement_comments(announcement_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_materials_class_type ON materials(classroom_id, file_type);
+CREATE INDEX IF NOT EXISTS idx_assignments_class_due ON assignments(classroom_id, due_date ASC);
+CREATE INDEX IF NOT EXISTS idx_submissions_assign ON assignment_submissions(assignment_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id, status);
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_order ON quiz_questions(quiz_id, order_index ASC);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_sync_revisions_composite ON sync_revisions(entity_table, updated_at ASC);

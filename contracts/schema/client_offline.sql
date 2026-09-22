@@ -4,9 +4,14 @@
 -- Technology Invariant: Android Room (Kotlin) & @tauri-apps/plugin-sql (Desktop).
 -- Security Invariant: Strips correct_answer to prevent student cheating.
 -- Offline Invariant: Adds sync_status and local_file_path for home study mode.
+-- Concurrency Best Practice: WAL mode + NORMAL synchronous + 5s busy timeout.
 -- ==============================================================================
 
+-- High-Performance Client Pragmas
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
 PRAGMA foreign_keys = ON;
+PRAGMA busy_timeout = 5000;
 
 -- 1. Users (Local Profile)
 CREATE TABLE IF NOT EXISTS users (
@@ -48,7 +53,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    allow_comments INTEGER NOT NULL DEFAULT 1,
+    allow_comments INTEGER NOT NULL DEFAULT 1 CHECK(allow_comments IN (0, 1)),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -169,12 +174,15 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- High-Performance Query Indexes
-CREATE INDEX IF NOT EXISTS idx_client_enrollments ON enrollments(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_client_materials ON materials(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_client_announcements ON announcements(classroom_id);
-CREATE INDEX IF NOT EXISTS idx_client_comments ON announcement_comments(announcement_id);
-CREATE INDEX IF NOT EXISTS idx_client_questions ON quiz_questions(quiz_id);
-CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status);
-CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status);
-CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id);
+-- ==============================================================================
+-- COMPOSITE & COVERING INDEXES FOR FAST OFFLINE QUERIES
+-- ==============================================================================
+CREATE INDEX IF NOT EXISTS idx_client_enrollments ON enrollments(classroom_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_client_materials_class_type ON materials(classroom_id, file_type);
+CREATE INDEX IF NOT EXISTS idx_client_announcements_feed ON announcements(classroom_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_client_comments_order ON announcement_comments(announcement_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_client_assignments_due ON assignments(classroom_id, due_date ASC);
+CREATE INDEX IF NOT EXISTS idx_client_questions_order ON quiz_questions(quiz_id, order_index ASC);
+CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id, created_at ASC);
