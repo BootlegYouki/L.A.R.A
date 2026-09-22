@@ -67,6 +67,12 @@ The `contracts/` directory is the single source of truth for all network communi
   * The Hub maintains monotonic change records: `(id, entity_table, entity_id, updated_at)`.
   * **Pull Phase (`POST /api/sync/pull`):** Client sends `{ student_id, last_synced_at }`; Hub returns deltas; client writes inside a single atomic SQLite transaction.
   * **Push Phase (`POST /api/sync/push`):** Client uploads queued offline submissions; Hub acknowledges; client marks local rows `'SYNCED'`.
+* **Offline-First by Default (Home Study Mode):**
+  * Zero blocking network error screens when launched offline or away from school.
+  * Students can always browse enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline.
+  * Homework photos taken at home queue locally as `'QUEUED_FOR_SYNC'`.
+  * Capable devices (RAM ≥ 6GB on mobile, or laptop with ≥ 4GB RAM) with local GGUF models can use Socratic AI 100% offline at home; otherwise, AI queries indicate they unlock upon reconnecting to the classroom Hub.
+
 
 ---
 
