@@ -86,7 +86,28 @@
 
 ---
 
-## 3. Directory Structure
+## 3. Dedicated Server SQLite Schema (Master Local Hub)
+
+Server developers must configure and execute their SQLx / SQLite migrations strictly adhering to the canonical SQL DDL at [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql).
+
+### The 13 Authoritative Master Tables:
+1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
+2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
+3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
+4. **`announcements`:** `id`, `classroom_id`, `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
+5. **`announcement_comments`:** `id`, `announcement_id`, `author_id`, `content`, `created_at`, `updated_at`.
+6. **`materials`:** `id`, `classroom_id`, `title`, `file_type`, `file_path`, `file_size_bytes`, `extracted_text`, `created_at`, `updated_at`.
+7. **`assignments`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category` (`WRITTEN_WORK` | `PERFORMANCE_TASK` | `QUARTERLY_ASSESSMENT`), `due_date`, `max_points`, `created_at`, `updated_at`.
+8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
+9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (authoritative epoch ms), `created_at`, `updated_at`.
+10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `correct_answer` (authoritative answer key for auto-grader), `created_at`, `updated_at`.
+11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
+12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at`.
+13. **`sync_revisions`:** `id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
+
+---
+
+## 4. Directory Structure
 
 ```
 server/
@@ -112,7 +133,7 @@ server/
 
 ---
 
-## 4. Server Team Sprint Roadmap & Execution Order
+## 5. Server Team Sprint Roadmap & Execution Order
 
 All server issues on GitHub follow the `[SERVER Sprint.Step]` naming convention:
 
