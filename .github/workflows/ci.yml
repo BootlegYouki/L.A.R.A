@@ -26,7 +26,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Run Contract & Tooling Test Suite
-        run: python3 -m unittest discover tests
+        run: python3 -m unittest discover tests -v
 
   mobile-ci:
     name: Android Mobile CI
@@ -58,7 +58,7 @@ jobs:
         run: |
           if [ -f "gradlew" ]; then
             chmod +x gradlew
-            ./gradlew lintDebug --stacktrace
+            ./gradlew lintDebug testDebugUnitTest --stacktrace
           fi
 
   desktop-ci:
@@ -87,8 +87,9 @@ jobs:
         if: steps.check_desktop.outputs.has_desktop == 'true'
         working-directory: desktop
         run: |
-          npm ci || npm install
-          npm run lint || true
+          npm ci
+          npm run lint
+          npm run build
 
   server-ci:
     name: Server Local Hub CI
@@ -100,7 +101,7 @@ jobs:
       - name: Check if server cargo exists
         id: check_server
         run: |
-          if [ -f "server/Cargo.toml" ] || [ -f "server/backend/Cargo.toml" ]; then
+          if [ -f "server/backend/Cargo.toml" ]; then
             echo "has_server=true" >> $GITHUB_OUTPUT
           else
             echo "has_server=false" >> $GITHUB_OUTPUT
@@ -112,6 +113,7 @@ jobs:
 
       - name: Run Cargo Check
         if: steps.check_server.outputs.has_server == 'true'
-        working-directory: server
+        working-directory: server/backend
         run: |
           cargo check --all-targets
+          cargo test

@@ -13,7 +13,7 @@ Use this skill whenever designing, writing, modifying, auditing, or testing code
 
 All applications operate strictly within an isolated local area network (router or teacher laptop hotspot). Never introduce external cloud dependencies:
 * **Forbidden Cloud Calls:** No Firebase (Auth, Firestore, Messaging), no Google Play APIs, no external CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`), no Google Fonts web links (`fonts.googleapis.com`), and no remote analytics or telemetry.
-* **All Assets Bundled Locally:** All fonts, icons (Material Symbols), installers, media, and GGUF model files must be bundled locally or served from the Local Hub.
+* **All Assets Bundled Locally:** All fonts, icons (Phosphor), installers, media, and GGUF model files must be bundled locally or served from the Local Hub.
 
 ### Ports & Protocol Standards
 * **HTTP REST & File Server (Port 8080):**
@@ -119,7 +119,7 @@ Designed to replace paper test printing for DepEd teachers.
 
 * **Design Team Authority (Primary):** The wireframes, mockups, and prototypes produced by the project's **Design Team** are the primary authority that must be implemented.
 * **Material Design 3 Best Practice:** Developers should implement the Design Team's layouts using Google **Material Design 3 (Material You)** primitives (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) to guarantee native accessibility, elevation, and tactile child-friendly feedback.
-* **Touch Targets (Grades 1–6):** Minimum **48dp** (preferred **56dp**) on all clickable cards, buttons, and radio options.
+* **Touch Targets (Grades 1–6):** Minimum **52dp** (preferred **56dp**) on all clickable cards, buttons, and radio options.
 * **Contrast & Typography:** Minimum **4.5:1** text-to-background contrast across all surfaces. Minimum 14sp body text, 18sp headings.
 * **Bilingual Localization:** Zero hardcoded strings. English strings in `values/strings.xml`, Filipino strings in `values-tl/strings.xml`.
 * **CameraX Homework Capture:** Viewfinder must display a clear rectangular document framing guide with automatic downscaling and JPEG compression (<800KB).

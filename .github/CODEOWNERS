@@ -1,0 +1,16 @@
+# Shared paths: Lead Developer only. Any change here is a contract-change or governance PR.
+/contracts/            @BootlegYouki
+/rules/                @BootlegYouki
+/design-system/        @BootlegYouki
+/docs/design-system.md @BootlegYouki
+/scripts/              @BootlegYouki
+/tests/                @BootlegYouki
+/.github/              @BootlegYouki
+/AGENTS.md             @BootlegYouki
+/CLAUDE.md             @BootlegYouki
+
+# Team folders. The Lead reviews every PR for now; replace with team handles when assigned, e.g.
+# /server/  @BootlegYouki @server-dev-a @server-dev-b
+/server/               @BootlegYouki
+/desktop/              @BootlegYouki
+/mobile/               @BootlegYouki
