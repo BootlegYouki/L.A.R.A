@@ -127,14 +127,32 @@ desktop/
 
 ## 5. Desktop Team Sprint Roadmap & Execution Order
 
-All desktop issues on GitHub follow the `[DESKTOP Sprint.Step]` naming convention:
+All desktop issues follow `[DESKTOP Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
 
+* **Sprint 0 (Contract Freeze & Technical Spec):**
+  * `[DESKTOP 0.1]`: Write desktop/docs/TECH_SPEC.md and get Lead approval ([#37](https://github.com/BootlegYouki/L.A.R.A/issues/37))
 * **Sprint 1 (Scaffolding & LAN Discovery):**
-  * `[DESKTOP 1.1]`: Setup Tauri 2.x + React 19 + Tailwind M3 shell with local SQLite storage ([#29](https://github.com/BootlegYouki/L.A.R.A/issues/29))
+  * `[DESKTOP 1.1]`: Setup Tauri 2.x + React 19 shell with local SQLite storage & design token foundations ([#29](https://github.com/BootlegYouki/L.A.R.A/issues/29))
   * `[DESKTOP 1.2]`: Implement mDNS/UDP discovery scanner in Rust/Tauri ([#5](https://github.com/BootlegYouki/L.A.R.A/issues/5))
-* **Sprint 3 (Media Player & Offline Caching):**
+  * `[DESKTOP 1.3]`: Build Hub connection screen: discovered hubs, manual IP entry and status banner ([#40](https://github.com/BootlegYouki/L.A.R.A/issues/40))
+* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
+  * `[DESKTOP 2.1]`: Build login, role routing and classroom card grid ([#45](https://github.com/BootlegYouki/L.A.R.A/issues/45))
+  * `[DESKTOP 2.2]`: Build Class Code join modal with live approval status ([#46](https://github.com/BootlegYouki/L.A.R.A/issues/46))
+  * `[DESKTOP 2.3]`: Build teacher classroom creation and roster table with Accept / Decline ([#47](https://github.com/BootlegYouki/L.A.R.A/issues/47))
+  * `[DESKTOP 2.4]`: Implement delta-sync engine with @tauri-apps/plugin-sql ([#48](https://github.com/BootlegYouki/L.A.R.A/issues/48))
+* **Sprint 3 (Stream, Media & Homework):**
   * `[DESKTOP 3.1]`: Build HTML5 video lesson player with offline local disk caching ([#30](https://github.com/BootlegYouki/L.A.R.A/issues/30))
-* **Sprint 4 (Teacher Quiz Builder):**
-  * `[DESKTOP 4.1]`: Build Teacher Quiz Builder wizard with question bank & live submission matrix ([#31](https://github.com/BootlegYouki/L.A.R.A/issues/31))
-* **Sprint 5 (On-Device SLM Sidecar):**
+  * `[DESKTOP 3.2]`: Build Stream and Classwork pages with comments and PDF reader ([#55](https://github.com/BootlegYouki/L.A.R.A/issues/55))
+  * `[DESKTOP 3.3]`: Build homework submission: file dropzone and queued upload ([#56](https://github.com/BootlegYouki/L.A.R.A/issues/56))
+  * `[DESKTOP 3.4]`: Build teacher authoring: announcements, material upload and assignments ([#57](https://github.com/BootlegYouki/L.A.R.A/issues/57))
+  * `[DESKTOP 3.5]`: Build full-screen homework review viewer with zoom, pan and grading ([#58](https://github.com/BootlegYouki/L.A.R.A/issues/58))
+* **Sprint 4 (Paperless Quiz & Gradebook):**
+  * `[DESKTOP 4.1]`: Build Teacher Quiz Builder wizard with question bank ([#31](https://github.com/BootlegYouki/L.A.R.A/issues/31))
+  * `[DESKTOP 4.2]`: Build student timed quiz runner (full screen, countdown, auto-submit) ([#62](https://github.com/BootlegYouki/L.A.R.A/issues/62))
+  * `[DESKTOP 4.3]`: Build teacher live quiz monitor and submission matrix ([#63](https://github.com/BootlegYouki/L.A.R.A/issues/63))
+* **Sprint 5 (Socratic AI):**
   * `[DESKTOP 5.1]`: Embed llama.cpp sidecar for on-device candidate SLM execution on laptops ([#32](https://github.com/BootlegYouki/L.A.R.A/issues/32))
+  * `[DESKTOP 5.2]`: Build Socratic chat drawer with lesson split view and bilingual toggle ([#67](https://github.com/BootlegYouki/L.A.R.A/issues/67))
+  * `[DESKTOP 5.3]`: Implement desktop AI router: local sidecar vs Hub WebSocket fallback ([#68](https://github.com/BootlegYouki/L.A.R.A/issues/68))
+* **Sprint 6 (Audit & Stress Test):**
+  * `[DESKTOP 6.1]`: Conduct desktop UX audit: touch/click targets, contrast and loading skeletons ([#71](https://github.com/BootlegYouki/L.A.R.A/issues/71))
