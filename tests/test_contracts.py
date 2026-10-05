@@ -13,13 +13,18 @@ class TestContracts(unittest.TestCase):
         self.assertIn("/api/classrooms", spec["paths"])
         self.assertIn("/api/sync/pull", spec["paths"])
         self.assertIn("/api/quizzes/active", spec["paths"])
+        for required in ("/api/auth/login", "/api/auth/register", "/api/classrooms/{id}/approve",
+                         "/api/assignments/{id}/submit", "/api/quizzes/{id}/start", "/api/export/class-record"):
+            self.assertIn(required, spec["paths"], f"openapi.yaml missing {required}")
 
     def test_websocket_event_schemas_valid_json(self):
         events_dir = "contracts/events"
         self.assertTrue(os.path.isdir(events_dir), "contracts/events directory missing")
         required_events = [
             "join_request.json", "join_approval.json", "quiz_start.json",
-            "quiz_submit.json", "ai_stream.json", "queue_status.json"
+            "quiz_submit.json", "ai_stream.json", "queue_status.json",
+            "ws_hello.json", "grade_confirmed.json", "quiz_closed.json",
+            "announcement_push.json", "presence.json", "error.json", "ai_chat_request.json"
         ]
         for filename in required_events:
             path = os.path.join(events_dir, filename)
@@ -46,7 +51,9 @@ class TestContracts(unittest.TestCase):
         cur_server = conn_server.cursor()
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 13, f"Server master must have exactly 13 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 15, f"Server master must have exactly 15 tables, got {server_tables}")
+        self.assertIn("sessions", server_tables)
+        self.assertIn("material_chunks", server_tables)
         self.assertIn("announcement_comments", server_tables)
         self.assertIn("ai_chat_messages", server_tables)
         self.assertIn("sync_revisions", server_tables)
@@ -56,6 +63,13 @@ class TestContracts(unittest.TestCase):
         quiz_cols = [r[1] for r in cur_server.fetchall()]
         self.assertIn("started_at", quiz_cols)
         self.assertIn("deped_category", quiz_cols)
+
+        # An unsubmitted attempt must be representable: the AI quiz lockout depends on it.
+        cur_server.execute("PRAGMA table_info(quiz_attempts);")
+        attempt_cols = {r[1]: r for r in cur_server.fetchall()}
+        self.assertIn("status", attempt_cols)
+        self.assertEqual(attempt_cols["submitted_at"][3], 0, "submitted_at must be nullable")
+        self.assertEqual(attempt_cols["score"][3], 0, "score must be nullable")
         conn_server.close()
 
         # Test client offline schema
@@ -65,13 +79,19 @@ class TestContracts(unittest.TestCase):
         cur_client = conn_client.cursor()
         cur_client.execute("SELECT name FROM sqlite_master WHERE type='table';")
         client_tables = [r[0] for r in cur_client.fetchall()]
-        self.assertEqual(len(client_tables), 12, f"Client offline must have exactly 12 tables, got {client_tables}")
+        self.assertEqual(len(client_tables), 13, f"Client offline must have exactly 13 tables, got {client_tables}")
+        self.assertNotIn("sessions", client_tables)
         self.assertNotIn("sync_revisions", client_tables)
 
         # Check client columns
         cur_client.execute("PRAGMA table_info(quiz_questions);")
         qq_cols = [r[1] for r in cur_client.fetchall()]
         self.assertNotIn("correct_answer", qq_cols, "CRITICAL: correct_answer must not exist on client schema!")
+
+        cur_client.execute("PRAGMA table_info(quiz_attempts);")
+        client_attempt_cols = [r[1] for r in cur_client.fetchall()]
+        self.assertIn("status", client_attempt_cols)
+        self.assertIn("sync_status", client_attempt_cols)
 
         cur_client.execute("PRAGMA table_info(assignment_submissions);")
         sub_cols = [r[1] for r in cur_client.fetchall()]
