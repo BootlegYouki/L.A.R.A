@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
 -- 13. Delta-Sync Monotonic Changelog (Handles UPSERT and DELETE Actions)
 CREATE TABLE IF NOT EXISTS sync_revisions (
     id TEXT PRIMARY KEY NOT NULL,
+    classroom_id TEXT,                         -- Scoped classroom UUID (NULL for user profile/global records)
     entity_table TEXT NOT NULL,                -- e.g. 'announcements', 'materials', 'quizzes'
     entity_id TEXT NOT NULL,                   -- UUID of modified/deleted record
     action TEXT NOT NULL DEFAULT 'UPSERT' CHECK(action IN ('UPSERT', 'DELETE')),
@@ -200,4 +201,5 @@ CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id, status);
 CREATE INDEX IF NOT EXISTS idx_quiz_questions_order ON quiz_questions(quiz_id, order_index ASC);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id, student_id);
 CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id, created_at ASC);
-CREATE INDEX IF NOT EXISTS idx_sync_revisions_composite ON sync_revisions(entity_table, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_sync_revisions_composite ON sync_revisions(classroom_id, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_sync_revisions_table ON sync_revisions(entity_table, updated_at ASC);
