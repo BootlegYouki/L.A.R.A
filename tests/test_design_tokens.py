@@ -1,4 +1,4 @@
-"""Fails when design-system/ drifts from docs/design-system-showcase.html (the design sample)."""
+"""Fails when design-system/ drifts from design-system/showcase.html (the design sample)."""
 import json
 import os
 import re
@@ -19,7 +19,7 @@ def norm(value):
 class TestDesignTokens(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.html = read("docs/design-system-showcase.html")
+        cls.html = read("design-system/showcase.html")
         root = re.search(r":root\s*\{(.*?)\n\s*\}", cls.html, re.S)
         cls.root_vars = dict(re.findall(r"(--[a-z0-9-]+):\s*([^;]+);", root.group(1)))
         kt = re.search(r"object LaraColors \{(.*?)\n\}", cls.html, re.S)
@@ -75,7 +75,7 @@ class TestDesignTokens(unittest.TestCase):
             self.assertIn(needle, shape)
 
     def test_no_gradients_and_no_external_urls_in_design_files(self):
-        for path in ("design-system/tokens.css", "design-system/desktop/theme.css", "docs/design-system-showcase.html"):
+        for path in ("design-system/tokens.css", "design-system/desktop/theme.css", "design-system/showcase.html"):
             text = read(path)
             self.assertNotRegex(text, r"(linear|radial|conic)-gradient\(", f"{path} contains a gradient")
             self.assertNotRegex(text, r"https?://(?!www\.w3\.org)", f"{path} references an external URL")

@@ -3,8 +3,8 @@ package org.lara.app.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * L.A.R.A. canonical color tokens. Source: docs/design-system-showcase.html (Colors) and
- * docs/design-system.md section 1. Never write Color(0xFF...) inside a screen; add a token here
+ * L.A.R.A. canonical color tokens. Source: design-system/showcase.html (Colors) and
+ * design-system/design-system.md section 1. Never write Color(0xFF...) inside a screen; add a token here
  * only through a Lead-reviewed design-system change.
  *
  * Zero gradients: every surface is a flat, solid fill.

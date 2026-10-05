@@ -121,7 +121,7 @@ Designed to replace paper test printing for DepEd teachers.
 
 ## 6. UI/UX Design Authority & Accessibility (`rules/ui-and-accessibility.md`)
 
-* **Design authority:** `docs/design-system.md` and `design-system/` are canonical (tokens only, no gradients, Nunito, Phosphor, purple only for the AI tutor). Layouts are free if they use the documented components and follow Google Classroom as the structural reference.
+* **Design authority:** `design-system/design-system.md` and `design-system/` are canonical (tokens only, no gradients, Nunito, Phosphor, purple only for the AI tutor). Layouts are free if they use the documented components and follow Google Classroom as the structural reference.
 * **Components:** `androidx.compose.material3` themed with `design-system/mobile/*` on Android; Tailwind with `design-system/desktop/tailwind.theme.ts` on Desktop.
 * **Touch Targets (Grades 1–6):** Minimum **52dp**, **56dp** for primary actions and quiz options.
 * **Contrast & Typography:** Minimum **4.5:1** text-to-background contrast across all surfaces. Minimum 14sp body text, 18sp headings.

@@ -222,5 +222,5 @@ L.A.R.A/
 
 * Documentation map and reading order by role: [`docs/README.md`](./docs/README.md)
 * Product requirements: [`docs/PRD.md`](./docs/PRD.md)
-* Visual rules: [`docs/design-system.md`](./docs/design-system.md)
+* Visual rules: [`design-system/design-system.md`](./design-system/design-system.md)
 * Workflow and PR rules: [`CONTRIBUTING.md`](./CONTRIBUTING.md) and [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md)

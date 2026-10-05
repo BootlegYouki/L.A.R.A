@@ -19,7 +19,7 @@ val Nunito = FontFamily(
     Font(R.font.nunito_black, FontWeight.Black),
 )
 
-// Scale from the design system (docs/design-system.md section 2). Use sp so system font scaling works.
+// Scale from the design system (design-system/design-system.md section 2). Use sp so system font scaling works.
 private val LaraStyles = Typography(
     displayLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Black, fontSize = 40.sp, lineHeight = 48.sp),
     headlineLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, lineHeight = 36.sp),

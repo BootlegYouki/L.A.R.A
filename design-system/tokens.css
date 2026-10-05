@@ -1,7 +1,7 @@
 /**
  * L.A.R.A. design tokens as plain CSS custom properties.
  * Use in static pages (the Hub captive portal) and anywhere Tailwind is not available.
- * Source of truth: docs/design-system-showcase.html and docs/design-system.md.
+ * Source of truth: design-system/showcase.html and design-system/design-system.md.
  * Brand: 100% solid fills, zero gradients, Phosphor icons, navy-tinted layered shadows.
  */
 
