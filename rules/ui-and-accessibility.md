@@ -6,11 +6,21 @@ All AI agents and contributors must follow these rules.
 
 ---
 
-## 1. Design Authority
+## 1. Design Authority & L.A.R.A Custom Brand System
 
-* **Design Team Authority (Primary):** The visual designs, wireframes, and prototypes provided by the project's **Design Team** are the authoritative specification that must be implemented. Teammates must adhere to the design team's screen layouts and user journeys.
-* **Material Design 3 Best Practice:** While following the Design Team's creative direction, developers should implement screens using Google's **Material Design 3 (Material You)** component library (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) whenever possible to guarantee native accessibility, elevation, and tactile child-friendly feedback.
-* **Icons:** Use official Google Material Symbols bundled locally without external CDN links.
+* **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`docs/design-system.md`](../docs/design-system.md) and previewed in [`docs/design-system-showcase.html`](../docs/design-system-showcase.html).
+* **Google Classroom Mental Model:** Use Google Classroom structures (Class Cards, Stream announcements with teacher avatars, Classwork materials with icons) as the UX mental model, paired with L.A.R.A brand tokens.
+* **Core Brand Tokens (Zero Gradients):**
+  * **Primary Green (`#2E9B4B`):** General classroom learning, active tabs, buttons.
+  * **Dark Green (`#176B36`):** Hover states and solid classroom card headers.
+  * **Light Green (`#E4F6E8`):** Selected states and badge backgrounds.
+  * **Primary Purple (`#5145E5`):** Strictly reserved for the Socratic AI Tutor.
+  * **Canvas Background (`#F7FBFA`):** Mint-tinted soft background.
+  * **Surface White (`#FFFFFF`):** High-contrast cards and dialogs.
+  * **Primary Text (`#17213D`):** Deep navy high-contrast text.
+  * **Gradient Invariant:** Zero gradients. All surfaces, cards, buttons, and banners must use 100% flat, solid color fills.
+* **Typography:** **Nunito Only** across all apps (rounded, friendly, readable for primary grade children).
+* **Icon Standard:** Use official **Phosphor Icons** (`ph-*`) bundled locally without external CDN dependencies.
 
 ---
 
@@ -18,7 +28,7 @@ All AI agents and contributors must follow these rules.
 
 Young children (especially in Grades 1 to 3) have developing fine motor control. Touch targets must prevent miss-taps:
 
-* **Minimum Clickable Height:** **48dp** on all buttons, list items, radio cards, and tabs.
+* **Minimum Clickable Height:** **52dp** on all buttons, list items, radio cards, and tabs.
 * **Preferred Primary Actions:** **56dp** for major call-to-actions (FAB, "Submit Work", "Start Quiz", "Kunan ng Litrato").
 * **Spacing:** Minimum 8dp between adjacent interactive buttons.
 

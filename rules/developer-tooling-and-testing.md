@@ -26,27 +26,24 @@ The `contracts/` directory is the single source of truth for all network communi
 
 ## 2. Local Hub Simulation (`scripts/mock_hub.py`)
 
-Mobile and Desktop developers must never be blocked waiting for the Rust server implementation. The standalone Mock Hub provides a complete zero-dependency simulation of all Local Hub network services.
+Mobile and Desktop developers must never be blocked waiting for the Rust server implementation. The standalone Mock Hub is a zero-dependency Python simulation of every Hub network service in `contracts/`.
 
 ### Usage
 Run from the repository root:
 ```bash
 python3 scripts/mock_hub.py
 ```
+State is in memory and resets on restart. Seeded accounts (PIN `1234`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), pupil `123456789012` (enrolled), pupil `123456789013` (not enrolled, use for the join and approval flow), and `ADMIN-0001` (accepted by `/api/admin/*`).
 
 ### What It Simulates
-1. **UDP Discovery Beacon (`255.255.255.255:8888`):** Broadcasts JSON discovery packets every 3 seconds so client auto-discovery scanners find the hub immediately.
-2. **Captive Web Portal (`http://<ip>:8080/download`):** Serves dummy APK and desktop installer downloads.
-3. **Classroom REST Endpoints (`:8080`):**
-   * `GET /api/classrooms`: Returns sample classes (e.g. Science 4, Section Aguinaldo, Code `SCI4-AG`).
-   * `POST /api/classrooms/join`: Simulates auto-approved enrollment.
-   * `POST /api/sync/pull`: Returns mock announcements and lesson materials.
-   * `GET /api/quizzes/active`: Serves a 2-item quiz with `correct_answer` safely stripped.
-   * `POST /api/quizzes/:id/submit`: Returns an instant auto-graded score receipt.
-   * `GET /api/materials/:id/stream`: Implements HTTP 206 Byte-Range streaming for video playback.
-4. **Teacher Mobile Endpoints:**
-   * `POST /api/announcements`: Simulates teacher broadcasting an announcement from a phone.
-   * `POST /api/quizzes/:id/start`: Simulates teacher launching a quiz from a phone.
+1. **UDP Discovery Beacon (`255.255.255.255:8888`):** every 3 seconds.
+2. **Captive Web Portal (`/download`).**
+3. **REST (`:8080`):** every operation in `contracts/openapi.yaml`: auth, admin accounts, classrooms and approval, delta-sync, announcements and comments, materials (upload, download, chunks, `206` streaming), assignments and homework upload, teacher grading, quizzes (create, start, begin, submit, close, results), export and backup. Bearer auth is enforced. Media routes also accept `?token=`.
+4. **WebSocket (`:8081`):** `EVENT_HELLO` handshake, then pushes `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH`, `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE`, and streams `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM` for `EVENT_AI_CHAT_REQUEST`.
+5. **Rules it enforces so clients meet them early:** pupil quiz payloads never contain `correct_answer`; AI requests fail with `QUIZ_IN_PROGRESS` while the pupil has an `IN_PROGRESS` attempt; quiz submissions later than the limit plus 60 seconds fail with `TIME_LIMIT_EXCEEDED`; unknown routes return `ROUTE_NOT_FOUND`.
+
+### Parity Rule
+Any change to `contracts/` must be mirrored in the mock hub in the same PR. `tests/test_contract_coverage.py` fails CI otherwise.
 
 ---
 
@@ -81,5 +78,5 @@ python3 -m unittest discover tests
 ```
 
 ### Quality Gate Rule
-* All tests in `tests/` must pass (**13/13 OK**) before pushing to `staging` or `main`.
+* All tests in `tests/` must pass before pushing to `staging` or `main`.
 * GitHub Actions automatically runs this suite on every push and pull request via `.github/workflows/ci.yml`.

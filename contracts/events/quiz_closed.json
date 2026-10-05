@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QuizClosedEvent",
+  "description": "Hub broadcast when the teacher closes the quiz. Clients that are still answering must auto-submit.",
+  "type": "object",
+  "required": [
+    "event",
+    "quiz_id",
+    "timestamp"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_QUIZ_CLOSED"
+    },
+    "quiz_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "integer"
+    }
+  }
+}

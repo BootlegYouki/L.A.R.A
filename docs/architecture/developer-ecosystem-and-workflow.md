@@ -59,7 +59,7 @@ A lightweight, single-file Python 3 script using only standard library modules (
     ```
 * **HTTP REST API (`:8080`):**
   * `GET /download`: Serves dummy `.apk` and desktop installer binaries with simulated 3-step sideloading HTML.
-  * `GET /api/classrooms`: Returns sample classes (e.g., Grade 4 Science, Section Aguinaldo, Code `SCI4-AG`).
+  * `GET /api/classrooms`: Returns sample classes (e.g., Grade 4 Science, Section Aguinaldo, Code `K7M4QX`).
   * `POST /api/classrooms/join`: Accepts student enrollment; automatically simulates teacher approval 2 seconds later.
   * `POST /api/sync/pull`: Returns mock announcements, lesson modules, and assignments.
   * `GET /api/quizzes/active`: Serves a 5-item mock quiz with `correct_answer` stripped out.

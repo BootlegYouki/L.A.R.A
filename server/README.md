@@ -68,7 +68,7 @@
   * Active candidate `.gguf` model weights for laptops and ≥6GB RAM phones.
 
 ### 2.3 Delta-Sync Protocol & Class Enrollment Gate
-* Unique 6-character Class Code generator (e.g. `SCI4-AG`).
+* Unique 6-character Class Code generator (e.g. `K7M4QX`, no 0/O/1/I).
 * Real-time join approval push notifications over WebSockets.
 * Two-way delta-sync engine:
   * `POST /api/sync/pull`: Returns deltas modified after client's `last_synced_at`.
@@ -90,7 +90,7 @@
 
 Server developers must configure and execute their SQLx / SQLite migrations strictly adhering to the canonical SQL DDL at [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql).
 
-### The 13 Authoritative Master Tables:
+### The 15 Authoritative Master Tables:
 1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
 2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
 3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
@@ -101,9 +101,11 @@ Server developers must configure and execute their SQLx / SQLite migrations stri
 8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
 9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (authoritative epoch ms), `created_at`, `updated_at`.
 10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `correct_answer` (authoritative answer key for auto-grader), `created_at`, `updated_at`.
-11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
+11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`.
 12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at`.
-13. **`sync_revisions`:** `id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
+13. **`sync_revisions`:** `id`, `classroom_id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
+14. **`sessions`:** `token_hash`, `user_id`, `created_at`, `expires_at` (opaque bearer tokens; the raw token is never stored; server only).
+15. **`material_chunks`:** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
 
 ---
 
@@ -135,26 +137,36 @@ server/
 
 ## 5. Server Team Sprint Roadmap & Execution Order
 
-All server issues on GitHub follow the `[SERVER Sprint.Step]` naming convention:
+All server issues follow `[SERVER Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
 
+* **Sprint 0 (Contract Freeze & Technical Spec):**
+  * `[SERVER 0.1]`: Write server/docs/TECH_SPEC.md and get Lead approval ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36))
 * **Sprint 1 (Scaffolding & LAN Discovery):**
+  * `[SERVER 1.0]`: Scaffold Tauri window, Axum :8080, WebSocket :8081 and migration runner ([#39](https://github.com/BootlegYouki/L.A.R.A/issues/39))
   * `[SERVER 1.1]`: Implement mDNS responder and UDP subnet broadcast beacon ([#1](https://github.com/BootlegYouki/L.A.R.A/issues/1))
   * `[SERVER 1.2]`: Set up central SQLite database with schema migrations ([#2](https://github.com/BootlegYouki/L.A.R.A/issues/2))
   * `[SERVER 1.3]`: Build captive web portal (:8080/download) with 3-step Android sideloading guide ([#3](https://github.com/BootlegYouki/L.A.R.A/issues/3))
   * `[SERVER 1.4]`: Package standalone zero-dependency installer (.exe / .deb) for teacher laptops ([#20](https://github.com/BootlegYouki/L.A.R.A/issues/20))
-* **Sprint 2 (Class Codes & Delta-Sync):**
-  * `[SERVER 2.1]`: Implement Class Code generation and teacher manual approval gate ([#6](https://github.com/BootlegYouki/L.A.R.A/issues/6))
-  * `[SERVER 2.2]`: Implement delta-sync protocol (pull/push) with SQLite transactions ([#7](https://github.com/BootlegYouki/L.A.R.A/issues/7))
-* **Sprint 3 (Text Chunking & Video Streaming):**
+* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
+  * `[SERVER 2.0]`: Implement auth: register, login, logout and bearer sessions ([#42](https://github.com/BootlegYouki/L.A.R.A/issues/42))
+  * `[SERVER 2.1]`: Class Code generation, enrollment API and teacher approval gate ([#6](https://github.com/BootlegYouki/L.A.R.A/issues/6))
+  * `[SERVER 2.2]`: Delta-sync pull/push with SQLite transactions and tombstones ([#7](https://github.com/BootlegYouki/L.A.R.A/issues/7))
+  * `[SERVER 2.3]`: Build Hub admin console for account creation and PIN reset ([#43](https://github.com/BootlegYouki/L.A.R.A/issues/43))
+  * `[SERVER 2.4]`: Implement WebSocket event broker: registry, presence and targeted push ([#44](https://github.com/BootlegYouki/L.A.R.A/issues/44))
+* **Sprint 3 (Stream, Media & Homework):**
   * `[SERVER 3.1]`: Automated document text extraction & chunking for lesson handouts ([#10](https://github.com/BootlegYouki/L.A.R.A/issues/10))
   * `[SERVER 3.2]`: Implement HTTP 206 Byte-Range video streaming with 2 MB/s client rate-limiting ([#8](https://github.com/BootlegYouki/L.A.R.A/issues/8))
-* **Sprint 4 (Quiz Engine, Auto-Grader & DepEd Export):**
-  * `[SERVER 4.1]`: Implement timed paperless quiz engine with synchronized countdown and auto-submission ([#11](https://github.com/BootlegYouki/L.A.R.A/issues/11))
+  * `[SERVER 3.3]`: Implement material upload and homework submission receivers ([#53](https://github.com/BootlegYouki/L.A.R.A/issues/53))
+  * `[SERVER 3.4]`: Implement teacher CRUD for announcements, assignments and submission grading ([#54](https://github.com/BootlegYouki/L.A.R.A/issues/54))
+* **Sprint 4 (Paperless Quiz & Gradebook):**
+  * `[SERVER 4.1]`: Quiz broker: synchronized start/close events and time-limit validation ([#11](https://github.com/BootlegYouki/L.A.R.A/issues/11))
   * `[SERVER 4.2]`: Instant auto-grading engine for Multiple Choice, True/False, and Identification questions ([#12](https://github.com/BootlegYouki/L.A.R.A/issues/12))
   * `[SERVER 4.3]`: One-click DepEd Class Record export (.xlsx/.csv) to plugged-in USB flash drives ([#13](https://github.com/BootlegYouki/L.A.R.A/issues/13))
   * `[SERVER 4.4]`: Implement one-click SQLite database backup & restore (.lara-backup) to USB flash drive ([#21](https://github.com/BootlegYouki/L.A.R.A/issues/21))
-* **Sprint 5 (Central SLM Queue & Guardrails):**
+  * `[SERVER 4.5]`: Implement quiz CRUD, redacted student view and attempt begin ([#61](https://github.com/BootlegYouki/L.A.R.A/issues/61))
+* **Sprint 5 (Socratic AI):**
   * `[SERVER 5.1]`: Configure embedded llama-server with 2-4 slots and FIFO request queue ([#14](https://github.com/BootlegYouki/L.A.R.A/issues/14))
-  * `[SERVER 5.2]`: Implement strict Socratic prompt template and hard quiz lockout enforcement ([#16](https://github.com/BootlegYouki/L.A.R.A/issues/16))
-* **Sprint 6 (Router Stress Test):**
+  * `[SERVER 5.2]`: Server-side Socratic prompt builder and hard quiz lockout enforcement ([#16](https://github.com/BootlegYouki/L.A.R.A/issues/16))
+  * `[SERVER 5.3]`: Build Hub health dashboard: ports, connected devices and AI queue ([#66](https://github.com/BootlegYouki/L.A.R.A/issues/66))
+* **Sprint 6 (Audit & Stress Test):**
   * `[SERVER 6.1]`: Simulate 40 concurrent connected devices on local Wi-Fi router (quizzes & video) ([#17](https://github.com/BootlegYouki/L.A.R.A/issues/17))
