@@ -17,7 +17,7 @@
 | 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so Dev A and Dev B can add routes without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
 | 6 | Before every PR: run the commands in [`server/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `server/docs/`. |
 
-**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
 **Status:** No backend code yet. The contracts, SQL schema and a full behavioral reference (the mock hub) are ready.
 

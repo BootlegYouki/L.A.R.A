@@ -8,11 +8,11 @@ Owned by the Lead Developer. Developers **use** these files; they do not edit th
 
 | Source | What it is | Role |
 | :--- | :--- | :--- |
-| [`../docs/design-system-showcase.html`](../docs/design-system-showcase.html) | Interactive sample (v2.0): every foundation and component, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
-| [`../docs/design-system.md`](../docs/design-system.md) | Written rules: tokens, components, accessibility, Google Classroom layout reference, definition of done | The rules agents and reviewers cite |
+| [`showcase.html`](./showcase.html) | Interactive sample (v2.0): every foundation and component, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
+| [`design-system.md`](./design-system.md) | Written rules: tokens, components, accessibility, Google Classroom layout reference, definition of done | The rules agents and reviewers cite |
 | This folder | Ready-to-copy token and theme files | The code form of the sample |
 
-`design-system/index.html` only redirects to the showcase. There is one HTML source, so it cannot drift.
+The written rules and the interactive sample both live in this folder, next to the code that mirrors them.
 
 ## What is in this folder
 
@@ -32,7 +32,8 @@ design-system/
 ├── assets/                 # Bundled offline assets, never a CDN
 │   ├── fonts/              # Nunito woff2 + fonts.css
 │   └── phosphor/           # Phosphor Regular, Fill, Bold woff2 + phosphor.css
-└── index.html              # Redirect to the showcase
+├── design-system.md        # Written rules (tokens, components, accessibility, Google Classroom reference)
+└── showcase.html           # Interactive sample, the visual source of truth (open in a browser)
 ```
 
 ## Principles
@@ -64,8 +65,8 @@ design-system/
 Link `tokens.css` plus `assets/fonts/fonts.css` and `assets/phosphor/phosphor.css`. Use the CSS variables (`var(--color-primary-green)`), no inline hex values.
 
 ## Keeping it in sync (Lead process)
-1. Change the design in `docs/design-system-showcase.html` (its token variables and its React and Kotlin code blocks).
-2. Update the matching files in this folder and the tables in `docs/design-system.md`.
+1. Change the design in `design-system/showcase.html` (its token variables and its React and Kotlin code blocks).
+2. Update the matching files in this folder and the tables in `design-system/design-system.md`.
 3. Run `python3 -m unittest discover tests`. `tests/test_design_tokens.py` compares every color, radius and shadow in the showcase with `tokens.css`, `tokens.json`, `Color.kt`, `tailwind.theme.ts` and `theme.css`, and fails on drift.
 4. Merge as a Lead-reviewed design-system PR; teams then update their code.
 

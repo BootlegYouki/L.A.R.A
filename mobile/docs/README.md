@@ -23,4 +23,4 @@ Maintained by the **Mobile Team**. This folder is where the Lead Developer and f
 4. **Gotchas and edge cases:** Transsion and realme battery killers, camera orientation, low-memory behavior.
 
 ## Related
-[`../AGENTS.md`](../AGENTS.md) (agent and developer guide), [`../README.md`](../README.md), [`../../contracts/`](../../contracts/), [`../../docs/design-system.md`](../../docs/design-system.md).
+[`../AGENTS.md`](../AGENTS.md) (agent and developer guide), [`../README.md`](../README.md), [`../../contracts/`](../../contracts/), [`../../design-system/design-system.md`](../../design-system/design-system.md).
