@@ -33,7 +33,7 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 
 ## 2. Picking and Doing Work
 
-* Open your sprint's [milestone](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name a developer slot (**Dev A** or **Dev B**), their dependencies, the contract they implement and the mock-hub flow to use.
+* **Find your list:** use the team, slot and sprint filter links in the [README](./README.md#find-your-issues). Every issue is labelled by team (`scope:*`), sprint (`sprint:N`) and slot (`slot:dev-a` / `slot:dev-b`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name a developer slot (**Dev A** or **Dev B**), their dependencies, the contract they implement and the mock-hub flow to use.
 * Take an issue from **your** slot. **One issue = one PR.** Do not start an issue whose dependencies are unmerged unless the issue says to use the mock hub.
 * Clients build against `scripts/mock_hub.py`. The real Hub is used on **integration day** at the end of each sprint.
 * **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + mock hub + tests) merged first. Never edit `contracts/` inside a feature PR.
