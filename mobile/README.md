@@ -21,7 +21,7 @@
 5. **UI & Design Authority:**
    * Visual wireframes and screen flows produced by the **Design Team** are the primary authority that must be implemented.
    * Implement screens using **Google Material Design 3 (`androidx.compose.material3`)**.
-   * Touch targets must be **minimum 48dp (preferred 56dp)** for young elementary pupils.
+   * Touch targets must be **minimum 52dp (preferred 56dp)** for young elementary pupils.
    * Text contrast must meet **minimum 4.5:1**.
    * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` and translated to Filipino in `values-tl/strings.xml`.
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
@@ -86,7 +86,7 @@ The app switches navigation graphs depending on authenticated role:
 
 Mobile developers must model their Room Database (`@Database`) strictly on the canonical SQL DDL at [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).
 
-### The 12 Room Entities (`org.lara.app.data.local.entities.*`):
+### The 13 Room Entities (`org.lara.app.data.local.entities.*`):
 1. **`UserEntity` (`users`):** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
 2. **`ClassroomEntity` (`classrooms`):** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
 3. **`EnrollmentEntity` (`enrollments`):** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
@@ -97,8 +97,9 @@ Mobile developers must model their Room Database (`@Database`) strictly on the c
 8. **`AssignmentSubmissionEntity` (`assignment_submissions`):** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
 9. **`QuizEntity` (`quizzes`):** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (server synchronized epoch ms), `created_at`, `updated_at`.
 10. **`QuizQuestionEntity` (`quiz_questions`):** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. **Strictly omits `correct_answer`.**
-11. **`QuizAttemptEntity` (`quiz_attempts`):** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
+11. **`QuizAttemptEntity` (`quiz_attempts`):** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
 12. **`AiChatMessageEntity` (`ai_chat_messages`):** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at` (persists conversation during offline home study).
+13. **`MaterialChunkEntity` (`material_chunks`):** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
 
 *All delta-sync batch operations in Room DAOs must be wrapped in `@Transaction`.*
 
@@ -125,7 +126,7 @@ mobile/
 │   │   │   │   └── ui/
 │   │   │   │       ├── navigation/      # StudentNavGraph, TeacherNavGraph
 │   │   │   │       ├── theme/           # Material 3 Color, Type, Shape tokens
-│   │   │   │       ├── components/      # 48dp Buttons, Cards, CountdownPill
+│   │   │   │       ├── components/      # 52dp Buttons, Cards, CountdownPill
 │   │   │   │       └── screens/         # Discovery, Classwork, Quiz, Tutor, Camera
 │   │   │   └── res/
 │   │   │       ├── values/strings.xml   # Canonical English strings
@@ -154,4 +155,4 @@ All mobile issues on GitHub follow the `[MOBILE Sprint.Step]` naming convention:
   * `[MOBILE 5.2]`: Build Socratic AI chat bottom sheet & desktop drawer with bilingual language toggle ([#27](https://github.com/BootlegYouki/L.A.R.A/issues/27))
 * **Sprint 6 (Audits & Benchmarks):**
   * `[MOBILE 6.1]`: Profile memory and battery consumption on 3GB/4GB Android devices (Transsion/realme) ([#18](https://github.com/BootlegYouki/L.A.R.A/issues/18))
-  * `[MOBILE 6.2]`: Conduct elementary UX audit: >=48dp touch targets, contrast ratios, and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))
+  * `[MOBILE 6.2]`: Conduct elementary UX audit: >=52dp touch targets, contrast ratios, and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))

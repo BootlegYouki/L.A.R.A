@@ -68,7 +68,7 @@
   * Active candidate `.gguf` model weights for laptops and ≥6GB RAM phones.
 
 ### 2.3 Delta-Sync Protocol & Class Enrollment Gate
-* Unique 6-character Class Code generator (e.g. `SCI4-AG`).
+* Unique 6-character Class Code generator (e.g. `K7M4QX`, no 0/O/1/I).
 * Real-time join approval push notifications over WebSockets.
 * Two-way delta-sync engine:
   * `POST /api/sync/pull`: Returns deltas modified after client's `last_synced_at`.
@@ -90,7 +90,7 @@
 
 Server developers must configure and execute their SQLx / SQLite migrations strictly adhering to the canonical SQL DDL at [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql).
 
-### The 13 Authoritative Master Tables:
+### The 15 Authoritative Master Tables:
 1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
 2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
 3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
@@ -101,9 +101,11 @@ Server developers must configure and execute their SQLx / SQLite migrations stri
 8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
 9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (authoritative epoch ms), `created_at`, `updated_at`.
 10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `correct_answer` (authoritative answer key for auto-grader), `created_at`, `updated_at`.
-11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
+11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`.
 12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at`.
 13. **`sync_revisions`:** `id`, `classroom_id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
+14. **`sessions`:** `token_hash`, `user_id`, `created_at`, `expires_at` (opaque bearer tokens; the raw token is never stored; server only).
+15. **`material_chunks`:** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
 
 ---
 

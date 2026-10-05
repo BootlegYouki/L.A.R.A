@@ -9,7 +9,7 @@
 
 **Every contributor and AI agent working in `desktop/` MUST adhere to these rules:**
 
-1. **Strict Zero-Internet Policy:** Never import external CDNs, Google Fonts web links, or remote telemetry. All assets (Material Symbols, fonts, dependencies) must be bundled locally into the binary.
+1. **Strict Zero-Internet Policy:** Never import external CDNs, Google Fonts web links, or remote telemetry. All assets (Nunito, Phosphor Icons, fonts, dependencies) must be bundled locally into the binary.
 2. **Why Tauri (Not Electron):** Tauri produces an ultra-lightweight ~15MB installer consuming ~40MB RAM (compared to Electron's ~150MB installer and 500MB RAM bloat), ensuring smooth performance on older school computer lab PCs (Intel Celeron / Core i3 with 4GB RAM).
 3. **Database Stack Invariant:** Use native local SQLite via the official **`@tauri-apps/plugin-sql`** plugin. **Prisma is strictly forbidden** to prevent 50MB query engine binary bloat and packaging crashes.
 4. **Canonical Network Contracts (`contracts/`):**
@@ -19,7 +19,7 @@
 5. **UI & Design Authority:**
    * Visual mockups and flows from the **Design Team** are the primary authority.
    * Implement screens using **Material Design 3 design tokens configured in Tailwind CSS**.
-   * Touch and click targets must be minimum 48dp, contrast ratio ≥ 4.5:1.
+   * Touch and click targets must be minimum 52dp (40px compact only on teacher tables), contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
    ```bash
@@ -61,7 +61,7 @@
 
 ### 2.2 Dual-Role Capabilities
 * **Student Mode:**
-  * Class Code enrollment dialog (`SCI4-AG`) with real-time pending approval status.
+  * Class Code enrollment dialog (`K7M-4QX`) with real-time pending approval status.
   * Announcement stream with teacher comment moderation.
   * Lesson handouts with zoom controls.
   * Full-screen paperless quiz engine with synchronized timer and instant auto-grading.
@@ -82,7 +82,7 @@
 
 Desktop developers must initialize and query their local SQLite database strictly adhering to the canonical SQL DDL at [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).
 
-### The 12 Local Tables:
+### The 13 Local Tables:
 1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
 2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
 3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
@@ -93,8 +93,9 @@ Desktop developers must initialize and query their local SQLite database strictl
 8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`, `sync_status`.
 9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (server synchronized epoch ms), `created_at`, `updated_at`.
 10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. **Strictly omits `correct_answer`.**
-11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`, `sync_status`.
+11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`, `sync_status`.
 12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at` (persists conversation during offline study).
+13. **`material_chunks`:** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
 
 ---
 

@@ -26,5 +26,5 @@ Describe step-by-step how the teacher or student interacts with this feature.
 
 ## 5. Acceptance Criteria
 - [ ] Works 100% offline with zero internet access
-- [ ] Adheres to Google Material Design 3 (>=48dp touch targets)
+- [ ] Adheres to Google Material Design 3 (>=52dp touch targets)
 - [ ] Bilingual text (English and Filipino) supported
