@@ -138,21 +138,34 @@ mobile/
 
 ## 5. Mobile Team Sprint Roadmap & Execution Order
 
-All mobile issues on GitHub follow the `[MOBILE Sprint.Step]` naming convention:
+All mobile issues follow `[MOBILE Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
 
+* **Sprint 0 (Contract Freeze & Technical Spec):**
+  * `[MOBILE 0.1]`: Write mobile/docs/TECH_SPEC.md and get Lead approval ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38))
 * **Sprint 1 (Scaffolding & LAN Discovery):**
-  * `[MOBILE 1.1]`: Scaffold Material 3 theme, design tokens & connection screens ([#23](https://github.com/BootlegYouki/L.A.R.A/issues/23))
+  * `[MOBILE 1.1]`: Scaffold Android project shell, custom design tokens foundation & navigation ([#23](https://github.com/BootlegYouki/L.A.R.A/issues/23))
   * `[MOBILE 1.2]`: Implement mDNS discovery & manual IP fallback screen in Jetpack Compose ([#4](https://github.com/BootlegYouki/L.A.R.A/issues/4))
-* **Sprint 2 (Roles, Navigation & Sync):**
-  * `[MOBILE 2.1]`: Build role-based classroom navigation shell, Class Code dialog & Teacher approval sheet ([#24](https://github.com/BootlegYouki/L.A.R.A/issues/24))
-* **Sprint 3 (Media & Homework Camera):**
-  * `[MOBILE 3.1]`: Build announcement cards, Media3 video player & CameraX document capture overlay ([#25](https://github.com/BootlegYouki/L.A.R.A/issues/25))
+  * `[MOBILE 1.3]`: Create Room database, DAOs and repository layer from client_offline.sql ([#41](https://github.com/BootlegYouki/L.A.R.A/issues/41))
+* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
+  * `[MOBILE 2.1]`: Build role-based navigation shell (Student and Teacher graphs) ([#24](https://github.com/BootlegYouki/L.A.R.A/issues/24))
+  * `[MOBILE 2.2]`: Build Student/Teacher login and registration screens ([#49](https://github.com/BootlegYouki/L.A.R.A/issues/49))
+  * `[MOBILE 2.3]`: Build Class Code join dialog with live approval status ([#50](https://github.com/BootlegYouki/L.A.R.A/issues/50))
+  * `[MOBILE 2.4]`: Build Teacher pending-approval bottom sheet ([#51](https://github.com/BootlegYouki/L.A.R.A/issues/51))
+  * `[MOBILE 2.5]`: Implement DeltaSyncWorker (pull, push, tombstones) with WorkManager ([#52](https://github.com/BootlegYouki/L.A.R.A/issues/52))
+* **Sprint 3 (Stream, Media & Homework):**
+  * `[MOBILE 3.1]`: Build announcement stream cards and PDF reader ([#25](https://github.com/BootlegYouki/L.A.R.A/issues/25))
   * `[MOBILE 3.2]`: Implement CameraX homework photo capture with automatic JPEG compression (<800KB) ([#9](https://github.com/BootlegYouki/L.A.R.A/issues/9))
-* **Sprint 4 (Paperless Quiz Engine):**
-  * `[MOBILE 4.1]`: Build paperless quiz flow with animated countdown timer & Teacher Quiz remote controller ([#26](https://github.com/BootlegYouki/L.A.R.A/issues/26))
-* **Sprint 5 (Socratic AI Tutor):**
+  * `[MOBILE 3.3]`: Build Media3 video player with Save for Home ([#59](https://github.com/BootlegYouki/L.A.R.A/issues/59))
+  * `[MOBILE 3.4]`: Build teacher Post Announcement FAB and dialog ([#60](https://github.com/BootlegYouki/L.A.R.A/issues/60))
+* **Sprint 4 (Paperless Quiz & Gradebook):**
+  * `[MOBILE 4.1]`: Build paperless student quiz flow with countdown timer and AI unmount ([#26](https://github.com/BootlegYouki/L.A.R.A/issues/26))
+  * `[MOBILE 4.2]`: Build Teacher Quiz remote controller and live submission monitor ([#64](https://github.com/BootlegYouki/L.A.R.A/issues/64))
+  * `[MOBILE 4.3]`: Implement quiz offline queue and auto-flush ([#65](https://github.com/BootlegYouki/L.A.R.A/issues/65))
+* **Sprint 5 (Socratic AI):**
   * `[MOBILE 5.1]`: Implement hardware RAM detection (<6GB vs >=6GB) and dual-mode inference router ([#15](https://github.com/BootlegYouki/L.A.R.A/issues/15))
-  * `[MOBILE 5.2]`: Build Socratic AI chat bottom sheet & desktop drawer with bilingual language toggle ([#27](https://github.com/BootlegYouki/L.A.R.A/issues/27))
-* **Sprint 6 (Audits & Benchmarks):**
+  * `[MOBILE 5.2]`: Build Socratic AI chat bottom sheet with bilingual toggle ([#27](https://github.com/BootlegYouki/L.A.R.A/issues/27))
+  * `[MOBILE 5.3]`: Implement SocraticPromptBuilder and client-side quiz lockout ([#69](https://github.com/BootlegYouki/L.A.R.A/issues/69))
+  * `[MOBILE 5.4]`: Implement llama.cpp JNI bridge for arm64-v8a ([#70](https://github.com/BootlegYouki/L.A.R.A/issues/70))
+* **Sprint 6 (Audit & Stress Test):**
   * `[MOBILE 6.1]`: Profile memory and battery consumption on 3GB/4GB Android devices (Transsion/realme) ([#18](https://github.com/BootlegYouki/L.A.R.A/issues/18))
-  * `[MOBILE 6.2]`: Conduct elementary UX audit: >=52dp touch targets, contrast ratios, and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))
+  * `[MOBILE 6.2]`: Conduct elementary UX audit: touch targets, contrast and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))
