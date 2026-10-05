@@ -1,41 +1,39 @@
 -- ==============================================================================
--- L.A.R.A CLIENT OFFLINE SQLITE SCHEMA (Android Room & Desktop Client)
+-- L.A.R.A CLIENT OFFLINE SQLITE SCHEMA (Android Room & Desktop @tauri-apps/plugin-sql)
 -- ==============================================================================
--- Technology Invariant: Android Room (Kotlin) & @tauri-apps/plugin-sql (Desktop).
--- Security Invariant: Strips correct_answer to prevent student cheating.
--- Offline Invariant: Adds sync_status and local_file_path for home study mode.
--- Concurrency Best Practice: WAL mode + NORMAL synchronous + 5s busy timeout.
+-- This is the offline SLICE of the server schema for the classes the user belongs to.
+-- Security: contains NO pin_hash, NO classmates' LRN, NO correct_answer, NO server file paths.
+-- A pupil can read their own phone's SQLite file, so anything stored here is public to that pupil.
+-- Offline invariant: sync_status and local_file_path support home study mode.
+--
+-- Room cannot express CHECK constraints, partial indexes or AUTOINCREMENT from entities. Mirror the
+-- columns, nullability and defaults in the entities and keep the CHECK rules in the repository layer.
+-- PRAGMAs are set in code (Room: WAL is the default; plugin-sql: foreign_keys = ON on open), not in migrations.
 -- ==============================================================================
 
--- High-Performance Client Pragmas
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-PRAGMA foreign_keys = ON;
-PRAGMA busy_timeout = 5000;
-
--- 1. Users (Local Profile)
+-- 1. Users (people you can see: yourself, your teacher, classmates' display names)
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY NOT NULL,              -- UUID v4
-    lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit DepEd LRN or Teacher ID
+    id TEXT PRIMARY KEY NOT NULL,
+    lrn_or_id TEXT,                            -- only filled for the signed-in user and, for teachers, their roster
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT')),
-    pin_hash TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
 
--- 2. Classrooms (Enrolled Subjects)
+-- 2. Classrooms
 CREATE TABLE IF NOT EXISTS classrooms (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     section TEXT NOT NULL,
     class_code TEXT NOT NULL,
     teacher_id TEXT NOT NULL,
+    archived_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
 
--- 3. Enrollments Status
+-- 3. Enrollments
 CREATE TABLE IF NOT EXISTS enrollments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -47,7 +45,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     UNIQUE(classroom_id, student_id)
 );
 
--- 4. Cached Announcements
+-- 4. Announcements
 CREATE TABLE IF NOT EXISTS announcements (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -59,7 +57,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 5. Announcement Comments (With Offline Sync Queue for Pupil Comments)
+-- 5. Announcement Comments (authors resolve through users; no FK because the author row may sync later)
 CREATE TABLE IF NOT EXISTS announcement_comments (
     id TEXT PRIMARY KEY NOT NULL,
     announcement_id TEXT NOT NULL,
@@ -71,44 +69,59 @@ CREATE TABLE IF NOT EXISTS announcement_comments (
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
 );
 
--- 6. Lesson Materials & Offline Disk Cache
+-- 6. Materials (metadata plus the cached file location)
 CREATE TABLE IF NOT EXISTS materials (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     file_type TEXT NOT NULL CHECK(file_type IN ('DOCUMENT', 'VIDEO', 'WORKSHEET')),
+    mime_type TEXT,
     file_size_bytes INTEGER NOT NULL,
-    extracted_text TEXT,                       -- Pre-chunked plain text for SLM grounding
-    download_url TEXT,                         -- Hub server relative URL
-    local_file_path TEXT,                      -- CLIENT SPECIFIC: Path on phone/laptop storage (null if not downloaded)
+    download_url TEXT,                         -- Hub relative URL, e.g. /api/materials/{id}/download
+    local_file_path TEXT,                      -- CLIENT ONLY: cached file on phone/laptop (NULL if not downloaded)
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Assignments (DepEd Categorized)
+-- 7. Lesson text chunks for offline reading and the local Socratic tutor
+CREATE TABLE IF NOT EXISTS material_chunks (
+    id TEXT PRIMARY KEY NOT NULL,
+    material_id TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    heading TEXT,
+    text TEXT NOT NULL,
+    token_estimate INTEGER,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE,
+    UNIQUE(material_id, order_index)
+);
+
+-- 8. Assignments
 CREATE TABLE IF NOT EXISTS assignments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
-    instructions TEXT NOT NULL,
+    instructions TEXT NOT NULL DEFAULT '',
     deped_category TEXT NOT NULL DEFAULT 'PERFORMANCE_TASK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
+    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),
     due_date INTEGER NOT NULL,
+    allow_late INTEGER NOT NULL DEFAULT 0 CHECK(allow_late IN (0, 1)),
     max_points INTEGER NOT NULL DEFAULT 100,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 8. Assignment Submissions (With Offline Sync Queue)
+-- 9. Assignment Submissions (offline queue for homework photos)
 CREATE TABLE IF NOT EXISTS assignment_submissions (
-    id TEXT PRIMARY KEY NOT NULL,
+    id TEXT PRIMARY KEY NOT NULL,              -- client-generated UUID; reused on every retry (idempotent upload)
     assignment_id TEXT NOT NULL,
     student_id TEXT NOT NULL,
-    file_path TEXT NOT NULL,                   -- Local image path on device storage
-    file_type TEXT NOT NULL DEFAULT 'IMAGE',
+    file_path TEXT NOT NULL,                   -- local image path on device storage
+    file_type TEXT NOT NULL DEFAULT 'IMAGE' CHECK(file_type IN ('IMAGE', 'DOCUMENT')),
     submitted_at INTEGER NOT NULL,
-    score INTEGER,                             -- Graded score receipt from server
+    score INTEGER,                             -- graded score received from the Hub
     teacher_feedback TEXT,
     updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
@@ -116,38 +129,41 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     UNIQUE(assignment_id, student_id)
 );
 
--- 9. Quizzes
+-- 10. Quizzes (metadata; questions are fetched when the teacher starts the quiz)
 CREATE TABLE IF NOT EXISTS quizzes (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
     deped_category TEXT NOT NULL DEFAULT 'WRITTEN_WORK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
+    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),
     time_limit_minutes INTEGER NOT NULL,
+    shuffle_questions INTEGER NOT NULL DEFAULT 0 CHECK(shuffle_questions IN (0, 1)),
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
-    started_at INTEGER,                        -- Server synchronized epoch ms
+    started_at INTEGER,                        -- server synchronized epoch ms
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 10. Quiz Questions (STRICT ANTI-CHEAT: correct_answer is completely omitted)
+-- 11. Quiz Questions (NO correct_answer, NO synonyms: the answer key never reaches a pupil device)
 CREATE TABLE IF NOT EXISTS quiz_questions (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
     order_index INTEGER NOT NULL,
     question_text TEXT NOT NULL,
     question_type TEXT NOT NULL CHECK(question_type IN ('MULTIPLE_CHOICE', 'TRUE_FALSE', 'IDENTIFICATION')),
-    options_json TEXT,                         -- JSON array of strings e.g. ["A", "B", "C", "D"]
+    options_json TEXT,
     points INTEGER NOT NULL DEFAULT 1,
     image_path TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
+    UNIQUE(quiz_id, order_index)
 );
 
--- 11. Student Quiz Attempts (With Offline Sync Queue)
--- Row is created at quiz start (IN_PROGRESS); on finish it becomes SUBMITTED + QUEUED_FOR_SYNC until the Hub confirms.
+-- 12. Student Quiz Attempts (offline sync queue)
+-- Created at quiz start (IN_PROGRESS). On finish it becomes SUBMITTED + QUEUED_FOR_SYNC until the Hub confirms.
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -155,48 +171,47 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     status TEXT NOT NULL DEFAULT 'IN_PROGRESS' CHECK(status IN ('IN_PROGRESS', 'SUBMITTED')),
     started_at INTEGER NOT NULL,
     submitted_at INTEGER,
-    score INTEGER,                             -- Graded score receipt from server (NULL until graded)
+    score INTEGER,                             -- Hub receipt (NULL until graded or while scores are held)
     total_points INTEGER,
-    answers_json TEXT NOT NULL DEFAULT '[]',   -- JSON array of {question_id, selected_option}
+    answers_json TEXT NOT NULL DEFAULT '[]',
     updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    CHECK(status = 'IN_PROGRESS' OR submitted_at IS NOT NULL),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     UNIQUE(quiz_id, student_id)
 );
 
--- 12. Local Socratic AI Chat History (Persistent Home & School Study)
+-- 13. Local Socratic AI Chat History (home study and school)
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     student_id TEXT NOT NULL,
     material_id TEXT,
+    chunk_id TEXT,
+    language TEXT CHECK(language IS NULL OR language IN ('EN', 'FIL')),
     role TEXT NOT NULL CHECK(role IN ('USER', 'TUTOR')),
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
+-- 14. Sync state (CLIENT ONLY key/value). Keys: 'hub_id', 'sync_epoch', 'cursor' (last next_cursor), 'current_user_id'.
+-- Write 'cursor' in the same transaction that applies the pulled records. If the Hub reports reset=true,
+-- wipe the mirrored tables (never rows still QUEUED_FOR_SYNC) and pull again from cursor 0.
+CREATE TABLE IF NOT EXISTS sync_state (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
 -- ==============================================================================
--- COMPOSITE & COVERING INDEXES FOR FAST OFFLINE QUERIES
+-- INDEXES
 -- ==============================================================================
-CREATE INDEX IF NOT EXISTS idx_client_enrollments ON enrollments(classroom_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_client_enrollments_student ON enrollments(student_id, status);
 CREATE INDEX IF NOT EXISTS idx_client_materials_class_type ON materials(classroom_id, file_type);
 CREATE INDEX IF NOT EXISTS idx_client_announcements_feed ON announcements(classroom_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_comments_order ON announcement_comments(announcement_id, created_at ASC);
-CREATE INDEX IF NOT EXISTS idx_client_assignments_due ON assignments(classroom_id, due_date ASC);
-CREATE INDEX IF NOT EXISTS idx_client_questions_order ON quiz_questions(quiz_id, order_index ASC);
+CREATE INDEX IF NOT EXISTS idx_client_assignments_due ON assignments(classroom_id, quarter, due_date ASC);
 CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id, created_at ASC);
-
--- 13. Pre-chunked lesson text for Socratic grounding (served by GET /api/materials/{id}/chunks)
-CREATE TABLE IF NOT EXISTS material_chunks (
-    id TEXT PRIMARY KEY NOT NULL,
-    material_id TEXT NOT NULL,
-    order_index INTEGER NOT NULL,
-    heading TEXT,
-    text TEXT NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_client_material_chunks_order ON material_chunks(material_id, order_index ASC);
