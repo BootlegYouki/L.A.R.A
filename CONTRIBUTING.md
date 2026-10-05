@@ -27,7 +27,7 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
    python3 -m unittest discover tests
    python3 scripts/verify_invariants.py
    ```
-4. Write your team's `docs/TECH_SPEC.md` from [`docs/templates/TECH_SPEC_TEMPLATE.md`](./docs/templates/TECH_SPEC_TEMPLATE.md) (the Sprint 0 issue). The Lead approves it before Sprint 1 PRs merge.
+4. Write your team's `docs/TECH_SPEC.md` from [`docs/templates/TECH_SPEC_TEMPLATE.md`](./docs/templates/TECH_SPEC_TEMPLATE.md) and check it against [`what a good spec looks like`](./docs/templates/TECH_SPEC_GUIDE.md) (the Sprint 0 issue). The Lead approves it before Sprint 1 PRs merge.
 
 ---
 
