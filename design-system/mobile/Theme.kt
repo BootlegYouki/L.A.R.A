@@ -1,39 +1,40 @@
 package org.lara.app.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
-private val LaraLightColorScheme = lightColorScheme(
-    primary = LaraPrimaryGreen,
-    onPrimary = LaraSurfaceWhite,
-    primaryContainer = LaraLightGreen,
-    onPrimaryContainer = LaraDarkGreen,
-    secondary = LaraPrimaryPurple,
-    onSecondary = LaraSurfaceWhite,
-    secondaryContainer = LaraLightPurple,
-    onSecondaryContainer = LaraDarkPurple,
-    background = LaraCanvasBg,
-    onBackground = LaraTextPrimary,
-    surface = LaraSurfaceWhite,
-    onSurface = LaraTextPrimary,
-    surfaceVariant = LaraSurfaceSubtle,
-    onSurfaceVariant = LaraTextSecondary,
-    outline = LaraBorder,
-    error = LaraStatusDanger,
-    onError = LaraSurfaceWhite
+private val LaraScheme = lightColorScheme(
+    primary = LaraColors.Primary,
+    onPrimary = Color.White,
+    primaryContainer = LaraColors.PrimaryLight,
+    onPrimaryContainer = LaraColors.PrimaryDark,
+    secondary = LaraColors.Ai,
+    onSecondary = Color.White,
+    secondaryContainer = LaraColors.AiLight,
+    onSecondaryContainer = LaraColors.AiDark,
+    background = LaraColors.Canvas,
+    onBackground = LaraColors.TextPrimary,
+    surface = LaraColors.Surface,
+    onSurface = LaraColors.TextPrimary,
+    surfaceVariant = LaraColors.SurfaceSubtle,
+    onSurfaceVariant = LaraColors.TextSecondary,
+    outline = LaraColors.Border,
+    error = LaraColors.Danger,
+    onError = Color.White,
+    errorContainer = LaraColors.DangerLight,
+    onErrorContainer = LaraColors.DangerDark,
 )
 
+// Light theme only, on purpose: bright classrooms and a high-contrast standard for young readers.
+// Dynamic color (Material You) is not used so the brand colors never change per device.
 @Composable
-fun LaraTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    // In primary school classrooms, high-contrast light theme is the invariant
+fun LaraTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = LaraLightColorScheme,
+        colorScheme = LaraScheme,
         typography = LaraTypography,
-        content = content
+        shapes = LaraShapes,
+        content = content,
     )
 }

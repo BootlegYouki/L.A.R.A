@@ -81,13 +81,15 @@ Contrast notes: Text Muted is never used for essential content. White on Primary
 
 | Style | Size / line height | Weight | Compose | Tailwind | Use |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Display | 48 / 60 | ExtraBold 800 | `displayLarge` | `text-5xl leading-[60px] font-extrabold` | Welcome and onboarding only |
-| Heading 1 | 32 / 40 | ExtraBold 800 | `headlineLarge` | `text-[32px] leading-10 font-extrabold` | Subject and class headers |
-| Heading 2 | 24 / 32 | Bold 700 | `headlineMedium` | `text-2xl leading-8 font-bold` | Section titles ("Mga Pagsusulit", "Stream") |
-| Heading 3 | 20 / 28 | Bold 700 | `titleMedium` | `text-xl leading-7 font-bold` | Quiz questions, card titles |
+| Display | 40 / 48 | Black 900 | `displayLarge` | `text-[40px] leading-[48px] font-black` | Welcome and onboarding only |
+| Heading 1 | 28 / 36 | ExtraBold 800 | `headlineLarge` | `text-[28px] leading-9 font-extrabold` | Subject and class headers |
+| Heading 2 | 22 / 30 | Bold 700 | `headlineMedium` | `text-[22px] leading-[30px] font-bold` | Section titles ("Mga Pagsusulit", "Stream") |
+| Title | 18 / 26 | ExtraBold 800 | `titleMedium` | `text-lg leading-[26px] font-extrabold` | Quiz questions, card titles |
 | Body | 16 / 24 | Medium 500 | `bodyLarge` | `text-base leading-6 font-medium` | Announcements, instructions, chat |
 | Label | 14 / 20 | ExtraBold 800 | `labelLarge` | `text-sm leading-5 font-extrabold` | Buttons, form labels, nav items |
-| Caption | 12 / 16 | Bold 700 | `bodySmall` | `text-xs leading-4 font-bold` | Timestamps, badges, metadata |
+| Caption | 12 / 16 | SemiBold 600 | `bodySmall` | `text-xs leading-4 font-semibold` | Timestamps, badges, metadata |
+
+The type scale matches `docs/design-system-showcase.html` and `design-system/mobile/Type.kt`. In Compose, styles the scale does not name (for example `titleLarge`) are still Nunito, so no Material component falls back to the system font.
 
 Rules:
 - Minimum body size on pupil screens is 16.
@@ -220,7 +222,7 @@ Each component below has live previews and copy-ready React and Kotlin code in t
 
 ### 5.10 Skeleton and empty states
 - Skeleton: solid `#E4EAF0` blocks matching the final layout, opacity pulse, `role="status"` container. Replace with an empty state if loading completes with no data.
-- Empty state: 80px Light Green circle with a 40px icon, Heading 3 title, one explanatory sentence, one optional secondary action. Do not blame the user.
+- Empty state: 80px Light Green circle with a 40px icon, Title-style heading, one explanatory sentence, one optional secondary action. Do not blame the user.
 
 ### 5.11 Avatars, lists, stat cards, tables
 - Avatar: initials, sizes 32, 40, 56, tone derived from the name so it stays stable. Purple tone is reserved for the AI tutor. No photos of pupils.
