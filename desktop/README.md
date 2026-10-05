@@ -5,6 +5,23 @@
 
 ---
 
+## Start Here (New Developer Checklist)
+
+| Step | What to do |
+| :--- | :--- |
+| 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`desktop/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
+| 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#37](https://github.com/BootlegYouki/L.A.R.A/issues/37)). The Lead approves it before Sprint 1 work merges. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
+| 4 | Open your sprint milestone and take the next issue in **your slot** (Dev A or Dev B). One issue = one PR. The roadmap is in section 5. |
+| 5 | Scaffold first: [#29](https://github.com/BootlegYouki/L.A.R.A/issues/29) (Tauri + React + SQLite + tokens). Copy `design-system/assets/` to `desktop/src/assets/design-system/` and import the font and icon CSS from `index.css`. |
+| 6 | Before every PR: run the commands in [`desktop/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `desktop/docs/`. |
+
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+
+**Status:** No application code yet. Contracts, tokens, bundled fonts/icons and the mock hub are ready.
+
+---
+
 ## 0. Developer Pre-Flight & Hard Invariants
 
 **Every contributor and AI agent working in `desktop/` MUST adhere to these rules:**
@@ -17,8 +34,8 @@
    * All network JSON fields are strictly **`snake_case`**.
    * **Anti-Cheat Redaction:** The student view must never receive or parse `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * Visual mockups and flows from the **Design Team** are the primary authority.
-   * Implement screens using **Material Design 3 design tokens configured in Tailwind CSS**.
+   * [`docs/design-system.md`](../docs/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
    * Touch and click targets must be minimum 52dp (40px compact only on teacher tables), contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
@@ -39,14 +56,14 @@
 
 * **Desktop Application Core:** Tauri 2.x (Rust core + Webview frontend).
 * **Frontend Framework:** React 19, TypeScript 5.x, Vite 6.x.
-* **Styling & Tokens:** Tailwind CSS 4.x configured with Google Material Design 3 surface roles, typography scales, and elevation tokens.
+* **Styling & Tokens:** Tailwind CSS 4.x configured with the L.A.R.A design tokens (`design-system/desktop/tailwind.theme.ts`): solid colors, Nunito scale, navy-tinted two-layer shadows.
 * **State Management:** Zustand with offline persistence (`localStorage` / Tauri store).
 * **Local Persistence:** Local SQLite database via `@tauri-apps/plugin-sql`.
 * **Networking:**
   * HTTP REST: Tauri HTTP plugin / standard browser `fetch`.
   * WebSockets: Native browser `WebSocket` connecting to Local Hub port 8081.
   * Discovery: Rust background thread for mDNS browsing (`_lara._tcp.local`) and UDP subnet broadcast listening on port 8888.
-* **Media Player:** HTML5 `<video>` element styled with custom M3 controls, supporting HTTP 206 Byte-Range streaming and offline local disk caching.
+* **Media Player:** HTML5 `<video>` element styled with design-system controls, supporting HTTP 206 Byte-Range streaming and offline local disk caching.
 * **Pluggable Desktop SLM:** Bundled `llama.cpp` CLI binary (`llama-cli`) executed via Tauri sidecar process for 100% offline on-device inference (MiniCPM5-2B, Qwen2.5, Llama 3.2) on laptops with **≥ 4GB RAM**.
 * **Target Platforms:** Windows 10/11 (64-bit), Ubuntu/Debian Linux (DepEd lab PCs), and macOS.
 
@@ -66,7 +83,8 @@
   * Lesson handouts with zoom controls.
   * Full-screen paperless quiz engine with synchronized timer and instant auto-grading.
   * Socratic AI drawer with split-screen view (lesson on left, tutor on right).
-* **Teacher Desktop Mode (Alternative to Hub GUI):**
+* **Teacher Mode (the full authoring surface; the Hub window is only an admin console):**
+  * **Classroom, announcements, materials and assignments:** create a class and share its code, post to the stream (comments on or off), upload lessons and videos, create assignments, review and grade homework photos.
   * **Teacher Quiz Builder Wizard:** Multi-step wizard to create tests, manage question banks, and randomize question order.
   * **Live Quiz Submission Matrix:** Real-time telemetry grid showing which pupils are currently answering and their auto-graded scores.
   * **Class Roster Table:** List of enrolled pupils with one-click Accept/Decline actions.
@@ -80,22 +98,13 @@
 
 ## 3. Client Offline Database Schema (`@tauri-apps/plugin-sql`)
 
-Desktop developers must initialize and query their local SQLite database strictly adhering to the canonical SQL DDL at [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
-### The 13 Local Tables:
-1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
-2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
-3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
-4. **`announcements`:** `id`, `classroom_id`, `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
-5. **`announcement_comments`:** `id`, `announcement_id`, `author_id`, `content`, `created_at`, `updated_at`, `sync_status`.
-6. **`materials`:** `id`, `classroom_id`, `title`, `file_type`, `file_size_bytes`, `extracted_text`, `download_url`, `local_file_path` (cached disk path for home study), `created_at`, `updated_at`.
-7. **`assignments`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category` (`WRITTEN_WORK` | `PERFORMANCE_TASK` | `QUARTERLY_ASSESSMENT`), `due_date`, `max_points`, `created_at`, `updated_at`.
-8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`, `sync_status`.
-9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (server synchronized epoch ms), `created_at`, `updated_at`.
-10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. **Strictly omits `correct_answer`.**
-11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`, `sync_status`.
-12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at` (persists conversation during offline study).
-13. **`material_chunks`:** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
+* Write migrations that reproduce `client_offline.sql` and enable `foreign_keys` when the connection opens.
+* **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.
+* **Client-only:** `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`), `materials.local_file_path`, and the `sync_state` key/value table (`hub_id`, `sync_epoch`, `cursor`, `current_user_id`).
+* Apply a pull response and its `next_cursor` inside one `BEGIN`/`COMMIT`; on `reset: true`, wipe mirrored tables but keep `QUEUED_FOR_SYNC` rows.
+* Use explicit TypeScript interfaces generated from or matching `contracts/openapi.yaml`; no `any`.
 
 ---
 
@@ -127,7 +136,7 @@ desktop/
 
 ## 5. Desktop Team Sprint Roadmap & Execution Order
 
-All desktop issues follow `[DESKTOP Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
+All desktop issues follow `[DESKTOP Sprint.Step]`. Each issue names the developer slot (Dev A or Dev B), its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
 
 * **Sprint 0 (Contract Freeze & Technical Spec):**
   * `[DESKTOP 0.1]`: Write desktop/docs/TECH_SPEC.md and get Lead approval ([#37](https://github.com/BootlegYouki/L.A.R.A/issues/37))

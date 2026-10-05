@@ -40,13 +40,14 @@ All applications operate strictly within an isolated local area network (router 
 
 The `contracts/` directory is the single source of truth for all network communication between Local Hub and client applications:
 * **Canonical REST Specification:** `contracts/openapi.yaml` (OpenAPI 3.1).
-* **WebSocket Event Schemas:** `contracts/events/` (`quiz_start.json`, `quiz_submit.json`, `join_request.json`, `join_approval.json`, `ai_stream.json`, `queue_status.json`).
+* **WebSocket Event Schemas:** `contracts/events/*.json` plus `contracts/events/README.md` (handshake, direction table). Events: `EVENT_HELLO`, `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH`, `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_QUIZ_SUBMIT`, `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE`, `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM`, `EVENT_ERROR`.
+* **Auth:** bearer token from `POST /api/auth/login` on every route except `/download`, register and login; errors use `{error:{code,message}}`.
 * **Serialization Case Rule:** All network JSON keys transmitted over HTTP and WebSockets must strictly use **`snake_case`**.
   * Kotlin uses `@SerialName("student_id")`.
   * Rust uses `#[serde(rename_all = "snake_case")]`.
   * TypeScript uses `snake_case` interfaces.
 * **Strict Answer Key Redaction:** When student clients request active quizzes (`GET /api/quizzes/active` or `EVENT_QUIZ_START`), the server **must strictly omit `correct_answer`**. Student models and local databases must never store unsubmitted answer keys.
-* **Contract-First Rule:** Never create or alter endpoints in Kotlin, TypeScript, or Rust without first defining or updating the schema in `contracts/`.
+* **Contract-First Rule:** Never create or alter endpoints in Kotlin, TypeScript, or Rust without first defining or updating the schema in `contracts/`, the mock hub and the tests (a Lead-reviewed `contract-change` PR).
 
 ---
 
@@ -54,19 +55,19 @@ The `contracts/` directory is the single source of truth for all network communi
 
 ### Technology Invariants (No Prisma)
 * **Android Client (`mobile/`):** Must use **Android Room (SQLite)**.
-* **Server Backend (`server/`):** Must use **SQLx (Rust)** or **Drizzle ORM + `better-sqlite3` (Node)**. Single-binary embedded engine.
+* **Server Backend (`server/`):** Must use **SQLx (Rust)** with embedded SQLite. Single-binary engine; no Node backend.
 * **Desktop Client (`desktop/`):** Must use **`@tauri-apps/plugin-sql`**.
 * **Forbidden ORMs:** Never introduce Prisma (causes 50MB binary bloat and packaging failures).
 
-### Schema Parity & Client Slices
-* Core entity tables share identical column definitions across server and clients (`users`, `classrooms`, `enrollments`, `announcements`, `materials`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`).
-* **Client-Only Helper Columns:**
-  * `sync_status`: `'SYNCED'` vs `'QUEUED_FOR_SYNC'` (for offline homework photos and quiz attempts completed at home).
-  * `local_file_path`: Absolute on-disk path of cached offline PDF or video files.
-* **Master Sync Ledger (`sync_revisions`):**
-  * The Hub maintains monotonic change records: `(id, entity_table, entity_id, updated_at)`.
-  * **Pull Phase (`POST /api/sync/pull`):** Client sends `{ student_id, last_synced_at }`; Hub returns deltas; client writes inside a single atomic SQLite transaction.
-  * **Push Phase (`POST /api/sync/push`):** Client uploads queued offline submissions; Hub acknowledges; client marks local rows `'SYNCED'`.
+### Schema, Parity & Sync (details: `rules/database-and-sync.md`)
+* The schema lives only in `contracts/schema/server_master.sql` (16 tables) and `client_offline.sql` (14 tables). Never copy column lists into other docs.
+* **Never on a client:** `pin_hash`, other people's LRN, `correct_answer` or synonyms, server file paths. Clients get other people's names via `PublicUser`.
+* **Client-only:** `sync_status` (`SYNCED` / `QUEUED_FOR_SYNC`), `materials.local_file_path`, `sync_state` (`hub_id`, `sync_epoch`, `cursor`, `current_user_id`).
+* **Sync cursor is `sync_revisions.seq`, an integer sequence, never a timestamp** (the offline Hub clock can be wrong). The Hub writes a revision row in the same transaction as each change, scoped by `classroom_id` and `student_id`.
+  * **Pull (`POST /api/sync/pull`):** `{cursor, hub_id?, sync_epoch?}` -> changed records, tombstones, `users`, `next_cursor`, `has_more`, `reset`. Apply the response and store `next_cursor` in ONE local transaction. On `reset: true` wipe mirrored tables but keep `QUEUED_FOR_SYNC` rows.
+  * **Push (`POST /api/sync/push`):** queued quiz attempts and comments; mark `SYNCED` only from a per-item receipt. Homework photos use the multipart submit route with a client-generated `submission_id`.
+* **Integrity:** never delete users, classrooms or graded rows (deactivate/archive); one ACTIVE quiz per classroom; `quiz_attempts` exists from `begin` as `IN_PROGRESS`.
+* PRAGMAs are connection settings, not migrations (SQLx runs migrations in a transaction).
 * **Offline-First by Default (Home Study Mode):**
   * Zero blocking network error screens when launched offline or away from school.
   * Students can always browse enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline.
@@ -96,10 +97,13 @@ The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary stu
 ### Pedagogical System Prompt Directives
 1. **Never provide direct answers:** If asked "What is the answer to #3?" or "Ano ang sagot?", politely decline:
    *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
-2. **Strict Grounding:** Always ground hints exclusively in the teacher's uploaded lesson module text chunks.
+2. **Strict Grounding:** Always ground hints exclusively in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover the question, say so and point back to the lesson; never answer from general knowledge.
 3. **Step-by-Step Questioning:** Offer one small hint followed by a guiding question.
 4. **Bilingual:** Detect and reply in the pupil's preferred language (English or natural conversational Filipino/Taglish).
-5. **Quiz Lockout:** While a quiz is active, the AI tutor floating button is completely unmounted from the UI, and the Hub server rejects any inference calls with `HTTP 403 / QUIZ_IN_PROGRESS`.
+5. **Quiz Lockout:** While the pupil has an `IN_PROGRESS` quiz attempt, the chat UI is never composed (the AI tab may show a disabled explanation) and the Hub rejects AI requests with `HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`.
+
+### Model Choice Is Open
+MiniCPM5-2B is only a baseline candidate. Choose the model from the evaluation in `rules/socratic-ai-guardrails.md` section 5 (scored test set run on the real Hub machine). Do not claim a model is good enough without those numbers.
 
 ---
 
@@ -117,9 +121,9 @@ Designed to replace paper test printing for DepEd teachers.
 
 ## 6. UI/UX Design Authority & Accessibility (`rules/ui-and-accessibility.md`)
 
-* **Design Team Authority (Primary):** The wireframes, mockups, and prototypes produced by the project's **Design Team** are the primary authority that must be implemented.
-* **Material Design 3 Best Practice:** Developers should implement the Design Team's layouts using Google **Material Design 3 (Material You)** primitives (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) to guarantee native accessibility, elevation, and tactile child-friendly feedback.
-* **Touch Targets (Grades 1–6):** Minimum **52dp** (preferred **56dp**) on all clickable cards, buttons, and radio options.
+* **Design authority:** `docs/design-system.md` and `design-system/` are canonical (tokens only, no gradients, Nunito, Phosphor, purple only for the AI tutor). Layouts are free if they use the documented components and follow Google Classroom as the structural reference.
+* **Components:** `androidx.compose.material3` themed with `design-system/mobile/*` on Android; Tailwind with `design-system/desktop/tailwind.theme.ts` on Desktop.
+* **Touch Targets (Grades 1–6):** Minimum **52dp**, **56dp** for primary actions and quiz options.
 * **Contrast & Typography:** Minimum **4.5:1** text-to-background contrast across all surfaces. Minimum 14sp body text, 18sp headings.
 * **Bilingual Localization:** Zero hardcoded strings. English strings in `values/strings.xml`, Filipino strings in `values-tl/strings.xml`.
 * **CameraX Homework Capture:** Viewfinder must display a clear rectangular document framing guide with automatic downscaling and JPEG compression (<800KB).
@@ -140,9 +144,8 @@ The mobile Android application is a **dual-role client** supporting both Student
 
 ## 8. Developer Tooling & Quality Gates (`rules/developer-tooling-and-testing.md`)
 
-* **Standalone Mock Hub:** Run `python3 scripts/mock_hub.py` to simulate UDP beacon (`:8888`), HTTP REST (`:8080`), byte-range video streaming, and teacher mobile triggers.
-* **Pre-Push Invariant Scanner:** Run `python3 scripts/verify_invariants.py` before opening PRs to catch forbidden cloud imports or missing Filipino string keys.
-* **Automated Test Suite:** Run `python3 -m unittest discover tests` (13/13 tests must pass).
-* **Folder-Level Documentation Invariant:** Major PRs must include updated architectural notes in the assigned folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`) to preserve context for the Lead Developer.
-* **GitFlow Standard:** All feature branches branch off `staging` and open PRs targeting `staging`. Merges to `main` occur only upon sprint milestone completion.
-
+* **Mock Hub:** `python3 scripts/mock_hub.py` simulates the whole contract: UDP beacon, REST with bearer auth, uploads, `206` streaming, and a WebSocket broker on `:8081`. Seed accounts (PIN `1234`): `T-0001` (class code `K7M4QX`), `123456789012`, `123456789013`, `ADMIN-0001`.
+* **Tests:** `python3 -m unittest discover tests` (contract, schema, mock hub behavior and `test_contract_coverage.py`, which fails when contracts and the mock hub drift). All must pass.
+* **Invariant scanner:** `python3 scripts/verify_invariants.py` before every PR (forbidden cloud dependencies, Filipino string parity).
+* **Folder docs:** major PRs update `mobile/docs/`, `desktop/docs/` or `server/docs/`. Each team also has a nested `AGENTS.md` (read the one for your folder) and a `docs/TECH_SPEC.md`.
+* **Workflow:** one issue = one team = one PR; branch from `staging`; contract changes are their own Lead-reviewed PR first; `main` only from `staging` at sprint completion.

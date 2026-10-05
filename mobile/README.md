@@ -5,6 +5,23 @@
 
 ---
 
+## Start Here (New Developer Checklist)
+
+| Step | What to do |
+| :--- | :--- |
+| 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`mobile/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
+| 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38)). The Lead approves it before Sprint 1 work merges. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
+| 4 | Open your sprint milestone and take the next issue in **your slot** (Dev A or Dev B). One issue = one PR. The roadmap is in section 5. |
+| 5 | Scaffold first: [#23](https://github.com/BootlegYouki/L.A.R.A/issues/23). Copy `design-system/mobile/*.kt` to `app/src/main/java/org/lara/app/ui/theme/` and `design-system/mobile/res/font/*.ttf` to `app/src/main/res/font/`. Package is `org.lara.app`. |
+| 6 | Before every PR: run the commands in [`mobile/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `mobile/docs/`. |
+
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+
+**Status:** No application code yet. Contracts, theme files, bundled Nunito and the mock hub are ready.
+
+---
+
 ## 0. Developer Pre-Flight & Hard Invariants
 
 **Every contributor and AI agent working in `mobile/` MUST adhere to these rules:**
@@ -19,8 +36,8 @@
    * All network JSON fields are strictly **`snake_case`**. Annotate Kotlin fields with `@SerialName("field_name")`.
    * **Anti-Cheat Redaction:** The student client must **never** contain fields or Room columns for `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * Visual wireframes and screen flows produced by the **Design Team** are the primary authority that must be implemented.
-   * Implement screens using **Google Material Design 3 (`androidx.compose.material3`)**.
+   * [`docs/design-system.md`](../docs/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young elementary pupils.
    * Text contrast must meet **minimum 4.5:1**.
    * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` and translated to Filipino in `values-tl/strings.xml`.
@@ -41,7 +58,7 @@
 ## 1. Technical Stack & Hardware Profile
 
 * **Language & Runtime:** Kotlin 2.x, Java 17, Android SDK 26 to 35 (Android 8.0 Oreo to Android 15).
-* **UI Framework:** Jetpack Compose with Google Material Design 3 (`androidx.compose.material3`).
+* **UI Framework:** Jetpack Compose with `androidx.compose.material3` components themed by the L.A.R.A design tokens.
 * **Architecture Pattern:** Clean Architecture + MVI/MVVM with Kotlin Coroutines, StateFlow, and ViewModel.
 * **Local Persistence:** Android Room Database (SQLite) with `@Transaction` atomic delta-sync execution.
 * **Networking:** 
@@ -59,7 +76,7 @@
 
 ### 2.1 Dual-Role Architecture (Student & Teacher)
 The app switches navigation graphs depending on authenticated role:
-* **Student NavGraph:** Bottom Navigation (`Stream`, `Classwork`, `Grades`).
+* **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz).
 * **Teacher NavGraph (`TeacherNavGraph`):**
   * **Join Request Approvals:** Bottom sheet showing student Name, LRN, and one-click Accept/Decline buttons.
   * **Stream Broadcasting:** FAB allowing teachers to post announcements to the class directly from their smartphone.
@@ -68,7 +85,7 @@ The app switches navigation graphs depending on authenticated role:
 
 ### 2.2 Paperless Quiz Engine
 * Timed full-screen view with visual countdown timer pill (Green >5m, Yellow ≤5m, Red pulsing ≤2m).
-* **Absolute AI Tutor Lockout:** Floating "Ask L.A.R.A AI" button is completely unmounted from the UI during active test sessions.
+* **Absolute AI Tutor Lockout:** The AI chat UI is never composed while a quiz attempt is `IN_PROGRESS` (the AI tab may show only a disabled explanation).
 * Auto-submit upon timer expiration (`00:00`).
 * If Wi-Fi drops mid-quiz, timer continues locally on hardware clocks (`SystemClock.elapsedRealtime()`). Finished tests save as `'QUEUED_FOR_SYNC'` and auto-flush to the Hub upon reconnect.
 
@@ -84,24 +101,14 @@ The app switches navigation graphs depending on authenticated role:
 
 ## 3. Client Offline Database Schema (Android Room)
 
-Mobile developers must model their Room Database (`@Database`) strictly on the canonical SQL DDL at [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
-### The 13 Room Entities (`org.lara.app.data.local.entities.*`):
-1. **`UserEntity` (`users`):** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
-2. **`ClassroomEntity` (`classrooms`):** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
-3. **`EnrollmentEntity` (`enrollments`):** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
-4. **`AnnouncementEntity` (`announcements`):** `id`, `classroom_id`, `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
-5. **`AnnouncementCommentEntity` (`announcement_comments`):** `id`, `announcement_id`, `author_id`, `content`, `created_at`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
-6. **`MaterialEntity` (`materials`):** `id`, `classroom_id`, `title`, `file_type`, `file_size_bytes`, `extracted_text`, `download_url`, `local_file_path` (cached disk path for home study), `created_at`, `updated_at`.
-7. **`AssignmentEntity` (`assignments`):** `id`, `classroom_id`, `title`, `instructions`, `deped_category` (`WRITTEN_WORK` | `PERFORMANCE_TASK` | `QUARTERLY_ASSESSMENT`), `due_date`, `max_points`, `created_at`, `updated_at`.
-8. **`AssignmentSubmissionEntity` (`assignment_submissions`):** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
-9. **`QuizEntity` (`quizzes`):** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (server synchronized epoch ms), `created_at`, `updated_at`.
-10. **`QuizQuestionEntity` (`quiz_questions`):** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. **Strictly omits `correct_answer`.**
-11. **`QuizAttemptEntity` (`quiz_attempts`):** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`, `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`).
-12. **`AiChatMessageEntity` (`ai_chat_messages`):** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at` (persists conversation during offline home study).
-13. **`MaterialChunkEntity` (`material_chunks`):** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
-
-*All delta-sync batch operations in Room DAOs must be wrapped in `@Transaction`.*
+* One Room entity per table, package `org.lara.app.data.local.entities.*`, same column names and nullability. Add a schema test that compares Room's exported schema with the SQL file.
+* **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.
+* **Client-only:** `sync_status` (`SYNCED` | `QUEUED_FOR_SYNC`), `materials.local_file_path`, and the `sync_state` key/value table (`hub_id`, `sync_epoch`, `cursor`, `current_user_id`).
+* Room cannot express CHECKs or partial indexes: enforce them in the repository layer.
+* Apply a pull response and its `next_cursor` in **one** `@Transaction`; on `reset: true`, wipe mirrored tables but keep `QUEUED_FOR_SYNC` rows.
+* Stay under the **250 MB heap** ceiling: page large lists, never load whole files or full-size bitmaps.
 
 ---
 
@@ -138,7 +145,7 @@ mobile/
 
 ## 5. Mobile Team Sprint Roadmap & Execution Order
 
-All mobile issues follow `[MOBILE Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
+All mobile issues follow `[MOBILE Sprint.Step]`. Each issue names the developer slot (Dev A or Dev B), its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
 
 * **Sprint 0 (Contract Freeze & Technical Spec):**
   * `[MOBILE 0.1]`: Write mobile/docs/TECH_SPEC.md and get Lead approval ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38))
