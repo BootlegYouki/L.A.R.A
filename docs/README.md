@@ -29,6 +29,7 @@ Start here to find the right document. When two documents disagree, the one high
 | [`design-system-showcase.html`](./design-system-showcase.html) | Interactive preview of the design system (fully offline) |
 | [`architecture/developer-ecosystem-and-workflow.md`](./architecture/developer-ecosystem-and-workflow.md) | How the mock hub, contracts and CI let three teams work in parallel |
 | [`templates/TECH_SPEC_TEMPLATE.md`](./templates/TECH_SPEC_TEMPLATE.md) | Template each team fills in Sprint 0 |
+| [`templates/TECH_SPEC_GUIDE.md`](./templates/TECH_SPEC_GUIDE.md) | What a good spec looks like, for developers, the Lead and AI agents |
 | [`plans/`](./plans/) | Historical implementation plans (superseded, kept for context) |
 | `benchmarks/` | Created in Sprint 5 and 6: AI model evaluation, router stress test, phone profiling |
 | `evaluations/`, `audits/` | Created in Sprint 6: SUS and ISO 25010 results, WAN-unplugged audit |
