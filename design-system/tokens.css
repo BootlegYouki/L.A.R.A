@@ -1,0 +1,52 @@
+/**
+ * L.A.R.A. Design System - Master CSS Custom Properties
+ * Brand: 100% Solid Fills · Zero Gradients · Phosphor Icons · Non-Muddy Layered Shadows
+ */
+
+:root {
+  /* Brand Primary */
+  --lara-color-primary-green: #2E9B4B;
+  --lara-color-dark-green: #176B36;
+  --lara-color-light-green: #E4F6E8;
+
+  /* Socratic AI Dedicated Palette */
+  --lara-color-primary-purple: #5145E5;
+  --lara-color-dark-purple: #4035C9;
+  --lara-color-light-purple: #EEEAFE;
+
+  /* Surfaces */
+  --lara-color-canvas-bg: #F7FBFA;
+  --lara-color-surface-white: #FFFFFF;
+  --lara-color-surface-subtle: #F2F6F5;
+  --lara-color-border: #E4EAF0;
+
+  /* Typography Colors */
+  --lara-color-text-primary: #17213D;
+  --lara-color-text-secondary: #667085;
+  --lara-color-text-muted: #98A2B3;
+
+  /* Semantic Status */
+  --lara-color-status-success: #22A447;
+  --lara-color-status-warning: #F5B82E;
+  --lara-color-status-danger: #EF5350;
+  --lara-color-status-info: #3B82F6;
+
+  /* Typography */
+  --lara-font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Radii */
+  --lara-radius-sm: 8px;
+  --lara-radius-md: 12px;
+  --lara-radius-lg: 16px;
+  --lara-radius-pill: 9999px;
+
+  /* Touch Standards */
+  --lara-touch-target-min: 52px;
+  --lara-touch-target-preferred: 56px;
+
+  /* Non-Muddy Navy-Tinted Multi-Layered Shadows */
+  --lara-shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
+  --lara-shadow-card-hover: 0 4px 6px -1px rgba(23, 33, 61, 0.07), 0 2px 4px -2px rgba(23, 33, 61, 0.05);
+  --lara-shadow-elevated: 0 10px 15px -3px rgba(23, 33, 61, 0.08), 0 4px 6px -4px rgba(23, 33, 61, 0.04);
+  --lara-shadow-toast: 0 12px 28px -4px rgba(23, 33, 61, 0.12), 0 4px 8px -2px rgba(23, 33, 61, 0.06);
+}
