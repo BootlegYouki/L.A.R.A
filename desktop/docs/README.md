@@ -22,4 +22,4 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 4. **Gotchas and edge cases:** Tauri capability limits, webview quirks, offline failure modes.
 
 ## Related
-[`../AGENTS.md`](../AGENTS.md) (agent and developer guide), [`../README.md`](../README.md), [`../../contracts/`](../../contracts/), [`../../docs/design-system.md`](../../docs/design-system.md).
+[`../AGENTS.md`](../AGENTS.md) (agent and developer guide), [`../README.md`](../README.md), [`../../contracts/`](../../contracts/), [`../../design-system/design-system.md`](../../design-system/design-system.md).
