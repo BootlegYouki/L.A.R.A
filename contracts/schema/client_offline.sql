@@ -147,15 +147,17 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 );
 
 -- 11. Student Quiz Attempts (With Offline Sync Queue)
+-- Row is created at quiz start (IN_PROGRESS); on finish it becomes SUBMITTED + QUEUED_FOR_SYNC until the Hub confirms.
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
     student_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'IN_PROGRESS' CHECK(status IN ('IN_PROGRESS', 'SUBMITTED')),
     started_at INTEGER NOT NULL,
-    submitted_at INTEGER NOT NULL,
-    score INTEGER NOT NULL DEFAULT 0,          -- Graded score receipt from server
-    total_points INTEGER NOT NULL DEFAULT 0,
-    answers_json TEXT NOT NULL,                -- JSON object of student answers
+    submitted_at INTEGER,
+    score INTEGER,                             -- Graded score receipt from server (NULL until graded)
+    total_points INTEGER,
+    answers_json TEXT NOT NULL DEFAULT '[]',   -- JSON array of {question_id, selected_option}
     updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
@@ -186,3 +188,15 @@ CREATE INDEX IF NOT EXISTS idx_client_questions_order ON quiz_questions(quiz_id,
 CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id, created_at ASC);
+
+-- 13. Pre-chunked lesson text for Socratic grounding (served by GET /api/materials/{id}/chunks)
+CREATE TABLE IF NOT EXISTS material_chunks (
+    id TEXT PRIMARY KEY NOT NULL,
+    material_id TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    heading TEXT,
+    text TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_client_material_chunks_order ON material_chunks(material_id, order_index ASC);

@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS classrooms (
     id TEXT PRIMARY KEY NOT NULL,              -- UUID v4
     name TEXT NOT NULL,                        -- e.g. "Science 4 (Agham 4)"
     section TEXT NOT NULL,                     -- e.g. "Aguinaldo"
-    class_code TEXT UNIQUE NOT NULL,           -- 6-character alphanumeric code (e.g. "SCI4-AG")
+    class_code TEXT UNIQUE NOT NULL,           -- 6-char uppercase code, no 0/O/1/I (e.g. "K7M4QX"); shown grouped "K7M-4QX"
     teacher_id TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
@@ -148,15 +148,18 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 );
 
 -- 11. Student Quiz Attempts & Scores
+-- An attempt row is created when the student starts the quiz (status IN_PROGRESS).
+-- The AI lockout (HTTP 403 / QUIZ_IN_PROGRESS) is enforced while any row for the student is IN_PROGRESS.
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
     student_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'IN_PROGRESS' CHECK(status IN ('IN_PROGRESS', 'SUBMITTED')),
     started_at INTEGER NOT NULL,
-    submitted_at INTEGER NOT NULL,
-    score INTEGER NOT NULL,
-    total_points INTEGER NOT NULL,
-    answers_json TEXT NOT NULL,                -- JSON object of student submitted answers
+    submitted_at INTEGER,                      -- NULL until submitted
+    score INTEGER,                             -- NULL until graded
+    total_points INTEGER,
+    answers_json TEXT NOT NULL DEFAULT '[]',   -- JSON array of {question_id, selected_option}
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -187,6 +190,26 @@ CREATE TABLE IF NOT EXISTS sync_revisions (
     updated_at INTEGER NOT NULL                -- Monotonic epoch timestamp
 );
 
+-- 14. Auth Sessions (opaque bearer tokens issued by POST /api/auth/login)
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY NOT NULL,      -- SHA-256 of the opaque token; the raw token is never stored
+    user_id TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 15. Pre-chunked lesson text for Socratic grounding (resolves ai_stream.grounded_chunk_id)
+CREATE TABLE IF NOT EXISTS material_chunks (
+    id TEXT PRIMARY KEY NOT NULL,
+    material_id TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    heading TEXT,
+    text TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
+);
+
 -- ==============================================================================
 -- COMPOSITE & COVERING INDEXES FOR HIGH-CONCURRENCY CLASSROOM QUERIES
 -- ==============================================================================
@@ -203,3 +226,6 @@ CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id, stud
 CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_sync_revisions_composite ON sync_revisions(classroom_id, updated_at ASC);
 CREATE INDEX IF NOT EXISTS idx_sync_revisions_table ON sync_revisions(entity_table, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_material_chunks_order ON material_chunks(material_id, order_index ASC);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_active ON quiz_attempts(student_id, status);

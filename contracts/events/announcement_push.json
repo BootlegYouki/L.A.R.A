@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnnouncementPushEvent",
+  "description": "Hub to enrolled pupils: a new announcement exists; clients run a delta pull.",
+  "type": "object",
+  "required": [
+    "event",
+    "classroom_id",
+    "announcement_id",
+    "title",
+    "timestamp"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_ANNOUNCEMENT_PUSH"
+    },
+    "classroom_id": {
+      "type": "string"
+    },
+    "announcement_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "integer"
+    }
+  }
+}
