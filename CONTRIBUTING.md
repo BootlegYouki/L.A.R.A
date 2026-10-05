@@ -72,7 +72,7 @@ Any Pull Request containing any of the following will be **immediately rejected*
 2. **Hardware RAM Crashes:** Unoptimized mobile heap allocations (> 250MB) or attempting on-device SLM inference without verifying `physical RAM >= 6GB`.
 3. **Socratic AI Leaks:** Providing direct answers, solution formulas, or homework keys in prompts.
 4. **Quiz Lockout Bypass:** Any pathway that allows the AI tutor to run during an active timed quiz.
-5. **Accessibility Regressions:** Touch targets smaller than 48dp (preferred 56dp) or hardcoding English strings without Filipino localization keys.
+5. **Accessibility Regressions:** Touch targets smaller than 52dp (preferred 56dp) or hardcoding English strings without Filipino localization keys.
 
 ---
 

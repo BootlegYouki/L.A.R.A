@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ErrorEvent",
+  "description": "Hub to client: a WebSocket request was rejected. QUIZ_IN_PROGRESS is the WebSocket equivalent of REST 403 QUIZ_IN_PROGRESS.",
+  "type": "object",
+  "required": [
+    "event",
+    "code",
+    "message"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_ERROR"
+    },
+    "code": {
+      "type": "string",
+      "enum": [
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "QUIZ_IN_PROGRESS",
+        "AI_QUEUE_FULL",
+        "BAD_REQUEST"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    }
+  }
+}

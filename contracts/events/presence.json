@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PresenceEvent",
+  "description": "Hub to teacher sessions: live pupil presence and quiz progress for the submission matrix.",
+  "type": "object",
+  "required": [
+    "event",
+    "classroom_id",
+    "student_id",
+    "state",
+    "timestamp"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_PRESENCE"
+    },
+    "classroom_id": {
+      "type": "string"
+    },
+    "student_id": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "ONLINE",
+        "OFFLINE",
+        "ANSWERING_QUIZ",
+        "SUBMITTED"
+      ]
+    },
+    "timestamp": {
+      "type": "integer"
+    }
+  }
+}

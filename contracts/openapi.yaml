@@ -1,18 +1,31 @@
 openapi: 3.1.0
 info:
   title: L.A.R.A Local Hub REST API
-  description: Offline-first LAN classroom management and assessment API for Philippine elementary schools.
-  version: 1.0.0
+  description: |
+    Offline-first LAN classroom management and assessment API for Philippine elementary schools.
+
+    Conventions (see contracts/naming_rules.md):
+    - All JSON keys are snake_case. All timestamps are epoch milliseconds (integer).
+    - All routes except /download, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
+    - Errors always use the Error envelope: {"error": {"code": "...", "message": "..."}}.
+    - correct_answer is returned ONLY to the teacher who owns the quiz. Student responses never contain it.
+    - Realtime events are on ws://{hub_ip}:8081 (see contracts/events/README.md).
+  version: 1.1.0
 servers:
   - url: http://{hub_ip}:8080
     description: Local Hub Server
     variables:
       hub_ip:
         default: 192.168.1.50
+security:
+  - bearerAuth: []
+
 paths:
   /download:
     get:
       summary: Captive download portal for client APK and desktop installers
+      security: []
+      tags: [portal]
       responses:
         "200":
           description: HTML portal page or binary application package
@@ -21,9 +34,144 @@ paths:
               schema:
                 type: string
 
+  # ---------------------------------------------------------------- AUTH
+  /api/auth/register:
+    post:
+      summary: Self-register a pupil account (teacher accounts are created by the Hub admin)
+      security: []
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lrn_or_id, full_name, pin]
+              properties:
+                lrn_or_id:
+                  type: string
+                  example: "123456789012"
+                full_name:
+                  type: string
+                  example: "Juan dela Cruz"
+                pin:
+                  type: string
+                  pattern: "^[0-9]{4}$"
+      responses:
+        "200":
+          description: Account created and session opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/auth/login:
+    post:
+      summary: Log in with LRN/ID and 4-digit PIN
+      security: []
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lrn_or_id, pin]
+              properties:
+                lrn_or_id:
+                  type: string
+                pin:
+                  type: string
+                  pattern: "^[0-9]{4}$"
+      responses:
+        "200":
+          description: Session opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/auth/logout:
+    post:
+      summary: Close the current session
+      tags: [auth]
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  # ---------------------------------------------------------------- ADMIN (Hub console only)
+  /api/admin/users:
+    get:
+      summary: List all accounts (admin)
+      tags: [admin]
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      summary: Create a teacher or pupil account (admin)
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lrn_or_id, full_name, role, pin]
+              properties:
+                lrn_or_id:
+                  type: string
+                full_name:
+                  type: string
+                role:
+                  type: string
+                  enum: ["TEACHER", "STUDENT"]
+                pin:
+                  type: string
+                  pattern: "^[0-9]{4}$"
+      responses:
+        "200":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /api/admin/users/{id}/reset-pin:
+    post:
+      summary: Reset a user PIN (admin)
+      tags: [admin]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+                  pattern: "^[0-9]{4}$"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  # ---------------------------------------------------------------- CLASSROOMS
   /api/classrooms:
     get:
-      summary: List all active classrooms on this Local Hub
+      summary: List classrooms visible to the caller (teacher - owned; student - ACTIVE and PENDING enrollments)
+      tags: [classrooms]
       responses:
         "200":
           description: List of classrooms
@@ -33,41 +181,56 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Classroom"
-
-  /api/classrooms/join:
     post:
-      summary: Request to enroll in a classroom using a 6-character Class Code
+      summary: Create a classroom and generate its 6-character Class Code (teacher)
+      tags: [classrooms]
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - class_code
-                - student_id
-                - full_name
-                - lrn
+              required: [name, section]
+              properties:
+                name:
+                  type: string
+                  example: "Science 4"
+                section:
+                  type: string
+                  example: "Aguinaldo"
+      responses:
+        "200":
+          description: Created classroom
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Classroom"
+
+  /api/classrooms/join:
+    post:
+      summary: Request to enroll in a classroom using a 6-character Class Code
+      tags: [classrooms]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [class_code]
               properties:
                 class_code:
                   type: string
-                  example: "SCI4-AG"
-                student_id:
-                  type: string
-                  format: uuid
-                full_name:
-                  type: string
-                  example: "Juan dela Cruz"
-                lrn:
-                  type: string
-                  example: "123456789012"
+                  pattern: "^[A-HJ-NP-Z2-9]{6}$"
+                  description: Uppercase, no 0/O/1/I. Clients strip the display hyphen before sending.
+                  example: "K7M4QX"
       responses:
         "200":
-          description: Enrollment status receipt
+          description: Enrollment status receipt. Teacher sessions receive EVENT_JOIN_REQUEST.
           content:
             application/json:
               schema:
                 type: object
+                required: [status, classroom_id]
                 properties:
                   status:
                     type: string
@@ -75,59 +238,190 @@ paths:
                   classroom_id:
                     type: string
                     format: uuid
+        "404":
+          $ref: "#/components/responses/Error"
 
+  /api/classrooms/{id}/roster:
+    get:
+      summary: Enrollment roster with status (teacher)
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RosterEntry"
+
+  /api/classrooms/{id}/approve:
+    post:
+      summary: Approve a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL to the pupil.
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/StudentRef"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  /api/classrooms/{id}/reject:
+    post:
+      summary: Reject a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL with status REJECTED.
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/StudentRef"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  # ---------------------------------------------------------------- SYNC
   /api/sync/pull:
     post:
-      summary: Delta-sync pull handshake for client offline storage
+      summary: Delta-sync pull for client offline storage (scoped to the caller's ACTIVE classrooms)
+      tags: [sync]
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - student_id
-                - last_synced_at
+              required: [last_synced_at]
               properties:
-                student_id:
-                  type: string
-                  format: uuid
                 last_synced_at:
                   type: integer
-                  description: Epoch millisecond timestamp
+                  description: Epoch ms of the previous server_time (0 for a first sync)
       responses:
         "200":
-          description: Delta updates modified after last_synced_at
+          description: Records with updated_at greater than last_synced_at plus tombstones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPullResponse"
+
+  /api/sync/push:
+    post:
+      summary: Delta-sync push for queued offline work (quiz attempts, homework metadata)
+      tags: [sync]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quiz_attempts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/QuizAttemptPush"
+                comments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CommentPush"
+      responses:
+        "200":
+          description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit.
           content:
             application/json:
               schema:
                 type: object
+                required: [acknowledged, receipts]
                 properties:
-                  server_time:
-                    type: integer
-                  announcements:
+                  acknowledged:
+                    type: boolean
+                  receipts:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Announcement"
-                  materials:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Material"
-                  assignments:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Assignment"
+                      type: object
+                      required: [id, status]
+                      properties:
+                        id:
+                          type: string
+                        status:
+                          type: string
+                          enum: ["SYNCED", "REJECTED"]
+                        reason:
+                          type: string
+                          description: e.g. TIME_LIMIT_EXCEEDED
+
+  # ---------------------------------------------------------------- STREAM
+  /api/announcements:
+    post:
+      summary: Post an announcement to a classroom stream (teacher). Emits EVENT_ANNOUNCEMENT_PUSH.
+      tags: [stream]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classroom_id, title, content]
+              properties:
+                classroom_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                content:
+                  type: string
+                allow_comments:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Created announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /api/announcements/{id}:
+    patch:
+      summary: Edit an announcement or toggle comments (teacher)
+      tags: [stream]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                allow_comments:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+    delete:
+      summary: Delete an announcement (teacher). Produces a DELETE tombstone in sync.
+      tags: [stream]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
 
   /api/announcements/{id}/comments:
     get:
       summary: Retrieve comments for a specific announcement
+      tags: [stream]
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: List of announcement comments
@@ -136,167 +430,103 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                    announcement_id:
-                      type: string
-                      format: uuid
-                    author_id:
-                      type: string
-                      format: uuid
-                    content:
-                      type: string
-                    created_at:
-                      type: integer
+                  $ref: "#/components/schemas/Comment"
     post:
-      summary: Post a comment on an announcement
+      summary: Post a comment on an announcement (rejected with 403 COMMENTS_DISABLED when allow_comments is false)
+      tags: [stream]
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - author_id
-                - content
+              required: [content]
               properties:
-                author_id:
-                  type: string
-                  format: uuid
                 content:
                   type: string
       responses:
         "200":
-          description: Comment created
+          description: Created comment
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-                  success:
-                    type: boolean
+                $ref: "#/components/schemas/Comment"
 
-  /api/sync/push:
+  # ---------------------------------------------------------------- MATERIALS
+  /api/materials:
     post:
-      summary: Delta-sync push handshake for offline submissions
+      summary: Upload a lesson file (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
+      tags: [materials]
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
+              required: [classroom_id, title, file_type, file]
               properties:
-                submissions:
-                  type: array
-                  items:
-                    type: object
-                quiz_attempts:
-                  type: array
-                  items:
-                    type: object
-      responses:
-        "200":
-          description: Sync confirmation receipts
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  acknowledged:
-                    type: boolean
-                  synced_ids:
-                    type: array
-                    items:
-                      type: string
-
-  /api/quizzes/active:
-    get:
-      summary: Fetch the currently active quiz for student desks (ANSWER KEYS STRIPPED)
-      responses:
-        "200":
-          description: Active quiz payload without correct_answer fields
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StudentQuizResponse"
-
-  /api/quizzes/{id}/submit:
-    post:
-      summary: Submit student answers for instant auto-grading
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - student_id
-                - started_at
-                - submitted_at
-                - answers
-              properties:
-                student_id:
+                classroom_id:
                   type: string
                   format: uuid
-                started_at:
-                  type: integer
-                submitted_at:
-                  type: integer
-                answers:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      question_id:
-                        type: string
-                        format: uuid
-                      selected_option:
-                        type: string
+                title:
+                  type: string
+                file_type:
+                  type: string
+                  enum: ["VIDEO", "DOCUMENT", "WORKSHEET"]
+                file:
+                  type: string
+                  format: binary
       responses:
         "200":
-          description: Graded receipt
+          description: Created material
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  score:
-                    type: integer
-                  total_points:
-                    type: integer
-                  submitted_at:
-                    type: integer
+                $ref: "#/components/schemas/Material"
+        "413":
+          $ref: "#/components/responses/Error"
+
+  /api/materials/{id}/download:
+    get:
+      summary: Download the full material file
+      tags: [materials]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/TokenQuery"
+      responses:
+        "200":
+          description: File bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /api/materials/{id}/chunks:
+    get:
+      summary: Pre-extracted lesson text chunks for Socratic grounding
+      tags: [materials]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Ordered chunks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaterialChunk"
 
   /api/materials/{id}/stream:
     get:
-      summary: HTTP 206 Byte-Range streaming for educational videos
+      summary: HTTP 206 Byte-Range streaming for educational videos (max 2.0 MB/s per client)
+      tags: [materials]
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/TokenQuery"
         - name: Range
           in: header
           required: false
@@ -309,16 +539,473 @@ paths:
         "200":
           description: Full video content
 
+  # ---------------------------------------------------------------- ASSIGNMENTS
+  /api/assignments:
+    post:
+      summary: Create an assignment (teacher)
+      tags: [assignments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classroom_id, title, deped_category, max_points, due_date]
+              properties:
+                classroom_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                instructions:
+                  type: string
+                deped_category:
+                  $ref: "#/components/schemas/DepEdCategory"
+                max_points:
+                  type: integer
+                due_date:
+                  type: integer
+      responses:
+        "200":
+          description: Created assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+
+  /api/assignments/{id}/submit:
+    post:
+      summary: Upload a homework photo or document (pupil). Idempotent on (assignment_id, student_id); a resubmission replaces the file.
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [submission_id, file]
+              properties:
+                submission_id:
+                  type: string
+                  format: uuid
+                  description: Client-generated id so offline retries are idempotent
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG up to ~800 KB for photos
+      responses:
+        "200":
+          description: Stored submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /api/assignments/{id}/submissions:
+    get:
+      summary: List pupil submissions for an assignment (teacher)
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /api/submissions/{id}:
+    patch:
+      summary: Grade a submission with score and feedback (teacher)
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: integer
+                teacher_feedback:
+                  type: string
+      responses:
+        "200":
+          description: Updated submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /api/submissions/{id}/file:
+    get:
+      summary: Fetch the stored submission image or document (teacher or owning pupil)
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/TokenQuery"
+      responses:
+        "200":
+          description: File bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # ---------------------------------------------------------------- QUIZZES
+  /api/quizzes:
+    post:
+      summary: Create a quiz with questions and answer keys (teacher)
+      tags: [quizzes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherQuizInput"
+      responses:
+        "200":
+          description: Created quiz in DRAFT status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherQuiz"
+
+  /api/quizzes/active:
+    get:
+      summary: Fetch the currently active quiz for the caller's classrooms (ANSWER KEYS STRIPPED)
+      tags: [quizzes]
+      responses:
+        "200":
+          description: Active quiz payload without correct_answer fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentQuizResponse"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/quizzes/{id}:
+    get:
+      summary: Fetch a quiz. Pupils get the redacted payload; the owning teacher gets correct_answer.
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Quiz payload
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/StudentQuizResponse"
+                  - $ref: "#/components/schemas/TeacherQuiz"
+
+  /api/quizzes/{id}/start:
+    post:
+      summary: Activate the quiz and broadcast EVENT_QUIZ_START (teacher)
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Authoritative start time
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [started_at, duration_seconds]
+                properties:
+                  started_at:
+                    type: integer
+                  duration_seconds:
+                    type: integer
+
+  /api/quizzes/{id}/begin:
+    post:
+      summary: Pupil begins the active quiz. Creates the IN_PROGRESS attempt that triggers the AI lockout.
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Attempt opened
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt_id, started_at]
+                properties:
+                  attempt_id:
+                    type: string
+                    format: uuid
+                  started_at:
+                    type: integer
+
+  /api/quizzes/{id}/close:
+    post:
+      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted.
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  /api/quizzes/{id}/submit:
+    post:
+      summary: Submit pupil answers for instant auto-grading. Emits EVENT_GRADE_CONFIRMED.
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [started_at, submitted_at, answers]
+              properties:
+                started_at:
+                  type: integer
+                submitted_at:
+                  type: integer
+                answers:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Answer"
+      responses:
+        "200":
+          description: Graded receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GradeReceipt"
+        "422":
+          $ref: "#/components/responses/Error"
+
+  /api/quizzes/{id}/results:
+    get:
+      summary: Live and final results matrix for all pupils (teacher)
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: One row per enrolled pupil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [student_id, full_name, status]
+                  properties:
+                    student_id:
+                      type: string
+                      format: uuid
+                    full_name:
+                      type: string
+                    status:
+                      type: string
+                      enum: ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED"]
+                    score:
+                      type: integer
+                    total_points:
+                      type: integer
+
+  # ---------------------------------------------------------------- EXPORT & BACKUP
+  /api/export/class-record:
+    post:
+      summary: Export the DepEd Class Record (.xlsx or .csv) to a mounted USB path or as a download (teacher / Hub console)
+      tags: [export]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classroom_id, format]
+              properties:
+                classroom_id:
+                  type: string
+                  format: uuid
+                format:
+                  type: string
+                  enum: ["XLSX", "CSV"]
+                target_path:
+                  type: string
+                  description: Mounted USB path. When omitted the file is returned as the response body.
+      responses:
+        "200":
+          description: Export result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [file_name]
+                properties:
+                  file_name:
+                    type: string
+                  saved_to:
+                    type: string
+
+  /api/backup:
+    post:
+      summary: Create a .lara-backup snapshot on the given path (Hub console)
+      tags: [export]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_path]
+              properties:
+                target_path:
+                  type: string
+      responses:
+        "200":
+          description: Backup written
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [file_name, checksum_sha256]
+                properties:
+                  file_name:
+                    type: string
+                  checksum_sha256:
+                    type: string
+
+  /api/restore:
+    post:
+      summary: Restore from a .lara-backup archive after verifying its checksum (Hub console)
+      tags: [export]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_path]
+              properties:
+                source_path:
+                  type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Opaque session token returned by /api/auth/login
+
+  parameters:
+    TokenQuery:
+      name: token
+      in: query
+      required: false
+      description: Bearer token as a query parameter. Only for media routes consumed by players that cannot set headers (HTML5 video, image views).
+      schema:
+        type: string
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  requestBodies:
+    StudentRef:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [student_id]
+            properties:
+              student_id:
+                type: string
+                format: uuid
+
+  responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success]
+            properties:
+              success:
+                type: boolean
+    Error:
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
   schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: "QUIZ_IN_PROGRESS"
+            message:
+              type: string
+
+    DepEdCategory:
+      type: string
+      enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
+
+    AuthSession:
+      type: object
+      required: [token, expires_at, user]
+      properties:
+        token:
+          type: string
+        expires_at:
+          type: integer
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, lrn_or_id, full_name, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        lrn_or_id:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: ["TEACHER", "STUDENT"]
+
     Classroom:
       type: object
-      required:
-        - id
-        - name
-        - section
-        - class_code
-        - teacher_id
+      required: [id, name, section, class_code, teacher_id]
       properties:
         id:
           type: string
@@ -331,19 +1018,35 @@ components:
           example: "Aguinaldo"
         class_code:
           type: string
-          example: "SCI4-AG"
+          example: "K7M4QX"
         teacher_id:
           type: string
           format: uuid
+        enrollment_status:
+          type: string
+          enum: ["PENDING", "ACTIVE", "REJECTED"]
+          description: Present for pupil callers only
+
+    RosterEntry:
+      type: object
+      required: [student_id, full_name, lrn, status]
+      properties:
+        student_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        lrn:
+          type: string
+        status:
+          type: string
+          enum: ["PENDING", "ACTIVE", "REJECTED"]
+        joined_at:
+          type: integer
 
     Announcement:
       type: object
-      required:
-        - id
-        - classroom_id
-        - title
-        - content
-        - created_at
+      required: [id, classroom_id, title, content, created_at, updated_at]
       properties:
         id:
           type: string
@@ -359,15 +1062,47 @@ components:
           type: boolean
         created_at:
           type: integer
+        updated_at:
+          type: integer
+
+    Comment:
+      type: object
+      required: [id, announcement_id, author_id, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        announcement_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+
+    CommentPush:
+      type: object
+      required: [id, announcement_id, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        announcement_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: integer
 
     Material:
       type: object
-      required:
-        - id
-        - classroom_id
-        - title
-        - file_type
-        - file_size_bytes
+      required: [id, classroom_id, title, file_type, file_size_bytes, updated_at]
       properties:
         id:
           type: string
@@ -384,16 +1119,29 @@ components:
           type: integer
         download_url:
           type: string
+        updated_at:
+          type: integer
+
+    MaterialChunk:
+      type: object
+      required: [id, material_id, order_index, text]
+      properties:
+        id:
+          type: string
+          format: uuid
+        material_id:
+          type: string
+          format: uuid
+        order_index:
+          type: integer
+        heading:
+          type: string
+        text:
+          type: string
 
     Assignment:
       type: object
-      required:
-        - id
-        - classroom_id
-        - title
-        - max_points
-        - due_date
-        - deped_category
+      required: [id, classroom_id, title, max_points, due_date, deped_category]
       properties:
         id:
           type: string
@@ -406,23 +1154,102 @@ components:
         instructions:
           type: string
         deped_category:
-          type: string
-          enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
+          $ref: "#/components/schemas/DepEdCategory"
         max_points:
           type: integer
         due_date:
           type: integer
+        updated_at:
+          type: integer
+
+    Submission:
+      type: object
+      required: [id, assignment_id, student_id, file_type, submitted_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        assignment_id:
+          type: string
+          format: uuid
+        student_id:
+          type: string
+          format: uuid
+        file_type:
+          type: string
+          enum: ["IMAGE", "DOCUMENT"]
+        submitted_at:
+          type: integer
+        score:
+          type: integer
+        teacher_feedback:
+          type: string
+        updated_at:
+          type: integer
+
+    Enrollment:
+      type: object
+      required: [id, classroom_id, student_id, status, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        classroom_id:
+          type: string
+          format: uuid
+        student_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: ["PENDING", "ACTIVE", "REJECTED"]
+        joined_at:
+          type: integer
+        updated_at:
+          type: integer
+
+    Answer:
+      type: object
+      required: [question_id, selected_option]
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        selected_option:
+          type: string
+
+    StudentQuestion:
+      type: object
+      required: [id, order_index, question_text, question_type, options, points]
+      description: Pupil-facing question. MUST NOT contain correct_answer.
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_index:
+          type: integer
+        question_text:
+          type: string
+        question_type:
+          type: string
+          enum: ["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"]
+        options:
+          type: array
+          items:
+            type: string
+        points:
+          type: integer
+        image_url:
+          type: string
 
     StudentQuizResponse:
       type: object
-      required:
-        - id
-        - title
-        - time_limit_minutes
-        - deped_category
-        - questions
+      required: [id, classroom_id, title, time_limit_minutes, deped_category, questions]
       properties:
         id:
+          type: string
+          format: uuid
+        classroom_id:
           type: string
           format: uuid
         title:
@@ -431,36 +1258,180 @@ components:
           type: integer
         started_at:
           type: integer
-          description: Nullable epoch ms when quiz was officially started by teacher
+          description: Nullable epoch ms when the teacher started the quiz
         deped_category:
-          type: string
-          enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
+          $ref: "#/components/schemas/DepEdCategory"
         questions:
           type: array
           items:
+            $ref: "#/components/schemas/StudentQuestion"
+
+    TeacherQuestion:
+      allOf:
+        - $ref: "#/components/schemas/StudentQuestion"
+        - type: object
+          required: [correct_answer]
+          properties:
+            correct_answer:
+              type: string
+            synonyms:
+              type: array
+              items:
+                type: string
+              description: Accepted alternates for IDENTIFICATION questions
+
+    TeacherQuizInput:
+      type: object
+      required: [classroom_id, title, time_limit_minutes, deped_category, questions]
+      properties:
+        classroom_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        instructions:
+          type: string
+        time_limit_minutes:
+          type: integer
+        deped_category:
+          $ref: "#/components/schemas/DepEdCategory"
+        shuffle_questions:
+          type: boolean
+          default: false
+        release_scores_immediately:
+          type: boolean
+          default: true
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeacherQuestion"
+
+    TeacherQuiz:
+      allOf:
+        - $ref: "#/components/schemas/TeacherQuizInput"
+        - type: object
+          required: [id, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: ["DRAFT", "ACTIVE", "CLOSED"]
+            started_at:
+              type: integer
+
+    QuizAttemptPush:
+      type: object
+      required: [id, quiz_id, started_at, submitted_at, answers]
+      properties:
+        id:
+          type: string
+          format: uuid
+        quiz_id:
+          type: string
+          format: uuid
+        started_at:
+          type: integer
+        submitted_at:
+          type: integer
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Answer"
+
+    GradeReceipt:
+      type: object
+      required: [attempt_id, score, total_points, submitted_at]
+      properties:
+        attempt_id:
+          type: string
+          format: uuid
+        score:
+          type: integer
+        total_points:
+          type: integer
+        submitted_at:
+          type: integer
+
+    SyncPullResponse:
+      type: object
+      required: [server_time, has_more]
+      properties:
+        server_time:
+          type: integer
+          description: Store this as the next last_synced_at only after the whole response is committed
+        has_more:
+          type: boolean
+          description: When true, call pull again with last_synced_at set to the previous server_time
+        classrooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Classroom"
+        enrollments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Enrollment"
+        announcements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Announcement"
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        materials:
+          type: array
+          items:
+            $ref: "#/components/schemas/Material"
+        material_chunks:
+          type: array
+          items:
+            $ref: "#/components/schemas/MaterialChunk"
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Assignment"
+        submissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Submission"
+        quizzes:
+          type: array
+          description: Metadata only. Question bodies are fetched via /api/quizzes/{id} after the teacher starts the quiz.
+          items:
             type: object
-            required:
-              - id
-              - order_index
-              - question_text
-              - question_type
-              - options
-              - points
+            required: [id, classroom_id, title, status, time_limit_minutes, deped_category]
             properties:
               id:
                 type: string
                 format: uuid
-              order_index:
-                type: integer
-              question_text:
+              classroom_id:
                 type: string
-              question_type:
+                format: uuid
+              title:
                 type: string
-                enum: ["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"]
-              options:
-                type: array
-                items:
-                  type: string
-              points:
+              status:
+                type: string
+                enum: ["DRAFT", "ACTIVE", "CLOSED"]
+              time_limit_minutes:
                 type: integer
-
+              deped_category:
+                $ref: "#/components/schemas/DepEdCategory"
+              started_at:
+                type: integer
+        quiz_attempts:
+          type: array
+          items:
+            $ref: "#/components/schemas/GradeReceipt"
+        deleted:
+          type: array
+          description: Tombstones from sync_revisions
+          items:
+            type: object
+            required: [entity_table, entity_id]
+            properties:
+              entity_table:
+                type: string
+              entity_id:
+                type: string

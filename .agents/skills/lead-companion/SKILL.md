@@ -40,7 +40,7 @@ Whenever reviewing any pull request, branch, or code snippet, evaluate these fiv
    * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
    * Rule: The AI tutor must be completely unmounted from the UI and rejected on the backend (`HTTP 403`) during an active test.
 5. **Accessibility & Touch Degradation (Elementary Invariant):**
-   * Check for: Clickable elements with touch targets < 48dp (preferred 56dp), hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+   * Check for: Clickable elements with touch targets < 52dp (preferred 56dp), hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
 
 ---
 
