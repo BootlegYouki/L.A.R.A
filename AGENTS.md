@@ -51,7 +51,7 @@ Every contributor and AI agent must consult the dedicated rule files in `rules/`
 ### 1.2 Offline-First Persistence
 * Both client applications (Android and Desktop) must store an offline mirror of all enrolled subjects, announcements, downloaded handouts, video lessons, and quiz histories in local SQLite.
 * Students must be able to launch the app at home in a disconnected state and review materials or interact with the local AI tutor without errors or blocking loaders.
-* Disconnected network operations (submitting finished quizzes, camera homework photos) must be saved locally with state `QUEUED_SYNC` and automatically flush to the Hub upon reconnecting to the classroom Wi-Fi.
+* Disconnected network operations (submitting finished quizzes, camera homework photos) must be saved locally with state `QUEUED_FOR_SYNC` and automatically flush to the Hub upon reconnecting to the classroom Wi-Fi.
 
 ### 1.3 Strict Network Protocol & Port Allocations
 * **HTTP REST Server (Port 8080):** 
@@ -93,10 +93,10 @@ While **MiniCPM5-2B (Int4)** serves as our primary baseline candidate, the syste
 
 ## 3. UI/UX Guidelines (Elementary School Accessibility)
 
-* **Design Authority:** The mockups, screen layouts, and assets produced by the project's **Design Team** are the primary authority that developers must implement.
-* **Material Design 3 Best Practice:** Developers should implement screens using Google Material Design 3 (Material You) tokens and components (`androidx.compose.material3` on Android, Tailwind M3 tokens on Desktop) to realize the Design Team's layouts with built-in accessibility.
+* **Design Authority:** [`docs/design-system.md`](./docs/design-system.md) and the tokens in `design-system/` are canonical for all three apps. Developers are free to design screen layouts as long as they use only the documented tokens, components and rules, and follow Google Classroom as the structural reference (see the Google Classroom reference section in the design system doc).
+* **Components:** Android uses `androidx.compose.material3` components themed with `design-system/mobile/*`. Desktop uses Tailwind with `design-system/desktop/tailwind.theme.ts`. Icons are Phosphor and the font is Nunito, both bundled in `design-system/assets/`.
 * **Target Audience:** Filipino elementary pupils (Grades 1 to 6) and public school teachers (DepEd).
-* **Touch Targets:** Minimum 48dp (preferred 56dp) on mobile for young learners' touch accuracy.
+* **Touch Targets:** Minimum 52dp (preferred 56dp) on mobile for young learners' touch accuracy.
 
 * **Visual Hierarchy:** Large, high-contrast typography, clear iconography accompanied by text labels, and clean cards. Avoid dense nested menus or complex technical terminology.
 * **Bilingual UI:** All user-facing text must be localized into English and Filipino. Never hardcode strings in UI components.

@@ -20,7 +20,8 @@ Core tables share identical column names and types across Server, Mobile, and De
 * **`assignment_submissions`:** `id` (UUID PK), `assignment_id` (FK), `student_id` (FK), `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
 * **`quizzes`:** `id` (UUID PK), `classroom_id` (FK), `title`, `instructions`, `deped_category` (`'WRITTEN_WORK'` | `'PERFORMANCE_TASK'` | `'QUARTERLY_ASSESSMENT'`), `time_limit_minutes`, `status` (`'DRAFT'` | `'ACTIVE'` | `'CLOSED'`), `started_at` (Epoch ms), `created_at`, `updated_at`.
 * **`quiz_questions`:** `id` (UUID PK), `quiz_id` (FK), `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `created_at`, `updated_at`. (Server adds `correct_answer`).
-* **`quiz_attempts`:** `id` (UUID PK), `quiz_id` (FK), `student_id` (FK), `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
+* **`quiz_attempts`:** `id` (UUID PK), `quiz_id` (FK), `student_id` (FK), `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`. A row exists from quiz start (`IN_PROGRESS`); the AI lockout is enforced while one exists for the pupil.
+* **`material_chunks`:** `id` (UUID PK), `material_id` (FK), `order_index`, `heading`, `text`, `updated_at`. Server also has `sessions` (server only, never synced).
 * **`ai_chat_messages`:** `id` (UUID PK), `classroom_id` (FK), `student_id` (FK), `material_id` (FK), `role` (`'USER'` | `'TUTOR'`), `content`, `created_at`.
 
 
@@ -35,7 +36,7 @@ Client databases store an offline slice and must include these helper columns:
    * Values: `'SYNCED'` (confirmed by server) or `'QUEUED_FOR_SYNC'` (created offline at home, pending upload upon Wi-Fi reconnect).
 2. **`local_file_path` (TEXT, Nullable):**
    * Added to `materials`.
-   * Stores the absolute on-disk path of the cached PDF or MP4 file (e.g., `/data/user/0/org.lara.student/files/lesson3.mp4`).
+   * Stores the absolute on-disk path of the cached PDF or MP4 file (e.g., `/data/user/0/org.lara.app/files/lesson3.mp4`).
 
 ---
 
@@ -50,7 +51,8 @@ Client databases store an offline slice and must include these helper columns:
 ## 4. Delta-Sync Handshake & Master Ledger
 
 1. **Server Ledger (`sync_revisions`):**
-   * The Hub maintains a monotonic record of changes: `(id, entity_table, entity_id, action, updated_at)`.
+   * The Hub maintains a monotonic record of changes: `(id, classroom_id, entity_table, entity_id, action, updated_at)`.
+   * `classroom_id` scopes the changes to specific classes (or `NULL` for global/profile updates), ensuring delete events and resource changes can be filtered per student without scanning deleted rows.
    * `action` is `'UPSERT'` or `'DELETE'`. This allows clients to reliably purge deleted announcements and materials.
 2. **Pull Phase (`POST /api/sync/pull`):**
    * Client transmits `{ student_id, last_synced_at }`.
