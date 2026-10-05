@@ -64,7 +64,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
 2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
 3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, DepEd export, backup.
-4. **Lead Developer:** reviews every PR with the `lead-companion` protocol, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
+4. **Lead Developer:** reviews every PR with the `lara-co-lead` PR review protocol, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
 Rule documents (read the ones for your task):
 * [`rules/developer-tooling-and-testing.md`](./rules/developer-tooling-and-testing.md)
