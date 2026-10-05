@@ -16,7 +16,7 @@
 | 5 | Scaffold first: [#29](https://github.com/BootlegYouki/L.A.R.A/issues/29) (Tauri + React + SQLite + tokens). Copy `design-system/assets/` to `desktop/src/assets/design-system/` and import the font and icon CSS from `index.css`. |
 | 6 | Before every PR: run the commands in [`desktop/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `desktop/docs/`. |
 
-**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
 **Status:** No application code yet. Contracts, tokens, bundled fonts/icons and the mock hub are ready.
 
@@ -34,7 +34,7 @@
    * All network JSON fields are strictly **`snake_case`**.
    * **Anti-Cheat Redaction:** The student view must never receive or parse `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`docs/design-system.md`](../docs/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
    * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
    * Touch and click targets must be minimum 52dp (40px compact only on teacher tables), contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.

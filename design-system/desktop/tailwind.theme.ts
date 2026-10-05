@@ -1,6 +1,6 @@
 /**
  * L.A.R.A. Tailwind theme extension (Tailwind 3 style config, or Tailwind 4 via `@config`).
- * Mirrors the "React + Tailwind" code in docs/design-system-showcase.html.
+ * Mirrors the "React + Tailwind" code in design-system/showcase.html.
  *
  * Usage in tailwind.config.ts:
  *   import { laraTheme } from './design-system/desktop/tailwind.theme';

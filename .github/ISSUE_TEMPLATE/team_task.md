@@ -32,5 +32,5 @@ What this delivers and why, in two or three sentences.
 
 ### Docs & Design
 - Update the team's `docs/` folder (purpose, key files, data flow, gotchas).
-- **Design system:** relevant sections of `docs/design-system.md` (or N/A).
+- **Design system:** relevant sections of `design-system/design-system.md` (or N/A).
 - PR evidence: build or test output plus a log or screenshot against the mock hub, WAN unplugged.

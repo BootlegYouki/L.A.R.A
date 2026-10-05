@@ -2,7 +2,7 @@
 
 > Canonical design rules for every L.A.R.A. surface: the Android pupil app (Kotlin, Jetpack Compose), the Teacher Desktop Hub (React + Tailwind), and the Server Web Portal (React + Tailwind).
 > Mental model: Google Classroom, with a custom visual brand for Filipino elementary pupils.
-> Interactive reference with live previews and copy-ready code for both platforms: `docs/design-system-showcase.html`.
+> Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`.
 
 ---
 
@@ -89,7 +89,7 @@ Contrast notes: Text Muted is never used for essential content. White on Primary
 | Label | 14 / 20 | ExtraBold 800 | `labelLarge` | `text-sm leading-5 font-extrabold` | Buttons, form labels, nav items |
 | Caption | 12 / 16 | SemiBold 600 | `bodySmall` | `text-xs leading-4 font-semibold` | Timestamps, badges, metadata |
 
-The type scale matches `docs/design-system-showcase.html` and `design-system/mobile/Type.kt`. In Compose, styles the scale does not name (for example `titleLarge`) are still Nunito, so no Material component falls back to the system font.
+The type scale matches `design-system/showcase.html` and `design-system/mobile/Type.kt`. In Compose, styles the scale does not name (for example `titleLarge`) are still Nunito, so no Material component falls back to the system font.
 
 Rules:
 - Minimum body size on pupil screens is 16.
@@ -297,7 +297,7 @@ Each component below has live previews and copy-ready React and Kotlin code in t
 - [ ] Assessment lock rules respected (no AI during an active quiz)
 - [ ] Accessible names, roles and states set; focus order checked
 - [ ] Strings localized (English and Filipino) with no hard-coded text
-- [ ] Matches the corresponding entry in `docs/design-system-showcase.html`. If you add or change a component, update the showcase and this file in the same change
+- [ ] Matches the corresponding entry in `design-system/showcase.html`. If you add or change a component, update the showcase and this file in the same change
 
 ---
 

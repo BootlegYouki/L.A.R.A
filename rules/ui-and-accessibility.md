@@ -8,7 +8,7 @@ All AI agents and contributors must follow these rules.
 
 ## 1. Design Authority & L.A.R.A Custom Brand System
 
-* **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`docs/design-system.md`](../docs/design-system.md) and previewed in [`docs/design-system-showcase.html`](../docs/design-system-showcase.html).
+* **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`design-system/design-system.md`](../design-system/design-system.md) and previewed in [`design-system/showcase.html`](../design-system/showcase.html).
 * **Google Classroom Mental Model:** Use Google Classroom structures (Class Cards, Stream announcements with teacher avatars, Classwork materials with icons) as the UX mental model, paired with L.A.R.A brand tokens.
 * **Core Brand Tokens (Zero Gradients):**
   * **Primary Green (`#2E9B4B`):** General classroom learning, active tabs, buttons.

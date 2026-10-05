@@ -16,7 +16,7 @@
 | 5 | Scaffold first: [#23](https://github.com/BootlegYouki/L.A.R.A/issues/23). Copy `design-system/mobile/*.kt` to `app/src/main/java/org/lara/app/ui/theme/` and `design-system/mobile/res/font/*.ttf` to `app/src/main/res/font/`. Package is `org.lara.app`. |
 | 6 | Before every PR: run the commands in [`mobile/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `mobile/docs/`. |
 
-**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
 **Status:** No application code yet. Contracts, theme files, bundled Nunito and the mock hub are ready.
 
@@ -36,7 +36,7 @@
    * All network JSON fields are strictly **`snake_case`**. Annotate Kotlin fields with `@SerialName("field_name")`.
    * **Anti-Cheat Redaction:** The student client must **never** contain fields or Room columns for `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`docs/design-system.md`](../docs/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young elementary pupils.
    * Text contrast must meet **minimum 4.5:1**.
