@@ -38,9 +38,26 @@ Whenever reviewing any pull request, branch, or code snippet, evaluate these fiv
    * Rule: The AI tutor must guide step-by-step using teacher-provided lesson chunks without revealing answers.
 4. **Assessment Integrity Bypass (Quiz Lockout Invariant):**
    * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
-   * Rule: The AI tutor must be completely unmounted from the UI and rejected on the backend (`HTTP 403`) during an active test.
+   * Rule: While the pupil has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the backend must reject AI requests (`HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`).
 5. **Accessibility & Touch Degradation (Elementary Invariant):**
-   * Check for: Clickable elements with touch targets < 52dp (preferred 56dp), hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+   * Check for: Clickable elements with touch targets < 52dp (56dp for primary actions and quiz options), hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+
+---
+
+### Additional Blockers (also `REQUEST CHANGES`)
+
+6. **Secrets or Keys Reaching a Client:** `pin_hash`, another person's LRN, `correct_answer` or synonyms, or server `file_path` in a response, a client table, a DTO or a log line. Student serializers must be separate types that cannot hold `correct_answer`.
+7. **Contract Drift:** an endpoint, event or column added or changed in code but not first in `contracts/`, or a `contracts/` change without the matching `scripts/mock_hub.py` and test updates. Check that `python3 -m unittest discover tests` output is attached.
+8. **Sync Correctness:** a timestamp used as the sync cursor; a pull response applied without storing `next_cursor` in the same transaction; no handling of `reset: true`; a revision row not written in the same transaction as the change; `SYNCED` set without a server receipt.
+9. **Scope Violation:** a PR that touches more than one team's folder, edits Lead-owned paths (`contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, `AGENTS.md`) inside a feature PR, or does not match the linked issue.
+10. **Destructive Data Handling:** deleting users, classrooms or graded rows instead of deactivating or archiving.
+
+### Also Check (usually `NEEDS DISCUSSION` or a nit)
+* Design tokens only (no invented hex, gradients, non-Phosphor icons, non-Nunito fonts); purple used only for the AI tutor.
+* Offline state, empty state and loading skeleton exist for every new screen; English and Filipino strings present.
+* Server authorisation by role and class ownership, not only in the UI.
+* Evidence is real: build or test output, a log or screenshot against the mock hub, and a plain statement of anything not verified.
+* Docs updated in the team folder (and `TECH_SPEC.md` if the design changed).
 
 ---
 

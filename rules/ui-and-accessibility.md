@@ -38,11 +38,7 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
 
 * **Contrast Ratio:** Text-to-background contrast must maintain at least **4.5:1** across all surface container roles to ensure readability under bright tropical classroom lighting.
 * **Typography Scale:** Avoid dense, tiny fonts. Use minimum 14sp for body text and 18sp for titles.
-* **Subject Color Coding:**
-  * **Science (Agham):** Green accents (`#146C2E` / `#C4EED0`).
-  * **Mathematics (Matematika):** Blue accents (`#0B57D0` / `#D3E3FD`).
-  * **English:** Amber accents (`#705D00` / `#FFE16D`).
-  * **Filipino & Araling Panlipunan:** Rose accents (`#984061` / `#FFD9E2`).
+* **Subject colors:** the design system does not define per-subject colors, and tokens-only is an invariant. Do not use per-subject hex accents unless the Lead adds them to `design-system/tokens.json` first.
 
 ---
 

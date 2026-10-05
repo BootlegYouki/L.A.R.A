@@ -5,7 +5,7 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 ## Handshake
 1. Client opens `ws://<hub-ip>:8081`.
 2. Client sends `EVENT_HELLO` with the bearer token from `POST /api/auth/login` (and `last_event_id` after a reconnect).
-3. Hub replies `{"event":"EVENT_HELLO_ACK","server_time":<epoch ms>}`. Invalid token: Hub closes with code `4401`.
+3. Hub replies `{"event":"EVENT_HELLO_ACK","server_time":<epoch ms>,"hub_id":"<id>","sync_epoch":<int>}`. Invalid token: Hub closes with code `4401`. A client whose stored `hub_id` or `sync_epoch` differs must run a full sync (see `POST /api/sync/pull`, `reset`).
 4. Clients reconnect with exponential backoff (1s, 2s, 4s, max 10s) and must never show a blocking error; offline-first rules apply.
 
 ## Direction
