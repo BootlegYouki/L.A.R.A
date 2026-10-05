@@ -45,7 +45,7 @@ Before opening a PR targeting `staging`:
 2. **PR Template:** Complete all sections in `.github/PULL_REQUEST_TEMPLATE.md`. CI (contracts, guardrails and the team job) must be green.
 3. **Subsystem Documentation Updated:** Must include documentation of changes within the assigned subsystem folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`).
 4. **Attach Verification Evidence:** Attach a log snippet, terminal output, or screenshot proving your code works on local LAN with zero internet.
-5. **Lead Review:** Wait for the Lead Developer's audit using the `lead-companion` protocol before merging.
+5. **Lead Review:** Wait for the Lead Developer's audit using the `lara-co-lead` PR review protocol before merging.
 
 ---
 

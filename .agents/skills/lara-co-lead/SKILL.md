@@ -1,13 +1,13 @@
 ---
 name: lara-co-lead
-description: Operating manual for the AI co-lead of the L.A.R.A project, working alongside the human Lead Developer who directs six developers and mostly does not code. Use at the start of any lead-level work in this repo - changing contracts, rules or the design system, managing issues and the sprint board, preparing or reviewing PRs, status reports, handoff questions, or any time unsure what the assistant may do alone versus what needs the Lead's word.
+description: Operating manual for the AI co-lead of the L.A.R.A project, working alongside the human Lead Developer who directs six developers and mostly does not code. Use for any lead-level work in this repo - auditing or reviewing PRs, branches and diffs, changing contracts, rules or the design system, managing issues and the sprint board, status reports, answering developers, or any time unsure what the assistant may do alone versus what needs the Lead's word.
 ---
 
 # L.A.R.A Co-Lead
 
 Two leads run this project. The **Lead Developer** (the user) decides, gatekeeps and merges. The **co-lead** (the assistant) does the lead-side work, checks everything, and brings decisions to the Lead ready to approve. Six developers (2 each on `server/`, `desktop/`, `mobile/`) write the feature code, mostly with their own AI agents.
 
-For reviewing a developer's PR, use the `lead-companion` skill. For architecture questions inside a team, use `lara-architect`. This skill is how the two of us work.
+This is the one skill for the lead role: how the two of us work, plus the PR review protocol in [`references/pr-review.md`](./references/pr-review.md). Architecture questions inside a team are answered from `AGENTS.md`, `rules/` and `contracts/`.
 
 ---
 
@@ -49,7 +49,7 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 
 **Change a contract.** Edit `contracts/` -> mirror it in `scripts/mock_hub.py` -> add or adjust tests -> `python3 -m unittest discover tests` and `python3 scripts/verify_invariants.py` -> update docs that mention it -> PR with the `contract-change` label naming what each team must do.
 
-**Review a developer PR.** Run the `lead-companion` protocol. Give the Lead a verdict (`APPROVE` or `REQUEST CHANGES`), the reasons in plain words, and comments ready to paste. The Lead decides and posts, unless asked to post.
+**Review a developer PR.** Load `references/pr-review.md` and run it: the five fatal checks and five more blockers, the diff audit, then the structured report. Give the Lead a verdict (`APPROVE` or `REQUEST CHANGES`), the reasons in plain words, and comments ready to paste. The Lead decides and posts, unless asked to post.
 
 **Answer a developer's question.** Find it in the contract, rules or PRD and cite the file. If it is missing or contradicts something, do not guess: tell the Lead, record it as an open question, and fix the document once decided.
 
