@@ -49,9 +49,10 @@ class TestContracts(unittest.TestCase):
         with open("contracts/schema/server_master.sql", "r", encoding="utf-8") as f:
             conn_server.executescript(f.read())
         cur_server = conn_server.cursor()
-        cur_server.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 15, f"Server master must have exactly 15 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 16, f"Server master must have exactly 16 tables, got {server_tables}")
+        self.assertIn("hub_meta", server_tables)
         self.assertIn("sessions", server_tables)
         self.assertIn("material_chunks", server_tables)
         self.assertIn("announcement_comments", server_tables)
@@ -70,6 +71,20 @@ class TestContracts(unittest.TestCase):
         self.assertIn("status", attempt_cols)
         self.assertEqual(attempt_cols["submitted_at"][3], 0, "submitted_at must be nullable")
         self.assertEqual(attempt_cols["score"][3], 0, "score must be nullable")
+
+        cur_server.execute("PRAGMA table_info(sync_revisions);")
+        rev_cols = [r[1] for r in cur_server.fetchall()]
+        self.assertEqual(rev_cols[0], "seq", "sync cursor must be an integer sequence, not a timestamp")
+        self.assertIn("student_id", rev_cols)
+        cur_server.execute("SELECT sql FROM sqlite_master WHERE name='sync_revisions'")
+        self.assertIn("AUTOINCREMENT", cur_server.fetchone()[0])
+        cur_server.execute("PRAGMA table_info(quiz_questions);")
+        self.assertIn("synonyms_json", [r[1] for r in cur_server.fetchall()])
+        for table in ("assignments", "quizzes"):
+            cur_server.execute(f"PRAGMA table_info({table});")
+            self.assertIn("quarter", [r[1] for r in cur_server.fetchall()], f"{table} needs quarter for the DepEd record")
+        cur_server.execute("PRAGMA table_info(materials);")
+        self.assertNotIn("extracted_text", [r[1] for r in cur_server.fetchall()], "lesson text lives in material_chunks only")
         conn_server.close()
 
         # Test client offline schema
@@ -77,9 +92,10 @@ class TestContracts(unittest.TestCase):
         with open("contracts/schema/client_offline.sql", "r", encoding="utf-8") as f:
             conn_client.executescript(f.read())
         cur_client = conn_client.cursor()
-        cur_client.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        cur_client.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         client_tables = [r[0] for r in cur_client.fetchall()]
-        self.assertEqual(len(client_tables), 13, f"Client offline must have exactly 13 tables, got {client_tables}")
+        self.assertEqual(len(client_tables), 14, f"Client offline must have exactly 14 tables, got {client_tables}")
+        self.assertIn("sync_state", client_tables)
         self.assertNotIn("sessions", client_tables)
         self.assertNotIn("sync_revisions", client_tables)
 
@@ -87,6 +103,11 @@ class TestContracts(unittest.TestCase):
         cur_client.execute("PRAGMA table_info(quiz_questions);")
         qq_cols = [r[1] for r in cur_client.fetchall()]
         self.assertNotIn("correct_answer", qq_cols, "CRITICAL: correct_answer must not exist on client schema!")
+
+        cur_client.execute("PRAGMA table_info(users);")
+        user_cols = {r[1]: r for r in cur_client.fetchall()}
+        self.assertNotIn("pin_hash", user_cols, "CRITICAL: PIN hashes must never be stored on a client")
+        self.assertEqual(user_cols["lrn_or_id"][3], 0, "client lrn_or_id must be nullable (classmates' LRN is not synced)")
 
         cur_client.execute("PRAGMA table_info(quiz_attempts);")
         client_attempt_cols = [r[1] for r in cur_client.fetchall()]

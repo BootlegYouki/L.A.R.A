@@ -153,15 +153,75 @@ class TestMockHub(unittest.TestCase):
         ws.send({"event": "EVENT_HELLO", "token": "nope"})
         self.assertEqual(ws.recv(), {"event": "CLOSED", "code": 4401})
 
+    def pull(self, token, **body):
+        status, data, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0, **body}, token)
+        self.assertEqual(status, 200, data)
+        return data
+
     def test_teacher_mobile_announcement_post_and_pull(self):
+        first = self.pull(self.pupil)
         status, ann, _ = call(BASE, "POST", "/api/announcements", {
             "classroom_id": CLASSROOM, "title": "Field Trip", "content": "Magdala ng tubig."}, self.teacher)
         self.assertEqual(status, 200)
-        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"last_synced_at": 0}, self.pupil)
-        self.assertIn(ann["id"], [a["id"] for a in pull["announcements"]])
+        delta = self.pull(self.pupil, cursor=first["next_cursor"])
+        self.assertEqual([a["id"] for a in delta["announcements"]], [ann["id"]])
         call(BASE, "DELETE", f"/api/announcements/{ann['id']}", token=self.teacher)
-        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"last_synced_at": 0}, self.pupil)
-        self.assertIn(ann["id"], [d["entity_id"] for d in pull["deleted"]])
+        delta = self.pull(self.pupil, cursor=delta["next_cursor"])
+        self.assertEqual([d["entity_id"] for d in delta["deleted"]], [ann["id"]])
+
+    def test_cursor_never_misses_changes_made_in_the_same_millisecond(self):
+        first = self.pull(self.pupil)
+        ids = []
+        for n in range(5):
+            _, ann, _ = call(BASE, "POST", "/api/announcements", {
+                "classroom_id": CLASSROOM, "title": f"A{n}", "content": "x"}, self.teacher)
+            ids.append(ann["id"])
+        delta = self.pull(self.pupil, cursor=first["next_cursor"])
+        self.assertEqual(sorted(a["id"] for a in delta["announcements"]), sorted(ids))
+        again = self.pull(self.pupil, cursor=delta["next_cursor"])
+        self.assertEqual(again["announcements"], [], "a pull after the last cursor must be empty")
+
+    def test_first_pull_returns_everything_and_identifies_the_hub(self):
+        data = self.pull(self.pupil)
+        self.assertTrue(data["hub_id"] and data["sync_epoch"] >= 1)
+        self.assertFalse(data["reset"])
+        self.assertTrue(data["announcements"] and data["materials"] and data["material_chunks"] and data["assignments"])
+
+    def test_pull_from_a_different_hub_or_epoch_asks_for_a_reset(self):
+        known = self.pull(self.pupil)
+        data = self.pull(self.pupil, cursor=known["next_cursor"], hub_id="some-other-hub", sync_epoch=1)
+        self.assertTrue(data["reset"])
+        self.assertTrue(data["announcements"], "after a reset the response starts again from cursor 0")
+        ok = self.pull(self.pupil, cursor=known["next_cursor"], hub_id=known["hub_id"], sync_epoch=known["sync_epoch"])
+        self.assertFalse(ok["reset"])
+
+    def test_pull_never_leaks_pin_data_or_other_pupils_lrn(self):
+        data = self.pull(self.pupil)
+        self.assertNotIn("pin_hash", json.dumps(data))
+        mine = next(u for u in data["users"] if u["full_name"] == "Juan dela Cruz")
+        self.assertIn("lrn_or_id", mine)
+        others = [u for u in data["users"] if u["id"] != mine["id"]]
+        self.assertTrue(others)
+        self.assertTrue(all("lrn_or_id" not in u for u in others), "a pupil must not receive classmates' LRN")
+        teacher_view = self.pull(self.teacher)
+        self.assertTrue(all("lrn_or_id" in u for u in teacher_view["users"]))
+
+    def test_submissions_are_scoped_to_their_owner(self):
+        ana = login(BASE, "123456789013")
+        call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)
+        _, roster, _ = call(BASE, "GET", f"/api/classrooms/{CLASSROOM}/roster", token=self.teacher)
+        sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
+        call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        boundary = "XX"
+        body = (f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\nsub-1\r\n'
+                f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="a.jpg"\r\n\r\nJPEGDATA\r\n--{boundary}--\r\n').encode()
+        status, _, _ = call(BASE, "POST", f"/api/assignments/{asg}/submit", token=self.pupil, raw=body,
+                            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(self.pull(self.pupil)["submissions"]), 1)
+        self.assertEqual(self.pull(self.teacher)["submissions"][0]["student_id"], self.pull(self.pupil)["submissions"][0]["student_id"])
+        self.assertEqual(self.pull(ana)["submissions"], [], "classmates must never see each other's homework")
 
     def test_admin_routes_are_admin_only(self):
         status, _, _ = call(BASE, "GET", "/api/admin/users", token=self.teacher)
