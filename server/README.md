@@ -1,7 +1,25 @@
 # L.A.R.A Local Hub Server (`server/`)
 
 > **Subsystem Scope:** Teacher Host System & Local Area Network (LAN) Server.  
+> **Deployment:** one Hub per school on a **dedicated, always-on PC wired to the router**, serving every teacher and pupil. The same app also runs on a team laptop for demos.  
 > **Repository Role:** Single source of truth for the offline classroom: serves the captive APK portal, orchestrates live quiz WebSockets, manages the SQLite delta-sync ledger, and runs the multi-slot SLM inference queue.
+
+---
+
+## Start Here (New Developer Checklist)
+
+| Step | What to do |
+| :--- | :--- |
+| 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`server/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
+| 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36)). The Lead approves it before Sprint 1 work merges. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
+| 4 | Open your sprint milestone and take the next issue in **your slot** (Dev A or Dev B). One issue = one PR. The roadmap is in section 5. |
+| 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so Dev A and Dev B can add routes without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
+| 6 | Before every PR: run the commands in [`server/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `server/docs/`. |
+
+**Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`docs/design-system.md`](../docs/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
+
+**Status:** No backend code yet. The contracts, SQL schema and a full behavioral reference (the mock hub) are ready.
 
 ---
 
@@ -26,7 +44,7 @@
      netsh advfirewall firewall add rule name="LARA Discovery Beacon" dir=in action=allow protocol=UDP localport=8888
      ```
    * The Hub dashboard must include an in-app LAN Port Health Check indicator.
-5. **Database Stack Invariant:** Use embedded **SQLite via SQLx (Rust)** or **Drizzle + `better-sqlite3` (Node)** with monotonic `sync_revisions` tracking. **Prisma is strictly forbidden.**
+5. **Database Stack Invariant:** Use embedded **SQLite via SQLx (Rust)** with monotonic `sync_revisions` tracking. **Prisma is strictly forbidden.**
 6. **Strict Anti-Cheat Redaction:** When serving active quizzes to student clients (`GET /api/quizzes/active`), the server **must strictly omit `correct_answer`**.
 7. **Canonical Network Contracts (`contracts/`):**
    * Check [`../contracts/openapi.yaml`](../contracts/openapi.yaml) and [`../contracts/events/`](../contracts/events/) before creating or altering any route or payload.
@@ -71,8 +89,8 @@
 * Unique 6-character Class Code generator (e.g. `K7M4QX`, no 0/O/1/I).
 * Real-time join approval push notifications over WebSockets.
 * Two-way delta-sync engine:
-  * `POST /api/sync/pull`: Returns deltas modified after client's `last_synced_at`.
-  * `POST /api/sync/push`: Accepts queued offline quiz attempts and compressed homework photos.
+  * `POST /api/sync/pull`: Cursor-based deltas (`cursor` -> `next_cursor`, with `hub_id`, `sync_epoch` and `reset`).
+  * `POST /api/sync/push`: Accepts queued quiz attempts and comments. Homework photos arrive through `POST /api/assignments/{id}/submit` (multipart, client-generated `submission_id`).
 
 ### 2.4 Timed Paperless Quiz Engine & Auto-Grading
 * Synchronized `EVENT_QUIZ_START` broadcast over WebSockets.
@@ -88,24 +106,14 @@
 
 ## 3. Dedicated Server SQLite Schema (Master Local Hub)
 
-Server developers must configure and execute their SQLx / SQLite migrations strictly adhering to the canonical SQL DDL at [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql).
+> **Source of truth:** [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql) (16 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
-### The 15 Authoritative Master Tables:
-1. **`users`:** `id`, `lrn_or_id`, `full_name`, `role` (`TEACHER` | `STUDENT`), `pin_hash`, `created_at`, `updated_at`.
-2. **`classrooms`:** `id`, `name`, `section`, `class_code`, `teacher_id`, `created_at`, `updated_at`.
-3. **`enrollments`:** `id`, `classroom_id`, `student_id`, `status` (`PENDING` | `ACTIVE` | `REJECTED`), `joined_at`, `updated_at`.
-4. **`announcements`:** `id`, `classroom_id`, `title`, `content`, `allow_comments`, `created_at`, `updated_at`.
-5. **`announcement_comments`:** `id`, `announcement_id`, `author_id`, `content`, `created_at`, `updated_at`.
-6. **`materials`:** `id`, `classroom_id`, `title`, `file_type`, `file_path`, `file_size_bytes`, `extracted_text`, `created_at`, `updated_at`.
-7. **`assignments`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category` (`WRITTEN_WORK` | `PERFORMANCE_TASK` | `QUARTERLY_ASSESSMENT`), `due_date`, `max_points`, `created_at`, `updated_at`.
-8. **`assignment_submissions`:** `id`, `assignment_id`, `student_id`, `file_path`, `file_type`, `submitted_at`, `score`, `teacher_feedback`, `updated_at`.
-9. **`quizzes`:** `id`, `classroom_id`, `title`, `instructions`, `deped_category`, `time_limit_minutes`, `status` (`DRAFT` | `ACTIVE` | `CLOSED`), `started_at` (authoritative epoch ms), `created_at`, `updated_at`.
-10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `correct_answer` (authoritative answer key for auto-grader), `created_at`, `updated_at`.
-11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `status` (`IN_PROGRESS` | `SUBMITTED`), `started_at`, `submitted_at` (nullable), `score` (nullable), `total_points` (nullable), `answers_json`, `updated_at`.
-12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at`.
-13. **`sync_revisions`:** `id`, `classroom_id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
-14. **`sessions`:** `token_hash`, `user_id`, `created_at`, `expires_at` (opaque bearer tokens; the raw token is never stored; server only).
-15. **`material_chunks`:** `id`, `material_id`, `order_index`, `heading`, `text`, `updated_at` (pre-chunked lesson text for Socratic grounding).
+* **Migrations:** one SQL migration per logical group under `backend/src/db/migrations/`, reproducing `server_master.sql` exactly. PRAGMAs are connection options, not migration statements.
+* **Never log or return:** `users.pin_hash`, `quiz_questions.correct_answer`, `synonyms_json`, server `file_path` values, raw session tokens.
+* **Sync ledger:** every write a client must see also inserts a `sync_revisions` row in the same transaction. The cursor is `seq`, never a timestamp.
+* **Identity:** create `hub_meta.hub_id` on first run; bump `hub_meta.sync_epoch` on restore from backup or when pruning old tombstones.
+* **Deletion:** never delete users, classrooms or graded rows. Deactivate or archive.
+* **Student-facing serializers** are separate types that cannot contain `correct_answer`. A test must scan every student route's JSON for it.
 
 ---
 
@@ -137,7 +145,7 @@ server/
 
 ## 5. Server Team Sprint Roadmap & Execution Order
 
-All server issues follow `[SERVER Sprint.Step]`. The issue body names the developer slot (Dev A / Dev B), dependencies and the contract it implements. Issues are generated from GitHub; check the milestone for the latest state.
+All server issues follow `[SERVER Sprint.Step]`. Each issue names the developer slot (Dev A or Dev B), its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
 
 * **Sprint 0 (Contract Freeze & Technical Spec):**
   * `[SERVER 0.1]`: Write server/docs/TECH_SPEC.md and get Lead approval ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36))
@@ -147,6 +155,7 @@ All server issues follow `[SERVER Sprint.Step]`. The issue body names the develo
   * `[SERVER 1.2]`: Set up central SQLite database with schema migrations ([#2](https://github.com/BootlegYouki/L.A.R.A/issues/2))
   * `[SERVER 1.3]`: Build captive web portal (:8080/download) with 3-step Android sideloading guide ([#3](https://github.com/BootlegYouki/L.A.R.A/issues/3))
   * `[SERVER 1.4]`: Package standalone zero-dependency installer (.exe / .deb) for teacher laptops ([#20](https://github.com/BootlegYouki/L.A.R.A/issues/20))
+  * `[SERVER 1.5]`: AI feasibility spike: evaluate candidate models on the Hub machine ([#73](https://github.com/BootlegYouki/L.A.R.A/issues/73))
 * **Sprint 2 (Roles, Classrooms & Delta-Sync):**
   * `[SERVER 2.0]`: Implement auth: register, login, logout and bearer sessions ([#42](https://github.com/BootlegYouki/L.A.R.A/issues/42))
   * `[SERVER 2.1]`: Class Code generation, enrollment API and teacher approval gate ([#6](https://github.com/BootlegYouki/L.A.R.A/issues/6))

@@ -1,8 +1,8 @@
 # Architecture Design: L.A.R.A Developer Ecosystem & Automated Workflow
 
-* **Date:** 2026-09-21
+* **Date:** 2026-09-21 (revised 2026-10-05 to match what is implemented)
 * **Author:** Tech Lead & Lead Companion Architecture Gatekeeper
-* **Status:** Validated Specification (Ready for Implementation Planning)
+* **Status:** Implemented
 * **Target Repository:** `BootlegYouki/L.A.R.A`
 
 ---
@@ -25,56 +25,39 @@ This specification defines the three-pillar developer ecosystem designed to unbl
 
 ## 2. Pillar 1: Zero-Dependency Standalone Mock Hub (`scripts/mock_hub.py`)
 
-### 2.1 Architecture & Objectives
-A lightweight, single-file Python 3 script using only standard library modules (`http.server`, `socket`, `threading`, `json`) that emulates the complete Local Hub environment on any developer or CI machine.
+### 2.1 What it is
+A single-file Python 3 program (standard library only) that implements **every** route and event in `contracts/`, so Mobile and Desktop never wait for the Rust server. It is also the behavioral acceptance reference for the Server team.
 
 ```
-+-------------------------------------------------------------------------+
-|                  STANDALONE MOCK HUB (scripts/mock_hub.py)              |
-|                                                                         |
-|  [UDP Beacon :8888]      [HTTP Server :8080]      [WebSocket :8081]     |
-|   Broadcasts JSON         - /download              - Synced Timers      |
-|   every 3 seconds         - /api/classrooms        - Socratic AI Token  |
-|   to 255.255.255.255      - /api/sync/pull           Streaming Stream   |
-|                           - /api/quizzes           - Join Approval Push |
-|                           - Byte-Range Video                            |
-+-------------------------------------------------------------------------+
-           |                         |                         |
-           v                         v                         v
-   [Android Phone]           [Student Laptop]          [Teacher Laptop]
++------------------------------------------------------------------------------+
+|                      MOCK HUB (scripts/mock_hub.py)                           |
+|  [UDP Beacon :8888]     [HTTP :8080]                [WebSocket :8081]         |
+|   JSON every 3 s         - bearer auth, all routes   - EVENT_HELLO handshake  |
+|                          - uploads (multipart)       - join, quiz, grade,     |
+|                          - 206 Range streaming         presence, announcement |
+|                          - cursor delta-sync           pushes                 |
+|                          - in-memory state           - AI queue + token stream|
++------------------------------------------------------------------------------+
+        |                      |                              |
+ [Android Phone]        [Student Laptop]              [Teacher Desktop/Phone]
 ```
 
-### 2.2 Simulated Interfaces & Protocols
-* **UDP Subnet Beacon (`255.255.255.255:8888`):**
-  * Broadcasts every 3 seconds:
-    ```json
-    {
-      "app": "lara",
-      "version": "1.0.0-mock",
-      "name": "Grade 4 - Science (Mock Hub)",
-      "ip": "<host_lan_ip>",
-      "http_port": 8080,
-      "ws_port": 8081
-    }
-    ```
-* **HTTP REST API (`:8080`):**
-  * `GET /download`: Serves dummy `.apk` and desktop installer binaries with simulated 3-step sideloading HTML.
-  * `GET /api/classrooms`: Returns sample classes (e.g., Grade 4 Science, Section Aguinaldo, Code `K7M4QX`).
-  * `POST /api/classrooms/join`: Accepts student enrollment; automatically simulates teacher approval 2 seconds later.
-  * `POST /api/sync/pull`: Returns mock announcements, lesson modules, and assignments.
-  * `GET /api/quizzes/active`: Serves a 5-item mock quiz with `correct_answer` stripped out.
-  * `POST /api/quizzes/:id/submit`: Auto-grades submission in 20ms and returns a signed receipt.
-  * `GET /api/materials/:id/stream`: Implements HTTP `206 Partial Content` with byte-range slicing for mock MP4 video files.
-* **WebSocket Realtime Broker (`:8081`):**
-  * Accepts WebSocket connections on `/ws`.
-  * Emits synchronized `EVENT_QUIZ_START` countdowns.
-  * Handles simulated Socratic AI streaming (`EVENT_AI_PROMPT`) yielding realistic Filipino pedagogical tokens with 30ms inter-token delay:
-    *"Magandang araw! Balikan natin ang binasa mo sa talata 2..."*
-* **Teacher Mobile Support:**
-  * Handles `POST /api/announcements` from mobile teacher clients.
-  * Handles `POST /api/quizzes/:id/start` to trigger classroom-wide synchronized countdowns.
-* **Interactive CLI Dashboard:**
-  * Logs all client requests with IP addresses, request latency, and active WebSocket connection count in real time.
+### 2.2 Behavior it enforces (so clients meet the rules early)
+* Bearer auth on every route except `/download`, register and login; media routes also accept `?token=`.
+* Pupil quiz payloads never contain `correct_answer`; the teacher view does.
+* AI requests fail with `QUIZ_IN_PROGRESS` while the pupil has an `IN_PROGRESS` attempt; otherwise the mock streams a canned Socratic reply with `EVENT_QUEUE_STATUS` and `grounded_chunk_id`.
+* Quiz submissions later than the limit plus 60 s fail with `TIME_LIMIT_EXCEEDED`.
+* Delta-sync uses an integer cursor from a change ledger, with tombstones, `hub_id`, `sync_epoch` and `reset`; pulls never contain PIN data or other people's LRN, and pupils never see classmates' homework.
+* Unknown routes return `404 ROUTE_NOT_FOUND`, which lets the coverage test tell a missing route from a missing entity.
+
+### 2.3 Usage and seed data
+```bash
+python3 scripts/mock_hub.py
+```
+State is in memory and reseeds on every start. Accounts (PIN `1234`): `ADMIN-0001`, teacher `T-0001` (Science 4, code `K7M4QX`), pupil `123456789012` (enrolled), pupil `123456789013` (join with the code).
+
+### 2.4 Parity guarantee
+`tests/test_contract_coverage.py` fails CI if any `openapi.yaml` operation has no mock route, if the mock serves an undocumented `/api/` route, or if an event schema is not emitted or handled by the mock. A contract change is therefore incomplete until the mock hub follows.
 
 ---
 
@@ -83,68 +66,42 @@ A lightweight, single-file Python 3 script using only standard library modules (
 ### 3.1 Directory Organization
 ```
 contracts/
-├── openapi.yaml           # Canonical OpenAPI 3.1 REST specification
-├── events/                # WebSocket event payloads (JSON Schema)
-│   ├── join_request.json  # Pupil sends 6-char code -> Hub
-│   ├── join_approval.json # Teacher approves on phone/desktop -> Hub pushes to Pupil
-│   ├── quiz_start.json    # Teacher launches quiz -> Synced epoch + duration to all
-│   ├── quiz_submit.json   # Pupil answers payload -> Hub auto-grader
-│   ├── ai_stream.json     # Token-by-token streaming chunk format
-│   └── queue_status.json  # FIFO position in line update
-└── naming_rules.md        # Explicit serialization guidelines
+├── openapi.yaml           # REST: auth, admin, classrooms, sync, stream, materials, assignments, quizzes, export
+├── events/                # WebSocket event schemas (JSON Schema) + README (handshake, direction table)
+├── schema/                # server_master.sql (16 tables) and client_offline.sql (14 tables)
+├── README.md              # how to change a contract
+└── naming_rules.md        # serialization, privacy and error rules
 ```
 
-### 3.2 Canonical Contract Standards
-1. **Network Serialization Rule:** All JSON keys transmitted across HTTP and WebSockets must strictly use **`snake_case`**.
-   * Kotlin: Annotated with `@SerialName("field_name")`.
-   * Rust: Annotated with `#[serde(rename_all = "snake_case")]`.
-   * TypeScript: Defined with `snake_case` interfaces.
-2. **Answer Key Redaction:**
-   * In `contracts/openapi.yaml`, the `Quiz` schema has two distinct representations:
-     * `TeacherQuizResponse`: Includes `correct_answer` and grading rubric.
-     * `StudentQuizResponse`: Strictly omits `correct_answer`.
+### 3.2 Standards
+1. **snake_case** for every JSON key over HTTP and WebSocket (Kotlin `@SerialName`, Rust `serde`, TypeScript interfaces).
+2. **Answer-key redaction:** `StudentQuestion` and `StudentQuizResponse` have no `correct_answer`; `TeacherQuestion` and `TeacherQuiz` do.
+3. **Privacy:** clients receive `PublicUser` only; never `pin_hash` or another person's LRN.
+4. **Errors:** `{"error": {"code", "message"}}`.
+5. **Sync cursor** is an integer sequence, never a timestamp.
 
 ---
 
 ## 4. Pillar 3: Automated "Lead Gatekeeper" CI/CD Pipeline
 
 ### 4.1 Invariant Guardrail Scanner (`.github/workflows/guardrails.yml`)
-Runs on all pull requests targeting `staging` or `main`. Executes in < 10 seconds:
+Runs `scripts/verify_invariants.py` on pull requests to `staging` and `main`: rejects added lines containing forbidden cloud patterns (Firebase, Prisma, Google Fonts, cdnjs, jsDelivr, unpkg) in `.kt .ts .tsx .rs .html .json` and checks Android `values` / `values-tl` string-key parity.
 
-```bash
-# High-level logic executed by guardrails.yml:
-# 1. Reject forbidden cloud dependencies
-FORBIDDEN="firebase|googleapis|fonts.googleapis|cdnjs|cdn.jsdelivr|unpkg|prisma"
-if git diff origin/staging...HEAD | grep -E -i "$FORBIDDEN"; then
-  echo "FAIL: Cloud dependency or prohibited library detected in diff!"
-  exit 1
-fi
+### 4.2 Path-Filtered CI (`.github/workflows/ci.yml`)
+* **contracts-and-tools:** `python3 -m unittest discover tests` (contracts, schema, mock hub behavior, coverage).
+* **mobile-ci** (when `mobile/` has a Gradle project): `./gradlew lintDebug testDebugUnitTest`.
+* **desktop-ci** (when `desktop/package.json` exists): `npm ci`, `npm run lint`, `npm run build`.
+* **server-ci** (when `server/backend/Cargo.toml` exists): `cargo check --all-targets` and `cargo test`.
 
-# 2. Verify bilingual Android string parity
-# Ensures all new keys in strings.xml exist in values-tl/strings.xml
-python3 scripts/verify_strings_parity.py
-```
-
-### 4.2 Path-Filtered Matrix CI (`.github/workflows/ci.yml`)
-Executes isolated build checks only for subsystems with modified files:
-* **`mobile-ci`** (path: `mobile/**`):
-  * Environment: Java 17 + Android SDK.
-  * Command: `./gradlew lintDebug assembleDebug`.
-* **`desktop-ci`** (path: `desktop/**`):
-  * Environment: Node 20 + Rust toolchain.
-  * Command: `npm run lint && npm run typecheck && cargo check --manifest-path desktop/src-tauri/Cargo.toml`.
-* **`server-ci`** (path: `server/**`):
-  * Environment: Rust toolchain.
-  * Command: `cargo clippy -- -D warnings && cargo test`.
-
-### 4.3 Clean PR Template Integration
-Rather than posting noisy automated comments on every PR, GitHub natively loads the pre-configured checklist from `.github/PULL_REQUEST_TEMPLATE.md` directly into the PR description upon creation.
-
+### 4.3 Governance
+* [`.github/CODEOWNERS`](../../.github/CODEOWNERS): Lead-owned shared paths (`contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`).
+* [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md): checklist, including the contract-change section.
+* Branch protection on `staging` should require the CI checks above and CODEOWNERS review (a repository setting the Lead enables).
 
 ---
 
 ## 5. Verification & Acceptance Criteria
 
-1. **Mock Hub Test:** Running `python3 scripts/mock_hub.py` starts all three services (UDP `:8888`, HTTP `:8080`, WS `:8081`) and allows a mobile client to discover, join, and receive simulated Socratic AI tokens.
-2. **CI Guardrail Test:** Opening a test PR containing `import firebase from 'firebase'` is instantly rejected by GitHub Actions with an exit code 1.
-3. **Contract Test:** All REST routes in `contracts/openapi.yaml` validate cleanly against OpenAPI 3.1 schema validators.
+1. **Mock hub:** `python3 scripts/mock_hub.py` serves UDP `:8888`, HTTP `:8080` and WebSocket `:8081`; a client can discover it, log in, join with `K7M4QX`, get approved, take a quiz and receive streamed tutor tokens.
+2. **Guardrail:** a PR adding a Firebase import or a Google Fonts link fails `guardrails.yml`.
+3. **Contract tests:** `python3 -m unittest discover tests` passes, including OpenAPI validity, SQL schema checks and mock hub coverage.
