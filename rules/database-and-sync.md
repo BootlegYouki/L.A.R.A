@@ -50,7 +50,8 @@ Client databases store an offline slice and must include these helper columns:
 ## 4. Delta-Sync Handshake & Master Ledger
 
 1. **Server Ledger (`sync_revisions`):**
-   * The Hub maintains a monotonic record of changes: `(id, entity_table, entity_id, action, updated_at)`.
+   * The Hub maintains a monotonic record of changes: `(id, classroom_id, entity_table, entity_id, action, updated_at)`.
+   * `classroom_id` scopes the changes to specific classes (or `NULL` for global/profile updates), ensuring delete events and resource changes can be filtered per student without scanning deleted rows.
    * `action` is `'UPSERT'` or `'DELETE'`. This allows clients to reliably purge deleted announcements and materials.
 2. **Pull Phase (`POST /api/sync/pull`):**
    * Client transmits `{ student_id, last_synced_at }`.

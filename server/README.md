@@ -103,7 +103,7 @@ Server developers must configure and execute their SQLx / SQLite migrations stri
 10. **`quiz_questions`:** `id`, `quiz_id`, `order_index`, `question_text`, `question_type`, `options_json`, `points`, `image_path`, `correct_answer` (authoritative answer key for auto-grader), `created_at`, `updated_at`.
 11. **`quiz_attempts`:** `id`, `quiz_id`, `student_id`, `started_at`, `submitted_at`, `score`, `total_points`, `answers_json`, `updated_at`.
 12. **`ai_chat_messages`:** `id`, `classroom_id`, `student_id`, `material_id`, `role` (`USER` | `TUTOR`), `content`, `created_at`.
-13. **`sync_revisions`:** `id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
+13. **`sync_revisions`:** `id`, `classroom_id`, `entity_table`, `entity_id`, `action` (`UPSERT` | `DELETE`), `updated_at` (monotonic changelog for delta-sync pull/push).
 
 ---
 
