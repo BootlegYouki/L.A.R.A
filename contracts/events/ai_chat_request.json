@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AIChatRequestEvent",
+  "description": "Pupil to Hub over ws://<hub>:8081: ask the Socratic tutor. The Hub builds the grounded prompt from material_chunks. Rejected with EVENT_ERROR QUIZ_IN_PROGRESS while the pupil has an IN_PROGRESS quiz attempt.",
+  "type": "object",
+  "required": [
+    "event",
+    "request_id",
+    "classroom_id",
+    "material_id",
+    "message",
+    "language"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_AI_CHAT_REQUEST"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "classroom_id": {
+      "type": "string"
+    },
+    "material_id": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "EN",
+        "FIL"
+      ]
+    }
+  }
+}

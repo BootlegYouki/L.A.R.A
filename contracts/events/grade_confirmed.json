@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GradeConfirmedEvent",
+  "description": "Hub to pupil: score receipt right after a submit is graded. Not sent when the teacher chose to hold scores.",
+  "type": "object",
+  "required": [
+    "event",
+    "quiz_id",
+    "attempt_id",
+    "score",
+    "total_points",
+    "timestamp"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "const": "EVENT_GRADE_CONFIRMED"
+    },
+    "quiz_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "score": {
+      "type": "integer"
+    },
+    "total_points": {
+      "type": "integer"
+    },
+    "timestamp": {
+      "type": "integer"
+    }
+  }
+}
