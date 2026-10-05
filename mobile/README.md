@@ -12,7 +12,7 @@
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`mobile/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38)). The Lead approves it before Sprint 1 work merges. |
 | 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
-| 4 | Open your sprint milestone and take the next issue in **your slot** (Dev A or Dev B). One issue = one PR. The roadmap is in section 5. |
+| 4 | Take the next issue in **your slot**: [all mobile issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22) · [Dev A](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22%20label%3A%22slot%3Adev-a%22) · [Dev B](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22%20label%3A%22slot%3Adev-b%22). One issue = one PR. The sprint-by-sprint roadmap is in section 5. |
 | 5 | Scaffold first: [#23](https://github.com/BootlegYouki/L.A.R.A/issues/23). Copy `design-system/mobile/*.kt` to `app/src/main/java/org/lara/app/ui/theme/` and `design-system/mobile/res/font/*.ttf` to `app/src/main/res/font/`. Package is `org.lara.app`. |
 | 6 | Before every PR: run the commands in [`mobile/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `mobile/docs/`. |
 
