@@ -1,5 +1,8 @@
 # Product Requirements Document (PRD)
 
+> **How to use this PRD:** it is the single source of *product behavior*. API shapes, events and the database live in [`../contracts/`](../contracts/) and win if they differ; visual rules live in [`design-system.md`](../design-system/design-system.md). Team Tech Specs describe *how* to build and must not redefine behavior here. Documentation map: [`README.md`](./README.md).
+
+
 **Project Title:** Offline LAN-Based Classroom Management System with Hybrid Socratic SLM Tutor and Paperless Assessment Engine 
 **Working Codename:** L.A.R.A. 
 **Document Version:** 1.2.0 
@@ -14,7 +17,7 @@
 L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an embedded, local Small Language Model (SLM) based on **MiniCPM5-2B**.
 
 The system operates across three interconnected applications:
-1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust/Node) hosted on a teacher’s laptop or school PC. It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
+1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) hosted on a teacher’s laptop or school PC. It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
 2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on students' mobile devices with local Room (SQLite) storage, camera homework capture, bilingual localization, and optional on-device SLM execution.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for school computer laboratories or teacher desktop management.
 
@@ -48,7 +51,7 @@ flowchart TD
  Router["Classroom Wi-Fi Router / Teacher Laptop Hotspot"]
  end
 
- subgraph HubServer["Local Hub (Teacher Laptop / School PC) - Tauri + Rust / Node Core"]
+ subgraph HubServer["Local Hub (Teacher Laptop / School PC) - Tauri + Rust Core"]
  Captive["Captive Web Portal (Port 8080)<br/>• APK & Desktop Installers<br/>• 3-Step Sideload Guide"]
  RestEngine["REST API & File Server (Port 8080)<br/>• Handouts (PDF/TXT)<br/>• Videos (HTTP Range 206)<br/>• Photo Submissions"]
  WsBroker["WebSocket Realtime Broker (Port 8081)<br/>• Live Quiz Sync & Timers<br/>• Announcements Push<br/>• Student Presence"]
@@ -143,28 +146,27 @@ flowchart TD
 ```mermaid
 sequenceDiagram
  autonumber
- actor Teacher as Teacher (Hub)
- participant Hub as Local Hub Server
- participant WS as WebSocket Broker
- actor Pupil as Pupil (Android App)
+ actor Teacher as Teacher (Desktop or Phone)
+ participant Hub as Local Hub (REST + WebSocket)
+ actor Pupil as Pupil (Phone or Laptop)
 
- Teacher->>Hub: Create & Publish Quiz (Title, Time Limit, Questions)
- Hub->>WS: Broadcast EVENT_QUIZ_PUBLISHED
- WS-->>Pupil: Push Notification & Quiz Banner
- Pupil->>Hub: Request Start Quiz (student_id, quiz_id)
- Hub-->>Pupil: Approve Start & Send Synchronized Server Timestamp
- Note over Pupil: Anti-Cheat Activated: Socratic AI Tutor Locked Out!
- Note over Pupil: Visual Countdown Timer Running (Green -> Yellow -> Red)
+ Teacher->>Hub: POST /api/quizzes (title, time limit, questions, answer keys) as DRAFT
+ Teacher->>Hub: POST /api/quizzes/{id}/start
+ Hub-->>Pupil: EVENT_QUIZ_START (start_epoch_ms, duration_seconds)
+ Pupil->>Hub: POST /api/quizzes/{id}/begin (creates the IN_PROGRESS attempt)
+ Note over Pupil: Anti-cheat: Socratic AI locked. Chat UI never composed, Hub rejects with QUIZ_IN_PROGRESS
+ Note over Pupil: Visual countdown on a monotonic clock (Green, Yellow, Red pulsing)
+ Hub-->>Teacher: EVENT_PRESENCE (ANSWERING_QUIZ)
  alt Completed before timeout
- Pupil->>WS: Send Completed Answers
- else Timer reaches 00:00
- Pupil->>WS: Auto-Submit Forced Answers
+ Pupil->>Hub: POST /api/quizzes/{id}/submit
+ else Timer reaches 00:00 or EVENT_QUIZ_CLOSED
+ Pupil->>Hub: Auto-submit current answers
+ else Wi-Fi dropped
+ Note over Pupil: Finish locally as QUEUED_FOR_SYNC, upload on reconnect
  end
- WS->>Hub: Process Answers & Auto-Grade Objective Items
- Hub->>CentralDB: Save Attempt Record (Score, Duration, Answers)
- Hub-->>WS: Emit EVENT_GRADE_CONFIRMED
- WS-->>Pupil: Instant Grade Receipt (Score / Total)
- Hub-->>Teacher: Live Gradebook Matrix Updated Realtime
+ Hub->>Hub: Validate time limit (+60 s grace), auto-grade, save attempt
+ Hub-->>Pupil: EVENT_GRADE_CONFIRMED (score receipt, unless scores are held)
+ Hub-->>Teacher: EVENT_PRESENCE (SUBMITTED), live matrix updates
 ```
 
 * **FR-4.1 Quiz Authoring:**
@@ -276,151 +278,59 @@ To prevent the teacher's laptop from overloading when multiple low-RAM devices r
 
 ### 6.1 Database Schema (Entity-Relationship Model)
 
+> **The schema is defined only in [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql) and [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql).** This section shows relationships only so it cannot drift from the SQL.
+
 ```mermaid
 erDiagram
  USERS ||--o{ CLASSROOMS : "teaches"
  USERS ||--o{ ENROLLMENTS : "joins"
  USERS ||--o{ ASSIGNMENT_SUBMISSIONS : "submits"
  USERS ||--o{ QUIZ_ATTEMPTS : "takes"
- 
+ USERS ||--o{ SESSIONS : "signs in"
+
  CLASSROOMS ||--o{ ENROLLMENTS : "contains"
  CLASSROOMS ||--o{ ANNOUNCEMENTS : "publishes"
  CLASSROOMS ||--o{ MATERIALS : "stores"
  CLASSROOMS ||--o{ ASSIGNMENTS : "assigns"
  CLASSROOMS ||--o{ QUIZZES : "schedules"
 
+ ANNOUNCEMENTS ||--o{ ANNOUNCEMENT_COMMENTS : "has"
+ MATERIALS ||--o{ MATERIAL_CHUNKS : "split into"
  ASSIGNMENTS ||--o{ ASSIGNMENT_SUBMISSIONS : "receives"
  QUIZZES ||--o{ QUIZ_QUESTIONS : "consists_of"
  QUIZZES ||--o{ QUIZ_ATTEMPTS : "records"
-
- USERS {
- text id PK "UUID"
- text lrn_or_id UK "Learner Reference Number"
- text full_name "Student / Teacher Name"
- text role "TEACHER or STUDENT"
- text pin_hash "4-digit PIN"
- integer created_at "Epoch Milliseconds"
- }
-
- CLASSROOMS {
- text id PK "UUID"
- text name "Subject Title"
- text section "Grade & Section"
- text class_code UK "6-char Code (e.g. K7M-4QX)"
- text teacher_id FK "References USERS.id"
- integer created_at "Epoch Milliseconds"
- }
-
- ENROLLMENTS {
- text id PK "UUID"
- text classroom_id FK "References CLASSROOMS.id"
- text student_id FK "References USERS.id"
- text status "PENDING, ACTIVE, REJECTED"
- integer joined_at "Epoch Milliseconds"
- }
-
- ANNOUNCEMENTS {
- text id PK "UUID"
- text classroom_id FK "References CLASSROOMS.id"
- text title "Post Title"
- text content "Announcement Body"
- integer allow_comments "Boolean 0 or 1"
- integer created_at "Epoch Milliseconds"
- integer updated_at "Epoch Milliseconds"
- }
-
- MATERIALS {
- text id PK "UUID"
- text classroom_id FK "References CLASSROOMS.id"
- text title "Handout / Module Title"
- text file_type "PDF, VIDEO, IMAGE, TEXT"
- text file_path "Relative Storage Path"
- integer file_size_bytes "Size in Bytes"
- text extracted_text "Pre-processed Chunks for SLM"
- integer created_at "Epoch Milliseconds"
- }
-
- ASSIGNMENTS {
- text id PK "UUID"
- text classroom_id FK "References CLASSROOMS.id"
- text title "Assignment Name"
- text instructions "Guidelines"
- integer due_date "Epoch Milliseconds"
- integer max_points "Score Cap"
- integer created_at "Epoch Milliseconds"
- }
-
- ASSIGNMENT_SUBMISSIONS {
- text id PK "UUID"
- text assignment_id FK "References ASSIGNMENTS.id"
- text student_id FK "References USERS.id"
- text file_path "Photo / Attachment Path"
- text file_type "IMAGE or PDF"
- integer submitted_at "Epoch Milliseconds"
- real score "Assigned Grade"
- text teacher_feedback "Comments"
- text sync_status "SYNCED or QUEUED"
- }
-
- QUIZZES {
- text id PK "UUID"
- text classroom_id FK "References CLASSROOMS.id"
- text title "Assessment Title"
- text instructions "Directions"
- integer time_limit_minutes "Overall Time Limit"
- text status "DRAFT, ACTIVE, CLOSED"
- integer created_at "Epoch Milliseconds"
- }
-
- QUIZ_QUESTIONS {
- text id PK "UUID"
- text quiz_id FK "References QUIZZES.id"
- integer order_index "Item Position"
- text question_text "Prompt"
- text question_type "MULTIPLE_CHOICE, TRUE_FALSE, IDENTIFICATION"
- text options_json "JSON String Array"
- text correct_answer "Key"
- integer points "Item Value"
- text image_path "Optional Item Image"
- }
-
- QUIZ_ATTEMPTS {
- text id PK "UUID"
- text quiz_id FK "References QUIZZES.id"
- text student_id FK "References USERS.id"
- integer started_at "Epoch Milliseconds"
- integer submitted_at "Epoch Milliseconds"
- real score "Calculated Score"
- real total_points "Max Score"
- text answers_json "JSON Encoded Responses"
- text sync_status "SYNCED or QUEUED"
- }
+ MATERIAL_CHUNKS ||--o{ AI_CHAT_MESSAGES : "grounds"
 ```
+
+Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only table: `sync_state`. Clients never store PIN hashes, other people's LRNs or answer keys (see `rules/database-and-sync.md`).
 
 ### 6.2 Delta-Sync Protocol Lifecycle
 
 ```mermaid
 sequenceDiagram
  autonumber
- participant App as Android Client (Room DB)
+ participant App as Client (Room / SQLite)
  participant Hub as Local Hub Server (Central DB)
 
- Note over App,Hub: Step 1: Network Discovery (mDNS / UDP Beacon)
- App->>Hub: Handshake & Connect WebSocket (Port 8081)
- 
- Note over App,Hub: Step 2: Pull Phase (Fetch Server Deltas)
- App->>Hub: POST /api/sync/pull { student_id, last_synced_at: 1774000000 }
- Hub->>Hub: Query records where updated_at > last_synced_at
- Hub-->>App: Delta Payload (New announcements, materials, approved enrollment, published quizzes)
- App->>App: Atomic SQLite Transaction: Upsert new records
+ Note over App,Hub: Step 1: Discovery (mDNS / UDP beacon or manual IP), then sign in
+ App->>Hub: POST /api/auth/login (LRN + PIN) -> bearer token
+ App->>Hub: WebSocket EVENT_HELLO (token) -> EVENT_HELLO_ACK (hub_id, sync_epoch, server_time)
 
- Note over App,Hub: Step 3: Push Phase (Upload Offline Actions)
- App->>Hub: POST /api/sync/push { pending_quizzes, homework_photos, pending_join_requests }
- Hub->>Hub: Validate submissions, auto-grade quizzes, store photo files
- Hub-->>App: ACK Receipt { synced_ids: [...], grades: [...] }
- App->>App: Update local records: set sync_status = 'SYNCED'
+ Note over App,Hub: Step 2: Pull (fetch server deltas)
+ App->>Hub: POST /api/sync/pull { cursor, hub_id, sync_epoch }
+ Hub->>Hub: Select sync_revisions with seq > cursor in the caller's classes
+ Hub-->>App: Changed records, tombstones, users, next_cursor, has_more, reset
+ App->>App: ONE atomic transaction: apply records AND store next_cursor
+
+ Note over App,Hub: Step 3: Push (upload offline work)
+ App->>Hub: POST /api/sync/push { quiz_attempts, comments }
+ App->>Hub: POST /api/assignments/{id}/submit (homework photo, submission_id)
+ Hub->>Hub: Validate, auto-grade, store files, write sync_revisions
+ Hub-->>App: Per-item receipts (SYNCED or REJECTED + reason)
+ App->>App: Mark rows SYNCED only from a receipt
 ```
 
+* **Cursor:** a monotonic integer (`sync_revisions.seq`), never a timestamp, because the offline Hub clock can be wrong. A `hub_id` or `sync_epoch` mismatch makes the client do a full resync (`reset`).
 * **Conflict Policy:** Server is authoritative for classroom metadata, class rosters, and official quiz score calculations. Client is authoritative for its own locally initiated drafts and homework photos.
 
 ---
@@ -429,14 +339,14 @@ sequenceDiagram
 
 | Layer | Technology | Rationale |
 | :--- | :--- | :--- |
-| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | First-party Google Material Design 3; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; native C++/JNI binding to `llama.cpp`. |
+| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | Compose Material 3 components themed with the L.A.R.A tokens; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; native C++/JNI binding to `llama.cpp`. |
 | **Mobile Local DB** | **Android Room (SQLite)** | Compile-time SQL validation, robust migrations, native coroutine/Flow support. |
-| **Desktop Client** | **Tauri + React + TypeScript + Tailwind CSS** | Ultra-lightweight binary (~15MB installer vs ~120MB Electron), low memory overhead on student laptops & lab PCs; styled with Material 3 tokens; runs MiniCPM5-2B via bundled llama.cpp or Hub streaming. |
-| **Local Hub (Server)** | **Tauri + Rust Backend / Node.js Engine** | Native desktop management window for the teacher; high-concurrency async I/O; low idle CPU/RAM usage; direct USB flash drive export. |
-| **Server Local DB** | **SQLite (via SQLx / better-sqlite3)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
+| **Desktop Client** | **Tauri + React + TypeScript + Tailwind CSS** | Ultra-lightweight binary (~15MB installer vs ~120MB Electron), low memory overhead on student laptops & lab PCs; styled with the L.A.R.A design tokens; runs MiniCPM5-2B via bundled llama.cpp or Hub streaming. |
+| **Local Hub (Server)** | **Tauri + Rust Backend (Axum, Tokio, SQLx)** | Native desktop management window for the teacher; high-concurrency async I/O; low idle CPU/RAM usage; direct USB flash drive export. |
+| **Server Local DB** | **SQLite (via SQLx)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
 | **Realtime Protocol** | **WebSockets (`ws` / Rust `tokio-tungstenite`)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
 | **SLM Runtime** | **`llama.cpp` / `llama-server`** | Highly optimized CPU/GPU GGUF inference; supports 4-bit quantization and multi-slot continuous batching. |
-| **Design System** | **Google Material Design 3 (Material You)** | Elementary-accessible components, high legibility, large touch targets (52dp+ / 56dp), dynamic color palettes, bilingual strings. |
+| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Elementary-accessible components, high legibility, large touch targets (52dp+ / 56dp), dynamic color palettes, bilingual strings. |
 
 ---
 

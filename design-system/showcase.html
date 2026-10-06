@@ -1,0 +1,2768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L.A.R.A. Design System and Component Library</title>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="assets/phosphor/phosphor.css">
+
+  <style>
+    :root {
+      /* Brand */
+      --color-primary-green: #2E9B4B;
+      --color-dark-green: #176B36;
+      --color-light-green: #E4F6E8;
+      --color-primary-purple: #5145E5;
+      --color-dark-purple: #4035C9;
+      --color-light-purple: #EEEAFE;
+
+      /* Surfaces */
+      --color-canvas-bg: #F7FBFA;
+      --color-surface-white: #FFFFFF;
+      --color-surface-subtle: #F2F6F5;
+      --color-border: #E4EAF0;
+
+      /* Text */
+      --color-text-primary: #17213D;
+      --color-text-secondary: #667085;
+      --color-text-muted: #98A2B3;
+
+      /* Status */
+      --color-status-success: #22A447;
+      --color-status-warning: #F5B82E;
+      --color-status-danger: #EF5350;
+      --color-status-info: #3B82F6;
+      --color-warning-light: #FEF0C7;
+      --color-warning-dark: #B54708;
+      --color-danger-light: #FEE4E2;
+      --color-info-light: #E0F2FE;
+      --color-info-dark: #0369A1;
+
+      /* Radii */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-pill: 9999px;
+
+      --min-touch-target: 52px;
+
+      /* Layered shadows tinted with navy */
+      --shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
+      --shadow-card-hover: 0 4px 6px -1px rgba(23, 33, 61, 0.07), 0 2px 4px -2px rgba(23, 33, 61, 0.05);
+      --shadow-elevated: 0 10px 15px -3px rgba(23, 33, 61, 0.08), 0 4px 6px -4px rgba(23, 33, 61, 0.04);
+      --shadow-toast: 0 12px 28px -4px rgba(23, 33, 61, 0.12), 0 4px 8px -2px rgba(23, 33, 61, 0.06);
+      --shadow-modal: 0 24px 48px -12px rgba(23, 33, 61, 0.22), 0 8px 16px -4px rgba(23, 33, 61, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--color-surface-white);
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    button { font-family: inherit; }
+    :focus-visible { outline: 3px solid var(--color-primary-purple); outline-offset: 2px; }
+
+    /* ---------- Navbar ---------- */
+    .doc-navbar {
+      height: 60px; border-bottom: 1px solid var(--color-border); background: var(--color-surface-white);
+      position: sticky; top: 0; z-index: 50; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 24px;
+    }
+    .doc-nav-left { display: flex; align-items: center; gap: 16px; }
+    .doc-brand-badge {
+      background: var(--color-primary-green); color: #fff; font-weight: 900; font-size: 14px;
+      padding: 4px 10px; border-radius: var(--radius-sm); letter-spacing: 0.5px;
+    }
+    .doc-brand-title { font-size: 15px; font-weight: 800; }
+    .doc-nav-right { display: flex; align-items: center; gap: 12px; }
+    .doc-status-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: var(--radius-pill);
+      background: var(--color-light-green); color: var(--color-dark-green); font-size: 12px; font-weight: 800;
+    }
+    .doc-version { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); }
+
+    /* ---------- Layout ---------- */
+    .doc-layout { display: grid; grid-template-columns: 270px 1fr 220px; min-height: calc(100vh - 60px); }
+    .doc-sidebar {
+      border-right: 1px solid var(--color-border); background: var(--color-surface-white);
+      position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; padding: 16px 16px 32px;
+    }
+    .sidebar-search { position: relative; margin-bottom: 8px; }
+    .sidebar-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 16px; }
+    .sidebar-search input {
+      width: 100%; height: 40px; border-radius: var(--radius-md); border: 2px solid var(--color-border);
+      padding: 0 12px 0 36px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--color-text-primary);
+    }
+    .sidebar-search input:focus { outline: none; border-color: var(--color-primary-green); }
+    .sidebar-group-title {
+      font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--color-text-muted); margin: 18px 0 6px 12px;
+    }
+    .sidebar-nav-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 700; color: var(--color-text-secondary); background: transparent; border: none;
+      text-align: left; cursor: pointer; transition: all 0.15s;
+    }
+    .sidebar-nav-btn:hover { background: var(--color-surface-subtle); color: var(--color-primary-green); }
+    .sidebar-nav-btn.active { background: var(--color-light-green); color: var(--color-dark-green); font-weight: 800; }
+    .sidebar-nav-btn i { font-size: 18px; }
+    .sidebar-tag-badge {
+      margin-left: auto; background: var(--color-primary-purple); color: #fff; font-size: 10px; font-weight: 800;
+      padding: 2px 6px; border-radius: var(--radius-pill);
+    }
+
+    .doc-main { padding: 40px 48px 80px; max-width: 960px; margin: 0 auto; width: 100%; min-width: 0; }
+    .breadcrumb { font-size: 12px; font-weight: 800; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .comp-header { margin-bottom: 24px; }
+    .comp-title { font-size: 32px; font-weight: 900; margin-bottom: 6px; }
+    .comp-desc { font-size: 15px; color: var(--color-text-secondary); }
+    .doc-h2 { font-size: 20px; font-weight: 900; margin: 32px 0 12px; scroll-margin-top: 80px; }
+    .doc-list { list-style: none; display: grid; gap: 8px; }
+    .doc-list li {
+      display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 600; color: var(--color-text-secondary);
+      padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white);
+    }
+    .doc-list li i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+    .doc-list.do li i { color: var(--color-primary-green); }
+    .doc-list.dont li i { color: var(--color-status-danger); }
+    .doc-list.a11y li i { color: var(--color-primary-purple); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .two-col h3 { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+
+    /* ---------- Tabs ---------- */
+    .tab-bar { display: flex; border-bottom: 1px solid var(--color-border); margin-bottom: 20px; gap: 8px; flex-wrap: wrap; }
+    .tab-item {
+      padding: 8px 16px; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); cursor: pointer;
+      border-bottom: 2px solid transparent; user-select: none; margin-bottom: -1px;
+    }
+    .tab-item:hover { color: var(--color-text-primary); }
+    .tab-item.active { color: var(--color-primary-green); border-bottom-color: var(--color-primary-green); }
+
+    /* ---------- Preview ---------- */
+    .preview-card {
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px 28px;
+      background: var(--color-canvas-bg); display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 200px; box-shadow: var(--shadow-card); position: relative; overflow: hidden;
+    }
+    .preview-card.full-width { align-items: stretch; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: center; }
+    .stack { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+    .label-xs { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-text-muted); margin-bottom: 8px; }
+
+    /* ---------- Code ---------- */
+    .code-wrapper { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid #1F2937; background: #111827; }
+    .code-header {
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #1F2937;
+      color: #9CA3AF; font-size: 12px; font-weight: 800; border-bottom: 1px solid #374151;
+    }
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px;
+      background: rgba(255,255,255,0.1); color: #E5E7EB; font-size: 12px; font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.15); cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .code-block {
+      margin: 0; padding: 16px 20px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 13px; color: #E5E7EB; overflow-x: auto; line-height: 1.6; max-height: 520px;
+    }
+
+    /* ---------- TOC ---------- */
+    .doc-toc { border-left: 1px solid var(--color-border); padding: 36px 20px; position: sticky; top: 60px; height: calc(100vh - 60px); }
+    .toc-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; color: var(--color-text-muted); margin-bottom: 12px; }
+    .toc-item { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); text-decoration: none; padding: 6px 0; cursor: pointer; }
+    .toc-item:hover { color: var(--color-primary-green); }
+
+    /* ==========================================================
+       COMPONENT PRIMITIVES
+       ========================================================== */
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--min-touch-target);
+      padding: 12px 22px; border-radius: var(--radius-md); font-size: 15px; font-weight: 800; cursor: pointer;
+      border: 2px solid transparent; user-select: none; box-shadow: var(--shadow-card); transition: all 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn i { font-size: 20px; }
+    .btn-pill { border-radius: var(--radius-pill); }
+    .btn-sm { min-height: 40px; padding: 6px 16px; font-size: 14px; }
+    .btn-icon { width: var(--min-touch-target); padding: 0; }
+    .btn-icon.btn-sm { width: 40px; }
+    .btn-block { width: 100%; }
+    .btn-primary { background: var(--color-primary-green); color: #fff; }
+    .btn-primary:hover { background: var(--color-dark-green); box-shadow: var(--shadow-card-hover); }
+    .btn-ai { background: var(--color-primary-purple); color: #fff; }
+    .btn-ai:hover { background: var(--color-dark-purple); box-shadow: var(--shadow-card-hover); }
+    .btn-secondary { background: var(--color-surface-white); color: var(--color-text-primary); border-color: var(--color-border); }
+    .btn-secondary:hover { background: var(--color-canvas-bg); border-color: var(--color-text-secondary); }
+    .btn-ghost { background: transparent; color: var(--color-dark-green); box-shadow: none; }
+    .btn-ghost:hover { background: var(--color-light-green); }
+    .btn-danger { background: var(--color-danger-light); color: var(--color-status-danger); border-color: #FECDCA; }
+    .btn-danger:hover { background: #FECDCA; }
+    .btn:disabled { background: var(--color-border); color: var(--color-text-muted); cursor: not-allowed; box-shadow: none; border-color: transparent; }
+    .btn.loading { pointer-events: none; opacity: 0.9; }
+    .spin { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast-container { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 420px; }
+    .toast {
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-lg);
+      background: #fff; border: 1px solid var(--color-border); box-shadow: var(--shadow-toast); animation: slide-in 0.2s ease-out;
+    }
+    @keyframes slide-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast-icon-wrap { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+    .toast-success .toast-icon-wrap { background: var(--color-light-green); color: var(--color-dark-green); }
+    .toast-warning .toast-icon-wrap { background: var(--color-warning-light); color: var(--color-warning-dark); }
+    .toast-danger .toast-icon-wrap { background: var(--color-danger-light); color: var(--color-status-danger); }
+    .toast-ai .toast-icon-wrap { background: var(--color-light-purple); color: var(--color-dark-purple); }
+    .toast-body { flex: 1; }
+    .toast-title { font-size: 14px; font-weight: 800; }
+    .toast-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+    .toast-close { background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; font-size: 16px; padding: 2px; }
+    #live-toast-anchor { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 800; letter-spacing: 0.3px; }
+    .badge i { font-size: 15px; }
+    .badge-synced { background: var(--color-light-green); color: var(--color-dark-green); border: 1px solid #C4ECCB; }
+    .badge-queued { background: var(--color-warning-light); color: var(--color-warning-dark); border: 1px solid #FEDF89; }
+    .badge-deped { background: var(--color-info-light); color: var(--color-info-dark); border: 1px solid #BAE6FD; }
+    .badge-ai { background: var(--color-light-purple); color: var(--color-dark-purple); border: 1px solid #D6CCFC; }
+    .badge-danger { background: var(--color-danger-light); color: #B42318; border: 1px solid #FECDCA; }
+    .badge-neutral { background: var(--color-surface-subtle); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+    .count-dot { min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--color-status-danger); color: #fff; font-size: 11px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
+    .radar-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: var(--radius-pill); background: #fff; border: 1px solid var(--color-border); font-size: 13px; font-weight: 800; box-shadow: var(--shadow-card); }
+    .radar-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-status-success); }
+    .radar-dot.off { background: var(--color-text-muted); }
+    .radar-dot.warn { background: var(--color-status-warning); }
+
+    /* Alert banner */
+    .alert-banner { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; box-shadow: var(--shadow-card); width: 100%; }
+    .alert-banner i { font-size: 22px; flex-shrink: 0; }
+    .alert-banner-warning { background: var(--color-warning-light); color: #93370D; border: 1px solid #FEDF89; }
+    .alert-banner-warning i { color: var(--color-warning-dark); }
+    .alert-banner-success { background: var(--color-light-green); color: var(--color-dark-green); border: 1px solid #C4ECCB; }
+    .alert-banner-danger { background: var(--color-danger-light); color: #B42318; border: 1px solid #FECDCA; }
+    .alert-banner-info { background: var(--color-info-light); color: var(--color-info-dark); border: 1px solid #BAE6FD; }
+
+    /* Inputs */
+    .form-group { width: 100%; margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+    .form-hint { font-size: 12px; font-weight: 600; color: var(--color-text-secondary); margin-top: 6px; }
+    .form-error { font-size: 12px; font-weight: 700; color: #B42318; margin-top: 6px; display: flex; gap: 6px; align-items: center; }
+    .form-input {
+      width: 100%; min-height: var(--min-touch-target); padding: 12px 14px; border-radius: var(--radius-md);
+      border: 2px solid var(--color-border); background: #fff; font-family: inherit; font-size: 15px; font-weight: 600;
+      color: var(--color-text-primary); box-shadow: var(--shadow-card);
+    }
+    .form-input::placeholder { color: var(--color-text-muted); }
+    .form-input:focus { outline: none; border-color: var(--color-primary-green); }
+    .form-input.error { border-color: var(--color-status-danger); background: #FFFBFA; }
+    .form-input:disabled { background: var(--color-surface-subtle); color: var(--color-text-muted); }
+    textarea.form-input { min-height: 110px; resize: vertical; }
+    .select-wrap { position: relative; }
+    .select-wrap select { appearance: none; -webkit-appearance: none; padding-right: 44px; cursor: pointer; }
+    .select-wrap i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--color-text-secondary); font-size: 18px; }
+    .pin-grid { display: flex; gap: 10px; }
+    .pin-box {
+      width: 52px; height: 60px; border: 2px solid var(--color-border); border-radius: var(--radius-md); text-align: center;
+      font-size: 26px; font-weight: 900; background: #fff; color: var(--color-text-primary); box-shadow: var(--shadow-card); font-family: inherit;
+    }
+    .pin-box:focus { outline: none; border-color: var(--color-primary-green); }
+    .search-bar { position: relative; width: 100%; }
+    .search-bar i.lead { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--color-text-muted); }
+    .search-bar input { padding-left: 46px; border-radius: var(--radius-pill); }
+
+    /* Selection controls */
+    .sel-row { display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 8px 14px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; user-select: none; font-size: 15px; font-weight: 700; width: 100%; box-shadow: var(--shadow-card); }
+    .sel-row:hover { border-color: var(--color-primary-green); }
+    .check { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #CBD5E1; background: #fff; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 16px; flex-shrink: 0; transition: all 0.12s; }
+    .check.on { background: var(--color-primary-green); border-color: var(--color-primary-green); color: #fff; }
+    .radio { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #CBD5E1; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .radio::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: transparent; }
+    .radio.on { border-color: var(--color-primary-green); }
+    .radio.on::after { background: var(--color-primary-green); }
+    .switch { width: 52px; height: 30px; border-radius: var(--radius-pill); background: #CBD5E1; position: relative; flex-shrink: 0; transition: background 0.15s; margin-left: auto; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-card); transition: transform 0.15s; }
+    .switch.on { background: var(--color-primary-green); }
+    .switch.on::after { transform: translateX(22px); }
+
+    /* Segmented, tabs, chips */
+    .segmented { display: inline-flex; padding: 4px; border-radius: var(--radius-md); background: var(--color-surface-subtle); border: 1px solid var(--color-border); gap: 4px; }
+    .seg-item { min-height: 44px; padding: 0 18px; border-radius: 9px; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; }
+    .seg-item.active { background: #fff; color: var(--color-dark-green); box-shadow: var(--shadow-card); }
+    .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border-radius: var(--radius-pill); border: 2px solid var(--color-border); background: #fff; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); cursor: pointer; user-select: none; }
+    .chip.selected { background: var(--color-light-green); border-color: var(--color-primary-green); color: var(--color-dark-green); }
+
+    /* Progress */
+    .progress { width: 100%; height: 12px; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+    .progress > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary-green); transition: width 0.3s; }
+    .progress.ai > span { background: var(--color-primary-purple); }
+    .progress.warn > span { background: var(--color-status-warning); }
+    .ring { position: relative; width: 96px; height: 96px; }
+    .ring svg { transform: rotate(-90deg); }
+    .ring .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; line-height: 1; }
+    .ring .ring-label small { font-size: 10px; font-weight: 800; color: var(--color-text-secondary); margin-top: 3px; }
+
+    /* Skeleton (solid fills with opacity pulse, no gradient shimmer) */
+    .skel { background: #E4EAF0; border-radius: 8px; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+    /* Empty state */
+    .empty { text-align: center; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .empty-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--color-light-green); color: var(--color-primary-green); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .empty h4 { font-size: 18px; font-weight: 900; }
+    .empty p { font-size: 14px; color: var(--color-text-secondary); font-weight: 600; margin-bottom: 6px; }
+
+    /* Modal */
+    .scrim { position: absolute; inset: 0; background: rgba(23, 33, 61, 0.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 5; }
+    .scrim.open { display: flex; }
+    .modal { background: #fff; border-radius: var(--radius-xl); padding: 24px; width: 100%; max-width: 380px; box-shadow: var(--shadow-modal); animation: slide-in 0.2s ease-out; }
+    .modal-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--color-warning-light); color: var(--color-warning-dark); font-size: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .modal h4 { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+    .modal p { font-size: 14px; color: var(--color-text-secondary); font-weight: 600; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions .btn { flex: 1; }
+
+    /* Phone frame */
+    .phone { width: 300px; height: 540px; border: 8px solid var(--color-text-primary); border-radius: 36px; background: var(--color-canvas-bg); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-elevated); }
+    .phone-status { height: 22px; background: var(--color-dark-green); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    .app-bar { height: 56px; background: var(--color-dark-green); color: #fff; display: flex; align-items: center; gap: 10px; padding: 0 12px; flex-shrink: 0; }
+    .app-bar h3 { font-size: 18px; font-weight: 900; flex: 1; }
+    .app-bar button { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .phone-body { flex: 1; padding: 14px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+    .bottom-nav { height: 68px; background: #fff; border-top: 1px solid var(--color-border); display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; }
+    .bn-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 800; color: var(--color-text-secondary); min-width: 64px; min-height: 52px; justify-content: center; cursor: pointer; border-radius: 12px; border: none; background: transparent; position: relative; }
+    .bn-item i { font-size: 24px; }
+    .bn-item.active { color: var(--color-primary-green); }
+    .bn-item.active .bn-pill { background: var(--color-light-green); }
+    .bn-pill { padding: 2px 18px; border-radius: var(--radius-pill); display: flex; }
+    .bn-item.ai.active { color: var(--color-primary-purple); }
+    .bn-item.ai.active .bn-pill { background: var(--color-light-purple); }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 12px 18px 22px; box-shadow: var(--shadow-modal); transform: translateY(105%); transition: transform 0.25s ease; z-index: 6; }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: #CBD5E1; margin: 0 auto 14px; }
+    .sheet-scrim { position: absolute; inset: 0; background: rgba(23,33,61,0.45); display: none; z-index: 5; }
+    .sheet-scrim.open { display: block; }
+
+    /* Side nav (desktop) */
+    .side-nav { width: 100%; max-width: 260px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-card); }
+    .side-nav .brand { display: flex; align-items: center; gap: 10px; padding: 8px 10px 14px; font-weight: 900; font-size: 15px; }
+
+    /* Avatar */
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--color-light-green); color: var(--color-dark-green); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; position: relative; }
+    .avatar.sm { width: 32px; height: 32px; font-size: 12px; }
+    .avatar.lg { width: 56px; height: 56px; font-size: 20px; }
+    .avatar.blue { background: var(--color-info-light); color: var(--color-info-dark); }
+    .avatar.purple { background: var(--color-light-purple); color: var(--color-dark-purple); }
+    .avatar.amber { background: var(--color-warning-light); color: var(--color-warning-dark); }
+    .avatar .status { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: var(--color-status-success); border: 2px solid #fff; }
+    .avatar-group { display: flex; }
+    .avatar-group .avatar { border: 2px solid #fff; margin-left: -10px; }
+    .avatar-group .avatar:first-child { margin-left: 0; }
+
+    /* Cards, stat, list */
+    .card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); width: 100%; }
+    .card-pad { padding: 20px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; width: 100%; }
+    .stat { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
+    .stat-ico { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .stat-val { font-size: 30px; font-weight: 900; line-height: 1.1; }
+    .stat-delta { font-size: 12px; font-weight: 800; }
+    .up { color: var(--color-dark-green); }
+    .down { color: #B42318; }
+    .list-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; min-height: 64px; border-bottom: 1px solid var(--color-border); background: #fff; cursor: pointer; }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: var(--color-canvas-bg); }
+    .list-ico { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .list-main { flex: 1; min-width: 0; }
+    .list-main h4 { font-size: 15px; font-weight: 800; }
+    .list-main p { font-size: 12px; color: var(--color-text-secondary); font-weight: 600; }
+    .list-end { color: var(--color-text-muted); font-size: 18px; }
+
+    /* Table */
+    .tbl { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .tbl th { padding: 12px 14px; font-weight: 800; background: var(--color-surface-subtle); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+    .tbl td { padding: 12px 14px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tbody tr:hover { background: var(--color-canvas-bg); }
+    .tbl code { font-size: 12px; background: var(--color-surface-subtle); padding: 2px 6px; border-radius: 6px; }
+    .tbl .pass { color: var(--color-primary-green); font-weight: 800; }
+    .tbl .fail { color: #B42318; font-weight: 800; }
+    .scroll-x { overflow-x: auto; }
+
+    /* Classroom */
+    .class-head { background: var(--color-dark-green); color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .class-head h3 { font-size: 20px; font-weight: 900; }
+    .class-head p { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+    .code-tag { background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 800; }
+    .comment { display: flex; align-items: flex-start; gap: 10px; }
+    .comment .bubble { background: var(--color-canvas-bg); border: 1px solid var(--color-border); border-radius: 12px; padding: 8px 12px; font-size: 13px; flex: 1; }
+    .due-late { color: #B42318; }
+    .att-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border); }
+    .att-row:last-child { border-bottom: none; }
+    .att-row .name { flex: 1; font-size: 14px; font-weight: 800; }
+    .att-btns { display: flex; gap: 6px; }
+    .att-btn { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--color-border); background: #fff; font-weight: 900; font-size: 14px; color: var(--color-text-secondary); cursor: pointer; }
+    .att-btn.p.on { background: var(--color-light-green); border-color: var(--color-primary-green); color: var(--color-dark-green); }
+    .att-btn.a.on { background: var(--color-danger-light); border-color: var(--color-status-danger); color: #B42318; }
+    .att-btn.l.on { background: var(--color-warning-light); border-color: var(--color-status-warning); color: var(--color-warning-dark); }
+
+    /* Quiz */
+    .quiz-card-option { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 12px 18px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: #fff; margin-bottom: 10px; cursor: pointer; user-select: none; font-size: 16px; font-weight: 700; box-shadow: var(--shadow-card); transition: all 0.15s; width: 100%; }
+    .quiz-card-option:hover { border-color: var(--color-primary-green); box-shadow: var(--shadow-card-hover); }
+    .quiz-card-option.selected { border-color: var(--color-primary-green); background: var(--color-light-green); }
+    .quiz-card-option i { font-size: 22px; color: var(--color-text-muted); }
+    .quiz-card-option.selected i { color: var(--color-primary-green); }
+    .q-dots { display: flex; gap: 6px; }
+    .q-dot { width: 28px; height: 8px; border-radius: 4px; background: var(--color-border); }
+    .q-dot.done { background: var(--color-primary-green); }
+    .q-dot.now { background: var(--color-primary-purple); }
+    .timer-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 9999px; background: var(--color-warning-light); color: var(--color-warning-dark); font-weight: 900; font-size: 15px; }
+
+    /* Swatches */
+    .swatch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; width: 100%; }
+    .swatch { border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; background: #fff; box-shadow: var(--shadow-card); cursor: pointer; }
+    .swatch .chipc { height: 52px; padding: 8px 10px; font-weight: 800; font-size: 11px; display: flex; align-items: flex-end; }
+    .swatch .meta { padding: 8px 10px; font-size: 12px; font-weight: 800; }
+    .swatch .meta small { display: block; font-size: 11px; color: var(--color-text-secondary); font-weight: 700; font-family: ui-monospace, monospace; }
+    .group-title { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-text-secondary); margin: 18px 0 10px; width: 100%; }
+    .group-title:first-child { margin-top: 0; }
+    .type-row { border-bottom: 1px solid var(--color-border); padding-bottom: 14px; width: 100%; }
+    .type-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .type-meta { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); text-transform: uppercase; }
+    .space-row { display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 800; margin-bottom: 8px; width: 100%; }
+    .space-row .sp { background: var(--color-primary-green); height: 16px; border-radius: 4px; }
+    .space-row code { width: 70px; font-size: 12px; color: var(--color-text-secondary); }
+    .shadow-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px; width: 100%; }
+    .shadow-box { height: 90px; border-radius: 16px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; border: 1px solid var(--color-border); }
+    .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; width: 100%; }
+    .icon-cell { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 6px 10px; text-align: center; font-size: 11px; font-weight: 800; color: var(--color-text-secondary); box-shadow: var(--shadow-card); }
+    .icon-cell i { display: block; font-size: 28px; color: var(--color-text-primary); margin-bottom: 6px; }
+    .viewfinder { width: 100%; height: 280px; background: var(--color-text-primary); border-radius: 16px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+    .vf-frame { width: 80%; height: 66%; border: 2px dashed var(--color-primary-green); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--color-light-green); }
+    .vf-bar { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 28px; }
+    .shutter { width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 4px solid var(--color-light-green); }
+
+    @media (max-width: 1000px) { .doc-layout { grid-template-columns: 230px 1fr; } .doc-toc { display: none; } }
+    @media (max-width: 720px) {
+      .doc-layout { grid-template-columns: 1fr; }
+      .doc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--color-border); max-height: 240px; }
+      .doc-main { padding: 24px 16px 60px; }
+      .two-col { grid-template-columns: 1fr; }
+      .doc-status-pill { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="doc-navbar">
+    <div class="doc-nav-left">
+      <div class="doc-brand-badge">L.A.R.A.</div>
+      <span class="doc-brand-title">Design System and Component Library</span>
+    </div>
+    <div class="doc-nav-right">
+      <span class="doc-version">v2.0</span>
+      <span class="doc-status-pill"><i class="ph ph-check-circle"></i> Solid fills | Phosphor icons | Layered depth</span>
+    </div>
+  </header>
+
+  <div class="doc-layout">
+    <aside class="doc-sidebar" id="sidebar"></aside>
+    <main class="doc-main" id="main"></main>
+    <aside class="doc-toc" id="toc"></aside>
+  </div>
+
+  <div id="live-toast-anchor"></div>
+
+<script>
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const COLORS = {
+  brand: [
+    ['Primary Green', '#2E9B4B', 'primary', 'Primary actions, active nav', '#fff'],
+    ['Dark Green', '#176B36', 'primaryDark', 'Headers, hover, class banners', '#fff'],
+    ['Light Green', '#E4F6E8', 'primaryLight', 'Selected states, success fills', '#176B36'],
+    ['Primary Purple', '#5145E5', 'ai', 'Socratic AI surfaces only', '#fff'],
+    ['Dark Purple', '#4035C9', 'aiDark', 'AI hover and pressed', '#fff'],
+    ['Light Purple', '#EEEAFE', 'aiLight', 'AI bubbles and badges', '#4035C9']
+  ],
+  surface: [
+    ['Canvas', '#F7FBFA', 'canvas', 'App background', '#17213D'],
+    ['Surface', '#FFFFFF', 'surface', 'Cards, sheets, dialogs', '#17213D'],
+    ['Surface Subtle', '#F2F6F5', 'surfaceSubtle', 'Table headers, segmented', '#17213D'],
+    ['Border', '#E4EAF0', 'border', 'Dividers and outlines', '#17213D']
+  ],
+  text: [
+    ['Text Primary', '#17213D', 'textPrimary', 'Headings and body', '#fff'],
+    ['Text Secondary', '#667085', 'textSecondary', 'Supporting copy', '#fff'],
+    ['Text Muted', '#98A2B3', 'textMuted', 'Placeholders, disabled', '#fff']
+  ],
+  status: [
+    ['Success', '#22A447', 'success', 'Passed, synced', '#fff'],
+    ['Warning', '#F5B82E', 'warning', 'Queued, timers', '#17213D'],
+    ['Danger', '#EF5350', 'danger', 'Errors, lockouts', '#fff'],
+    ['Info', '#3B82F6', 'info', 'Neutral information', '#fff']
+  ]
+};
+
+function swatches() {
+  const titles = { brand: 'Brand', surface: 'Surfaces', text: 'Text', status: 'Status' };
+  return Object.keys(COLORS).map(k =>
+    '<div class="group-title">' + titles[k] + '</div><div class="swatch-grid">' +
+    COLORS[k].map(c =>
+      '<div class="swatch" onclick="copyText(\'' + c[1] + '\')" title="Click to copy">' +
+      '<div class="chipc" style="background:' + c[1] + ';color:' + c[4] + ';' + (c[1] === '#FFFFFF' ? 'border-bottom:1px solid #E4EAF0;' : '') + '">' + c[2] + '</div>' +
+      '<div class="meta">' + c[0] + '<small>' + c[1] + '</small></div></div>').join('') + '</div>'
+  ).join('');
+}
+
+const ICONS = ['house','chat-circle-dots','notebook','timer','sparkle','camera','bell','gear','user','users','book-open','clipboard-text','check-circle','warning-circle','wifi-slash','broadcast','cloud-slash','lock-key','download-simple','upload-simple','magnifying-glass','plus','x','arrow-right','chart-bar','calendar-check','paperclip','printer','usb','trash','pencil-simple','eye'];
+function iconGrid() {
+  return '<div class="icon-grid">' + ICONS.map(i => '<div class="icon-cell"><i class="ph ph-' + i + '"></i>' + i + '</div>').join('') + '</div>';
+}
+
+/* ==========================================================================
+   COMPONENT REGISTRY
+   Each entry: id, title, icon, desc, wide, preview, react, kotlin, dos, donts, a11y
+   ========================================================================== */
+const GROUPS = [
+
+/* ----------------------------- FOUNDATIONS ----------------------------- */
+{ name: 'Foundations', items: [
+{
+  id: 'colors', title: 'Colors', icon: 'palette', wide: true,
+  desc: 'Solid flat fills with zero gradients. Purple is reserved for the Socratic AI so pupils always know when they are talking to the tutor. Click any swatch to copy its hex value.',
+  preview: swatches(),
+  react: `// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        lara: {
+          primary: '#2E9B4B',
+          'primary-dark': '#176B36',
+          'primary-light': '#E4F6E8',
+          ai: '#5145E5',
+          'ai-dark': '#4035C9',
+          'ai-light': '#EEEAFE',
+          canvas: '#F7FBFA',
+          subtle: '#F2F6F5',
+          border: '#E4EAF0',
+          ink: '#17213D',
+          'ink-2': '#667085',
+          'ink-3': '#98A2B3',
+          success: '#22A447',
+          warning: '#F5B82E',
+          danger: '#EF5350',
+          info: '#3B82F6',
+          'warning-light': '#FEF0C7',
+          'danger-light': '#FEE4E2',
+          'info-light': '#E0F2FE',
+        },
+      },
+      fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
+    },
+  },
+};`,
+  kotlin: `// ui/theme/Color.kt
+import androidx.compose.ui.graphics.Color
+
+object LaraColors {
+    val Primary = Color(0xFF2E9B4B)
+    val PrimaryDark = Color(0xFF176B36)
+    val PrimaryLight = Color(0xFFE4F6E8)
+    val Ai = Color(0xFF5145E5)
+    val AiDark = Color(0xFF4035C9)
+    val AiLight = Color(0xFFEEEAFE)
+    val Canvas = Color(0xFFF7FBFA)
+    val Surface = Color(0xFFFFFFFF)
+    val SurfaceSubtle = Color(0xFFF2F6F5)
+    val Border = Color(0xFFE4EAF0)
+    val TextPrimary = Color(0xFF17213D)
+    val TextSecondary = Color(0xFF667085)
+    val TextMuted = Color(0xFF98A2B3)
+    val Success = Color(0xFF22A447)
+    val Warning = Color(0xFFF5B82E)
+    val Danger = Color(0xFFEF5350)
+    val Info = Color(0xFF3B82F6)
+    val WarningLight = Color(0xFFFEF0C7)
+    val DangerLight = Color(0xFFFEE4E2)
+    val InfoLight = Color(0xFFE0F2FE)
+}
+
+private val LaraScheme = lightColorScheme(
+    primary = LaraColors.Primary,
+    onPrimary = Color.White,
+    secondary = LaraColors.Ai,
+    background = LaraColors.Canvas,
+    surface = LaraColors.Surface,
+    onSurface = LaraColors.TextPrimary,
+    outline = LaraColors.Border,
+    error = LaraColors.Danger,
+)`,
+  dos: ['Use Primary Green for the single main action on a screen.', 'Pair every status color with an icon and a text label.', 'Keep AI Purple exclusive to tutor surfaces.'],
+  donts: ['Do not use gradients anywhere in the product.', 'Do not use color alone to communicate correct or incorrect.', 'Do not place Text Muted on tinted backgrounds for essential content.'],
+  a11y: ['Text Primary on Canvas has a contrast ratio above 14:1.', 'White on Primary Green passes WCAG AA for large and bold text.', 'Text Muted is for placeholders and disabled content only.']
+},
+{
+  id: 'typography', title: 'Typography', icon: 'text-aa', wide: true,
+  desc: 'Nunito provides rounded, high-contrast letterforms that are friendly and legible for primary school pupils. Minimum body size on mobile is 16sp.',
+  preview: `<div class="stack" style="gap:18px">
+    <div class="type-row"><div class="type-meta">Display | 40 / 48 | Black 900</div><div style="font-size:38px;font-weight:900;line-height:1.2;margin-top:4px">Learning grows with you.</div></div>
+    <div class="type-row"><div class="type-meta">Heading 1 | 28 / 36 | ExtraBold 800</div><div style="font-size:28px;font-weight:800;margin-top:4px">Science 4: Ecosystems and Living Things</div></div>
+    <div class="type-row"><div class="type-meta">Heading 2 | 22 / 30 | Bold 700</div><div style="font-size:22px;font-weight:700;margin-top:4px">Weekly Modules and Paperless Quizzes</div></div>
+    <div class="type-row"><div class="type-meta">Title | 18 / 26 | ExtraBold 800</div><div style="font-size:18px;font-weight:800;margin-top:4px">Pagsusulit #2: Parts of a Leaf</div></div>
+    <div class="type-row"><div class="type-meta">Body | 16 / 24 | Medium 500</div><div style="font-size:16px;font-weight:500;line-height:1.6;margin-top:4px">Please review Handout #2 regarding Photosynthesis before taking Friday's quiz. All files are cached offline.</div></div>
+    <div class="type-row"><div class="type-meta">Label | 14 / 20 | ExtraBold 800</div><div style="font-size:14px;font-weight:800;margin-top:4px">Student 4-Digit PIN or Class Code</div></div>
+    <div class="type-row"><div class="type-meta">Caption | 12 / 16 | SemiBold 600</div><div style="font-size:12px;font-weight:600;color:var(--color-text-secondary);margin-top:4px">Yesterday, 2:15 PM | Classroom Wi-Fi Hub</div></div>
+  </div>`,
+  react: `// Tailwind utility map
+display : "text-[40px] leading-[48px] font-black"
+h1      : "text-[28px] leading-9 font-extrabold"
+h2      : "text-[22px] leading-[30px] font-bold"
+title   : "text-lg leading-[26px] font-extrabold"
+body    : "text-base leading-6 font-medium"
+label   : "text-sm leading-5 font-extrabold"
+caption : "text-xs leading-4 font-semibold"`,
+  kotlin: `// ui/theme/Type.kt
+val Nunito = FontFamily(
+    Font(R.font.nunito_regular, FontWeight.Normal),
+    Font(R.font.nunito_semibold, FontWeight.SemiBold),
+    Font(R.font.nunito_bold, FontWeight.Bold),
+    Font(R.font.nunito_extrabold, FontWeight.ExtraBold),
+    Font(R.font.nunito_black, FontWeight.Black),
+)
+
+val LaraTypography = Typography(
+    displayLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Black, fontSize = 40.sp, lineHeight = 48.sp),
+    headlineLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, lineHeight = 36.sp),
+    headlineMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 30.sp),
+    titleMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, lineHeight = 26.sp),
+    bodyLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
+    labelLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp),
+)`,
+  dos: ['Keep body copy at 16px or larger for pupils.', 'Use weight, not size, to create hierarchy inside cards.', 'Bundle Nunito with the Android app so it works offline.'],
+  donts: ['Do not use more than three sizes on one screen.', 'Do not set body text in Black 900.', 'Do not load fonts from a CDN on the offline mobile app.'],
+  a11y: ['Respect system font scaling; use sp units in Compose and rem in React.', 'Maintain a line height of at least 1.4 for body text.', 'Avoid all caps for sentences; reserve it for short labels.']
+},
+{
+  id: 'spacing', title: 'Spacing, Radii and Depth', icon: 'ruler', wide: true,
+  desc: 'A 4px base grid, four corner radii, and a layered shadow system tinted with navy to avoid muddy gray halos.',
+  preview: `<div class="stack" style="gap:6px">
+    <div class="group-title">Spacing scale</div>
+    ${[['4',4,'space-1'],['8',8,'space-2'],['12',12,'space-3'],['16',16,'space-4'],['20',20,'space-5'],['24',24,'space-6'],['32',32,'space-8'],['48',48,'space-12']].map(s => '<div class="space-row"><code>' + s[2] + '</code><div class="sp" style="width:' + (s[1]*4) + 'px"></div>' + s[0] + 'px</div>').join('')}
+    <div class="group-title" style="margin-top:20px">Radii</div>
+    <div class="row" style="justify-content:flex-start">
+      ${[['sm',8],['md',12],['lg',16],['xl',24],['pill',9999]].map(r => '<div style="width:84px;height:64px;background:var(--color-light-green);border:2px solid var(--color-primary-green);border-radius:' + Math.min(r[1],32) + 'px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--color-dark-green)">' + r[0] + '</div>').join('')}
+    </div>
+    <div class="group-title" style="margin-top:20px">Elevation</div>
+    <div class="shadow-demo">
+      <div class="shadow-box" style="box-shadow:var(--shadow-card)">card</div>
+      <div class="shadow-box" style="box-shadow:var(--shadow-card-hover)">card hover</div>
+      <div class="shadow-box" style="box-shadow:var(--shadow-elevated)">elevated</div>
+      <div class="shadow-box" style="box-shadow:var(--shadow-toast)">toast</div>
+      <div class="shadow-box" style="box-shadow:var(--shadow-modal)">modal</div>
+    </div>
+  </div>`,
+  react: `/* tokens.css */
+:root {
+  --radius-sm: 8px;  --radius-md: 12px;
+  --radius-lg: 16px; --radius-xl: 24px;
+  --min-touch-target: 52px;
+
+  --shadow-card:
+    0 1px 3px 0 rgba(23,33,61,.05), 0 1px 2px -1px rgba(23,33,61,.05);
+  --shadow-card-hover:
+    0 4px 6px -1px rgba(23,33,61,.07), 0 2px 4px -2px rgba(23,33,61,.05);
+  --shadow-elevated:
+    0 10px 15px -3px rgba(23,33,61,.08), 0 4px 6px -4px rgba(23,33,61,.04);
+  --shadow-toast:
+    0 12px 28px -4px rgba(23,33,61,.12), 0 4px 8px -2px rgba(23,33,61,.06);
+  --shadow-modal:
+    0 24px 48px -12px rgba(23,33,61,.22), 0 8px 16px -4px rgba(23,33,61,.08);
+}
+
+// tailwind.config.js (extend)
+boxShadow: {
+  card: 'var(--shadow-card)',
+  'card-hover': 'var(--shadow-card-hover)',
+  elevated: 'var(--shadow-elevated)',
+  toast: 'var(--shadow-toast)',
+  modal: 'var(--shadow-modal)',
+},
+borderRadius: { md: '12px', lg: '16px', xl: '24px' },`,
+  kotlin: `// ui/theme/Shape.kt
+object LaraSpacing {
+    val S1 = 4.dp;  val S2 = 8.dp;  val S3 = 12.dp; val S4 = 16.dp
+    val S5 = 20.dp; val S6 = 24.dp; val S8 = 32.dp; val S12 = 48.dp
+}
+
+val LaraShapes = Shapes(
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
+)
+
+val MinTouchTarget = 52.dp
+
+// Compose elevation is a single blur, so tint the shadow with navy
+fun Modifier.laraShadow(elevation: Dp = 2.dp, shape: Shape = LaraShapes.large) =
+    this.shadow(
+        elevation = elevation,
+        shape = shape,
+        ambientColor = Color(0x1417213D),
+        spotColor = Color(0x2017213D),
+    )`,
+  dos: ['Use multiples of 4 for every gap and padding.', 'Use shadow-card for resting surfaces and shadow-elevated for overlays.', 'Keep a 16px screen gutter on mobile.'],
+  donts: ['Do not mix more than two radii inside one component.', 'Do not use pure black or gray shadows.', 'Do not stack shadows on nested cards.'],
+  a11y: ['Never let the interactive area fall below 52px for pupil-facing controls.', 'Keep at least 8px between adjacent touch targets.', 'Do not rely on shadow alone to indicate a focused element.']
+},
+{
+  id: 'icons', title: 'Iconography', icon: 'shapes', wide: true,
+  desc: 'Phosphor Icons in the Regular weight. Use Fill weight only for the active state of a navigation item.',
+  preview: iconGrid(),
+  react: `// npm i @phosphor-icons/react
+import { CheckCircle, Sparkle, WifiSlash } from '@phosphor-icons/react';
+
+<CheckCircle size={20} weight="regular" />
+<Sparkle size={24} weight="fill" className="text-lara-ai" />
+<WifiSlash size={22} />`,
+  kotlin: `// implementation("com.adamglin:phosphor-icon:1.0.0")
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.regular.CheckCircle
+import com.adamglin.phosphoricons.fill.Sparkle
+
+Icon(
+    imageVector = PhosphorIcons.Regular.CheckCircle,
+    contentDescription = null,
+    tint = LaraColors.Primary,
+    modifier = Modifier.size(20.dp),
+)`,
+  dos: ['Use 20px inside buttons, 24px in navigation, 28px or larger in empty states.', 'Pair icons with a visible text label wherever space allows.'],
+  donts: ['Do not mix icon families.', 'Do not recolor icons outside the token palette.'],
+  a11y: ['Decorative icons use contentDescription = null and aria-hidden.', 'Icon-only buttons need an accessible name.']
+}
+]},
+
+/* ----------------------------- FEEDBACK ----------------------------- */
+{ name: 'Feedback and Alerts', items: [
+{
+  id: 'toast', title: 'Toast', icon: 'bell', tag: 'NEW',
+  desc: 'A short, non-blocking notification confirming actions, offline storage, and quiz anti-cheat lockouts. Auto-dismisses after four seconds.',
+  preview: `<div class="row" style="margin-bottom:24px">
+      <button class="btn btn-primary" onclick="triggerToast('success')"><i class="ph ph-check"></i> Success</button>
+      <button class="btn btn-secondary" onclick="triggerToast('warning')"><i class="ph ph-cloud-slash"></i> Offline</button>
+      <button class="btn btn-ai" onclick="triggerToast('ai')"><i class="ph ph-sparkle"></i> AI Hint</button>
+      <button class="btn btn-danger" onclick="triggerToast('danger')"><i class="ph ph-lock"></i> Lockout</button>
+    </div>
+    <div class="toast-container">
+      <div class="toast toast-success"><div class="toast-icon-wrap"><i class="ph ph-check-circle"></i></div><div class="toast-body"><div class="toast-title">Lesson Handout Cached</div><div class="toast-desc">Handout #2 (Parts of a Leaf) is ready for offline study.</div></div><button class="toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button></div>
+      <div class="toast toast-warning"><div class="toast-icon-wrap"><i class="ph ph-cloud-slash"></i></div><div class="toast-body"><div class="toast-title">Offline Mode: Queued for Sync</div><div class="toast-desc">Quiz attempt saved locally. Will push when reconnected to Hub.</div></div><button class="toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button></div>
+    </div>`,
+  react: `type ToastTone = 'success' | 'warning' | 'danger' | 'ai';
+
+const tone: Record<ToastTone, string> = {
+  success: 'bg-lara-primary-light text-lara-primary-dark',
+  warning: 'bg-lara-warning-light text-[#B54708]',
+  danger: 'bg-lara-danger-light text-lara-danger',
+  ai: 'bg-lara-ai-light text-lara-ai-dark',
+};
+
+export function Toast({ title, desc, icon, kind = 'success', onClose }: Props) {
+  return (
+    <div role="status" aria-live="polite"
+      className="flex items-start gap-3 p-4 rounded-2xl bg-white border border-lara-border shadow-toast">
+      <div className={'w-7 h-7 rounded-full flex items-center justify-center shrink-0 ' + tone[kind]}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <h4 className="text-sm font-extrabold text-lara-ink">{title}</h4>
+        <p className="text-xs text-lara-ink-2 mt-0.5">{desc}</p>
+      </div>
+      <button onClick={onClose} aria-label="Dismiss" className="text-lara-ink-3">
+        <X size={16} />
+      </button>
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraToast(
+    title: String,
+    desc: String,
+    icon: ImageVector,
+    iconBg: Color = LaraColors.PrimaryLight,
+    iconTint: Color = LaraColors.PrimaryDark,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .laraShadow(8.dp)
+            .background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp))
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            Modifier.size(28.dp).background(iconBg, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, tint = iconTint, modifier = Modifier.size(16.dp)) }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.labelLarge)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
+        }
+    }
+}
+
+// Host it with a SnackbarHostState and show with scope.launch { host.showSnackbar(...) }`,
+  dos: ['Keep titles under 32 characters and descriptions under 80.', 'Place toasts bottom-right on desktop and above the bottom navigation on mobile.'],
+  donts: ['Do not use a toast for errors that block progress; use a dialog.', 'Do not stack more than three toasts.'],
+  a11y: ['Use role="status" with aria-live="polite" for confirmations.', 'Provide a visible dismiss control; do not rely on the timer.']
+},
+{
+  id: 'banner', title: 'Alert Banner', icon: 'warning-circle',
+  desc: 'Persistent status messages at the top of a screen for offline mode, hub connection, and exam lockouts.',
+  wide: true,
+  preview: `<div class="stack">
+    <div class="alert-banner alert-banner-warning"><i class="ph ph-wifi-slash"></i><span><strong>Offline Mode Active:</strong> All changes, quiz answers, and photo submissions are saved locally on your device.</span></div>
+    <div class="alert-banner alert-banner-success"><i class="ph ph-broadcast"></i><span><strong>Connected to Teacher Hub:</strong> Live quiz timer synchronized and ready for auto-grading.</span></div>
+    <div class="alert-banner alert-banner-danger"><i class="ph ph-lock-key"></i><span><strong>Exam In Progress:</strong> Socratic AI and external aids are locked until quiz submission.</span></div>
+    <div class="alert-banner alert-banner-info"><i class="ph ph-info"></i><span><strong>New Module Available:</strong> Lesson 3 will download automatically on the next Hub connection.</span></div>
+  </div>`,
+  react: `const styles = {
+  warning: 'bg-lara-warning-light text-[#93370D] border-[#FEDF89]',
+  success: 'bg-lara-primary-light text-lara-primary-dark border-[#C4ECCB]',
+  danger: 'bg-lara-danger-light text-[#B42318] border-[#FECDCA]',
+  info: 'bg-lara-info-light text-[#0369A1] border-[#BAE6FD]',
+};
+
+export function AlertBanner({ kind, icon, title, children }: Props) {
+  return (
+    <div role="alert"
+      className={'flex items-center gap-3 p-4 rounded-xl border shadow-card text-sm font-bold ' + styles[kind]}>
+      <span className="text-[22px]">{icon}</span>
+      <span><strong>{title}:</strong> {children}</span>
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun AlertBanner(
+    title: String,
+    message: String,
+    icon: ImageVector,
+    container: Color,
+    content: Color,
+    border: Color,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(container, RoundedCornerShape(12.dp))
+            .border(1.dp, border, RoundedCornerShape(12.dp))
+            .padding(horizontal = 18.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(icon, null, tint = content, modifier = Modifier.size(22.dp))
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold)) { append("$title: ") }
+                append(message)
+            },
+            color = content,
+            style = MaterialTheme.typography.labelLarge,
+        )
+    }
+}`,
+  dos: ['Show only one banner at a time, ordered by severity.', 'Lead with a short bold title, then one sentence of detail.'],
+  donts: ['Do not make banners dismissible when the state is still active.', 'Do not use a banner for transient confirmations; use a toast.'],
+  a11y: ['Use role="alert" for urgent states such as exam lockout.', 'Do not rely on color; the icon and the title carry the meaning.']
+},
+{
+  id: 'badge', title: 'Status Badges and Chips', icon: 'tag', wide: true,
+  desc: 'Compact pills conveying sync state, DepEd assessment categories, counts, and live network beacon connectivity.',
+  preview: `<div class="stack" style="align-items:center">
+    <div class="row">
+      <span class="badge badge-synced"><i class="ph ph-check-circle"></i> SYNCED TO HUB</span>
+      <span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> QUEUED OFFLINE</span>
+      <span class="badge badge-deped"><i class="ph ph-clipboard-text"></i> WRITTEN WORK (40%)</span>
+      <span class="badge badge-ai"><i class="ph ph-sparkle"></i> SOCRATIC AI</span>
+      <span class="badge badge-danger"><i class="ph ph-warning-circle"></i> MISSING</span>
+      <span class="badge badge-neutral"><i class="ph ph-clock"></i> DRAFT</span>
+    </div>
+    <div class="row">
+      <div class="radar-pill"><div class="radar-dot"></div><span>Hub: 192.168.1.50</span></div>
+      <div class="radar-pill"><div class="radar-dot warn"></div><span>Searching for Hub</span></div>
+      <div class="radar-pill"><div class="radar-dot off"></div><span>Offline</span></div>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px">Stream <span class="count-dot">3</span></span>
+    </div>
+  </div>`,
+  react: `export function Badge({ tone, icon, children }: Props) {
+  const tones = {
+    synced: 'bg-lara-primary-light text-lara-primary-dark border-[#C4ECCB]',
+    queued: 'bg-lara-warning-light text-[#B54708] border-[#FEDF89]',
+    deped: 'bg-lara-info-light text-[#0369A1] border-[#BAE6FD]',
+    ai: 'bg-lara-ai-light text-lara-ai-dark border-[#D6CCFC]',
+    danger: 'bg-lara-danger-light text-[#B42318] border-[#FECDCA]',
+  };
+  return (
+    <span className={'inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-extrabold tracking-wide ' + tones[tone]}>
+      {icon}{children}
+    </span>
+  );
+}
+
+export const HubBeacon = ({ ip, state }: Props) => (
+  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-lara-border shadow-card text-[13px] font-extrabold">
+    <span className={'w-2.5 h-2.5 rounded-full ' + (state === 'on' ? 'bg-lara-success' : 'bg-lara-ink-3')} />
+    Hub: {ip}
+  </div>
+);`,
+  kotlin: `@Composable
+fun LaraBadge(
+    text: String,
+    icon: ImageVector,
+    container: Color,
+    content: Color,
+    border: Color,
+) {
+    Row(
+        Modifier
+            .background(container, CircleShape)
+            .border(1.dp, border, CircleShape)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(icon, null, tint = content, modifier = Modifier.size(15.dp))
+        Text(text, color = content, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, letterSpacing = 0.3.sp)
+    }
+}
+
+@Composable
+fun HubBeacon(ip: String, connected: Boolean) {
+    Row(
+        Modifier.laraShadow(2.dp, CircleShape).background(Color.White, CircleShape)
+            .border(1.dp, LaraColors.Border, CircleShape).padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(Modifier.size(10.dp).background(if (connected) LaraColors.Success else LaraColors.TextMuted, CircleShape))
+        Text("Hub: $ip", fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+    }
+}`,
+  dos: ['Keep badge text in uppercase and under 22 characters.', 'Always include an icon with the status color.'],
+  donts: ['Do not use badges as buttons.', 'Do not introduce a new badge color without a new semantic meaning.'],
+  a11y: ['Status is communicated by label and icon, never by color alone.', 'Beacon dots need an adjacent text label.']
+},
+{
+  id: 'progress', title: 'Progress Indicators', icon: 'chart-donut',
+  desc: 'Linear bars for downloads and lesson completion, and a circular ring for scores and quiz results.',
+  wide: true,
+  preview: `<div class="stack" style="gap:24px">
+    <div><div class="label-xs">Lesson download | 68%</div><div class="progress" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><span style="width:68%"></span></div></div>
+    <div><div class="label-xs">AI tutor session budget | 40%</div><div class="progress ai"><span style="width:40%"></span></div></div>
+    <div><div class="label-xs">Quiz time remaining | 18%</div><div class="progress warn"><span style="width:18%"></span></div></div>
+    <div class="row" style="justify-content:flex-start;gap:28px">
+      ${[['92','Quiz 1','#2E9B4B'],['76','Quiz 2','#F5B82E'],['48','Quiz 3','#EF5350']].map(r => '<div class="ring"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#E4EAF0" stroke-width="10"/><circle cx="48" cy="48" r="40" fill="none" stroke="' + r[2] + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (2*Math.PI*40) + '" stroke-dashoffset="' + (2*Math.PI*40*(1-r[0]/100)) + '"/></svg><div class="ring-label">' + r[0] + '%<small>' + r[1] + '</small></div></div>').join('')}
+    </div>
+  </div>`,
+  react: `export function Progress({ value, tone = 'bg-lara-primary' }: Props) {
+  return (
+    <div role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}
+      className="w-full h-3 rounded-full bg-lara-border overflow-hidden">
+      <div className={'h-full rounded-full transition-all ' + tone} style={{ width: value + '%' }} />
+    </div>
+  );
+}
+
+export function ScoreRing({ value, color }: { value: number; color: string }) {
+  const r = 40, c = 2 * Math.PI * r;
+  return (
+    <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+      <circle cx="48" cy="48" r={r} fill="none" stroke="#E4EAF0" strokeWidth="10" />
+      <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="10"
+        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} />
+    </svg>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraProgress(progress: Float, color: Color = LaraColors.Primary, modifier: Modifier = Modifier) {
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier.fillMaxWidth().height(12.dp).clip(CircleShape),
+        color = color,
+        trackColor = LaraColors.Border,
+        strokeCap = StrokeCap.Round,
+        drawStopIndicator = {},
+    )
+}
+
+@Composable
+fun ScoreRing(percent: Int, color: Color, label: String) {
+    Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(
+            progress = { percent / 100f },
+            modifier = Modifier.fillMaxSize(),
+            color = color,
+            trackColor = LaraColors.Border,
+            strokeWidth = 10.dp,
+            strokeCap = StrokeCap.Round,
+        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("$percent%", fontWeight = FontWeight.Black, fontSize = 22.sp)
+            Text(label, fontSize = 10.sp, color = LaraColors.TextSecondary, fontWeight = FontWeight.ExtraBold)
+        }
+    }
+}`,
+  dos: ['Show a numeric value next to any score ring.', 'Use warning color for time running out, danger only for scores below passing.'],
+  donts: ['Do not animate indefinitely when progress is known.', 'Do not use purple unless the progress belongs to the AI tutor.'],
+  a11y: ['Expose value, minimum and maximum to assistive technology.', 'Announce completion, not every percent change.']
+},
+{
+  id: 'skeleton', title: 'Skeleton Loader', icon: 'rectangle',
+  desc: 'Solid placeholder blocks with a soft opacity pulse. No gradient shimmer, so it remains consistent with the flat design language and is cheaper on low-end devices.',
+  wide: true,
+  preview: `<div class="card card-pad" style="max-width:420px;margin:0 auto">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px"><div class="skel" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skel" style="height:14px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:10px;width:35%"></div></div></div>
+    <div class="skel" style="height:12px;width:100%;margin-bottom:8px"></div>
+    <div class="skel" style="height:12px;width:92%;margin-bottom:8px"></div>
+    <div class="skel" style="height:12px;width:60%;margin-bottom:16px"></div>
+    <div class="skel" style="height:44px;width:140px;border-radius:9999px"></div>
+  </div>`,
+  react: `export const Skeleton = ({ className = '' }: { className?: string }) => (
+  <div aria-hidden className={'bg-lara-border rounded-lg animate-pulse ' + className} />
+);
+
+// Usage
+<div role="status" aria-label="Loading stream">
+  <Skeleton className="h-3 w-full mb-2" />
+  <Skeleton className="h-3 w-4/6" />
+</div>`,
+  kotlin: `@Composable
+fun SkeletonBlock(modifier: Modifier = Modifier) {
+    val alpha by rememberInfiniteTransition(label = "skeleton").animateFloat(
+        initialValue = 1f,
+        targetValue = 0.45f,
+        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+        label = "alpha",
+    )
+    Box(
+        modifier
+            .graphicsLayer { this.alpha = alpha }
+            .background(LaraColors.Border, RoundedCornerShape(8.dp)),
+    )
+}`,
+  dos: ['Match the skeleton to the final layout to avoid content jumps.', 'Replace with an empty state when loading completes with no data.'],
+  donts: ['Do not show skeletons for more than a few seconds without an offline explanation.', 'Do not use shimmer gradients.'],
+  a11y: ['Mark the container with role="status" and a label.', 'Respect reduced motion by disabling the pulse.']
+},
+{
+  id: 'empty', title: 'Empty State', icon: 'tray',
+  desc: 'Friendly guidance when a list has no content, always paired with a single clear next action.',
+  wide: true,
+  preview: `<div class="empty"><div class="empty-icon"><i class="ph ph-notebook"></i></div><h4>No classwork yet</h4><p>When your teacher posts a handout or quiz, it will appear here and be saved for offline use.</p><button class="btn btn-secondary btn-pill"><i class="ph ph-arrows-clockwise"></i> Check for updates</button></div>`,
+  react: `export function EmptyState({ icon, title, body, action }: Props) {
+  return (
+    <div className="flex flex-col items-center text-center gap-2.5 max-w-[340px] mx-auto py-10">
+      <div className="w-20 h-20 rounded-full bg-lara-primary-light text-lara-primary flex items-center justify-center text-[40px]">
+        {icon}
+      </div>
+      <h4 className="text-lg font-black text-lara-ink">{title}</h4>
+      <p className="text-sm font-semibold text-lara-ink-2 mb-1.5">{body}</p>
+      {action}
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun EmptyState(icon: ImageVector, title: String, body: String, action: @Composable () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(Modifier.size(80.dp).background(LaraColors.PrimaryLight, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = LaraColors.Primary, modifier = Modifier.size(40.dp))
+        }
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Text(body, style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary, textAlign = TextAlign.Center)
+        action()
+    }
+}`,
+  dos: ['Explain why the area is empty and what will fill it.', 'Offer one secondary-weight action at most.'],
+  donts: ['Do not blame the user.', 'Do not use empty states for errors; use a banner or dialog.'],
+  a11y: ['The illustration is decorative; the heading carries the message.']
+},
+{
+  id: 'dialog', title: 'Dialog', icon: 'chat-centered-text',
+  desc: 'A modal confirmation for destructive or irreversible actions such as submitting a quiz.',
+  preview: `<button class="btn btn-primary" data-open="dlg-demo"><i class="ph ph-paper-plane-tilt"></i> Submit quiz</button>
+    <div class="scrim" id="dlg-demo"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+      <div class="modal-icon"><i class="ph ph-warning"></i></div>
+      <h4 id="dlg-title">Submit your answers?</h4>
+      <p>You have 2 unanswered questions. Once submitted, you cannot change your answers.</p>
+      <div class="modal-actions"><button class="btn btn-secondary" data-close="dlg-demo">Go back</button><button class="btn btn-primary" data-close="dlg-demo">Submit</button></div>
+    </div></div>`,
+  react: `// Uses Radix Dialog for focus trapping and escape handling
+import * as Dialog from '@radix-ui/react-dialog';
+
+export function ConfirmDialog({ open, onOpenChange, onConfirm }: Props) {
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-lara-ink/50" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-40px)] max-w-sm rounded-3xl bg-white p-6 shadow-modal">
+          <Dialog.Title className="text-xl font-black text-lara-ink">Submit your answers?</Dialog.Title>
+          <Dialog.Description className="text-sm font-semibold text-lara-ink-2 mt-1.5 mb-5">
+            You have 2 unanswered questions. Once submitted, you cannot change your answers.
+          </Dialog.Description>
+          <div className="flex gap-2.5">
+            <button onClick={() => onOpenChange(false)} className="flex-1 min-h-[52px] rounded-xl border-2 border-lara-border font-extrabold">Go back</button>
+            <button onClick={onConfirm} className="flex-1 min-h-[52px] rounded-xl bg-lara-primary text-white font-extrabold">Submit</button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}`,
+  kotlin: `@Composable
+fun ConfirmDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color.White,
+        icon = {
+            Box(Modifier.size(52.dp).background(LaraColors.WarningLight, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(PhosphorIcons.Regular.Warning, null, tint = Color(0xFFB54708), modifier = Modifier.size(28.dp))
+            }
+        },
+        title = { Text("Submit your answers?", fontWeight = FontWeight.Black) },
+        text = { Text("You have 2 unanswered questions. Once submitted, you cannot change your answers.", color = LaraColors.TextSecondary) },
+        confirmButton = { LaraButton("Submit", onClick = onConfirm) },
+        dismissButton = { LaraButton("Go back", style = ButtonStyle.Secondary, onClick = onDismiss) },
+    )
+}`,
+  dos: ['State the consequence in the body, not only in the title.', 'Label buttons with verbs that match the action.'],
+  donts: ['Do not open a dialog for non-critical information.', 'Do not place the destructive action on the left of the primary.'],
+  a11y: ['Trap focus inside the dialog and return it to the trigger on close.', 'Close on Escape and on the Android back gesture.']
+},
+{
+  id: 'sheet', title: 'Bottom Sheet', icon: 'rows', tag: 'MOBILE',
+  desc: 'A mobile-only surface that slides up for secondary actions such as attachments or sort options.',
+  preview: `<div class="phone"><div class="phone-status"><span>9:41</span><span>LTE</span></div>
+    <div class="app-bar"><button aria-label="Back"><i class="ph ph-arrow-left"></i></button><h3>Handout #2</h3></div>
+    <div class="phone-body">
+      <div class="card card-pad"><h4 style="font-weight:900;font-size:16px">Parts of a Leaf</h4><p style="font-size:13px;color:var(--color-text-secondary);font-weight:600;margin-top:4px">Draw and label the blade, petiole and veins.</p></div>
+      <button class="btn btn-primary btn-block" data-sheet-open="sheet-demo"><i class="ph ph-plus"></i> Add work</button>
+    </div>
+    <div class="sheet-scrim" id="sheet-demo-scrim" data-sheet-close="sheet-demo"></div>
+    <div class="sheet" id="sheet-demo"><div class="sheet-handle"></div>
+      <div class="list-item" style="padding:12px 4px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-camera"></i></div><div class="list-main"><h4>Take a photo</h4><p>Frame your notebook page</p></div></div>
+      <div class="list-item" style="padding:12px 4px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-file-arrow-up"></i></div><div class="list-main"><h4>Upload a file</h4><p>PDF or image</p></div></div>
+      <button class="btn btn-secondary btn-block" style="margin-top:10px" data-sheet-close="sheet-demo">Cancel</button>
+    </div></div>`,
+  react: `// Desktop and web fall back to a Dialog; on small screens use a drawer
+import { Drawer } from 'vaul';
+
+<Drawer.Root>
+  <Drawer.Trigger className="min-h-[52px] px-6 rounded-xl bg-lara-primary text-white font-extrabold">
+    Add work
+  </Drawer.Trigger>
+  <Drawer.Portal>
+    <Drawer.Overlay className="fixed inset-0 bg-lara-ink/45" />
+    <Drawer.Content className="fixed bottom-0 inset-x-0 rounded-t-3xl bg-white px-[18px] pt-3 pb-6 shadow-modal">
+      <div className="mx-auto mb-3.5 h-[5px] w-10 rounded-full bg-slate-300" />
+      {/* list items */}
+    </Drawer.Content>
+  </Drawer.Portal>
+</Drawer.Root>`,
+  kotlin: `@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddWorkSheet(onDismiss: () -> Unit, onCamera: () -> Unit, onUpload: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        containerColor = Color.White,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0xFFCBD5E1)) },
+    ) {
+        Column(Modifier.padding(horizontal = 18.dp).padding(bottom = 22.dp)) {
+            LaraListItem("Take a photo", "Frame your notebook page", PhosphorIcons.Regular.Camera, onClick = onCamera)
+            LaraListItem("Upload a file", "PDF or image", PhosphorIcons.Regular.FileArrowUp, onClick = onUpload)
+            LaraButton("Cancel", style = ButtonStyle.Secondary, modifier = Modifier.fillMaxWidth(), onClick = onDismiss)
+        }
+    }
+}`,
+  dos: ['Keep to four actions or fewer.', 'Support swipe down and tap on scrim to dismiss.'],
+  donts: ['Do not place forms with many fields in a sheet.', 'Do not use on desktop; use a dialog or popover.'],
+  a11y: ['Move focus into the sheet on open.', 'Provide a visible Cancel button in addition to the swipe gesture.']
+}
+]},
+
+/* ----------------------------- CORE CONTROLS ----------------------------- */
+{ name: 'Core Controls', items: [
+{
+  id: 'button', title: 'Button', icon: 'hand-pointing',
+  desc: 'Tactile, high-contrast action triggers with a strict 52px touch target floor for primary learners. A 40px compact size is permitted on teacher desktop screens only.',
+  wide: true,
+  preview: `<div class="stack" style="align-items:center;gap:20px">
+    <div class="row">
+      <button class="btn btn-primary"><i class="ph ph-check"></i><span>Primary</span></button>
+      <button class="btn btn-ai"><i class="ph ph-sparkle"></i><span>Socratic AI</span></button>
+      <button class="btn btn-secondary"><i class="ph ph-download-simple"></i><span>Secondary</span></button>
+      <button class="btn btn-ghost"><span>Ghost</span></button>
+      <button class="btn btn-danger"><i class="ph ph-trash"></i><span>Destructive</span></button>
+      <button class="btn btn-primary" disabled><i class="ph ph-lock"></i><span>Locked</span></button>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary btn-sm"><i class="ph ph-plus"></i><span>Compact</span></button>
+      <button class="btn btn-primary btn-pill"><span>Pill</span><i class="ph ph-arrow-right"></i></button>
+      <button class="btn btn-secondary btn-icon" aria-label="Settings"><i class="ph ph-gear"></i></button>
+      <button class="btn btn-primary btn-icon btn-pill" aria-label="Add"><i class="ph ph-plus"></i></button>
+      <button class="btn btn-primary loading"><i class="ph ph-circle-notch spin"></i><span>Saving</span></button>
+    </div>
+    <div style="width:100%;max-width:360px"><button class="btn btn-primary btn-block"><i class="ph ph-play"></i><span>Start Quiz</span></button></div>
+  </div>`,
+  react: `type Variant = 'primary' | 'ai' | 'secondary' | 'ghost' | 'danger';
+
+const variants: Record<Variant, string> = {
+  primary: 'bg-lara-primary hover:bg-lara-primary-dark text-white',
+  ai: 'bg-lara-ai hover:bg-lara-ai-dark text-white',
+  secondary: 'bg-white text-lara-ink border-lara-border hover:border-lara-ink-2',
+  ghost: 'bg-transparent text-lara-primary-dark hover:bg-lara-primary-light shadow-none',
+  danger: 'bg-lara-danger-light text-lara-danger border-[#FECDCA] hover:bg-[#FECDCA]',
+};
+
+export function Button({ variant = 'primary', size = 'md', loading, icon, children, ...rest }: Props) {
+  return (
+    <button
+      {...rest}
+      disabled={rest.disabled || loading}
+      className={[
+        'inline-flex items-center justify-center gap-2 rounded-xl border-2 border-transparent font-extrabold',
+        'shadow-card active:scale-[0.98] transition-all',
+        'disabled:bg-lara-border disabled:text-lara-ink-3 disabled:shadow-none disabled:cursor-not-allowed',
+        size === 'md' ? 'min-h-[52px] px-[22px] text-[15px]' : 'min-h-10 px-4 text-sm',
+        variants[variant],
+      ].join(' ')}
+    >
+      {loading ? <CircleNotch className="animate-spin" size={20} /> : icon}
+      {children}
+    </button>
+  );
+}`,
+  kotlin: `enum class ButtonStyle { Primary, Ai, Secondary, Ghost, Danger }
+
+@Composable
+fun LaraButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: ButtonStyle = ButtonStyle.Primary,
+    icon: ImageVector? = null,
+    loading: Boolean = false,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val colors = when (style) {
+        ButtonStyle.Primary -> ButtonDefaults.buttonColors(LaraColors.Primary, Color.White, LaraColors.Border, LaraColors.TextMuted)
+        ButtonStyle.Ai -> ButtonDefaults.buttonColors(LaraColors.Ai, Color.White, LaraColors.Border, LaraColors.TextMuted)
+        ButtonStyle.Secondary -> ButtonDefaults.buttonColors(Color.White, LaraColors.TextPrimary)
+        ButtonStyle.Ghost -> ButtonDefaults.buttonColors(Color.Transparent, LaraColors.PrimaryDark)
+        ButtonStyle.Danger -> ButtonDefaults.buttonColors(LaraColors.DangerLight, LaraColors.Danger)
+    }
+    Button(
+        onClick = onClick,
+        enabled = enabled && !loading,
+        modifier = modifier.heightIn(min = MinTouchTarget),
+        shape = RoundedCornerShape(12.dp),
+        colors = colors,
+        border = if (style == ButtonStyle.Secondary) BorderStroke(2.dp, LaraColors.Border) else null,
+        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
+    ) {
+        if (loading) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+        else icon?.let { Icon(it, null, Modifier.size(20.dp)) }
+        Spacer(Modifier.width(8.dp))
+        Text(text, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+    }
+}`,
+  dos: ['Use one primary button per view.', 'Use a verb plus object for labels, such as "Start quiz".'],
+  donts: ['Do not disable a button without explaining why nearby.', 'Do not use Destructive for cancel actions.'],
+  a11y: ['Minimum 52 by 52 touch target on pupil screens.', 'Icon-only buttons require aria-label or contentDescription.', 'Loading buttons remain focusable and announce their busy state.']
+},
+{
+  id: 'input', title: 'Input and PIN Boxes', icon: 'textbox',
+  desc: 'Elementary-friendly text fields with 52px height, validation states, a textarea, and large PIN digit boxes for class codes.',
+  wide: true,
+  preview: `<div style="max-width:480px;margin:0 auto;width:100%">
+    <div class="form-group"><label class="form-label">Student 4-Digit PIN or Class Code</label>
+      <div class="pin-grid" id="pin-demo">
+        <input class="pin-box" maxlength="1" inputmode="numeric" value="4" aria-label="Digit 1"><input class="pin-box" maxlength="1" inputmode="numeric" value="2" aria-label="Digit 2"><input class="pin-box" maxlength="1" inputmode="numeric" value="8" aria-label="Digit 3"><input class="pin-box" maxlength="1" inputmode="numeric" aria-label="Digit 4">
+      </div></div>
+    <div class="form-group"><label class="form-label" for="lrn">12-Digit DepEd Learner Reference Number (LRN)</label><input id="lrn" class="form-input" placeholder="e.g. 109283746501"><div class="form-hint">Found on your school ID.</div></div>
+    <div class="form-group"><label class="form-label" for="lrn2">Class code</label><input id="lrn2" class="form-input error" value="SCI4-A"><div class="form-error"><i class="ph ph-warning-circle"></i> That code does not match any class.</div></div>
+    <div class="form-group"><label class="form-label">Section</label><input class="form-input" value="Aguinaldo" disabled></div>
+    <div class="form-group" style="margin-bottom:0"><label class="form-label" for="ta">Comment to teacher</label><textarea id="ta" class="form-input" placeholder="Write your question here"></textarea><div class="form-hint" style="text-align:right">0 / 300</div></div>
+  </div>`,
+  react: `export function TextField({ label, hint, error, ...rest }: Props) {
+  const id = useId();
+  return (
+    <div className="w-full mb-4">
+      <label htmlFor={id} className="block text-[13px] font-extrabold text-lara-ink mb-1.5">{label}</label>
+      <input
+        id={id}
+        aria-invalid={!!error}
+        aria-describedby={id + '-msg'}
+        className={[
+          'w-full min-h-[52px] px-3.5 rounded-xl border-2 bg-white text-[15px] font-semibold shadow-card outline-none',
+          'placeholder:text-lara-ink-3 disabled:bg-lara-subtle disabled:text-lara-ink-3',
+          error ? 'border-lara-danger bg-[#FFFBFA]' : 'border-lara-border focus:border-lara-primary',
+        ].join(' ')}
+        {...rest}
+      />
+      <p id={id + '-msg'} className={'text-xs font-semibold mt-1.5 ' + (error ? 'text-[#B42318]' : 'text-lara-ink-2')}>
+        {error ?? hint}
+      </p>
+    </div>
+  );
+}
+
+export function PinInput({ length = 4, onComplete }: Props) {
+  const refs = useRef<HTMLInputElement[]>([]);
+  return (
+    <div className="flex gap-2.5">
+      {Array.from({ length }).map((_, i) => (
+        <input key={i} ref={el => (refs.current[i] = el!)} maxLength={1} inputMode="numeric"
+          aria-label={'Digit ' + (i + 1)}
+          onChange={e => e.target.value && refs.current[i + 1]?.focus()}
+          className="w-[52px] h-[60px] rounded-xl border-2 border-lara-border focus:border-lara-primary text-center text-[26px] font-black bg-white shadow-card outline-none" />
+      ))}
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    hint: String? = null,
+    error: String? = null,
+    enabled: Boolean = true,
+) {
+    Column(modifier) {
+        Text(label, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = enabled,
+            isError = error != null,
+            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = LaraColors.Primary,
+                unfocusedBorderColor = LaraColors.Border,
+                errorBorderColor = LaraColors.Danger,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+        )
+        Text(error ?: hint.orEmpty(), fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+            color = if (error != null) Color(0xFFB42318) else LaraColors.TextSecondary,
+            modifier = Modifier.padding(top = 6.dp))
+    }
+}
+
+@Composable
+fun PinBoxes(pin: String, length: Int = 4, onChange: (String) -> Unit) {
+    BasicTextField(
+        value = pin,
+        onValueChange = { if (it.length <= length && it.all(Char::isDigit)) onChange(it) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        decorationBox = {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                repeat(length) { i ->
+                    Box(
+                        Modifier.size(52.dp, 60.dp).background(Color.White, RoundedCornerShape(12.dp))
+                            .border(2.dp, if (i == pin.length) LaraColors.Primary else LaraColors.Border, RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(pin.getOrNull(i)?.toString().orEmpty(), fontSize = 26.sp, fontWeight = FontWeight.Black) }
+                }
+            }
+        },
+    )
+}`,
+  dos: ['Always show a visible label above the field.', 'Use the numeric keyboard for LRN, PIN and class codes.'],
+  donts: ['Do not use placeholder text as the only label.', 'Do not clear a field after an error.'],
+  a11y: ['Associate error text with the field using aria-describedby.', 'Give each PIN digit its own accessible name.']
+},
+{
+  id: 'select', title: 'Select', icon: 'caret-circle-down',
+  desc: 'A native-backed dropdown. On mobile the system picker is used, which is the most reliable option on entry-level devices.',
+  preview: `<div style="max-width:380px;width:100%"><div class="form-group" style="margin-bottom:0"><label class="form-label" for="sel1">Quarter</label>
+    <div class="select-wrap"><select id="sel1" class="form-input"><option>1st Quarter</option><option>2nd Quarter</option><option>3rd Quarter</option><option>4th Quarter</option></select><i class="ph ph-caret-down"></i></div></div></div>`,
+  react: `export function Select({ label, options, ...rest }: Props) {
+  const id = useId();
+  return (
+    <div className="w-full">
+      <label htmlFor={id} className="block text-[13px] font-extrabold mb-1.5">{label}</label>
+      <div className="relative">
+        <select id={id} {...rest}
+          className="appearance-none w-full min-h-[52px] pl-3.5 pr-11 rounded-xl border-2 border-lara-border bg-white text-[15px] font-semibold shadow-card focus:border-lara-primary outline-none">
+          {options.map(o => <option key={o}>{o}</option>)}
+        </select>
+        <CaretDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-lara-ink-2" />
+      </div>
+    </div>
+  );
+}`,
+  kotlin: `@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LaraSelect(label: String, options: List<String>, selected: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Column {
+        Text(label, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+        Spacer(Modifier.height(6.dp))
+        ExposedDropdownMenuBox(expanded, { expanded = it }) {
+            OutlinedTextField(
+                value = selected, onValueChange = {}, readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth().heightIn(min = MinTouchTarget),
+                shape = RoundedCornerShape(12.dp),
+            )
+            ExposedDropdownMenu(expanded, { expanded = false }) {
+                options.forEach { o -> DropdownMenuItem(text = { Text(o) }, onClick = { onSelect(o); expanded = false }) }
+            }
+        }
+    }
+}`,
+  dos: ['Use a select for 4 to 12 options.', 'Preselect the most likely value.'],
+  donts: ['Do not use a select for fewer than 4 options; use radio buttons.', 'Do not nest selects.'],
+  a11y: ['Keep the native element on web so screen readers and keyboards work.']
+},
+{
+  id: 'selection', title: 'Checkbox, Radio and Switch', icon: 'check-square',
+  desc: 'Large, tappable selection rows. The entire row is the hit area, not only the control.',
+  wide: true,
+  preview: `<div style="max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:10px;width:100%">
+    <div class="label-xs" style="margin-bottom:0">Checkbox</div>
+    <div class="sel-row" data-kind="check" role="checkbox" aria-checked="true" tabindex="0"><div class="check on"><i class="ph-bold ph-check"></i></div>Download for offline use</div>
+    <div class="sel-row" data-kind="check" role="checkbox" aria-checked="false" tabindex="0"><div class="check"><i class="ph-bold ph-check"></i></div>Notify me about new handouts</div>
+    <div class="label-xs" style="margin:10px 0 0">Radio</div>
+    <div class="sel-row" data-kind="radio" role="radio" aria-checked="true" tabindex="0"><div class="radio on"></div>English</div>
+    <div class="sel-row" data-kind="radio" role="radio" aria-checked="false" tabindex="0"><div class="radio"></div>Filipino</div>
+    <div class="label-xs" style="margin:10px 0 0">Switch</div>
+    <div class="sel-row" data-kind="switch" role="switch" aria-checked="true" tabindex="0">Auto-sync when Hub is found<div class="switch on"></div></div>
+    <div class="sel-row" data-kind="switch" role="switch" aria-checked="false" tabindex="0">Reduce motion<div class="switch"></div></div>
+  </div>`,
+  react: `export function SwitchRow({ label, checked, onChange }: Props) {
+  return (
+    <button role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
+      className="flex items-center gap-3.5 w-full min-h-[52px] px-3.5 rounded-xl border-2 border-lara-border bg-white shadow-card text-[15px] font-bold hover:border-lara-primary">
+      {label}
+      <span className={'ml-auto relative w-[52px] h-[30px] rounded-full transition-colors ' + (checked ? 'bg-lara-primary' : 'bg-slate-300')}>
+        <span className={'absolute top-[3px] left-[3px] w-6 h-6 rounded-full bg-white shadow-card transition-transform ' + (checked ? 'translate-x-[22px]' : '')} />
+      </span>
+    </button>
+  );
+}
+
+export function CheckRow({ label, checked, onChange }: Props) {
+  return (
+    <button role="checkbox" aria-checked={checked} onClick={() => onChange(!checked)}
+      className="flex items-center gap-3.5 w-full min-h-[52px] px-3.5 rounded-xl border-2 border-lara-border bg-white shadow-card text-[15px] font-bold">
+      <span className={'w-[26px] h-[26px] rounded-lg border-2 flex items-center justify-center ' + (checked ? 'bg-lara-primary border-lara-primary text-white' : 'border-slate-300')}>
+        {checked && <Check size={16} weight="bold" />}
+      </span>
+      {label}
+    </button>
+  );
+}`,
+  kotlin: `@Composable
+fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+            .laraShadow(2.dp, RoundedCornerShape(12.dp))
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .border(2.dp, LaraColors.Border, RoundedCornerShape(12.dp))
+            .toggleable(checked, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Switch(
+            checked = checked, onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = LaraColors.Primary, checkedThumbColor = Color.White,
+                uncheckedTrackColor = Color(0xFFCBD5E1), uncheckedThumbColor = Color.White,
+                uncheckedBorderColor = Color.Transparent,
+            ),
+        )
+    }
+}
+
+// CheckRow and RadioRow follow the same pattern with Checkbox(...) and RadioButton(...)
+// using Modifier.toggleable / Modifier.selectable so the full row is the hit area.`,
+  dos: ['Make the whole row the touch target.', 'Use a switch for settings that take effect immediately.'],
+  donts: ['Do not use a switch inside a form that needs a Save button.', 'Do not mix checkboxes and radios in one group.'],
+  a11y: ['Expose role and checked state: role="switch", role="checkbox", role="radio".', 'Support Space to toggle and arrow keys within a radio group.']
+},
+{
+  id: 'segmented', title: 'Segmented Control, Tabs and Filter Chips', icon: 'toggle-left',
+  desc: 'Switch between peer views, or filter a list by one or more criteria.',
+  wide: true,
+  preview: `<div class="stack" style="align-items:center;gap:22px">
+    <div class="segmented" role="tablist"><button class="seg-item active" role="tab">Stream</button><button class="seg-item" role="tab">Classwork</button><button class="seg-item" role="tab">People</button><button class="seg-item" role="tab">Grades</button></div>
+    <div class="row">
+      <span class="chip selected" data-kind="chip"><i class="ph ph-check"></i> All</span>
+      <span class="chip" data-kind="chip">Quizzes</span>
+      <span class="chip" data-kind="chip">Handouts</span>
+      <span class="chip" data-kind="chip">Homework</span>
+      <span class="chip" data-kind="chip">Due this week</span>
+    </div>
+  </div>`,
+  react: `export function Segmented({ items, value, onChange }: Props) {
+  return (
+    <div role="tablist" className="inline-flex p-1 gap-1 rounded-xl bg-lara-subtle border border-lara-border">
+      {items.map(i => (
+        <button key={i} role="tab" aria-selected={value === i} onClick={() => onChange(i)}
+          className={'min-h-11 px-[18px] rounded-[9px] text-sm font-extrabold ' +
+            (value === i ? 'bg-white text-lara-primary-dark shadow-card' : 'text-lara-ink-2')}>
+          {i}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export const FilterChip = ({ selected, children, ...p }: Props) => (
+  <button aria-pressed={selected} {...p}
+    className={'inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full border-2 text-sm font-extrabold ' +
+      (selected ? 'bg-lara-primary-light border-lara-primary text-lara-primary-dark' : 'bg-white border-lara-border text-lara-ink-2')}>
+    {selected && <Check size={14} weight="bold" />}{children}
+  </button>
+);`,
+  kotlin: `@Composable
+fun LaraSegmented(items: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    SingleChoiceSegmentedButtonRow {
+        items.forEachIndexed { i, label ->
+            SegmentedButton(
+                selected = selected == i,
+                onClick = { onSelect(i) },
+                shape = SegmentedButtonDefaults.itemShape(i, items.size),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = Color.White,
+                    activeContentColor = LaraColors.PrimaryDark,
+                    inactiveContainerColor = LaraColors.SurfaceSubtle,
+                    inactiveContentColor = LaraColors.TextSecondary,
+                ),
+                modifier = Modifier.heightIn(min = 44.dp),
+            ) { Text(label, fontWeight = FontWeight.ExtraBold) }
+        }
+    }
+}
+
+@Composable
+fun LaraFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected, onClick = onClick,
+        label = { Text(label, fontWeight = FontWeight.ExtraBold) },
+        leadingIcon = if (selected) { { Icon(PhosphorIcons.Regular.Check, null, Modifier.size(14.dp)) } } else null,
+        shape = CircleShape,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = LaraColors.PrimaryLight,
+            selectedLabelColor = LaraColors.PrimaryDark,
+        ),
+    )
+}`,
+  dos: ['Limit a segmented control to four items.', 'Use chips for filters that can be combined.'],
+  donts: ['Do not use tabs for sequential steps.', 'Do not truncate labels; switch to a scrollable row instead.'],
+  a11y: ['Use role="tablist" and role="tab" with aria-selected.', 'Chips that toggle use aria-pressed.']
+},
+{
+  id: 'search', title: 'Search Bar', icon: 'magnifying-glass',
+  desc: 'A pill-shaped search field for filtering modules, classmates, and the gradebook.',
+  preview: `<div style="max-width:420px;width:100%" class="search-bar"><i class="ph ph-magnifying-glass lead"></i><input class="form-input" placeholder="Search lessons and handouts" aria-label="Search"></div>`,
+  react: `export function SearchBar(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="relative w-full">
+      <MagnifyingGlass size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-lara-ink-3" />
+      <input type="search" aria-label="Search" {...props}
+        className="w-full min-h-[52px] pl-[46px] pr-4 rounded-full border-2 border-lara-border bg-white shadow-card font-semibold outline-none focus:border-lara-primary" />
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraSearchBar(query: String, onQueryChange: (String) -> Unit, placeholder: String) {
+    OutlinedTextField(
+        value = query, onValueChange = onQueryChange,
+        placeholder = { Text(placeholder, color = LaraColors.TextMuted) },
+        leadingIcon = { Icon(PhosphorIcons.Regular.MagnifyingGlass, null, tint = LaraColors.TextMuted) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+        shape = CircleShape,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = LaraColors.Primary, unfocusedBorderColor = LaraColors.Border,
+            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+    )
+}`,
+  dos: ['Filter as the user types for local data.', 'Offer a clear button once text is entered.'],
+  donts: ['Do not search the network while offline without saying so.'],
+  a11y: ['Use type="search" and an explicit label.']
+}
+]},
+
+/* ----------------------------- DATA DISPLAY ----------------------------- */
+{ name: 'Data Display', items: [
+{
+  id: 'avatar', title: 'Avatar', icon: 'user-circle',
+  desc: 'Initials-based avatars in three sizes with an optional presence indicator and an overlapping group variant.',
+  preview: `<div class="stack" style="align-items:center;gap:22px">
+    <div class="row" style="gap:16px"><div class="avatar sm">JD</div><div class="avatar">MR</div><div class="avatar lg">AS</div><div class="avatar blue">KL<span class="status"></span></div><div class="avatar purple">AI</div><div class="avatar amber">PB</div></div>
+    <div class="row"><div class="avatar-group"><div class="avatar sm">JD</div><div class="avatar sm blue">KL</div><div class="avatar sm amber">PB</div><div class="avatar sm purple">+29</div></div><span style="font-size:13px;font-weight:800;color:var(--color-text-secondary)">32 enrolled</span></div>
+  </div>`,
+  react: `const palette = ['green', 'blue', 'amber', 'purple'] as const;
+const bg = {
+  green: 'bg-lara-primary-light text-lara-primary-dark',
+  blue: 'bg-lara-info-light text-[#0369A1]',
+  amber: 'bg-lara-warning-light text-[#B54708]',
+  purple: 'bg-lara-ai-light text-lara-ai-dark',
+};
+
+export function Avatar({ name, size = 40, tone }: Props) {
+  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const t = tone ?? palette[name.length % palette.length];
+  return (
+    <div style={{ width: size, height: size }} aria-label={name}
+      className={'rounded-full flex items-center justify-center font-black ' + bg[t]}>
+      {initials}
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraAvatar(name: String, size: Dp = 40.dp, bg: Color = LaraColors.PrimaryLight, fg: Color = LaraColors.PrimaryDark) {
+    val initials = name.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString("").uppercase()
+    Box(
+        Modifier.size(size).background(bg, CircleShape).semantics { contentDescription = name },
+        contentAlignment = Alignment.Center,
+    ) { Text(initials, color = fg, fontWeight = FontWeight.Black, fontSize = (size.value * 0.38f).sp) }
+}`,
+  dos: ['Derive the tone from the name so it stays stable.', 'Use purple only for the AI tutor avatar.'],
+  donts: ['Do not use photos of minors in pupil avatars.'],
+  a11y: ['Expose the full name as the accessible label.']
+},
+{
+  id: 'stat', title: 'Stat Card', icon: 'chart-bar',
+  desc: 'Key figures for the teacher dashboard: class average, submissions, attendance.',
+  wide: true,
+  preview: `<div class="stat-grid">
+    <div class="card stat"><div class="stat-top">Class average<div class="stat-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-chart-line-up"></i></div></div><div class="stat-val">86.4</div><div class="stat-delta up"><i class="ph ph-arrow-up"></i> 2.1 from last quarter</div></div>
+    <div class="card stat"><div class="stat-top">Submissions<div class="stat-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-paper-plane-tilt"></i></div></div><div class="stat-val">28 / 32</div><div class="stat-delta" style="color:var(--color-text-secondary)">4 pupils pending</div></div>
+    <div class="card stat"><div class="stat-top">Attendance<div class="stat-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-calendar-check"></i></div></div><div class="stat-val">94%</div><div class="stat-delta down"><i class="ph ph-arrow-down"></i> 1.5 this week</div></div>
+  </div>`,
+  react: `export function StatCard({ label, value, delta, trend, icon, tone }: Props) {
+  return (
+    <div className="bg-white border border-lara-border rounded-2xl shadow-card p-4 flex flex-col gap-1.5">
+      <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wide text-lara-ink-2">
+        {label}
+        <span className={'w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-lg ' + tone}>{icon}</span>
+      </div>
+      <div className="text-3xl font-black leading-tight">{value}</div>
+      <div className={'text-xs font-extrabold ' + (trend === 'up' ? 'text-lara-primary-dark' : trend === 'down' ? 'text-[#B42318]' : 'text-lara-ink-2')}>
+        {delta}
+      </div>
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun StatCard(label: String, value: String, delta: String, icon: ImageVector, iconBg: Color, iconFg: Color, deltaColor: Color) {
+    Column(
+        Modifier.laraShadow(2.dp).background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label.uppercase(), Modifier.weight(1f), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = LaraColors.TextSecondary)
+            Box(Modifier.size(34.dp).background(iconBg, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = iconFg, modifier = Modifier.size(18.dp))
+            }
+        }
+        Text(value, fontSize = 30.sp, fontWeight = FontWeight.Black)
+        Text(delta, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = deltaColor)
+    }
+}`,
+  dos: ['Show the unit and comparison period in the delta line.', 'Limit a row to three or four cards.'],
+  donts: ['Do not show a delta without an arrow icon and text.'],
+  a11y: ['Read as "label, value, delta" in that order.']
+},
+{
+  id: 'gradebook', title: 'DepEd Gradebook Table', icon: 'table', wide: true,
+  desc: 'The official DepEd E-Class Record view for the Teacher Desktop Hub with objective auto-grading, transmutation, and USB export.',
+  preview: `<div class="card" style="overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--color-border);flex-wrap:wrap"><div><h4 style="font-weight:900;font-size:16px">Science 4 | Aguinaldo | 1st Quarter</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600">Last synced 2:15 PM</p></div><div class="row"><button class="btn btn-secondary btn-sm"><i class="ph ph-funnel"></i> Filter</button><button class="btn btn-primary btn-sm"><i class="ph ph-usb"></i> Export to USB</button></div></div>
+    <div class="scroll-x"><table class="tbl"><thead><tr><th>LRN</th><th>Learner's Name</th><th>Quiz 1</th><th>Quiz 2</th><th>Initial Grade</th><th>Transmuted</th><th>Status</th></tr></thead><tbody>
+      <tr><td><code>109283746501</code></td><td style="font-weight:700">Dela Cruz, Juan M.</td><td class="pass">9 / 10</td><td class="pass">18 / 20</td><td>90.0</td><td style="font-weight:800">95 (Passed)</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
+      <tr><td><code>109283746502</code></td><td style="font-weight:700">Santos, Maria L.</td><td class="pass">8 / 10</td><td class="pass">16 / 20</td><td>80.0</td><td style="font-weight:800">90 (Passed)</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
+      <tr><td><code>109283746503</code></td><td style="font-weight:700">Reyes, Paolo B.</td><td class="fail">4 / 10</td><td class="fail">9 / 20</td><td>43.3</td><td style="font-weight:800" class="fail">74 (Failed)</td><td><span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> Queued</span></td></tr>
+      <tr><td><code>109283746504</code></td><td style="font-weight:700">Villanueva, Ana K.</td><td style="color:var(--color-text-muted)">No submission</td><td class="pass">17 / 20</td><td>42.5</td><td style="font-weight:800">74 (Incomplete)</td><td><span class="badge badge-danger"><i class="ph ph-warning-circle"></i> Missing</span></td></tr>
+    </tbody></table></div></div>`,
+  react: `export function Gradebook({ rows }: { rows: Row[] }) {
+  return (
+    <div className="bg-white border border-lara-border rounded-2xl shadow-card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-[13px] text-left">
+          <thead>
+            <tr className="bg-lara-subtle border-b-2 border-lara-border">
+              {['LRN', "Learner's Name", 'Quiz 1', 'Quiz 2', 'Transmuted', 'Status'].map(h => (
+                <th key={h} scope="col" className="px-3.5 py-3 font-extrabold whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.lrn} className="border-b border-lara-border last:border-0 hover:bg-lara-canvas">
+                <td className="px-3.5 py-3"><code className="text-xs bg-lara-subtle px-1.5 py-0.5 rounded-md">{r.lrn}</code></td>
+                <td className="px-3.5 py-3 font-bold">{r.name}</td>
+                <td className={'px-3.5 py-3 font-extrabold ' + (r.q1Pass ? 'text-lara-primary' : 'text-[#B42318]')}>{r.q1}</td>
+                <td className={'px-3.5 py-3 font-extrabold ' + (r.q2Pass ? 'text-lara-primary' : 'text-[#B42318]')}>{r.q2}</td>
+                <td className="px-3.5 py-3 font-extrabold">{r.transmuted}</td>
+                <td className="px-3.5 py-3"><Badge tone={r.sync}>{r.syncLabel}</Badge></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}`,
+  kotlin: `// Mobile shows the gradebook as a LazyColumn of cards, not a table.
+@Composable
+fun GradeRow(name: String, lrn: String, transmuted: Int, passed: Boolean, sync: SyncState) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        LaraAvatar(name)
+        Column(Modifier.weight(1f)) {
+            Text(name, fontWeight = FontWeight.ExtraBold)
+            Text("LRN $lrn", fontSize = 12.sp, color = LaraColors.TextSecondary)
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                if (passed) "$transmuted Passed" else "$transmuted Failed",
+                fontWeight = FontWeight.ExtraBold,
+                color = if (passed) LaraColors.Primary else Color(0xFFB42318),
+            )
+            SyncBadge(sync)
+        }
+    }
+    HorizontalDivider(color = LaraColors.Border)
+}`,
+  dos: ['Right-align numeric columns when columns are many.', 'Keep the learner name column sticky on narrow screens.', 'Show both the raw score and the transmuted grade.'],
+  donts: ['Do not rely on red and green alone; include the Passed or Failed label.', 'Do not show a table on phones narrower than 600px.'],
+  a11y: ['Use scope="col" on headers.', 'Wrap in a scrollable region that is keyboard focusable.']
+},
+{
+  id: 'list', title: 'List Item', icon: 'list-bullets',
+  desc: 'A single row with leading icon, two lines of text, and a trailing indicator. Used for classwork, files, and settings.',
+  wide: true,
+  preview: `<div class="card" style="overflow:hidden;max-width:520px;margin:0 auto">
+    <div class="list-item"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-notebook"></i></div><div class="list-main"><h4>Handout #2: Parts of a Leaf</h4><p>Posted Oct 3 | 2 pages | Cached offline</p></div><i class="ph ph-caret-right list-end"></i></div>
+    <div class="list-item"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div class="list-main"><h4>Pagsusulit #2</h4><p>Due Fri, Oct 9 | 20 items | 15 minutes</p></div><span class="badge badge-queued">Due soon</span></div>
+    <div class="list-item"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div class="list-main"><h4>Leaf drawing homework</h4><p>Submitted Oct 1 | Photo</p></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Graded</span></div>
+  </div>`,
+  react: `export function ListItem({ icon, tone, title, meta, trailing, onClick }: Props) {
+  return (
+    <button onClick={onClick}
+      className="flex items-center gap-3.5 w-full min-h-16 px-4 py-3.5 text-left bg-white border-b border-lara-border last:border-0 hover:bg-lara-canvas">
+      <span className={'w-11 h-11 rounded-xl flex items-center justify-center text-[22px] shrink-0 ' + tone}>{icon}</span>
+      <span className="flex-1 min-w-0">
+        <span className="block text-[15px] font-extrabold truncate">{title}</span>
+        <span className="block text-xs font-semibold text-lara-ink-2 truncate">{meta}</span>
+      </span>
+      {trailing ?? <CaretRight size={18} className="text-lara-ink-3" />}
+    </button>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraListItem(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconBg: Color = LaraColors.PrimaryLight,
+    iconFg: Color = LaraColors.PrimaryDark,
+    trailing: @Composable (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(title, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = { Text(subtitle, fontSize = 12.sp, color = LaraColors.TextSecondary, maxLines = 1) },
+        leadingContent = {
+            Box(Modifier.size(44.dp).background(iconBg, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = iconFg, modifier = Modifier.size(22.dp))
+            }
+        },
+        trailingContent = trailing ?: { Icon(PhosphorIcons.Regular.CaretRight, null, tint = LaraColors.TextMuted) },
+        colors = ListItemDefaults.colors(containerColor = Color.White),
+        modifier = Modifier.heightIn(min = 64.dp).clickable(onClick = onClick),
+    )
+}`,
+  dos: ['Truncate long titles with an ellipsis.', 'Keep the metadata line to three facts or fewer.'],
+  donts: ['Do not place more than one trailing control.'],
+  a11y: ['The entire row is one interactive element with a single accessible name.']
+}
+]},
+
+/* ----------------------------- CLASSROOM ----------------------------- */
+{ name: 'Classroom UI', items: [
+{
+  id: 'cards', title: 'Classroom Card', icon: 'chalkboard-teacher', wide: true,
+  desc: 'Primary subject card with a solid Dark Green header banner, class code tag, teacher avatar, and offline cache status.',
+  preview: `<div class="card" style="overflow:hidden;max-width:460px;margin:0 auto">
+    <div class="class-head"><div><h3>Science 4</h3><p>Section Aguinaldo | Room 204</p></div><span class="code-tag">CODE: SCI4-AG</span></div>
+    <div class="card-pad">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><div class="avatar">MR</div><div><h4 style="font-size:14px;font-weight:800">Mr. Mark Ramirez</h4><p style="font-size:12px;color:var(--color-text-secondary)">32 enrolled students</p></div></div>
+      <div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:6px"><span>Modules cached</span><span>5 of 8</span></div><div class="progress"><span style="width:62%"></span></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><button class="btn btn-primary btn-pill btn-sm"><span>Open class</span><i class="ph ph-arrow-right"></i></button><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></div>
+    </div></div>`,
+  react: `export function ClassroomCard({ cls }: { cls: Classroom }) {
+  return (
+    <article className="bg-white border border-lara-border rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">
+      <header className="bg-lara-primary-dark text-white p-5 flex justify-between items-start">
+        <div>
+          <h3 className="text-xl font-black">{cls.subject}</h3>
+          <p className="text-[13px] opacity-90 mt-0.5">{cls.section} | {cls.room}</p>
+        </div>
+        <span className="bg-white/20 px-2 py-1 rounded-lg text-xs font-extrabold">CODE: {cls.code}</span>
+      </header>
+      <div className="p-5 space-y-3.5">
+        <div className="flex items-center gap-3">
+          <Avatar name={cls.teacher} />
+          <div>
+            <h4 className="text-sm font-extrabold">{cls.teacher}</h4>
+            <p className="text-xs text-lara-ink-2">{cls.enrolled} enrolled students</p>
+          </div>
+        </div>
+        <Progress value={cls.cachedPct} />
+        <Button size="sm" className="rounded-full">Open class <ArrowRight size={20} /></Button>
+      </div>
+    </article>
+  );
+}`,
+  kotlin: `@Composable
+fun ClassroomCard(cls: Classroom, onOpen: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().laraShadow(2.dp)
+            .clip(RoundedCornerShape(16.dp)).background(Color.White)
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().background(LaraColors.PrimaryDark).padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column {
+                Text(cls.subject, color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
+                Text("\${cls.section} | \${cls.room}", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp)
+            }
+            Text("CODE: \${cls.code}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp,
+                modifier = Modifier.background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp)).padding(8.dp, 4.dp))
+        }
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LaraAvatar(cls.teacher)
+                Column {
+                    Text(cls.teacher, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                    Text("\${cls.enrolled} enrolled students", fontSize = 12.sp, color = LaraColors.TextSecondary)
+                }
+            }
+            LaraProgress(cls.cachedPct / 100f)
+            LaraButton("Open class", icon = PhosphorIcons.Regular.ArrowRight, onClick = onOpen)
+        }
+    }
+}`,
+  dos: ['Show the class code so pupils can join without typing a long name.', 'Show how much content is available offline.'],
+  donts: ['Do not vary header colors per subject; subject identity comes from the title.'],
+  a11y: ['Use an article landmark with the subject as its heading.']
+},
+{
+  id: 'stream', title: 'Stream Announcement', icon: 'chat-circle-dots', wide: true,
+  desc: 'Teacher post card with nested pupil comments, following the familiar Google Classroom mental model.',
+  preview: `<div class="card card-pad" style="max-width:600px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div style="display:flex;align-items:center;gap:12px"><div class="avatar">MR</div><div><h4 style="font-size:15px;font-weight:800">Mr. Mark Ramirez</h4><p style="font-size:12px;color:var(--color-text-secondary)">Yesterday, 2:15 PM | Classroom Wi-Fi Hub</p></div></div><span class="badge badge-synced">Synced</span></div>
+    <p style="font-size:15px;line-height:1.6;margin-bottom:14px">Good morning class! Please download <strong>Handout #2 (Parts of a Leaf)</strong> before leaving school today. If you have questions while studying at home, use the <strong>L.A.R.A Socratic AI Tutor</strong> button below.</p>
+    <div class="list-item" style="border:1px solid var(--color-border);border-radius:12px;margin-bottom:14px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-file-pdf"></i></div><div class="list-main"><h4>Handout2_PartsOfALeaf.pdf</h4><p>412 KB | Tap to open</p></div><i class="ph ph-download-simple list-end"></i></div>
+    <div style="border-top:1px solid var(--color-border);padding-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="comment"><div class="avatar sm blue">JD</div><div class="bubble"><strong>John Doe:</strong> Teacher Mark, do we need to draw the entire leaf in our notebook?</div></div>
+      <div class="comment"><div class="avatar sm">MR</div><div class="bubble"><strong>Mr. Ramirez:</strong> Yes, and please label at least three parts.</div></div>
+      <div style="display:flex;gap:8px;align-items:center"><input class="form-input" style="min-height:44px;border-radius:9999px" placeholder="Add class comment" aria-label="Add class comment"><button class="btn btn-primary btn-icon btn-sm btn-pill" aria-label="Send"><i class="ph ph-paper-plane-tilt"></i></button></div>
+    </div></div>`,
+  react: `export function StreamPost({ post }: { post: Post }) {
+  return (
+    <article className="bg-white border border-lara-border rounded-2xl shadow-card p-6">
+      <header className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <Avatar name={post.author} />
+          <div>
+            <h4 className="text-[15px] font-extrabold">{post.author}</h4>
+            <p className="text-xs text-lara-ink-2">{post.when} | {post.source}</p>
+          </div>
+        </div>
+        <Badge tone={post.synced ? 'synced' : 'queued'}>{post.synced ? 'Synced' : 'Queued'}</Badge>
+      </header>
+      <p className="text-[15px] leading-relaxed mb-3.5">{post.body}</p>
+      {post.attachments.map(a => <ListItem key={a.id} {...a} />)}
+      <ul className="border-t border-lara-border pt-3.5 mt-3.5 space-y-2.5">
+        {post.comments.map(c => (
+          <li key={c.id} className="flex items-start gap-2.5">
+            <Avatar name={c.author} size={32} />
+            <p className="flex-1 bg-lara-canvas border border-lara-border rounded-xl px-3 py-2 text-[13px]">
+              <strong>{c.author}:</strong> {c.text}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}`,
+  kotlin: `@Composable
+fun StreamPost(post: Post, onComment: (String) -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().laraShadow(2.dp).background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            LaraAvatar(post.author)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(post.author, fontWeight = FontWeight.ExtraBold)
+                Text("\${post.whenText} | \${post.source}", fontSize = 12.sp, color = LaraColors.TextSecondary)
+            }
+            SyncBadge(if (post.synced) SyncState.Synced else SyncState.Queued)
+        }
+        Text(post.body, style = MaterialTheme.typography.bodyLarge)
+        post.attachments.forEach { LaraListItem(it.name, it.meta, PhosphorIcons.Regular.FilePdf, onClick = {}) }
+        HorizontalDivider(color = LaraColors.Border)
+        post.comments.forEach { c ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                LaraAvatar(c.author, size = 32.dp)
+                Text(
+                    buildAnnotatedString { withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold)) { append(c.author + ": ") }; append(c.text) },
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f).background(LaraColors.Canvas, RoundedCornerShape(12.dp))
+                        .border(1.dp, LaraColors.Border, RoundedCornerShape(12.dp)).padding(12.dp, 8.dp),
+                )
+            }
+        }
+    }
+}`,
+  dos: ['Show the sync state on every post authored while offline.', 'Keep comments flat; one level of nesting is enough.'],
+  donts: ['Do not auto-play attachments.', 'Do not show pupil comments from other sections.'],
+  a11y: ['Use article for each post and a list for comments.']
+},
+{
+  id: 'classwork', title: 'Assignment Card', icon: 'notebook', tag: 'NEW',
+  desc: 'A classwork item with due date, points, status and a clear primary action, shared by pupils and teachers.',
+  wide: true,
+  preview: `<div class="stack" style="max-width:560px;margin:0 auto">
+    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div><h4 style="font-weight:900;font-size:16px">Pagsusulit #2: Parts of a Leaf</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Due Fri, Oct 9, 11:59 PM | 20 points | 15 min</p></div></div><span class="badge badge-queued">Not started</span></div><div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-play"></i> Start quiz</button><button class="btn btn-secondary"><i class="ph ph-book-open"></i> Review lesson</button></div></div>
+    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div><h4 style="font-weight:900;font-size:16px">Leaf drawing homework</h4><p class="due-late" style="font-size:12px;font-weight:800;margin-top:2px">Overdue by 2 days | 10 points</p></div></div><span class="badge badge-danger">Missing</span></div><div style="margin-top:16px"><button class="btn btn-ai"><i class="ph ph-camera"></i> Take photo</button></div></div>
+    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-check-circle"></i></div><div><h4 style="font-weight:900;font-size:16px">Quiz 1: Living Things</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Graded Sep 28 | 9 / 10</p></div></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Graded</span></div></div>
+  </div>`,
+  react: `type State = 'todo' | 'late' | 'done';
+
+export function AssignmentCard({ a }: { a: Assignment }) {
+  const tone = { todo: 'queued', late: 'danger', done: 'synced' }[a.state as State];
+  return (
+    <article className="bg-white border border-lara-border rounded-2xl shadow-card p-5">
+      <div className="flex justify-between gap-2.5 items-start">
+        <div className="flex gap-3">
+          <span className="w-11 h-11 rounded-xl bg-lara-warning-light text-[#B54708] flex items-center justify-center text-[22px]">{a.icon}</span>
+          <div>
+            <h4 className="text-base font-black">{a.title}</h4>
+            <p className={'text-xs mt-0.5 ' + (a.state === 'late' ? 'text-[#B42318] font-extrabold' : 'text-lara-ink-2 font-semibold')}>{a.meta}</p>
+          </div>
+        </div>
+        <Badge tone={tone}>{a.statusLabel}</Badge>
+      </div>
+      {a.state !== 'done' && (
+        <div className="mt-4 flex gap-2.5 flex-wrap">
+          <Button icon={<Play size={20} />}>{a.cta}</Button>
+          {a.secondary && <Button variant="secondary">{a.secondary}</Button>}
+        </div>
+      )}
+    </article>
+  );
+}`,
+  kotlin: `@Composable
+fun AssignmentCard(a: Assignment, onPrimary: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().laraShadow(2.dp).background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.size(44.dp).background(a.iconBg, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                Icon(a.icon, null, tint = a.iconFg, modifier = Modifier.size(22.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(a.title, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                Text(a.meta, fontSize = 12.sp,
+                    color = if (a.state == State.Late) Color(0xFFB42318) else LaraColors.TextSecondary,
+                    fontWeight = if (a.state == State.Late) FontWeight.ExtraBold else FontWeight.SemiBold)
+            }
+            StatusBadge(a.state)
+        }
+        if (a.state != State.Done) {
+            LaraButton(a.cta, icon = PhosphorIcons.Regular.Play, onClick = onPrimary)
+        }
+    }
+}`,
+  dos: ['Surface overdue items first with a text label, not only color.', 'Offer the offline-capable action first (Start quiz, Take photo).'],
+  donts: ['Do not show a Start button after the due date unless late work is allowed.'],
+  a11y: ['Announce status as part of the card name, such as "Pagsusulit 2, not started, due Friday".']
+},
+{
+  id: 'attendance', title: 'Attendance Row', icon: 'calendar-check', tag: 'NEW',
+  desc: 'Daily roll call with Present, Absent and Late toggles sized for quick one-handed tapping on a tablet.',
+  wide: true,
+  preview: `<div class="card" style="overflow:hidden;max-width:520px;margin:0 auto">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center"><div><h4 style="font-weight:900">Mon, Oct 5 | Science 4</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600">3 of 4 marked</p></div><span class="badge badge-queued">Draft</span></div>
+    ${[['Dela Cruz, Juan','JD','p'],['Santos, Maria','MS','p'],['Reyes, Paolo','PR','l'],['Villanueva, Ana','AV','']].map(r => '<div class="att-row" data-att><div class="avatar sm">' + r[1] + '</div><span class="name">' + r[0] + '</span><div class="att-btns"><button class="att-btn p ' + (r[2]==='p'?'on':'') + '" aria-label="Present">P</button><button class="att-btn a" aria-label="Absent">A</button><button class="att-btn l ' + (r[2]==='l'?'on':'') + '" aria-label="Late">L</button></div></div>').join('')}
+    <div style="padding:14px 16px;background:var(--color-surface-subtle)"><button class="btn btn-primary btn-block">Save attendance</button></div></div>`,
+  react: `type Mark = 'P' | 'A' | 'L' | null;
+
+export function AttendanceRow({ name, mark, onMark }: Props) {
+  const btn = (m: Exclude<Mark, null>, on: string, label: string) => (
+    <button aria-label={label} aria-pressed={mark === m} onClick={() => onMark(m)}
+      className={'w-11 h-11 rounded-xl border-2 font-black text-sm ' + (mark === m ? on : 'border-lara-border text-lara-ink-2 bg-white')}>
+      {m}
+    </button>
+  );
+  return (
+    <div className="flex items-center gap-3 px-3.5 py-2.5 border-b border-lara-border last:border-0">
+      <Avatar name={name} size={32} />
+      <span className="flex-1 text-sm font-extrabold">{name}</span>
+      <div className="flex gap-1.5">
+        {btn('P', 'bg-lara-primary-light border-lara-primary text-lara-primary-dark', 'Present')}
+        {btn('A', 'bg-lara-danger-light border-lara-danger text-[#B42318]', 'Absent')}
+        {btn('L', 'bg-lara-warning-light border-lara-warning text-[#B54708]', 'Late')}
+      </div>
+    </div>
+  );
+}`,
+  kotlin: `enum class Mark { Present, Absent, Late }
+
+@Composable
+fun AttendanceRow(name: String, mark: Mark?, onMark: (Mark) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        LaraAvatar(name, size = 32.dp)
+        Text(name, Modifier.weight(1f), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+        listOf(Mark.Present to "P", Mark.Absent to "A", Mark.Late to "L").forEach { (m, letter) ->
+            val on = mark == m
+            val (bg, border, fg) = when (m) {
+                Mark.Present -> Triple(LaraColors.PrimaryLight, LaraColors.Primary, LaraColors.PrimaryDark)
+                Mark.Absent -> Triple(LaraColors.DangerLight, LaraColors.Danger, Color(0xFFB42318))
+                Mark.Late -> Triple(LaraColors.WarningLight, LaraColors.Warning, Color(0xFFB54708))
+            }
+            Box(
+                Modifier.size(44.dp)
+                    .background(if (on) bg else Color.White, RoundedCornerShape(12.dp))
+                    .border(2.dp, if (on) border else LaraColors.Border, RoundedCornerShape(12.dp))
+                    .selectable(on, role = Role.RadioButton, onClick = { onMark(m) })
+                    .semantics { contentDescription = m.name },
+                contentAlignment = Alignment.Center,
+            ) { Text(letter, fontWeight = FontWeight.Black, color = if (on) fg else LaraColors.TextSecondary) }
+        }
+    }
+}`,
+  dos: ['Default to Present only if the teacher chooses to; otherwise leave unmarked.', 'Show a count of marked pupils in the header.'],
+  donts: ['Do not rely on color; the letter and the label carry the meaning.'],
+  a11y: ['The three buttons behave as a radio group with an accessible name for each.']
+},
+{
+  id: 'navigation', title: 'Navigation', icon: 'sidebar', wide: true,
+  desc: 'Bottom navigation and top app bar for mobile; left sidebar for the teacher desktop hub. The AI tab is the only purple destination.',
+  preview: `<div class="row" style="align-items:flex-start;gap:28px">
+    <div class="phone"><div class="phone-status"><span>9:41</span><span>LTE</span></div>
+      <div class="app-bar"><button aria-label="Menu"><i class="ph ph-list"></i></button><h3>Science 4</h3><button aria-label="Notifications"><i class="ph ph-bell"></i></button></div>
+      <div class="phone-body"><div class="alert-banner alert-banner-warning" style="padding:10px 12px;font-size:12px"><i class="ph ph-wifi-slash" style="font-size:18px"></i><span>Offline mode. Changes are saved locally.</span></div>
+        <div class="card card-pad" style="font-size:13px;font-weight:700">Good morning class! Please download Handout #2 before leaving today.</div></div>
+      <nav class="bottom-nav" id="bn-demo" aria-label="Primary">
+        <button class="bn-item active"><span class="bn-pill"><i class="ph-fill ph-chat-circle-dots"></i></span>Stream</button>
+        <button class="bn-item"><span class="bn-pill"><i class="ph ph-notebook"></i></span>Classwork</button>
+        <button class="bn-item"><span class="bn-pill"><i class="ph ph-timer"></i></span>Quizzes</button>
+        <button class="bn-item ai"><span class="bn-pill"><i class="ph ph-sparkle"></i></span>AI Tutor</button>
+      </nav></div>
+    <div class="side-nav"><div class="brand"><span class="doc-brand-badge">L.A.R.A.</span>Teacher Hub</div>
+      <div id="sn-demo">
+      <button class="sidebar-nav-btn active"><i class="ph ph-house"></i> Dashboard</button>
+      <button class="sidebar-nav-btn"><i class="ph ph-chat-circle-dots"></i> Stream</button>
+      <button class="sidebar-nav-btn"><i class="ph ph-notebook"></i> Classwork</button>
+      <button class="sidebar-nav-btn"><i class="ph ph-users"></i> Learners <span class="count-dot" style="margin-left:auto">4</span></button>
+      <button class="sidebar-nav-btn"><i class="ph ph-table"></i> E-Class Record</button>
+      <button class="sidebar-nav-btn"><i class="ph ph-calendar-check"></i> Attendance</button>
+      <button class="sidebar-nav-btn"><i class="ph ph-usb"></i> USB Export</button>
+      </div></div>
+  </div>`,
+  react: `// Desktop sidebar
+export function SideNav({ items, active, onSelect }: Props) {
+  return (
+    <nav aria-label="Primary" className="w-[260px] bg-white border border-lara-border rounded-2xl shadow-card p-3">
+      {items.map(i => (
+        <button key={i.id} onClick={() => onSelect(i.id)} aria-current={active === i.id ? 'page' : undefined}
+          className={'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left ' +
+            (active === i.id ? 'bg-lara-primary-light text-lara-primary-dark font-extrabold' : 'text-lara-ink-2 font-bold hover:bg-lara-subtle hover:text-lara-primary')}>
+          <i.Icon size={18} weight={active === i.id ? 'fill' : 'regular'} /> {i.label}
+          {i.count ? <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-lara-danger text-white text-[11px] font-black flex items-center justify-center">{i.count}</span> : null}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+// Web mobile bottom bar
+export function BottomNav({ items, active, onSelect }: Props) {
+  return (
+    <nav aria-label="Primary" className="h-[68px] bg-white border-t border-lara-border flex justify-around items-center">
+      {items.map(i => (
+        <button key={i.id} onClick={() => onSelect(i.id)} aria-current={active === i.id ? 'page' : undefined}
+          className={'flex flex-col items-center gap-0.5 min-w-16 min-h-[52px] justify-center text-[11px] font-extrabold ' +
+            (active === i.id ? (i.ai ? 'text-lara-ai' : 'text-lara-primary') : 'text-lara-ink-2')}>
+          <span className={'px-[18px] py-0.5 rounded-full ' + (active === i.id ? (i.ai ? 'bg-lara-ai-light' : 'bg-lara-primary-light') : '')}>
+            <i.Icon size={24} weight={active === i.id ? 'fill' : 'regular'} />
+          </span>
+          {i.label}
+        </button>
+      ))}
+    </nav>
+  );
+}`,
+  kotlin: `@Composable
+fun LaraBottomBar(tabs: List<Tab>, selected: Int, onSelect: (Int) -> Unit) {
+    NavigationBar(containerColor = Color.White, modifier = Modifier.height(68.dp)) {
+        tabs.forEachIndexed { i, tab ->
+            val accent = if (tab.isAi) LaraColors.Ai else LaraColors.Primary
+            val accentLight = if (tab.isAi) LaraColors.AiLight else LaraColors.PrimaryLight
+            NavigationBarItem(
+                selected = selected == i,
+                onClick = { onSelect(i) },
+                icon = { Icon(if (selected == i) tab.filled else tab.regular, null, Modifier.size(24.dp)) },
+                label = { Text(tab.label, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = accent, selectedTextColor = accent,
+                    indicatorColor = accentLight,
+                    unselectedIconColor = LaraColors.TextSecondary, unselectedTextColor = LaraColors.TextSecondary,
+                ),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LaraTopBar(title: String, onMenu: () -> Unit, onBell: () -> Unit) {
+    TopAppBar(
+        title = { Text(title, fontWeight = FontWeight.Black) },
+        navigationIcon = { IconButton(onMenu) { Icon(PhosphorIcons.Regular.List, "Menu") } },
+        actions = { IconButton(onBell) { Icon(PhosphorIcons.Regular.Bell, "Notifications") } },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = LaraColors.PrimaryDark, titleContentColor = Color.White,
+            navigationIconContentColor = Color.White, actionIconContentColor = Color.White,
+        ),
+    )
+}`,
+  dos: ['Keep to four bottom destinations on mobile.', 'Use the Fill icon weight only for the active item.'],
+  donts: ['Do not hide the AI tab; during an exam disable it and say why.', 'Do not nest a second level of navigation inside the bottom bar.'],
+  a11y: ['Mark the current destination with aria-current="page".', 'Every nav item meets the 52px minimum height.']
+}
+]},
+
+/* ----------------------------- L.A.R.A. EXCLUSIVE ----------------------------- */
+{ name: 'L.A.R.A Exclusive', items: [
+{
+  id: 'quiz', title: 'Paperless Quiz', icon: 'timer', wide: true,
+  desc: 'Synchronized timed assessment card with 56px option rows designed for high motor accuracy on entry-level Android devices, plus a progress indicator.',
+  preview: `<div class="card" style="border:2px solid var(--color-border);padding:24px;box-shadow:var(--shadow-elevated);max-width:560px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--color-border);padding-bottom:14px;margin-bottom:14px"><span class="badge badge-deped">PAGSUSULIT #2</span><div class="timer-pill"><i class="ph ph-timer"></i> 04:32</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:12px;font-weight:800;color:var(--color-text-secondary)">Question 3 of 5</span><div class="q-dots"><span class="q-dot done"></span><span class="q-dot done"></span><span class="q-dot now"></span><span class="q-dot"></span><span class="q-dot"></span></div></div>
+    <p style="font-size:18px;font-weight:800;margin-bottom:18px">What is the green pigment in leaves that absorbs sunlight for photosynthesis?</p>
+    <div class="quiz-card-option" role="radio" aria-checked="false"><i class="ph ph-circle"></i><span>Stomata</span></div>
+    <div class="quiz-card-option selected" role="radio" aria-checked="true"><i class="ph ph-check-circle"></i><span>Chlorophyll</span></div>
+    <div class="quiz-card-option" role="radio" aria-checked="false"><i class="ph ph-circle"></i><span>Phloem</span></div>
+    <div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-secondary" style="flex:1"><i class="ph ph-arrow-left"></i> Back</button><button class="btn btn-primary" style="flex:1">Next <i class="ph ph-arrow-right"></i></button></div></div>`,
+  react: `export function QuizOption({ label, selected, onSelect }: Props) {
+  return (
+    <button role="radio" aria-checked={selected} onClick={onSelect}
+      className={'w-full min-h-14 px-[18px] py-3 mb-2.5 rounded-xl border-2 flex items-center gap-3.5 text-left text-base font-bold shadow-card transition-all ' +
+        (selected ? 'border-lara-primary bg-lara-primary-light' : 'border-lara-border bg-white hover:border-lara-primary')}>
+      {selected
+        ? <CheckCircle size={22} weight="fill" className="text-lara-primary" />
+        : <Circle size={22} className="text-lara-ink-3" />}
+      {label}
+    </button>
+  );
+}
+
+export function QuizTimer({ secondsLeft }: { secondsLeft: number }) {
+  const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+  const s = String(secondsLeft % 60).padStart(2, '0');
+  return (
+    <div role="timer" aria-live="off"
+      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-lara-warning-light text-[#B54708] font-black">
+      <Timer size={20} /> {m}:{s}
+    </div>
+  );
+}`,
+  kotlin: `@Composable
+fun QuizOption(label: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            .laraShadow(2.dp, RoundedCornerShape(12.dp))
+            .background(if (selected) LaraColors.PrimaryLight else Color.White, RoundedCornerShape(12.dp))
+            .border(2.dp, if (selected) LaraColors.Primary else LaraColors.Border, RoundedCornerShape(12.dp))
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect)
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Icon(
+            if (selected) PhosphorIcons.Fill.CheckCircle else PhosphorIcons.Regular.Circle, null,
+            tint = if (selected) LaraColors.Primary else LaraColors.TextMuted, modifier = Modifier.size(22.dp),
+        )
+        Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    }
+}
+
+@Composable
+fun QuizTimer(secondsLeft: Int) {
+    Row(
+        Modifier.background(LaraColors.WarningLight, CircleShape).padding(14.dp, 6.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(PhosphorIcons.Regular.Timer, null, tint = Color(0xFFB54708), modifier = Modifier.size(20.dp))
+        Text("%02d:%02d".format(secondsLeft / 60, secondsLeft % 60), color = Color(0xFFB54708), fontWeight = FontWeight.Black)
+    }
+}
+
+// Anti-cheat: set WindowManager.LayoutParams.FLAG_SECURE and disable the AI tab while a quiz is active.`,
+  dos: ['Time is always synchronized from the Hub clock, not the device clock.', 'Autosave each answer locally on selection.'],
+  donts: ['Do not reveal correct answers before the teacher releases results.', 'Do not allow leaving the quiz screen without a warning dialog.'],
+  a11y: ['Options are a radio group; announce "Question 3 of 5".', 'Do not announce the timer every second; announce at 5, 1 and 0 minutes remaining.']
+},
+{
+  id: 'results', title: 'Quiz Results', icon: 'trophy', tag: 'NEW', wide: true,
+  desc: 'End-of-quiz summary with a score ring, per-item review, and a link back to the relevant lesson.',
+  preview: `<div class="card card-pad" style="max-width:520px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:22px;margin-bottom:18px;flex-wrap:wrap">
+      <div class="ring"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="#E4EAF0" stroke-width="10"/><circle cx="48" cy="48" r="40" fill="none" stroke="#2E9B4B" stroke-width="10" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="50.3"/></svg><div class="ring-label">80%<small>Score</small></div></div>
+      <div style="flex:1;min-width:200px"><h4 style="font-size:20px;font-weight:900">Good work, Juan!</h4><p style="font-size:14px;color:var(--color-text-secondary);font-weight:600">You answered 4 of 5 correctly. Your result is saved on this device and will sync to the Hub.</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="list-item" style="border:1px solid var(--color-border);border-radius:12px;min-height:52px;padding:10px 14px"><i class="ph-fill ph-check-circle" style="color:var(--color-primary-green);font-size:22px"></i><div class="list-main"><h4>1. Function of the stem</h4></div><span class="badge badge-synced">Correct</span></div>
+      <div class="list-item" style="border:1px solid var(--color-border);border-radius:12px;min-height:52px;padding:10px 14px"><i class="ph-fill ph-x-circle" style="color:var(--color-status-danger);font-size:22px"></i><div class="list-main"><h4>3. Green pigment in leaves</h4><p>Your answer: Phloem | Correct: Chlorophyll</p></div><span class="badge badge-danger">Review</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-ai"><i class="ph ph-sparkle"></i> Ask the tutor</button><button class="btn btn-secondary">Back to class</button></div></div>`,
+  react: `export function QuizResult({ score, total, items }: Props) {
+  const pct = Math.round((score / total) * 100);
+  const color = pct >= 75 ? '#2E9B4B' : pct >= 60 ? '#F5B82E' : '#EF5350';
+  return (
+    <section className="bg-white border border-lara-border rounded-2xl shadow-card p-5 max-w-lg">
+      <div className="flex items-center gap-5 mb-4 flex-wrap">
+        <ScoreRing value={pct} color={color} />
+        <div className="flex-1 min-w-[200px]">
+          <h4 className="text-xl font-black">Good work!</h4>
+          <p className="text-sm font-semibold text-lara-ink-2">You answered {score} of {total} correctly.</p>
+        </div>
+      </div>
+      <ul className="space-y-2 mb-4">
+        {items.map(i => (
+          <li key={i.n} className="flex items-center gap-3.5 border border-lara-border rounded-xl px-3.5 py-2.5 min-h-[52px]">
+            {i.correct ? <CheckCircle weight="fill" size={22} className="text-lara-primary" /> : <XCircle weight="fill" size={22} className="text-lara-danger" />}
+            <span className="flex-1 font-extrabold text-[15px]">{i.n}. {i.title}</span>
+            <Badge tone={i.correct ? 'synced' : 'danger'}>{i.correct ? 'Correct' : 'Review'}</Badge>
+          </li>
+        ))}
+      </ul>
+      <Button variant="ai" icon={<Sparkle size={20} />}>Ask the tutor</Button>
+    </section>
+  );
+}`,
+  kotlin: `@Composable
+fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -> Unit) {
+    val pct = score * 100 / total
+    val color = when { pct >= 75 -> LaraColors.Primary; pct >= 60 -> LaraColors.Warning; else -> LaraColors.Danger }
+    Column(
+        Modifier.fillMaxWidth().laraShadow(2.dp).background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            ScoreRing(pct, color, "Score")
+            Column {
+                Text("Good work!", fontWeight = FontWeight.Black, fontSize = 20.sp)
+                Text("You answered $score of $total correctly.", color = LaraColors.TextSecondary, fontSize = 14.sp)
+            }
+        }
+        items.forEach { ResultRow(it) }
+        // Only enable once the quiz is closed; the tutor is locked during an active assessment.
+        LaraButton("Ask the tutor", style = ButtonStyle.Ai, icon = PhosphorIcons.Regular.Sparkle, onClick = onAskTutor)
+    }
+}`,
+  dos: ['Use warm, encouraging language regardless of score.', 'Link each incorrect item to the lesson page that covers it.'],
+  donts: ['Do not compare a pupil with classmates.', 'Do not show a red full-screen state for a low score.'],
+  a11y: ['Read the score as text, such as "80 percent, 4 of 5 correct".', 'Do not rely on the icon color to tell correct from incorrect; the badge text does.']
+},
+{
+  id: 'ai', title: 'Socratic AI Tutor', icon: 'sparkle', wide: true,
+  desc: 'A pedagogical tutor styled in solid purple with a mandatory lesson-grounding badge. It guides with questions and never gives the direct answer.',
+  preview: `<div class="card" style="border:2px solid #D6CCFC;overflow:hidden;box-shadow:var(--shadow-elevated);max-width:560px;margin:0 auto">
+    <div style="background:var(--color-primary-purple);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px"><i class="ph-fill ph-sparkle" style="font-size:20px"></i><span>L.A.R.A Socratic AI Tutor</span></div><span style="font-size:11px;font-weight:800;background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:4px">FILIPINO</span></div>
+    <div style="padding:20px;background:#FAF9FE;display:flex;flex-direction:column;gap:12px">
+      <div style="align-self:flex-end;max-width:80%;background:var(--color-primary-purple);color:#fff;border-radius:14px 14px 2px 14px;padding:12px 16px;font-size:14px;font-weight:700">What is the green thing in leaves?</div>
+      <div style="align-self:flex-start;max-width:88%;background:var(--color-light-purple);border:1px solid #D6CCFC;border-radius:14px 14px 14px 2px;padding:14px 16px;font-size:14px;color:#2D237A">
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--color-primary-purple);background:#fff;border:1px solid #D6CCFC;padding:2px 8px;border-radius:9999px;margin-bottom:6px"><i class="ph ph-book-open"></i> BASED ON LESSON 1 (PAGE 2)</div>
+        <p style="font-weight:600">Great question! I cannot give you the direct answer, but let us remember together: what substance gives plants their green color?</p></div>
+      <div style="align-self:flex-start;display:flex;gap:4px;padding:10px 14px;background:var(--color-light-purple);border-radius:14px" aria-label="Tutor is typing"><span class="skel" style="width:8px;height:8px;border-radius:50%;background:#8E85EE"></span><span class="skel" style="width:8px;height:8px;border-radius:50%;background:#8E85EE;animation-delay:.2s"></span><span class="skel" style="width:8px;height:8px;border-radius:50%;background:#8E85EE;animation-delay:.4s"></span></div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #D6CCFC;display:flex;gap:8px;background:#fff"><input class="form-input" style="min-height:48px;border-radius:9999px;border-color:#D6CCFC" placeholder="Type your question" aria-label="Question"><button class="btn btn-ai btn-icon btn-pill" aria-label="Send"><i class="ph ph-paper-plane-tilt"></i></button></div></div>`,
+  react: `export function TutorBubble({ from, lesson, children }: Props) {
+  if (from === 'pupil') {
+    return (
+      <div className="self-end max-w-[80%] bg-lara-ai text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm font-bold">
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div className="self-start max-w-[88%] bg-lara-ai-light border border-[#D6CCFC] rounded-2xl rounded-bl-sm p-4 text-[#2D237A]">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-extrabold uppercase text-lara-ai bg-white border border-[#D6CCFC] mb-1.5">
+        <BookOpen size={12} /> Based on {lesson}
+      </span>
+      <p className="text-sm font-semibold">{children}</p>
+    </div>
+  );
+}
+
+// Server guard: refuse tutor calls while an assessment is active.
+if (session.activeQuizId) return res.status(423).json({ error: 'ASSESSMENT_LOCKED' });`,
+  kotlin: `@Composable
+fun TutorBubble(fromPupil: Boolean, lesson: String?, text: String) {
+    if (fromPupil) {
+        Text(
+            text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp,
+            modifier = Modifier.widthIn(max = 280.dp)
+                .background(LaraColors.Ai, RoundedCornerShape(14.dp, 14.dp, 2.dp, 14.dp)).padding(16.dp, 12.dp),
+        )
+    } else {
+        Column(
+            Modifier.widthIn(max = 300.dp)
+                .background(LaraColors.AiLight, RoundedCornerShape(14.dp, 14.dp, 14.dp, 2.dp))
+                .border(1.dp, Color(0xFFD6CCFC), RoundedCornerShape(14.dp, 14.dp, 14.dp, 2.dp))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            lesson?.let {
+                Row(
+                    Modifier.background(Color.White, CircleShape).border(1.dp, Color(0xFFD6CCFC), CircleShape).padding(8.dp, 2.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Icon(PhosphorIcons.Regular.BookOpen, null, tint = LaraColors.Ai, modifier = Modifier.size(12.dp))
+                    Text("BASED ON " + it.uppercase(), color = LaraColors.Ai, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp)
+                }
+            }
+            Text(text, color = Color(0xFF2D237A), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        }
+    }
+}`,
+  dos: ['Always show which lesson page the hint is grounded in.', 'Reply with a guiding question, never the final answer.'],
+  donts: ['Do not allow the tutor during an active quiz.', 'Do not use purple for any non-AI element.'],
+  a11y: ['Announce new tutor messages with aria-live="polite".', 'Provide a text label for the typing indicator.']
+},
+{
+  id: 'camera', title: 'CameraX Overlay', icon: 'camera', tag: 'MOBILE', wide: true,
+  desc: 'Viewfinder overlay helping young pupils frame handwritten notebook pages, with automatic JPEG compression below 800KB.',
+  preview: `<div class="viewfinder" style="max-width:560px;margin:0 auto"><div class="vf-frame">FRAME NOTEBOOK PAGE HERE</div><div style="margin-top:10px;font-size:11px;opacity:.85">Auto-compress to JPEG under 800KB</div><div class="vf-bar"><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Flash"><i class="ph ph-lightning"></i></button><div class="shutter" role="button" aria-label="Take photo"></div><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Close"><i class="ph ph-x"></i></button></div></div>`,
+  react: `// Web fallback for the teacher hub: file input with capture hint
+<label className="inline-flex items-center gap-2 min-h-[52px] px-6 rounded-xl bg-lara-primary text-white font-extrabold cursor-pointer">
+  <Camera size={20} /> Take photo
+  <input type="file" accept="image/*" capture="environment" className="sr-only"
+    onChange={async e => onPhoto(await compressToJpeg(e.target.files![0], 800 * 1024))} />
+</label>`,
+  kotlin: `@Composable
+fun HomeworkCamera(onCapture: (Uri) -> Unit, onClose: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(LaraColors.TextPrimary)) {
+        AndroidView(factory = { ctx -> PreviewView(ctx) /* bind CameraX Preview + ImageCapture */ }, Modifier.fillMaxSize())
+
+        // Framing guide
+        Box(
+            Modifier.align(Alignment.Center).fillMaxWidth(0.85f).fillMaxHeight(0.7f)
+                .drawBehind {
+                    drawRoundRect(
+                        color = LaraColors.Primary, cornerRadius = CornerRadius(12.dp.toPx()),
+                        style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))),
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) { Text("FRAME NOTEBOOK PAGE HERE", color = LaraColors.PrimaryLight, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp) }
+
+        // Shutter
+        Box(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).size(64.dp)
+                .background(Color.White, CircleShape).border(4.dp, LaraColors.PrimaryLight, CircleShape)
+                .clickable { /* imageCapture.takePicture(...) then compress to <= 800 KB */ }
+                .semantics { contentDescription = "Take photo" },
+        )
+    }
+}`,
+  dos: ['Show a live preview of the compressed result before submit.', 'Offer retake as the most prominent secondary action.'],
+  donts: ['Do not upload full-resolution originals over the school network.'],
+  a11y: ['Shutter has a text label; support volume keys as a hardware shutter.']
+},
+{
+  id: 'hub', title: 'Hub Sync Panel', icon: 'broadcast', tag: 'NEW', wide: true,
+  desc: 'Shows the LAN connection to the Teacher Hub, the offline queue, and the last successful sync. Designed for classrooms with no internet.',
+  preview: `<div class="card card-pad" style="max-width:520px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px"><div style="display:flex;align-items:center;gap:12px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-broadcast"></i></div><div><h4 style="font-weight:900;font-size:16px">Teacher Hub</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600">192.168.1.50 | Room 204</p></div></div><div class="radar-pill"><div class="radar-dot"></div><span>Connected</span></div></div>
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:var(--color-canvas-bg);border:1px solid var(--color-border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900">3</div><div style="font-size:11px;font-weight:800;color:var(--color-text-secondary)">Queued</div></div>
+      <div style="background:var(--color-canvas-bg);border:1px solid var(--color-border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900">12</div><div style="font-size:11px;font-weight:800;color:var(--color-text-secondary)">Synced today</div></div>
+      <div style="background:var(--color-canvas-bg);border:1px solid var(--color-border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900">5/8</div><div style="font-size:11px;font-weight:800;color:var(--color-text-secondary)">Modules</div></div>
+    </div>
+    <div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:6px"><span>Syncing quiz attempts</span><span>2 of 3</span></div><div class="progress"><span style="width:66%"></span></div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-arrows-clockwise"></i> Sync now</button><button class="btn btn-secondary">View queue</button></div>
+    <p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:12px">Last successful sync: Today, 2:15 PM</p></div>`,
+  react: `export function HubSyncPanel({ hub, queued, syncedToday, progress }: Props) {
+  return (
+    <section className="bg-white border border-lara-border rounded-2xl shadow-card p-5 max-w-lg">
+      <header className="flex items-center justify-between gap-2.5 mb-3.5">
+        <div className="flex items-center gap-3">
+          <span className="w-11 h-11 rounded-xl bg-lara-primary-light text-lara-primary-dark flex items-center justify-center text-[22px]"><Broadcast /></span>
+          <div>
+            <h4 className="text-base font-black">Teacher Hub</h4>
+            <p className="text-xs font-semibold text-lara-ink-2">{hub.ip} | {hub.room}</p>
+          </div>
+        </div>
+        <HubBeacon ip={hub.ip} state={hub.connected ? 'on' : 'off'} />
+      </header>
+      <dl className="grid grid-cols-3 gap-2.5 mb-3.5 text-center">
+        {[['Queued', queued], ['Synced today', syncedToday], ['Modules', hub.modules]].map(([k, v]) => (
+          <div key={k as string} className="bg-lara-canvas border border-lara-border rounded-xl p-3">
+            <dd className="text-[22px] font-black">{v}</dd>
+            <dt className="text-[11px] font-extrabold text-lara-ink-2">{k}</dt>
+          </div>
+        ))}
+      </dl>
+      <Progress value={progress} />
+      <div className="flex gap-2.5 mt-3.5">
+        <Button icon={<ArrowsClockwise size={20} />}>Sync now</Button>
+        <Button variant="secondary">View queue</Button>
+      </div>
+    </section>
+  );
+}`,
+  kotlin: `sealed interface SyncState {
+    data object Synced : SyncState
+    data object Queued : SyncState
+    data class Syncing(val done: Int, val total: Int) : SyncState
+}
+
+@Composable
+fun HubSyncPanel(hub: HubInfo, queued: Int, syncedToday: Int, state: SyncState, onSync: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().laraShadow(2.dp).background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, LaraColors.Border, RoundedCornerShape(16.dp)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Teacher Hub", fontWeight = FontWeight.Black, fontSize = 16.sp)
+                Text("\${hub.ip} | \${hub.room}", fontSize = 12.sp, color = LaraColors.TextSecondary)
+            }
+            HubBeacon(hub.ip, hub.connected)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            listOf("Queued" to queued, "Synced today" to syncedToday, "Modules" to hub.cachedModules).forEach { (k, v) ->
+                Column(
+                    Modifier.weight(1f).background(LaraColors.Canvas, RoundedCornerShape(12.dp))
+                        .border(1.dp, LaraColors.Border, RoundedCornerShape(12.dp)).padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text("$v", fontWeight = FontWeight.Black, fontSize = 22.sp)
+                    Text(k, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = LaraColors.TextSecondary)
+                }
+            }
+        }
+        if (state is SyncState.Syncing) LaraProgress(state.done / state.total.toFloat())
+        LaraButton("Sync now", icon = PhosphorIcons.Regular.ArrowsClockwise, onClick = onSync, enabled = hub.connected)
+    }
+}`,
+  dos: ['Always show how many items are waiting in the local queue.', 'Keep Sync now available even when auto-sync is on.'],
+  donts: ['Do not describe the connection as "internet"; use "Hub" or "classroom network".', 'Do not discard queued items when the Hub is unreachable.'],
+  a11y: ['Announce connection changes with a polite live region.', 'The beacon dot always has an adjacent text label.']
+}
+]}
+];
+
+/* ==========================================================================
+   RENDERING
+   ========================================================================== */
+const ALL = GROUPS.flatMap(g => g.items.map(i => Object.assign({ group: g.name }, i)));
+
+function codeBlock(title, code) {
+  return '<div class="code-wrapper"><div class="code-header"><span>' + title + '</span>' +
+    '<button class="copy-btn" data-copy><i class="ph ph-copy"></i> Copy</button></div>' +
+    '<pre class="code-block"><code>' + esc(code) + '</code></pre></div>';
+}
+function bullets(list, icon) {
+  return '<ul class="doc-list ' + (icon === 'ph-check-circle' ? 'do' : icon === 'ph-x-circle' ? 'dont' : 'a11y') + '">' +
+    list.map(t => '<li><i class="ph ' + icon + '"></i><span>' + t + '</span></li>').join('') + '</ul>';
+}
+
+function renderSection(c) {
+  return '<section id="doc-' + c.id + '" class="comp-section" style="display:none">' +
+    '<div class="breadcrumb">' + c.group + '</div>' +
+    '<div class="comp-header"><h1 class="comp-title">' + c.title + '</h1><p class="comp-desc">' + c.desc + '</p></div>' +
+    '<div class="tab-bar" data-anchor="preview">' +
+      '<div class="tab-item active" data-panel="preview">Preview</div>' +
+      '<div class="tab-item" data-panel="react">React + Tailwind</div>' +
+      '<div class="tab-item" data-panel="kotlin">Kotlin Compose</div>' +
+    '</div>' +
+    '<div class="panel" data-panel="preview"><div class="preview-card ' + (c.wide ? 'full-width' : '') + '">' + c.preview + '</div></div>' +
+    '<div class="panel" data-panel="react" style="display:none" data-anchor="code">' + codeBlock('React + Tailwind (TypeScript)', c.react) + '</div>' +
+    '<div class="panel" data-panel="kotlin" style="display:none">' + codeBlock('Kotlin (Jetpack Compose, Material 3)', c.kotlin) + '</div>' +
+    '<h2 class="doc-h2" data-anchor="guidelines">Guidelines</h2>' +
+    '<div class="two-col"><div><h3>Do</h3>' + bullets(c.dos, 'ph-check-circle') + '</div><div><h3>Avoid</h3>' + bullets(c.donts, 'ph-x-circle') + '</div></div>' +
+    '<h2 class="doc-h2" data-anchor="a11y">Accessibility</h2>' + bullets(c.a11y, 'ph-person-simple-circle') +
+  '</section>';
+}
+
+function renderSidebar() {
+  let h = '<div class="sidebar-search"><i class="ph ph-magnifying-glass"></i><input id="side-search" placeholder="Search components" aria-label="Search components"></div>';
+  GROUPS.forEach(g => {
+    h += '<div class="sidebar-group" data-group><div class="sidebar-group-title">' + g.name + '</div>';
+    g.items.forEach(i => {
+      h += '<button class="sidebar-nav-btn" data-id="' + i.id + '" data-title="' + i.title.toLowerCase() + '"><i class="ph ph-' + i.icon + '"></i> ' + i.title +
+        (i.tag ? '<span class="sidebar-tag-badge">' + i.tag + '</span>' : '') + '</button>';
+    });
+    h += '</div>';
+  });
+  document.getElementById('sidebar').innerHTML = h;
+}
+
+function renderToc() {
+  document.getElementById('toc').innerHTML =
+    '<div class="toc-title">On This Page</div>' +
+    '<a class="toc-item" data-go="preview">Interactive Preview</a>' +
+    '<a class="toc-item" data-go="code">Implementation Code</a>' +
+    '<a class="toc-item" data-go="guidelines">Usage Guidelines</a>' +
+    '<a class="toc-item" data-go="a11y">Accessibility</a>';
+}
+
+/* ==========================================================================
+   BEHAVIOUR
+   ========================================================================== */
+function showComponent(id) {
+  if (!ALL.find(c => c.id === id)) id = ALL[0].id;
+  document.querySelectorAll('.comp-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.sidebar-nav-btn[data-id]').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  const sec = document.getElementById('doc-' + id);
+  sec.style.display = 'block';
+  history.replaceState(null, '', '#' + id);
+  window.scrollTo({ top: 0 });
+}
+
+function copyText(text, btn) {
+  const done = () => {
+    if (!btn) { triggerToast('success', 'Copied', text); return; }
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ph ph-check"></i> Copied';
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done);
+  else done();
+}
+
+function triggerToast(type, titleOverride, descOverride) {
+  const anchor = document.getElementById('live-toast-anchor');
+  const map = {
+    success: ['ph-check-circle', 'Handout Downloaded', 'Handout #2 is saved locally for offline study.'],
+    warning: ['ph-cloud-slash', 'Queued Offline', 'No LAN hub detected. Saved to Room SQLite.'],
+    ai: ['ph-sparkle', 'Socratic Hint Received', 'L.A.R.A provided a clue based on Lesson 1.'],
+    danger: ['ph-lock', 'Assessment Lockout', 'AI Tutor is strictly blocked during an active quiz.']
+  };
+  const m = map[type];
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.setAttribute('role', 'status');
+  t.innerHTML = '<div class="toast-icon-wrap"><i class="ph ' + m[0] + '"></i></div><div class="toast-body"><div class="toast-title"></div><div class="toast-desc"></div></div><button class="toast-close" aria-label="Dismiss"><i class="ph ph-x"></i></button>';
+  t.querySelector('.toast-title').textContent = titleOverride || m[1];
+  t.querySelector('.toast-desc').textContent = descOverride || m[2];
+  t.querySelector('.toast-close').onclick = () => t.remove();
+  anchor.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+
+  // Sidebar nav
+  const nav = t.closest('.sidebar-nav-btn[data-id]');
+  if (nav) { showComponent(nav.dataset.id); return; }
+
+  // Demo navs (non-routing)
+  const bn = t.closest('#bn-demo .bn-item');
+  if (bn) { bn.parentElement.querySelectorAll('.bn-item').forEach(x => x.classList.remove('active')); bn.classList.add('active'); return; }
+  const sn = t.closest('#sn-demo .sidebar-nav-btn');
+  if (sn) { sn.parentElement.querySelectorAll('.sidebar-nav-btn').forEach(x => x.classList.remove('active')); sn.classList.add('active'); return; }
+
+  // Doc tabs
+  const tab = t.closest('.tab-item[data-panel]');
+  if (tab) {
+    const sec = tab.closest('.comp-section');
+    sec.querySelectorAll('.tab-item[data-panel]').forEach(x => x.classList.toggle('active', x === tab));
+    sec.querySelectorAll('.panel').forEach(p => p.style.display = p.dataset.panel === tab.dataset.panel ? 'block' : 'none');
+    return;
+  }
+
+  // Copy
+  const cp = t.closest('[data-copy]');
+  if (cp) { copyText(cp.closest('.code-wrapper').querySelector('code').innerText, cp); return; }
+
+  // TOC
+  const go = t.closest('[data-go]');
+  if (go) {
+    const sec = Array.from(document.querySelectorAll('.comp-section')).find(s => s.style.display !== 'none');
+    const key = go.dataset.go;
+    if (key === 'code') { const tabBtn = sec.querySelector('.tab-item[data-panel="react"]'); tabBtn.click(); }
+    if (key === 'preview') { sec.querySelector('.tab-item[data-panel="preview"]').click(); }
+    const target = sec.querySelector('[data-anchor="' + key + '"]');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  // Selection rows
+  const row = t.closest('.sel-row');
+  if (row) {
+    const kind = row.dataset.kind;
+    if (kind === 'check') {
+      const c = row.querySelector('.check'); c.classList.toggle('on'); row.setAttribute('aria-checked', c.classList.contains('on'));
+    } else if (kind === 'switch') {
+      const s = row.querySelector('.switch'); s.classList.toggle('on'); row.setAttribute('aria-checked', s.classList.contains('on'));
+    } else if (kind === 'radio') {
+      row.parentElement.querySelectorAll('.sel-row[data-kind="radio"]').forEach(r => { r.querySelector('.radio').classList.remove('on'); r.setAttribute('aria-checked', 'false'); });
+      row.querySelector('.radio').classList.add('on'); row.setAttribute('aria-checked', 'true');
+    }
+    return;
+  }
+
+  // Segmented
+  const seg = t.closest('.seg-item');
+  if (seg) { seg.parentElement.querySelectorAll('.seg-item').forEach(s => { s.classList.remove('active'); s.setAttribute('aria-selected', 'false'); }); seg.classList.add('active'); seg.setAttribute('aria-selected', 'true'); return; }
+
+  // Chips
+  const chip = t.closest('.chip[data-kind="chip"]');
+  if (chip) {
+    chip.classList.toggle('selected');
+    const sel = chip.classList.contains('selected');
+    chip.setAttribute('aria-pressed', sel);
+    const ic = chip.querySelector('i');
+    if (sel && !ic) chip.insertAdjacentHTML('afterbegin', '<i class="ph ph-check"></i> ');
+    if (!sel && ic) ic.remove();
+    return;
+  }
+
+  // Quiz options
+  const opt = t.closest('.quiz-card-option');
+  if (opt) {
+    opt.parentElement.querySelectorAll('.quiz-card-option').forEach(o => {
+      o.classList.remove('selected'); o.setAttribute('aria-checked', 'false');
+      const i = o.querySelector('i'); if (i) i.className = 'ph ph-circle';
+    });
+    opt.classList.add('selected'); opt.setAttribute('aria-checked', 'true');
+    const i = opt.querySelector('i'); if (i) i.className = 'ph ph-check-circle';
+    return;
+  }
+
+  // Attendance
+  const ab = t.closest('.att-btn');
+  if (ab) { ab.parentElement.querySelectorAll('.att-btn').forEach(b => b.classList.remove('on')); ab.classList.add('on'); return; }
+
+  // Dialog
+  const op = t.closest('[data-open]');
+  if (op) { const d = document.getElementById(op.dataset.open); if (d) { d.classList.add('open'); d.querySelector('button').focus(); } return; }
+  const cl = t.closest('[data-close]');
+  if (cl) { document.getElementById(cl.dataset.close).classList.remove('open'); return; }
+  if (t.classList && t.classList.contains('scrim')) { t.classList.remove('open'); return; }
+
+  // Sheet
+  const so = t.closest('[data-sheet-open]');
+  if (so) { document.getElementById(so.dataset.sheetOpen).classList.add('open'); document.getElementById(so.dataset.sheetOpen + '-scrim').classList.add('open'); return; }
+  const sc = t.closest('[data-sheet-close]');
+  if (sc) { const id = sc.dataset.sheetClose; document.getElementById(id).classList.remove('open'); document.getElementById(id + '-scrim').classList.remove('open'); return; }
+
+  // Swatch hex copy via inline handler handled elsewhere
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.scrim.open, .sheet.open, .sheet-scrim.open').forEach(x => x.classList.remove('open'));
+  }
+  if ((e.key === ' ' || e.key === 'Enter') && e.target.classList && e.target.classList.contains('sel-row')) {
+    e.preventDefault(); e.target.click();
+  }
+});
+
+// PIN auto-advance
+document.addEventListener('input', e => {
+  const b = e.target;
+  if (b.classList && b.classList.contains('pin-box')) {
+    b.value = b.value.replace(/\D/g, '');
+    if (b.value && b.nextElementSibling) b.nextElementSibling.focus();
+  }
+});
+document.addEventListener('keydown', e => {
+  const b = e.target;
+  if (b.classList && b.classList.contains('pin-box') && e.key === 'Backspace' && !b.value && b.previousElementSibling) b.previousElementSibling.focus();
+});
+
+// Sidebar search
+document.addEventListener('input', e => {
+  if (e.target.id !== 'side-search') return;
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.sidebar-nav-btn[data-id]').forEach(b => { b.style.display = !q || b.dataset.title.includes(q) ? '' : 'none'; });
+  document.querySelectorAll('[data-group]').forEach(g => {
+    const any = Array.from(g.querySelectorAll('.sidebar-nav-btn')).some(b => b.style.display !== 'none');
+    g.style.display = any ? '' : 'none';
+  });
+});
+
+/* ---------- Boot ---------- */
+renderSidebar();
+renderToc();
+document.getElementById('main').innerHTML = ALL.map(renderSection).join('');
+showComponent(location.hash.replace('#', '') || ALL[0].id);
+window.addEventListener('hashchange', () => showComponent(location.hash.replace('#', '')));
+</script>
+</body>
+</html>

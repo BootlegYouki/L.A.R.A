@@ -198,6 +198,16 @@ paths:
                 section:
                   type: string
                   example: "Aguinaldo"
+                weight_written_works:
+                  type: integer
+                  default: 40
+                weight_performance_tasks:
+                  type: integer
+                  default: 40
+                weight_quarterly_assessment:
+                  type: integer
+                  default: 20
+                  description: The three weights must add up to 100
       responses:
         "200":
           description: Created classroom
@@ -284,7 +294,13 @@ paths:
   # ---------------------------------------------------------------- SYNC
   /api/sync/pull:
     post:
-      summary: Delta-sync pull for client offline storage (scoped to the caller's ACTIVE classrooms)
+      summary: Delta-sync pull (cursor based) for the caller's ACTIVE classrooms
+      description: |
+        The cursor is a strictly increasing integer from the Hub's change ledger (`sync_revisions.seq`), never a clock time.
+        First sync: send cursor 0 and no hub_id. Afterwards send the last `next_cursor` plus the `hub_id` and `sync_epoch` you stored.
+        If they do not match the Hub (different school Hub, restored backup), the response has `reset: true`: wipe the
+        mirrored tables (keep rows still QUEUED_FOR_SYNC) and apply the response, which then starts from cursor 0.
+        Commit the whole response and the new cursor in ONE local transaction.
       tags: [sync]
       requestBody:
         required: true
@@ -292,14 +308,18 @@ paths:
           application/json:
             schema:
               type: object
-              required: [last_synced_at]
+              required: [cursor]
               properties:
-                last_synced_at:
+                cursor:
                   type: integer
-                  description: Epoch ms of the previous server_time (0 for a first sync)
+                  minimum: 0
+                hub_id:
+                  type: string
+                sync_epoch:
+                  type: integer
       responses:
         "200":
-          description: Records with updated_at greater than last_synced_at plus tombstones
+          description: Records changed after the cursor, plus tombstones
           content:
             application/json:
               schema:
@@ -561,10 +581,18 @@ paths:
                   type: string
                 deped_category:
                   $ref: "#/components/schemas/DepEdCategory"
+                quarter:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                  default: 1
                 max_points:
                   type: integer
                 due_date:
                   type: integer
+                allow_late:
+                  type: boolean
+                  default: false
       responses:
         "200":
           description: Created assignment
@@ -1006,6 +1034,7 @@ components:
     Classroom:
       type: object
       required: [id, name, section, class_code, teacher_id]
+      description: Weights are returned to the owning teacher only.
       properties:
         id:
           type: string
@@ -1022,6 +1051,14 @@ components:
         teacher_id:
           type: string
           format: uuid
+        archived_at:
+          type: integer
+        weight_written_works:
+          type: integer
+        weight_performance_tasks:
+          type: integer
+        weight_quarterly_assessment:
+          type: integer
         enrollment_status:
           type: string
           enum: ["PENDING", "ACTIVE", "REJECTED"]
@@ -1155,10 +1192,16 @@ components:
           type: string
         deped_category:
           $ref: "#/components/schemas/DepEdCategory"
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
         max_points:
           type: integer
         due_date:
           type: integer
+        allow_late:
+          type: boolean
         updated_at:
           type: integer
 
@@ -1295,6 +1338,11 @@ components:
           type: integer
         deped_category:
           $ref: "#/components/schemas/DepEdCategory"
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          default: 1
         shuffle_questions:
           type: boolean
           default: false
@@ -1354,16 +1402,48 @@ components:
         submitted_at:
           type: integer
 
+    PublicUser:
+      type: object
+      required: [id, full_name, role]
+      description: What a client may know about another person. Never contains lrn_or_id (except the caller's own profile and a teacher's roster) or any PIN data.
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: ["TEACHER", "STUDENT"]
+        lrn_or_id:
+          type: string
+
     SyncPullResponse:
       type: object
-      required: [server_time, has_more]
+      required: [server_time, hub_id, sync_epoch, next_cursor, has_more, reset]
       properties:
         server_time:
           type: integer
-          description: Store this as the next last_synced_at only after the whole response is committed
+          description: Hub clock in epoch ms. Informational (clock offset for quiz timers); NEVER used as the sync cursor.
+        hub_id:
+          type: string
+          description: Identity of this Hub. Store it; a different value means a different school Hub.
+        sync_epoch:
+          type: integer
+          description: Incremented on restore-from-backup or tombstone pruning.
+        next_cursor:
+          type: integer
+          description: Store as the cursor only after the whole response is committed.
         has_more:
           type: boolean
-          description: When true, call pull again with last_synced_at set to the previous server_time
+          description: When true, pull again immediately with cursor set to next_cursor.
+        reset:
+          type: boolean
+          description: True when the caller's hub_id or sync_epoch did not match. The caller must wipe its mirror before applying.
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicUser"
         classrooms:
           type: array
           items:

@@ -68,7 +68,10 @@ class HubState:
         self.submission_files = {}
         self.quizzes = {}
         self.attempts = {}
-        self.tombstones = []
+        self.ledger = []
+        self.seq = 0
+        self.hub_id = new_id()
+        self.sync_epoch = 1
         self.ws_clients = []
         self._seed()
 
@@ -83,20 +86,25 @@ class HubState:
             "section": "Aguinaldo", "class_code": "K7M4QX",
             "teacher_id": teacher["id"], "created_at": t, "updated_at": t,
         }
+        classroom.update(weight_written_works=40, weight_performance_tasks=40, weight_quarterly_assessment=20)
         self.classrooms[classroom["id"]] = classroom
+        self.log("classrooms", classroom["id"], classroom["id"])
         enr = {"id": new_id(), "classroom_id": classroom["id"], "student_id": pupil["id"],
                "status": "ACTIVE", "joined_at": t, "updated_at": t}
         self.enrollments[enr["id"]] = enr
+        self.log("enrollments", enr["id"], classroom["id"], pupil["id"])
         ann = {"id": new_id(), "classroom_id": classroom["id"],
                "title": "Maligayang Pagdating sa Agham 4!",
                "content": "Basahin ang Aralin 1 tungkol sa Ecosystem bago ang pagsusulit.",
                "allow_comments": True, "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
         self.announcements[ann["id"]] = ann
+        self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "m1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
                "file_size_bytes": 2048, "download_url": "/api/materials/m1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
+        self.log("materials", mat["id"], classroom["id"])
         self.chunks[mat["id"]] = [
             {"id": new_id(), "material_id": mat["id"], "order_index": 1, "heading": "Ang Ecosystem",
              "text": "Ang ecosystem ay binubuo ng mga buhay at walang buhay na bagay na magkakaugnay."},
@@ -108,15 +116,27 @@ class HubState:
                "download_url": "/api/materials/m2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
+        self.log("materials", vid["id"], classroom["id"])
+        for chunk in self.chunks[mat["id"]]:
+            self.log("material_chunks", chunk["id"], classroom["id"])
         asg = {"id": new_id(), "classroom_id": classroom["id"], "title": "Gumuhit ng Food Chain",
                "instructions": "Kunan ng litrato ang iyong guhit.", "deped_category": "PERFORMANCE_TASK",
+               "quarter": 1, "allow_late": False,
                "max_points": 20, "due_date": t + 7 * 86_400_000, "created_at": t, "updated_at": t}
         self.assignments[asg["id"]] = asg
+        self.log("assignments", asg["id"], classroom["id"])
+
+    def log(self, table, entity_id, classroom_id=None, student_id=None, action="UPSERT"):
+        """Mirror of the server's sync_revisions insert: strictly increasing seq, never a clock time."""
+        self.seq += 1
+        self.ledger.append({"seq": self.seq, "table": table, "id": entity_id, "classroom_id": classroom_id,
+                            "student_id": student_id, "action": action})
 
     def add_user(self, lrn, name, role, pin):
         user = {"id": new_id(), "lrn_or_id": lrn, "full_name": name, "role": role,
                 "pin_hash": hash_pin(pin), "created_at": now_ms(), "updated_at": now_ms()}
         self.users[user["id"]] = user
+        self.log("users", user["id"])
         return user
 
     def public_user(self, user):
@@ -183,6 +203,15 @@ def grade(quiz, answers):
     return score, total
 
 
+def strip_private(obj):
+    """Never leak mock-internal fields (pin_hash, leading underscore keys) in any HTTP reply."""
+    if isinstance(obj, dict):
+        return {k: strip_private(v) for k, v in obj.items() if k != "pin_hash" and not k.startswith("_")}
+    if isinstance(obj, list):
+        return [strip_private(v) for v in obj]
+    return obj
+
+
 def student_quiz(quiz):
     out = {k: quiz.get(k) for k in ("id", "classroom_id", "title", "time_limit_minutes", "deped_category", "started_at")}
     out["questions"] = [{k: v for k, v in q.items() if k not in ("correct_answer", "synonyms")}
@@ -240,7 +269,7 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization")
 
     def send_json(self, status, obj):
-        data = json.dumps(obj).encode("utf-8")
+        data = json.dumps(strip_private(obj)).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
@@ -359,12 +388,6 @@ def owned_classroom(req, classroom_id):
     return c
 
 
-def revise(entity_table, entity_id, classroom_id, action="UPSERT"):
-    if action == "DELETE":
-        STATE.tombstones.append({"entity_table": entity_table, "entity_id": entity_id,
-                                 "classroom_id": classroom_id, "updated_at": now_ms()})
-
-
 # ---- portal
 @route("GET", r"/", auth=False)
 @route("GET", r"/download", auth=False)
@@ -440,6 +463,8 @@ def admin_reset(req):
 # ---- classrooms
 def public_classroom(c, user):
     out = {k: c[k] for k in ("id", "name", "section", "class_code", "teacher_id")}
+    if user["id"] == c["teacher_id"]:
+        out.update({k: c[k] for k in ("weight_written_works", "weight_performance_tasks", "weight_quarterly_assessment")})
     if user["role"] == "STUDENT":
         for e in STATE.enrollments.values():
             if e["classroom_id"] == c["id"] and e["student_id"] == user["id"]:
@@ -465,8 +490,14 @@ def classroom_create(req):
     code = "".join(random.choice(CLASS_CODE_ALPHABET) for _ in range(6))
     t = now_ms()
     c = {"id": new_id(), "name": b["name"], "section": b["section"], "class_code": code,
-         "teacher_id": req.user["id"], "created_at": t, "updated_at": t}
+         "teacher_id": req.user["id"], "created_at": t, "updated_at": t,
+         "weight_written_works": b.get("weight_written_works", 40),
+         "weight_performance_tasks": b.get("weight_performance_tasks", 40),
+         "weight_quarterly_assessment": b.get("weight_quarterly_assessment", 20)}
+    if c["weight_written_works"] + c["weight_performance_tasks"] + c["weight_quarterly_assessment"] != 100:
+        raise ApiError(400, "BAD_REQUEST", "Weights must add up to 100")
     STATE.classrooms[c["id"]] = c
+    STATE.log("classrooms", c["id"], c["id"])
     return public_classroom(c, req.user)
 
 
@@ -483,6 +514,7 @@ def classroom_join(req):
         enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"],
                "status": "PENDING", "joined_at": t, "updated_at": t}
         STATE.enrollments[enr["id"]] = enr
+        STATE.log("enrollments", enr["id"], c["id"], req.user["id"])
         STATE.broadcast({"event": "EVENT_JOIN_REQUEST", "class_code": c["class_code"],
                          "student_id": req.user["id"], "full_name": req.user["full_name"],
                          "lrn": req.user["lrn_or_id"], "timestamp": t}, STATE.teachers_of(c["id"]))
@@ -505,6 +537,7 @@ def decide(req, status):
     if not enr:
         raise ApiError(404, "NOT_FOUND", "Enrollment not found")
     enr["status"], enr["updated_at"] = status, now_ms()
+    STATE.log("enrollments", enr["id"], req.groups[0], sid)
     STATE.broadcast({"event": "EVENT_JOIN_APPROVAL", "classroom_id": req.groups[0], "student_id": sid,
                      "status": status, "timestamp": now_ms()}, {sid})
     return {"success": True}
@@ -523,43 +556,70 @@ def reject(req):
 # ---- sync
 @route("POST", r"/api/sync/pull")
 def sync_pull(req):
-    since = int(req.json().get("last_synced_at", 0))
+    b = req.json()
+    cursor = int(b.get("cursor", 0))
+    claimed_hub, claimed_epoch = b.get("hub_id"), b.get("sync_epoch")
+    reset = bool(claimed_hub) and (claimed_hub != STATE.hub_id or claimed_epoch != STATE.sync_epoch)
+    if reset:
+        cursor = 0
     ids = STATE.visible_classroom_ids(req.user)
+    teacher = req.user["role"] == "TEACHER"
 
-    def fresh(items, key="classroom_id"):
-        return [i for i in items if i.get(key) in ids and i["updated_at"] > since]
+    latest = {}
+    for e in STATE.ledger:
+        if e["seq"] <= cursor or e["table"] == "users" or e["classroom_id"] not in ids:
+            continue
+        if e["student_id"] and e["student_id"] != req.user["id"] and not teacher:
+            continue
+        latest[(e["table"], e["id"])] = e
 
-    mats = fresh(STATE.materials.values())
-    ann = fresh(STATE.announcements.values())
-    quizzes = [{"id": q["id"], "classroom_id": q["classroom_id"], "title": q["title"], "status": q["status"],
-                "time_limit_minutes": q["time_limit_minutes"], "deped_category": q["deped_category"],
-                "started_at": q.get("started_at")}
-               for q in STATE.quizzes.values()
-               if q["classroom_id"] in ids and q["updated_at"] > since and
-               (q["status"] != "DRAFT" or req.user["role"] == "TEACHER")]
-    return {
-        "server_time": now_ms(), "has_more": False,
-        "classrooms": [public_classroom(c, req.user) for c in STATE.classrooms.values()
-                       if c["id"] in ids and c["updated_at"] > since],
-        "enrollments": [e for e in STATE.enrollments.values()
-                        if (e["student_id"] == req.user["id"] or e["classroom_id"] in ids) and e["updated_at"] > since],
-        "announcements": ann,
-        "comments": [c for c in STATE.comments.values()
-                     if STATE.announcements.get(c["announcement_id"], {}).get("classroom_id") in ids
-                     and c["updated_at"] > since],
-        "materials": mats,
-        "material_chunks": [c for m in mats for c in STATE.chunks.get(m["id"], [])],
-        "assignments": fresh(STATE.assignments.values()),
-        "submissions": [s for s in STATE.submissions.values()
-                        if (s["student_id"] == req.user["id"] or req.user["role"] == "TEACHER") and s["updated_at"] > since],
-        "quizzes": quizzes,
-        "quiz_attempts": [{"attempt_id": a["id"], "score": a["score"], "total_points": a["total_points"],
-                           "submitted_at": a["submitted_at"]}
-                          for a in STATE.attempts.values()
-                          if a["student_id"] == req.user["id"] and a["status"] == "SUBMITTED" and a["updated_at"] > since],
-        "deleted": [{"entity_table": d["entity_table"], "entity_id": d["entity_id"]}
-                    for d in STATE.tombstones if d["classroom_id"] in ids and d["updated_at"] > since],
-    }
+    out = {k: [] for k in ("classrooms", "enrollments", "announcements", "comments", "materials", "material_chunks",
+                           "assignments", "submissions", "quizzes", "quiz_attempts")}
+    deleted = []
+    for (table, eid), e in latest.items():
+        if e["action"] == "DELETE":
+            deleted.append({"entity_table": table, "entity_id": eid})
+        elif table == "classrooms" and eid in STATE.classrooms:
+            out["classrooms"].append(public_classroom(STATE.classrooms[eid], req.user))
+        elif table == "enrollments" and eid in STATE.enrollments:
+            out["enrollments"].append(STATE.enrollments[eid])
+        elif table == "announcements" and eid in STATE.announcements:
+            out["announcements"].append(STATE.announcements[eid])
+        elif table == "announcement_comments" and eid in STATE.comments:
+            out["comments"].append(STATE.comments[eid])
+        elif table == "materials" and eid in STATE.materials:
+            out["materials"].append(STATE.materials[eid])
+        elif table == "material_chunks":
+            out["material_chunks"] += [c for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
+        elif table == "assignments" and eid in STATE.assignments:
+            out["assignments"].append(STATE.assignments[eid])
+        elif table == "assignment_submissions" and eid in STATE.submissions:
+            out["submissions"].append(STATE.submissions[eid])
+        elif table == "quizzes" and eid in STATE.quizzes:
+            q = STATE.quizzes[eid]
+            if q["status"] != "DRAFT" or teacher:
+                out["quizzes"].append({k: q.get(k) for k in ("id", "classroom_id", "title", "status", "time_limit_minutes",
+                                                              "deped_category", "started_at")})
+        elif table == "quiz_attempts" and eid in STATE.attempts:
+            a = STATE.attempts[eid]
+            if a["status"] == "SUBMITTED":
+                out["quiz_attempts"].append({"attempt_id": a["id"], "score": a["score"],
+                                             "total_points": a["total_points"], "submitted_at": a["submitted_at"]})
+
+    people = {req.user["id"]}
+    for cid in ids:
+        people |= STATE.teachers_of(cid) | STATE.students_of(cid)
+    users = []
+    for uid in people:
+        u = STATE.users[uid]
+        entry = {"id": u["id"], "full_name": u["full_name"], "role": u["role"]}
+        if uid == req.user["id"] or teacher:
+            entry["lrn_or_id"] = u["lrn_or_id"]
+        users.append(entry)
+
+    return {"server_time": now_ms(), "hub_id": STATE.hub_id, "sync_epoch": STATE.sync_epoch,
+            "next_cursor": STATE.seq, "has_more": False, "reset": reset, "users": users,
+            "deleted": deleted, **out}
 
 
 @route("POST", r"/api/sync/push", role="STUDENT")
@@ -578,6 +638,7 @@ def sync_push(req):
             STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
                                        "author_id": req.user["id"], "content": c["content"],
                                        "created_at": c["created_at"], "updated_at": now_ms()}
+            STATE.log("announcement_comments", c["id"], ann["classroom_id"])
             receipts.append({"id": c["id"], "status": "SYNCED"})
         else:
             receipts.append({"id": c["id"], "status": "REJECTED", "reason": "COMMENTS_DISABLED"})
@@ -594,6 +655,7 @@ def announcement_create(req):
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"], "content": b["content"],
          "allow_comments": b.get("allow_comments", True), "created_at": t, "updated_at": t}
     STATE.announcements[a["id"]] = a
+    STATE.log("announcements", a["id"], a["classroom_id"])
     STATE.broadcast({"event": "EVENT_ANNOUNCEMENT_PUSH", "classroom_id": a["classroom_id"],
                      "announcement_id": a["id"], "title": a["title"], "timestamp": t},
                     STATE.students_of(a["classroom_id"]))
@@ -610,6 +672,7 @@ def announcement_patch(req):
         if k in req.json():
             a[k] = req.json()[k]
     a["updated_at"] = now_ms()
+    STATE.log("announcements", a["id"], a["classroom_id"])
     return a
 
 
@@ -620,7 +683,7 @@ def announcement_delete(req):
         raise ApiError(404, "NOT_FOUND", "Announcement not found")
     owned_classroom(req, a["classroom_id"])
     del STATE.announcements[a["id"]]
-    revise("announcements", a["id"], a["classroom_id"], "DELETE")
+    STATE.log("announcements", a["id"], a["classroom_id"], action="DELETE")
     return {"success": True}
 
 
@@ -642,6 +705,7 @@ def comment_create(req):
     c = {"id": new_id(), "announcement_id": a["id"], "author_id": req.user["id"],
          "content": req.json()["content"], "created_at": t, "updated_at": t}
     STATE.comments[c["id"]] = c
+    STATE.log("announcement_comments", c["id"], a["classroom_id"])
     return c
 
 
@@ -659,9 +723,12 @@ def material_create(req):
          "file_size_bytes": len(data), "download_url": f"/api/materials/{mid}/download",
          "created_at": t, "updated_at": t}
     STATE.materials[mid] = m
+    STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
-        STATE.chunks[mid] = [{"id": new_id(), "material_id": mid, "order_index": 1,
-                              "heading": f["title"], "text": data.decode("utf-8", "replace")[:500]}]
+        chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
+                 "heading": f["title"], "text": data.decode("utf-8", "replace")[:500]}
+        STATE.chunks[mid] = [chunk]
+        STATE.log("material_chunks", chunk["id"], f["classroom_id"])
     return m
 
 
@@ -703,8 +770,10 @@ def assignment_create(req):
     t = now_ms()
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
          "instructions": b.get("instructions", ""), "deped_category": b["deped_category"],
+         "quarter": b.get("quarter", 1), "allow_late": b.get("allow_late", False),
          "max_points": b["max_points"], "due_date": b["due_date"], "created_at": t, "updated_at": t}
     STATE.assignments[a["id"]] = a
+    STATE.log("assignments", a["id"], a["classroom_id"])
     return a
 
 
@@ -725,6 +794,7 @@ def submission_create(req):
     sub["submitted_at"], sub["updated_at"] = t, t
     STATE.submissions[sub["id"]] = sub
     STATE.submission_files[sub["id"]] = files["file"]
+    STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
     return sub
 
 
@@ -743,6 +813,7 @@ def submission_grade(req):
         if k in b:
             s[k] = b[k]
     s["updated_at"] = now_ms()
+    STATE.log("assignment_submissions", s["id"], STATE.assignments[s["assignment_id"]]["classroom_id"], s["student_id"])
     return s
 
 
@@ -772,10 +843,11 @@ def quiz_create(req):
                    "correct_answer": q["correct_answer"], "synonyms": q.get("synonyms", [])})
     quiz = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
             "instructions": b.get("instructions"), "time_limit_minutes": b["time_limit_minutes"],
-            "deped_category": b["deped_category"], "shuffle_questions": b.get("shuffle_questions", False),
+            "deped_category": b["deped_category"], "quarter": b.get("quarter", 1), "shuffle_questions": b.get("shuffle_questions", False),
             "release_scores_immediately": b.get("release_scores_immediately", True),
             "status": "DRAFT", "started_at": None, "questions": qs, "created_at": t, "updated_at": t}
     STATE.quizzes[quiz["id"]] = quiz
+    STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     return quiz
 
 
@@ -813,6 +885,7 @@ def quiz_start(req):
     owned_classroom(req, quiz["classroom_id"])
     t = now_ms()
     quiz.update(status="ACTIVE", started_at=t, updated_at=t)
+    STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     duration = quiz["time_limit_minutes"] * 60
     STATE.broadcast({"event": "EVENT_QUIZ_START", "quiz_id": quiz["id"], "title": quiz["title"],
                      "start_epoch_ms": t, "duration_seconds": duration}, STATE.students_of(quiz["classroom_id"]))
@@ -833,6 +906,7 @@ def quiz_begin(req):
                "started_at": t, "submitted_at": None, "score": None, "total_points": None,
                "answers": [], "updated_at": t}
         STATE.attempts[att["id"]] = att
+        STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], req.user["id"])
         STATE.broadcast({"event": "EVENT_PRESENCE", "classroom_id": quiz["classroom_id"],
                          "student_id": req.user["id"], "state": "ANSWERING_QUIZ", "timestamp": t},
                         STATE.teachers_of(quiz["classroom_id"]))
@@ -855,6 +929,7 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
         STATE.attempts[att["id"]] = att
     att.update(status="SUBMITTED", submitted_at=submitted_at, score=score, total_points=total,
                answers=answers, updated_at=t)
+    STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], user["id"])
     if quiz["release_scores_immediately"]:
         STATE.broadcast({"event": "EVENT_GRADE_CONFIRMED", "quiz_id": quiz_id, "attempt_id": att["id"],
                          "score": score, "total_points": total, "timestamp": t}, {user["id"]})
@@ -879,10 +954,12 @@ def quiz_close(req):
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
     owned_classroom(req, quiz["classroom_id"])
     quiz.update(status="CLOSED", updated_at=now_ms())
+    STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     for att in list(STATE.attempts.values()):
         if att["quiz_id"] == quiz["id"] and att["status"] == "IN_PROGRESS":
             score, total = grade(quiz, att["answers"])
             att.update(status="SUBMITTED", submitted_at=now_ms(), score=score, total_points=total, updated_at=now_ms())
+            STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], att["student_id"])
     STATE.broadcast({"event": "EVENT_QUIZ_CLOSED", "quiz_id": quiz["id"], "timestamp": now_ms()},
                     STATE.students_of(quiz["classroom_id"]))
     return {"success": True}
@@ -1044,7 +1121,8 @@ def ws_session(sock):
                         return
                     client.user_id = user["id"]
                     STATE.ws_clients.append(client)
-                client.send_text(json.dumps({"event": "EVENT_HELLO_ACK", "server_time": now_ms()}))
+                client.send_text(json.dumps({"event": "EVENT_HELLO_ACK", "server_time": now_ms(),
+                                                 "hub_id": STATE.hub_id, "sync_epoch": STATE.sync_epoch}))
             elif event == "EVENT_AI_CHAT_REQUEST":
                 threading.Thread(target=handle_ai_request, args=(client, msg), daemon=True).start()
             elif event == "EVENT_QUIZ_SUBMIT":

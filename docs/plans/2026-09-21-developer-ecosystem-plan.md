@@ -1,5 +1,8 @@
 # L.A.R.A Developer Ecosystem & Workflow Implementation Plan
 
+> **HISTORICAL DOCUMENT (superseded).** This was the original implementation plan for the developer tooling. The tooling now exists and has changed (authenticated mock hub with a WebSocket broker, expanded contracts, coverage tests). Do not follow the steps below. Current behavior is described in [`../architecture/developer-ecosystem-and-workflow.md`](../architecture/developer-ecosystem-and-workflow.md) and [`../../rules/developer-tooling-and-testing.md`](../../rules/developer-tooling-and-testing.md). Examples here may use outdated values (for example the old class code `SCI4-AG`).
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Establish the shared API contracts, standalone zero-dependency Mock Hub, and GitHub Actions Invariant Guardrail CI to unblock parallel development across Mobile, Desktop, and Server teams.

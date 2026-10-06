@@ -8,7 +8,7 @@ All AI agents and contributors must follow these rules.
 
 ## 1. Design Authority & L.A.R.A Custom Brand System
 
-* **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`docs/design-system.md`](../docs/design-system.md) and previewed in [`docs/design-system-showcase.html`](../docs/design-system-showcase.html).
+* **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`design-system/design-system.md`](../design-system/design-system.md) and previewed in [`design-system/showcase.html`](../design-system/showcase.html).
 * **Google Classroom Mental Model:** Use Google Classroom structures (Class Cards, Stream announcements with teacher avatars, Classwork materials with icons) as the UX mental model, paired with L.A.R.A brand tokens.
 * **Core Brand Tokens (Zero Gradients):**
   * **Primary Green (`#2E9B4B`):** General classroom learning, active tabs, buttons.
@@ -38,11 +38,7 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
 
 * **Contrast Ratio:** Text-to-background contrast must maintain at least **4.5:1** across all surface container roles to ensure readability under bright tropical classroom lighting.
 * **Typography Scale:** Avoid dense, tiny fonts. Use minimum 14sp for body text and 18sp for titles.
-* **Subject Color Coding:**
-  * **Science (Agham):** Green accents (`#146C2E` / `#C4EED0`).
-  * **Mathematics (Matematika):** Blue accents (`#0B57D0` / `#D3E3FD`).
-  * **English:** Amber accents (`#705D00` / `#FFE16D`).
-  * **Filipino & Araling Panlipunan:** Rose accents (`#984061` / `#FFD9E2`).
+* **Subject colors:** the design system does not define per-subject colors, and tokens-only is an invariant. Do not use per-subject hex accents unless the Lead adds them to `design-system/tokens.json` first.
 
 ---
 
