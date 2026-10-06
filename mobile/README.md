@@ -128,8 +128,10 @@ mobile/
 │   │   │   │   ├── data/
 │   │   │   │   │   ├── local/           # Room Database, DAOs, Entities
 │   │   │   │   │   ├── remote/          # Ktor/OkHttp, WebSocket, Discovery, MulticastLock
-│   │   │   │   │   └── sync/            # DeltaSyncWorker, HomeworkUploadWorker
+│   │   │   │   │   ├── sync/            # DeltaSyncWorker, HomeworkUploadWorker
+│   │   │   │   │   └── repository/      # Repository implementations over local + remote
 │   │   │   │   ├── domain/              # Models, Repositories, UseCases
+│   │   │   │   ├── ai/                  # Tutor routing (local GGUF vs Hub), lockout checks
 │   │   │   │   └── ui/
 │   │   │   │       ├── navigation/      # StudentNavGraph, TeacherNavGraph
 │   │   │   │       ├── theme/           # Material 3 Color, Type, Shape tokens
