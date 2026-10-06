@@ -128,7 +128,9 @@ desktop/
 │   ├── components/                   # Reusable M3 cards, buttons, video player
 │   ├── pages/                        # Stream, Classwork, Quiz, Teacher Dashboard
 │   ├── services/                     # Tauri SQL DB, WebSocket, Mock Hub client
-│   └── store/                        # Zustand global state stores
+│   ├── store/                        # Zustand global state stores
+│   ├── i18n/                         # English and Filipino dictionaries, runtime toggle
+│   └── assets/design-system/         # Nunito + Phosphor copied from design-system/assets/
 └── docs/                             # Mandatory subsystem architectural documentation
 ```
 
