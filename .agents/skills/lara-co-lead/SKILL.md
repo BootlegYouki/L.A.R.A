@@ -85,7 +85,7 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 ## 7. Standing open items (snapshot, 2026-10-05; re-check before relying on it)
 
 * Milestone due dates and Dev A / Dev B names are not set.
-* A teacher or adviser to write and score the Filipino AI test set is not named (issue #73); results stay marked "unvalidated" until then.
+* The AI test set is written and scored by the dev team (`rules/socratic-ai-guardrails.md` section 5); results are labelled "developer-scored", never as validated by educators.
 * DepEd weight defaults (40/40/20) need confirming against the current DepEd order.
 * The board is private; decide whether to invite collaborators or make it public.
 * `main` has no ruleset yet, and CODEOWNERS lists only the Lead until team handles exist.
