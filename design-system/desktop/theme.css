@@ -1,0 +1,53 @@
+/**
+ * L.A.R.A. tokens as a Tailwind CSS 4 @theme block.
+ * Same values as tailwind.theme.ts and tokens.css. In desktop/src/index.css:
+ *   @import "tailwindcss";
+ *   @import "../../design-system/desktop/theme.css";
+ * Gives utilities such as bg-lara-primary, text-lara-ink-2, shadow-card, rounded-xl, min-h-touch.
+ */
+@theme {
+  --color-lara-primary: #2E9B4B;
+  --color-lara-primary-dark: #176B36;
+  --color-lara-primary-light: #E4F6E8;
+  --color-lara-ai: #5145E5;
+  --color-lara-ai-dark: #4035C9;
+  --color-lara-ai-light: #EEEAFE;
+  --color-lara-ai-border: #D6CCFC;
+  --color-lara-ai-bubble-text: #2D237A;
+  --color-lara-ai-chat-bg: #FAF9FE;
+  --color-lara-canvas: #F7FBFA;
+  --color-lara-subtle: #F2F6F5;
+  --color-lara-border: #E4EAF0;
+  --color-lara-ink: #17213D;
+  --color-lara-ink-2: #667085;
+  --color-lara-ink-3: #98A2B3;
+  --color-lara-success: #22A447;
+  --color-lara-warning: #F5B82E;
+  --color-lara-danger: #EF5350;
+  --color-lara-info: #3B82F6;
+  --color-lara-success-border: #C4ECCB;
+  --color-lara-warning-light: #FEF0C7;
+  --color-lara-warning-dark: #B54708;
+  --color-lara-warning-border: #FEDF89;
+  --color-lara-danger-light: #FEE4E2;
+  --color-lara-danger-dark: #B42318;
+  --color-lara-danger-border: #FECDCA;
+  --color-lara-info-light: #E0F2FE;
+  --color-lara-info-dark: #0369A1;
+  --color-lara-info-border: #BAE6FD;
+
+  --font-sans: 'Nunito', system-ui, sans-serif;
+
+  --shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgba(23, 33, 61, 0.07), 0 2px 4px -2px rgba(23, 33, 61, 0.05);
+  --shadow-elevated: 0 10px 15px -3px rgba(23, 33, 61, 0.08), 0 4px 6px -4px rgba(23, 33, 61, 0.04);
+  --shadow-toast: 0 12px 28px -4px rgba(23, 33, 61, 0.12), 0 4px 8px -2px rgba(23, 33, 61, 0.06);
+  --shadow-modal: 0 24px 48px -12px rgba(23, 33, 61, 0.22), 0 8px 16px -4px rgba(23, 33, 61, 0.08);
+
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --spacing-touch: 52px;
+  --spacing-touch-primary: 56px;
+}

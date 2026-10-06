@@ -1,147 +1,192 @@
-# L.A.R.A — Agent Development Rules & Architectural Guidelines
+# L.A.R.A: Agent Development Rules & Architectural Guidelines
 
-This document outlines the mandatory architectural invariants, technical constraints, coding standards, and pedagogical guardrails for developing the **L.A.R.A** (Localized Augmented Resource & Assessment) offline classroom platform.
-
-All AI agents and human contributors must adhere strictly to these rules.
+Mandatory architectural invariants, technical constraints, coding standards and pedagogical guardrails for the **L.A.R.A** (Localized Augmented Resource & Assessment) offline classroom platform. All AI agents and human contributors must follow them. Nested `AGENTS.md` files in `server/`, `desktop/` and `mobile/` add team-specific detail; read the one for the folder you are working in.
 
 ---
 
-## 0. Team Organization & Three Project Streams
+## 0. What L.A.R.A Is (60-second context)
 
-The engineering team is strictly structured into three decoupled project streams, overseen by the Lead Developer:
+An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Philippine public elementary schools (Grades 1 to 6). It runs entirely on the classroom's own Wi-Fi, with no internet at all. First deployment: the capstone defense plus one pilot class of about 40 pupils.
 
-1. **Mobile Project Team (`mobile/`):**
-   * **Scope:** Native Android Client (Kotlin 2.x + Jetpack Compose + Material 3).
-   * **Responsibilities:** Room SQLite offline caching, CameraX homework photo capture, Jetpack Media3 video playback, and JNI llama.cpp ARM64 bindings for capable devices.
-   * **Target Hardware:** 3GB/4GB RAM budget phones (Infinix, TECNO, itel, realme). Strict memory ceiling: heap < 250MB.
+**Three programs, one network:**
+* **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
+* **Mobile app (`mobile/`):** Android for pupils (budget 3 to 4 GB phones) and teachers (approve, post, start and monitor quizzes).
+* **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. The full teacher authoring surface.
 
-2. **Desktop Project Team (`desktop/`):**
-   * **Scope:** Cross-Platform Desktop Client (Tauri 2.x + React 19 + TypeScript + Tailwind CSS).
-   * **Responsibilities:** School computer lab (DepEd PC packages) & student laptop client, local SQLite via Tauri plugin, bundled llama.cpp sidecar execution on laptops with >= 4GB RAM.
+**How a class runs:** admin creates teacher accounts, a teacher creates a class and gets a 6-character code, pupils self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so pupils can study at home offline. Teachers post announcements, upload handouts and videos, assign homework (pupils photograph their notebook), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
 
-3. **Server Project Team (`server/`):**
-   * **Scope:** Local Hub Server & Teacher Host Application (Tauri + Rust/Node backend engine).
-   * **Responsibilities:** mDNS responder (`_lara._tcp.local`), UDP subnet broadcast beacon (`:8888`), central SQLite database, captive download portal (`:8080/download`), HTTP 206 video streaming, WebSocket real-time event broker, and llama-server multi-slot FIFO queue.
-
-4. **Lead Developer (Tech Lead & Gatekeeper):**
-   * Oversees all three projects.
-   * Reviews all pull requests using the `lead-companion` protocol.
-   * Gatekeeps merges into `staging` and releases to `main`.
-   * Enforces the zero-internet policy, budget hardware memory limits, and Socratic pedagogical rules.
-
-### Modular Architecture & Rule Documents
-Every contributor and AI agent must consult the dedicated rule files in `rules/` for their specific domain:
-* **Developer Tooling & Testing:** [`rules/developer-tooling-and-testing.md`](./rules/developer-tooling-and-testing.md)
-* **Database & Delta-Sync:** [`rules/database-and-sync.md`](./rules/database-and-sync.md)
-* **Quiz Engine & Anti-Cheat:** [`rules/quiz-and-anti-cheat.md`](./rules/quiz-and-anti-cheat.md)
-* **LAN Networking & Protocols:** [`rules/networking-and-lan.md`](./rules/networking-and-lan.md)
-* **Socratic AI & SLM Guardrails:** [`rules/socratic-ai-guardrails.md`](./rules/socratic-ai-guardrails.md)
-* **UI/UX & Elementary Accessibility:** [`rules/ui-and-accessibility.md`](./rules/ui-and-accessibility.md)
-* **Team Workflow & PR Criteria:** [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md)
+**Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
 ---
 
-## 1. Non-Negotiable System Invariants
+## 1. How To Work In This Repo
 
-### 1.1 Zero Internet Dependency (LAN Only)
-* The entire system must function 100% locally across an isolated Wi-Fi router or peer hotspot with no uplink to the global internet.
-* **Never introduce external cloud dependencies:** Do not add Firebase, Google Play Services, external CDNs, web fonts from Google Fonts, remote analytics, or remote API keys.
-* All assets, fonts, icons, installers, model weights, and media must be bundled locally or served via the Local Hub.
+### 1.1 Source of truth (when two documents disagree, higher wins)
+1. `contracts/` (OpenAPI, WebSocket event schemas, SQL schemas, `naming_rules.md`): the only shared surface between teams.
+2. This file and `rules/*.md`.
+3. `design-system/design-system.md` and `design-system/` (UI authority).
+4. `docs/PRD.md` (product behavior and functional requirements).
+5. Team `README.md`, `docs/TECH_SPEC.md` and GitHub issues.
 
-### 1.2 Offline-First Persistence
-* Both client applications (Android and Desktop) must store an offline mirror of all enrolled subjects, announcements, downloaded handouts, video lessons, and quiz histories in local SQLite.
-* Students must be able to launch the app at home in a disconnected state and review materials or interact with the local AI tutor without errors or blocking loaders.
-* Disconnected network operations (submitting finished quizzes, camera homework photos) must be saved locally with state `QUEUED_FOR_SYNC` and automatically flush to the Hub upon reconnecting to the classroom Wi-Fi.
+If you find a conflict, do not pick silently: fix the lower document, or if the higher one looks wrong, raise it to the Lead Developer. Never redefine product behavior in a Tech Spec or issue.
 
-### 1.3 Strict Network Protocol & Port Allocations
-* **HTTP REST Server (Port 8080):** 
-  * Captive distribution portal at `http://<hub-ip>:8080/download`.
-  * Binary file transfers (APKs, desktop installers, PDFs, GGUF model files).
-  * Video streaming strictly using HTTP Byte-Range requests (`Range: bytes=X-`, response `206 Partial Content`).
-  * Per-client streaming rate limit (max 2.0 MB/s) to prevent classroom Wi-Fi router congestion.
-* **Realtime Event Broker (Port 8081):**
-  * WebSockets exclusively for low-latency events: live quiz timers, active student presence, enrollment approvals, announcements push, and Hub-assisted AI token streaming.
-* **Discovery Service:**
-  * mDNS service identifier: `_lara._tcp.local` on port 8080.
-  * UDP subnet broadcast beacon: Broadcast JSON packet every 3 seconds to `255.255.255.255:8888`.
-  * Manual IP entry fallback must always remain accessible on the connection screen.
+### 1.2 Commands
+| Task | Command |
+|---|---|
+| Run the Hub simulator (clients build against it) | `python3 scripts/mock_hub.py` |
+| All contract, schema and mock hub tests | `python3 -m unittest discover tests` |
+| Offline and localization guardrail | `python3 scripts/verify_invariants.py` |
+| Mobile | `./gradlew test lint` (in `mobile/`) |
+| Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
+| Server | `cargo check && cargo test` (in `server/backend/`) |
 
----
+Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled pupil), `123456789013` (join with the code), `ADMIN-0001`.
 
-## 2. Pluggable Socratic AI Tutor & Model Benchmarking (GGUF / llama.cpp)
+### 1.3 Ownership
+* One issue = one team = one PR. Edit only your team's folder.
+* **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
+* Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 
-The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary pupils (Grades 1 to 6). The inference architecture is **pluggable and model-agnostic**, executing quantized GGUF models via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on Local Hub).
-
-While **MiniCPM5-2B (Int4)** serves as our primary baseline candidate, the system is designed to experimentally benchmark other candidate edge SLMs (e.g. **Qwen2.5-1.5B/3B**, **Llama-3.2-1B/3B**, **Gemma-2-2B**, **SmolLM2-1.7B**) to find the optimal combination of Filipino/English comprehension, Socratic reasoning, and memory efficiency.
-
-### 2.1 Hardware-Adaptive Dual Routing
-* **Android Phones with < 6GB physical RAM:** Must strictly route inference to the Local Hub over WebSockets (port 8081). Client heap must stay < 250MB to prevent Android Low Memory Killer (LMK/OOM) crashes on 3GB/4GB budget devices (Infinix, TECNO, itel, realme).
-* **Phones with ≥ 6GB RAM & Student Laptops:** Can execute supported candidate GGUF models 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
-* **Hub Queue:** The Local Hub manages concurrent low-RAM requests using a FIFO queue with 2 to 4 parallel `llama-server` slots, pushing queue status (`"Pangalawa ka sa pila - est. 4s"`) over WebSockets.
-
-### 2.2 Socratic Prompt Directives
-1. **Never output direct answers:** If asked "What is the answer to #3?" or "Ano ang sagot sa tanong na ito?", the tutor must decline warmly:
-   *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
-2. **Strict Grounding:** Base all hints and questions strictly on the teacher's uploaded lesson module text chunks. Do not extrapolate beyond provided material.
-3. **Step-by-Step Questioning:** Give only one small clue at a time, followed by a leading question that prompts the child to take the next reasoning step.
-4. **Bilingual Agility:** Understand and respond in the pupil's chosen language (English or natural conversational Filipino/Taglish).
-5. **Assessment Integrity (Hard Quiz Lockout):**
-   * While a paperless quiz is active, the AI tutor button is completely removed from the UI.
-   * The Hub backend must reject any inference requests originating from a student with an active quiz session (`HTTP 403 / QUIZ_IN_PROGRESS`).
+### 1.4 Decisions already made (do not re-litigate)
+* Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
+* The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
+* **Accounts:** admin creates teachers; pupils self-register, join by class code, teacher approves.
+* **Teachers work on desktop and mobile;** desktop is the full authoring surface, mobile the on-the-go set.
+* **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
+* Canonical values: touch targets 52dp (56dp primary actions and quiz options), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
+* **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the pupil back to the lesson.
+* Model choice is open until the AI evaluation (section 5.4) produces data.
 
 ---
 
-## 3. UI/UX Guidelines (Elementary School Accessibility)
+## 2. Team Organization
 
-* **Design Authority:** [`docs/design-system.md`](./docs/design-system.md) and the tokens in `design-system/` are canonical for all three apps. Developers are free to design screen layouts as long as they use only the documented tokens, components and rules, and follow Google Classroom as the structural reference (see the Google Classroom reference section in the design system doc).
-* **Components:** Android uses `androidx.compose.material3` components themed with `design-system/mobile/*`. Desktop uses Tailwind with `design-system/desktop/tailwind.theme.ts`. Icons are Phosphor and the font is Nunito, both bundled in `design-system/assets/`.
-* **Target Audience:** Filipino elementary pupils (Grades 1 to 6) and public school teachers (DepEd).
-* **Touch Targets:** Minimum 52dp (preferred 56dp) on mobile for young learners' touch accuracy.
+1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
+2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
+3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, DepEd export, backup.
+4. **Lead Developer:** reviews every PR with the `lara-co-lead` PR review protocol, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
-* **Visual Hierarchy:** Large, high-contrast typography, clear iconography accompanied by text labels, and clean cards. Avoid dense nested menus or complex technical terminology.
-* **Bilingual UI:** All user-facing text must be localized into English and Filipino. Never hardcode strings in UI components.
-* **Camera Capture:** CameraX integration must include document framing guides and automatic compression to JPEG (<800KB target).
-* **DepEd Gradebook Export:** Hub desktop application must export consolidated class records to `.xlsx` / `.csv` formatted according to official DepEd standards with direct export to USB flash drives.
-
----
-
-## 4. Subsystem Guidelines & Conventions
-
-### 4.1 Mobile Client (`mobile/`)
-* **Framework:** Native Android (Kotlin 2.x + Jetpack Compose + Material 3).
-* **Dual Roles:** Role-based UI switching for both **Student** and **Teacher** (Teacher can approve enrollments on-the-go, launch quizzes, and view live score telemetry from their phone).
-* **Architecture:** Clean Architecture + MVI/MVVM with Kotlin Coroutines and StateFlow.
-* **Database:** Room DB (SQLite) with compile-time query verification.
-* **Media:** Jetpack Media3 (ExoPlayer) with hardware decoding.
-* **AI:** `llama.cpp` JNI C++ bindings compiled for `arm64-v8a`.
-* **Verification:** Run `./gradlew test` and `./gradlew lint` before proposing changes.
-
-### 4.2 Desktop Client (`desktop/`)
-* **Framework:** Tauri 2.x + React 19 + TypeScript 5.x + Tailwind CSS 4.x.
-* **Styling:** Material 3 color palettes and elevation tokens configured in Tailwind.
-* **TypeScript Quality:** Strict type checking enabled (`strict: true`). Avoid `any`; use explicit interfaces matching backend schemas.
-* **Database:** Local SQLite via `@tauri-apps/plugin-sql`.
-* **AI:** Bundled `llama.cpp` binary invoked via Tauri sidecar process on machines with >= 4GB RAM.
-* **Verification:** Run `npm run build` (`tsc && vite build`) to verify zero type errors.
-
-### 4.3 Server Local Hub (`server/`)
-* **Framework:** Tauri 2.x Desktop GUI + Rust/Node backend engine.
-* **Database:** Central SQLite via SQLx / better-sqlite3 with automatic ACID migrations.
-* **Concurrency:** Rust Tokio async runtime or Fastify async engine.
-* **Rate Limiting:** Enforce 2 MB/s per client stream for videos to protect local Wi-Fi routers.
-* **Verification:** Run `cargo check` and `cargo test` on the server backend.
-
-### 4.4 Mandatory Folder-Level Documentation
-To ensure the Lead Developer and future teammates have immediate technical context:
-* **Mobile Developers:** Document architecture, Room schemas, and CameraX gotchas in `mobile/docs/` (or update `mobile/README.md`).
-* **Desktop Developers:** Document components, state flows, and Tauri sidecars in `desktop/docs/` (or update `desktop/README.md`).
-* **Server Developers:** Document routes, SQLite migrations, and `llama-server` queues in `server/docs/` (or update `server/README.md`).
-* Every PR introducing major features must include updated documentation within its assigned folder.
+Rule documents (read the ones for your task):
+* [`rules/developer-tooling-and-testing.md`](./rules/developer-tooling-and-testing.md)
+* [`rules/database-and-sync.md`](./rules/database-and-sync.md)
+* [`rules/quiz-and-anti-cheat.md`](./rules/quiz-and-anti-cheat.md)
+* [`rules/networking-and-lan.md`](./rules/networking-and-lan.md)
+* [`rules/socratic-ai-guardrails.md`](./rules/socratic-ai-guardrails.md)
+* [`rules/ui-and-accessibility.md`](./rules/ui-and-accessibility.md)
+* [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md)
 
 ---
 
-## 5. Code Hygiene & Anti-Slop Standards
+## 3. Non-Negotiable System Invariants
 
-* **No AI-Slop Comments:** Do not write obvious comments (e.g., `// create button`, `// set state to true`). Only write comments that explain non-obvious domain logic, hardware workarounds, or pedagogical constraints.
-* **Evidence Before Assertions:** When implementing features or fixing bugs, verify with build outputs, tests, or compiler logs before claiming a task is complete.
-* **Graceful Failure:** Always handle network drops cleanly. Network timeouts or broken sockets must never crash client applications or corrupt local SQLite databases.
+### 3.1 Zero Internet Dependency (LAN only)
+* Everything must work 100% locally on an isolated router or hotspot with no uplink.
+* **Never add:** Firebase, Google Play Services, external CDNs, Google Fonts links, remote analytics, remote API keys.
+* All assets (fonts, icons, installers, model weights, media) are bundled locally or served by the Hub. Fonts and icons come from `design-system/assets/`.
+
+### 3.2 Offline-first persistence
+* Both clients keep an offline mirror of enrolled classes, announcements, handouts, videos and quiz history in local SQLite.
+* A pupil can launch the app at home with no Wi-Fi and read, watch and (when capable) use the local AI without errors or blocking loaders.
+* Offline actions (finished quizzes, homework photos, comments) are saved with `sync_status = 'QUEUED_FOR_SYNC'` and flush automatically when the Hub is reachable. Never describe the connection as "internet"; say "Hub" or "classroom network".
+
+### 3.3 Network protocol and ports
+* **HTTP `:8080`:** captive portal `/download`, REST, file transfer, video streaming strictly via HTTP Range (`206 Partial Content`), per-client cap **2.0 MB/s**, video uploads capped at 250 MB.
+* **WebSocket `:8081`:** live quiz timers, presence, enrollment approvals, announcement pushes, Hub-assisted AI tokens. Handshake in `contracts/events/README.md`.
+* **Discovery:** mDNS `_lara._tcp.local` on 8080, UDP JSON beacon every 3 s to `255.255.255.255:8888`. A manual IP entry fallback must always exist on the connection screen.
+
+### 3.4 Security and privacy (children's data)
+* Every route except `/download`, register and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI.
+* **Never reach a client:** PIN hashes, other people's LRN, answer keys (`correct_answer`, synonyms), server file paths. Student serializers are separate types that cannot contain `correct_answer`.
+* Never log PINs, tokens, LRNs or homework file contents. Never delete users, classrooms or graded rows; deactivate or archive.
+* Pupils' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. Do not add features that export or transmit them off the Hub.
+
+---
+
+## 4. UI/UX Guidelines (Elementary Accessibility)
+
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference (see section 9 of the design system).
+* **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
+* **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
+* **Touch targets:** minimum 52dp, 56dp for primary actions and quiz options. Never rely on color alone: pair status color with an icon and text.
+* **Bilingual:** all user-facing text in English and Filipino, no hardcoded strings (`values/strings.xml` + `values-tl/strings.xml`; a JSON dictionary on desktop with runtime toggle).
+* **Every screen** needs an offline state, an empty state and a loading skeleton.
+* **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
+* **DepEd export:** `.xlsx` and `.csv` class records per quarter and subject, direct to USB.
+
+---
+
+## 5. Socratic AI Tutor (L.A.R.A AI)
+
+A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on the Hub). Full rules: `rules/socratic-ai-guardrails.md`.
+
+### 5.1 Routing
+* **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
+* **Phones with 6 GB or more, and laptops with 4 GB or more:** may run a downloaded GGUF fully offline.
+* The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
+
+### 5.2 Behavior (every model, every path)
+1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
+2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
+3. **One small clue, then one leading question.**
+4. **Reply in the pupil's chosen language** (English or natural Filipino/Taglish).
+5. **Quiz lockout:** while a pupil has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
+
+### 5.3 Model choice is open
+MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption.
+
+### 5.4 Evaluation requirement
+Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, Filipino and Taglish, run on the actual Hub machine. Do not claim "good enough" without those numbers.
+
+---
+
+## 6. Subsystem Conventions
+
+### 6.1 Mobile
+Kotlin 2.x, Compose Material 3, Clean Architecture with MVI/MVVM, Coroutines and StateFlow, Room, Media3, JNI for `arm64-v8a`. Teacher and Student nav graphs. Verify: `./gradlew test lint`.
+
+### 6.2 Desktop
+Tauri 2.x, React 19, TypeScript 5 with `strict: true` and no `any`, Tailwind 4 with design-system tokens, `@tauri-apps/plugin-sql`. Verify: `npm run build`.
+
+### 6.3 Server
+Rust, Axum, Tokio, SQLx with automatic ACID migrations (PRAGMAs on the connection, not in migrations), 2 MB/s per-stream rate limit. Verify: `cargo check` and `cargo test`.
+
+### 6.4 Folder documentation (mandatory)
+Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/docs/` or `server/docs/` (purpose, key files, data flow, gotchas), or the team README.
+
+---
+
+## 7. Working Rules For Agents
+
+* **Read before you write.** Open the contract, the rule file and the nested `AGENTS.md` for your area first. Search for existing code before creating new code.
+* **Do not invent behavior.** If a requirement is missing or contradicts another document, write the open question in the PR or issue instead of guessing.
+* **Smallest change that satisfies the issue.** No drive-by refactors, no new dependencies without need, no edits outside your folder.
+* **Evidence before assertions.** Run the commands in 1.2 and attach output. Never say "done" without a passing build or test, and say plainly what you could not verify.
+* **Graceful failure.** Broken sockets, timeouts and Wi-Fi drops never crash the app or corrupt SQLite. Writes that must be atomic use transactions.
+* **Security by default.** Authorise on the server, strip secrets from responses and logs.
+* **Comments only when they explain why:** non-obvious domain logic, a hardware workaround or a pedagogical constraint. No comments that restate the code.
+
+### Definition of done (every PR)
+- [ ] Linked issue (`Closes #n`), one team, one PR
+- [ ] Contract, mock hub and tests updated first if the API changed
+- [ ] Build, tests and `verify_invariants.py` pass, output attached
+- [ ] Works with the Hub unreachable (offline state defined)
+- [ ] English and Filipino strings, tokens only, targets at least 52dp
+- [ ] No answer key, PIN data or foreign LRN reaches a client
+- [ ] AI unavailable during a quiz
+- [ ] Team docs updated
+
+---
+
+## 8. Glossary
+
+| Term | Meaning |
+|---|---|
+| **Hub** | The server app on the school PC: database, files, WebSocket, AI queue |
+| **Class Code** | 6-character code a pupil enters to ask to join a class (stored `K7M4QX`, shown `K7M-4QX`) |
+| **LRN** | Learner Reference Number, the 12-digit DepEd pupil ID. Personal data |
+| **DepEd categories** | Written Work, Performance Task, Quarterly Assessment, weighted per subject, per quarter |
+| **QUEUED_FOR_SYNC** | Work created offline, waiting for the Hub |
+| **Cursor / `seq`** | Strictly increasing sync position; never a clock time |
+| **Socratic** | Guide with questions and one clue at a time instead of giving the answer |
+| **Grounding** | Tying every tutor reply to a specific lesson chunk |
+| **Mock hub** | `scripts/mock_hub.py`, a Python stand-in for the Hub that implements the whole contract |

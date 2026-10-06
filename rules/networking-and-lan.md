@@ -37,6 +37,16 @@ All AI agents and contributors must follow these rules.
 
 ---
 
+### 2.1 Authentication and the Realtime Handshake
+* Every REST route except `/download`, `POST /api/auth/register` and `POST /api/auth/login` requires `Authorization: Bearer <token>`. Media routes that players cannot send headers to (`/api/materials/{id}/stream`, `/download`, `/api/submissions/{id}/file`) also accept `?token=`.
+* WebSocket: the first frame must be `EVENT_HELLO` with the token. The Hub answers `EVENT_HELLO_ACK` (`server_time`, `hub_id`, `sync_epoch`) or closes with code `4401`. Reconnect with backoff 1 s, 2 s, 4 s, up to 10 s, and never show a blocking error while offline.
+* Errors always use `{ "error": { "code", "message" } }`. See `contracts/events/README.md` and `contracts/openapi.yaml`.
+
+### 2.2 Where the Hub Runs
+The pilot Hub is a **dedicated, always-on school PC wired to the router** running the same Hub app (Windows or Linux). Do not design around a teacher's personal laptop that sleeps, moves or changes networks. Teachers may use laptop hotspot mode only as a fallback, and the Hub should then warn about sleep and lid-close.
+
+---
+
 ## 3. Video Streaming & Bandwidth Throttling
 
 To prevent 40 connected devices from freezing cheap classroom Wi-Fi routers:

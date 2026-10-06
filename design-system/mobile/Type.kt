@@ -8,64 +8,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import org.lara.app.R
 
-// Copy design-system/mobile/res/font/*.ttf to mobile/app/src/main/res/font/ (bundled; never a downloadable font).
-val NunitoFamily = FontFamily(
+// Copy design-system/mobile/res/font/*.ttf to mobile/app/src/main/res/font/. Bundled, never a downloadable font:
+// the app must work with no internet.
+val Nunito = FontFamily(
     Font(R.font.nunito_regular, FontWeight.Normal),
     Font(R.font.nunito_medium, FontWeight.Medium),
     Font(R.font.nunito_semibold, FontWeight.SemiBold),
     Font(R.font.nunito_bold, FontWeight.Bold),
     Font(R.font.nunito_extrabold, FontWeight.ExtraBold),
-    Font(R.font.nunito_black, FontWeight.Black)
+    Font(R.font.nunito_black, FontWeight.Black),
 )
 
-val LaraTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 48.sp,
-        lineHeight = 60.sp,
-        color = LaraTextPrimary
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        color = LaraTextPrimary
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        color = LaraTextPrimary
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-        lineHeight = 28.sp,
-        color = LaraTextPrimary
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        color = LaraTextPrimary
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        color = LaraTextSecondary
-    ),
-    labelSmall = TextStyle(
-        fontFamily = NunitoFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        color = LaraTextSecondary
-    )
+// Scale from the design system (design-system/design-system.md section 2). Use sp so system font scaling works.
+private val LaraStyles = Typography(
+    displayLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Black, fontSize = 40.sp, lineHeight = 48.sp),
+    headlineLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, lineHeight = 36.sp),
+    headlineMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 30.sp),
+    titleMedium = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, lineHeight = 26.sp),
+    bodyLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
+    labelLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp),
 )
+
+// Material 3 components read the styles above that we did not set (TopAppBar uses titleLarge, dialogs use
+// headlineSmall, and so on). Without this they fall back to the system font and break "Nunito everywhere".
+val LaraTypography: Typography = LaraStyles.let { t ->
+    t.copy(
+        displaySmall = t.displaySmall.copy(fontFamily = Nunito),
+        displayMedium = t.displayMedium.copy(fontFamily = Nunito),
+        headlineSmall = t.headlineSmall.copy(fontFamily = Nunito),
+        titleLarge = t.titleLarge.copy(fontFamily = Nunito),
+        titleSmall = t.titleSmall.copy(fontFamily = Nunito),
+        bodyMedium = t.bodyMedium.copy(fontFamily = Nunito),
+        labelMedium = t.labelMedium.copy(fontFamily = Nunito),
+        labelSmall = t.labelSmall.copy(fontFamily = Nunito),
+    )
+}

@@ -1,52 +1,79 @@
 /**
- * L.A.R.A. Design System - Master CSS Custom Properties
- * Brand: 100% Solid Fills · Zero Gradients · Phosphor Icons · Non-Muddy Layered Shadows
+ * L.A.R.A. design tokens as plain CSS custom properties.
+ * Use in static pages (the Hub captive portal) and anywhere Tailwind is not available.
+ * Source of truth: design-system/showcase.html and design-system/design-system.md.
+ * Brand: 100% solid fills, zero gradients, Phosphor icons, navy-tinted layered shadows.
  */
 
 :root {
-  /* Brand Primary */
-  --lara-color-primary-green: #2E9B4B;
-  --lara-color-dark-green: #176B36;
-  --lara-color-light-green: #E4F6E8;
+  /* Brand */
+  --color-primary-green: #2E9B4B;
+  --color-dark-green: #176B36;
+  --color-light-green: #E4F6E8;
 
-  /* Socratic AI Dedicated Palette */
-  --lara-color-primary-purple: #5145E5;
-  --lara-color-dark-purple: #4035C9;
-  --lara-color-light-purple: #EEEAFE;
+  /* Socratic AI tutor (tutor surfaces only) */
+  --color-primary-purple: #5145E5;
+  --color-dark-purple: #4035C9;
+  --color-light-purple: #EEEAFE;
+  --color-ai-border: #D6CCFC;
+  --color-ai-bubble-text: #2D237A;
+  --color-ai-chat-bg: #FAF9FE;
 
   /* Surfaces */
-  --lara-color-canvas-bg: #F7FBFA;
-  --lara-color-surface-white: #FFFFFF;
-  --lara-color-surface-subtle: #F2F6F5;
-  --lara-color-border: #E4EAF0;
+  --color-canvas-bg: #F7FBFA;
+  --color-surface-white: #FFFFFF;
+  --color-surface-subtle: #F2F6F5;
+  --color-border: #E4EAF0;
 
-  /* Typography Colors */
-  --lara-color-text-primary: #17213D;
-  --lara-color-text-secondary: #667085;
-  --lara-color-text-muted: #98A2B3;
+  /* Text */
+  --color-text-primary: #17213D;
+  --color-text-secondary: #667085;
+  --color-text-muted: #98A2B3;
 
-  /* Semantic Status */
-  --lara-color-status-success: #22A447;
-  --lara-color-status-warning: #F5B82E;
-  --lara-color-status-danger: #EF5350;
-  --lara-color-status-info: #3B82F6;
+  /* Status (always pair with an icon and a text label) */
+  --color-status-success: #22A447;
+  --color-status-warning: #F5B82E;
+  --color-status-danger: #EF5350;
+  --color-status-info: #3B82F6;
+  --color-success-border: #C4ECCB;
+  --color-warning-light: #FEF0C7;
+  --color-warning-dark: #B54708;
+  --color-warning-border: #FEDF89;
+  --color-danger-light: #FEE4E2;
+  --color-danger-dark: #B42318;
+  --color-danger-border: #FECDCA;
+  --color-info-light: #E0F2FE;
+  --color-info-dark: #0369A1;
+  --color-info-border: #BAE6FD;
 
-  /* Typography */
-  --lara-font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography. Nunito is bundled in assets/fonts; never load it from a CDN. */
+  --font-sans: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Spacing: 4px base grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
 
   /* Radii */
-  --lara-radius-sm: 8px;
-  --lara-radius-md: 12px;
-  --lara-radius-lg: 16px;
-  --lara-radius-pill: 9999px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
 
-  /* Touch Standards */
-  --lara-touch-target-min: 52px;
-  --lara-touch-target-preferred: 56px;
+  /* Touch targets */
+  --min-touch-target: 52px;
+  --primary-touch-target: 56px;
 
-  /* Non-Muddy Navy-Tinted Multi-Layered Shadows */
-  --lara-shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
-  --lara-shadow-card-hover: 0 4px 6px -1px rgba(23, 33, 61, 0.07), 0 2px 4px -2px rgba(23, 33, 61, 0.05);
-  --lara-shadow-elevated: 0 10px 15px -3px rgba(23, 33, 61, 0.08), 0 4px 6px -4px rgba(23, 33, 61, 0.04);
-  --lara-shadow-toast: 0 12px 28px -4px rgba(23, 33, 61, 0.12), 0 4px 8px -2px rgba(23, 33, 61, 0.06);
+  /* Navy-tinted layered shadows (never gray) */
+  --shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgba(23, 33, 61, 0.07), 0 2px 4px -2px rgba(23, 33, 61, 0.05);
+  --shadow-elevated: 0 10px 15px -3px rgba(23, 33, 61, 0.08), 0 4px 6px -4px rgba(23, 33, 61, 0.04);
+  --shadow-toast: 0 12px 28px -4px rgba(23, 33, 61, 0.12), 0 4px 8px -2px rgba(23, 33, 61, 0.06);
+  --shadow-modal: 0 24px 48px -12px rgba(23, 33, 61, 0.22), 0 8px 16px -4px rgba(23, 33, 61, 0.08);
 }
