@@ -121,7 +121,7 @@ Companion docs live in `mobile/docs/*.md` (`navigation.md`, `room_schema.md`, `d
 Every route/event the client touches. Links: [`contracts/openapi.yaml`](../../contracts/openapi.yaml), [`contracts/events/`](../../contracts/events/). Nothing copied. Default on timeout / Hub-unreachable (offline-first, AGENTS §3.2): reads serve the Room mirror; writes persist locally as `QUEUED_FOR_SYNC`; the WebSocket reconnects with backoff 1s/2s/4s/max 10s; the app never shows a blocking error.
 
 ### REST (`contracts/openapi.yaml`)
-| Route | Our module | On documented error | On timeout / Hub unreachable |
+| Route | Our module | On error | On timeout / Hub unreachable |
 |---|---|---|---|
 | `POST /api/auth/register` | `data/remote` AuthApi | `409` → "ID already registered", stay on form | Keep form; retry when reachable; no local account created |
 | `POST /api/auth/login` | AuthApi | `401` → wrong ID/PIN message | If a valid token is cached, enter offline (home-study) mode |
@@ -137,7 +137,7 @@ Every route/event the client touches. Links: [`contracts/openapi.yaml`](../../co
 | `GET`/`POST /api/announcements/{id}/comments` | StreamRepository | `403 COMMENTS_DISABLED` → hide composer | Read from Room; new comment `QUEUED_FOR_SYNC` via push |
 | `GET /api/materials/{id}/download` | MaterialRepository | `404` → "not available" | Serve `materials.local_file_path` if cached |
 | `GET /api/materials/{id}/chunks` | MaterialRepository | `404` | Serve mirrored chunks for Socratic grounding |
-| `GET /api/materials/{id}/stream` | `data/remote` (OkHttp + Media3), `?token=` | `416`/`404` → error state | Play local file if "Saved for Home"; else disabled |
+| `GET /api/materials/{id}/stream` | `data/remote` (OkHttp + Media3), `?token=` | `416` (not in contract; treated as the stream error state)/`404` → error state | Play local file if "Saved for Home"; else disabled |
 | `POST /api/assignments/{id}/submit` | `HomeworkUploadWorker` | `413 FILE_TOO_LARGE` → recompress <800 KB | Store JPEG locally `QUEUED_FOR_SYNC` with client `submission_id`; upload on reconnect |
 | `GET /api/assignments/{id}/submissions` (teacher) | AssignmentRepository | `403` | Serve mirror |
 | `PATCH /api/submissions/{id}` (teacher grade) | AssignmentRepository | `403`/`404` | Requires Hub; disable grading |
