@@ -13,7 +13,7 @@
 | 1 Scaffolding & LAN discovery | `[MOBILE 1.1]` #23, `[MOBILE 1.2]` #4, `[MOBILE 1.3]` #41 | PRD §3.1 discovery; §6.1 client schema |
 | 2 Roles, classrooms & delta-sync | `[MOBILE 2.1]` #24, `[MOBILE 2.2]` #49, `[MOBILE 2.3]` #50, `[MOBILE 2.4]` #51, `[MOBILE 2.5]` #52 | FR-1.1, FR-1.2, FR-1.3; §6.2 sync |
 | 3 Stream, media & homework | `[MOBILE 3.1]` #25, `[MOBILE 3.2]` #9, `[MOBILE 3.3]` #59, `[MOBILE 3.4]` #60 | FR-2.1, FR-2.2, FR-2.3, FR-3.1, FR-3.3, FR-3.5 |
-| 4 Paperless quiz & gradebook | `[MOBILE 4.1]` #26, `[MOBILE 4.2]` #64, `[MOBILE 4.3]` #65 | FR-4.1..FR-4.6 |
+| 4 Paperless quiz & gradebook | `[MOBILE 4.1]` #26, `[MOBILE 4.2]` #64, `[MOBILE 4.3]` #65 | FR-4.1..FR-4.6, FR-5.1 (read-only matrix) |
 | 5 Socratic AI | `[MOBILE 5.1]` #15, `[MOBILE 5.2]` #27, `[MOBILE 5.3]` #69, `[MOBILE 5.4]` #70 | PRD §5 (all) |
 | 6 Audit & stress test | `[MOBILE 6.1]` #18, `[MOBILE 6.2]` #28 | PRD §8, §10 |
 
@@ -151,6 +151,8 @@ Every route/event the client touches. Links: [`contracts/openapi.yaml`](../../co
 | `POST /api/export/class-record` (teacher trigger) | ExportRepository | `403` | Requires Hub; disable; generation is server-side |
 
 ### WebSocket events (`contracts/events/`)
+After a reconnect, send `last_event_id` in `EVENT_HELLO`; anything still missed is recovered by `POST /api/sync/pull`.
+
 | Event | Our module | On error / unexpected | On timeout / Hub unreachable |
 |---|---|---|---|
 | `EVENT_HELLO` → `EVENT_HELLO_ACK` | `data/remote` WsClient | close `4401` → re-auth; store `hub_id`, `sync_epoch`, clock offset | Reconnect with backoff; UI stays usable offline |
@@ -223,8 +225,11 @@ HomeworkUploadWorker.enqueue(workManager, submissionId)                     // s
 
 **Quiz countdown on a monotonic clock:**
 ```kotlin
-val offset = helloAck.serverTime - System.currentTimeMillis()      // from EVENT_HELLO_ACK
-val serverNow = { System.currentTimeMillis() + offset }
+// on EVENT_HELLO_ACK
+val ackElapsed = SystemClock.elapsedRealtime()
+val serverAtAck = helloAck.serverTime
+fun serverNow() = serverAtAck + (SystemClock.elapsedRealtime() - ackElapsed)
+// on EVENT_QUIZ_START
 val endElapsed = SystemClock.elapsedRealtime() + (startEpochMs + durationMs - serverNow())
 fun remaining() = endElapsed - SystemClock.elapsedRealtime()       // monotonic; survives Wi-Fi drop
 // at remaining() <= 0 or EVENT_QUIZ_CLOSED: lock input and auto-submit
