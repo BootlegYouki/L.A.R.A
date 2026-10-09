@@ -41,12 +41,28 @@ enum class ManualInputError { EMPTY, INVALID_FORMAT }
  *
  * [AndroidViewModel] is used because discovery needs the application [Context] for the Android
  * system services; the context is the application's, never an Activity's, so nothing leaks.
+ *
+ * The primary constructor takes ONLY [Application] so Compose's default `viewModel()` factory can
+ * reflectively instantiate it (that factory requires an `(Application)` constructor on an
+ * [AndroidViewModel]). The collaborators are built from the application context here; a test-only
+ * secondary constructor injects fakes without needing a reflective `(Application)` match.
  */
 class DiscoveryViewModel(
     application: Application,
-    private val discoveryService: HubDiscoveryService = HubDiscoveryService(application),
-    private val networkMonitor: NetworkMonitor = NetworkMonitor(application),
+    private val discoveryService: HubDiscoveryService,
+    private val networkMonitor: NetworkMonitor,
 ) : AndroidViewModel(application) {
+
+    /**
+     * Constructor used by Compose's default `viewModel()` factory, which reflectively requires an
+     * `(Application)`-only constructor on an [AndroidViewModel]. It builds the collaborators from the
+     * application context. The three-arg primary constructor stays available for tests to inject fakes.
+     */
+    constructor(application: Application) : this(
+        application = application,
+        discoveryService = HubDiscoveryService(application),
+        networkMonitor = NetworkMonitor(application),
+    )
 
     private val _uiState = MutableStateFlow(DiscoveryUiState())
     val uiState: StateFlow<DiscoveryUiState> = _uiState.asStateFlow()
