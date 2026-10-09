@@ -27,10 +27,4 @@
     <string name="placeholder_quizzes_body">Your quizzes will appear here.</string>
     <string name="placeholder_tutor_title">AI Tutor</string>
     <string name="placeholder_tutor_body">The Socratic tutor unlocks when you are connected to the classroom Hub.</string>
-
-    <!-- Accessible names for icon-only elements -->
-    <string name="cd_nav_stream">Open Stream</string>
-    <string name="cd_nav_classwork">Open Classwork</string>
-    <string name="cd_nav_quizzes">Open Quizzes</string>
-    <string name="cd_nav_tutor">Open AI Tutor</string>
 </resources>

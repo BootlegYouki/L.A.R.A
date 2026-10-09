@@ -23,19 +23,22 @@ Start at the entry point and follow the composition down:
 | `MainActivity.kt` | Single-Activity entry point; calls `setContent { LaraApp() }`, enables edge-to-edge. |
 | `LaraApplication.kt` | Process `Application`; intentionally thin — later wires Room/OkHttp/WorkManager. |
 | `ui/LaraApp.kt` | Compose root. Applies `LaraTheme` once and hosts the nav graph in a `Surface`. |
-| `ui/navigation/LaraDestinations.kt` | `LaraRoutes` string constants and the `LaraTab` enum (route + label + accessible-name string resources). |
-| `ui/navigation/LaraNavGraph.kt` | `NavHost`: `connect` landing → a home shell with the `NavigationBar` and the four placeholder tabs. |
+| `ui/navigation/LaraDestinations.kt` | `LaraRoutes` string constants (incl. `HOME`) and the `LaraTab` enum (route + label string resource). |
+| `ui/navigation/LaraNavGraph.kt` | Outer `NavHost` (`connect` → `home`); `HomeShell` holds one `Scaffold` + `NavigationBar` over an inner tab `NavHost`. |
 | `ui/screens/ConnectScreen.kt` | Landing screen the app opens to; primary action is a navigation placeholder for discovery (#4). |
 | `ui/screens/PlaceholderScreens.kt` | Stream / Classwork / Quizzes / Tutor placeholder bodies. |
 | `ui/components/LaraButtons.kt` | `LaraPrimaryButton` (56dp) and `LaraButton` (52dp) — the touch-target floor baked in. |
 | `ui/theme/*` | `Color/Theme/Type/Shape.kt` copied verbatim from `design-system/mobile/`; the single source of tokens. |
 
-**Navigation flow:** `connect` is the start destination. "Find Hub" navigates to `stream` and pops
-`connect` off the back stack. The four tabs are top-level routes; the shared `NavigationBar` is drawn
-per destination and re-selects with `launchSingleTop` + `restoreState` so tab state survives switches.
+**Navigation flow:** `connect` is the outer start destination. "Find Hub" navigates to `home` and
+pops `connect` with `inclusive = true`, so Back from the shell exits the app (it does not return to
+Connect). `home` renders `HomeShell`: a single `Scaffold` whose `NavigationBar` drives an inner
+`NavHost` (start = `stream`) over the four tabs. The bar is composed once; switching tabs recomposes
+only the content. Tabs re-select with `popUpTo(startDestination){saveState}` + `launchSingleTop` +
+`restoreState` so each tab's state is preserved and the inner back stack stays single-entry.
 
-The single home host is deliberately flat so #24 can split it into `StudentNavGraph` /
-`TeacherNavGraph` by authenticated role without reworking the `NavController` contract.
+`HomeShell`'s inner host is the seam #24 replaces with role-aware `StudentNavGraph` /
+`TeacherNavGraph`; the outer host and the `connect → home` transition stay as the entry contract.
 
 ## 3. Data flow and local state
 
@@ -61,9 +64,17 @@ Package is `org.lara.app` throughout (per the handoff review note).
 - **`gradlew` line endings.** `mobile/.gitattributes` forces `gradlew` to LF. On a CRLF checkout the
   Linux CI runner fails with a `bad interpreter` error. Fonts (`*.ttf`) and the wrapper jar are
   marked `binary` so EOL conversion never corrupts them.
-- **Icons.** The bottom nav is text-labelled with explicit `contentDescription`s. The Phosphor icon
-  set (design-system §4) is a feature-screen concern and lands with the role nav work (#24); it was
-  intentionally not added here to avoid a premature icon dependency.
+- **Icon + text slot (for #24).** Text is in the `NavigationBarItem` **label** slot; the **icon**
+  slot is a deliberate empty placeholder. #24 must put the Phosphor icon (Regular, Fill when active)
+  in the icon slot — the design system requires icon **and** text (§4, §5.13) — and reintroduce the
+  per-tab `contentDescription` accessible names that were removed here while the nav is text-only.
+- **Do not copy a per-tab Scaffold.** An earlier revision gave each tab its own Scaffold, which
+  rebuilt the bottom bar on every switch and dropped tab state. The shell now hoists one Scaffold +
+  one inner `NavHost` (see §2). #24 should keep this single-Scaffold shape, not reintroduce the
+  per-destination pattern.
+- **Back behavior to verify on device.** With `connect` popped `inclusive = true`, Back from a tab
+  should exit the app, not return to Connect or stack tabs. This is correct by construction but
+  unverified on hardware in this PR (no device/emulator available); confirm during #24.
 - **Launcher icon.** Adaptive-icon only (vector foreground + solid Primary Green background); no
   legacy density PNGs. Fine for `minSdk 26`, but lint emits a benign `IconMissingDensityFolder` note.
 - **No blocking offline dialog.** The connection landing follows `README` §0.9 — it invites the user
@@ -75,6 +86,6 @@ Package is `org.lara.app` throughout (per the handoff review note).
 | Placeholder | Replaced by |
 | :--- | :--- |
 | `ConnectScreen` "Find Hub" action | mDNS discovery + manual IP + reconnect (#4, see `discovery.md`) |
-| Single home host | `StudentNavGraph` / `TeacherNavGraph` role routing (#24) |
+| `HomeShell` inner host | `StudentNavGraph` / `TeacherNavGraph` role routing (#24) |
 | Stream / Classwork / Quizzes / Tutor bodies | Feature screens across Sprints 3–5 |
-| Text-labelled nav items | Phosphor Regular/Fill icons with the Light Green active indicator (#24) |
+| Empty icon slot + text label | Phosphor Regular/Fill icon in the icon slot, Light Green active indicator, restored content descriptions (#24) |

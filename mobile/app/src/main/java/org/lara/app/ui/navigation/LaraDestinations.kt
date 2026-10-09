@@ -9,6 +9,10 @@ import org.lara.app.R
  */
 object LaraRoutes {
     const val CONNECT = "connect"
+
+    /** Outer-graph route for the bottom-nav shell; owns a single Scaffold + inner tab NavHost. */
+    const val HOME = "home"
+
     const val STREAM = "stream"
     const val CLASSWORK = "classwork"
     const val QUIZZES = "quizzes"
@@ -23,10 +27,9 @@ object LaraRoutes {
 enum class LaraTab(
     val route: String,
     @StringRes val labelRes: Int,
-    @StringRes val contentDescriptionRes: Int,
 ) {
-    STREAM(LaraRoutes.STREAM, R.string.nav_stream, R.string.cd_nav_stream),
-    CLASSWORK(LaraRoutes.CLASSWORK, R.string.nav_classwork, R.string.cd_nav_classwork),
-    QUIZZES(LaraRoutes.QUIZZES, R.string.nav_quizzes, R.string.cd_nav_quizzes),
-    TUTOR(LaraRoutes.TUTOR, R.string.nav_tutor, R.string.cd_nav_tutor),
+    STREAM(LaraRoutes.STREAM, R.string.nav_stream),
+    CLASSWORK(LaraRoutes.CLASSWORK, R.string.nav_classwork),
+    QUIZZES(LaraRoutes.QUIZZES, R.string.nav_quizzes),
+    TUTOR(LaraRoutes.TUTOR, R.string.nav_tutor),
 }

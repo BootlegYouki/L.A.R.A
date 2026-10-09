@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import org.lara.app.R
@@ -51,36 +52,31 @@ private fun PlaceholderBody(
 
 @Composable
 fun StreamScreen(modifier: Modifier = Modifier) = PlaceholderBody(
-    title = stringResOf(R.string.placeholder_stream_title),
-    body = stringResOf(R.string.placeholder_stream_body),
+    title = stringResource(R.string.placeholder_stream_title),
+    body = stringResource(R.string.placeholder_stream_body),
     modifier = modifier,
 )
 
 @Composable
 fun ClassworkScreen(modifier: Modifier = Modifier) = PlaceholderBody(
-    title = stringResOf(R.string.placeholder_classwork_title),
-    body = stringResOf(R.string.placeholder_classwork_body),
+    title = stringResource(R.string.placeholder_classwork_title),
+    body = stringResource(R.string.placeholder_classwork_body),
     modifier = modifier,
 )
 
 @Composable
 fun QuizzesScreen(modifier: Modifier = Modifier) = PlaceholderBody(
-    title = stringResOf(R.string.placeholder_quizzes_title),
-    body = stringResOf(R.string.placeholder_quizzes_body),
+    title = stringResource(R.string.placeholder_quizzes_title),
+    body = stringResource(R.string.placeholder_quizzes_body),
     modifier = modifier,
 )
 
 @Composable
 fun TutorScreen(modifier: Modifier = Modifier) = PlaceholderBody(
-    title = stringResOf(R.string.placeholder_tutor_title),
-    body = stringResOf(R.string.placeholder_tutor_body),
+    title = stringResource(R.string.placeholder_tutor_title),
+    body = stringResource(R.string.placeholder_tutor_body),
     modifier = modifier,
 )
-
-/** Thin wrapper so the screens above read clearly; delegates to Compose's stringResource. */
-@Composable
-private fun stringResOf(resId: Int): String =
-    androidx.compose.ui.res.stringResource(resId)
 
 @Preview(showBackground = true)
 @Composable

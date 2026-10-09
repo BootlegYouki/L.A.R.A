@@ -25,10 +25,4 @@
     <string name="placeholder_quizzes_body">Lilitaw dito ang iyong mga pagsusulit.</string>
     <string name="placeholder_tutor_title">AI Tutor</string>
     <string name="placeholder_tutor_body">Mabubuksan ang Socratic tutor kapag nakakonekta ka sa Hub ng silid-aralan.</string>
-
-    <!-- Accessible names for icon-only elements -->
-    <string name="cd_nav_stream">Buksan ang Stream</string>
-    <string name="cd_nav_classwork">Buksan ang Gawain</string>
-    <string name="cd_nav_quizzes">Buksan ang Pagsusulit</string>
-    <string name="cd_nav_tutor">Buksan ang AI Tutor</string>
 </resources>
