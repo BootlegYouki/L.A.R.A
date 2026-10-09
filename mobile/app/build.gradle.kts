@@ -26,6 +26,8 @@ android {
 
     buildTypes {
         release {
+            // Scaffold ships unminified. TODO(#18): enable R8 (isMinifyEnabled + shrinkResources)
+            // and measure APK size and heap on 3-4 GB budget devices before release.
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
