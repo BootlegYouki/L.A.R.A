@@ -12,6 +12,32 @@
     <string name="connect_subtitle">Find your Teacher Hub on the classroom network to get started.</string>
     <string name="connect_action">Find Hub</string>
 
+    <!-- LAN discovery screen (#4) -->
+    <string name="discovery_title">Find your classroom</string>
+    <string name="discovery_searching">Looking for your Teacher Hub…</string>
+    <string name="discovery_found_title">Classrooms found</string>
+    <string name="discovery_empty_title">No classroom found yet</string>
+    <string name="discovery_empty_body">Make sure you are on the classroom Wi-Fi. If it still does not show, type the Hub address below.</string>
+    <string name="discovery_offline_title">You are not on Wi-Fi</string>
+    <string name="discovery_offline_body">Join the classroom Wi-Fi and the Hub will appear here on its own.</string>
+    <string name="discovery_connect">Connect</string>
+    <string name="discovery_hub_address">%1$s · Hub</string>
+    <string name="discovery_source_mdns">Found on the network</string>
+    <string name="discovery_source_udp">Found on the network</string>
+    <string name="discovery_source_manual">Typed by you</string>
+    <string name="discovery_manual_action">Type the Hub address</string>
+    <string name="discovery_rescan">Search again</string>
+
+    <!-- Manual IP fallback dialog (router AP isolation) -->
+    <string name="manual_dialog_title">Type the Hub address</string>
+    <string name="manual_dialog_body">Ask your teacher for the classroom Hub address, then type it here. For example 192.168.1.50.</string>
+    <string name="manual_dialog_label">Hub address</string>
+    <string name="manual_dialog_hint">192.168.1.50</string>
+    <string name="manual_dialog_error_empty">Please type the Hub address.</string>
+    <string name="manual_dialog_error_format">That does not look right. Type numbers like 192.168.1.50.</string>
+    <string name="manual_dialog_connect">Connect</string>
+    <string name="manual_dialog_cancel">Cancel</string>
+
     <!-- Bottom navigation destinations (placeholder routes for the scaffold) -->
     <string name="nav_stream">Stream</string>
     <string name="nav_classwork">Classwork</string>

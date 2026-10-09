@@ -19,10 +19,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.lara.app.ui.screens.ClassworkScreen
-import org.lara.app.ui.screens.ConnectScreen
 import org.lara.app.ui.screens.QuizzesScreen
 import org.lara.app.ui.screens.StreamScreen
 import org.lara.app.ui.screens.TutorScreen
+import org.lara.app.ui.screens.discovery.DiscoveryScreen
 
 /**
  * Top-level navigation shell for the scaffold, split into two levels so the bottom bar is hoisted:
@@ -44,8 +44,11 @@ fun LaraNavGraph(
         startDestination = LaraRoutes.CONNECT,
     ) {
         composable(LaraRoutes.CONNECT) {
-            ConnectScreen(
-                onFindHub = {
+            // #4: the landing screen auto-discovers the Hub over mDNS/UDP and offers manual IP.
+            // Selecting (or manually entering) a Hub advances to the app shell. Persisting the
+            // chosen DiscoveredHub into the session is #41/#24's job; here we complete the gesture.
+            DiscoveryScreen(
+                onHubSelected = {
                     navController.navigate(LaraRoutes.HOME) {
                         // Drop Connect so Back from the shell exits the app rather than returning here.
                         popUpTo(LaraRoutes.CONNECT) { inclusive = true }
