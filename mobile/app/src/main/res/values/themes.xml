@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launch/base theme. The real UI theming is Compose (LaraTheme); this XML theme only styles the
+  window the OS shows before the Activity's Compose content is drawn, so it uses the brand canvas
+  and a Dark Green status bar to avoid a white or default-blue flash.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Lara" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/lara_canvas</item>
+        <item name="android:statusBarColor">@color/lara_primary_dark</item>
+        <item name="android:navigationBarColor">@color/lara_canvas</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>
