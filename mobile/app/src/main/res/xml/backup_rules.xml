@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Legacy auto-backup rules (API 26..30). The app is offline-first and holds no cloud account, so
+  nothing is backed up off-device here; this file exists to satisfy the manifest reference.
+  See https://developer.android.com/guide/topics/data/autobackup
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="database" path="." />
+    <!-- Homework photos (minors' personal data) live in the app files dir; keep them on-device. -->
+    <exclude domain="file" path="." />
+</full-backup-content>
