@@ -147,6 +147,16 @@ class TestGuardrailScanner(unittest.TestCase):
                         "app/build.gradle.kts": 'implementation("com.google.android.gms:play-services-maps:18")\n'})
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
 
+    def test_script_scans_extensions_nobody_listed(self):
+        for name in ("desktop/src/App.js", "desktop/src/App.jsx", "mobile/app/Bad.java", "mobile/gradle.properties",
+                     "tools/run.sh", "config/app.yml", "desktop/src/Bad.vue"):
+            r = _scan_repo({name: 'import firebase from "firebase"\n'})
+            self.assertEqual(r.returncode, 1, name + "\n" + r.stdout + r.stderr)
+
+    def test_script_ignores_markdown_and_binary_assets(self):
+        r = _scan_repo({"mobile/README.md": "we never use firebase\n"})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_script_passes_a_clean_change(self):
         r = _scan_repo({"server/backend/src/main.rs": "fn main() {}\n"})
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

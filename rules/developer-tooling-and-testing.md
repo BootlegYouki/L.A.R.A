@@ -58,11 +58,12 @@ python3 scripts/verify_invariants.py
 ```
 
 ### What It Enforces
-1. **Zero Cloud Dependencies:** Scans git diffs for additions introducing forbidden libraries or external links:
-   * `firebase`, `@prisma/client`, `prisma`.
-   * `fonts.googleapis.com` (web fonts must be bundled locally).
+1. **Zero Cloud Dependencies:** Scans the git diff of every text file (not only code; build files, CSS and config count) for additions introducing forbidden libraries or external links. Markdown, `docs/`, `rules/`, `tests/`, `scripts/` and binary assets are skipped.
+   * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, `amplitude`, `posthog`, Google Analytics and Tag Manager.
+   * Google Play Services (`play-services`, `com.google.android.gms`, `google-services`) and `googleapis.com` / `gstatic.com` (web fonts must be bundled locally).
    * External CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`).
-2. **Android String Parity:** Verifies that any new string added to `mobile/app/src/main/res/values/strings.xml` has a matching translation key in `mobile/app/src/main/res/values-tl/strings.xml`.
+2. **String Parity:** Every key in `mobile/app/src/main/res/values/strings.xml` needs a key in `values-tl/strings.xml`, and every key in `desktop/src/i18n/en.json` needs one in `fil.json`. A language file without its pair fails.
+3. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
 
 If any violation is detected, the script exits with code 1 and prints the exact offending lines.
 
