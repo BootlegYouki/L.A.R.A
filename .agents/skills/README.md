@@ -26,11 +26,10 @@ A skill is instructions an agent follows, so treat it like code that runs on eve
 2. **Read all of it** before adding. Reject or edit anything that conflicts with the invariants: CDNs, Google Fonts, Firebase or Play Services, Material Symbols (we use Phosphor), dynamic color or gradients, a download or sync step that needs the internet.
 3. **Check the license** and keep the `LICENSE` file with it. No scripts that fetch or run remote code.
 4. **Record the source** in the table above (URL, license, version).
-5. Add it in its own PR; the Lead reviews it like any other change.
+5. Add it in its own PR.
 
 ## Removed, and why
 
 * `material-3`: its examples load Google Fonts and Material Symbols from a CDN and push dynamic color, which breaks the zero-internet, Phosphor and tokens-only rules. The design system in `design-system/` replaces it.
-* `lead-companion` and `lara-co-lead`: the Lead's own working skills. They are personal to the Lead (kept outside this repo and synced between the Lead's machines), not project tooling for developers. The review checklist they used is now `rules/team-workflow-and-prs.md` section 5.
 * `find-skills`, `skill-creator`: general tools for managing skills, not for building L.A.R.A. They can stay in your personal `~/.claude/skills/`.
 * Considered and not added: a Tailwind 4 docs skill (needs internet and has a restrictive license); Next.js-oriented React skills (the desktop app is Vite, not Next.js).

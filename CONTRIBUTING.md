@@ -34,7 +34,7 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 ## 2. Picking and Doing Work
 
 * **Board:** the [L.A.R.A Sprint Board](https://github.com/users/BootlegYouki/projects/2) shows every issue by Team, Sprint and Status. Move your card to *In Progress* when you start and *Done* when the PR merges.
-* **Find your list:** use the team and sprint filter links in the [README](./README.md#find-your-issues). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the mock-hub flow to use.
+* **Find your list:** use the team and sprint filter links in the [README](./README.md#start-in-10-minutes). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the mock-hub flow to use.
 * Take any issue whose dependencies are merged and comment that you are taking it, so two people do not start the same one. **One issue = one PR.** Do not start an issue whose dependencies are unmerged unless the issue says to use the mock hub.
 * Clients build against `scripts/mock_hub.py`. The real Hub is used on **integration day** at the end of each sprint.
 * **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + mock hub + tests) merged first. Never edit `contracts/` inside a feature PR.
