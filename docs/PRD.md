@@ -201,12 +201,14 @@ sequenceDiagram
 
 ## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
 
-### 5.0 The AI Is Optional
-The tutor is an optional part of L.A.R.A. A school can run the whole system with **no AI at all**: the classroom, quizzes, auto-grading and DepEd export work in full, and the tutor button simply says "AI is not set up" (`AI_NOT_AVAILABLE`). Where the AI is wanted there are two ways to run it, and the user chooses:
-1. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user downloads the model from the Hub once, and only when they choose to. It is never downloaded automatically.
-2. **On the Hub,** shared by everyone, with a first-in-first-out queue so a few pupils at a time are served and the rest see their place in line.
+### 5.0 The Hub Always Has the AI; Using It Is Optional
+The Hub is installed with the AI model, so a pupil on any phone or laptop can use the tutor without downloading anything. Using it is optional for everyone: a pupil or teacher can ignore it, and nothing else in L.A.R.A depends on it. There are two ways to use it, and the user chooses:
+1. **On the Hub (the default),** shared by everyone through a first-in-first-out queue, so a few pupils at a time are served and the rest see their place in line.
+2. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user may download the model from the Hub once to run it offline, for example at home. It is never downloaded automatically.
 
-The Hub's own AI is optional too: it runs only when the admin has configured a model. The quiz lockout (no AI during a quiz) applies on every path.
+The model the Hub runs and the model a device runs may be different: a smarter model on the Hub PC, and a smaller one for devices that can use it. Each is chosen by the AI evaluation and must pass the same Socratic checks (no direct answers, grounded, one clue and one question, right language). If the small model does not pass on the weakest device it would run on, devices simply use the Hub.
+
+If the Hub's model file is missing or fails to load, the Hub reports it (`AI_NOT_AVAILABLE`), the tutor says "AI is not available right now", and every other feature keeps working. The quiz lockout (no AI during a quiz) applies on every path.
 
 ### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
 The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
