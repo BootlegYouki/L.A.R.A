@@ -104,6 +104,8 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 * DepEd weight defaults (40/40/20) need confirming against the current DepEd order.
 * The board is private; decide whether to invite collaborators or make it public.
 * `main` has no ruleset yet, and CODEOWNERS lists only the Lead until team handles exist. When `main` gets one, require the PR check and "Branch Flow Guard"; until then that guard is advisory.
-* Open decisions waiting on the Lead: how the AI model file reaches devices (no contract route yet), where the export button lives and how the quarter is chosen, how backups are encrypted and where the key is kept, what the AI Tutor bottom-nav tab opens.
+* Facts from the Lead (2026-10-10): they can test only on an Android emulator and a Windows or Linux laptop, so every phone-only check stays "not verified" in my briefs until a real 3 to 4 GB phone is found (needed by Sprint 6 at the latest). The pilot Hub is a Linux PC (specs unknown), so the `.deb` and the Linux firewall come first and USB drives mount under `/media`. The calendar is week 9 of an 18-week semester with two semesters in total; I assumed semester 1, about 27 weeks left, and need that confirmed before setting milestone dates.
+* Decided: the Hub serves the AI model file over Wi-Fi (resumable, checksummed).
+* Open decisions waiting on the Lead: where the export button lives and how the quarter is chosen, how backups are encrypted and where the key is kept, what the AI Tutor bottom-nav tab opens.
 * `mobile/docs/TECH_SPEC.md` section 10 still describes a Dev A / Dev B split; the mobile team lead should rewrite it.
 * CI does not yet cover the Tauri Rust crates (`desktop/src-tauri`, `server/src-tauri`), `server/ui`, clippy or fmt. Add them when those scaffolds land.
