@@ -11,7 +11,7 @@ Use this skill whenever designing, writing, modifying, auditing, or testing code
 
 ## 1. Zero-Internet LAN Networking Invariants
 
-All applications operate strictly within an isolated local area network (router or teacher laptop hotspot). Never introduce external cloud dependencies:
+All applications operate strictly within an isolated local area network (the classroom router; a laptop hotspot only as a fallback). Never introduce external cloud dependencies:
 * **Forbidden Cloud Calls:** No Firebase (Auth, Firestore, Messaging), no Google Play APIs, no external CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`), no Google Fonts web links (`fonts.googleapis.com`), and no remote analytics or telemetry.
 * **All Assets Bundled Locally:** All fonts, icons (Phosphor), installers, media, and GGUF model files must be bundled locally or served from the Local Hub.
 
@@ -47,7 +47,7 @@ The `contracts/` directory is the single source of truth for all network communi
   * Rust uses `#[serde(rename_all = "snake_case")]`.
   * TypeScript uses `snake_case` interfaces.
 * **Strict Answer Key Redaction:** When student clients request active quizzes (`GET /api/quizzes/active` or `EVENT_QUIZ_START`), the server **must strictly omit `correct_answer`**. Student models and local databases must never store unsubmitted answer keys.
-* **Contract-First Rule:** Never create or alter endpoints in Kotlin, TypeScript, or Rust without first defining or updating the schema in `contracts/`, the mock hub and the tests (a Lead-reviewed `contract-change` PR).
+* **Contract-First Rule:** Never create or alter endpoints in Kotlin, TypeScript, or Rust without first defining or updating the schema in `contracts/`, the mock hub and the tests (its own `contract-change` PR, merged first).
 
 ---
 
@@ -148,4 +148,3 @@ The mobile Android application is a **dual-role client** supporting both Student
 * **Tests:** `python3 -m unittest discover tests` (contract, schema, mock hub behavior and `test_contract_coverage.py`, which fails when contracts and the mock hub drift). All must pass.
 * **Invariant scanner:** `python3 scripts/verify_invariants.py` before every PR (forbidden cloud dependencies, Filipino string parity).
 * **Folder docs:** major PRs update `mobile/docs/`, `desktop/docs/` or `server/docs/`. Each team also has a nested `AGENTS.md` (read the one for your folder) and a `docs/TECH_SPEC.md`.
-* **Workflow:** one issue = one team = one PR; branch from `staging`; contract changes are their own Lead-reviewed PR first; `main` only from `staging` at sprint completion.
