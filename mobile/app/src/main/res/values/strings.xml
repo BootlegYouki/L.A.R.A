@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Canonical English strings. Every key here MUST have a matching key in values-tl/strings.xml;
+  CI (scripts/verify_invariants.py) fails the build on any missing Filipino translation.
+  No hard-coded user-facing text is allowed in Compose (README §0.5).
+-->
+<resources>
+    <string name="app_name">L.A.R.A</string>
+
+    <!-- Connection / landing shell -->
+    <string name="connect_title">Connect to your classroom</string>
+    <string name="connect_subtitle">Find your Teacher Hub on the classroom network to get started.</string>
+    <string name="connect_action">Find Hub</string>
+
+    <!-- Bottom navigation destinations (placeholder routes for the scaffold) -->
+    <string name="nav_stream">Stream</string>
+    <string name="nav_classwork">Classwork</string>
+    <string name="nav_quizzes">Quizzes</string>
+    <string name="nav_tutor">AI Tutor</string>
+
+    <!-- Placeholder screen bodies -->
+    <string name="placeholder_stream_title">Stream</string>
+    <string name="placeholder_stream_body">Class announcements will appear here.</string>
+    <string name="placeholder_classwork_title">Classwork</string>
+    <string name="placeholder_classwork_body">Handouts, assignments and quizzes will appear here.</string>
+    <string name="placeholder_quizzes_title">Quizzes</string>
+    <string name="placeholder_quizzes_body">Your quizzes will appear here.</string>
+    <string name="placeholder_tutor_title">AI Tutor</string>
+    <string name="placeholder_tutor_body">The Socratic tutor unlocks when you are connected to the classroom Hub.</string>
+</resources>
