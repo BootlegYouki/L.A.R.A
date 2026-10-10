@@ -5,7 +5,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 ## Required documents
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
-| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, Dev A / Dev B split, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
+| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, parallel-PR file map, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | `discovery_mdns_udp.md` | mDNS and UDP beacon behavior, LAN IP detection, AP-isolation notes | Sprint 1 |
 | `database_sync.md` | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |
 | `auth_sessions.md` | PIN hashing, session tokens, role and ownership guards, rate limits | Sprint 2 |
