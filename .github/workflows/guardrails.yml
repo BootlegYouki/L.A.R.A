@@ -9,15 +9,25 @@ on:
     branches:
       - staging
 
+permissions:
+  contents: read
+
+concurrency:
+  group: guardrails-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   offline-invariants:
     name: Offline Invariant & Localization Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 50
+          # The scanner diffs against origin/<base>. A shallow checkout has no base branch, and the old
+          # script then scanned an empty diff and passed.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,5 +37,22 @@ jobs:
       - name: Run Invariant & Guardrail Scanner
         env:
           BASE_REF: ${{ github.base_ref || 'staging' }}
+          BASE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
         run: |
           python3 scripts/verify_invariants.py
+
+  branch-flow:
+    name: Branch Flow Guard
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Only staging may merge into main
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          if [ "$BASE" = "main" ] && [ "$HEAD" != "staging" ] && [[ "$HEAD" != hotfix/* ]]; then
+            echo "::error::PRs into main must come from staging (this one is from '$HEAD'). Retarget it to staging. See rules/team-workflow-and-prs.md section 2."
+            exit 1
+          fi
