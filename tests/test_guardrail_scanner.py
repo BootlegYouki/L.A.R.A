@@ -141,6 +141,12 @@ class TestGuardrailScanner(unittest.TestCase):
         r = _scan_repo({"tests/forbidden_fixture.json": '{"bad": "firebase"}\n', "docs/notes.xml": "<a>firebase</a>\n"})
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    def test_gitattributes_cannot_hide_a_violation_from_the_scan(self):
+        r = _scan_repo({".gitattributes": "*.kt -diff\n*.kts binary\n",
+                        "Bad.kt": "import com.google.firebase.FirebaseApp\n",
+                        "app/build.gradle.kts": 'implementation("com.google.android.gms:play-services-maps:18")\n'})
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+
     def test_script_passes_a_clean_change(self):
         r = _scan_repo({"server/backend/src/main.rs": "fn main() {}\n"})
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
