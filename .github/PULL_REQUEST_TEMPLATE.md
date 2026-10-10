@@ -13,6 +13,10 @@ Closes #(issue number)
 - [ ] Documentation / Specs
 
 
+## How to Test (for the person reviewing as an end user)
+Numbered steps a teacher or pupil could follow, with what they should see after each step. Say which accounts to use (for example teacher `T-0001`, pupil `123456789012`, PIN `1234`) and how to start the mock hub or the real Hub. Include the offline case: airplane mode or Hub stopped.
+1. ...
+
 ## Verification & Testing
 Describe the tests executed to verify these changes:
 - [ ] Tested on local LAN / Wi-Fi router with WAN cable unplugged

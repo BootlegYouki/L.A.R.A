@@ -41,10 +41,10 @@ A short worked example (about 10 lines) for each non-obvious pattern: a reposito
 ## 9. Pitfalls
 Known traps for this stack and hardware, each with the fix. Example: "Transsion phones kill background work: use WorkManager."
 
-## 10. Dev A / Dev B Work Split
-| Slot | Owns (folders/files) | Sprint 1 | Sprint 2 | ... |
+## 10. Parallel Work (PR Boundaries)
+| Area | Owns (folders/files) | Sprint 1 | Sprint 2 | ... |
 |---|---|---|---|---|
-Two developers must not edit the same file in parallel. Anything both need is assigned to one of them; the other uses a stub until it merges.
+Any developer on the team can take any issue. Two open PRs must not edit the same file. Anything several PRs need (a shared interface, a DB entity) is built by one issue first; the others depend on it or use a stub until it merges.
 
 ## 11. Dependencies on Other Teams
 What you need from the other two teams and when. Default is: use `scripts/mock_hub.py` until the real endpoint merges.

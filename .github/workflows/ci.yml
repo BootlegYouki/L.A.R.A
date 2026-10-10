@@ -9,10 +9,18 @@ on:
     branches:
       - staging
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   contracts-and-tools:
     name: Contracts & Mock Hub Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,7 +39,7 @@ jobs:
   mobile-ci:
     name: Android Mobile CI
     runs-on: ubuntu-latest
-    # Run only if mobile files changed
+    timeout-minutes: 30
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,8 +49,12 @@ jobs:
         run: |
           if [ -f "mobile/app/build.gradle.kts" ] || [ -f "mobile/build.gradle.kts" ]; then
             echo "has_mobile=true" >> $GITHUB_OUTPUT
+          elif [ -n "$(find mobile -name '*.kt' 2>/dev/null | head -1)" ]; then
+            echo "::error::mobile/ has Kotlin sources but no Gradle build file, so nothing would be built."
+            exit 1
           else
             echo "has_mobile=false" >> $GITHUB_OUTPUT
+            echo "::notice::No mobile code yet, build skipped."
           fi
 
       - name: Set up JDK 17
@@ -56,14 +68,14 @@ jobs:
         if: steps.check_mobile.outputs.has_mobile == 'true'
         working-directory: mobile
         run: |
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew lintDebug testDebugUnitTest --stacktrace
-          fi
+          [ -f gradlew ] || { echo "::error::mobile/gradlew is missing; commit the Gradle wrapper."; exit 1; }
+          chmod +x gradlew
+          ./gradlew lintDebug testDebugUnitTest --stacktrace
 
   desktop-ci:
     name: Desktop Client CI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -73,8 +85,12 @@ jobs:
         run: |
           if [ -f "desktop/package.json" ]; then
             echo "has_desktop=true" >> $GITHUB_OUTPUT
+          elif [ -n "$(find desktop/src desktop/src-tauri \( -name '*.ts' -o -name '*.tsx' -o -name '*.rs' \) 2>/dev/null | head -1)" ]; then
+            echo "::error::desktop/ has source code but no package.json, so nothing would be built."
+            exit 1
           else
             echo "has_desktop=false" >> $GITHUB_OUTPUT
+            echo "::notice::No desktop code yet, build skipped."
           fi
 
       - name: Set up Node.js
@@ -94,6 +110,7 @@ jobs:
   server-ci:
     name: Server Local Hub CI
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -103,8 +120,12 @@ jobs:
         run: |
           if [ -f "server/backend/Cargo.toml" ]; then
             echo "has_server=true" >> $GITHUB_OUTPUT
+          elif [ -n "$(find server/backend/src server/src-tauri -name '*.rs' 2>/dev/null | head -1)" ]; then
+            echo "::error::server/ has Rust code but no server/backend/Cargo.toml, so nothing would be built."
+            exit 1
           else
             echo "has_server=false" >> $GITHUB_OUTPUT
+            echo "::notice::No server code yet, build skipped."
           fi
 
       - name: Set up Rust

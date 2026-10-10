@@ -8,9 +8,9 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 
 | Team | Folder | Developers | Lead's view |
 | :--- | :--- | :--- | :--- |
-| **Mobile** | `mobile/` | Dev A, Dev B | Kotlin, Compose, Room, CameraX, Media3, JNI |
-| **Desktop** | `desktop/` | Dev A, Dev B | Tauri, React, TypeScript, sidecar AI |
-| **Server** | `server/` | Dev A, Dev B | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
+| **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3, JNI |
+| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, sidecar AI |
+| **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
 | **Lead Developer** | all | 1 | Reviews every PR, owns `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` |
 
 You only edit your own team's folder. Shared paths are Lead-owned (see `.github/CODEOWNERS`).
@@ -33,9 +33,9 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 
 ## 2. Picking and Doing Work
 
-* **Board:** the [L.A.R.A Sprint Board](https://github.com/users/BootlegYouki/projects/2) shows every issue by Team, Sprint, Slot and Status. Move your card to *In Progress* when you start and *Done* when the PR merges.
-* **Find your list:** use the team, slot and sprint filter links in the [README](./README.md#find-your-issues). Every issue is labelled by team (`scope:*`), sprint (`sprint:N`) and slot (`slot:dev-a` / `slot:dev-b`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name a developer slot (**Dev A** or **Dev B**), their dependencies, the contract they implement and the mock-hub flow to use.
-* Take an issue from **your** slot. **One issue = one PR.** Do not start an issue whose dependencies are unmerged unless the issue says to use the mock hub.
+* **Board:** the [L.A.R.A Sprint Board](https://github.com/users/BootlegYouki/projects/2) shows every issue by Team, Sprint and Status. Move your card to *In Progress* when you start and *Done* when the PR merges.
+* **Find your list:** use the team and sprint filter links in the [README](./README.md#start-in-10-minutes). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the mock-hub flow to use.
+* Take any issue whose dependencies are merged and comment that you are taking it, so two people do not start the same one. **One issue = one PR.** Do not start an issue whose dependencies are unmerged unless the issue says to use the mock hub.
 * Clients build against `scripts/mock_hub.py`. The real Hub is used on **integration day** at the end of each sprint.
 * **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + mock hub + tests) merged first. Never edit `contracts/` inside a feature PR.
 * Stuck or found a contradiction between documents? Write it in the issue instead of guessing. The documents are ranked in [`docs/README.md`](./docs/README.md).
@@ -70,7 +70,7 @@ feature/bug branches (feat/*, fix/*, docs/*, test/*)
 Follow these steps in order for every issue. Replace the example (`#6`, `[SERVER 2.1]`, `feat/server-class-code-approval`) with yours.
 
 ### Step 1: Claim the issue
-1. Open the [sprint board](https://github.com/users/BootlegYouki/projects/2) and pick the next card in **your slot** whose dependencies are merged (or that says to use the mock hub).
+1. Open the [sprint board](https://github.com/users/BootlegYouki/projects/2) and pick the next card whose dependencies are merged (or that says to use the mock hub).
 2. Comment `I'm taking this` on the issue and ask the Lead to assign you (or assign yourself if you can).
 3. Move the card to **In Progress**.
 4. Read the whole issue: Objective, Contract, Sub-Tasks, Target Files, Acceptance Criteria. If anything contradicts another document, ask in the issue **before** coding.
@@ -161,7 +161,7 @@ After you push, GitHub runs the checks listed at the bottom of the PR. All must 
 Click **Details** on the red check to see the log. Push a fix to the same branch; CI re-runs automatically. Do not ask for review while CI is red.
 
 ### Step 9: Review loop
-1. The Lead reviews with the checklist in [`.agents/skills/lara-co-lead/references/pr-review.md`](./.agents/skills/lara-co-lead/references/pr-review.md): the five fatal checks and the extra blockers, scope, offline behavior, security, evidence.
+1. The Lead reviews with the checklist in [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md) section 5: the five fatal checks and the extra blockers, scope, offline behavior, security, evidence.
 2. The verdict is **Approve**, **Request changes** (with blocking items) or **Needs discussion**.
 3. For each comment: fix it, push to the same branch, and reply `Fixed in <commit>` (or explain why not). Do **not** open a new PR and do not resolve a thread yourself unless the Lead says so.
 4. Push the fixes, then click **Re-request review**. Repeat until approved.

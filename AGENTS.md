@@ -64,7 +64,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
 2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
 3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, DepEd export, backup.
-4. **Lead Developer:** reviews every PR with the `lara-co-lead` PR review protocol, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
+4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
 Rule documents (read the ones for your task):
 * [`rules/developer-tooling-and-testing.md`](./rules/developer-tooling-and-testing.md)
@@ -123,6 +123,7 @@ A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF v
 * **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
 * **Phones with 6 GB or more, and laptops with 4 GB or more:** may run a downloaded GGUF fully offline.
 * The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
+* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. Downloading the model to run on your own device is opt-in, never automatic. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
 1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
@@ -132,7 +133,7 @@ A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF v
 5. **Quiz lockout:** while a pupil has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
-MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption.
+MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. There may be two choices: a smarter model on the Hub and a smaller one for devices that can run it. Each must pass the same evaluation; if the small one does not, devices use the Hub.
 
 ### 5.4 Evaluation requirement
 Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, Filipino and Taglish, run on the actual Hub machine. Do not claim "good enough" without those numbers.
