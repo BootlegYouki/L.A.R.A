@@ -37,10 +37,13 @@ FORBIDDEN_PATTERNS = [
     r"mixpanel|amplitude|posthog",
 ]
 
-# Build files (.kts, .gradle, .toml) and styles (.css, .xml) are where dependencies and font imports live.
-SCAN_GLOBS = ["*.kt", "*.kts", "*.gradle", "*.toml", "*.ts", "*.tsx", "*.rs", "*.html", "*.css", "*.xml", "*.json"]
-# These legitimately name the forbidden things (rules, tests, this script, CI config).
-SCAN_EXCLUDES = [":(exclude)tests", ":(exclude)scripts", ":(exclude).github", ":(exclude)docs", ":(exclude)rules"]
+# Scan every text file, not an allow-list of extensions: an allow-list is a gap (.js, .java, .properties, .yml, .sh...).
+SCAN_GLOBS = ["."]
+# These legitimately name the forbidden things (rules, tests, this script, CI config, markdown docs).
+SCAN_EXCLUDES = [":(exclude)tests", ":(exclude)scripts", ":(exclude).github", ":(exclude)docs", ":(exclude)rules", ":(exclude)*.md"]
+# Binary assets only produce noise under --text.
+SCAN_EXCLUDES += [f":(exclude)*.{e}" for e in
+                  "png jpg jpeg webp gif ico ttf otf woff woff2 jar apk aab so zip gz mp4 webm pdf gguf".split()]
 
 ANDROID_EN = "mobile/app/src/main/res/values/strings.xml"
 ANDROID_TL = "mobile/app/src/main/res/values-tl/strings.xml"
