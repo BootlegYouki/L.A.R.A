@@ -10,7 +10,7 @@ assignees: ''
 What this delivers and why, in two or three sentences.
 
 ### Ownership
-- **Team:** SERVER | DESKTOP | MOBILE | QA  |  **Slot:** Dev A | Dev B  |  **Sprint:** n
+- **Team:** SERVER | DESKTOP | MOBILE | QA  |  **Sprint:** n
 - **Depends on:** issue numbers or step codes (or "none")
 - One issue = one PR. Do not edit another team's folder; shared paths (`contracts/`, `design-system/`, `rules/`) are Lead-owned.
 

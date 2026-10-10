@@ -55,7 +55,7 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 
 **Status report.** Pull from the board and issues (`gh`), not from memory. Report per team and sprint: done, in progress, blocked, and what the Lead must decide.
 
-**Sprint start and integration day.** Check each issue has one team, a sprint, a contract link and a slot; at integration day switch clients from `scripts/mock_hub.py` to the real Hub, and file failures as bug issues labelled by owning team.
+**Sprint start and integration day.** Check each issue has one team, a sprint and a contract link; at integration day switch clients from `scripts/mock_hub.py` to the real Hub, and file failures as bug issues labelled by owning team.
 
 **Keep docs honest.** A change that makes any document wrong fixes that document in the same PR. Run a link check on markdown after moving or renaming anything.
 
@@ -67,7 +67,7 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 * **Merge timing:** the Lead sometimes merges while I am still pushing, and GitHub deletes the branch, so late commits miss it. Finish pushing before the Lead merges, and ask them to say when they are about to merge. A missed commit goes in a follow-up PR from a fresh branch.
 * **Protection:** `staging` uses the ruleset "Protect staging" (1 approval, five CI checks, admin may bypass on a PR). `main` still has classic protection. The Lead cannot approve a PR from their own account, which is why they use the bypass on PRs I open.
 * **Permission prompts:** `git checkout`, `git commit` and `git push` are allowed in settings. Changes to protection or rulesets can be blocked by the permission check; give the Lead the exact command to run with the `!` prefix instead of working around it.
-* **Issues:** titled `[TEAM sprint.step]`, one team and one PR each, with labels `scope:*`, `sprint:*`, `slot:dev-a|dev-b`. Project board #2 has Team, Sprint, Slot, Status (Todo, In Progress, Done) and Step fields. Sprint 0 is each team's Tech Spec, written by the developers (guide: `docs/templates/TECH_SPEC_GUIDE.md`).
+* **Issues:** titled `[TEAM sprint.step]`, one team and one PR each, with labels `scope:*` and `sprint:*`. There are no developer slots: any developer takes any issue, and the PR is the unit of work. Project board #2 has Team, Sprint, Status (Todo, In Progress, Done) and Step fields. Sprint 0 is each team's Tech Spec, written by the developers (guide: `docs/templates/TECH_SPEC_GUIDE.md`).
 * **Commands:** `python3 -m unittest discover tests`, `python3 scripts/verify_invariants.py`, `python3 scripts/mock_hub.py`. Screenshots of HTML can be taken with `brave --headless --screenshot` (Chrome is not installed).
 
 ---
@@ -84,7 +84,7 @@ Higher wins when documents disagree (`AGENTS.md` section 1.1): `contracts/` > `A
 
 ## 7. Standing open items (snapshot, 2026-10-05; re-check before relying on it)
 
-* Milestone due dates and Dev A / Dev B names are not set.
+* Milestone due dates are not set.
 * The AI test set is written and scored by the dev team (`rules/socratic-ai-guardrails.md` section 5); results are labelled "developer-scored", never as validated by educators.
 * DepEd weight defaults (40/40/20) need confirming against the current DepEd order.
 * The board is private; decide whether to invite collaborators or make it public.
