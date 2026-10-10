@@ -26,7 +26,7 @@ The Local Hub: Rust backend (`backend/`, Axum, Tokio, SQLx, tokio-tungstenite) p
 * **Windows:** installer registers firewall rules for TCP 8080/8081 and UDP 8888; the dashboard shows a port health check.
 
 ## Layout
-`backend/src/{discovery,routes,websocket,services,ai,db}`, `backend/bin/` (llama-server), `src-tauri/` (window, USB detection). Document routes, migrations and queue behavior in `server/docs/`.
+`backend/src/{discovery,routes,websocket,services,ai,db}`, `backend/bin/` (llama-server), `src-tauri/` (window, USB detection), `ui/` (the window's React pages: admin console and health dashboard). Document routes, migrations and queue behavior in `server/docs/`.
 
 ## Never
 Add internet calls or telemetry, introduce Prisma or a Node backend, edit `contracts/`, `rules/` or other teams' folders, or hold the DB write lock across a network call.
