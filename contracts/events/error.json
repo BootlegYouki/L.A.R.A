@@ -20,6 +20,7 @@
         "FORBIDDEN",
         "QUIZ_IN_PROGRESS",
         "AI_QUEUE_FULL",
+        "AI_NOT_AVAILABLE",
         "BAD_REQUEST"
       ]
     },
