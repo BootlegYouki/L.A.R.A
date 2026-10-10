@@ -201,6 +201,13 @@ sequenceDiagram
 
 ## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
 
+### 5.0 The AI Is Optional
+The tutor is an optional part of L.A.R.A. A school can run the whole system with **no AI at all**: the classroom, quizzes, auto-grading and DepEd export work in full, and the tutor button simply says "AI is not set up" (`AI_NOT_AVAILABLE`). Where the AI is wanted there are two ways to run it, and the user chooses:
+1. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user downloads the model from the Hub once, and only when they choose to. It is never downloaded automatically.
+2. **On the Hub,** shared by everyone, with a first-in-first-out queue so a few pupils at a time are served and the rest see their place in line.
+
+The Hub's own AI is optional too: it runs only when the admin has configured a model. The quiz lockout (no AI during a quiz) applies on every path.
+
 ### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
 The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
 

@@ -4,6 +4,8 @@ This rule document governs all on-device and Hub-assisted Small Language Model (
 
 All AI agents and contributors must follow these rules.
 
+**The AI is optional.** Nothing else in L.A.R.A may depend on it. A school can run with no model on the Hub and none on any device: clients then show "AI is not set up" and every other feature works. Users who can run the model themselves may choose to download it from the Hub (never automatic); everyone else uses the Hub's shared, queued AI when the Hub has one. The Hub answers `AI_NOT_AVAILABLE` when no model is configured.
+
 ---
 
 ## 1. Pluggable Architecture & Experimental Model Benchmarking

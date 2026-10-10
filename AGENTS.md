@@ -123,6 +123,7 @@ A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF v
 * **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
 * **Phones with 6 GB or more, and laptops with 4 GB or more:** may run a downloaded GGUF fully offline.
 * The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
+* **The AI is optional.** L.A.R.A must work fully with no model on the Hub and none on the device. Downloading the model is opt-in, never automatic. If the Hub has no model configured it answers `AI_NOT_AVAILABLE` and clients show "AI is not set up" without disturbing anything else.
 
 ### 5.2 Behavior (every model, every path)
 1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
