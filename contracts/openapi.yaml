@@ -562,11 +562,11 @@ paths:
   # ---------------------------------------------------------------- AI MODEL FILE
   /api/model:
     get:
-      summary: Describe the AI model file this Hub offers for on-device use (any signed-in user). The model is chosen by the AI evaluation (rules/socratic-ai-guardrails.md section 5).
+      summary: Describe the on-device AI model file this Hub offers (any signed-in user). It may be a smaller model than the one the Hub itself runs. Models are chosen by the AI evaluation (rules/socratic-ai-guardrails.md section 5).
       tags: [model]
       responses:
         "200":
-          description: "`available` is false until the Hub has a model file configured."
+          description: "The Hub ships with the model installed. `available` is false only if the model file is missing or failed to load."
           content:
             application/json:
               schema:
@@ -1015,7 +1015,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub has no AI model configured; the AI is optional and everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:
