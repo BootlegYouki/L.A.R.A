@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Filipino strings. Must stay in key-for-key parity with values/strings.xml (CI enforces this).
+-->
+<resources>
+    <string name="app_name">L.A.R.A</string>
+
+    <!-- Connection / landing shell -->
+    <string name="connect_title">Kumonekta sa iyong silid-aralan</string>
+    <string name="connect_subtitle">Hanapin ang iyong Teacher Hub sa network ng klase para magsimula.</string>
+    <string name="connect_action">Hanapin ang Hub</string>
+
+    <!-- Bottom navigation destinations (placeholder routes for the scaffold) -->
+    <string name="nav_stream">Stream</string>
+    <string name="nav_classwork">Gawain</string>
+    <string name="nav_quizzes">Pagsusulit</string>
+    <string name="nav_tutor">AI Tutor</string>
+
+    <!-- Placeholder screen bodies -->
+    <string name="placeholder_stream_title">Stream</string>
+    <string name="placeholder_stream_body">Lilitaw dito ang mga anunsyo ng klase.</string>
+    <string name="placeholder_classwork_title">Gawain</string>
+    <string name="placeholder_classwork_body">Lilitaw dito ang mga babasahin, takdang-aralin at pagsusulit.</string>
+    <string name="placeholder_quizzes_title">Pagsusulit</string>
+    <string name="placeholder_quizzes_body">Lilitaw dito ang iyong mga pagsusulit.</string>
+    <string name="placeholder_tutor_title">AI Tutor</string>
+    <string name="placeholder_tutor_body">Mabubuksan ang Socratic tutor kapag nakakonekta ka sa Hub ng silid-aralan.</string>
+</resources>

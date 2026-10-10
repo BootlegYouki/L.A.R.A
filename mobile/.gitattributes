@@ -1,0 +1,10 @@
+# Keep the Unix wrapper script as LF so it runs on the Linux CI runner.
+# A CRLF gradlew fails with "bad interpreter" under /bin/sh.
+gradlew text eol=lf
+
+# Windows wrapper stays CRLF.
+gradlew.bat text eol=crlf
+
+# Fonts and the wrapper jar are binary; never apply EOL conversion.
+*.ttf binary
+*.jar binary
