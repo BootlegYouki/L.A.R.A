@@ -18,8 +18,7 @@ Start here to find the right document. When two documents disagree, the one high
 | **Desktop developer** | `AGENTS.md` -> `desktop/AGENTS.md` -> `desktop/README.md` -> `contracts/` -> `design-system/design-system.md` -> `rules/database-and-sync.md` |
 | **Mobile developer** | `AGENTS.md` -> `mobile/AGENTS.md` -> `mobile/README.md` -> `contracts/` -> `design-system/design-system.md` -> `rules/database-and-sync.md` |
 | **Working on the AI tutor** | `rules/socratic-ai-guardrails.md` (including the evaluation requirement) -> your team's AI issues |
-| **Reviewing a PR (Lead)** | `.agents/skills/lara-co-lead/references/pr-review.md` -> `rules/team-workflow-and-prs.md` |
-| **Working as Lead or co-lead** | `.agents/skills/lara-co-lead/SKILL.md` (roles, what needs the Lead's word, routines, git and board mechanics) |
+| **Reviewing a PR (Lead)** | `rules/team-workflow-and-prs.md` section 5 |
 | **New to the project** | Root `README.md` -> `PRD.md` sections 1 to 4 -> this map |
 
 ## All documents
