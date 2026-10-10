@@ -559,6 +559,41 @@ paths:
         "200":
           description: Full video content
 
+  # ---------------------------------------------------------------- AI MODEL FILE
+  /api/model:
+    get:
+      summary: Describe the AI model file this Hub offers for on-device use (any signed-in user). The model is chosen by the AI evaluation (rules/socratic-ai-guardrails.md section 5).
+      tags: [model]
+      responses:
+        "200":
+          description: "`available` is false until the Hub has a model file configured."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelOffer"
+
+  /api/model/file:
+    get:
+      summary: Resumable download of the model file (HTTP Range, max 2.0 MB/s per client). Clients verify `sha256` from /api/model after the last byte.
+      tags: [model]
+      parameters:
+        - $ref: "#/components/parameters/TokenQuery"
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+            example: "bytes=1048576-"
+      responses:
+        "206":
+          description: Partial model file
+        "200":
+          description: Full model file
+        "404":
+          description: NOT_FOUND when the Hub has no model file configured
+        "416":
+          description: Range outside the file
+
   # ---------------------------------------------------------------- ASSIGNMENTS
   /api/assignments:
     post:
@@ -980,7 +1015,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE.
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub has no AI model configured; the AI is optional and everything else keeps working).
       content:
         application/json:
           schema:
@@ -1159,6 +1194,20 @@ components:
         updated_at:
           type: integer
 
+    ModelOffer:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+        file_name:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+        sha256:
+          type: string
+          description: Lowercase hex SHA-256 of the whole file.
     MaterialChunk:
       type: object
       required: [id, material_id, order_index, text]
