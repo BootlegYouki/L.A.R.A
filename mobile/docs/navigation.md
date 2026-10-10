@@ -55,7 +55,7 @@ text is resolved from string resources, never hard-coded.
 | compileSdk / minSdk / targetSdk | 36 / 26 / 35 | `minSdk 26`–`targetSdk 35` match the `README` §1 SDK range (Android 8.0–15). `compileSdk 36` is a build-time choice only; it does not change the shipped API range. |
 | Compose BOM | 2024.12.01 | Pins every Compose artifact to one coherent set. |
 | Room | 2.6.1 (via KSP) | Mandated persistence stack; schema export is enabled now so the #41 schema test has a location to diff against. |
-| Dependency management | Gradle version catalog (`gradle/libs.versions.toml`) | One place for versions so the Dev A / Dev B slots never drift. |
+| Dependency management | Gradle version catalog (`gradle/libs.versions.toml`) | One place for versions so parallel PRs never drift. |
 
 Package is `org.lara.app` throughout (per the handoff review note).
 
