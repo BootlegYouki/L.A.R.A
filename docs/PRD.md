@@ -101,7 +101,7 @@ flowchart TD
  * Hosts:
  * `L.A.R.A.-Student.apk` (Android client)
  * `L.A.R.A.-Desktop-Setup.exe` / `.deb` (Desktop client)
- * Quantized model weight bundle (the GGUF chosen by the AI evaluation) for optional on-device AI.
+ * Quantized model weight bundle (the GGUF chosen by the AI evaluation) for optional on-device AI. Clients fetch it from the Hub with HTTP Range (`GET /api/model` for its name, size and SHA-256, `GET /api/model/file` for the bytes) so a dropped connection resumes, then verify the checksum.
  * **3-Step Visual Installation Guide on Web Portal:**
  * *Step 1:* Tap the large **"Download L.A.R.A. (Android)"** button.
  * *Step 2:* When prompted by Android browser, tap **Settings** Toggle on **"Allow from this source"**.

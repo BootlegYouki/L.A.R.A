@@ -36,6 +36,10 @@ GRACE_MS = 60_000
 CLASS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 ADMIN_ID = "ADMIN-0001"
 MOCK_VIDEO_SIZE = 1024 * 1024
+MOCK_MODEL_NAME = "mock-model-q4.gguf"
+MOCK_MODEL_SIZE = 3 * 1024 * 1024          # a small stand-in; the real file is about 1.5 GB
+MOCK_MODEL_BYTE = b"7"
+MOCK_MODEL_SHA256 = hashlib.sha256(MOCK_MODEL_BYTE * MOCK_MODEL_SIZE).hexdigest()
 
 
 def now_ms():
@@ -759,6 +763,31 @@ def material_stream(req):
     end = min(end, MOCK_VIDEO_SIZE - 1)
     return Raw(b"0" * (end - start + 1), "video/mp4", 206,
                {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_VIDEO_SIZE}"})
+
+
+# ---- AI model file (resumable download; the real Hub serves the file chosen by the AI evaluation)
+@route("GET", r"/api/model")
+def model_offer(req):
+    return {"available": True, "file_name": MOCK_MODEL_NAME, "size_bytes": MOCK_MODEL_SIZE,
+            "sha256": MOCK_MODEL_SHA256}
+
+
+@route("GET", r"/api/model/file")
+def model_file(req):
+    header = req.handler.headers.get("Range")
+    if not header:
+        return Raw(MOCK_MODEL_BYTE * MOCK_MODEL_SIZE, "application/octet-stream", 200, {"Accept-Ranges": "bytes"})
+    lo, _, hi = header.removeprefix("bytes=").partition("-")
+    try:
+        start = int(lo) if lo else 0
+        end = int(hi) if hi else MOCK_MODEL_SIZE - 1
+    except ValueError:
+        return Raw(b"", "application/octet-stream", 416, {"Content-Range": f"bytes */{MOCK_MODEL_SIZE}"})
+    end = min(end, MOCK_MODEL_SIZE - 1)
+    if start > end:
+        return Raw(b"", "application/octet-stream", 416, {"Content-Range": f"bytes */{MOCK_MODEL_SIZE}"})
+    return Raw(MOCK_MODEL_BYTE * (end - start + 1), "application/octet-stream", 206,
+               {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_MODEL_SIZE}"})
 
 
 # ---- assignments

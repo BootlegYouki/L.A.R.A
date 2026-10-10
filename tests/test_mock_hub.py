@@ -82,6 +82,30 @@ class TestMockHub(unittest.TestCase):
                             headers={"Range": "bytes=0-9"})
         self.assertEqual(status, 206)
 
+    def test_model_file_is_offered_and_resumable_and_matches_its_checksum(self):
+        import hashlib
+        status, offer, _ = call(BASE, "GET", "/api/model", token=self.pupil)
+        self.assertEqual(status, 200)
+        self.assertTrue(offer["available"])
+        # download in two Range requests, the second resuming where the first stopped
+        half = offer["size_bytes"] // 2
+        s1, first, h1 = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": f"bytes=0-{half - 1}"})
+        s2, rest, h2 = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": f"bytes={half}-"})
+        self.assertEqual((s1, s2), (206, 206))
+        self.assertEqual(h2["Content-Range"], f"bytes {half}-{offer['size_bytes'] - 1}/{offer['size_bytes']}")
+        data = first if isinstance(first, bytes) else first.encode()
+        data += rest if isinstance(rest, bytes) else rest.encode()
+        self.assertEqual(len(data), offer["size_bytes"])
+        self.assertEqual(hashlib.sha256(data).hexdigest(), offer["sha256"])
+
+    def test_model_file_needs_a_token_accepts_token_query_and_rejects_bad_range(self):
+        self.assertEqual(call(BASE, "GET", "/api/model")[0], 401)
+        self.assertEqual(call(BASE, "GET", "/api/model/file", headers={"Range": "bytes=0-9"})[0], 401)
+        status, _, _ = call(BASE, "GET", f"/api/model/file?token={self.pupil}", headers={"Range": "bytes=0-9"})
+        self.assertEqual(status, 206)
+        status, _, _ = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": "bytes=999999999-"})
+        self.assertEqual(status, 416)
+
     def test_join_approve_flow_pushes_websocket_events(self):
         ana = login(BASE, "123456789013")
         teacher_ws = WsClient("127.0.0.1", WS, self.teacher)
