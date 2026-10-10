@@ -5,7 +5,7 @@ Maintained by the **Mobile Team**. This folder is where the Lead Developer and f
 ## Required documents
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
-| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, Dev A / Dev B split, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
+| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, parallel-PR file map, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | `navigation.md` | Student and Teacher graphs, role routing, bottom navigation | Sprint 1 and 2 |
 | `room_schema.md` | Entities versus `client_offline.sql`, DAOs, schema test | Sprint 1 |
 | `discovery.md` | NSD, UDP, `MulticastLock`, manual IP, reconnect | Sprint 1 |

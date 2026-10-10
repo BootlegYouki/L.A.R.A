@@ -13,8 +13,8 @@
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`server/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36)). The Lead approves it before Sprint 1 work merges. |
 | 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
-| 4 | Take the next issue in **your slot**: [all server issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22) · [Dev A](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22%20label%3A%22slot%3Adev-a%22) · [Dev B](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22%20label%3A%22slot%3Adev-b%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Server). The sprint-by-sprint roadmap is in section 5. |
-| 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so Dev A and Dev B can add routes without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
+| 4 | Take the next issue whose dependencies are merged: [all server issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Server). The sprint-by-sprint roadmap is in section 5. |
+| 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so developers can add routes in parallel PRs without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
 | 6 | Before every PR: run the commands in [`server/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `server/docs/`. |
 
 **Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
@@ -145,7 +145,7 @@ server/
 
 ## 5. Server Team Sprint Roadmap & Execution Order
 
-All server issues follow `[SERVER Sprint.Step]`. Each issue names the developer slot (Dev A or Dev B), its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
+All server issues follow `[SERVER Sprint.Step]`. Each issue names its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
 
 * **Sprint 0 (Contract Freeze & Technical Spec):**
   * `[SERVER 0.1]`: Write server/docs/TECH_SPEC.md and get Lead approval ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36))

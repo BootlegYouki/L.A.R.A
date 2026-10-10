@@ -5,7 +5,7 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 ## Required documents
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
-| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, Dev A / Dev B split, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
+| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, parallel-PR file map, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | `components.md` | Component structure, design-system token usage, i18n dictionaries | Sprint 1 |
 | `database.md` | `plugin-sql` setup, migrations from `client_offline.sql`, `sync_state` | Sprint 1 and 2 |
 | `sync_engine.md` | Pull and push loops, cursor handling, `reset`, offline queue | Sprint 2 |

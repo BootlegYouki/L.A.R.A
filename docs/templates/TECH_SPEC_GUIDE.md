@@ -24,7 +24,7 @@ A good spec for humans and a good spec for agents are the same thing, taken a li
 4. **One name per thing.** Pick the module and type names here (for example `SyncRepository`, `QuizSessionManager`) and use them identically in issues, PRs and code. Never two names for one idea.
 5. **Contract usage is a complete table.** Each route and event this team touches, the module that handles it, and what happens on each documented error code, on timeout and when the Hub is unreachable.
 6. **Offline and sync are explicit.** What is stored locally, the `sync_status` lifecycle, the cursor and transaction rule from `rules/database-and-sync.md`, and what each screen or service does with no Hub. "Handled gracefully" is not an answer.
-7. **The Dev A / Dev B split has no shared files.** Two developers, two sets of folders. Anything both need (a shared interface, a DB entity) is assigned to one of them, and the other waits for it or uses a stub.
+7. **Parallel PRs share no files.** Any developer can take any issue, so the file map says which issue owns each file. Anything several PRs need (a shared interface, a DB entity) is assigned to one issue, and the others depend on it or use a stub.
 8. **Every sprint item is testable.** Each deliverable has a command or a manual check that proves it, against the mock hub first. If you cannot say how you would prove it, it is not specified yet.
 9. **Risks have an owner and a date.** Spikes (weak-phone memory, Tauri sidecar, Rust SSE) are scheduled, not "to be investigated".
 10. **Non-goals are written.** What this team is deliberately not building, so an agent does not helpfully add it.
@@ -49,7 +49,7 @@ Before you ask the Lead for review, run your own agent over the draft with this 
 Read AGENTS.md, <team>/AGENTS.md, contracts/ and docs/templates/TECH_SPEC_GUIDE.md.
 Then review <team>/docs/TECH_SPEC.md against the ten checks.
 List: (1) anything that contradicts a contract or rule, (2) any decision without a
-reason, (3) any file that both Dev A and Dev B would edit, (4) any sprint item with
+reason, (3) any file that two parallel PRs would edit, (4) any sprint item with
 no way to prove it, (5) anything an agent would have to guess. Do not rewrite it.
 ```
 

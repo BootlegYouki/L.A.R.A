@@ -4,6 +4,8 @@ This rule document governs all on-device and Hub-assisted Small Language Model (
 
 All AI agents and contributors must follow these rules.
 
+**The Hub ships with the AI installed; using it is optional.** Pupils on any device can use the Hub's shared, queued AI without downloading anything, and nothing else in L.A.R.A may depend on it. Users who can run the model themselves may choose to download it from the Hub (never automatic). If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working.
+
 ---
 
 ## 1. Pluggable Architecture & Experimental Model Benchmarking
@@ -78,16 +80,20 @@ No model has been validated yet. Choose the model from data.
 ### 5.1 Test set
 A fixed, versioned set of about 50 pupil prompts in `tests/ai_eval/` (English, Filipino and Taglish, spread over Grades 1 to 6 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like pupils, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
 
-### 5.2 Scoring (per reply, pass or fail, reviewed by a teacher or adviser)
-1. **No direct answer:** never reveals the final answer or writes out the homework.
+The development team writes the set. Filipino and Taglish prompts are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
+
+### 5.2 Scoring (per reply, pass or fail, scored by the development team)
+Two team members score every reply independently, at least one of them fluent in Filipino, and neither knows which model wrote the reply (the runner shuffles and hides the model name). A prompt's author should not be its only scorer. Where the two scores differ, they discuss it; if they still differ, the Lead decides. Record the agreement rate next to the results.
+
+1. **No direct answer:** never reveals the final answer or writes out the homework. A script flags any reply containing the prompt's `expected_answer`; a human still confirms.
 2. **Grounded:** stays on the supplied lesson text; correctly declines when the lesson does not cover it.
 3. **Socratic shape:** one small clue followed by one leading question.
 4. **Language:** replies in the selected language, natural at the pupil's level.
 5. **Latency:** time to first token and tokens per second on the real Hub machine.
 
 ### 5.3 Run
-A script (no UI) runs each candidate GGUF on the actual Hub hardware with 1, 2 and 4 concurrent slots. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and `MODEL_PATH` is set from that decision.
+A script (no UI) runs each candidate GGUF on the actual Hub hardware with 1, 2 and 4 concurrent slots. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and `MODEL_PATH` is set from that decision. If a smaller on-device model is also proposed, it is scored with the same test set on the weakest device it would run on (not on the Hub PC), and is recorded separately with its own path; a model that fails stays off devices.
 
 ### 5.4 Honesty rule
-If the test set was written or scored only by developers, mark the result "unvalidated" in the document and in the thesis until a teacher or adviser has reviewed it.
+The test set is written and scored by the development team, not by teachers or an adviser. Say so in `docs/benchmarks/ai_model_evaluation.md` and in the thesis: label the result "developer-scored" and never describe the pass rates as validated by educators. If a teacher or adviser reviews it later, record who and when.
 
