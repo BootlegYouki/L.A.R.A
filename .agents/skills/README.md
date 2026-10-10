@@ -5,7 +5,6 @@ Skills the AI agents on this project can load. Only skills that this project nee
 | Skill | For | What it gives the agent |
 |---|---|---|
 | [`lara-architect`](./lara-architect/SKILL.md) | All developers | L.A.R.A invariants, protocols, schemas, guardrails |
-| [`lara-co-lead`](./lara-co-lead/SKILL.md) | Lead and AI co-lead (the only lead-role skill) | Roles, what needs the Lead's word, routines, git and board mechanics, and the PR review protocol in `references/pr-review.md` |
 | [`android-jetpack-compose`](./android-jetpack-compose/SKILL.md) | Mobile | Compose state and UI patterns |
 | [`tauri-v2`](./tauri-v2/SKILL.md) | Desktop, Server window | Tauri 2 config, Rust commands, IPC, permissions |
 | [`rust-skills`](./rust-skills/SKILL.md) | Server (also Tauri Rust code) | 265 rules for idiomatic, safe, fast Rust: ownership, errors, async, serde, testing |
@@ -32,6 +31,6 @@ A skill is instructions an agent follows, so treat it like code that runs on eve
 ## Removed, and why
 
 * `material-3`: its examples load Google Fonts and Material Symbols from a CDN and push dynamic color, which breaks the zero-internet, Phosphor and tokens-only rules. The design system in `design-system/` replaces it.
-* `lead-companion`: merged into `lara-co-lead` (its review checklist is now `lara-co-lead/references/pr-review.md`), so the lead role has one skill.
+* `lead-companion` and `lara-co-lead`: the Lead's own working skills. They are personal to the Lead (kept outside this repo and synced between the Lead's machines), not project tooling for developers. The review checklist they used is now `rules/team-workflow-and-prs.md` section 5.
 * `find-skills`, `skill-creator`: general tools for managing skills, not for building L.A.R.A. They can stay in your personal `~/.claude/skills/`.
 * Considered and not added: a Tailwind 4 docs skill (needs internet and has a restrictive license); Next.js-oriented React skills (the desktop app is Vite, not Next.js).
