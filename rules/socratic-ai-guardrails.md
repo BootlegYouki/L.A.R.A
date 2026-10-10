@@ -4,7 +4,7 @@ This rule document governs all on-device and Hub-assisted Small Language Model (
 
 All AI agents and contributors must follow these rules.
 
-**The AI is optional.** Nothing else in L.A.R.A may depend on it. A school can run with no model on the Hub and none on any device: clients then show "AI is not set up" and every other feature works. Users who can run the model themselves may choose to download it from the Hub (never automatic); everyone else uses the Hub's shared, queued AI when the Hub has one. The Hub answers `AI_NOT_AVAILABLE` when no model is configured.
+**The Hub ships with the AI installed; using it is optional.** Pupils on any device can use the Hub's shared, queued AI without downloading anything, and nothing else in L.A.R.A may depend on it. Users who can run the model themselves may choose to download it from the Hub (never automatic). If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working.
 
 ---
 
@@ -92,7 +92,7 @@ Two team members score every reply independently, at least one of them fluent in
 5. **Latency:** time to first token and tokens per second on the real Hub machine.
 
 ### 5.3 Run
-A script (no UI) runs each candidate GGUF on the actual Hub hardware with 1, 2 and 4 concurrent slots. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and `MODEL_PATH` is set from that decision.
+A script (no UI) runs each candidate GGUF on the actual Hub hardware with 1, 2 and 4 concurrent slots. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and `MODEL_PATH` is set from that decision. If a smaller on-device model is also proposed, it is scored with the same test set on the weakest device it would run on (not on the Hub PC), and is recorded separately with its own path; a model that fails stays off devices.
 
 ### 5.4 Honesty rule
 The test set is written and scored by the development team, not by teachers or an adviser. Say so in `docs/benchmarks/ai_model_evaluation.md` and in the thesis: label the result "developer-scored" and never describe the pass rates as validated by educators. If a teacher or adviser reviews it later, record who and when.
