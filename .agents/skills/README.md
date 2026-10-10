@@ -5,11 +5,19 @@ Skills the AI agents on this project can load. Only skills that this project nee
 | Skill | For | What it gives the agent |
 |---|---|---|
 | [`lara-architect`](./lara-architect/SKILL.md) | All developers | L.A.R.A invariants, protocols, schemas, guardrails |
+| [`lara-android-offline`](./lara-android-offline/SKILL.md) | Mobile | Room offline mirror and atomic sync, cleartext LAN HTTP, WorkManager, CameraX under 800 KB, Media3, the 250 MB heap budget |
+| [`lara-desktop-web`](./lara-desktop-web/SKILL.md) | Desktop | Tauri 2 and React 19 offline, strict TypeScript, plugin-sql and atomic sync, Tailwind 4 tokens and bundled fonts, quiz timer |
+| [`lara-hub-rust`](./lara-hub-rust/SKILL.md) | Server | SQLx on SQLite (WAL, `sync_revisions`), uploads past Axum's 2 MB limit, Range streaming with the 2 MB/s cap, auth, WebSocket broker |
+| [`lara-ai-runtime`](./lara-ai-runtime/SKILL.md) | All teams (AI issues) | llama.cpp on the Hub, desktop and Android: slots and context budget, streaming, queue, grounding, evidence |
 | [`android-jetpack-compose`](./android-jetpack-compose/SKILL.md) | Mobile | Compose state and UI patterns |
 | [`tauri-v2`](./tauri-v2/SKILL.md) | Desktop, Server window | Tauri 2 config, Rust commands, IPC, permissions |
 | [`rust-skills`](./rust-skills/SKILL.md) | Server (also Tauri Rust code) | 265 rules for idiomatic, safe, fast Rust: ownership, errors, async, serde, testing |
 
 Where a skill and a project rule disagree, `AGENTS.md` and `contracts/` win (see `AGENTS.md` section 1.1).
+
+## Skills written for this project
+
+`lara-android-offline`, `lara-desktop-web`, `lara-hub-rust` and `lara-ai-runtime` are original to this repository. Their library facts were checked against the current official documentation (Axum, SQLx, tower-http, Tailwind CSS 4, Tauri plugin-sql, llama.cpp) on 2026-10-10. Android cleartext traffic and the WorkManager network constraint were not checked against the docs, so those two items say "test it first". Treat every skill as guidance: the contracts and rules win, and a real device or the mock hub is the final check.
 
 ## Third-party skills
 
