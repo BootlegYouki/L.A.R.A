@@ -103,7 +103,9 @@ def base_spec() -> str:
 def run_git_diff_check():
     """Runs against the live git diff for CI. Returns 0 pass, 1 violation, 2 could not check."""
     spec = base_spec()
-    cmd = ["git", "diff", f"{spec}...HEAD", "--", *SCAN_GLOBS, *SCAN_EXCLUDES]
+    # --text: a .gitattributes line such as "*.kt -diff" would otherwise turn the diff into "Binary files differ"
+    # with no added lines, and the scan would pass. No textconv or external diff driver may rewrite what we read.
+    cmd = ["git", "diff", "--text", "--no-textconv", "--no-ext-diff", f"{spec}...HEAD", "--", *SCAN_GLOBS, *SCAN_EXCLUDES]
     res = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if res.returncode != 0:
         print(f"\n❌ L.A.R.A GUARDRAIL COULD NOT RUN: git diff against '{spec}' failed.")
