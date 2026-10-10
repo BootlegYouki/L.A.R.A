@@ -69,19 +69,7 @@ To ensure the Lead Developer and teammates always have immediate architectural c
 
 ## 5. The Five Fatal Rejection Rules
 
-
-The Lead Developer will immediately reject any PR that introduces:
-1. **Cloud Leakage:** External CDNs, Firebase, Google Fonts links, remote analytics, or Google Play Billing.
-2. **Hardware RAM Crashes:** Mobile heap allocations exceeding 250MB or loading on-device LLM models without verifying `RAM >= 6GB`.
-3. **Socratic AI Leaks:** Prompts or logic that provide direct answers to students.
-4. **Quiz Lockout Bypass:** Any pathway allowing the AI tutor to run during an active quiz session.
-5. **Accessibility Regressions:** Touch targets smaller than 52dp or missing Filipino string resources.
-
----
-
-## 5. What The Lead Checks In Every PR
-
-Every PR is checked against these. If one of the first five is present the PR is sent back; the next five are also blockers. Green CI is necessary but is not the review: the Lead also runs the change.
+The Lead rejects any PR that introduces one of these five. Green CI is necessary but is not the review: the Lead also runs the change.
 
 1. **Cloud Leakage (Zero Internet Invariant):**
    * Check for: Firebase, Google Play Services, external CDNs, Google Fonts URLs, remote analytics, third-party tracking, or external API endpoints.
