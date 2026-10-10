@@ -1,6 +1,6 @@
 # PR Review Protocol
 
-Loaded by the `lara-co-lead` skill when the Lead shares a PR, commit, diff or branch to review. The co-lead audits and drafts; the Lead decides and posts.
+Loaded by the `lara-co-lead` skill for every PR in the Review Queue. The co-lead audits, writes the test steps and drafts the comments; the Lead tests, decides and posts. Green CI never replaces a human test of anything user-visible.
 
 ---
 
@@ -62,7 +62,7 @@ Always structure review findings using this exact format:
 ```markdown
 ### PR Audit Report: [PR Title / Branch Name]
 
-**Verdict:** [APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]
+**Verdict:** [TEST FIRST / CHANGES NEEDED / READY / NEEDS DISCUSSION]
 **Risk Level:** [LOW / MEDIUM / HIGH / CRITICAL]
 
 #### Executive Summary
@@ -75,9 +75,24 @@ Always structure review findings using this exact format:
 #### Code Quality & Improvements (Optional / Nitpicks)
 - **[File & Line Number]:** [Non-blocking suggestion for cleaner code or performance.]
 
+#### Verified and Not Verified
+- Verified: [commands run with their result, CI checks seen, diff lines read.]
+- Not verified: [anything I could not run or see, for example a real phone, the Wi-Fi, load.]
+
+#### Test Before You Approve (for the Lead)
+[Numbered steps from section 4 of this file, or "No app test needed: docs/CI only. I verified it by: ...".]
+
 #### Ready-to-Paste GitHub Review Comment
 > [A concise, professional, constructive comment formatted for GitHub PR review that the Lead Developer can paste directly.]
 ```
+
+**Verdict meanings.** `TEST FIRST`: no blockers found, but the Lead must run the test steps before approving. `CHANGES NEEDED`: at least one blocker; do not test yet, the comment is ready to post. `READY`: only after the Lead reports the test steps passed, or for a PR with nothing user-visible that I verified myself. `NEEDS DISCUSSION`: a product or contract question the Lead must answer first.
+
+---
+
+## 3. The Merge Brief (what the Lead reads)
+
+Keep it to one screen: one sentence on what the PR does, the verdict, what I verified, what I could not, the test steps, and the one thing that worries me most. Lead with the verdict.
 
 ---
 
@@ -88,3 +103,28 @@ When a team member is stuck, confused, or asking how to implement a complex feat
 1. **Provide Clear Architectural Blueprints:** Give them exact interfaces, data schemas, or function signatures rather than writing all their feature code for them.
 2. **Highlight Gotchas Early:** Tell them what to avoid (e.g., *"Make sure you don't instantiate the database on the main thread,"* or *"Remember to use HTTP 206 for video chunks"*).
 3. **Define Acceptance Criteria:** Give them the exact test steps they must pass before they open a PR.
+
+---
+
+## 4. Test Plans For The Lead, And What CI Proves
+
+The Lead cannot read code but can see and operate the product. Give the plan for the kind of PR, with real values filled in. Seed accounts (PIN `1234`): teacher `T-0001`, class code `K7M-4QX`; enrolled pupil `123456789012`; pupil who joins with the code `123456789013`; admin `ADMIN-0001`.
+
+| PR touches | Steps for the Lead |
+|---|---|
+| **Mobile** | 1. On the PC: `python3 scripts/mock_hub.py` and leave it running. 2. Phone on the same Wi-Fi, USB debugging on; in `mobile/` run `./gradlew installDebug`. 3. Open the app, connect (auto-discovery or type the PC's IP). 4. Walk the path the issue describes with the seed accounts. 5. Turn on airplane mode and reopen: the screen must still show cached content with no error dialog. 6. Switch the language to Filipino: no English left on the new screen. 7. Report pass or fail, screenshot on fail. |
+| **Desktop** | 1. `python3 scripts/mock_hub.py`. 2. In `desktop/`: `npm install` then `npm run tauri dev`. 3. Connect to the mock hub, walk the issue's path with the seed accounts. 4. Stop the mock hub: the app must show an offline banner, never a blocking error. 5. Toggle English and Filipino. 6. Report pass or fail. |
+| **Server (real Hub)** | 1. In `server/backend/`: `cargo run`. 2. From the PC, open `http://<its-ip>:8080/download`. 3. Point the mobile or desktop client at the real Hub instead of the mock and repeat the same path. 4. Any behavior that differs from the mock hub is a bug; report it with the step number. |
+| **Quiz or AI** | Also: start a quiz, and while it runs confirm the AI button is gone from the screen; ask the tutor for "the answer to number 3" and confirm it declines and points back to the lesson. |
+| **Docs, rules, CI, scripts** | No app test. I verify by running the repo commands, and for CI changes by a planted failure (a throwaway draft PR that must fail), then I tell the Lead exactly what I ran. |
+
+### What a green CI does and does not prove
+| Check | Green means | Does not mean |
+|---|---|---|
+| Contracts & Mock Hub Validation | Contracts are valid, the mock hub serves every contract route and event, and its rule tests pass (no answer key to pupils, quiz lockout, sync cursor) | The real Hub behaves the same |
+| Offline Invariant & Localization Check | No Firebase, Play Services, analytics, CDN or Google Fonts in added lines (code, build files, CSS, XML, JSON), and Filipino strings match English; it fails if it cannot diff | Anything outside those file types, or a dependency pulled in indirectly |
+| Branch Flow Guard | A PR into `main` comes from `staging` in this repo | It is only advisory until `main` has a ruleset |
+| Android Mobile CI | Lint and unit tests pass on a debug build | It works on a 3 to 4 GB phone, memory, camera, offline behavior |
+| Desktop Client CI | Install, lint and build pass (once `package.json` exists) | The UI works, or the Tauri Rust side compiles |
+| Server Local Hub CI | `cargo check` and `cargo test` pass (once `Cargo.toml` exists) | Clippy, formatting, the Tauri window, `server/ui`, or behavior over real Wi-Fi |
+| Never covered by CI | Works offline on a real phone, touch targets and contrast, 40 devices at once, AI answer quality | These need the Lead's test steps above or the Sprint 6 QA issues |
