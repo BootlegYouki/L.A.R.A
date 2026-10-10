@@ -51,8 +51,12 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
           HEAD: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          THIS_REPO: ${{ github.repository }}
         run: |
-          if [ "$BASE" = "main" ] && [ "$HEAD" != "staging" ] && [[ "$HEAD" != hotfix/* ]]; then
+          # A branch name alone proves nothing: a fork can have a branch called staging. Advisory guard;
+          # the real lock is a branch ruleset on main that requires this check.
+          if [ "$BASE" = "main" ] && { [ "$HEAD_REPO" != "$THIS_REPO" ] || { [ "$HEAD" != "staging" ] && [[ "$HEAD" != hotfix/* ]]; }; }; then
             echo "::error::PRs into main must come from staging (this one is from '$HEAD'). Retarget it to staging. See rules/team-workflow-and-prs.md section 2."
             exit 1
           fi
