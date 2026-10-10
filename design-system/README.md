@@ -1,6 +1,6 @@
 # L.A.R.A. Design System
 
-> **Canonical design system for the L.A.R.A. offline classroom apps.** Google Classroom's mental model with a Filipino elementary brand: solid flat colors, Nunito, Phosphor icons, navy-tinted shadows.
+> **Canonical design system for the L.A.R.A. offline classroom apps.** Google Classroom's screen layout, copied closely, with a friendly Filipino elementary brand: solid flat colors, Nunito, Phosphor icons, navy-tinted shadows, warm words.
 
 Owned by the Lead Developer. Developers **use** these files; they do not edit them in a feature PR.
 
@@ -8,7 +8,7 @@ Owned by the Lead Developer. Developers **use** these files; they do not edit th
 
 | Source | What it is | Role |
 | :--- | :--- | :--- |
-| [`showcase.html`](./showcase.html) | Interactive sample (v2.0): every foundation and component, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
+| [`showcase.html`](./showcase.html) | Interactive sample (v2.0): every foundation and component, plus the **Classroom Screens** (Home, Stream, Classwork, People, Assignment, Review, To-do, Join, Phones) laid out like Google Classroom, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
 | [`design-system.md`](./design-system.md) | Written rules: tokens, components, accessibility, Google Classroom layout reference, definition of done | The rules agents and reviewers cite |
 | This folder | Ready-to-copy token and theme files | The code form of the sample |
 
@@ -45,6 +45,7 @@ design-system/
 6. **52 minimum touch target,** 56 for primary actions and quiz options.
 7. **Never rely on color alone:** pair every status color with an icon and a text label.
 8. **Offline first:** every screen has an offline state; say "Hub" or "classroom network", never "internet".
+9. **Classroom's layout, our voice:** copy the structure of the matching Google Classroom screen (`design-system.md` section 9), and say it warmly (section 7). Never copy its colors, fonts, logo or pictures.
 
 ## How to use it
 
