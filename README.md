@@ -35,7 +35,7 @@ It is built for the Philippine reality: over half of pupils' phones are 3 to 4 G
 | **Desktop developer** | [`desktop/README.md`](./desktop/README.md) and [`desktop/AGENTS.md`](./desktop/AGENTS.md) |
 | **Mobile developer** | [`mobile/README.md`](./mobile/README.md) and [`mobile/AGENTS.md`](./mobile/AGENTS.md) |
 | **AI agent** | [`AGENTS.md`](./AGENTS.md) (also `CLAUDE.md`), then the nested guide for your folder |
-| **Lead Developer / reviewer** | [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md) and the `lara-co-lead` skill |
+| **Lead Developer / reviewer** | [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md) |
 | **Anyone** | The documentation map in [`docs/README.md`](./docs/README.md) |
 
 ### Quick start (any team)

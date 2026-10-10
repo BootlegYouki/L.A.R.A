@@ -161,7 +161,7 @@ After you push, GitHub runs the checks listed at the bottom of the PR. All must 
 Click **Details** on the red check to see the log. Push a fix to the same branch; CI re-runs automatically. Do not ask for review while CI is red.
 
 ### Step 9: Review loop
-1. The Lead reviews with the checklist in [`.agents/skills/lara-co-lead/references/pr-review.md`](./.agents/skills/lara-co-lead/references/pr-review.md): the five fatal checks and the extra blockers, scope, offline behavior, security, evidence.
+1. The Lead reviews with the checklist in [`rules/team-workflow-and-prs.md`](./rules/team-workflow-and-prs.md) section 5: the five fatal checks and the extra blockers, scope, offline behavior, security, evidence.
 2. The verdict is **Approve**, **Request changes** (with blocking items) or **Needs discussion**.
 3. For each comment: fix it, push to the same branch, and reply `Fixed in <commit>` (or explain why not). Do **not** open a new PR and do not resolve a thread yourself unless the Lead says so.
 4. Push the fixes, then click **Re-request review**. Repeat until approved.
