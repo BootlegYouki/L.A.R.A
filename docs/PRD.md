@@ -143,7 +143,7 @@ flowchart TD
  * **In-App Camera Capture:** Learners can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app (or attach an image file).
  * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. The moment the learner walks into school and connects to the Hub Wi-Fi, the submission uploads automatically.
  * **Grade and Feedback Visibility:** Learners see their score and the teacher's feedback once homework is graded, and it stays available offline.
- * **Teacher Grading Interface:** Teacher reviews student photo submissions on the Hub, assigns a score, and types short encouraging feedback.
+ * **Teacher Grading Interface:** Teacher reviews learner photo submissions in the desktop app, assigns a score, and types short encouraging feedback.
 
 ### 4.4 Module 4: Paperless Assessment Engine (Quizzes)
 
@@ -188,7 +188,7 @@ sequenceDiagram
  * **Server-Side Rejection:** The Hub drops any inference calls originating from a student with an active quiz attempt.
 * **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, the test is locked and answers are immediately transmitted to the Hub.
 * **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the learner reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
-* **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment.
+* **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment; closing the quiz is what releases held scores.
 * **FR-4.7 Result History:** Learners can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
 
 ### 4.5 Module 5: Gradebook & Export
@@ -258,27 +258,7 @@ flowchart TD
 * **Interaction Trigger:** Located inside the Material Viewer as a floating button: **"Magtanong kay L.A.R.A. AI" / "Ask L.A.R.A. AI"**.
 * **Grounding:** The prompt binds the pre-extracted text of the active lesson document.
 
-* **Bilingual System Prompt Template:**
- ```text
- You are "L.A.R.A. AI", a friendly and patient Socratic learning guide for Filipino learners (Grades 1 to 12).
- Your objective is to guide the student to discover answers independently.
-
- LANGUAGE INSTRUCTION:
- - Respond in the language used by the student (Filipino or English).
- - Use simple, encouraging words suitable for young children.
-
- CORE PEDAGOGICAL DIRECTIVES:
- 1. Under NO circumstances should you give the direct answer, complete formula, or write homework solutions out.
- 2. If the student asks: "What is the answer?" or "Ano ang sagot sa #3?", reply warmly:
- "Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang napansin mo sa unang bahagi?"
- 3. Ground all guidance exclusively in the lesson text provided below.
- 4. Provide only ONE small hint at a time, followed by a leading question that helps them take the next step.
-
- LESSON CONTEXT:
- \"\"\"
- {active_material_chunk}
- \"\"\"
- ```
+* **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), used unchanged by the Hub, mobile and desktop. It is not copied here so it cannot drift.
 
 ### 5.4 Hub Inference Queue
 To prevent the Hub PC from overloading when multiple low-RAM devices request hints simultaneously:

@@ -17,6 +17,21 @@ class TestContracts(unittest.TestCase):
                          "/api/assignments/{id}/submit", "/api/quizzes/{id}/start", "/api/export/class-record"):
             self.assertIn(required, spec["paths"], f"openapi.yaml missing {required}")
 
+    def test_one_shared_socratic_system_prompt(self):
+        # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
+        # behaves the same on every path. The mock hub's canned reply must stay the canonical decline line.
+        with open("contracts/ai/socratic_system_prompt.txt", "r", encoding="utf-8") as f:
+            prompt = f.read()
+        for placeholder in ("{reply_language}", "{lesson_chunks}"):
+            self.assertEqual(prompt.count(placeholder), 1, f"prompt needs exactly one {placeholder}")
+        decline = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
+                   "Balikan natin ang binasa mo. Ano ang unang hakbang?")
+        self.assertIn(decline, prompt)
+        with open("scripts/mock_hub.py", "r", encoding="utf-8") as f:
+            self.assertIn("Ano ang unang hakbang?", f.read())
+        with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
+            self.assertIn(decline, f.read())
+
     def test_websocket_event_schemas_valid_json(self):
         events_dir = "contracts/events"
         self.assertTrue(os.path.isdir(events_dir), "contracts/events directory missing")
