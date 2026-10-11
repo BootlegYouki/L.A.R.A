@@ -1,6 +1,6 @@
-# UI/UX & Elementary Accessibility Standards
+# UI/UX & Accessibility Standards (Grades 1 to 12)
 
-This rule document governs all visual styling, touch targets, and accessibility requirements for Filipino elementary school pupils (Grades 1 to 6) and public school teachers (DepEd).
+This rule document governs all visual styling, touch targets, and accessibility requirements for Filipino public school learners (Grades 1 to 12) and teachers.
 
 All AI agents and contributors must follow these rules.
 
@@ -24,7 +24,7 @@ All AI agents and contributors must follow these rules.
 
 ---
 
-## 2. Touch Targets (Elementary Precision Rule)
+## 2. Touch Targets (Precision Rule)
 
 Young children (especially in Grades 1 to 3) have developing fine motor control. Touch targets must prevent miss-taps:
 
@@ -34,7 +34,7 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
 
 ---
 
-## 3. High-Contrast & Elementary Readability
+## 3. High-Contrast & Readability
 
 * **Contrast Ratio:** Text-to-background contrast must maintain at least **4.5:1** across all surface container roles to ensure readability under bright tropical classroom lighting.
 * **Typography Scale:** Avoid dense, tiny fonts. Use minimum 14sp for body text and 18sp for titles.
@@ -60,7 +60,7 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
 
 ---
 
-## 6. DepEd Gradebook Export Standard
+## 6. Gradebook Export Standard
 
-* Hub desktop application must export `.xlsx` and `.csv` files strictly conforming to DepEd Class Record columns: Learner Name, LRN, Written Works, Performance Tasks, and Quarterly Assessment.
+* Hub desktop application must export `.xlsx` and `.csv` files with Learner Name, LRN, one column per assignment and quiz (points earned, with the maximum in the header) and a total. No DepEd categories, quarters or weights: each teacher grades their own way.
 * Automatically detect mounted USB flash drives for one-click direct transfer.

@@ -30,7 +30,7 @@ val LaraShapes = Shapes(
     extraLarge = RoundedCornerShape(24.dp),
 )
 
-// Minimum interactive size for pupil-facing controls. Primary actions and quiz options use 56dp.
+// Minimum interactive size for learner-facing controls. Primary actions and quiz options use 56dp.
 val MinTouchTarget = 52.dp
 val PrimaryTouchTarget = 56.dp
 

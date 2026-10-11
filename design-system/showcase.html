@@ -364,7 +364,7 @@
     .badge i { font-size: 15px; }
     .badge-synced { background: var(--color-light-green); color: var(--color-dark-green); border: 1px solid var(--color-success-border); }
     .badge-queued { background: var(--color-warning-light); color: var(--color-warning-dark); border: 1px solid var(--color-warning-border); }
-    .badge-deped { background: var(--color-info-light); color: var(--color-info-dark); border: 1px solid var(--color-info-border); }
+    .badge-info { background: var(--color-info-light); color: var(--color-info-dark); border: 1px solid var(--color-info-border); }
     .badge-ai { background: var(--color-light-purple); color: var(--color-dark-purple); border: 1px solid var(--color-ai-border); }
     .badge-danger { background: var(--color-danger-light); color: var(--color-danger-dark); border: 1px solid var(--color-danger-border); }
     .badge-neutral { background: var(--color-surface-subtle); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
@@ -770,11 +770,11 @@
     .cr-review > * { min-width: 0; }
     .cr-review .list { border-right: 1px solid var(--color-border); padding: 12px; display: grid; gap: 4px; align-content: start; }
     .cr-review .list .group { font-size: 13px; font-weight: 900; padding: 10px 8px 4px; color: var(--color-text-secondary); }
-    .cr-pupil { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 10px; border-radius: var(--radius-md); border: none; background: transparent; width: 100%; text-align: left; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--color-text-primary); }
-    .cr-pupil:hover { background: var(--color-surface-subtle); }
-    .cr-pupil.active { background: var(--color-light-green); color: var(--color-dark-green); }
-    .cr-pupil small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-pupil.active small { color: var(--color-dark-green); }
+    .cr-learner { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 10px; border-radius: var(--radius-md); border: none; background: transparent; width: 100%; text-align: left; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--color-text-primary); }
+    .cr-learner:hover { background: var(--color-surface-subtle); }
+    .cr-learner.active { background: var(--color-light-green); color: var(--color-dark-green); }
+    .cr-learner small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+    .cr-learner.active small { color: var(--color-dark-green); }
     .cr-review .viewer { padding: 20px; background: var(--color-canvas-bg); display: flex; flex-direction: column; gap: 12px; }
     .cr-review .paper { flex: 1; min-height: 300px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--color-text-secondary); font-weight: 800; font-size: 14px; text-align: center; padding: 16px; }
     .cr-review .paper i { font-size: 44px; color: var(--color-text-muted); }
@@ -960,7 +960,7 @@ const COLORS = {
     ['Text Muted', '#98A2B3', 'textMuted', 'Placeholders, disabled', '#fff']
   ],
   status: [
-    ['Success', '#22A447', 'success', 'Passed, synced', '#fff'],
+    ['Success', '#22A447', 'success', 'Synced, done', '#fff'],
     ['Warning', '#F5B82E', 'warning', 'Queued, timers', '#17213D'],
     ['Danger', '#EF5350', 'danger', 'Errors, lockouts', '#fff'],
     ['Info', '#3B82F6', 'info', 'Neutral information', '#fff']
@@ -1009,7 +1009,7 @@ function iconGrid() {
 /* ==========================================================================
    CLASSROOM SCREEN HELPERS
    Same layout as Google Classroom, built from L.A.R.A tokens and a friendlier voice.
-   Sample people are made up. Pupils appear by initials only.
+   Sample people are made up. Learners appear by initials only.
    ========================================================================== */
 const CR_CLASSES = [
   { icon: 'flask', name: 'Science 4', section: 'Grade 4 - Rizal', teacher: 'Ms. Reyes', init: 'MR' },
@@ -1019,7 +1019,7 @@ const CR_CLASSES = [
 ];
 const CR_SCI = CR_CLASSES[0];
 
-/* data-only="pupil" or "teacher" follows the role switch above a preview. data-st follows a state switch. */
+/* data-only="learner" or "teacher" follows the role switch above a preview. data-st follows a state switch. */
 function crSwitch(views, labelText, kind) {
   const label = labelText || 'View as';
   return '<div class="cr-switch"><span>' + label + '</span><div class="segmented" role="tablist" aria-label="' + label + '">' +
@@ -1033,16 +1033,16 @@ function crTop(cls) {
     '<span class="doc-brand-badge">L.A.R.A.</span>' + crumb + '<span class="cr-spacer"></span>' +
     '<span class="radar-pill cr-hub"><span class="radar-dot"></span><span>Connected to Hub</span></span>' +
     '<button class="cr-icon" type="button" aria-label="Join or create a class"><i class="ph ph-plus"></i></button>' +
-    '<button class="cr-icon" type="button" aria-label="Your account"><span class="avatar sm" data-only="pupil">AS</span><span class="avatar sm" data-only="teacher">MR</span></button></header>';
+    '<button class="cr-icon" type="button" aria-label="Your account"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></button></header>';
 }
 
 function crDrawer(active, cls) {
   const nav = (id, icon, text, extra) => '<button class="cr-nav' + (active === id ? ' active' : '') + '" type="button"' + (active === id ? ' aria-current="page"' : '') + '><i class="' + (icon.indexOf('ph-fill') === 0 ? icon : 'ph ' + icon) + '"></i><span class="cr-nav-text">' + text + '</span>' + (extra || '') + '</button>';
   const klass = c => '<button class="cr-nav' + (cls && cls.name === c.name && active === 'class' ? ' active' : '') + '" type="button"' + (cls && cls.name === c.name && active === 'class' ? ' aria-current="page"' : '') + '><span class="cr-dot">' + c.name.charAt(0) + '</span><span class="cr-nav-text">' + c.name + '<small>' + c.section + '</small></span></button>';
   return nav('home', active === 'home' ? 'ph-fill ph-house' : 'ph-house', 'Home') +
-    '<div data-only="pupil">' + nav('todo', active === 'todo' ? 'ph-fill ph-check-square' : 'ph-check-square', 'To-do') + '</div>' +
+    '<div data-only="learner">' + nav('todo', active === 'todo' ? 'ph-fill ph-check-square' : 'ph-check-square', 'To-do') + '</div>' +
     '<div data-only="teacher">' + nav('review', 'ph-clipboard-text', 'To review', '<span class="count-dot">5</span>') + '</div>' +
-    '<div class="cr-nav-sec"><i class="ph ph-graduation-cap"></i><span data-only="pupil">Enrolled</span><span data-only="teacher">Teaching</span><i class="ph ph-caret-up end"></i></div>' +
+    '<div class="cr-nav-sec"><i class="ph ph-graduation-cap"></i><span data-only="learner">Enrolled</span><span data-only="teacher">Teaching</span><i class="ph ph-caret-up end"></i></div>' +
     CR_CLASSES.map(klass).join('') +
     '<div data-only="teacher"><div class="cr-nav-sec"><i class="ph ph-toolbox"></i>Class tools</div>' + nav('attendance', 'ph-calendar-check', 'Attendance') + nav('usb', 'ph-usb', 'USB export') + '</div>' +
     '<div style="height:8px"></div>' +
@@ -1054,14 +1054,14 @@ function crTabs(active) {
   return '<div class="cr-tabs" role="tablist" aria-label="Class sections">' +
     t('stream', 'Stream', 'ph-chat-circle-dots') + t('classwork', 'Classwork', 'ph-notebook') + t('quizzes', 'Quizzes', 'ph-timer') +
     t('people', 'People', 'ph-users', 'teacher') + t('grades', 'Grades', 'ph-table', 'teacher') +
-    '<button class="cr-tab ai" type="button" data-only="pupil"><i class="ph ph-sparkle"></i>Ask L.A.R.A.</button></div>';
+    '<button class="cr-tab ai" type="button" data-only="learner"><i class="ph ph-sparkle"></i>Ask L.A.R.A.</button></div>';
 }
 
 /* One screen: top bar, drawer, white sheet.
    o = { cls, active, role, state, content, tabs, plain, views, viewKind, viewLabel } */
 function crScreen(o) {
   return (o.views ? crSwitch(o.views, o.viewLabel, o.viewKind) : '') +
-    '<div class="cr-screen" data-role="' + (o.role || 'pupil') + '"' + (o.state ? ' data-state="' + o.state + '"' : '') + '>' + crTop(o.cls) +
+    '<div class="cr-screen" data-role="' + (o.role || 'learner') + '"' + (o.state ? ' data-state="' + o.state + '"' : '') + '>' + crTop(o.cls) +
     '<div class="cr-body"><nav class="cr-drawer" aria-label="Classes">' + crDrawer(o.active, o.cls) + '</nav>' +
     '<div class="cr-sheet' + (o.plain ? ' plain' : '') + '">' + (o.tabs ? crTabs(o.tabs) : '') + o.content + '</div></div></div>';
 }
@@ -1085,24 +1085,24 @@ function crCard(c, i) {
     '<button class="cr-icon" type="button" aria-label="More options for ' + c.name + '"><i class="ph ph-dots-three-vertical"></i></button></footer></article>';
 }
 
-const CR_VIEWS = [['pupil', 'Pupil'], ['teacher', 'Teacher']];
+const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];
 
 /* ---------------------------- Screen previews ---------------------------- */
 function crHomePreview() {
-  const due = '<section class="cr-panel" data-only="pupil" aria-label="Due soon"><header><h4>Due soon <span class="count-dot">2</span></h4>' +
+  const due = '<section class="cr-panel" data-only="learner" aria-label="Due soon"><header><h4>Due soon <span class="count-dot">2</span></h4>' +
     '<button class="cr-icon" type="button" aria-label="Collapse due soon"><i class="ph ph-arrows-in-line-vertical"></i></button></header>' +
     '<div class="cr-item" style="border-top:1px solid var(--color-border)"><span class="tile quiz"><i class="ph ph-timer"></i></span><div class="main"><strong>Pagsusulit #2: Parts of a Leaf</strong><small>Science 4</small></div><span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span></div>' +
     '<div class="cr-item"><span class="tile"><i class="ph ph-notebook"></i></span><div class="main"><strong>Fractions drill</strong><small>Math 4</small></div><span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span></div></section>';
   const waiting = '<section class="cr-panel" data-only="teacher" aria-label="Waiting for you"><header><h4>Waiting for you <span class="count-dot">7</span></h4></header>' +
-    '<div class="cr-item" style="border-top:1px solid var(--color-border)"><span class="tile"><i class="ph ph-clipboard-text"></i></span><div class="main"><strong>5 pupils turned in Handout #2</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Review</button></div>' +
-    '<div class="cr-item"><span class="tile material"><i class="ph ph-users"></i></span><div class="main"><strong>2 pupils want to join</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Open People</button></div></section>';
+    '<div class="cr-item" style="border-top:1px solid var(--color-border)"><span class="tile"><i class="ph ph-clipboard-text"></i></span><div class="main"><strong>5 learners turned in Handout #2</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Review</button></div>' +
+    '<div class="cr-item"><span class="tile material"><i class="ph ph-users"></i></span><div class="main"><strong>2 learners want to join</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Open People</button></div></section>';
   const classes = '<section class="cr-panel" aria-label="Classes"><header><h4>Classes</h4>' +
-    '<button class="cr-link" type="button" data-only="pupil"><i class="ph ph-plus"></i>Join class</button><button class="cr-link" type="button" data-only="teacher"><i class="ph ph-plus"></i>Create class</button></header>' +
+    '<button class="cr-link" type="button" data-only="learner"><i class="ph ph-plus"></i>Join class</button><button class="cr-link" type="button" data-only="teacher"><i class="ph ph-plus"></i>Create class</button></header>' +
     '<div class="cr-grid">' + CR_CLASSES.map(crCard).join('') + '</div></section>';
   return crScreen({
     active: 'home', plain: true, views: CR_VIEWS,
-    content: '<div class="cr-pad"><div class="cr-greet"><h3 data-only="pupil">Magandang umaga, Ana!</h3><h3 data-only="teacher">Magandang umaga, Ms. Reyes!</h3>' +
-      '<p data-only="pupil">You have 2 things to turn in this week.</p><p data-only="teacher">7 things are waiting for you today.</p></div>' + due + waiting + classes + '</div>'
+    content: '<div class="cr-pad"><div class="cr-greet"><h3 data-only="learner">Magandang umaga, Ana!</h3><h3 data-only="teacher">Magandang umaga, Ms. Reyes!</h3>' +
+      '<p data-only="learner">You have 2 things to turn in this week.</p><p data-only="teacher">7 things are waiting for you today.</p></div>' + due + waiting + classes + '</div>'
   });
 }
 
@@ -1122,8 +1122,8 @@ function crStreamPreview() {
   const composer = '<div class="cr-composer" data-only="teacher"><span class="avatar">MR</span><span class="grow">Post an announcement to your class</span>' +
     '<button class="btn btn-secondary btn-sm" type="button" style="min-height:52px"><i class="ph ph-paperclip"></i> Add</button></div>';
   const side = '<div class="cr-side">' +
-    '<div class="cr-side-card" data-only="teacher"><h4>Class code <i class="ph ph-arrows-out-simple" style="color:var(--color-text-secondary)"></i></h4><p class="big">K7M-4QX</p><p>Pupils type this to ask to join. You approve each one.</p></div>' +
-    '<div class="cr-side-card"><h4>Upcoming</h4><p data-only="pupil">Handout #2 is due Fri, Oct 9.</p><p data-only="teacher">2 items are due this week.</p><button class="cr-link" type="button" style="padding-left:0">View all</button></div></div>';
+    '<div class="cr-side-card" data-only="teacher"><h4>Class code <i class="ph ph-arrows-out-simple" style="color:var(--color-text-secondary)"></i></h4><p class="big">K7M-4QX</p><p>Learners type this to ask to join. You approve each one.</p></div>' +
+    '<div class="cr-side-card"><h4>Upcoming</h4><p data-only="learner">Handout #2 is due Fri, Oct 9.</p><p data-only="teacher">2 items are due this week.</p><button class="cr-link" type="button" style="padding-left:0">View all</button></div></div>';
   const post = crPost() +
     '<article class="cr-post"><header class="cr-post-head"><span class="avatar">MR</span><div class="who"><strong>Ms. Reyes</strong><small>Oct 2, 9:00 AM</small></div><span class="badge badge-neutral"><i class="ph ph-chat-slash"></i> Comments off</span><button class="cr-icon" type="button" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></header>' +
     '<div class="cr-post-body">Reminder: bring your notebook and a pencil tomorrow.</div></article>';
@@ -1140,20 +1140,20 @@ function crClassworkPreview() {
     '<button class="main" type="button" aria-expanded="' + !!open + '"><strong>' + title + '</strong><small>' + meta + '</small></button><span class="end">' + end + '</span>' + (extra || '') + '</div>';
   const kebab = '<button class="cr-icon" type="button" data-only="teacher" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button>';
   const save = '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Saved</span>';
-  const todo = '<span class="badge badge-queued" data-only="pupil"><i class="ph ph-clock"></i> To do</span>';
+  const todo = '<span class="badge badge-queued" data-only="learner"><i class="ph ph-clock"></i> To do</span>';
   return crScreen({
     cls: CR_SCI, active: 'class', tabs: 'classwork', views: CR_VIEWS,
     content: '<div class="cr-cw"><div class="cr-cw-actions"><button class="btn btn-primary" type="button" data-only="teacher"><i class="ph ph-plus"></i> Create</button>' +
-      '<span class="cr-spacer"></span><button class="btn btn-secondary btn-pill" type="button" data-only="pupil"><i class="ph ph-clipboard-text"></i> View your work</button>' +
+      '<span class="cr-spacer"></span><button class="btn btn-secondary btn-pill" type="button" data-only="learner"><i class="ph ph-clipboard-text"></i> View your work</button>' +
       '<button class="cr-link" type="button"><i class="ph ph-arrows-in-line-vertical"></i>Collapse all</button></div>' +
       '<div class="cr-topic"><h4>Week 5: Plants</h4><span class="end">4 items <i class="ph ph-caret-up" style="font-size:20px"></i></span></div>' +
       row('quiz', 'ph-timer', 'Pagsusulit #2: Parts of a Leaf', 'Posted Oct 5', '<span class="when">Due Fri, Oct 9, 8:00 AM</span>' + todo, kebab) +
       row('', 'ph-notebook', 'Homework: Draw and label a leaf', 'Posted Oct 5', '<span class="when">Due Mon, Oct 12</span>' + todo, kebab) +
-      row('', 'ph-notebook', 'Worksheet: Parts of a plant', 'Posted Oct 2', '<span class="when">Due Oct 6</span><span class="badge badge-synced" data-only="pupil"><i class="ph ph-check-circle"></i> Turned in</span>', kebab, true) +
-      '<div class="cr-row-open"><div class="meta"><span>Posted Oct 2, 9:00 AM</span><span data-only="pupil">You turned this in on time. Well done!</span><span data-only="teacher">12 turned in, 28 not yet</span></div>' +
+      row('', 'ph-notebook', 'Worksheet: Parts of a plant', 'Posted Oct 2', '<span class="when">Due Oct 6</span><span class="badge badge-synced" data-only="learner"><i class="ph ph-check-circle"></i> Turned in</span>', kebab, true) +
+      '<div class="cr-row-open"><div class="meta"><span>Posted Oct 2, 9:00 AM</span><span data-only="learner">You turned this in on time. Well done!</span><span data-only="teacher">12 turned in, 28 not yet</span></div>' +
       '<p>Color and label the parts of the plant. Take a clear photo of your notebook page.</p><footer><button class="cr-link" type="button" style="padding-left:0">View instructions</button></footer></div>' +
       row('material', 'ph-book-open', 'Handout #2: Parts of a Leaf', 'Posted Oct 5', '<span class="when">Posted Oct 5</span>' + save, kebab) +
-      row('material', 'ph-play-circle', 'Video: How plants make food', 'Posted Sep 28', '<span class="when">Posted Sep 28</span><button class="btn btn-secondary btn-sm" type="button" style="min-height:52px" data-only="pupil"><i class="ph ph-download-simple"></i> Save for home</button>', kebab) +
+      row('material', 'ph-play-circle', 'Video: How plants make food', 'Posted Sep 28', '<span class="when">Posted Sep 28</span><button class="btn btn-secondary btn-sm" type="button" style="min-height:52px" data-only="learner"><i class="ph ph-download-simple"></i> Save for home</button>', kebab) +
       '<div class="cr-topic" style="margin-top:20px"><h4>Week 4: Living things</h4><span class="end">2 items <i class="ph ph-caret-down" style="font-size:20px"></i></span></div></div>'
   });
 }
@@ -1164,10 +1164,10 @@ function crPeoplePreview() {
   const accept = '<span class="badge badge-queued"><i class="ph ph-hourglass-medium"></i> Pending</span><button class="btn btn-primary btn-sm" type="button"><i class="ph ph-check"></i> Accept</button><button class="btn btn-secondary btn-sm" type="button">Decline</button>';
   return crScreen({
     cls: CR_SCI, active: 'class', tabs: 'people', role: 'teacher',
-    content: '<div class="cr-cw"><div class="alert-banner alert-banner-info" style="margin-bottom:8px"><i class="ph ph-users"></i><span><strong>2 pupils want to join:</strong> Check that you know them, then accept.</span></div>' +
+    content: '<div class="cr-cw"><div class="alert-banner alert-banner-info" style="margin-bottom:8px"><i class="ph ph-users"></i><span><strong>2 learners want to join:</strong> Check that you know them, then accept.</span></div>' +
       '<div class="cr-sec-head"><h4>Teachers</h4><button class="cr-link" type="button"><i class="ph ph-plus"></i>Add teacher</button></div>' +
       person('MR', 'Ms. Reyes', '', '') +
-      '<div class="cr-sec-head" style="margin-top:20px"><h4>Pupils</h4><span>40 pupils</span></div>' +
+      '<div class="cr-sec-head" style="margin-top:20px"><h4>Learners</h4><span>40 learners</span></div>' +
       person('JD', 'Juan Dela Cruz', 'blue', accept) +
       person('MS', 'Maria Santos', 'amber', accept) +
       person('AL', 'Ana Lopez', '', active) +
@@ -1185,7 +1185,7 @@ function crAssignmentPreview() {
         '<button class="btn btn-secondary" type="button"><i class="ph ph-arrow-counter-clockwise"></i> Take a new photo</button>', '<p class="note">You are not connected to the Hub yet. Your work will turn in by itself when you are.</p>'],
       turned: ['<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Turned in</span>', '<div class="cr-photo filled"><i class="ph ph-image"></i>leaf-notebook.jpg<br>Your teacher has it</div>',
         '<button class="btn btn-secondary" type="button"><i class="ph ph-arrow-counter-clockwise"></i> Take it back to edit</button>', '<p class="note">Nice work, Ana! You turned this in on time.</p>'],
-      graded: ['<span class="badge badge-deped"><i class="ph ph-clipboard-text"></i> Graded</span>', '<p class="cr-score"><strong>45</strong> / 50</p><p style="font-size:15px;font-weight:700;line-height:1.6">Good job on the labels! Next time, add the veins of the leaf too.</p>',
+      graded: ['<span class="badge badge-info"><i class="ph ph-clipboard-text"></i> Graded</span>', '<p class="cr-score"><strong>45</strong> / 50</p><p style="font-size:15px;font-weight:700;line-height:1.6">Good job on the labels! Next time, add the veins of the leaf too.</p>',
         '<button class="btn btn-secondary" type="button"><i class="ph ph-image"></i> See your work</button>', '<p class="note">Graded Oct 8 by Ms. Reyes.</p>']
     }[state];
     return '<div data-st="' + state + '" class="cr-work"><header><h4>Your work</h4>' + top[0] + '</header>' + top[1] + top[2] +
@@ -1203,15 +1203,15 @@ function crAssignmentPreview() {
     '<p class="note">Only you and your teacher can see these.</p></div></aside></div>';
   return crScreen({
     cls: CR_SCI, active: 'class', content: detail,
-    views: [['todo', 'To do'], ['queued', 'Queued'], ['turned', 'Turned in'], ['graded', 'Graded']], viewKind: 'state', viewLabel: 'Pupil sees', state: 'todo'
+    views: [['todo', 'To do'], ['queued', 'Queued'], ['turned', 'Turned in'], ['graded', 'Graded']], viewKind: 'state', viewLabel: 'Learner sees', state: 'todo'
   });
 }
 
 function crReviewPreview() {
-  const pupil = (init, name, sub, icon, tone, active) => '<button class="cr-pupil' + (active ? ' active' : '') + '" type="button"><span class="avatar sm ' + tone + '">' + init + '</span><span style="flex:1;min-width:0">' + name + '<small>' + sub + '</small></span><i class="ph ' + icon + '" style="font-size:20px"></i></button>';
+  const learner = (init, name, sub, icon, tone, active) => '<button class="cr-learner' + (active ? ' active' : '') + '" type="button"><span class="avatar sm ' + tone + '">' + init + '</span><span style="flex:1;min-width:0">' + name + '<small>' + sub + '</small></span><i class="ph ' + icon + '" style="font-size:20px"></i></button>';
   const list = '<div class="list"><div class="group">Turned in (5)</div>' +
-    pupil('AL', 'Ana Lopez', 'Turned in 8:12 AM', 'ph-check-circle', '', true) + pupil('PG', 'Paolo Garcia', 'Turned in 8:30 AM', 'ph-check-circle', 'blue', false) + pupil('RT', 'Rhea Tan', 'Queued, arrived 9:05 AM', 'ph-cloud-slash', 'amber', false) +
-    '<div class="group">Not turned in yet (35)</div>' + pupil('JD', 'Juan Dela Cruz', 'Not turned in yet', 'ph-clock', 'blue', false) + '</div>';
+    learner('AL', 'Ana Lopez', 'Turned in 8:12 AM', 'ph-check-circle', '', true) + learner('PG', 'Paolo Garcia', 'Turned in 8:30 AM', 'ph-check-circle', 'blue', false) + learner('RT', 'Rhea Tan', 'Queued, arrived 9:05 AM', 'ph-cloud-slash', 'amber', false) +
+    '<div class="group">Not turned in yet (35)</div>' + learner('JD', 'Juan Dela Cruz', 'Not turned in yet', 'ph-clock', 'blue', false) + '</div>';
   const viewer = '<div class="viewer"><div class="row" style="justify-content:space-between"><strong style="font-size:18px;font-weight:900">Ana Lopez</strong><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Turned in</span></div>' +
     '<div class="paper"><i class="ph ph-image"></i>Homework photo<br><span style="font-weight:700">Zoom, rotate and mark it here</span></div></div>';
   const grade = '<div class="grade"><div><div class="label-xs">Score</div><div class="cr-grade-input"><input class="form-input" value="45" inputmode="numeric" aria-label="Score out of 50"> / 50</div></div>' +
@@ -1221,7 +1221,7 @@ function crReviewPreview() {
   return crScreen({
     cls: CR_SCI, active: 'class', role: 'teacher',
     content: '<div style="padding:16px 24px;border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="cr-icon" type="button" aria-label="Back to classwork"><i class="ph ph-arrow-left"></i></button><span class="tile"><i class="ph ph-notebook"></i></span><div style="flex:1 1 180px;min-width:0"><strong style="font-size:18px;font-weight:900">Homework: Draw and label a leaf</strong><div style="font-size:13px;font-weight:700;color:var(--color-text-secondary)">Due Mon, Oct 12 | 50 points</div></div>' +
-      '<div class="segmented" role="tablist" aria-label="Assignment sections"><button class="seg-item" role="tab" type="button" aria-selected="false">Instructions</button><button class="seg-item active" role="tab" type="button" aria-selected="true">Pupil work</button></div></div>' +
+      '<div class="segmented" role="tablist" aria-label="Assignment sections"><button class="seg-item" role="tab" type="button" aria-selected="false">Instructions</button><button class="seg-item active" role="tab" type="button" aria-selected="true">Learner work</button></div></div>' +
       '<div class="cr-review">' + list + viewer + grade + '</div>'
   });
 }
@@ -1271,7 +1271,7 @@ function crPhonesPreview() {
     '<button class="cr-row" type="button"><span class="tile quiz"><i class="ph ph-timer"></i></span><span class="main"><strong>Pagsusulit #2</strong><small>Due Fri, Oct 9, 8:00 AM</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button>' +
     '<button class="cr-row" type="button"><span class="tile"><i class="ph ph-notebook"></i></span><span class="main"><strong>Draw and label a leaf</strong><small>Due Mon, Oct 12</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button>' +
     '<button class="cr-row" type="button"><span class="tile material"><i class="ph ph-book-open"></i></span><span class="main"><strong>Handout #2</strong><small>Saved on this device</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button></div>' + bottom('classwork') + '</div>';
-  return '<div class="cr-phones" data-role="pupil"><div class="cr-phone-wrap">' + home + '<span>Home</span></div><div class="cr-phone-wrap">' + stream + '<span>Stream</span></div><div class="cr-phone-wrap">' + cw + '<span>Classwork</span></div></div>';
+  return '<div class="cr-phones" data-role="learner"><div class="cr-phone-wrap">' + home + '<span>Home</span></div><div class="cr-phone-wrap">' + stream + '<span>Stream</span></div><div class="cr-phone-wrap">' + cw + '<span>Classwork</span></div></div>';
 }
 
 /* Code shared by a component page and the screens that use it */
@@ -1429,8 +1429,8 @@ fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, sub: String?
 }
 
 ${CR_CARD_KOTLIN}`,
-  dos: ['Keep the top bar, drawer and sheet in the same place on every screen so a pupil learns the frame once.', 'Greet the pupil by first name and say what is due in one short sentence.', 'Put a subject icon and the teacher avatar on every class card so a younger pupil can find a class without reading.', 'Show the Hub beacon in the top bar so a pupil knows why a class may be out of date.'],
-  donts: ['Do not add a second navigation bar. The drawer and the class tabs are enough.', 'Do not use a photo or a gradient as a class banner. Use Dark Green with the subject icon.', 'Do not show a pupil the class code. Only the teacher sees it.', 'Do not block Home with a loader when the Hub is unreachable. Show the saved classes and the offline banner.'],
+  dos: ['Keep the top bar, drawer and sheet in the same place on every screen so a learner learns the frame once.', 'Greet the learner by first name and say what is due in one short sentence.', 'Put a subject icon and the teacher avatar on every class card so a younger learner can find a class without reading.', 'Show the Hub beacon in the top bar so a learner knows why a class may be out of date.'],
+  donts: ['Do not add a second navigation bar. The drawer and the class tabs are enough.', 'Do not use a photo or a gradient as a class banner. Use Dark Green with the subject icon.', 'Do not show a learner the class code. Only the teacher sees it.', 'Do not block Home with a loader when the Hub is unreachable. Show the saved classes and the offline banner.'],
   a11y: ['The drawer is a nav landmark and the current item has aria-current="page".', 'A class card is one link named after the class. The footer icon buttons name the class too.', 'On phones the drawer opens from the menu button, traps focus and closes on Escape or the back gesture.', 'The greeting is a heading, so screen readers can jump to it.']
 },
 {
@@ -1494,7 +1494,7 @@ fun ClassStream(state: StreamState, onPost: () -> Unit, onComment: (postId: Stri
 
 ${CR_POST_KOTLIN}`,
   dos: ['Show a sync badge on every post, and the source label, so it is clear what is saved and what is waiting.', 'Keep comments to one level, like Classroom. A reply box sits under the last comment.', 'Let a teacher turn comments off per post. Show "Comments off" instead of hiding the box.', 'Write empty states as an invitation: say what will appear and that it is saved on this device.'],
-  donts: ['Do not show other pupils\' full names or LRNs in comments. Use first names.', 'Do not let pupils post to the stream. Only teachers announce; pupils comment.', 'Do not use a gradient or photo in the banner.', 'Do not compare pupils or show who has not read a post.'],
+  donts: ['Do not show other learners\' full names or LRNs in comments. Use first names.', 'Do not let learners post to the stream. Only teachers announce; learners comment.', 'Do not use a gradient or photo in the banner.', 'Do not compare learners or show who has not read a post.'],
   a11y: ['The feed is a labelled region and each post is an article with the author as its heading.', 'The comment box has a visible placeholder and an accessible name, and Send is an icon button with a name.', 'New announcements pushed from the Hub are announced politely, without moving focus.', 'The banner icon is decorative. The class name is the page heading.']
 },
 {
@@ -1507,7 +1507,7 @@ ${CR_POST_KOTLIN}`,
       <div className="mb-2 flex items-center gap-2">
         {role === 'teacher' && <CreateMenu />}
         <span className="flex-1" />
-        {role === 'pupil' && <Button variant="secondary" pill icon={<ClipboardText />}>View your work</Button>}
+        {role === 'learner' && <Button variant="secondary" pill icon={<ClipboardText />}>View your work</Button>}
         <Button variant="ghost" icon={<ArrowsInLineVertical />}>Collapse all</Button>
       </div>
       {topics.map(t => (
@@ -1579,27 +1579,27 @@ fun WorkRow(work: Work, role: Role, onClick: () -> Unit) {
         StatusBadge(work.status)
     }
 }`,
-  dos: ['Group work under topics and let each topic collapse. Keep "Collapse all" in the same place as Classroom.', 'Tint the type tile: green for homework, blue for handouts and videos, amber for quizzes. The icon says the type too.', 'Show "Saved" or "Save for home" on materials so a pupil knows what works with no Wi-Fi.', 'Say what happens next in the preview: "You turned this in on time. Well done!"'],
-  donts: ['Do not show "Late" or "Missing" to a pupil. Use "Not turned in yet" and keep the red badge for teachers.', 'Do not show a Start button after the due date unless the teacher allows late work.', 'Do not use purple for any work type. Purple is only for the AI tutor.', 'Do not put more than three actions on a row. Use the kebab for the rest.'],
+  dos: ['Group work under topics and let each topic collapse. Keep "Collapse all" in the same place as Classroom.', 'Tint the type tile: green for homework, blue for handouts and videos, amber for quizzes. The icon says the type too.', 'Show "Saved" or "Save for home" on materials so a learner knows what works with no Wi-Fi.', 'Say what happens next in the preview: "You turned this in on time. Well done!"'],
+  donts: ['Do not show "Late" or "Missing" to a learner. Use "Not turned in yet" and keep the red badge for teachers.', 'Do not show a Start button after the due date unless the teacher allows late work.', 'Do not use purple for any work type. Purple is only for the AI tutor.', 'Do not put more than three actions on a row. Use the kebab for the rest.'],
   a11y: ['Each row is a button with a name like "Homework: Draw and label a leaf, due Mon, Oct 12, to do".', 'The expanded preview uses aria-expanded on its row.', 'Topic headings are real headings so screen reader users can jump between topics.', 'Status is shown with an icon and a word, never color alone.']
 },
 {
   id: 'screen-people', title: 'People and join requests', icon: 'users', wide: true, screen: true,
-  desc: 'Teacher only. Teachers on top, pupils below with a count, the same as Classroom. Pupils who entered the class code wait here with Accept and Decline until the teacher decides.',
+  desc: 'Teacher only. Teachers on top, learners below with a count, the same as Classroom. Learners who entered the class code wait here with Accept and Decline until the teacher decides.',
   preview: crPeoplePreview(),
-  react: `export function People({ teachers, pupils, onAccept, onDecline }: Props) {
-  const pending = pupils.filter(p => p.status === 'PENDING_APPROVAL');
+  react: `export function People({ teachers, learners, onAccept, onDecline }: Props) {
+  const pending = learners.filter(p => p.status === 'PENDING_APPROVAL');
   return (
     <div className="mx-auto max-w-[860px] p-6">
       {pending.length > 0 && (
-        <AlertBanner kind="info" icon={<Users />} title={pending.length + ' pupils want to join'}>
+        <AlertBanner kind="info" icon={<Users />} title={pending.length + ' learners want to join'}>
           Check that you know them, then accept.
         </AlertBanner>
       )}
       <SectionHead title="Teachers" action={<Button variant="ghost" icon={<Plus />}>Add teacher</Button>} />
       {teachers.map(t => <PersonRow key={t.id} person={t} />)}
-      <SectionHead title="Pupils" count={pupils.length + ' pupils'} />
-      {pupils.map(p => (
+      <SectionHead title="Learners" count={learners.length + ' learners'} />
+      {learners.map(p => (
         <PersonRow key={p.id} person={p}>
           {p.status === 'PENDING_APPROVAL' ? (
             <>
@@ -1619,7 +1619,7 @@ fun PeopleScreen(state: PeopleState, onAccept: (String) -> Unit, onDecline: (Str
         if (state.pending > 0) {
             item {
                 AlertBanner(
-                    title = pluralStringResource(R.plurals.pupils_want_to_join, state.pending, state.pending),
+                    title = pluralStringResource(R.plurals.learners_want_to_join, state.pending, state.pending),
                     message = stringResource(R.string.check_then_accept),
                     icon = PhosphorIcons.Regular.Users,
                     container = LaraColors.InfoLight,
@@ -1630,8 +1630,8 @@ fun PeopleScreen(state: PeopleState, onAccept: (String) -> Unit, onDecline: (Str
         }
         item { SectionHead(stringResource(R.string.teachers), null) }
         items(state.teachers, key = { it.id }) { PersonCard(it) }
-        item { SectionHead(stringResource(R.string.pupils), state.pupils.size.toString()) }
-        items(state.pupils, key = { it.id }) { p ->
+        item { SectionHead(stringResource(R.string.learners), state.learners.size.toString()) }
+        items(state.learners, key = { it.id }) { p ->
             PersonCard(p) {
                 if (p.status == Status.PENDING) {
                     LaraButton("Accept", onClick = { onAccept(p.id) })
@@ -1641,13 +1641,13 @@ fun PeopleScreen(state: PeopleState, onAccept: (String) -> Unit, onDecline: (Str
         }
     }
 }`,
-  dos: ['Show pending pupils first with Accept and Decline on the row. One tap each, as the PRD asks.', 'Use initials for avatars. Never show a pupil photo.', 'On phones show each person as a card, not a table row.', 'Confirm with a toast: "Juan joined Science 4."'],
-  donts: ['Do not show the roster to pupils. Pupils never see each other\'s names or LRNs here.', 'Do not accept or decline by swipe alone. Use visible buttons.', 'Do not delete a declined pupil. Mark them Rejected and keep the record.', 'Do not show an LRN in the list. Open the pupil to see it.'],
-  a11y: ['The pending banner is a status region. Accept and Decline name the pupil: "Accept Juan Dela Cruz".', 'Status badges carry an icon and a word.', 'Rows are a list; each pupil is one list item.', 'The 40px compact buttons are allowed here because this is a teacher table.']
+  dos: ['Show pending learners first with Accept and Decline on the row. One tap each, as the PRD asks.', 'Use initials for avatars. Never show a learner photo.', 'On phones show each person as a card, not a table row.', 'Confirm with a toast: "Juan joined Science 4."'],
+  donts: ['Do not show the roster to learners. Learners never see each other\'s names or LRNs here.', 'Do not accept or decline by swipe alone. Use visible buttons.', 'Do not delete a declined learner. Mark them Rejected and keep the record.', 'Do not show an LRN in the list. Open the learner to see it.'],
+  a11y: ['The pending banner is a status region. Accept and Decline name the learner: "Accept Juan Dela Cruz".', 'Status badges carry an icon and a word.', 'Rows are a list; each learner is one list item.', 'The 40px compact buttons are allowed here because this is a teacher table.']
 },
 {
   id: 'screen-assignment', title: 'Assignment detail and Your work', icon: 'clipboard-text', wide: true, screen: true,
-  desc: 'Instructions on the left and a Your work card on the right, like Classroom. Pupils photograph their notebook and turn it in. The card changes with the state: to do, queued, turned in, graded.',
+  desc: 'Instructions on the left and a Your work card on the right, like Classroom. Learners photograph their notebook and turn it in. The card changes with the state: to do, queued, turned in, graded.',
   preview: crAssignmentPreview(),
   react: `export function AssignmentDetail({ a, mine }: Props) {
   return (
@@ -1718,31 +1718,31 @@ fun YourWorkCard(a: Assignment, mine: Submission, onCamera: () -> Unit, onTurnIn
         Text(stringResource(helpFor(mine.status)), style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
     }
 }`,
-  dos: ['Make "Kunan ng litrato" the one primary action while the work is not started, at 56dp.', 'Explain the next step under the buttons: "Take a photo first, then Turn in is ready."', 'When offline, save the photo first, show "Queued for sync", and let the pupil leave. It uploads by itself.', 'Praise before correction in the teacher message: "Good job on the labels! Next time, add the veins."'],
+  dos: ['Make "Kunan ng litrato" the one primary action while the work is not started, at 56dp.', 'Explain the next step under the buttons: "Take a photo first, then Turn in is ready."', 'When offline, save the photo first, show "Queued for sync", and let the learner leave. It uploads by itself.', 'Praise before correction in the teacher message: "Good job on the labels! Next time, add the veins."'],
   donts: ['Do not say "Late" or "Missing". Say "Turned in after the due date" only to the teacher.', 'Do not block Turn in when the Hub is unreachable.', 'Do not show a grade without the teacher\'s message when there is one.', 'Do not allow Take it back after the teacher has graded the work.'],
   a11y: ['Status changes are announced politely: "Queued for sync. It will turn in when you are connected."', 'The photo slot is a button with the name "Add a photo of your notebook page".', 'Private comments say who can see them, in text.', 'Score is read as "45 out of 50", not as a fraction image.']
 },
 {
-  id: 'screen-review', title: 'Review pupil work', icon: 'note-pencil', wide: true, screen: true,
-  desc: 'Teacher only. Laid out like Classroom\'s review page: pupils on the left, their photo in the middle, a score and a short message on the right. The teacher returns the work with one button.',
+  id: 'screen-review', title: 'Review learner work', icon: 'note-pencil', wide: true, screen: true,
+  desc: 'Teacher only. Laid out like Classroom\'s review page: learners on the left, their photo in the middle, a score and a short message on the right. The teacher returns the work with one button.',
   preview: crReviewPreview(),
-  react: `export function ReviewWork({ assignment, pupils, selected, onSelect, onReturn }: Props) {
+  react: `export function ReviewWork({ assignment, learners, selected, onSelect, onReturn }: Props) {
   return (
     <div className="grid min-h-[480px] grid-cols-[240px_1fr_280px]">
-      <nav aria-label="Pupils" className="grid content-start gap-1 border-r border-lara-border p-3">
-        <GroupLabel>Turned in ({pupils.turnedIn.length})</GroupLabel>
-        {pupils.turnedIn.map(p => (
-          <PupilButton key={p.id} pupil={p} active={p.id === selected.id} onClick={() => onSelect(p.id)} />
+      <nav aria-label="Learners" className="grid content-start gap-1 border-r border-lara-border p-3">
+        <GroupLabel>Turned in ({learners.turnedIn.length})</GroupLabel>
+        {learners.turnedIn.map(p => (
+          <LearnerButton key={p.id} learner={p} active={p.id === selected.id} onClick={() => onSelect(p.id)} />
         ))}
-        <GroupLabel>Not turned in yet ({pupils.waiting.length})</GroupLabel>
-        {pupils.waiting.map(p => <PupilButton key={p.id} pupil={p} />)}
+        <GroupLabel>Not turned in yet ({learners.waiting.length})</GroupLabel>
+        {learners.waiting.map(p => <LearnerButton key={p.id} learner={p} />)}
       </nav>
       <section aria-label={'Work by ' + selected.name} className="flex flex-col gap-3 bg-lara-canvas p-5">
         <PhotoViewer src={selected.photoUrl} />
       </section>
       <aside className="grid content-start gap-3.5 border-l border-lara-border p-4">
         <ScoreField max={assignment.points} value={selected.score} />
-        <MessageField pupil={selected.firstName} suggestions={['Great effort!', 'Please retake the photo']} />
+        <MessageField learner={selected.firstName} suggestions={['Great effort!', 'Please retake the photo']} />
         <Button icon={<PaperPlaneTilt />} onClick={() => onReturn(selected.id)}>Return to {selected.firstName}</Button>
       </aside>
     </div>
@@ -1753,7 +1753,7 @@ fun ReviewWork(state: ReviewState, onSelect: (String) -> Unit, onReturn: (String
     var score by rememberSaveable(state.selected.id) { mutableStateOf(state.selected.score?.toString().orEmpty()) }
     var message by rememberSaveable(state.selected.id) { mutableStateOf(state.selected.message) }
     Column(Modifier.fillMaxSize()) {
-        PupilStrip(state.pupils, state.selected.id, onSelect)
+        LearnerStrip(state.learners, state.selected.id, onSelect)
         PhotoViewer(state.selected.photoUri, Modifier.weight(1f))
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             LaraTextField(value = score, onValueChange = { score = it.filter(Char::isDigit) }, label = "Score out of " + state.points, keyboardType = KeyboardType.Number)
@@ -1762,13 +1762,13 @@ fun ReviewWork(state: ReviewState, onSelect: (String) -> Unit, onReturn: (String
         }
     }
 }`,
-  dos: ['Keep the pupil list, photo and score visible together on desktop. On phones show the list as a strip above the photo.', 'Offer one-tap encouraging phrases so a teacher can reply fast.', 'Show photos that arrived from a queue with "Queued, arrived 9:05 AM".', 'Return work with one button and show "Returned to Ana" in a toast.'],
-  donts: ['Do not show other pupils\' scores while grading one pupil.', 'Do not auto-return when the score field changes.', 'Do not compress or crop the pupil\'s photo in the viewer.', 'Do not export or send these photos anywhere off the Hub.'],
-  a11y: ['The pupil list is a nav with the current pupil marked aria-current.', 'The score field has a label with the maximum: "Score out of 50".', 'Zoom and rotate controls are labelled buttons.', 'Returning work is announced: "Returned to Ana Lopez".']
+  dos: ['Keep the learner list, photo and score visible together on desktop. On phones show the list as a strip above the photo.', 'Offer one-tap encouraging phrases so a teacher can reply fast.', 'Show photos that arrived from a queue with "Queued, arrived 9:05 AM".', 'Return work with one button and show "Returned to Ana" in a toast.'],
+  donts: ['Do not show other learners\' scores while grading one learner.', 'Do not auto-return when the score field changes.', 'Do not compress or crop the learner\'s photo in the viewer.', 'Do not export or send these photos anywhere off the Hub.'],
+  a11y: ['The learner list is a nav with the current learner marked aria-current.', 'The score field has a label with the maximum: "Score out of 50".', 'Zoom and rotate controls are labelled buttons.', 'Returning work is announced: "Returned to Ana Lopez".']
 },
 {
   id: 'screen-todo', title: 'To-do', icon: 'check-square', wide: true, screen: true,
-  desc: 'Everything a pupil still has to do, across all classes, in the groups Classroom uses: This week, Next week, Later and No due date. The tabs read in friendly words.',
+  desc: 'Everything a learner still has to do, across all classes, in the groups Classroom uses: This week, Next week, Later and No due date. The tabs read in friendly words.',
   preview: crTodoPreview(),
   react: `export function Todo({ groups, classes }: Props) {
   const [tab, setTab] = useState<'todo' | 'notYet' | 'done'>('todo');
@@ -1821,12 +1821,12 @@ fun TodoScreen(state: TodoState, onTab: (TodoTab) -> Unit, onOpen: (String) -> U
     }
 }`,
   dos: ['Keep Classroom\'s grouping: This week, Next week, Later, No due date. Show the count on every group.', 'Name the tabs in plain words: To do, Not turned in yet, Done.', 'End with a kind line when the list is empty.', 'Open a group by default only when it has items.'],
-  donts: ['Do not show a red count for pupils. The badge on the tab is neutral.', 'Do not sort by who is behind. Sort by due date.', 'Do not add a leaderboard or a streak counter.', 'Do not hide Done work. Pupils like to look back.'],
+  donts: ['Do not show a red count for learners. The badge on the tab is neutral.', 'Do not sort by who is behind. Sort by due date.', 'Do not add a leaderboard or a streak counter.', 'Do not hide Done work. Learners like to look back.'],
   a11y: ['Tabs follow the tab pattern with arrow keys; the count is part of the group heading.', 'Each group is a disclosure with aria-expanded.', 'Items are links named "title, class, due date".', 'The empty message is a status region.']
 },
 {
   id: 'screen-join', title: 'Join a class', icon: 'key', wide: true, screen: true,
-  desc: 'A pupil types the 6-letter class code, like Classroom. Then the teacher has to say yes, so the next screen explains the wait kindly. Codes show as XXX-XXX and never contain 0, O, 1 or I.',
+  desc: 'A learner types the 6-letter class code, like Classroom. Then the teacher has to say yes, so the next screen explains the wait kindly. Codes show as XXX-XXX and never contain 0, O, 1 or I.',
   preview: crJoinPreview(),
   react: `export function JoinClassDialog({ open, onOpenChange, onJoin, name }: Props) {
   const [code, setCode] = useState('');
@@ -1885,13 +1885,13 @@ fun JoinClassDialog(name: String, onJoin: (String) -> Unit, onDismiss: () -> Uni
         dismissButton = { LaraButton("Cancel", style = ButtonStyle.Secondary, onClick = onDismiss) },
     )
 }`,
-  dos: ['Use six large boxes in two groups of three. Open the letters keyboard and capitalize automatically.', 'Say who has to approve and that the pupil can leave. "You can close this and come back."', 'Keep the class code out of any pupil screen after joining.', 'Explain a wrong code in one line: "That code does not match a class. Check it with your teacher."'],
-  donts: ['Do not accept 0, O, 1 or I. The codes never contain them.', 'Do not show a spinner that blocks the screen while waiting for approval.', 'Do not tell the pupil the teacher declined in red. Say: "Your teacher did not add you. Ask them why."', 'Do not call it "internet". Say "Hub" or "classroom network".'],
+  dos: ['Use six large boxes in two groups of three. Open the letters keyboard and capitalize automatically.', 'Say who has to approve and that the learner can leave. "You can close this and come back."', 'Keep the class code out of any learner screen after joining.', 'Explain a wrong code in one line: "That code does not match a class. Check it with your teacher."'],
+  donts: ['Do not accept 0, O, 1 or I. The codes never contain them.', 'Do not show a spinner that blocks the screen while waiting for approval.', 'Do not tell the learner the teacher declined in red. Say: "Your teacher did not add you. Ask them why."', 'Do not call it "internet". Say "Hub" or "classroom network".'],
   a11y: ['The dialog traps focus and returns it to the Join button on close.', 'Each code box has an accessible name: "Class code, character 1 of 6".', 'The waiting state is a status region.', 'Paste works across all six boxes.']
 },
 {
   id: 'screen-mobile', title: 'Phone screens', icon: 'device-mobile', wide: true, screen: true, tag: 'MOBILE',
-  desc: 'The same screens on a pupil\'s phone. Classroom puts its class tabs under the top bar. L.A.R.A keeps the top bar and one column of cards, and moves the tabs to a bottom navigation within thumb reach, where Quizzes and the AI Tutor join them.',
+  desc: 'The same screens on a learner\'s phone. Classroom puts its class tabs under the top bar. L.A.R.A keeps the top bar and one column of cards, and moves the tabs to a bottom navigation within thumb reach, where Quizzes and the AI Tutor join them.',
   preview: crPhonesPreview(),
   react: `// Phone web layout (desktop and Hub portal on small screens)
 export function PhoneClassLayout({ cls, active, children }: Props) {
@@ -1949,8 +1949,8 @@ fun ClassScaffold(cls: ClassSummary, active: ClassTab, quizActive: Boolean, onTa
         content = content,
     )
 }`,
-  dos: ['Use one column of cards and the bottom navigation, so every class tab is within thumb reach.', 'Put the class name and section in the top bar, so the pupil always knows where they are.', 'Keep 52dp targets everywhere, and 56dp for primary actions.', 'Disable the AI Tutor item during a quiz and say why when it is tapped.'],
-  donts: ['Do not show tables on phones. Use cards.', 'Do not move the bottom navigation between screens. It stays in the same place on every class screen.', 'Do not put People or Grades on the pupil bottom bar. They are teacher screens.', 'Do not load a model on phones under 6 GB. Use the Hub for the tutor.'],
+  dos: ['Use one column of cards and the bottom navigation, so every class tab is within thumb reach.', 'Put the class name and section in the top bar, so the learner always knows where they are.', 'Keep 52dp targets everywhere, and 56dp for primary actions.', 'Disable the AI Tutor item during a quiz and say why when it is tapped.'],
+  donts: ['Do not show tables on phones. Use cards.', 'Do not move the bottom navigation between screens. It stays in the same place on every class screen.', 'Do not put People or Grades on the learner bottom bar. They are teacher screens.', 'Do not load a model on phones under 6 GB. Use the Hub for the tutor.'],
   a11y: ['The bottom bar is a nav landmark and the current item has aria-current or selected state.', 'Icon-only buttons in the top bar have names.', 'The page respects system font scaling, so rows grow instead of truncating.', 'Back gesture goes up one level: class to Home, never out of the app.']
 }
 ]};
@@ -1961,7 +1961,7 @@ const GROUPS = [
 { name: 'Foundations', items: [
 {
   id: 'colors', title: 'Colors', icon: 'palette', wide: true,
-  desc: 'Solid flat fills with zero gradients. Purple is reserved for the Socratic AI so pupils always know when they are talking to the tutor. Click any swatch to copy its hex value.',
+  desc: 'Solid flat fills with zero gradients. Purple is reserved for the Socratic AI so learners always know when they are talking to the tutor. Click any swatch to copy its hex value.',
   preview: swatches(),
   react: `// tailwind.config.js
 module.exports = {
@@ -2036,7 +2036,7 @@ private val LaraScheme = lightColorScheme(
 },
 {
   id: 'typography', title: 'Typography', icon: 'text-aa', wide: true,
-  desc: 'Nunito provides rounded, high-contrast letterforms that are friendly and legible for primary school pupils. Minimum body size on mobile is 16sp.',
+  desc: 'Nunito provides rounded, high-contrast letterforms that are friendly and legible for learners of every age. Minimum body size on mobile is 16sp.',
   preview: `<div class="stack" style="gap:18px">
     <div class="type-row"><div class="type-meta">Display | 40 / 48 | Black 900</div><div style="font-size:38px;font-weight:900;line-height:1.2;margin-top:4px">Learning grows with you.</div></div>
     <div class="type-row"><div class="type-meta">Heading 1 | 28 / 36 | ExtraBold 800</div><div style="font-size:28px;font-weight:800;margin-top:4px">Science 4: Ecosystems and Living Things</div></div>
@@ -2072,7 +2072,7 @@ val LaraTypography = Typography(
     labelLarge = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, lineHeight = 20.sp),
     bodySmall = TextStyle(fontFamily = Nunito, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp),
 )`,
-  dos: ['Keep body copy at 16px or larger for pupils.', 'Use weight, not size, to create hierarchy inside cards.', 'Bundle Nunito with the Android app so it works offline.'],
+  dos: ['Keep body copy at 16px or larger for learners.', 'Use weight, not size, to create hierarchy inside cards.', 'Bundle Nunito with the Android app so it works offline.'],
   donts: ['Do not use more than three sizes on one screen.', 'Do not set body text in Black 900.', 'Do not load fonts from a CDN on the offline mobile app.'],
   a11y: ['Respect system font scaling; use sp units in Compose and rem in React.', 'Maintain a line height of at least 1.4 for body text.', 'Avoid all caps for sentences; reserve it for short labels.']
 },
@@ -2147,7 +2147,7 @@ fun Modifier.laraShadow(elevation: Dp = 2.dp, shape: Shape = LaraShapes.large) =
     )`,
   dos: ['Use multiples of 4 for every gap and padding.', 'Use shadow-card for resting surfaces and shadow-elevated for overlays.', 'Keep a 16px screen gutter on mobile.'],
   donts: ['Do not mix more than two radii inside one component.', 'Do not use pure black or gray shadows.', 'Do not stack shadows on nested cards.'],
-  a11y: ['Never let the interactive area fall below 52px for pupil-facing controls.', 'Keep at least 8px between adjacent touch targets.', 'Do not rely on shadow alone to indicate a focused element.']
+  a11y: ['Never let the interactive area fall below 52px for learner-facing controls.', 'Keep at least 8px between adjacent touch targets.', 'Do not rely on shadow alone to indicate a focused element.']
 },
 {
   id: 'icons', title: 'Iconography', icon: 'shapes', wide: true,
@@ -2315,12 +2315,12 @@ fun AlertBanner(
 },
 {
   id: 'badge', title: 'Status Badges and Chips', icon: 'tag', wide: true,
-  desc: 'Compact pills conveying sync state, DepEd assessment categories, counts, and live network beacon connectivity.',
+  desc: 'Compact pills conveying sync state, status, counts, and live network beacon connectivity.',
   preview: `<div class="stack" style="align-items:center">
     <div class="row">
       <span class="badge badge-synced"><i class="ph ph-check-circle"></i> SYNCED TO HUB</span>
       <span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> QUEUED OFFLINE</span>
-      <span class="badge badge-deped"><i class="ph ph-clipboard-text"></i> WRITTEN WORK (40%)</span>
+      <span class="badge badge-info"><i class="ph ph-clipboard-text"></i> GRADED</span>
       <span class="badge badge-ai"><i class="ph ph-sparkle"></i> SOCRATIC AI</span>
       <span class="badge badge-danger"><i class="ph ph-warning-circle"></i> MISSING</span>
       <span class="badge badge-neutral"><i class="ph ph-clock"></i> DRAFT</span>
@@ -2336,7 +2336,7 @@ fun AlertBanner(
   const tones = {
     synced: 'bg-lara-primary-light text-lara-primary-dark border-[#C4ECCB]',
     queued: 'bg-lara-warning-light text-[#B54708] border-[#FEDF89]',
-    deped: 'bg-lara-info-light text-[#0369A1] border-[#BAE6FD]',
+    info: 'bg-lara-info-light text-[#0369A1] border-[#BAE6FD]',
     ai: 'bg-lara-ai-light text-lara-ai-dark border-[#D6CCFC]',
     danger: 'bg-lara-danger-light text-[#B42318] border-[#FECDCA]',
   };
@@ -2721,11 +2721,11 @@ fun LaraButton(
 }`,
   dos: ['Use one primary button per view.', 'Use a verb plus object for labels, such as "Start quiz".'],
   donts: ['Do not disable a button without explaining why nearby.', 'Do not use Destructive for cancel actions.'],
-  a11y: ['Minimum 52 by 52 touch target on pupil screens.', 'Icon-only buttons require aria-label or contentDescription.', 'Loading buttons remain focusable and announce their busy state.']
+  a11y: ['Minimum 52 by 52 touch target on learner screens.', 'Icon-only buttons require aria-label or contentDescription.', 'Loading buttons remain focusable and announce their busy state.']
 },
 {
   id: 'input', title: 'Input and PIN Boxes', icon: 'textbox',
-  desc: 'Elementary-friendly text fields with 52px height, validation states, a textarea, and large PIN digit boxes for class codes.',
+  desc: 'Easy-to-read text fields with 52px height, validation states, a textarea, and large PIN digit boxes for class codes.',
   wide: true,
   preview: `<div style="max-width:480px;margin:0 auto;width:100%">
     <div class="form-group"><label class="form-label">Student 4-Digit PIN or Class Code</label>
@@ -2833,8 +2833,8 @@ fun PinBoxes(pin: String, length: Int = 4, onChange: (String) -> Unit) {
 {
   id: 'select', title: 'Select', icon: 'caret-circle-down',
   desc: 'A native-backed dropdown. On mobile the system picker is used, which is the most reliable option on entry-level devices.',
-  preview: `<div style="max-width:380px;width:100%"><div class="form-group" style="margin-bottom:0"><label class="form-label" for="sel1">Quarter</label>
-    <div class="select-wrap"><select id="sel1" class="form-input"><option>1st Quarter</option><option>2nd Quarter</option><option>3rd Quarter</option><option>4th Quarter</option></select><i class="ph ph-caret-down"></i></div></div></div>`,
+  preview: `<div style="max-width:380px;width:100%"><div class="form-group" style="margin-bottom:0"><label class="form-label" for="sel1">Topic</label>
+    <div class="select-wrap"><select id="sel1" class="form-input"><option>Plants</option><option>Animals</option><option>Weather</option><option>No topic</option></select><i class="ph ph-caret-down"></i></div></div></div>`,
   react: `export function Select({ label, options, ...rest }: Props) {
   const id = useId();
   return (
@@ -3084,7 +3084,7 @@ fun LaraAvatar(name: String, size: Dp = 40.dp, bg: Color = LaraColors.PrimaryLig
     ) { Text(initials, color = fg, fontWeight = FontWeight.Black, fontSize = (size.value * 0.38f).sp) }
 }`,
   dos: ['Derive the tone from the name so it stays stable.', 'Use purple only for the AI tutor avatar.'],
-  donts: ['Do not use photos of minors in pupil avatars.'],
+  donts: ['Do not use photos of minors in learner avatars.'],
   a11y: ['Expose the full name as the accessible label.']
 },
 {
@@ -3093,7 +3093,7 @@ fun LaraAvatar(name: String, size: Dp = 40.dp, bg: Color = LaraColors.PrimaryLig
   wide: true,
   preview: `<div class="stat-grid">
     <div class="card stat"><div class="stat-top">Class average<div class="stat-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-chart-line-up"></i></div></div><div class="stat-val">86.4</div><div class="stat-delta up"><i class="ph ph-arrow-up"></i> 2.1 from last quarter</div></div>
-    <div class="card stat"><div class="stat-top">Submissions<div class="stat-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-paper-plane-tilt"></i></div></div><div class="stat-val">28 / 32</div><div class="stat-delta" style="color:var(--color-text-secondary)">4 pupils pending</div></div>
+    <div class="card stat"><div class="stat-top">Submissions<div class="stat-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-paper-plane-tilt"></i></div></div><div class="stat-val">28 / 32</div><div class="stat-delta" style="color:var(--color-text-secondary)">4 learners pending</div></div>
     <div class="card stat"><div class="stat-top">Attendance<div class="stat-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-calendar-check"></i></div></div><div class="stat-val">94%</div><div class="stat-delta down"><i class="ph ph-arrow-down"></i> 1.5 this week</div></div>
   </div>`,
   react: `export function StatCard({ label, value, delta, trend, icon, tone }: Props) {
@@ -3132,13 +3132,13 @@ fun StatCard(label: String, value: String, delta: String, icon: ImageVector, ico
   a11y: ['Read as "label, value, delta" in that order.']
 },
 {
-  id: 'gradebook', title: 'DepEd Gradebook Table', icon: 'table', wide: true,
-  desc: 'The official DepEd E-Class Record view for the Teacher Desktop Hub with objective auto-grading, transmutation, and USB export.',
-  preview: `<div class="card" style="overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--color-border);flex-wrap:wrap"><div><h4 style="font-weight:900;font-size:16px">Science 4 | Aguinaldo | 1st Quarter</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600">Last synced 2:15 PM</p></div><div class="row"><button class="btn btn-secondary btn-sm"><i class="ph ph-funnel"></i> Filter</button><button class="btn btn-primary btn-sm"><i class="ph ph-usb"></i> Export to USB</button></div></div>
-    <div class="scroll-x"><table class="tbl"><thead><tr><th>LRN</th><th>Learner's Name</th><th>Quiz 1</th><th>Quiz 2</th><th>Initial Grade</th><th>Transmuted</th><th>Status</th></tr></thead><tbody>
-      <tr><td><code>109283746501</code></td><td style="font-weight:700">Dela Cruz, Juan M.</td><td class="pass">9 / 10</td><td class="pass">18 / 20</td><td>90.0</td><td style="font-weight:800">95 (Passed)</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
-      <tr><td><code>109283746502</code></td><td style="font-weight:700">Santos, Maria L.</td><td class="pass">8 / 10</td><td class="pass">16 / 20</td><td>80.0</td><td style="font-weight:800">90 (Passed)</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
-      <tr><td><code>109283746503</code></td><td style="font-weight:700">Reyes, Paolo B.</td><td class="fail">4 / 10</td><td class="fail">9 / 20</td><td>43.3</td><td style="font-weight:800" class="fail">74 (Failed)</td><td><span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> Queued</span></td></tr>
+  id: 'gradebook', title: 'Gradebook Table', icon: 'table', wide: true,
+  desc: 'The points table for the Teacher Desktop Hub: one row per learner, one column per assignment and quiz, auto-graded quizzes, and USB export. Points only; teachers apply their own grading system.',
+  preview: `<div class="card" style="overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--color-border);flex-wrap:wrap"><div><h4 style="font-weight:900;font-size:16px">Science 4 | Aguinaldo</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600">Last synced 2:15 PM</p></div><div class="row"><button class="btn btn-secondary btn-sm"><i class="ph ph-funnel"></i> Filter</button><button class="btn btn-primary btn-sm"><i class="ph ph-usb"></i> Export to USB</button></div></div>
+    <div class="scroll-x"><table class="tbl"><thead><tr><th>LRN</th><th>Learner's Name</th><th>Quiz 1 (10)</th><th>Quiz 2 (20)</th><th>Total (30)</th><th>Status</th></tr></thead><tbody>
+      <tr><td><code>109283746501</code></td><td style="font-weight:700">Dela Cruz, Juan M.</td><td>9 / 10</td><td>18 / 20</td><td style="font-weight:800">27 / 30</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
+      <tr><td><code>109283746502</code></td><td style="font-weight:700">Santos, Maria L.</td><td>8 / 10</td><td>16 / 20</td><td style="font-weight:800">24 / 30</td><td><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></td></tr>
+      <tr><td><code>109283746503</code></td><td style="font-weight:700">Reyes, Paolo B.</td><td>4 / 10</td><td>9 / 20</td><td style="font-weight:800">13 / 30</td><td><span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> Queued</span></td></tr>
       <tr><td><code>109283746504</code></td><td style="font-weight:700">Villanueva, Ana K.</td><td style="color:var(--color-text-muted)">No submission</td><td class="pass">17 / 20</td><td>42.5</td><td style="font-weight:800">74 (Incomplete)</td><td><span class="badge badge-danger"><i class="ph ph-warning-circle"></i> Missing</span></td></tr>
     </tbody></table></div></div>`,
   react: `export function Gradebook({ rows }: { rows: Row[] }) {
@@ -3148,7 +3148,7 @@ fun StatCard(label: String, value: String, delta: String, icon: ImageVector, ico
         <table className="w-full text-[13px] text-left">
           <thead>
             <tr className="bg-lara-subtle border-b-2 border-lara-border">
-              {['LRN', "Learner's Name", 'Quiz 1', 'Quiz 2', 'Transmuted', 'Status'].map(h => (
+              {['LRN', "Learner's Name", 'Quiz 1 (10)', 'Quiz 2 (20)', 'Total (30)', 'Status'].map(h => (
                 <th key={h} scope="col" className="px-3.5 py-3 font-extrabold whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -3158,9 +3158,9 @@ fun StatCard(label: String, value: String, delta: String, icon: ImageVector, ico
               <tr key={r.lrn} className="border-b border-lara-border last:border-0 hover:bg-lara-canvas">
                 <td className="px-3.5 py-3"><code className="text-xs bg-lara-subtle px-1.5 py-0.5 rounded-md">{r.lrn}</code></td>
                 <td className="px-3.5 py-3 font-bold">{r.name}</td>
-                <td className={'px-3.5 py-3 font-extrabold ' + (r.q1Pass ? 'text-lara-primary' : 'text-[#B42318]')}>{r.q1}</td>
-                <td className={'px-3.5 py-3 font-extrabold ' + (r.q2Pass ? 'text-lara-primary' : 'text-[#B42318]')}>{r.q2}</td>
-                <td className="px-3.5 py-3 font-extrabold">{r.transmuted}</td>
+                <td className="px-3.5 py-3 font-bold">{r.q1}</td>
+                <td className="px-3.5 py-3 font-bold">{r.q2}</td>
+                <td className="px-3.5 py-3 font-extrabold">{r.total}</td>
                 <td className="px-3.5 py-3"><Badge tone={r.sync}>{r.syncLabel}</Badge></td>
               </tr>
             ))}
@@ -3172,7 +3172,7 @@ fun StatCard(label: String, value: String, delta: String, icon: ImageVector, ico
 }`,
   kotlin: `// Mobile shows the gradebook as a LazyColumn of cards, not a table.
 @Composable
-fun GradeRow(name: String, lrn: String, transmuted: Int, passed: Boolean, sync: SyncState) {
+fun GradeRow(name: String, lrn: String, points: Int, maxPoints: Int, sync: SyncState) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -3185,17 +3185,16 @@ fun GradeRow(name: String, lrn: String, transmuted: Int, passed: Boolean, sync: 
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                if (passed) "$transmuted Passed" else "$transmuted Failed",
+                "$points / $maxPoints",
                 fontWeight = FontWeight.ExtraBold,
-                color = if (passed) LaraColors.Primary else Color(0xFFB42318),
             )
             SyncBadge(sync)
         }
     }
     HorizontalDivider(color = LaraColors.Border)
 }`,
-  dos: ['Right-align numeric columns when columns are many.', 'Keep the learner name column sticky on narrow screens.', 'Show both the raw score and the transmuted grade.'],
-  donts: ['Do not rely on red and green alone; include the Passed or Failed label.', 'Do not show a table on phones narrower than 600px.'],
+  dos: ['Right-align numeric columns when columns are many.', 'Keep the learner name column sticky on narrow screens.', 'Show points earned out of the maximum, and a total.'],
+  donts: ['Do not add pass or fail colors or labels. L.A.R.A. records points; teachers decide grades.', 'Do not show a table on phones narrower than 600px.'],
   a11y: ['Use scope="col" on headers.', 'Wrap in a scrollable region that is keyboard focusable.']
 },
 {
@@ -3254,11 +3253,11 @@ fun LaraListItem(
 {
   id: 'cards', title: 'Classroom Card', icon: 'chalkboard-teacher', wide: true,
   desc: 'The class card on Home, laid out like Google Classroom: a Dark Green header with the class name, a subject icon and the teacher\'s initials, then what is due, then a footer. Teachers also see the class code.',
-  preview: crSwitch(CR_VIEWS) + '<div class="cr-lite" data-role="pupil" style="width:100%"><div class="cr-grid" style="max-width:660px;margin:0 auto">' + crCard(CR_CLASSES[0], 0) + crCard(CR_CLASSES[1], 1) + '</div></div>',
+  preview: crSwitch(CR_VIEWS) + '<div class="cr-lite" data-role="learner" style="width:100%"><div class="cr-grid" style="max-width:660px;margin:0 auto">' + crCard(CR_CLASSES[0], 0) + crCard(CR_CLASSES[1], 1) + '</div></div>',
   react: `${CR_CARD_REACT}`,
   kotlin: `${CR_CARD_KOTLIN}`,
-  dos: ['Show the subject icon and the teacher avatar so a younger pupil can find a class without reading.', 'Show the next thing due, or one friendly line when nothing is due.', 'Show how much is saved on this device, and a cache bar while lessons download.', 'Show the class code to the teacher only.'],
-  donts: ['Do not vary the header color per subject. Subject identity comes from the title and the icon.', 'Do not use a photo, a theme picture or a gradient in the header.', 'Do not show a pupil the class code.', 'Do not put more than two icon buttons in the footer.'],
+  dos: ['Show the subject icon and the teacher avatar so a younger learner can find a class without reading.', 'Show the next thing due, or one friendly line when nothing is due.', 'Show how much is saved on this device, and a cache bar while lessons download.', 'Show the class code to the teacher only.'],
+  donts: ['Do not vary the header color per subject. Subject identity comes from the title and the icon.', 'Do not use a photo, a theme picture or a gradient in the header.', 'Do not show a learner the class code.', 'Do not put more than two icon buttons in the footer.'],
   a11y: ['The card is an article. The class name is its heading and the whole card opens the class.', 'Footer icon buttons name the class: "Your work in Science 4".', 'The avatar and subject icon are decorative.', 'The cache bar exposes its value, minimum and maximum.']
 },
 {
@@ -3268,12 +3267,12 @@ fun LaraListItem(
   react: `${CR_POST_REACT}`,
   kotlin: `${CR_POST_KOTLIN}`,
   dos: ['Show the sync state on every post authored while offline.', 'Keep comments to one level, like Classroom.', 'Let a teacher turn comments off per post and show "Comments off" in the header.', 'Show attachments as cards that say whether they are saved on this device.'],
-  donts: ['Do not auto-play attachments.', 'Do not show comments from other classes.', 'Do not show other pupils\' full names or LRNs. Use first names.', 'Do not let pupils start a post.'],
+  donts: ['Do not auto-play attachments.', 'Do not show comments from other classes.', 'Do not show other learners\' full names or LRNs. Use first names.', 'Do not let learners start a post.'],
   a11y: ['Use an article for each post and a list for comments.', 'The comment box has an accessible name and a Send button with a name.', 'New posts pushed from the Hub are announced politely.']
 },
 {
   id: 'classwork', title: 'Assignment Card', icon: 'notebook', tag: 'NEW',
-  desc: 'A classwork item with due date, points, status and a clear primary action, shared by pupils and teachers.',
+  desc: 'A classwork item with due date, points, status and a clear primary action, shared by learners and teachers.',
   wide: true,
   preview: `<div class="stack" style="max-width:560px;margin:0 auto">
     <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div><h4 style="font-weight:900;font-size:16px">Pagsusulit #2: Parts of a Leaf</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Due Fri, Oct 9, 11:59 PM | 20 points | 15 min</p></div></div><span class="badge badge-queued">Not started</span></div><div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-play"></i> Start quiz</button><button class="btn btn-secondary"><i class="ph ph-book-open"></i> Review lesson</button></div></div>
@@ -3328,7 +3327,7 @@ fun AssignmentCard(a: Assignment, onPrimary: () -> Unit) {
     }
 }`,
   dos: ['Surface work that is not turned in yet first, with a text label and a kind tone.', 'Offer the offline-capable action first (Start quiz, Kunan ng litrato).'],
-  donts: ['Do not show a Start button after the due date unless late work is allowed.', 'Do not call a pupil\'s work Late or Missing. Teachers see those words; pupils see Not turned in yet.', 'Do not use purple for the camera button. Purple is only for the AI tutor.'],
+  donts: ['Do not show a Start button after the due date unless late work is allowed.', 'Do not call a learner\'s work Late or Missing. Teachers see those words; learners see Not turned in yet.', 'Do not use purple for the camera button. Purple is only for the AI tutor.'],
   a11y: ['Announce status as part of the card name, such as "Pagsusulit 2, not started, due Friday".']
 },
 {
@@ -3389,7 +3388,7 @@ fun AttendanceRow(name: String, mark: Mark?, onMark: (Mark) -> Unit) {
         }
     }
 }`,
-  dos: ['Default to Present only if the teacher chooses to; otherwise leave unmarked.', 'Show a count of marked pupils in the header.'],
+  dos: ['Default to Present only if the teacher chooses to; otherwise leave unmarked.', 'Show a count of marked learners in the header.'],
   donts: ['Do not rely on color; the letter and the label carry the meaning.'],
   a11y: ['The three buttons behave as a radio group with an accessible name for each.']
 },
@@ -3508,7 +3507,7 @@ fun LaraTopBar(title: String, onMenu: () -> Unit, onBell: () -> Unit) {
   id: 'quiz', title: 'Paperless Quiz', icon: 'timer', wide: true,
   desc: 'Synchronized timed assessment card with 56px option rows designed for high motor accuracy on entry-level Android devices, plus a progress indicator.',
   preview: `<div class="card" style="border:2px solid var(--color-border);padding:24px;box-shadow:var(--shadow-elevated);max-width:560px;margin:0 auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--color-border);padding-bottom:14px;margin-bottom:14px"><span class="badge badge-deped">PAGSUSULIT #2</span><div class="timer-pill"><i class="ph ph-timer"></i> 04:32</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--color-border);padding-bottom:14px;margin-bottom:14px"><span class="badge badge-info">PAGSUSULIT #2</span><div class="timer-pill"><i class="ph ph-timer"></i> 04:32</div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:12px;font-weight:800;color:var(--color-text-secondary)">Question 3 of 5</span><div class="q-dots"><span class="q-dot done"></span><span class="q-dot done"></span><span class="q-dot now"></span><span class="q-dot"></span><span class="q-dot"></span></div></div>
     <p style="font-size:18px;font-weight:800;margin-bottom:18px">What is the green pigment in leaves that absorbs sunlight for photosynthesis?</p>
     <div class="quiz-card-option" role="radio" aria-checked="false"><i class="ph ph-circle"></i><span>Stomata</span></div>
@@ -3634,7 +3633,7 @@ fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -
     }
 }`,
   dos: ['Use warm, encouraging language regardless of score.', 'Link each incorrect item to the lesson page that covers it.'],
-  donts: ['Do not compare a pupil with classmates.', 'Do not show a red full-screen state for a low score.'],
+  donts: ['Do not compare a learner with classmates.', 'Do not show a red full-screen state for a low score.'],
   a11y: ['Read the score as text, such as "80 percent, 4 of 5 correct".', 'Do not rely on the icon color to tell correct from incorrect; the badge text does.']
 },
 {
@@ -3651,7 +3650,7 @@ fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -
     </div>
     <div style="padding:12px 16px;border-top:1px solid #D6CCFC;display:flex;gap:8px;background:#fff"><input class="form-input" style="min-height:48px;border-radius:9999px;border-color:#D6CCFC" placeholder="Type your question" aria-label="Question"><button class="btn btn-ai btn-icon btn-pill" aria-label="Send"><i class="ph ph-paper-plane-tilt"></i></button></div></div>`,
   react: `export function TutorBubble({ from, lesson, children }: Props) {
-  if (from === 'pupil') {
+  if (from === 'learner') {
     return (
       <div className="self-end max-w-[80%] bg-lara-ai text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm font-bold">
         {children}
@@ -3671,8 +3670,8 @@ fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -
 // Server guard: refuse tutor calls while an assessment is active.
 if (session.activeQuizId) return res.status(423).json({ error: 'ASSESSMENT_LOCKED' });`,
   kotlin: `@Composable
-fun TutorBubble(fromPupil: Boolean, lesson: String?, text: String) {
-    if (fromPupil) {
+fun TutorBubble(fromLearner: Boolean, lesson: String?, text: String) {
+    if (fromLearner) {
         Text(
             text, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp,
             modifier = Modifier.widthIn(max = 280.dp)
@@ -3705,7 +3704,7 @@ fun TutorBubble(fromPupil: Boolean, lesson: String?, text: String) {
 },
 {
   id: 'camera', title: 'CameraX Overlay', icon: 'camera', tag: 'MOBILE', wide: true,
-  desc: 'Viewfinder overlay helping young pupils frame handwritten notebook pages, with automatic JPEG compression below 800KB.',
+  desc: 'Viewfinder overlay helping young learners frame handwritten notebook pages, with automatic JPEG compression below 800KB.',
   preview: `<div class="viewfinder" style="max-width:560px;margin:0 auto"><div class="vf-frame">FRAME NOTEBOOK PAGE HERE</div><div style="margin-top:10px;font-size:11px;opacity:.85">Auto-compress to JPEG under 800KB</div><div class="vf-bar"><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Flash"><i class="ph ph-lightning"></i></button><div class="shutter" role="button" aria-label="Take photo"></div><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Close"><i class="ph ph-x"></i></button></div></div>`,
   react: `// Web fallback for the teacher hub: file input with capture hint
 <label className="inline-flex items-center gap-2 min-h-[52px] px-6 rounded-xl bg-lara-primary text-white font-extrabold cursor-pointer">
@@ -3905,14 +3904,14 @@ function renderSection(c) {
     '<h2 class="ds-h2" data-toc="Guidelines" id="' + c.id + '-guidelines"><i class="ph ph-list-checks"></i>Guidelines</h2>' +
     '<div class="ds-rules">' + ruleCard('do', 'Do', 'ph-check-circle', 'ph-check', c.dos) + ruleCard('dont', 'Avoid', 'ph-x-circle', 'ph-x', c.donts) + '</div>' +
     '<h2 class="ds-h2" data-toc="Accessibility" id="' + c.id + '-a11y"><i class="ph ph-person-simple-circle"></i>Accessibility</h2>' +
-    ruleCard('a11y', 'Build it so every pupil can use it', 'ph-person-simple-circle', 'ph-check-circle', c.a11y) +
+    ruleCard('a11y', 'Build it so every learner can use it', 'ph-person-simple-circle', 'ph-check-circle', c.a11y) +
     pager(c.id) + '</section>';
 }
 
 const PRINCIPLES = [
   ['paint-bucket', 'Solid fills, zero gradients', 'Flat color on every surface, including skeletons and progress bars.'],
   ['swatches', 'Tokens only', 'Use the named tokens. Never write a hex value or Color(0xFF...) inside a screen.'],
-  ['sparkle', 'Purple means AI', 'Purple appears only on Socratic tutor surfaces, so pupils always know who is talking.', true],
+  ['sparkle', 'Purple means AI', 'Purple appears only on Socratic tutor surfaces, so learners always know who is talking.', true],
   ['shapes', 'Phosphor icons only', 'Regular by default, Fill for the active navigation item, Bold inside checkboxes.'],
   ['text-aa', 'Nunito everywhere', 'Bundled with every app. Never loaded from a CDN.'],
   ['hand-pointing', 'Big touch targets', '52 minimum, 56 for primary actions and quiz options.'],
@@ -3929,7 +3928,7 @@ const COMPARE = [
   ['Status words', 'Missing, Turned in late', 'Not turned in yet. Teachers see the exact lateness'],
   ['Greeting', 'None', 'Magandang umaga, Ana! and one sentence about what is due'],
   ['Offline', 'Needs the internet', 'Hub beacon, Saved badges, Queued for sync. Nothing blocks'],
-  ['Classmates', 'Pupils can see each other', 'Teacher only. Pupils never see other pupils\' names or LRNs']
+  ['Classmates', 'Learners can see each other', 'Teacher only. Learners never see other learners\' names or LRNs']
 ];
 
 function renderOverview() {
@@ -3938,7 +3937,7 @@ function renderOverview() {
       (i.tag ? '<span class="ds-tag' + (i.tag === 'MOBILE' ? ' mobile' : '') + '">' + sentence(i.tag) + '</span>' : '') + '</a>').join('') + '</div>').join('');
   return '<section id="doc-overview" class="comp-section" hidden>' +
     '<div class="ov-hero"><div><h1>Built for small hands and no internet.</h1>' +
-    '<p>The design system behind the L.A.R.A. Hub, pupil phones and teacher laptops. Solid colors, Nunito, Phosphor icons and 52dp touch targets, all bundled offline.</p>' +
+    '<p>The design system behind the L.A.R.A. Hub, learner phones and teacher laptops. Solid colors, Nunito, Phosphor icons and 52dp touch targets, all bundled offline.</p>' +
     '<div class="cta"><a class="btn btn-light" href="#screen-home"><i class="ph ph-chalkboard-teacher"></i> See the Classroom screens</a>' +
     '<button class="btn btn-line" type="button" data-scroll="ov-areas"><i class="ph ph-squares-four"></i> Browse components</button></div></div>' +
     '<div class="ov-demo" aria-label="Example of the system in use">' +
@@ -3950,10 +3949,10 @@ function renderOverview() {
         '<p>Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?</p></div>' +
     '</div></div>' +
     '<h2 class="ov-section-title" data-toc="Principles" id="ov-principles">Eight rules every screen follows</h2>' +
-    '<p class="ov-section-sub">Google Classroom is the structural reference. These rules give it a Filipino elementary brand.</p>' +
+    '<p class="ov-section-sub">Google Classroom is the structural reference. These rules give it a Filipino school brand.</p>' +
     '<ul class="ov-principles">' + PRINCIPLES.map(p => '<li><span class="ico' + (p[3] ? ' ai' : '') + '"><i class="ph ph-' + p[0] + '"></i></span><div><strong>' + p[1] + '</strong><span>' + p[2] + '</span></div></li>').join('') + '</ul>' +
     '<h2 class="ov-section-title" data-toc="Classroom layout" id="ov-classroom">Classroom\'s layout, our voice</h2>' +
-    '<p class="ov-section-sub">Teachers and pupils already know Google Classroom, so every screen keeps its structure: top bar, class drawer, Stream, Classwork, People and the Your work card. We only change how it looks and sounds.</p>' +
+    '<p class="ov-section-sub">Teachers and learners already know Google Classroom, so every screen keeps its structure: top bar, class drawer, Stream, Classwork, People and the Your work card. We only change how it looks and sounds.</p>' +
     '<div class="scroll-x"><table class="tbl ov-compare"><thead><tr><th scope="col">Part</th><th scope="col">Google Classroom</th><th scope="col">L.A.R.A.</th></tr></thead><tbody>' +
       COMPARE.map(r => '<tr><th scope="row">' + r[0] + '</th><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('') +
     '</tbody></table></div><p style="margin-top:14px"><a class="btn btn-secondary" href="#screen-home"><i class="ph ph-arrow-right"></i> Open the screens</a></p>' +
@@ -4266,7 +4265,7 @@ document.addEventListener('input', e => {
   }
 });
 
-/* Show only what the current role (pupil or teacher) and state should see */
+/* Show only what the current role (learner or teacher) and state should see */
 function applyRoleState(root) {
   const role = root.dataset.role, state = root.dataset.state;
   root.querySelectorAll('[data-only]').forEach(el => { el.hidden = !el.dataset.only.split(' ').includes(role); });

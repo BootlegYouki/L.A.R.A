@@ -20,7 +20,7 @@ Target: Infinix, TECNO, itel, realme phones with 3 to 4 GB RAM. **Heap stays und
 ## 2. Room is the app's only source of truth
 
 * Entities match `contracts/schema/client_offline.sql` exactly (names, nullability, `sync_status`, `local_file_path`). Add a test that compares Room's exported schema to it. `exportSchema = true`.
-* **Never use `fallbackToDestructiveMigration`.** Rows with `sync_status = 'QUEUED_FOR_SYNC'` are a pupil's finished quiz or homework photo that has not reached the Hub yet. Wiping them loses a child's work. Write real migrations.
+* **Never use `fallbackToDestructiveMigration`.** Rows with `sync_status = 'QUEUED_FOR_SYNC'` are a learner's finished quiz or homework photo that has not reached the Hub yet. Wiping them loses a child's work. Write real migrations.
 * Screens read from Room `Flow`s, never straight from the network. No queries on the main thread.
 * **Applying a sync pull is one transaction, including the cursor.** If the cursor is saved separately the app can skip or repeat changes after a crash:
   ```kotlin
