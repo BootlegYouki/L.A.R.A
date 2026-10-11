@@ -63,7 +63,7 @@ for file names and patterns. The issue is the whole scope: its sub-tasks, Target
 - Change only my team's folder. Never edit contracts/, rules/, design-system/, scripts/, tests/ or .github/.
 - If the API, an event or a column must change, stop and tell me: that needs its own contract-change PR first.
 - No internet at runtime: no Firebase, Google Play Services, CDNs, Google Fonts or analytics. Fonts and icons come from design-system/assets/.
-- All user text in English and Filipino. Touch targets at least 52dp (56dp for primary actions). Design tokens only.
+- All user text in English and Filipino. Touch targets at least 52dp on phones (56dp for primary actions), 40px buttons on desktop. Design tokens only.
 - Build against scripts/mock_hub.py. Handle the Hub being unreachable without crashing or losing data.
 - Never put answer keys, PIN data or other learners' LRNs where a client can see them.
 - Make the smallest change that satisfies the issue. If a requirement is missing or two documents
@@ -94,7 +94,7 @@ Full rules: [`CONTRIBUTING.md`](./CONTRIBUTING.md), [`rules/`](./rules/), and fo
 
 - [ ] The build, lint and tests pass, and `verify_invariants.py` passes. Paste the output.
 - [ ] It works with the Hub unreachable and with the router's internet unplugged.
-- [ ] English and Filipino text, design tokens only, touch targets at least 52dp.
+- [ ] English and Filipino text, design tokens only, touch targets at least 52dp on phones and 40px buttons on desktop.
 - [ ] **"How to test" is filled in**: steps a teacher could follow, with what they should see.
 - [ ] A screenshot or log of it running, and an honest "Not verified" list.
 - [ ] CI is green. CI is the floor, not the proof: it does not run your app on a phone.
