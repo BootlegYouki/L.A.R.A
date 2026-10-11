@@ -14,7 +14,7 @@ Closes #(issue number)
 
 
 ## How to Test (for the person reviewing as an end user)
-Numbered steps a teacher or pupil could follow, with what they should see after each step. Say which accounts to use (for example teacher `T-0001`, pupil `123456789012`, PIN `1234`) and how to start the mock hub or the real Hub. Include the offline case: airplane mode or Hub stopped.
+Numbered steps a teacher or learner could follow, with what they should see after each step. Say which accounts to use (for example teacher `T-0001`, learner `123456789012`, PIN `1234`) and how to start the mock hub or the real Hub. Include the offline case: airplane mode or Hub stopped.
 1. ...
 
 ## Verification & Testing
@@ -26,7 +26,7 @@ Describe the tests executed to verify these changes:
 - [ ] Verified bilingual text (English & Filipino)
 
 ## Evidence
-Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real pupil names or LRNs first.
+Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.
 
 ## Not Verified
 List anything you could not test (for example no physical budget phone). Write "nothing" if everything was verified.

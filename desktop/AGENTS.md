@@ -3,7 +3,7 @@
 Read the root `AGENTS.md` first. This file adds what is specific to `desktop/`.
 
 ## What you are building
-A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, lab PCs and teachers. Pupils get the offline classroom; teachers get the **full authoring surface** (create class, roster approval, announcements, materials, assignments, grading, quiz builder, live monitor).
+A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, lab PCs and teachers. Learners get the offline classroom; teachers get the **full authoring surface** (create class, roster approval, announcements, materials, assignments, grading, quiz builder, live monitor).
 
 ## Commands (run in `desktop/`)
 `npm run build` (`tsc && vite build`) must pass with zero type errors. Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`.

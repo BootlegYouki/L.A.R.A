@@ -63,7 +63,7 @@ class TestContracts(unittest.TestCase):
         cur_server.execute("PRAGMA table_info(quizzes);")
         quiz_cols = [r[1] for r in cur_server.fetchall()]
         self.assertIn("started_at", quiz_cols)
-        self.assertIn("deped_category", quiz_cols)
+        self.assertNotIn("deped_category", quiz_cols, "grading categories are the teacher's own, not DepEd's")
 
         # An unsubmitted attempt must be representable: the AI quiz lockout depends on it.
         cur_server.execute("PRAGMA table_info(quiz_attempts);")
@@ -80,9 +80,6 @@ class TestContracts(unittest.TestCase):
         self.assertIn("AUTOINCREMENT", cur_server.fetchone()[0])
         cur_server.execute("PRAGMA table_info(quiz_questions);")
         self.assertIn("synonyms_json", [r[1] for r in cur_server.fetchall()])
-        for table in ("assignments", "quizzes"):
-            cur_server.execute(f"PRAGMA table_info({table});")
-            self.assertIn("quarter", [r[1] for r in cur_server.fetchall()], f"{table} needs quarter for the DepEd record")
         cur_server.execute("PRAGMA table_info(materials);")
         self.assertNotIn("extracted_text", [r[1] for r in cur_server.fetchall()], "lesson text lives in material_chunks only")
         conn_server.close()

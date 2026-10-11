@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PresenceEvent",
-  "description": "Hub to teacher sessions: live pupil presence and quiz progress for the submission matrix.",
+  "description": "Hub to teacher sessions: live learner presence and quiz progress for the submission matrix.",
   "type": "object",
   "required": [
     "event",

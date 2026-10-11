@@ -7,7 +7,7 @@
 **Working Codename:** L.A.R.A. 
 **Document Version:** 1.3.0 
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
-**Target Environment:** Philippine Public Elementary Schools (DepEd Grades 1–6), Rural Campuses, and Zero-Internet Classrooms 
+**Target Environment:** Philippine Public Schools (DepEd Grades 1–12: elementary, junior and senior high), Rural Campuses, and Zero-Internet Classrooms 
 
 ---
 
@@ -18,14 +18,14 @@ L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platf
 
 The system operates across three interconnected applications:
 1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
-2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on pupils' phones, and on teachers' phones for approving pupils, posting announcements and starting and monitoring quizzes, with local Room (SQLite) storage, camera homework capture, bilingual localization, and optional on-device SLM execution.
+2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones, and on teachers' phones for approving learners, posting announcements and starting and monitoring quizzes, with local Room (SQLite) storage, camera homework capture, bilingual localization, and optional on-device SLM execution.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It is the full teacher authoring surface: classes, announcements, materials, assignments, quizzes and grading.
 
 ### 1.2 The Philippine Context & Research Motivation
-* **High Smartphone Penetration vs. Absent Connectivity:** IDC and Canalys (2024) market reports demonstrate that Transsion Holdings (Infinix, TECNO, itel) dominates the Philippine smartphone market with a 37.3% share, followed by realme (13.3%) and Xiaomi. More than 50% of shipped phones are entry-level devices under $100 (~₱3,500–₱5,500). Filipino elementary pupils commonly have physical access to these household smartphones. However, persistent mobile data costs, lack of campus broadband, and rural network dead-zones render cloud-based LMS solutions (Google Classroom, MS Teams, Canvas) unusable.
-* **DepEd Teacher Financial & Logistical Burden:** Public elementary teachers routinely shoulder out-of-pocket expenses for paper and printing to produce daily worksheets, weekly formative tests, and quarterly summative assessments. A paperless, offline LAN assessment engine removes recurring reproduction expenses.
+* **High Smartphone Penetration vs. Absent Connectivity:** IDC and Canalys (2024) market reports demonstrate that Transsion Holdings (Infinix, TECNO, itel) dominates the Philippine smartphone market with a 37.3% share, followed by realme (13.3%) and Xiaomi. More than 50% of shipped phones are entry-level devices under $100 (~₱3,500–₱5,500). Filipino learners commonly have physical access to these household smartphones. However, persistent mobile data costs, lack of campus broadband, and rural network dead-zones render cloud-based LMS solutions (Google Classroom, MS Teams, Canvas) unusable.
+* **Teacher Financial & Logistical Burden:** Public school teachers routinely shoulder out-of-pocket expenses for paper and printing to produce daily worksheets, weekly formative tests, and quarterly summative assessments. A paperless, offline LAN assessment engine removes recurring reproduction expenses.
 * **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. Running an unoptimized 2B model on-device triggers out-of-memory (LMK/OOM) crashes. L.A.R.A. solves this via an adaptive hybrid architecture: the Local Hub executes the model for low-spec phones, while capable devices (≥6GB RAM) run 100% on-device.
-* **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s embedded SLM is engineered with strict Socratic system prompts, guiding elementary pupils step-by-step using teacher-provided materials without divulging final answers.
+* **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s embedded SLM is engineered with strict Socratic system prompts, guiding learners step-by-step using teacher-provided materials without divulging final answers.
 
 ---
 
@@ -35,8 +35,8 @@ The system operates across three interconnected applications:
 * **Teacher Maria (Grade 4 Science & Math Teacher):**
  * Uses the desktop app on a modest Windows/Linux laptop and the mobile app on her phone.
  * Works on the classroom's standard TP-Link Wi-Fi router (no internet WAN required). The Hub runs on the school PC; a laptop hotspot is only a fallback when the router isolates clients. The school admin creates her account.
- * Creates class sections, distributes digitized modules and educational videos, conducts paperless quizzes, reviews homework photo submissions, and exports DepEd-compliant grade sheets directly to a USB flash drive.
-* **Pupil Juan (Grade 4 Pupil):**
+ * Creates class sections, distributes digitized modules and educational videos, conducts paperless quizzes, reviews homework photo submissions, and exports gradebook sheets directly to a USB flash drive.
+* **Learner Juan (Grade 4 Learner):**
  * Uses a family-owned budget Android phone (e.g., realme Note 50 or Infinix Smart 8 with 3GB/4GB RAM).
  * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets bilingual Socratic guidance from the AI tutor.
  * Takes his phone home where the app remains completely functional in disconnected mode.
@@ -95,7 +95,7 @@ flowchart TD
  ```json
  {"app": "lara", "version": "1.2.0", "name": "Grade 4 - Room 102", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}
  ```
- * **Manual IP Fallback:** Client provides a manual connection field where pupils/teachers can enter the host IP shown on the Hub GUI (e.g., `192.168.1.50:8080`).
+ * **Manual IP Fallback:** Client provides a manual connection field where learners/teachers can enter the host IP shown on the Hub GUI (e.g., `192.168.1.50:8080`).
 2. **Captive Distribution Portal with Visual Sideloading Guide (HTTP):**
  * Hub serves a responsive HTML landing page at `http://<hub-ip>:8080/download`.
  * Hosts:
@@ -115,14 +115,14 @@ flowchart TD
 ## 4. Functional Specifications
 
 ### 4.1 Module 1: Offline Identity & Class Enrollment Gate
-* **FR-1.0 Admin-Created Teacher Accounts:** The school admin creates teacher accounts and resets forgotten PINs from the Hub window. Teachers never self-register; pupils do.
+* **FR-1.0 Admin-Created Teacher Accounts:** The school admin creates teacher accounts and resets forgotten PINs from the Hub window. Teachers never self-register; learners do.
 * **FR-1.1 Self-Registration:** Students register locally upon first connecting to the Hub by providing: Full Name, Learner Reference Number (LRN) / Student ID, and a 4-digit PIN.
-* **FR-1.2 Class Code Entry:** Pupils join a subject by entering a 6-character uppercase code (no 0/O/1/I; shown as XXX-XXX) generated by the teacher (e.g., `K7M-4QX`).
+* **FR-1.2 Class Code Entry:** Learners join a subject by entering a 6-character uppercase code (no 0/O/1/I; shown as XXX-XXX) generated by the teacher (e.g., `K7M-4QX`).
 * **FR-1.3 Teacher Verification Gate:**
  * Entering a valid code places the student in a `PENDING_APPROVAL` queue.
  * The teacher's interface alerts: *"Juan Dela Cruz (LRN: 123456789) wants to join Grade 4 - Science."*
  * Teacher has one-click actions: **Accept** or **Decline**.
- * Once approved, the class key is sent via WebSocket to unlock class access on the pupil's app.
+ * Once approved, the class key is sent via WebSocket to unlock class access on the learner's app.
 
 ### 4.2 Module 2: Stream & Announcements
 * **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices.
@@ -135,14 +135,14 @@ flowchart TD
 * **FR-3.3 Video Upload & Byte-Range Streaming:**
  * Teachers can upload educational video files (MP4 / WebM encoded in H.264, max file size capped at 250MB).
  * Hub serves videos via HTTP `206 Partial Content`.
- * Pupils can stream directly over Wi-Fi with instant seeking or tap **Save for Home Study** to download to local storage.
+ * Learners can stream directly over Wi-Fi with instant seeking or tap **Save for Home Study** to download to local storage.
  * Android client uses **Jetpack Media3 (ExoPlayer)** with hardware acceleration; Desktop uses HTML5 `<video>`.
 * **FR-3.4 Bandwidth Rate-Limiting:** Hub enforces a per-client streaming limit (max 2.0 MB/s) to prevent classroom Wi-Fi router congestion during simultaneous video playback.
 * **FR-3.5 Homework Assignments & Camera Photo Submission:**
  * Teachers can post assignments with title, instructions, due date, and maximum points.
- * **In-App Camera Capture:** Pupils can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app (or attach an image file).
- * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. The moment the pupil walks into school and connects to the Hub Wi-Fi, the submission uploads automatically.
- * **Grade and Feedback Visibility:** Pupils see their score and the teacher's feedback once homework is graded, and it stays available offline.
+ * **In-App Camera Capture:** Learners can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app (or attach an image file).
+ * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. The moment the learner walks into school and connects to the Hub Wi-Fi, the submission uploads automatically.
+ * **Grade and Feedback Visibility:** Learners see their score and the teacher's feedback once homework is graded, and it stays available offline.
  * **Teacher Grading Interface:** Teacher reviews student photo submissions on the Hub, assigns a score, and types short encouraging feedback.
 
 ### 4.4 Module 4: Paperless Assessment Engine (Quizzes)
@@ -152,24 +152,24 @@ sequenceDiagram
  autonumber
  actor Teacher as Teacher (Desktop or Phone)
  participant Hub as Local Hub (REST + WebSocket)
- actor Pupil as Pupil (Phone or Laptop)
+ actor Learner as Learner (Phone or Laptop)
 
  Teacher->>Hub: POST /api/quizzes (title, time limit, questions, answer keys) as DRAFT
  Teacher->>Hub: POST /api/quizzes/{id}/start
- Hub-->>Pupil: EVENT_QUIZ_START (start_epoch_ms, duration_seconds)
- Pupil->>Hub: POST /api/quizzes/{id}/begin (creates the IN_PROGRESS attempt)
- Note over Pupil: Anti-cheat: Socratic AI locked. Chat UI never composed, Hub rejects with QUIZ_IN_PROGRESS
- Note over Pupil: Visual countdown on a monotonic clock (Green, Yellow, Red pulsing)
+ Hub-->>Learner: EVENT_QUIZ_START (start_epoch_ms, duration_seconds)
+ Learner->>Hub: POST /api/quizzes/{id}/begin (creates the IN_PROGRESS attempt)
+ Note over Learner: Anti-cheat: Socratic AI locked. Chat UI never composed, Hub rejects with QUIZ_IN_PROGRESS
+ Note over Learner: Visual countdown on a monotonic clock (Green, Yellow, Red pulsing)
  Hub-->>Teacher: EVENT_PRESENCE (ANSWERING_QUIZ)
  alt Completed before timeout
- Pupil->>Hub: POST /api/quizzes/{id}/submit
+ Learner->>Hub: POST /api/quizzes/{id}/submit
  else Timer reaches 00:00 or EVENT_QUIZ_CLOSED
- Pupil->>Hub: Auto-submit current answers
+ Learner->>Hub: Auto-submit current answers
  else Wi-Fi dropped
- Note over Pupil: Finish locally as QUEUED_FOR_SYNC, upload on reconnect
+ Note over Learner: Finish locally as QUEUED_FOR_SYNC, upload on reconnect
  end
  Hub->>Hub: Validate time limit (+60 s grace), auto-grade, save attempt
- Hub-->>Pupil: EVENT_GRADE_CONFIRMED (score receipt, unless scores are held)
+ Hub-->>Learner: EVENT_GRADE_CONFIRMED (score receipt, unless scores are held)
  Hub-->>Teacher: EVENT_PRESENCE (SUBMITTED), live matrix updates
 ```
 
@@ -180,21 +180,21 @@ sequenceDiagram
  2. *True or False*.
  3. *Identification / Short Answer* (Case-insensitive string matching with teacher keyword list).
  * Option to shuffle question order per student.
-* **FR-4.2 Timed Pupil Experience:**
+* **FR-4.2 Timed Learner Experience:**
  * Synchronized countdown timer at the top of the screen with visual color cues (Green; Yellow at 5 minutes; Red and pulsing at 2 minutes).
- * Questions are presented in clean, elementary-friendly cards with large tap targets (minimum 56dp).
+ * Questions are presented in clean, easy-to-read cards with large tap targets (minimum 56dp).
 * **FR-4.3 Anti-Cheating & AI Lockout:**
  * **Strict AI Lock:** While the quiz session is active, the Socratic AI tutor floating button is completely removed and locked out.
  * **Server-Side Rejection:** The Hub drops any inference calls originating from a student with an active quiz attempt.
 * **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, the test is locked and answers are immediately transmitted to the Hub.
-* **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the pupil reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
-* **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether pupils see their score immediately or only after the teacher closes the assessment.
-* **FR-4.7 Result History:** Pupils can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
+* **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the learner reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
+* **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment.
+* **FR-4.7 Result History:** Learners can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
 
-### 4.5 Module 5: DepEd Class Record & Grading Sheet Export
+### 4.5 Module 5: Gradebook & Export
 * **FR-5.1 Gradebook Dashboard:** Teachers can view a consolidated spreadsheet-like matrix of all students, their quiz scores, and homework grades.
-* **FR-5.2 One-Click DepEd Export:**
- * Exports formatted **Excel (.xlsx) and CSV** files matching the Department of Education (DepEd) Class Record layout (Written Works, Performance Tasks, Quarterly Assessment).
+* **FR-5.2 One-Click Gradebook Export:**
+ * Exports **Excel (.xlsx) and CSV** files: one row per learner, one column per assignment and quiz (points earned, maximum in the header) and a total. Like Google Classroom, L.A.R.A. records points only; each teacher applies their own grading system, so there are no DepEd categories, quarters or weights.
  * Direct export to plugged-in **USB Flash Drives** from the Hub desktop application for easy transfer to school computers.
 
 ---
@@ -202,8 +202,8 @@ sequenceDiagram
 ## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
 
 ### 5.0 The Hub Always Has the AI; Using It Is Optional
-The Hub is installed with the AI model, so a pupil on any phone or laptop can use the tutor without downloading anything. Using it is optional for everyone: a pupil or teacher can ignore it, and nothing else in L.A.R.A depends on it. There are two ways to use it, and the user chooses:
-1. **On the Hub (the default),** shared by everyone through a first-in-first-out queue, so a few pupils at a time are served and the rest see their place in line.
+The Hub is installed with the AI model, so a learner on any phone or laptop can use the tutor without downloading anything. Using it is optional for everyone: a learner or teacher can ignore it, and nothing else in L.A.R.A depends on it. There are two ways to use it, and the user chooses:
+1. **On the Hub (the default),** shared by everyone through a first-in-first-out queue, so a few learners at a time are served and the rest see their place in line.
 2. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user may download the model from the Hub once to run it offline, for example at home. It is never downloaded automatically.
 
 The model the Hub runs and the model a device runs may be different: a smarter model on the Hub PC, and a smaller one for devices that can use it. Each is chosen by the AI evaluation and must pass the same Socratic checks (no direct answers, grounded, one clue and one question, right language). If the small model does not pass on the weakest device it would run on, devices simply use the Hub.
@@ -213,7 +213,7 @@ If the Hub's model file is missing or fails to load, the Hub reports it (`AI_NOT
 ### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
 The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
 
-To identify the optimal Small Language Model for Philippine elementary classrooms, the project experimentally benchmarks candidate sub-3B models:
+To identify the optimal Small Language Model for Philippine classrooms (Grades 1 to 12), the project experimentally benchmarks candidate sub-3B models:
 * **Primary Baseline Candidate:** **MiniCPM5-2B (Int4 / Q4_K_M GGUF, ~1.55GB)** — High multimodal and bilingual capability.
 * **Alternative Experimental Candidates:**
   * **Qwen2.5-1.5B / 3B (Instruct GGUF)** — Exceptional reasoning density and multilingual instruction following.
@@ -253,14 +253,14 @@ flowchart TD
 
 ### 5.3 Bilingual Localization & Persona Design
 * **Interface Language:** Toggle between **English** and **Filipino** in Settings.
-* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide adapted for Filipino elementary pupils (Grades 1 to 6).
+* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide adapted for Filipino learners (Grades 1 to 12).
 * **Language Agility:** L.A.R.A. AI understands and responds in the student's selected language (English or natural conversational Filipino / Taglish standard in DepEd classrooms).
 * **Interaction Trigger:** Located inside the Material Viewer as a floating button: **"Magtanong kay L.A.R.A. AI" / "Ask L.A.R.A. AI"**.
 * **Grounding:** The prompt binds the pre-extracted text of the active lesson document.
 
 * **Bilingual System Prompt Template:**
  ```text
- You are "L.A.R.A. AI", a friendly and patient Socratic learning guide for Filipino elementary pupils (Grades 1 to 6).
+ You are "L.A.R.A. AI", a friendly and patient Socratic learning guide for Filipino learners (Grades 1 to 12).
  Your objective is to guide the student to discover answers independently.
 
  LANGUAGE INSTRUCTION:
@@ -284,7 +284,7 @@ flowchart TD
 To prevent the Hub PC from overloading when multiple low-RAM devices request hints simultaneously:
 * Hub configures `llama-server` with **2–4 parallel inference slots**.
 * Additional requests enter a **FIFO Queue**.
-* The pupil’s screen displays real-time queue position: *"Nag-iisip si L.A.R.A. AI.. Pangalawa ka sa pila (~4s)"*.
+* The learner’s screen displays real-time queue position: *"Nag-iisip si L.A.R.A. AI.. Pangalawa ka sa pila (~4s)"*.
 
 ---
 
@@ -360,7 +360,7 @@ sequenceDiagram
 | **Server Local DB** | **SQLite (via SQLx)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
 | **Realtime Protocol** | **WebSockets (`ws` / Rust `tokio-tungstenite`)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
 | **SLM Runtime** | **`llama.cpp` / `llama-server`** | Highly optimized CPU/GPU GGUF inference; supports 4-bit quantization and multi-slot continuous batching. |
-| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Elementary-accessible components, high legibility, large touch targets (52dp+ / 56dp), dynamic color palettes, bilingual strings. |
+| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large touch targets (52dp+ / 56dp), dynamic color palettes, bilingual strings. |
 
 ---
 
@@ -370,7 +370,7 @@ sequenceDiagram
 2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. On-device SLM execution is strictly gated behind a 6GB physical RAM hardware check.
 3. **Low-Latency Quiz Sync:** Submissions and timer events must register with the Hub within <300ms across 40 concurrent connected devices.
 4. **Resumable Transfers:** Any interrupted file transfer (PDF, video, photo submission, or model bundle) must resume from the last received byte via HTTP Range headers.
-5. **DepEd Data Export:** Hub must export student rosters, quiz scores, and homework grades to `.xlsx` / `.csv` formatted for standard DepEd Class Records with one click.
+5. **Gradebook Export:** Hub must export learner rosters, quiz scores, and homework grades to `.xlsx` / `.csv` with one click.
 
 ---
 
@@ -388,7 +388,7 @@ sequenceDiagram
 * Timed paperless quizzes with instant auto-grading for objective questions.
 * Hybrid Socratic AI tutor with a model chosen by the AI evaluation (MiniCPM5-2B is the baseline candidate): Hub-assisted for low RAM, on-device for ≥6GB RAM.
 * Strict AI tutor lockout during active quizzes.
-* One-click DepEd Class Record export to USB flash drives.
+* One-click gradebook export to USB flash drives.
 * Delta synchronization and offline-first persistence.
 
 ### Out-of-Scope (Future Enhancements):
@@ -404,13 +404,13 @@ sequenceDiagram
 | Objective | Evaluation Metric | Target Benchmark |
 | :--- | :--- | :--- |
 | **Offline Independence** | Complete classroom cycle with WAN cable unplugged | 100% operational (zero failures due to lack of internet). |
-| **Paperless Cost Savings** | Simulated quiz & worksheet cycle vs printed DepEd test papers | 100% reduction in paper and reproduction costs. |
+| **Paperless Cost Savings** | Simulated quiz & worksheet cycle vs printed test papers | 100% reduction in paper and reproduction costs. |
 | **Mobile Stability** | RAM consumption on 3GB/4GB Android devices | Heap usage < 250MB; zero OOM crashes during Hub-assisted AI mode. |
 | **Inference Latency** | Time-to-First-Token (TTFT) for Socratic hints | < 2.5s on Hub queue; 8–15 tokens/s generation speed. |
 | **Quiz Sync Accuracy** | Grade calculation and submission reliability | 100% accuracy in score recording across 40 simultaneous submissions. |
 | **Homework Photo Upload** | Upload success rate over local Wi-Fi | 100% across 40 concurrent submissions with offline queueing. |
 | **Resilience to Disconnects** | Unannounced Wi-Fi disconnection mid-quiz | 0% data loss; automatic submission upon reconnect. |
-| **Usability (SUS Score)** | System Usability Scale survey administered to DepEd teachers | SUS score >= 80.0 (Grade A / Excellent usability). |
+| **Usability (SUS Score)** | System Usability Scale survey administered to teachers | SUS score >= 80.0 (Grade A / Excellent usability). |
 | **Software Quality (ISO 25010)** | Evaluation across Functional Suitability, Reliability, Usability | Mean Likert score >= 4.50 / 5.00 across all dimensions. |
 | **Disaster Recovery** | Database restore from USB backup after sudden power loss | 100% data recovery with zero corrupted records. |
 | **Day 0 Deployment** | Standalone installer (.exe/.deb) setup on a fresh Hub PC | Complete installation in < 3 minutes with zero CLI commands. |

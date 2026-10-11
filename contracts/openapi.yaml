@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: L.A.R.A Local Hub REST API
   description: |
-    Offline-first LAN classroom management and assessment API for Philippine elementary schools.
+    Offline-first LAN classroom management and assessment API for Philippine public schools (Grades 1 to 12).
 
     Conventions (see contracts/naming_rules.md):
     - All JSON keys are snake_case. All timestamps are epoch milliseconds (integer).
@@ -198,16 +198,6 @@ paths:
                 section:
                   type: string
                   example: "Aguinaldo"
-                weight_written_works:
-                  type: integer
-                  default: 40
-                weight_performance_tasks:
-                  type: integer
-                  default: 40
-                weight_quarterly_assessment:
-                  type: integer
-                  default: 20
-                  description: The three weights must add up to 100
       responses:
         "200":
           description: Created classroom
@@ -605,7 +595,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [classroom_id, title, deped_category, max_points, due_date]
+              required: [classroom_id, title, max_points, due_date]
               properties:
                 classroom_id:
                   type: string
@@ -614,13 +604,6 @@ paths:
                   type: string
                 instructions:
                   type: string
-                deped_category:
-                  $ref: "#/components/schemas/DepEdCategory"
-                quarter:
-                  type: integer
-                  minimum: 1
-                  maximum: 4
-                  default: 1
                 max_points:
                   type: integer
                 due_date:
@@ -888,7 +871,7 @@ paths:
   # ---------------------------------------------------------------- EXPORT & BACKUP
   /api/export/class-record:
     post:
-      summary: Export the DepEd Class Record (.xlsx or .csv) to a mounted USB path or as a download (teacher / Hub console)
+      summary: Export the gradebook (.xlsx or .csv) with learners by work and points to a mounted USB path or as a download (teacher / Hub console)
       tags: [export]
       requestBody:
         required: true
@@ -1036,10 +1019,6 @@ components:
             message:
               type: string
 
-    DepEdCategory:
-      type: string
-      enum: ["WRITTEN_WORK", "PERFORMANCE_TASK", "QUARTERLY_ASSESSMENT"]
-
     AuthSession:
       type: object
       required: [token, expires_at, user]
@@ -1069,7 +1048,6 @@ components:
     Classroom:
       type: object
       required: [id, name, section, class_code, teacher_id]
-      description: Weights are returned to the owning teacher only.
       properties:
         id:
           type: string
@@ -1087,12 +1065,6 @@ components:
           type: string
           format: uuid
         archived_at:
-          type: integer
-        weight_written_works:
-          type: integer
-        weight_performance_tasks:
-          type: integer
-        weight_quarterly_assessment:
           type: integer
         enrollment_status:
           type: string
@@ -1227,7 +1199,7 @@ components:
 
     Assignment:
       type: object
-      required: [id, classroom_id, title, max_points, due_date, deped_category]
+      required: [id, classroom_id, title, max_points, due_date]
       properties:
         id:
           type: string
@@ -1239,12 +1211,6 @@ components:
           type: string
         instructions:
           type: string
-        deped_category:
-          $ref: "#/components/schemas/DepEdCategory"
-        quarter:
-          type: integer
-          minimum: 1
-          maximum: 4
         max_points:
           type: integer
         due_date:
@@ -1336,7 +1302,7 @@ components:
 
     StudentQuizResponse:
       type: object
-      required: [id, classroom_id, title, time_limit_minutes, deped_category, questions]
+      required: [id, classroom_id, title, time_limit_minutes, questions]
       properties:
         id:
           type: string
@@ -1351,8 +1317,6 @@ components:
         started_at:
           type: integer
           description: Nullable epoch ms when the teacher started the quiz
-        deped_category:
-          $ref: "#/components/schemas/DepEdCategory"
         questions:
           type: array
           items:
@@ -1374,7 +1338,7 @@ components:
 
     TeacherQuizInput:
       type: object
-      required: [classroom_id, title, time_limit_minutes, deped_category, questions]
+      required: [classroom_id, title, time_limit_minutes, questions]
       properties:
         classroom_id:
           type: string
@@ -1385,13 +1349,6 @@ components:
           type: string
         time_limit_minutes:
           type: integer
-        deped_category:
-          $ref: "#/components/schemas/DepEdCategory"
-        quarter:
-          type: integer
-          minimum: 1
-          maximum: 4
-          default: 1
         shuffle_questions:
           type: boolean
           default: false
@@ -1530,7 +1487,7 @@ components:
           description: Metadata only. Question bodies are fetched via /api/quizzes/{id} after the teacher starts the quiz.
           items:
             type: object
-            required: [id, classroom_id, title, status, time_limit_minutes, deped_category]
+            required: [id, classroom_id, title, status, time_limit_minutes]
             properties:
               id:
                 type: string
@@ -1545,8 +1502,6 @@ components:
                 enum: ["DRAFT", "ACTIVE", "CLOSED"]
               time_limit_minutes:
                 type: integer
-              deped_category:
-                $ref: "#/components/schemas/DepEdCategory"
               started_at:
                 type: integer
         quiz_attempts:

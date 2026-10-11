@@ -6,7 +6,7 @@
 
 ## 1. Scope and Non-Goals
 
-**In scope.** The native Android app (`org.lara.app`) for pupils and teachers, built offline-first against `scripts/mock_hub.py` until integration day. Sprint-to-PRD map (behavior is defined in the cited `docs/PRD.md` FRs, not here):
+**In scope.** The native Android app (`org.lara.app`) for learners and teachers, built offline-first against `scripts/mock_hub.py` until integration day. Sprint-to-PRD map (behavior is defined in the cited `docs/PRD.md` FRs, not here):
 
 | Sprint | Issues | PRD modules |
 |---|---|---|
@@ -22,7 +22,7 @@
 - Any cloud sync or external service (Firebase, Google Play Services, CDNs, remote telemetry) — see `rules/networking-and-lan.md` §1.
 - The full teacher desktop authoring surface — mobile is the "on-the-go" teacher set only (approve, post, start/monitor quizzes); full authoring is the `desktop/` team (AGENTS §1.4).
 - LoRa / Bluetooth mesh, and live video conferencing.
-- The Hub, its database, REST/WS server, `llama-server` queue, DepEd `.xlsx` export generation — all owned by `server/`. Mobile only triggers/reads export via the contract.
+- The Hub, its database, REST/WS server, `llama-server` queue, gradebook `.xlsx` export generation — all owned by `server/`. Mobile only triggers/reads export via the contract.
 
 ## 2. Architecture
 
@@ -157,14 +157,14 @@ After a reconnect, send `last_event_id` in `EVENT_HELLO`; anything still missed 
 |---|---|---|---|
 | `EVENT_HELLO` → `EVENT_HELLO_ACK` | `data/remote` WsClient | close `4401` → re-auth; store `hub_id`, `sync_epoch`, clock offset | Reconnect with backoff; UI stays usable offline |
 | `EVENT_JOIN_REQUEST` (teacher) | ClassroomRepository | ignore unknown fields | Recovered via `POST /api/sync/pull` |
-| `EVENT_JOIN_APPROVAL` (pupil) | ClassroomRepository | — | Enrollment status recovered on next pull |
+| `EVENT_JOIN_APPROVAL` (learner) | ClassroomRepository | — | Enrollment status recovered on next pull |
 | `EVENT_ANNOUNCEMENT_PUSH` | StreamRepository | — | Missed push recovered on pull |
 | `EVENT_QUIZ_START` | `QuizSessionManager` | compute offset from `start_epoch_ms` | Recover active quiz via `GET /api/quizzes/active` |
 | `EVENT_QUIZ_CLOSED` | `QuizSessionManager` | lock input, auto-submit | Local timer still auto-submits at 00:00 |
-| `EVENT_QUIZ_SUBMIT` (pupil→Hub) | `QuizSessionManager` | same grading path as REST submit | Fallback to `POST .../submit` on reconnect |
+| `EVENT_QUIZ_SUBMIT` (learner→Hub) | `QuizSessionManager` | same grading path as REST submit | Fallback to `POST .../submit` on reconnect |
 | `EVENT_GRADE_CONFIRMED` | QuizRepository | — | Receipt recovered on pull (held scores release later) |
 | `EVENT_PRESENCE` (teacher) | QuizRepository | — | Live matrix stale until reconnect |
-| `EVENT_AI_CHAT_REQUEST` (pupil→Hub) | `InferenceRouter` | `EVENT_ERROR QUIZ_IN_PROGRESS` → never sent during quiz; `AI_QUEUE_FULL` → kind retry | AI sheet says available when connected to the Hub |
+| `EVENT_AI_CHAT_REQUEST` (learner→Hub) | `InferenceRouter` | `EVENT_ERROR QUIZ_IN_PROGRESS` → never sent during quiz; `AI_QUEUE_FULL` → kind retry | AI sheet says available when connected to the Hub |
 | `EVENT_QUEUE_STATUS` | `InferenceRouter` | — | Shown only while connected |
 | `EVENT_AI_TOKEN_STREAM` | `InferenceRouter` | partial stream → show received tokens | Stream ends on disconnect; offer retry |
 | `EVENT_ERROR` | WsClient | map `code` to the handling above | — |
@@ -284,7 +284,7 @@ Rule: two developers **must not** edit the same file in parallel; one issue is o
 ## 13. Commands and Verification
 Run from the repo root unless noted. Mobile build: `./gradlew test lint` (in `mobile/`). Mock hub: `python3 scripts/mock_hub.py`. Guardrails: `python3 scripts/verify_invariants.py`. Contract/mock tests: `python3 -m unittest discover tests`.
 
-Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` enrolled pupil, `123456789013` pupil (joins with the code), `ADMIN-0001`. Every PR attaches evidence against the mock hub (and the real Hub on integration day) with **WAN unplugged** (`rules/team-workflow-and-prs.md` §3).
+Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` enrolled learner, `123456789013` learner (joins with the code), `ADMIN-0001`. Every PR attaches evidence against the mock hub (and the real Hub on integration day) with **WAN unplugged** (`rules/team-workflow-and-prs.md` §3).
 
 **Flows built against the mock hub first (in order):** (1) discovery + manual IP → `EVENT_HELLO_ACK`; (2) login as `123456789012`; (3) `POST /api/sync/pull` apply + cursor; (4) join as `123456789013` with `K7M4QX` → teacher `EVENT_JOIN_REQUEST` → approve → `EVENT_JOIN_APPROVAL`.
 
@@ -297,7 +297,7 @@ Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `12345678901
 | #24 role nav shell | Login `T-0001` → `TeacherNavGraph`; `123456789012` → `StudentNavGraph` (bottom nav) |
 | #49 login/register | Register a new ID → `200`; duplicate → `409` message; login `123456789012`/`1234` → token stored encrypted |
 | #50 join dialog | `123456789013` enters `K7M4QX` → PENDING; status flips to ACTIVE on `EVENT_JOIN_APPROVAL` |
-| #51 teacher approval sheet | As `T-0001`, `EVENT_JOIN_REQUEST` shows name+LRN; Accept → pupil unlocked |
+| #51 teacher approval sheet | As `T-0001`, `EVENT_JOIN_REQUEST` shows name+LRN; Accept → learner unlocked |
 | #52 `DeltaSyncWorker` | Pull applies in one `@Transaction`; `reset:true` wipes mirror but keeps a `QUEUED_FOR_SYNC` row; push returns `SYNCED`/`REJECTED` receipts honored |
 
 **Sprint 3-6 checks (sketched; detail when scheduled):** #9 photo compresses <800 KB and uploads idempotently by `submission_id`; #59 Media3 `206` Range playback + Save-for-Home; #26 countdown pill colors + auto-submit at 00:00 + AI chat not composed while `IN_PROGRESS`; #65 offline attempt auto-flushes on reconnect; #15 RAM router picks Hub vs local; #69 AI blocked with `QUIZ_IN_PROGRESS` during a quiz; #18 heap < 250 MB captured on a 3–4 GB device.

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AnnouncementPushEvent",
-  "description": "Hub to enrolled pupils: a new announcement exists; clients run a delta pull.",
+  "description": "Hub to enrolled learners: a new announcement exists; clients run a delta pull.",
   "type": "object",
   "required": [
     "event",

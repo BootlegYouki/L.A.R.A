@@ -1,6 +1,6 @@
 # L.A.R.A. Design System
 
-> **Canonical design system for the L.A.R.A. offline classroom apps.** Google Classroom's screen layout, copied closely, with a friendly Filipino elementary brand: solid flat colors, Nunito, Phosphor icons, navy-tinted shadows, warm words.
+> **Canonical design system for the L.A.R.A. offline classroom apps.** Google Classroom's screen layout, copied closely, with a friendly Filipino school brand: solid flat colors, Nunito, Phosphor icons, navy-tinted shadows, warm words.
 
 Owned by the Lead Developer. Developers **use** these files; they do not edit them in a feature PR.
 
@@ -53,7 +53,7 @@ design-system/
 1. Copy `mobile/Color.kt`, `Type.kt`, `Shape.kt`, `Theme.kt` to `mobile/app/src/main/java/org/lara/app/ui/theme/`.
 2. Copy `mobile/res/font/*.ttf` to `mobile/app/src/main/res/font/`.
 3. Add the Phosphor Compose dependency `com.adamglin:phosphor-icon`.
-4. Wrap the app in `LaraTheme { ... }`; use `LaraColors.*`, `LaraShapes`, `LaraSpacing` and `Modifier.laraShadow(...)`. Colors and shadows on pupil screens must come from these, never from literals.
+4. Wrap the app in `LaraTheme { ... }`; use `LaraColors.*`, `LaraShapes`, `LaraSpacing` and `Modifier.laraShadow(...)`. Colors and shadows on learner screens must come from these, never from literals.
 
 ### Desktop (`desktop/`)
 1. Copy `assets/` to `desktop/src/assets/design-system/`.

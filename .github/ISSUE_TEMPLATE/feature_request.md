@@ -7,7 +7,7 @@ assignees: ''
 ---
 
 ## 1. Who needs it and why
-Which user (pupil Grade 1 to 6, teacher, admin) and what classroom problem does it solve? Link the PRD requirement (`FR-x.x`) if one exists.
+Which user (learner Grade 1 to 12, teacher, admin) and what classroom problem does it solve? Link the PRD requirement (`FR-x.x`) if one exists.
 
 ## 2. Affected application(s)
 - [ ] `mobile/` (Android)
@@ -22,7 +22,7 @@ Which user (pupil Grade 1 to 6, teacher, admin) and what classroom problem does 
 - Does it handle children's personal data (LRN, names, photos)?
 
 ## 4. Proposed solution and workflow
-Step by step: how does the teacher or pupil use it?
+Step by step: how does the teacher or learner use it?
 
 ## 5. Acceptance criteria
 - [ ] Works 100% offline on the classroom network with zero internet
