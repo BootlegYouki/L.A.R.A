@@ -35,7 +35,7 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 
 * **Board:** the [L.A.R.A Sprint Board](https://github.com/users/BootlegYouki/projects/2) shows every issue by Team, Sprint and Status. Move your card to *In Progress* when you start and *Done* when the PR merges.
 * **Find your list:** use the team and sprint filter links in the [README](./README.md#start-in-10-minutes). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the mock-hub flow to use.
-* Take any issue whose dependencies are merged and comment that you are taking it, so two people do not start the same one. **One issue = one PR.** Do not start an issue whose dependencies are unmerged unless the issue says to use the mock hub.
+* **Your team works one issue at a time, in step order** (`2.1`, then `2.2`, ...). Both developers work that issue together and open one PR; start the next issue when it is merged. The three teams are the only parallel streams. **One issue = one PR.** An issue that depends on another team's step builds against the mock hub and does not wait.
 * Clients build against `scripts/mock_hub.py`. The real Hub is used on **integration day** at the end of each sprint.
 * **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + mock hub + tests) merged first. Never edit `contracts/` inside a feature PR.
 * Stuck or found a contradiction between documents? Write it in the issue instead of guessing. The documents are ranked in [`docs/README.md`](./docs/README.md).
@@ -69,11 +69,11 @@ feature/bug branches (feat/*, fix/*, docs/*, test/*)
 
 Follow these steps in order for every issue. Replace the example (`#6`, `[SERVER 2.1]`, `feat/server-class-code-approval`) with yours.
 
-### Step 1: Claim the issue
-1. Open the [sprint board](https://github.com/users/BootlegYouki/projects/2) and pick the next card whose dependencies are merged (or that says to use the mock hub).
-2. Comment `I'm taking this` on the issue and ask the Lead to assign you (or assign yourself if you can).
+### Step 1: Start your team's next issue
+1. Open the [sprint board](https://github.com/users/BootlegYouki/projects/2) and take your team's next card in step order. Your team's previous PR must be merged first.
+2. Assign both developers of the team to the issue.
 3. Move the card to **In Progress**.
-4. Read the whole issue: Objective, Contract, Sub-Tasks, Target Files, Acceptance Criteria. If anything contradicts another document, ask in the issue **before** coding.
+4. Read the whole issue: Objective, PRD, Contract, Sub-Tasks, Target Files, Acceptance Criteria. Open the PRD requirement and the contract routes it names. If anything contradicts another document, ask in the issue **before** coding.
 
 ### Step 2: Create your branch from the latest `staging`
 ```bash

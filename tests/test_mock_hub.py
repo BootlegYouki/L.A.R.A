@@ -305,6 +305,31 @@ class TestMockHub(unittest.TestCase):
         _, anas, _ = call(BASE, "GET", f"/api/assignments/{asg}/private-comments", token=ana)
         self.assertEqual(anas, [])
 
+    def test_class_content_is_closed_to_people_outside_the_class(self):
+        data = self.pull(self.pupil)
+        mat, asg = data["materials"][0]["id"], data["assignments"][0]["id"]
+        quiz = self.make_active_quiz()
+        outsider = login(BASE, "123456789013")          # a learner who is not enrolled
+        for method, path in (("GET", f"/api/materials/{mat}/download"), ("GET", f"/api/materials/{mat}/chunks"),
+                             ("GET", f"/api/quizzes/{quiz['id']}"), ("POST", f"/api/quizzes/{quiz['id']}/begin")):
+            self.assertEqual(call(BASE, method, path, token=outsider)[0], 403, path)
+        admin = login(BASE, "ADMIN-0001")
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        other_teacher = login(BASE, "T-0002")
+        self.assertEqual(call(BASE, "GET", f"/api/assignments/{asg}/submissions", token=other_teacher)[0], 403)
+        self.assertEqual(call(BASE, "GET", f"/api/materials/{mat}/chunks", token=self.pupil)[0], 200)
+
+    def test_stream_comments_are_only_for_members_of_the_class(self):
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        outsider = login(BASE, "123456789013")          # signed in, but not enrolled
+        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann}/comments", token=outsider)[0], 403)
+        self.assertEqual(call(BASE, "POST", f"/api/announcements/{ann}/comments", {"content": "x"}, outsider)[0], 403)
+        queued = {"id": "c-1", "announcement_id": ann, "content": "x", "created_at": 1}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, outsider)
+        self.assertEqual(res["receipts"][0], {"id": "c-1", "status": "REJECTED", "reason": "FORBIDDEN"})
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED")
+
     def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):
         asg = self.pull(self.pupil)["assignments"][0]["id"]
         mine = {"id": "pc-1", "assignment_id": asg, "content": "Akin ito", "created_at": 1}

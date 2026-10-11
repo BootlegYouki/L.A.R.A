@@ -9,17 +9,12 @@ All AI agents and contributors must follow these rules.
 ## 1. Design Authority & L.A.R.A Custom Brand System
 
 * **Brand Authority (Canonical):** All three applications (Mobile, Desktop, and Server) must strictly follow the **L.A.R.A Custom Brand Design System** documented in [`design-system/design-system.md`](../design-system/design-system.md) and previewed in [`design-system/showcase.html`](../design-system/showcase.html).
-* **Google Classroom Mental Model:** Use Google Classroom structures (Class Cards, Stream announcements with teacher avatars, Classwork materials with icons) as the UX mental model, paired with L.A.R.A brand tokens.
-* **Core Brand Tokens (Zero Gradients):**
-  * **Primary Green (`#2E9B4B`):** General classroom learning, active tabs, buttons.
-  * **Dark Green (`#176B36`):** Hover states and solid classroom card headers.
-  * **Light Green (`#E4F6E8`):** Selected states and badge backgrounds.
-  * **Primary Purple (`#5145E5`):** Strictly reserved for the Socratic AI Tutor.
-  * **Canvas Background (`#F7FBFA`):** Mint-tinted soft background.
-  * **Surface White (`#FFFFFF`):** High-contrast cards and dialogs.
-  * **Primary Text (`#17213D`):** Deep navy high-contrast text.
-  * **Gradient Invariant:** Zero gradients. All surfaces, cards, buttons, and banners must use 100% flat, solid color fills.
-* **Typography:** **Nunito Only** across all apps (rounded, friendly, readable for primary grade children).
+* **Google Classroom is the layout.** L.A.R.A copies Google Classroom's screens and flows (Home, Stream, Classwork with topics, People, assignment page, grading, To-do) in the L.A.R.A brand, and adds quizzes and the AI tutor. When a screen is not in the design system yet, follow Classroom's structure with the documented components and say so in the PR.
+* **Same features on phone and desktop** for teachers and learners (`AGENTS.md` section 1.4); only the layout changes.
+* **Tokens only.** Colors, type sizes, spacing and radii come from `design-system/tokens.json` and its platform mirrors (`design-system/mobile/`, `design-system/desktop/`). Token values are not repeated in this file so they cannot drift; a hex value typed into a screen is a violation.
+* **Purple is reserved for the Socratic AI tutor.** Green is the classroom brand.
+* **Zero gradients.** Every surface, card, button and banner is a flat, solid fill.
+* **Typography:** **Nunito only** across all apps, bundled locally.
 * **Icon Standard:** Use official **Phosphor Icons** (`ph-*`) bundled locally without external CDN dependencies.
 
 ---
@@ -49,7 +44,9 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
   * English strings in `mobile/app/src/main/res/values/strings.xml`.
   * Filipino strings in `mobile/app/src/main/res/values-tl/strings.xml`.
 * **Desktop Localization:**
-  * Externalized JSON/TS dictionary with instant runtime toggle between English and Filipino.
+  * `desktop/src/i18n/en.json` and `desktop/src/i18n/fil.json` with the same keys, and a runtime toggle in Settings.
+* **CI checks key parity** on both platforms (`scripts/verify_invariants.py`).
+* **Words:** use the classroom words table in the design system (section 7.2). Say "learner", and "Hub" or "classroom network", never "internet".
 
 ---
 
@@ -62,5 +59,13 @@ Young children (especially in Grades 1 to 3) have developing fine motor control.
 
 ## 6. Gradebook Export Standard
 
-* Hub desktop application must export `.xlsx` and `.csv` files with Learner Name, LRN, one column per assignment and quiz (points earned, with the maximum in the header) and a total. No DepEd categories, quarters or weights: each teacher grades their own way.
-* Automatically detect mounted USB flash drives for one-click direct transfer.
+* The Hub must export `.xlsx` and `.csv` files with Learner Name, LRN, one column per assignment and quiz (points earned, with the maximum in the header) and a total. No DepEd categories, quarters or weights: each teacher grades their own way.
+* The file is written to a USB drive plugged into the Hub PC, detected automatically. Skip archived (deleted) assignments.
+
+---
+
+## 7. Every Screen
+
+* Has an offline state, an empty state and a loading skeleton.
+* Never relies on color alone: pair a status color with an icon and text.
+* Never shows a blocking "no connection" dialog.
