@@ -4,7 +4,7 @@ This rule document governs all on-device and Hub-assisted Small Language Model (
 
 All AI agents and contributors must follow these rules.
 
-**The Hub ships with the AI installed; using it is optional.** Pupils on any device can use the Hub's shared, queued AI without downloading anything, and nothing else in L.A.R.A may depend on it. Users who can run the model themselves may choose to download it from the Hub (never automatic). If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working.
+**The Hub ships with the AI installed; using it is optional.** Learners on any device can use the Hub's shared, queued AI without downloading anything, and nothing else in L.A.R.A may depend on it. Users who can run the model themselves may choose to download it from the Hub (never automatic). If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working.
 
 ---
 
@@ -48,15 +48,15 @@ Over 50% of Filipino student smartphones are 3GB/4GB RAM entry-level devices (In
 
 ## 3. Strict Socratic Pedagogical Behavior
 
-L.A.R.A AI is a mentor for elementary pupils (Grades 1 to 6), not an answer engine.
+L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It is Socratic, so the same rules hold at every grade level; there is no grade setting.
 
 ### Non-Negotiable Directives:
 1. **Zero Direct Answers:** Under no circumstances should the model output the final solution, answer key, or complete homework answers.
 2. **Polite Refusal Template:** If asked "What is the answer to #3?" or "Ano ang sagot sa tanong na ito?", respond warmly:
    *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"* (This exact text is the canonical template; the mock hub and tests use it.)
 3. **Document Anchoring:** The prompt must bind the pre-extracted text chunks (`material_chunks`) of the active lesson, within the 2,048-token window. All hints must reference concepts directly from the teacher's handout, and every reply carries the `grounded_chunk_id` it used.
-   * **Not covered by the lesson:** say you cannot help with that from this lesson and point the pupil back to the lesson. Do not answer from general knowledge. Optionally suggest asking the teacher.
-   * **Empty or unreadable lesson text** (for example a scanned PDF with no extractable text): do not improvise; tell the pupil the lesson text is not available yet.
+   * **Not covered by the lesson:** say you cannot help with that from this lesson and point the learner back to the lesson. Do not answer from general knowledge. Optionally suggest asking the teacher.
+   * **Empty or unreadable lesson text** (for example a scanned PDF with no extractable text): do not improvise; tell the learner the lesson text is not available yet.
 4. **Step-by-Step Questioning:** Give only ONE small clue at a time, followed by a leading question prompting the child to take the next step.
 5. **Bilingual Agility:** Automatically detect and reply in the student's selected language (English or natural conversational Filipino/Taglish).
 
@@ -78,7 +78,7 @@ To prevent the teacher's laptop from overloading when multiple low-RAM devices a
 No model has been validated yet. Choose the model from data.
 
 ### 5.1 Test set
-A fixed, versioned set of about 50 pupil prompts in `tests/ai_eval/` (English, Filipino and Taglish, spread over Grades 1 to 6 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like pupils, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
+A fixed, versioned set of about 50 learner prompts in `tests/ai_eval/` (English, Filipino and Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
 
 The development team writes the set. Filipino and Taglish prompts are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
 
@@ -88,7 +88,7 @@ Two team members score every reply independently, at least one of them fluent in
 1. **No direct answer:** never reveals the final answer or writes out the homework. A script flags any reply containing the prompt's `expected_answer`; a human still confirms.
 2. **Grounded:** stays on the supplied lesson text; correctly declines when the lesson does not cover it.
 3. **Socratic shape:** one small clue followed by one leading question.
-4. **Language:** replies in the selected language, natural at the pupil's level.
+4. **Language:** replies in the selected language, natural at the learner's level.
 5. **Latency:** time to first token and tokens per second on the real Hub machine.
 
 ### 5.3 Run

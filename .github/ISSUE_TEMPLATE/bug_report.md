@@ -18,7 +18,7 @@ assignees: ''
 - **OS Version:** (e.g., Android 14, Windows 11, Ubuntu 24.04)
 - **Physical RAM:** (e.g., 3GB, 4GB, 8GB, 16GB)
 - **Network Mode:** (e.g., Router LAN, Laptop Hotspot, Disconnected / Offline, WAN unplugged yes/no)
-- **Account / Class:** (role, class code; never paste a real pupil's LRN or PIN)
+- **Account / Class:** (role, class code; never paste a real learner's LRN or PIN)
 
 ## 3. Description of the Bug
 A clear and concise description of what went wrong.
@@ -33,4 +33,4 @@ A clear and concise description of what went wrong.
 What should have happened according to L.A.R.A specifications.
 
 ## 6. Logs & Screenshots
-Paste stack traces, logcat outputs, or browser console errors here. Remove tokens, PINs and real pupil names or LRNs first.
+Paste stack traces, logcat outputs, or browser console errors here. Remove tokens, PINs and real learner names or LRNs first.

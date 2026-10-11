@@ -21,13 +21,13 @@ Core tables share names and column meaning across server and clients: `users`, `
 * IDs are UUID v4 `TEXT`. Timestamps are epoch **milliseconds** `INTEGER`. Booleans are `INTEGER` 0/1.
 * Network JSON keys are `snake_case` and match column names.
 * Lesson text for the AI lives **only** in `material_chunks` (there is no `extracted_text` column).
-* DepEd records are per **quarter** (`quarter` 1 to 4 on `assignments` and `quizzes`); the three category weights live on `classrooms`.
+* Grading is points only, like Google Classroom: `max_points` on `assignments` and quizzes, points earned on submissions and attempts. There are no categories, quarters or weights; each teacher applies their own grading system outside L.A.R.A.
 
 ---
 
 ## 2. What Never Reaches a Client Database
 
-A pupil can open their own phone's SQLite file, so the client schema is public to that pupil. The server must never sync, and clients must never define columns or fields for:
+A learner can open their own phone's SQLite file, so the client schema is public to that learner. The server must never sync, and clients must never define columns or fields for:
 
 | Never on a client | Why |
 |---|---|
@@ -51,10 +51,10 @@ Clients get other people's names through `PublicUser` (`id`, `full_name`, `role`
 ### 3.1 The cursor is a sequence number, never a clock time
 `sync_revisions.seq` is `INTEGER PRIMARY KEY AUTOINCREMENT`. The Hub inserts one revision row **in the same transaction** as every change a client must see (`UPSERT` or `DELETE`). Using `updated_at` as a cursor is forbidden: the Hub laptop is offline and its clock can be wrong or corrected backwards, two changes can share a millisecond, and a transaction can commit after a pull finished. Any of these makes a client silently miss data.
 
-Each revision has `classroom_id` (NULL for global records) and `student_id` (NULL means the whole classroom; set means only that pupil and the teacher see it, for example homework submissions and quiz attempts). Pull filters on both.
+Each revision has `classroom_id` (NULL for global records) and `student_id` (NULL means the whole classroom; set means only that learner and the teacher see it, for example homework submissions and quiz attempts). Pull filters on both.
 
 ### 3.2 Pull (`POST /api/sync/pull`)
-1. Client sends `{ cursor, hub_id?, sync_epoch? }` (cursor 0 and no ids on the first sync). The pupil is identified by the bearer token, not by a body field.
+1. Client sends `{ cursor, hub_id?, sync_epoch? }` (cursor 0 and no ids on the first sync). The learner is identified by the bearer token, not by a body field.
 2. Hub returns the latest state of every entity changed after `cursor` in the caller's ACTIVE classrooms, `deleted` tombstones, `users` (`PublicUser`), `server_time`, `hub_id`, `sync_epoch`, `next_cursor`, `has_more`, `reset`.
 3. Client applies the whole response **and** stores `next_cursor` in **one** local transaction (`@Transaction` in Room, `BEGIN`/`COMMIT` with plugin-sql). If anything fails, roll back and keep the old cursor.
 4. If `has_more`, pull again immediately.
@@ -68,7 +68,7 @@ Each revision has `classroom_id` (NULL for global records) and `student_id` (NUL
 ### 3.4 Push (`POST /api/sync/push`)
 * Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts and comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
 * Hub validates and grades server-side, writes `sync_revisions` in the same transaction, and returns one receipt per item (`SYNCED` or `REJECTED` + reason such as `TIME_LIMIT_EXCEEDED`).
-* Client marks `SYNCED` only from a receipt. A `REJECTED` row stays visible to the pupil with a kind explanation and is never silently deleted.
+* Client marks `SYNCED` only from a receipt. A `REJECTED` row stays visible to the learner with a kind explanation and is never silently deleted.
 
 ### 3.5 Conflict policy
 Server is authoritative for classroom metadata, rosters and grades. The client is authoritative for its own drafts, queued answers and homework photos until the Hub acknowledges them.
@@ -79,9 +79,8 @@ Server is authoritative for classroom metadata, rosters and grades. The client i
 
 * **Never delete users, classrooms or graded rows in production code.** Deactivate users (`is_active`) and archive classrooms (`archived_at`). Grade-bearing tables reference `users` with `ON DELETE RESTRICT`; deleting a classroom cascades and would erase grades.
 * At most one `ACTIVE` quiz per classroom (partial unique index `uq_one_active_quiz_per_classroom`). `GET /api/quizzes/active` relies on it.
-* A `quiz_attempts` row exists from quiz start with `status = 'IN_PROGRESS'`; `submitted_at`, `score` and `total_points` are NULL until `SUBMITTED` (enforced by a CHECK). The AI quiz lockout is enforced while the pupil has an `IN_PROGRESS` row.
-* One attempt per pupil per quiz in v1 (`UNIQUE(quiz_id, student_id)`).
-* The three classroom weights must add up to 100 (CHECK). Defaults are a starting point; the teacher sets them per subject according to the current DepEd order.
+* A `quiz_attempts` row exists from quiz start with `status = 'IN_PROGRESS'`; `submitted_at`, `score` and `total_points` are NULL until `SUBMITTED` (enforced by a CHECK). The AI quiz lockout is enforced while the learner has an `IN_PROGRESS` row.
+* One attempt per learner per quiz in v1 (`UNIQUE(quiz_id, student_id)`).
 
 ---
 

@@ -89,7 +89,7 @@ Commit when one logical thing works, not at the end of the day. Use Conventional
 ```bash
 git add server/backend/src/routes/classrooms.rs
 git commit -m "feat(server): generate unique 6-character class codes"
-git commit -m "feat(server): emit EVENT_JOIN_REQUEST when a pupil joins"
+git commit -m "feat(server): emit EVENT_JOIN_REQUEST when a learner joins"
 git commit -m "test(server): cover approve and reject flows"
 git commit -m "docs(server): document the enrollment gate"
 ```
@@ -147,7 +147,7 @@ A PR without evidence is sent back. Paste into the PR description or a comment:
 * **Offline proof:** a screenshot or log of the feature with the Hub unreachable.
 * **Not verified:** if you could not test something (for example no physical budget phone), say so plainly. That is acceptable; hiding it is not.
 
-Remove tokens, PINs and real pupil names or LRNs from every log and screenshot first.
+Remove tokens, PINs and real learner names or LRNs from every log and screenshot first.
 
 ### Step 8: Wait for CI, fix failures
 After you push, GitHub runs the checks listed at the bottom of the PR. All must be green.
@@ -179,7 +179,7 @@ GitHub deletes the remote branch and closes the issue. Make sure the card is in 
 ```markdown
 ## Summary of Changes
 Adds server-side class code generation and the teacher approval gate: unique 6-character codes
-(no 0/O/1/I), pupil join creating a PENDING enrollment, approve/reject endpoints, and
+(no 0/O/1/I), learner join creating a PENDING enrollment, approve/reject endpoints, and
 EVENT_JOIN_REQUEST / EVENT_JOIN_APPROVAL pushes.
 
 Closes #6
@@ -244,7 +244,7 @@ A PR containing any of these is rejected immediately:
 1. **Cloud leakage:** Firebase, Google Play APIs, external CDNs, Google Fonts or unpkg links, remote analytics. Everything is 100% offline LAN.
 2. **Hardware RAM crashes:** mobile heap over 250 MB, or loading an on-device model without checking physical RAM of at least 6 GB.
 3. **Socratic AI leaks:** prompts or logic that give direct answers or homework solutions.
-4. **Quiz lockout bypass:** any path that lets the AI tutor run while the pupil has an `IN_PROGRESS` quiz attempt.
+4. **Quiz lockout bypass:** any path that lets the AI tutor run while the learner has an `IN_PROGRESS` quiz attempt.
 5. **Accessibility regressions:** touch targets under 52dp (56dp for primary actions and quiz options) or English-only strings.
 6. **Secrets reaching a client:** `pin_hash`, other people's LRN, `correct_answer`, or server file paths in a response, client table or log.
 7. **Contract drift:** a route, event or column changed in code without `contracts/`, the mock hub and the tests.
