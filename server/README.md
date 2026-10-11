@@ -1,6 +1,6 @@
 # L.A.R.A Local Hub Server (`server/`)
 
-> **Subsystem Scope:** Teacher Host System & Local Area Network (LAN) Server.  
+> **Subsystem Scope:** The school's Local Hub: the LAN server for every teacher and learner, with an admin console window.  
 > **Deployment:** one Hub per school on a **dedicated, always-on PC wired to the router**, serving every teacher and learner. The same app also runs on a team laptop for demos.  
 > **Repository Role:** Single source of truth for the offline classroom: serves the captive APK portal, orchestrates live quiz WebSockets, manages the SQLite delta-sync ledger, and runs the multi-slot SLM inference queue.
 
@@ -27,14 +27,14 @@
 
 **Every contributor and AI agent working in `server/` MUST adhere to these rules:**
 
-1. **Strict Zero-Internet Policy:** The Hub operates completely offline over a router or laptop hotspot. Never add remote cloud connections, telemetry, or external API dependencies.
+1. **Strict Zero-Internet Policy:** The Hub operates completely offline over the classroom router (the Hub PC's own hotspot only as a fallback). Never add remote cloud connections, telemetry, or external API dependencies.
 2. **Ports & Protocol Standard:**
    * **Port 8080 (HTTP):** Captive download portal (`/download`), REST endpoints, and HTTP 206 video streaming.
    * **Port 8081 (WebSocket):** Realtime event broker (`tokio-tungstenite`) for quiz timers, enrollments, and AI streaming.
    * **Port 8888 (UDP):** Subnet broadcast beacon (`255.255.255.255:8888`) every 3 seconds.
    * **mDNS (`_lara._tcp.local`):** Registered on port 8080.
 3. **Bandwidth Throttling (Router Protection):**
-   * Enforce a per-client token-bucket rate limit (maximum **2.0 MB/s per stream**) on HTTP 206 video endpoints to prevent 40 connected desks from freezing cheap classroom routers.
+   * Enforce a per-client token-bucket rate limit (maximum **2.0 MB/s per client**, not per connection) on HTTP 206 video endpoints to prevent 40 connected desks from freezing cheap classroom routers.
    * Cap teacher video uploads at **250MB** (recommended 720p H.264).
 4. **Windows Defender Firewall Countermeasure:**
    * Inbound ports (8080, 8081, 8888) are blocked by default on Windows "Public" networks.
@@ -106,7 +106,7 @@
 
 ## 3. Dedicated Server SQLite Schema (Master Local Hub)
 
-> **Source of truth:** [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql) (16 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * **Migrations:** one SQL migration per logical group under `backend/src/db/migrations/`, reproducing `server_master.sql` exactly. PRAGMAs are connection options, not migration statements.
 * **Never log or return:** `users.pin_hash`, `quiz_questions.correct_answer`, `synonyms_json`, server `file_path` values, raw session tokens.
@@ -143,39 +143,10 @@ server/
 
 ---
 
-## 5. Server Team Sprint Roadmap & Execution Order
+## 5. Server Team Issues and Build Order
 
-All server issues follow `[SERVER Sprint.Step]`. Each issue names its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
+The live list is on GitHub, so it is not copied here: [open `server` issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22%20sort%3Acreated-asc) and the [sprint board](https://github.com/users/BootlegYouki/projects/2).
 
-* **Sprint 0 (Contract Freeze & Technical Spec):**
-  * `[SERVER 0.1]`: Write server/docs/TECH_SPEC.md and get Lead approval ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36))
-* **Sprint 1 (Scaffolding & LAN Discovery):**
-  * `[SERVER 1.0]`: Scaffold Tauri window, Axum :8080, WebSocket :8081 and migration runner ([#39](https://github.com/BootlegYouki/L.A.R.A/issues/39))
-  * `[SERVER 1.1]`: Implement mDNS responder and UDP subnet broadcast beacon ([#1](https://github.com/BootlegYouki/L.A.R.A/issues/1))
-  * `[SERVER 1.2]`: Set up central SQLite database with schema migrations ([#2](https://github.com/BootlegYouki/L.A.R.A/issues/2))
-  * `[SERVER 1.3]`: Build captive web portal (:8080/download) with 3-step Android sideloading guide ([#3](https://github.com/BootlegYouki/L.A.R.A/issues/3))
-  * `[SERVER 1.4]`: Package standalone zero-dependency installer (.exe / .deb) for teacher laptops ([#20](https://github.com/BootlegYouki/L.A.R.A/issues/20))
-  * `[SERVER 1.5]`: AI feasibility spike: evaluate candidate models on the Hub machine ([#73](https://github.com/BootlegYouki/L.A.R.A/issues/73))
-* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
-  * `[SERVER 2.0]`: Implement auth: register, login, logout and bearer sessions ([#42](https://github.com/BootlegYouki/L.A.R.A/issues/42))
-  * `[SERVER 2.1]`: Class Code generation, enrollment API and teacher approval gate ([#6](https://github.com/BootlegYouki/L.A.R.A/issues/6))
-  * `[SERVER 2.2]`: Delta-sync pull/push with SQLite transactions and tombstones ([#7](https://github.com/BootlegYouki/L.A.R.A/issues/7))
-  * `[SERVER 2.3]`: Build Hub admin console for account creation and PIN reset ([#43](https://github.com/BootlegYouki/L.A.R.A/issues/43))
-  * `[SERVER 2.4]`: Implement WebSocket event broker: registry, presence and targeted push ([#44](https://github.com/BootlegYouki/L.A.R.A/issues/44))
-* **Sprint 3 (Stream, Media & Homework):**
-  * `[SERVER 3.1]`: Automated document text extraction & chunking for lesson handouts ([#10](https://github.com/BootlegYouki/L.A.R.A/issues/10))
-  * `[SERVER 3.2]`: Implement HTTP 206 Byte-Range video streaming with 2 MB/s client rate-limiting ([#8](https://github.com/BootlegYouki/L.A.R.A/issues/8))
-  * `[SERVER 3.3]`: Implement material upload and homework submission receivers ([#53](https://github.com/BootlegYouki/L.A.R.A/issues/53))
-  * `[SERVER 3.4]`: Implement teacher CRUD for announcements, assignments and submission grading ([#54](https://github.com/BootlegYouki/L.A.R.A/issues/54))
-* **Sprint 4 (Paperless Quiz & Gradebook):**
-  * `[SERVER 4.1]`: Quiz broker: synchronized start/close events and time-limit validation ([#11](https://github.com/BootlegYouki/L.A.R.A/issues/11))
-  * `[SERVER 4.2]`: Instant auto-grading engine for Multiple Choice, True/False, and Identification questions ([#12](https://github.com/BootlegYouki/L.A.R.A/issues/12))
-  * `[SERVER 4.3]`: One-click gradebook export (.xlsx/.csv) to plugged-in USB flash drives ([#13](https://github.com/BootlegYouki/L.A.R.A/issues/13))
-  * `[SERVER 4.4]`: Implement one-click SQLite database backup & restore (.lara-backup) to USB flash drive ([#21](https://github.com/BootlegYouki/L.A.R.A/issues/21))
-  * `[SERVER 4.5]`: Implement quiz CRUD, redacted student view and attempt begin ([#61](https://github.com/BootlegYouki/L.A.R.A/issues/61))
-* **Sprint 5 (Socratic AI):**
-  * `[SERVER 5.1]`: Configure embedded llama-server with 2-4 slots and FIFO request queue ([#14](https://github.com/BootlegYouki/L.A.R.A/issues/14))
-  * `[SERVER 5.2]`: Server-side Socratic prompt builder and hard quiz lockout enforcement ([#16](https://github.com/BootlegYouki/L.A.R.A/issues/16))
-  * `[SERVER 5.3]`: Build Hub health dashboard: ports, connected devices and AI queue ([#66](https://github.com/BootlegYouki/L.A.R.A/issues/66))
-* **Sprint 6 (Audit & Stress Test):**
-  * `[SERVER 6.1]`: Simulate 40 concurrent connected devices on local Wi-Fi router (quizzes & video) ([#17](https://github.com/BootlegYouki/L.A.R.A/issues/17))
+* Issues are titled `[SERVER sprint.step]`. The team works them **one at a time, in step order**, both developers together, with one open PR (`rules/team-workflow-and-prs.md` section 1.1).
+* Sprint 0 is `docs/TECH_SPEC.md`; its section 10 records the build order and what each step creates for later steps.
+* Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.

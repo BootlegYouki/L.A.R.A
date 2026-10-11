@@ -360,7 +360,7 @@ Measurements marked "Classroom" were taken from the learner side of the current 
 4. **Add, never replace.** L.A.R.A. additions (Hub beacon, sync and Saved badges, Quizzes, Ask L.A.R.A., camera, class code approval) go in the places named below. They never push a Classroom element out.
 5. **Roles.** Learners see Stream, Classwork, Quizzes and Ask L.A.R.A. Teachers see Stream, Classwork, Quizzes, People and Grades. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN).
 6. **Every screen** has an offline state, an empty state and a loading skeleton (5.10). Nothing blocks when the Hub is unreachable.
-7. **Teacher features live on Desktop and Mobile.** Desktop is the full authoring surface. Mobile covers the on-the-go set (approve, post, start a quiz, monitor, grade a photo) and may add authoring when the team has capacity.
+7. **Teacher features live on Desktop and Mobile, the same set on both** (`AGENTS.md` section 1.4).
 
 ### 9.2 App shell (Desktop and Hub portal)
 

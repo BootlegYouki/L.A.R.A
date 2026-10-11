@@ -77,11 +77,7 @@
 ### 2.1 Dual-Role Architecture (Student & Teacher)
 The app switches navigation graphs depending on authenticated role:
 * **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz).
-* **Teacher NavGraph (`TeacherNavGraph`):**
-  * **Join Request Approvals:** Bottom sheet showing student Name, LRN, and one-click Accept/Decline buttons.
-  * **Stream Broadcasting:** FAB allowing teachers to post announcements to the class directly from their smartphone.
-  * **Quiz Remote Controller:** Remote "Start Quiz" trigger button to broadcast synchronized countdowns across the classroom.
-  * **Live Submission Telemetry:** Card showing real-time count of learners currently answering and auto-graded score distributions.
+* **Teacher NavGraph (`TeacherNavGraph`):** every teacher feature the desktop app has (root `AGENTS.md` section 1.4): create and manage classes, approve and remove learners, post announcements, upload materials, create and edit assignments, topics, grade homework photos, private comments, build quizzes, start and monitor them, and see grades.
 
 ### 2.2 Paperless Quiz Engine
 * Timed full-screen view with visual countdown timer pill (Green >5m, Yellow ≤5m, Red pulsing ≤2m).
@@ -101,7 +97,7 @@ The app switches navigation graphs depending on authenticated role:
 
 ## 3. Client Offline Database Schema (Android Room)
 
-> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * One Room entity per table, package `org.lara.app.data.local.entities.*`, same column names and nullability. Add a schema test that compares Room's exported schema with the SQL file.
 * **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.
@@ -145,36 +141,10 @@ mobile/
 
 ---
 
-## 5. Mobile Team Sprint Roadmap & Execution Order
+## 5. Mobile Team Issues and Build Order
 
-All mobile issues follow `[MOBILE Sprint.Step]`. Each issue names its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
+The live list is on GitHub, so it is not copied here: [open `mobile` issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22%20sort%3Acreated-asc) and the [sprint board](https://github.com/users/BootlegYouki/projects/2).
 
-* **Sprint 0 (Contract Freeze & Technical Spec):**
-  * `[MOBILE 0.1]`: Write mobile/docs/TECH_SPEC.md and get Lead approval ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38))
-* **Sprint 1 (Scaffolding & LAN Discovery):**
-  * `[MOBILE 1.1]`: Scaffold Android project shell, custom design tokens foundation & navigation ([#23](https://github.com/BootlegYouki/L.A.R.A/issues/23))
-  * `[MOBILE 1.2]`: Implement mDNS discovery & manual IP fallback screen in Jetpack Compose ([#4](https://github.com/BootlegYouki/L.A.R.A/issues/4))
-  * `[MOBILE 1.3]`: Create Room database, DAOs and repository layer from client_offline.sql ([#41](https://github.com/BootlegYouki/L.A.R.A/issues/41))
-* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
-  * `[MOBILE 2.1]`: Build role-based navigation shell (Student and Teacher graphs) ([#24](https://github.com/BootlegYouki/L.A.R.A/issues/24))
-  * `[MOBILE 2.2]`: Build Student/Teacher login and registration screens ([#49](https://github.com/BootlegYouki/L.A.R.A/issues/49))
-  * `[MOBILE 2.3]`: Build Class Code join dialog with live approval status ([#50](https://github.com/BootlegYouki/L.A.R.A/issues/50))
-  * `[MOBILE 2.4]`: Build Teacher pending-approval bottom sheet ([#51](https://github.com/BootlegYouki/L.A.R.A/issues/51))
-  * `[MOBILE 2.5]`: Implement DeltaSyncWorker (pull, push, tombstones) with WorkManager ([#52](https://github.com/BootlegYouki/L.A.R.A/issues/52))
-* **Sprint 3 (Stream, Media & Homework):**
-  * `[MOBILE 3.1]`: Build announcement stream cards and PDF reader ([#25](https://github.com/BootlegYouki/L.A.R.A/issues/25))
-  * `[MOBILE 3.2]`: Implement CameraX homework photo capture with automatic JPEG compression (<800KB) ([#9](https://github.com/BootlegYouki/L.A.R.A/issues/9))
-  * `[MOBILE 3.3]`: Build Media3 video player with Save for Home ([#59](https://github.com/BootlegYouki/L.A.R.A/issues/59))
-  * `[MOBILE 3.4]`: Build teacher Post Announcement FAB and dialog ([#60](https://github.com/BootlegYouki/L.A.R.A/issues/60))
-* **Sprint 4 (Paperless Quiz & Gradebook):**
-  * `[MOBILE 4.1]`: Build paperless student quiz flow with countdown timer and AI unmount ([#26](https://github.com/BootlegYouki/L.A.R.A/issues/26))
-  * `[MOBILE 4.2]`: Build Teacher Quiz remote controller and live submission monitor ([#64](https://github.com/BootlegYouki/L.A.R.A/issues/64))
-  * `[MOBILE 4.3]`: Implement quiz offline queue and auto-flush ([#65](https://github.com/BootlegYouki/L.A.R.A/issues/65))
-* **Sprint 5 (Socratic AI):**
-  * `[MOBILE 5.1]`: Implement hardware RAM detection (<6GB vs >=6GB) and dual-mode inference router ([#15](https://github.com/BootlegYouki/L.A.R.A/issues/15))
-  * `[MOBILE 5.2]`: Build Socratic AI chat bottom sheet with bilingual toggle ([#27](https://github.com/BootlegYouki/L.A.R.A/issues/27))
-  * `[MOBILE 5.3]`: Implement SocraticPromptBuilder and client-side quiz lockout ([#69](https://github.com/BootlegYouki/L.A.R.A/issues/69))
-  * `[MOBILE 5.4]`: Implement llama.cpp JNI bridge for arm64-v8a ([#70](https://github.com/BootlegYouki/L.A.R.A/issues/70))
-* **Sprint 6 (Audit & Stress Test):**
-  * `[MOBILE 6.1]`: Profile memory and battery consumption on 3GB/4GB Android devices (Transsion/realme) ([#18](https://github.com/BootlegYouki/L.A.R.A/issues/18))
-  * `[MOBILE 6.2]`: Conduct accessibility UX audit: touch targets, contrast and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))
+* Issues are titled `[MOBILE sprint.step]`. The team works them **one at a time, in step order**, both developers together, with one open PR (`rules/team-workflow-and-prs.md` section 1.1).
+* Sprint 0 is `docs/TECH_SPEC.md`; its section 10 records the build order and what each step creates for later steps.
+* Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.
