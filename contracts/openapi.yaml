@@ -597,7 +597,7 @@ paths:
 
   /api/announcements/{id}/comments:
     get:
-      summary: Retrieve comments for a specific announcement
+      summary: Retrieve comments for a specific announcement (members of the class only, else 403)
       tags: [stream]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -611,7 +611,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/Comment"
     post:
-      summary: Post a comment on an announcement (rejected with 403 COMMENTS_DISABLED when allow_comments is false)
+      summary: Post a comment on an announcement (members of the class only; rejected with 403 COMMENTS_DISABLED when allow_comments is false)
       tags: [stream]
       parameters:
         - $ref: "#/components/parameters/Id"
