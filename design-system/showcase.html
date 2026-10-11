@@ -840,6 +840,60 @@
     .rm-dialog textarea { min-height: 140px; resize: vertical; }
     .rm-dialog footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
     .rm-dialog footer .hint { margin-right: auto; font-size: 13px; font-weight: 700; color: var(--color-warning-dark); }
+    .rm[data-screen="quiz"] [data-s~="quiz"] { display: block; }
+    .rm[data-screen="quiz"][data-role="learner"][data-qs="run"] .rm-body { grid-template-columns: minmax(0, 1fr); }
+    .rm[data-screen="quiz"][data-role="learner"][data-qs="run"] .rm-drawer { display: none; }
+    .rm-qwrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+    .rm-qwrap.wide { max-width: 960px; }
+    .rm-qcard { display: grid; gap: 16px; padding: 24px; border: 2px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-white); box-shadow: var(--shadow-elevated); }
+    .rm-qcard h3 { font-size: 24px; line-height: 32px; font-weight: 900; }
+    .rm-qhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .rm-qmeta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rm-qlist { display: grid; gap: 10px; list-style: none; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-qlist li { display: flex; gap: 10px; align-items: flex-start; }
+    .rm-qlist i { font-size: 20px; color: var(--color-dark-green); flex-shrink: 0; }
+    .rm-timer { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); border: 1px solid var(--color-success-border); background: var(--color-light-green); color: var(--color-dark-green); font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .rm-timer.warn { background: var(--color-warning-light); color: var(--color-warning-dark); border-color: var(--color-warning-border); }
+    .rm-timer.crit { background: var(--color-danger-light); color: var(--color-danger-dark); border-color: var(--color-danger-border); }
+    .rm-dots { display: flex; gap: 6px; }
+    .rm-dots i { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--color-border); }
+    .rm-dots i.done { background: var(--color-primary-green); }
+    .rm-dots i.cur { background: var(--color-dark-green); }
+    .rm-qbody { display: grid; gap: 16px; }
+    .rm-qcount { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-qtext { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-opts { display: grid; gap: 12px; }
+    .rm-opt { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 12px 18px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); color: inherit; font-family: inherit; font-size: 16px; font-weight: 800; text-align: left; cursor: pointer; }
+    .rm-opt:hover { border-color: var(--color-primary-green); box-shadow: var(--shadow-card-hover); }
+    .rm-opt i { font-size: 22px; color: var(--color-text-muted); }
+    .rm-opt[aria-checked="true"] { border-color: var(--color-primary-green); background: var(--color-light-green); }
+    .rm-opt[aria-checked="true"] i { color: var(--color-primary-green); }
+    .rm-qfoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .rm-qnote { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 18px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-qnote i { font-size: 18px; flex-shrink: 0; }
+    .rm-q { display: none; }
+    .rm .rm-qd-q { display: none; }
+    .rm[data-state="offline"] .rm-qd-q { display: inline-flex; }
+    .rm[data-state="offline"] .rm-sv { display: none; }
+    .rm[data-qs="intro"] .rm-qi, .rm[data-qs="run"] .rm-qr, .rm[data-qs="done"] .rm-qd { display: grid; }
+    .rm-ring { width: 96px; height: 96px; }
+    .rm-ring circle { fill: none; stroke-width: 10; }
+    .rm-ring .bg { stroke: var(--color-border); }
+    .rm-ring .fg { stroke: var(--color-primary-green); stroke-linecap: round; }
+    .rm-result { display: flex; align-items: center; gap: 24px; }
+    .rm-result h4 { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-result p { margin-top: 4px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-demo { display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-size: 12px; font-weight: 800; color: var(--color-text-muted); }
+    .rm-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .rm-stat { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-stat strong { display: block; font-size: 28px; line-height: 36px; font-weight: 900; }
+    .rm-stat span { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-lrow { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 4px; border-bottom: 1px solid var(--color-border); }
+    .rm-lrow .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 800; }
+    .rm-prog { width: 160px; height: 8px; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+    .rm-prog i { display: block; height: 100%; background: var(--color-primary-green); }
+    .rm-lrow .cnt { width: 56px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); text-align: right; }
+    .rm[data-qt="idle"] [data-qt-show]:not([data-qt-show~="idle"]), .rm[data-qt="live"] [data-qt-show]:not([data-qt-show~="live"]), .rm[data-qt="closed"] [data-qt-show]:not([data-qt-show~="closed"]) { display: none; }
     .rm .btn, .rm .rm-tonal, .rm .cr-link { min-height: var(--control-height-desktop); }
     .rm .cr-icon { width: var(--control-height-desktop); height: var(--control-height-desktop); }
     .rm .rm-tab, .rm .rm-nav { min-height: 48px; }
@@ -1253,6 +1307,92 @@ function rmHome() {
   return '<div data-s="home"><div class="rm-wrap wide"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' + due + classes + empty + skel + '</div></div>';
 }
 
+const RM_TIMES = [['600', '10:00'], ['290', '4:50'], ['100', '1:40']];
+const RM_QUIZ = { title: 'Pagsusulit #2: Parts of a Leaf', questions: [
+  ['What gives a leaf its green color?', ['Stomata', 'Chlorophyll', 'Phloem', 'Veins']],
+  ['Which part lets air move in and out of a leaf?', ['Stomata', 'Petiole', 'Xylem', 'Blade']],
+  ['What do leaves make using sunlight?', ['Soil', 'Food (sugar)', 'Water', 'Rocks']],
+  ['The flat, wide part of a leaf is called the...', ['Blade', 'Stem', 'Root', 'Seed']],
+  ['Which part joins the leaf to the stem?', ['Petiole', 'Blade', 'Vein', 'Edge']]] };
+const RM_LEARNERS = [['AS', 'Ana S.'], ['JD', 'Juan D.'], ['MR', 'Mika R.'], ['PC', 'Paolo C.'], ['LM', 'Liza M.'], ['BT', 'Ben T.']];
+const RM_LIVE = [['p', 3], ['s', 5], ['p', 1], ['n', 0], ['s', 5], ['p', 4]];
+
+function rmTimer() { return '<span class="rm-timer">' + rmIcon('timer') + '<span data-q-time>10:00 left</span></span>'; }
+
+function rmQuiz() {
+  const back = '<button class="cr-link" type="button" data-rm="go" data-screen="stream" style="justify-self:start;padding-left:0">' + rmIcon('arrow-left') + 'Back to Stream</button>';
+  const meta = '<div class="rm-qmeta"><span class="badge badge-neutral">' + rmIcon('list-numbers') + ' 5 questions</span><span class="badge badge-neutral">' + rmIcon('timer') + ' 10 minutes</span><span class="badge badge-neutral" data-rm-name>Science 4</span></div>';
+  const demo = '<div class="rm-demo">Prototype only:<button class="cr-link" type="button" data-rm="quiz-reset">Restart the demo</button></div>';
+  const offline = '<div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. Keep going: the timer keeps running and your answers are saved on this device.</div>';
+  const intro = '<section class="rm-qcard rm-q rm-qi">' + back + '<h3>' + RM_QUIZ.title + '</h3>' + meta +
+    '<ul class="rm-qlist"><li>' + rmIcon('timer') + 'One timer for the whole quiz. It starts when you press Start quiz and cannot be paused.</li>' +
+    '<li>' + rmIcon('cloud-slash') + 'If the Wi-Fi drops, keep going. Your answers are saved on this device and sent when the Hub is back.</li>' +
+    '<li>' + rmIcon('lock-key') + 'Ask L.A.R.A. is off until you submit.</li></ul>' +
+    '<div class="rm-qfoot"><span class="rm-qnote">' + rmIcon('check-circle') + 'You can change an answer until you submit.</span><button class="btn btn-primary" type="button" data-rm="quiz-start">Start quiz</button></div></section>';
+  const run = '<section class="rm-qcard rm-q rm-qr"><div class="rm-qhead"><strong>' + RM_QUIZ.title + '</strong>' + rmTimer() + '</div><div class="rm-qbody"></div>' +
+    '<div class="rm-qnote">' + rmIcon('cloud-slash') + 'Each answer is saved on this device as you pick it.</div><div class="rm-qnote">' + rmIcon('lock-key') + 'Ask L.A.R.A. is off during a quiz.</div></section>';
+  const done = '<section class="rm-qcard rm-q rm-qd"><div class="rm-result"><svg class="rm-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40" stroke-dasharray="201 251" transform="rotate(-90 50 50)"/></svg>' +
+    '<div><h4 data-q-done-title>Your answers are in</h4><p>Sample result: 4 of 5. Nice work. Let us look at the one you missed together.</p></div></div>' +
+    '<div class="rm-qnote"><span class="badge badge-synced rm-sv"><i class="ph ph-check-circle"></i> Saved</span><span class="badge badge-queued rm-qd-q"><i class="ph ph-clock"></i> Queued for sync</span>Your teacher sees it as soon as the Hub is reachable.</div>' +
+    '<div class="rm-qfoot"><button class="btn btn-secondary" type="button" data-rm="go" data-screen="stream">Back to Stream</button></div></section>';
+  const mon = '<div class="rm-qwrap wide"><button class="cr-link" type="button" data-rm="go" data-screen="stream" style="justify-self:start;padding-left:0">' + rmIcon('arrow-left') + 'Back to Stream</button>' +
+    '<section class="rm-qcard"><div class="rm-qhead"><div><h3>' + RM_QUIZ.title + '</h3><div class="rm-qmeta" style="margin-top:8px"><span class="badge badge-neutral" data-qt-show="live">' + rmIcon('broadcast') + ' Live</span><span class="badge badge-neutral" data-qt-show="idle">' + rmIcon('hourglass') + ' Not started</span><span class="badge badge-neutral" data-qt-show="closed">' + rmIcon('lock') + ' Closed</span></div></div>' +
+    '<div style="display:flex;align-items:center;gap:8px"><span data-qt-show="idle live">' + rmTimer() + '</span><button class="btn btn-primary" type="button" data-rm="quiz-open" data-qt-show="idle">Start quiz</button><button class="btn btn-secondary" type="button" data-rm="quiz-close" data-qt-show="live">Close quiz</button></div></div>' +
+    '<div class="rm-stats"><div class="rm-stat"><strong data-qs-n="p">0</strong><span>In progress</span></div><div class="rm-stat"><strong data-qs-n="s">0</strong><span>Submitted</span></div><div class="rm-stat"><strong data-qs-n="n">27</strong><span>Not started</span></div></div>' +
+    '<div class="rm-mon"></div><div class="rm-qnote">' + rmIcon('info') + 'Closing the quiz submits and grades everyone still answering. Building a quiz comes with the Classwork screens.</div></section>' + demo + '</div>';
+  return '<div data-s="quiz"><div class="rm-wrap"><div data-only="learner"><div class="rm-qwrap">' + offline + intro + run + done + demo + '</div></div><div data-only="teacher">' + mon + '</div></div></div>';
+}
+
+function rmFmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+
+function rmQuizTick(root) {
+  if (!root._qEnd) return;
+  const left = Math.max(0, Math.round((root._qEnd - Date.now()) / 1000));
+  root.querySelectorAll('[data-q-time]').forEach(e => {
+    e.textContent = rmFmt(left) + ' left';
+    const p = e.closest('.rm-timer'); p.classList.toggle('warn', left <= 300 && left > 120); p.classList.toggle('crit', left <= 120);
+  });
+  if (left === 0) {
+    clearInterval(root._qTimer);
+    if (root.dataset.qs === 'run') rmQuizSubmit(root, true);
+    if (root.dataset.qt === 'live') rmQuizClose(root);
+  }
+}
+
+function rmQuizClock(root) {
+  if (!root._qEnd || Date.now() >= root._qEnd) root._qEnd = Date.now() + (+root.dataset.time || 600) * 1000;
+  clearInterval(root._qTimer); root._qTimer = setInterval(() => rmQuizTick(root), 1000); rmQuizTick(root);
+}
+
+function rmQuizRender(root) {
+  const i = root._qIdx, qs = RM_QUIZ.questions, q = qs[i], ans = root._qAns, last = i === qs.length - 1;
+  root.querySelector('.rm-qbody').innerHTML = '<div class="rm-dots" aria-hidden="true">' + qs.map((_, k) => '<i class="' + (k === i ? 'cur' : ans[k] !== undefined ? 'done' : '') + '"></i>').join('') + '</div>' +
+    '<p class="rm-qcount">Question ' + (i + 1) + ' of ' + qs.length + '</p><p class="rm-qtext">' + q[0] + '</p>' +
+    '<div class="rm-opts" role="radiogroup" aria-label="Answers">' + q[1].map((o, k) => '<button type="button" class="rm-opt" role="radio" data-rm="quiz-pick" data-k="' + k + '" aria-checked="' + (ans[i] === k) + '">' + (ans[i] === k ? '<i class="ph-fill ph-check-circle"></i>' : '<i class="ph ph-circle"></i>') + '<span>' + o + '</span></button>').join('') + '</div>' +
+    '<div class="rm-qfoot"><button class="btn btn-secondary" type="button" data-rm="quiz-prev"' + (i === 0 ? ' disabled' : '') + '>Previous</button>' +
+    (last ? '<span class="rm-qnote">' + ans.filter(a => a !== undefined).length + ' of ' + qs.length + ' answered</span><button class="btn btn-primary" type="button" data-rm="quiz-submit">Submit</button>' : '<button class="btn btn-primary" type="button" data-rm="quiz-next">Next</button>') + '</div>';
+}
+
+function rmQuizSubmit(root, timeUp) {
+  clearInterval(root._qTimer);
+  root.dataset.qs = 'done';
+  root.querySelector('[data-q-done-title]').textContent = timeUp ? 'Time is up. Your answers were sent in' : 'Your answers are in';
+  rmSync(root);
+}
+
+function rmQuizTeacher(root) {
+  const t = root.dataset.qt, rows = RM_LEARNERS.map((l, k) => {
+    const st = t === 'idle' ? ['n', 0] : t === 'closed' ? ['s', 5] : RM_LIVE[k];
+    const badge = st[0] === 's' ? '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Submitted</span>' : st[0] === 'p' ? '<span class="badge badge-queued"><i class="ph ph-pencil-simple"></i> Answering</span>' : '<span class="badge badge-neutral"><i class="ph ph-hourglass"></i> Not started</span>';
+    return '<div class="rm-lrow"><span class="avatar sm">' + l[0] + '</span><span class="nm">' + l[1] + '</span><span class="rm-prog" aria-hidden="true"><i style="width:' + st[1] * 20 + '%"></i></span><span class="cnt">' + st[1] + ' of 5</span>' + badge + '</div>';
+  }).join('');
+  root.querySelector('.rm-mon').innerHTML = rows;
+  const n = t === 'idle' ? [0, 0, 27] : t === 'closed' ? [0, 27, 0] : [14, 9, 4];
+  ['p', 's', 'n'].forEach((k, j) => { root.querySelector('[data-qs-n="' + k + '"]').textContent = n[j]; });
+}
+
+function rmQuizClose(root) { clearInterval(root._qTimer); root.dataset.qt = 'closed'; rmQuizTeacher(root); rmSync(root); }
+
 function rmAnnouncement(init, who, when, body, tail) {
   return '<article class="rm-post"><header class="rm-post-head"><span class="avatar">' + init + '</span><div class="who">' + who + '<small>' + when + '</small></div>' + rmBtn('dots-three-vertical', 'Announcement options') + '</header>' +
     '<div class="rm-post-body">' + body + '</div>' + (tail || '') + '</article>';
@@ -1260,12 +1400,12 @@ function rmAnnouncement(init, who, when, body, tail) {
 
 function rmStream() {
   const c = CR_SCI;
-  const note = (kind, icon, text, when) => '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="later" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
+  const note = (kind, icon, text, when, screen) => '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="' + (screen || 'later') + '" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
   const comments = '<div class="rm-comments"><div class="rm-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
     '<button class="cr-link rm-add" type="button" data-rm="comment-toggle" style="justify-self:start">' + rmIcon('chat-text') + 'Add comment</button>' +
     '<div class="rm-reply" hidden><span class="avatar sm"><span data-only="learner">AS</span><span data-only="teacher">MR</span></span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment">' + rmBtn('paper-plane-tilt', 'Send comment', ' data-rm="comment-send"') + '</div></div>';
   const feed = '<div class="rm-feed rm-has">' +
-    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM') +
+    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
     note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
     '<div class="rm-posts">' + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', comments) + '</div></div>';
   const empty = '<section class="rm-empty rm-feed-empty" aria-label="Nothing posted yet"><span class="art">' + rmIcon('chat-circle-dots') + '</span><div><h4>This is where you can talk to your class</h4><p data-only="teacher">Use the stream to share announcements, post assignments and answer learners\' questions.</p><p data-only="learner">When your teacher posts something, you will see it here.</p></div></section>';
@@ -1299,9 +1439,9 @@ function rmApp() {
     '<div class="rm-crumb"><i class="ph ph-caret-right"></i><div><strong data-rm-name>' + CR_SCI.name + '</strong><small data-rm-sec>' + CR_SCI.section + '</small></div></div><span class="cr-spacer"></span>' +
     '<span class="rm-hub"><span class="on"><i class="ph ph-broadcast"></i> Connected to Hub</span><span class="off"><i class="ph ph-wifi-slash"></i> Not connected to Hub</span></span>' +
     rmBtn('plus', 'Join or create a class') + '<span class="cr-icon" style="cursor:default"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></span></header>';
-  return crSwitch(CR_VIEWS) + crSwitch(RM_STATES, 'State', 'state') +
-    '<div class="rm" data-role="learner" data-state="normal" data-screen="home" data-cls="0" data-tab="stream">' + top +
-    '<div class="rm-body"><nav class="rm-drawer" aria-label="Classes">' + rmDrawer() + '</nav><div class="rm-sheet">' + rmStream() + rmHome() + '</div></div>' + rmModal() + '</div>';
+  return crSwitch(CR_VIEWS) + crSwitch(RM_STATES, 'State', 'state') + crSwitch(RM_TIMES, 'Quiz clock starts at', 'time') +
+    '<div class="rm" data-role="learner" data-state="normal" data-screen="home" data-cls="0" data-tab="stream" data-qs="intro" data-qt="idle" data-time="600">' + top +
+    '<div class="rm-body"><nav class="rm-drawer" aria-label="Classes">' + rmDrawer() + '</nav><div class="rm-sheet">' + rmStream() + rmHome() + rmQuiz() + '</div></div>' + rmModal() + '</div>';
 }
 
 /* ---------------------------- Screen previews ---------------------------- */
@@ -1575,12 +1715,12 @@ fun StreamPostCard(post: StreamPost, onComment: (String, String) -> Unit) {
 /* ---------------------------- The screens group ---------------------------- */
 const CR_GROUP = { name: 'Classroom Screens', items: [
 {
-  id: 'screen-remake', title: 'Remake: Home and Stream (desktop)', icon: 'browsers', wide: true, screen: true, tag: 'REMAKE',
-  desc: 'First slice of the Classroom remake, desktop only. Layout and sizes were measured in Google Classroom at 1440px, then dressed in L.A.R.A tokens. Switch between learner and teacher, change the state, open a class from Home and try the announcement and comment boxes.',
+  id: 'screen-remake', title: 'Remake: Home, Stream and Quiz (desktop)', icon: 'browsers', wide: true, screen: true, tag: 'REMAKE',
+  desc: 'The remade desktop screens: Home, class Stream and the timed quiz (learner and teacher). Layout and sizes were measured in Google Classroom at 1440px, then dressed in L.A.R.A tokens with a look of its own. Switch between learner and teacher, change the state, open a class, post an announcement, comment, and open the quiz row on the Stream. The same screens run full window in prototype/index.html.',
   preview: rmApp(),
   react: `// Desktop prototype only. React code follows once the layout is approved.`,
   kotlin: `// The phone version is supplied separately.`,
-  dos: ['Keep the Classroom structure: a top bar, a class drawer, a white sheet, then Stream, Classwork, People (and Grades for teachers).', 'Show the Hub status in the top bar, as words and an icon, never color alone.', 'Let a learner comment, but only a teacher post an announcement.'],
+  dos: ['Keep the Classroom structure: a top bar, a class drawer, a white sheet, then Stream, Classwork, People (and Grades for teachers).', 'Show the Hub status in the top bar, as words and an icon, never color alone.', 'Let a learner comment, but only a teacher post an announcement.', 'Take the AI out of the quiz screen completely, and keep the timer on the class clock.'],
   donts: ['Do not add a Calendar or Drive entry: both are out of scope.', 'Do not put the class code where a learner can see it.', 'Do not add an AI tutor entry to these screens until the Lead decides where it lives.'],
   a11y: ['Tabs, drawer items and icon buttons are real buttons with names, 52px square.', 'The offline banner and the Hub pill carry an icon and words.', 'The announcement dialog is labelled and Cancel closes it.']
 },
@@ -4525,17 +4665,33 @@ function rmSync(root) {
   root.querySelector('.rm-modal [data-rm="post"]').disabled = root.dataset.state === 'offline';
 }
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-rm], [data-cr-state], [data-cr-role]');
+  const t = e.target.closest('[data-rm], [data-cr-state], [data-cr-role], [data-cr-time]');
   const root = t && t.closest('.rm') || (t && t.closest('.preview-card') && t.closest('.preview-card').querySelector('.rm'));
   if (!t || !root) return;
-  if (!t.dataset.rm) { setTimeout(() => rmSync(root), 0); return; }
+  if (!t.dataset.rm) { if (t.dataset.crTime) root.dataset.time = t.dataset.crTime; setTimeout(() => rmSync(root), 0); return; }
   const a = t.dataset.rm;
   if (a === 'go') {
     root.dataset.screen = t.dataset.screen;
     if (t.dataset.cls !== undefined) root.dataset.cls = t.dataset.cls;
     if (t.dataset.tab) root.dataset.tab = t.dataset.tab;
+    if (t.dataset.screen === 'quiz') rmQuizTeacher(root);
     if (t.dataset.label) root.querySelector('[data-rm-later]').textContent = t.dataset.label + ' is the next slice';
     rmSync(root);
+  } else if (a === 'quiz-start') {
+    rmQuizClock(root); root._qAns = []; root._qIdx = 0; root.dataset.qs = 'run'; rmQuizRender(root); rmSync(root);
+  } else if (a === 'quiz-pick') {
+    root._qAns[root._qIdx] = +t.dataset.k; rmQuizRender(root);
+  } else if (a === 'quiz-next' || a === 'quiz-prev') {
+    root._qIdx += a === 'quiz-next' ? 1 : -1; rmQuizRender(root);
+  } else if (a === 'quiz-submit') {
+    rmQuizSubmit(root, false);
+  } else if (a === 'quiz-open') {
+    rmQuizClock(root); root.dataset.qt = 'live'; rmQuizTeacher(root);
+  } else if (a === 'quiz-close') {
+    rmQuizClose(root);
+  } else if (a === 'quiz-reset') {
+    clearInterval(root._qTimer); root._qEnd = 0; root.dataset.qs = 'intro'; root.dataset.qt = 'idle'; rmQuizTeacher(root);
+    root.querySelectorAll('[data-q-time]').forEach(e => { e.textContent = rmFmt(+root.dataset.time || 600) + ' left'; e.closest('.rm-timer').classList.remove('warn', 'crit'); });
   } else if (a === 'toggle-nav') {
     const rail = root.dataset.nav !== 'rail'; root.dataset.nav = rail ? 'rail' : ''; t.setAttribute('aria-expanded', String(!rail));
   } else if (a === 'open-compose') {

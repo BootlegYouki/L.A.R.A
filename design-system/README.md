@@ -8,7 +8,7 @@ Owned by the Lead Developer. Developers **use** these files; they do not edit th
 
 | Source | What it is | Role |
 | :--- | :--- | :--- |
-| [`showcase.html`](./showcase.html) | Interactive sample (v2.0): every foundation and component, plus the **Classroom Screens** (Home, Stream, Classwork, People, Assignment, Review, To-do, Join, Phones) laid out like Google Classroom, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
+| [`showcase.html`](./showcase.html) | Interactive sample (v2.0): every foundation and component, plus the **Classroom Screens**: the remade desktop Home, Stream and Quiz first, then the first-pass Classwork, People, Assignment, Review, To-do, Join and Phones, laid out like Google Classroom, with copy-ready **React + Tailwind** and **Kotlin Compose** code. Open it in a browser; it works offline. | **The design.** When this changes, the files below follow it. |
 | [`design-system.md`](./design-system.md) | Written rules: tokens, components, accessibility, Google Classroom layout reference, definition of done | The rules agents and reviewers cite |
 | This folder | Ready-to-copy token and theme files | The code form of the sample |
 
@@ -36,13 +36,15 @@ design-system/
 └── showcase.html           # Interactive sample, the visual source of truth (open in a browser)
 ```
 
+Outside this folder, `prototype/index.html` runs the remade desktop screens (Home, Stream, quiz) as a full-window app, learner or teacher, with normal, empty, loading and offline states. It is generated from `showcase.html` by `python3 scripts/build_prototype.py`; a test fails when it is stale. Serve the repo root with any static server (for example `python3 -m http.server`) and open `/prototype/index.html`.
+
 ## Principles
 1. **Solid fills only, zero gradients.**
 2. **Tokens only.** Use the named tokens. Never write a hex value or `Color(0xFF...)` in a screen.
 3. **Purple means AI.** Purple appears only on Socratic tutor surfaces.
 4. **Phosphor icons only.** Regular by default, Fill for the active navigation item, Bold inside checkboxes.
 5. **Nunito everywhere,** bundled locally.
-6. **52 minimum touch target,** 56 for primary actions and quiz options.
+6. **Target sizes follow the device:** 52 on phones (56 for primary actions), 40 for desktop buttons and 48 for desktop tabs and drawer items, as in Classroom. Quiz options are 56 everywhere.
 7. **Never rely on color alone:** pair every status color with an icon and a text label.
 8. **Offline first:** every screen has an offline state; say "Hub" or "classroom network", never "internet".
 9. **Classroom's layout, our voice:** copy the structure of the matching Google Classroom screen (`design-system.md` section 9), and say it warmly (section 7). Never copy its colors, fonts, logo or pictures.
