@@ -16,7 +16,7 @@ These rules apply to every UI change. If a request conflicts with them, follow t
 2. **Tokens only.** Use the named tokens in section 1. Do not invent hex values, shades, or opacity-tinted variants of brand colors. The only permitted transparency is the white 20% overlay on dark green headers and the navy scrim on modals and sheets.
 3. **Purple means AI.** `#5145E5` and its variants appear only on Socratic AI surfaces (tutor chat, AI tab, AI buttons, grounding tags). Never use purple for decoration, links, or generic emphasis.
 4. **Phosphor Icons only.** Regular weight by default, Fill only for the active navigation item, Bold only inside checkboxes. Do not mix icon families.
-5. **52 minimum touch target.** Every interactive control on learner-facing screens is at least 52dp (Compose) or 52px (web). Quiz options are at least 56. The 40px compact size is allowed on the Teacher Desktop Hub only.
+5. **Target sizes follow the device.** On phones every interactive control is at least 52dp, and quiz options at least 56dp. On desktop (mouse and keyboard) buttons and icon buttons are 40px, and tabs and drawer items 48px, the same as Google Classroom, with at least 8px between neighbours. Quiz options stay 56 on every device.
 6. **Nunito everywhere.** Bundled locally in the Android app. Never load fonts from a CDN on mobile because the app must work offline.
 7. **Never rely on color alone.** Every status needs an icon and a text label as well as a color.
 8. **Offline first.** Every screen must have a defined offline state. Show sync status with the standard badges and banners. Never describe the classroom connection as "internet"; say "Hub" or "classroom network".
@@ -175,8 +175,8 @@ Each component below has live previews and copy-ready React and Kotlin code in t
 - Variants: Primary (green), AI (purple), Secondary (white, 2px border), Ghost (transparent, dark green text), Destructive (light red fill, red text and border).
 - One Primary per view. Label with a verb plus object ("Start quiz").
 - Disabled: `#E4EAF0` fill with Muted text, and nearby text must explain why. Loading: spinner replaces icon, button stays in place.
-- Icon-only buttons are 52 by 52 (40 by 40 compact) and need an accessible name.
-- Tailwind core: `min-h-[52px] px-[22px] rounded-xl font-extrabold shadow-card active:scale-[0.98]`.
+- Icon-only buttons are 52 by 52 on phones and 40 by 40 on desktop, and need an accessible name.
+- Tailwind core, phone: `min-h-[52px] px-[22px] rounded-xl font-extrabold shadow-card active:scale-[0.98]`. Desktop: `min-h-control px-6 rounded-full font-extrabold` (`control` is 40px in `desktop/tailwind.theme.ts`).
 
 ### 5.2 Inputs
 - 52 minimum height, 2px border, radius 12, label always visible above the field, never placeholder-only.
@@ -356,7 +356,7 @@ Measurements marked "Classroom" were taken from the learner side of the current 
 
 1. **Copy structure, not visuals.** No Google colors, fonts, logos or wordmark. No theme pictures or photos in banners: use Dark Green with a subject icon.
 2. **Same places.** Top bar, class drawer, class tabs, banner, Upcoming card, feed, topics, rows and the Your work card sit where Classroom puts them. Do not move them to be clever.
-3. **Friendlier by default.** Rounder corners, 52 px targets (Classroom uses 40), warm words, an encouraging line on every empty state, no shaming statuses.
+3. **Friendlier by default.** Rounder corners, 52 px targets on phones (desktop copies Classroom's 40), warm words, an encouraging line on every empty state, no shaming statuses.
 4. **Add, never replace.** L.A.R.A. additions (Hub beacon, sync and Saved badges, Quizzes, Ask L.A.R.A., camera, class code approval) go in the places named below. They never push a Classroom element out.
 5. **Roles.** Learners see Stream, Classwork, Quizzes and Ask L.A.R.A. Teachers see Stream, Classwork, Quizzes, People and Grades. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN).
 6. **Every screen** has an offline state, an empty state and a loading skeleton (5.10). Nothing blocks when the Hub is unreachable.

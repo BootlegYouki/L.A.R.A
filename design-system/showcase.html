@@ -60,6 +60,7 @@
       --radius-pill: 9999px;
 
       --min-touch-target: 52px;
+      --control-height-desktop: 40px;
 
       /* Layered shadows tinted with navy */
       --shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
@@ -839,6 +840,10 @@
     .rm-dialog textarea { min-height: 140px; resize: vertical; }
     .rm-dialog footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
     .rm-dialog footer .hint { margin-right: auto; font-size: 13px; font-weight: 700; color: var(--color-warning-dark); }
+    .rm .btn, .rm .rm-tonal, .rm .cr-link { min-height: var(--control-height-desktop); }
+    .rm .cr-icon { width: var(--control-height-desktop); height: var(--control-height-desktop); }
+    .rm .rm-tab, .rm .rm-nav { min-height: 48px; }
+    .rm .rm-reply .form-input, .rm .rm-note .main { min-height: var(--control-height-desktop); }
     @container rm (max-width: 760px) { .rm-body { grid-template-columns: minmax(0, 1fr); } .rm-drawer { display: none; } .rm-cols { grid-template-columns: minmax(0, 1fr); } .rm-banner h2 { padding-right: 0; } .rm-banner .subj { display: none; } }
 
     /* Classwork */
@@ -1271,7 +1276,7 @@ function rmStream() {
   const tabs = '<div data-s="stream later"><div class="rm-tabs" role="tablist" aria-label="Class sections">' +
     [['stream', 'Stream', ''], ['classwork', 'Classwork', ''], ['people', 'People', ''], ['grades', 'Grades', 'teacher']].map(t => '<button class="rm-tab" role="tab" type="button" data-rm="go" data-tab="' + t[0] + '" data-screen="' + (t[0] === 'stream' ? 'stream' : 'later') + '" data-label="' + t[1] + '"' + (t[2] ? ' data-only="teacher"' : '') + ' aria-selected="' + (t[0] === 'stream') + '">' + t[1] + '</button>').join('') +
     '<span class="cr-spacer"></span><span data-only="teacher">' + rmBtn('gear', 'Class settings', ' data-rm="go" data-screen="later" data-label="Class settings"') + '</span></div></div>';
-  const stream = '<div data-s="stream"><div class="rm-wrap"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' +
+  const stream = '<div data-s="stream"><div class="rm-wrap wide"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' +
     '<div class="rm-banner"><span class="subj" aria-hidden="true"><i class="ph ph-' + c.icon + '" data-rm-icon></i></span><h2 data-rm-name>' + c.name + '</h2><p data-rm-sec>' + c.section + '</p>' +
     '<span data-only="teacher"><button class="rm-tonal rm-custom" type="button" data-rm="go" data-screen="later" data-label="Customize">' + rmIcon('pencil-simple') + 'Customize</button></span>' +
     '<button class="cr-icon rm-info" type="button" aria-label="View class information">' + rmIcon('info') + '</button></div>' +

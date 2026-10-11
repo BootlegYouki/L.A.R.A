@@ -229,7 +229,7 @@ Closes #6
 - [ ] Contract, mock hub and tests updated first if the API changed (separate PR)
 - [ ] Build, tests and `verify_invariants.py` pass; output attached
 - [ ] Works with the Hub unreachable (offline state defined)
-- [ ] English and Filipino strings, design tokens only, touch targets at least 52dp
+- [ ] English and Filipino strings, design tokens only, touch targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or other person's LRN reaches a client
 - [ ] AI unavailable during a quiz
 - [ ] Team docs updated
@@ -245,7 +245,7 @@ A PR containing any of these is rejected immediately:
 2. **Hardware RAM crashes:** mobile heap over 250 MB, or loading an on-device model without checking physical RAM of at least 6 GB.
 3. **Socratic AI leaks:** prompts or logic that give direct answers or homework solutions.
 4. **Quiz lockout bypass:** any path that lets the AI tutor run while the learner has an `IN_PROGRESS` quiz attempt.
-5. **Accessibility regressions:** touch targets under 52dp (56dp for primary actions and quiz options) or English-only strings.
+5. **Accessibility regressions:** touch targets under 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px or English-only strings.
 6. **Secrets reaching a client:** `pin_hash`, other people's LRN, `correct_answer`, or server file paths in a response, client table or log.
 7. **Contract drift:** a route, event or column changed in code without `contracts/`, the mock hub and the tests.
 8. **Scope violation:** a PR that edits more than one team's folder or a Lead-owned path inside a feature PR.
