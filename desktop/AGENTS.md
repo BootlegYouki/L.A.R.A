@@ -20,7 +20,7 @@ A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, 
 * **Quiz screen:** the AI drawer and buttons are removed from the React tree (not hidden with CSS) while a quiz is open. Countdown uses the server offset from `EVENT_HELLO_ACK` plus `performance.now()`; auto-submit at 00:00 and on `EVENT_QUIZ_CLOSED`.
 * **Video:** `<video>` cannot set headers, so stream with `?token=`. Downloaded videos set `materials.local_file_path` and play from disk.
 * **AI:** local `llama.cpp` sidecar only with at least 4 GB RAM and the model present, otherwise stream from the Hub. Prompt building and lockout apply on both paths.
-* **UI:** tokens from `design-system/` only, Nunito and Phosphor from `design-system/assets/`, 52px targets (40px compact allowed only on teacher tables), English and Filipino dictionaries with a runtime toggle, Radix Dialog for dialogs.
+* **UI:** tokens from `design-system/` only, Nunito and Phosphor from `design-system/assets/`, 40px buttons and icon buttons and 48px tabs and drawer items, as in Google Classroom, English and Filipino dictionaries with a runtime toggle, Radix Dialog for dialogs.
 * **Tauri:** least-privilege capabilities; only the commands and sidecars you need.
 
 ## Layout

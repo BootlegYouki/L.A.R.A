@@ -64,6 +64,6 @@ Anything unclear or in conflict with a contract or the PRD. Write it here and ra
 - [ ] No internet or CDN dependency (fonts and icons come from `design-system/assets/`)
 - [ ] Offline state defined for every screen
 - [ ] English and Filipino strings for all UI text
-- [ ] Touch targets at least 52dp (56dp primary and quiz options)
+- [ ] Touch targets at least 52dp on phones (56dp primary and quiz options), 40px buttons on desktop
 - [ ] `correct_answer` never stored on a client
 - [ ] AI unavailable during an active quiz
