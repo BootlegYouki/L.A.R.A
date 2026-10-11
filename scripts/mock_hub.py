@@ -706,11 +706,16 @@ def sync_push(req):
             receipts.append({"id": c["id"], "status": "REJECTED", "reason": "COMMENTS_DISABLED"})
     for c in b.get("private_comments", []):
         asg = STATE.assignments.get(c["assignment_id"])
-        if asg and not asg.get("archived_at"):
+        existing = STATE.private_comments.get(c["id"])
+        # Same rule as the REST route: only a learner enrolled in the class, and a retry may only
+        # re-send the caller's own comment, never overwrite someone else's row by guessing its id.
+        if (asg and not asg.get("archived_at")
+                and asg["classroom_id"] in STATE.active_classroom_ids(req.user["id"])
+                and (existing is None or existing["author_id"] == req.user["id"])):
             add_private_comment(asg, req.user["id"], req.user["id"], c["content"], c["id"], c["created_at"])
             receipts.append({"id": c["id"], "status": "SYNCED"})
         else:
-            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "NOT_FOUND"})
+            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
     return {"acknowledged": True, "receipts": receipts}
 
 
