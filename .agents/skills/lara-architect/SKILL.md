@@ -48,7 +48,7 @@ Full list: `rules/team-workflow-and-prs.md` section 5. The ones agents trip on m
 | Quiz lockout | With an `IN_PROGRESS` attempt the chat UI is not composed and the Hub answers `QUIZ_IN_PROGRESS` | `rules/quiz-and-anti-cheat.md` |
 | Socratic tutor | One prompt file, loaded unchanged; grounded in `material_chunks`; one clue then one question | `rules/socratic-ai-guardrails.md` |
 | Budget phones | Heap under 250 MB; a model loads on a phone only at 6 GB RAM or more | `mobile/AGENTS.md` |
-| Accessibility | Targets 52dp (56dp primary and quiz options); English and Filipino for every string; tokens only | `rules/ui-and-accessibility.md` |
+| Accessibility | Targets 52dp on phones (56dp primary and quiz options), 40px buttons on desktop; English and Filipino for every string; tokens only | `rules/ui-and-accessibility.md` |
 | Data safety | Deactivate or archive; users, classrooms and graded rows are never deleted | `rules/database-and-sync.md` section 4 |
 
 ## 4. Before you open the PR

@@ -39,7 +39,7 @@ Read `AGENTS.md` and `desktop/AGENTS.md` first. Where this skill and a contract 
 * The repo's `design-system/desktop/tailwind.theme.ts` is a JavaScript config. Tailwind 4 does **not** pick it up automatically; load it explicitly with `@config "../path/to/tailwind.theme.ts"` or port its values into `@theme`, and keep the two identical (the tests compare them).
 * **Tokens only.** No invented hex values, no gradients. Purple is only for the AI tutor. Icons are Phosphor from `design-system/assets/`.
 * **Fonts are bundled**, with `@font-face` pointing at files in the app, never a remote stylesheet. A remote font import fails the offline check.
-* Buttons, inputs and list rows are at least 52 px tall (56 px for primary actions and quiz options); 40 px compact rows are allowed only in teacher tables. Visible focus rings, 4.5:1 contrast.
+* Buttons and icon buttons are 40 px, tabs and drawer items 48 px, as in Google Classroom (quiz options stay 56 px). Visible focus rings, 4.5:1 contrast.
 
 ## 5. React 19 notes
 

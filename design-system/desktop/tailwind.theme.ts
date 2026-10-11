@@ -59,10 +59,12 @@ export const laraTheme = {
     xl: '24px',
   },
   minHeight: {
+    control: '40px',
     touch: '52px',
     'touch-primary': '56px',
   },
   minWidth: {
+    control: '40px',
     touch: '52px',
     'touch-primary': '56px',
   },
