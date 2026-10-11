@@ -12,7 +12,9 @@
 The **L.A.R.A** engineering group operates across three decoupled project streams:
 1. **Mobile Project Team (`mobile/`):** Native Android (Kotlin, Jetpack Compose M3, Room DB).
 2. **Desktop Project Team (`desktop/`):** Desktop Client (Tauri 2.x, React 19, Tailwind M3).
-3. **Server Project Team (`server/`):** Local Hub & Teacher Host (Tauri, Rust/Axum, SQLite, `llama-server`).
+3. **Server Project Team (`server/`):** the Local Hub on a dedicated school PC (Tauri, Rust/Axum, SQLite, `llama-server`).
+
+The three teams are the only parallel streams. Inside a team both developers work one issue at a time, in step order (`rules/team-workflow-and-prs.md` section 1.1).
 
 ### The Three Operational Bottlenecks:
 1. **The Dependency Lock (Mocking Gap):** Mobile and Desktop teams risk being blocked while waiting for the Server team to build endpoints and WebSockets.
@@ -54,7 +56,7 @@ A single-file Python 3 program (standard library only) that implements **every**
 ```bash
 python3 scripts/mock_hub.py
 ```
-State is in memory and reseeds on every start. Accounts (PIN `1234`): `ADMIN-0001`, teacher `T-0001` (Science 4, code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (join with the code).
+State is in memory and reseeds on every start. Accounts (PIN `1234`): Hub admin `ADMIN-0001` (not a teacher), teacher `T-0001` (Science 4, code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (join with the code).
 
 ### 2.4 Parity guarantee
 `tests/test_contract_coverage.py` fails CI if any `openapi.yaml` operation has no mock route, if the mock serves an undocumented `/api/` route, or if an event schema is not emitted or handled by the mock. A contract change is therefore incomplete until the mock hub follows.
@@ -69,6 +71,7 @@ contracts/
 ├── openapi.yaml           # REST: auth, admin, classrooms, sync, stream, materials, assignments, quizzes, export
 ├── events/                # WebSocket event schemas (JSON Schema) + README (handshake, direction table)
 ├── schema/                # server_master.sql and client_offline.sql
+├── ai/                    # socratic_system_prompt.txt, the one tutor prompt every path loads
 ├── README.md              # how to change a contract
 └── naming_rules.md        # serialization, privacy and error rules
 ```

@@ -395,6 +395,12 @@ def owned_classroom(req, classroom_id, owner_only=False):
     return c
 
 
+def member_of(user, classroom_id):
+    """Every class-scoped route checks this: the class's teachers and its ACTIVE learners only."""
+    if classroom_id not in STATE.visible_classroom_ids(user):
+        raise ApiError(403, "FORBIDDEN", "Not your class")
+
+
 # ---- portal
 @route("GET", r"/", auth=False)
 @route("GET", r"/download", auth=False)
@@ -696,7 +702,11 @@ def sync_push(req):
             receipts.append({"id": att["id"], "status": "REJECTED", "reason": e.code})
     for c in b.get("comments", []):
         ann = STATE.announcements.get(c["announcement_id"])
-        if ann and ann["allow_comments"]:
+        existing = STATE.comments.get(c["id"])
+        if not ann or ann["classroom_id"] not in STATE.visible_classroom_ids(req.user) or (
+                existing and existing["author_id"] != req.user["id"]):
+            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
+        elif ann["allow_comments"]:
             STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
                                        "author_id": req.user["id"], "content": c["content"],
                                        "created_at": c["created_at"], "updated_at": now_ms()}
@@ -761,17 +771,25 @@ def announcement_delete(req):
     return {"success": True}
 
 
+def announcement_in_my_class(req):
+    """Comments are class-scoped: only the class's teachers and ACTIVE learners may read or write them."""
+    a = STATE.announcements.get(req.groups[0])
+    if not a:
+        raise ApiError(404, "NOT_FOUND", "Announcement not found")
+    member_of(req.user, a["classroom_id"])
+    return a
+
+
 @route("GET", r"/api/announcements/([^/]+)/comments")
 def comments_list(req):
+    announcement_in_my_class(req)
     return sorted((c for c in STATE.comments.values() if c["announcement_id"] == req.groups[0]),
                   key=lambda c: c["created_at"])
 
 
 @route("POST", r"/api/announcements/([^/]+)/comments")
 def comment_create(req):
-    a = STATE.announcements.get(req.groups[0])
-    if not a:
-        raise ApiError(404, "NOT_FOUND", "Announcement not found")
+    a = announcement_in_my_class(req)
     if not a["allow_comments"]:
         raise ApiError(403, "COMMENTS_DISABLED", "Naka-off ang komento")
     need(req.json(), "content")
@@ -876,6 +894,7 @@ def material_create(req):
 def material_download(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
+    member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
     return Raw(b"%PDF-1.4 mock lesson handout\n", "application/octet-stream")
 
 
@@ -883,6 +902,7 @@ def material_download(req):
 def material_chunks(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
+    member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
     return STATE.chunks.get(req.groups[0], [])
 
 
@@ -1000,8 +1020,9 @@ def private_comment_create(req):
 @route("POST", r"/api/assignments/([^/]+)/submit", role="STUDENT")
 def submission_create(req):
     asg = STATE.assignments.get(req.groups[0])
-    if not asg:
+    if not asg or asg.get("archived_at"):
         raise ApiError(404, "NOT_FOUND", "Assignment not found")
+    member_of(req.user, asg["classroom_id"])
     fields, files = req.multipart()
     need(fields, "submission_id")
     if "file" not in files:
@@ -1020,7 +1041,11 @@ def submission_create(req):
 
 @route("GET", r"/api/assignments/([^/]+)/submissions", role="TEACHER")
 def submissions_list(req):
-    return [s for s in STATE.submissions.values() if s["assignment_id"] == req.groups[0]]
+    asg = STATE.assignments.get(req.groups[0])
+    if not asg:
+        raise ApiError(404, "NOT_FOUND", "Assignment not found")
+    owned_classroom(req, asg["classroom_id"])
+    return [s for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
 
 
 @route("PATCH", r"/api/submissions/([^/]+)", role="TEACHER")
@@ -1028,6 +1053,7 @@ def submission_grade(req):
     s = STATE.submissions.get(req.groups[0])
     if not s:
         raise ApiError(404, "NOT_FOUND", "Submission not found")
+    owned_classroom(req, STATE.assignments[s["assignment_id"]]["classroom_id"])
     b = req.json()
     for k in ("score", "teacher_feedback"):
         if k in b:
@@ -1044,6 +1070,7 @@ def submission_file(req):
         raise ApiError(404, "NOT_FOUND", "Submission not found")
     if req.user["role"] == "STUDENT" and s["student_id"] != req.user["id"]:
         raise ApiError(403, "FORBIDDEN", "Not your submission")
+    member_of(req.user, STATE.assignments[s["assignment_id"]]["classroom_id"])
     return Raw(STATE.submission_files.get(s["id"], b""), "image/jpeg")
 
 
@@ -1085,9 +1112,10 @@ def quiz_patch(req):
     return quiz
 
 
-def pupil_quiz_or_404(quiz):
+def pupil_quiz_or_404(quiz, user):
     if not quiz or quiz["status"] == "DRAFT":
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
+    member_of(user, quiz["classroom_id"])
 
 
 @route("GET", r"/api/quizzes/active")
@@ -1107,7 +1135,7 @@ def quiz_get(req):
             raise ApiError(404, "NOT_FOUND", "Quiz not found")
         owned_classroom(req, quiz["classroom_id"])
         return quiz
-    pupil_quiz_or_404(quiz)
+    pupil_quiz_or_404(quiz, req.user)
     return student_quiz(quiz)
 
 
@@ -1129,7 +1157,7 @@ def quiz_start(req):
 @route("POST", r"/api/quizzes/([^/]+)/begin", role="STUDENT")
 def quiz_begin(req):
     quiz = STATE.quizzes.get(req.groups[0])
-    pupil_quiz_or_404(quiz)
+    pupil_quiz_or_404(quiz, req.user)
     if quiz["status"] != "ACTIVE":
         raise ApiError(409, "QUIZ_CLOSED", "Sarado na ang pagsusulit")
     att = next((a for a in STATE.attempts.values()
@@ -1149,7 +1177,7 @@ def quiz_begin(req):
 
 def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
     quiz = STATE.quizzes.get(quiz_id)
-    pupil_quiz_or_404(quiz)
+    pupil_quiz_or_404(quiz, user)
     if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "Lampas na sa oras")
     att = next((a for a in STATE.attempts.values()
