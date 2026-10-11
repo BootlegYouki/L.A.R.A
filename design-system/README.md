@@ -4,6 +4,8 @@
 
 Owned by the Lead Developer. Developers **use** these files; they do not edit them in a feature PR.
 
+**A guide, not a pixel spec.** Tokens, invariants and accessibility rules are fixed; the screens and the prototype show the intended direction and will need adjusting once real development starts. Change what does not work, keep the spirit, never bend an invariant, and report every deviation in the PR so the Lead can update these files (`design-system.md`, top note).
+
 ## The three sources and how they relate
 
 | Source | What it is | Role |
