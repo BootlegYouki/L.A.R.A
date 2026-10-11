@@ -11,7 +11,7 @@ All AI agents and contributors must follow these rules.
 To guarantee assessment integrity, the Socratic AI tutor is strictly forbidden from running while a student has an active quiz session:
 
 1. **Client UI Removal:** When the student opens the quiz screen, the floating "Ask L.A.R.A AI" button and chat drawer must be **completely unmounted from the view hierarchy**, not just hidden with CSS.
-2. **Server-Side Rejection (`HTTP 403`):** A pupil has an *active attempt* from the moment `POST /api/quizzes/{id}/begin` creates a `quiz_attempts` row with `status = 'IN_PROGRESS'` until it is `SUBMITTED`. While one exists, the Hub rejects any AI request: `HTTP 403` with error code `QUIZ_IN_PROGRESS` on REST, or `EVENT_ERROR` with code `QUIZ_IN_PROGRESS` on the WebSocket (`EVENT_AI_CHAT_REQUEST`).
+2. **Server-Side Rejection (`HTTP 403`):** A learner has an *active attempt* from the moment `POST /api/quizzes/{id}/begin` creates a `quiz_attempts` row with `status = 'IN_PROGRESS'` until it is `SUBMITTED`. While one exists, the Hub rejects any AI request: `HTTP 403` with error code `QUIZ_IN_PROGRESS` on REST, or `EVENT_ERROR` with code `QUIZ_IN_PROGRESS` on the WebSocket (`EVENT_AI_CHAT_REQUEST`).
 3. **Visible state:** the AI tab may remain visible only as a disabled placeholder that explains why; the chat composables are never composed during the quiz.
 
 ---
@@ -46,5 +46,5 @@ Classroom Wi-Fi routers may drop connection during a test. The system must handl
 1. **Multiple Choice & True/False:** Exact string or option index match against `quiz_questions.correct_answer`.
 2. **Identification / Short Answer:** Case-insensitive string comparison with leading/trailing whitespace trimmed. Optional support for teacher-defined synonym arrays.
 3. **Execution Speed:** Auto-grading must execute in under 50 milliseconds per submission on the Hub.
-4. **Receipts and score release:** The Hub records the score in `quiz_attempts` and, unless the teacher chose to hold scores (`release_scores_immediately = false`), emits `EVENT_GRADE_CONFIRMED` and returns the receipt. Held scores are released by the teacher and reach the pupil on the next sync.
-5. **Shuffle:** when `shuffle_questions` is set, each pupil gets a different question order; the Hub still grades by `question_id`, never by position.
+4. **Receipts and score release:** The Hub records the score in `quiz_attempts` and, unless the teacher chose to hold scores (`release_scores_immediately = false`), emits `EVENT_GRADE_CONFIRMED` and returns the receipt. Held scores are released by the teacher and reach the learner on the next sync.
+5. **Shuffle:** when `shuffle_questions` is set, each learner gets a different question order; the Hub still grades by `question_id`, never by position.

@@ -1,14 +1,14 @@
 # L.A.R.A.
 
-**An offline Google Classroom for Philippine public elementary schools, with paperless self-grading quizzes and a Socratic AI tutor.** It runs entirely on the classroom's own Wi-Fi with no internet. First deployment: the capstone defense plus one pilot class of about 40 pupils.
+**An offline Google Classroom for Philippine public schools (Grades 1 to 12), with paperless self-grading quizzes and a Socratic AI tutor.** It runs entirely on the classroom's own Wi-Fi with no internet. First deployment: the capstone defense plus one pilot class of about 40 learners.
 
 | Program | Folder | Runs on |
 | :--- | :--- | :--- |
 | **Hub** | [`server/`](./server/) | A dedicated always-on school PC (Linux for the pilot). Database, files, quizzes, AI queue, USB export. |
-| **Mobile app** | [`mobile/`](./mobile/) | Android phones (3 to 4 GB RAM budget phones are the target). Pupils and teachers. |
-| **Desktop app** | [`desktop/`](./desktop/) | Student laptops, lab PCs, teacher PCs. Pupils and the full teacher authoring surface. |
+| **Mobile app** | [`mobile/`](./mobile/) | Android phones (3 to 4 GB RAM budget phones are the target). Learners and teachers. |
+| **Desktop app** | [`desktop/`](./desktop/) | Student laptops, lab PCs, teacher PCs. Learners and the full teacher authoring surface. |
 
-What the product is, in full: [`docs/PRD.md`](./docs/PRD.md). The three things it must do well: **a classroom** (stream, handouts, videos, homework photos), **paperless timed quizzes** (auto-graded, exported to a DepEd class record), **an AI tutor that never gives the answer**. All of it works with the internet unplugged.
+What the product is, in full: [`docs/PRD.md`](./docs/PRD.md). The three things it must do well: **a classroom** (stream, handouts, videos, homework photos), **paperless timed quizzes** (auto-graded, gradebook exported to USB), **an AI tutor that never gives the answer**. All of it works with the internet unplugged.
 
 ---
 
@@ -16,7 +16,7 @@ What the product is, in full: [`docs/PRD.md`](./docs/PRD.md). The three things i
 
 This is AI-native development. **You direct AI agents and your agent writes most of the code.** You are accountable for the result: a small PR that is correct, proven, and easy to try.
 
-The people who review the project check it **as end users**: they run the app like a teacher or a pupil, with the Wi-Fi router's internet unplugged. They do not read your diff first. So:
+The people who review the project check it **as end users**: they run the app like a teacher or a learner, with the Wi-Fi router's internet unplugged. They do not read your diff first. So:
 
 * **If they cannot see it working, it is not done.** Every PR says how to try it, in plain steps.
 * **Prove it, do not claim it.** Paste real command output and a screenshot or log. Say plainly what you could not test.
@@ -32,7 +32,7 @@ The people who review the project check it **as end users**: they run the app li
    ```bash
    python3 scripts/mock_hub.py        # REST :8080, WebSocket :8081, UDP beacon :8888
    ```
-   Seed accounts (PIN `1234`): teacher `T-0001` (class code `K7M-4QX`), pupil `123456789012` (enrolled), pupil `123456789013` (joins with the code), admin `ADMIN-0001`.
+   Seed accounts (PIN `1234`): teacher `T-0001` (class code `K7M-4QX`), learner `123456789012` (enrolled), learner `123456789013` (joins with the code), admin `ADMIN-0001`.
 3. **Check your setup is healthy** (these are what CI runs):
    ```bash
    python3 -m unittest discover tests     # contracts, schema, mock hub, guardrails
@@ -64,7 +64,7 @@ contracts it names in contracts/, and the rules/ file for its area. Then:
 - No internet at runtime: no Firebase, Google Play Services, CDNs, Google Fonts or analytics. Fonts and icons come from design-system/assets/.
 - All user text in English and Filipino. Touch targets at least 52dp (56dp for primary actions). Design tokens only.
 - Build against scripts/mock_hub.py. Handle the Hub being unreachable without crashing or losing data.
-- Never put answer keys, PIN data or other pupils' LRNs where a client can see them.
+- Never put answer keys, PIN data or other learners' LRNs where a client can see them.
 - Make the smallest change that satisfies the issue. If a requirement is missing or two documents
   disagree, ask me instead of guessing.
 - When done, run the team commands and verify_invariants.py, and write the "How to test" steps for a non-programmer.
@@ -83,7 +83,7 @@ Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents
 | **Branch flow** | Branch from `staging`, open the PR to `staging`. `main` only receives `staging`; CI flags anything else. |
 | **Any developer takes any issue** | There are no fixed developer roles. Two open PRs must not edit the same file; the issue's Target Files are the boundary. |
 | **Docs travel with code** | Update your folder's `docs/` (purpose, key files, data flow, gotchas). |
-| **Children's data** | Never log PINs, tokens or LRNs. Never export pupil data off the Hub. |
+| **Children's data** | Never log PINs, tokens or LRNs. Never export learner data off the Hub. |
 
 Full rules: [`CONTRIBUTING.md`](./CONTRIBUTING.md), [`rules/`](./rules/), and for agents [`AGENTS.md`](./AGENTS.md).
 
@@ -98,7 +98,7 @@ Full rules: [`CONTRIBUTING.md`](./CONTRIBUTING.md), [`rules/`](./rules/), and fo
 
 ## What the reviewer will do
 
-Read the PR description, run your "How to test" steps like an end user, then try to break the offline cases: airplane mode, Hub stopped, a pupil who is not enrolled, a quiz running while the AI is opened. Anything that fails goes back to you with the step number. Make those steps easy.
+Read the PR description, run your "How to test" steps like an end user, then try to break the offline cases: airplane mode, Hub stopped, a learner who is not enrolled, a quiz running while the AI is opened. Anything that fails goes back to you with the step number. Make those steps easy.
 
 ---
 
