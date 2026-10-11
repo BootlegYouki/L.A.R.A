@@ -4,7 +4,7 @@ Skills the AI agents on this project can load. Only skills that this project nee
 
 | Skill | For | What it gives the agent |
 |---|---|---|
-| [`lara-architect`](./lara-architect/SKILL.md) | All developers | L.A.R.A invariants, protocols, schemas, guardrails |
+| [`lara-architect`](./lara-architect/SKILL.md) | All developers | How to work an issue: reading order, where each truth lives, what gets a PR rejected, checks before the PR |
 | [`lara-android-offline`](./lara-android-offline/SKILL.md) | Mobile | Room offline mirror and atomic sync, cleartext LAN HTTP, WorkManager, CameraX under 800 KB, Media3, the 250 MB heap budget |
 | [`lara-desktop-web`](./lara-desktop-web/SKILL.md) | Desktop | Tauri 2 and React 19 offline, strict TypeScript, plugin-sql and atomic sync, Tailwind 4 tokens and bundled fonts, quiz timer |
 | [`lara-hub-rust`](./lara-hub-rust/SKILL.md) | Server | SQLx on SQLite (WAL, `sync_revisions`), uploads past Axum's 2 MB limit, Range streaming with the 2 MB/s cap, auth, WebSocket broker |

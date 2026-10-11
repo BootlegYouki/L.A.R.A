@@ -17,6 +17,21 @@ class TestContracts(unittest.TestCase):
                          "/api/assignments/{id}/submit", "/api/quizzes/{id}/start", "/api/export/class-record"):
             self.assertIn(required, spec["paths"], f"openapi.yaml missing {required}")
 
+    def test_one_shared_socratic_system_prompt(self):
+        # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
+        # behaves the same on every path. The mock hub's canned reply must stay the canonical decline line.
+        with open("contracts/ai/socratic_system_prompt.txt", "r", encoding="utf-8") as f:
+            prompt = f.read()
+        for placeholder in ("{reply_language}", "{lesson_chunks}"):
+            self.assertEqual(prompt.count(placeholder), 1, f"prompt needs exactly one {placeholder}")
+        decline = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
+                   "Balikan natin ang binasa mo. Ano ang unang hakbang?")
+        self.assertIn(decline, prompt)
+        with open("scripts/mock_hub.py", "r", encoding="utf-8") as f:
+            self.assertIn("Ano ang unang hakbang?", f.read())
+        with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
+            self.assertIn(decline, f.read())
+
     def test_websocket_event_schemas_valid_json(self):
         events_dir = "contracts/events"
         self.assertTrue(os.path.isdir(events_dir), "contracts/events directory missing")
@@ -51,7 +66,9 @@ class TestContracts(unittest.TestCase):
         cur_server = conn_server.cursor()
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 16, f"Server master must have exactly 16 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 19, f"Server master must have exactly 19 tables, got {server_tables}")
+        for added in ("classroom_teachers", "topics", "private_comments"):
+            self.assertIn(added, server_tables)
         self.assertIn("hub_meta", server_tables)
         self.assertIn("sessions", server_tables)
         self.assertIn("material_chunks", server_tables)
@@ -91,7 +108,8 @@ class TestContracts(unittest.TestCase):
         cur_client = conn_client.cursor()
         cur_client.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         client_tables = [r[0] for r in cur_client.fetchall()]
-        self.assertEqual(len(client_tables), 14, f"Client offline must have exactly 14 tables, got {client_tables}")
+        self.assertEqual(len(client_tables), 16, f"Client offline must have exactly 16 tables, got {client_tables}")
+        self.assertNotIn("classroom_teachers", client_tables)
         self.assertIn("sync_state", client_tables)
         self.assertNotIn("sessions", client_tables)
         self.assertNotIn("sync_revisions", client_tables)

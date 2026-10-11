@@ -64,7 +64,7 @@
   * WebSockets: Native browser `WebSocket` connecting to Local Hub port 8081.
   * Discovery: Rust background thread for mDNS browsing (`_lara._tcp.local`) and UDP subnet broadcast listening on port 8888.
 * **Media Player:** HTML5 `<video>` element styled with design-system controls, supporting HTTP 206 Byte-Range streaming and offline local disk caching.
-* **Pluggable Desktop SLM:** Bundled `llama.cpp` CLI binary (`llama-cli`) executed via Tauri sidecar process for 100% offline on-device inference (MiniCPM5-2B, Qwen2.5, Llama 3.2) on laptops with **≥ 4GB RAM**.
+* **Pluggable Desktop SLM:** Bundled `llama.cpp` sidecar (`llama-server` by default, so the stream has the same format as the Hub path; the Tech Spec records the final choice) run as a Tauri sidecar process for 100% offline on-device inference (MiniCPM5-2B, Qwen2.5, Llama 3.2) on laptops with **≥ 4GB RAM**.
 * **Target Platforms:** Windows 10/11 (64-bit), Ubuntu/Debian Linux (DepEd lab PCs), and macOS.
 
 ---
@@ -83,7 +83,7 @@
   * Lesson handouts with zoom controls.
   * Full-screen paperless quiz engine with synchronized timer and instant auto-grading.
   * Socratic AI drawer with split-screen view (lesson on left, tutor on right).
-* **Teacher Mode (the full authoring surface; the Hub window is only an admin console):**
+* **Teacher Mode (every teacher feature, the same set as the mobile app; the Hub window is only an admin console):**
   * **Classroom, announcements, materials and assignments:** create a class and share its code, post to the stream (comments on or off), upload lessons and videos, create assignments, review and grade homework photos.
   * **Teacher Quiz Builder Wizard:** Multi-step wizard to create tests, manage question banks, and randomize question order.
   * **Live Quiz Submission Matrix:** Real-time telemetry grid showing which learners are currently answering and their auto-graded scores.
@@ -98,7 +98,7 @@
 
 ## 3. Client Offline Database Schema (`@tauri-apps/plugin-sql`)
 
-> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * Write migrations that reproduce `client_offline.sql` and enable `foreign_keys` when the connection opens.
 * **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.
@@ -136,34 +136,10 @@ desktop/
 
 ---
 
-## 5. Desktop Team Sprint Roadmap & Execution Order
+## 5. Desktop Team Issues and Build Order
 
-All desktop issues follow `[DESKTOP Sprint.Step]`. Each issue names its dependencies and the contract it implements. This list is generated from the GitHub milestones; the milestone is the live source.
+The live list is on GitHub, so it is not copied here: [open `desktop` issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22%20sort%3Acreated-asc) and the [sprint board](https://github.com/users/BootlegYouki/projects/2).
 
-* **Sprint 0 (Contract Freeze & Technical Spec):**
-  * `[DESKTOP 0.1]`: Write desktop/docs/TECH_SPEC.md and get Lead approval ([#37](https://github.com/BootlegYouki/L.A.R.A/issues/37))
-* **Sprint 1 (Scaffolding & LAN Discovery):**
-  * `[DESKTOP 1.1]`: Setup Tauri 2.x + React 19 shell with local SQLite storage & design token foundations ([#29](https://github.com/BootlegYouki/L.A.R.A/issues/29))
-  * `[DESKTOP 1.2]`: Implement mDNS/UDP discovery scanner in Rust/Tauri ([#5](https://github.com/BootlegYouki/L.A.R.A/issues/5))
-  * `[DESKTOP 1.3]`: Build Hub connection screen: discovered hubs, manual IP entry and status banner ([#40](https://github.com/BootlegYouki/L.A.R.A/issues/40))
-* **Sprint 2 (Roles, Classrooms & Delta-Sync):**
-  * `[DESKTOP 2.1]`: Build login, role routing and classroom card grid ([#45](https://github.com/BootlegYouki/L.A.R.A/issues/45))
-  * `[DESKTOP 2.2]`: Build Class Code join modal with live approval status ([#46](https://github.com/BootlegYouki/L.A.R.A/issues/46))
-  * `[DESKTOP 2.3]`: Build teacher classroom creation and roster table with Accept / Decline ([#47](https://github.com/BootlegYouki/L.A.R.A/issues/47))
-  * `[DESKTOP 2.4]`: Implement delta-sync engine with @tauri-apps/plugin-sql ([#48](https://github.com/BootlegYouki/L.A.R.A/issues/48))
-* **Sprint 3 (Stream, Media & Homework):**
-  * `[DESKTOP 3.1]`: Build HTML5 video lesson player with offline local disk caching ([#30](https://github.com/BootlegYouki/L.A.R.A/issues/30))
-  * `[DESKTOP 3.2]`: Build Stream and Classwork pages with comments and PDF reader ([#55](https://github.com/BootlegYouki/L.A.R.A/issues/55))
-  * `[DESKTOP 3.3]`: Build homework submission: file dropzone and queued upload ([#56](https://github.com/BootlegYouki/L.A.R.A/issues/56))
-  * `[DESKTOP 3.4]`: Build teacher authoring: announcements, material upload and assignments ([#57](https://github.com/BootlegYouki/L.A.R.A/issues/57))
-  * `[DESKTOP 3.5]`: Build full-screen homework review viewer with zoom, pan and grading ([#58](https://github.com/BootlegYouki/L.A.R.A/issues/58))
-* **Sprint 4 (Paperless Quiz & Gradebook):**
-  * `[DESKTOP 4.1]`: Build Teacher Quiz Builder wizard with question bank ([#31](https://github.com/BootlegYouki/L.A.R.A/issues/31))
-  * `[DESKTOP 4.2]`: Build student timed quiz runner (full screen, countdown, auto-submit) ([#62](https://github.com/BootlegYouki/L.A.R.A/issues/62))
-  * `[DESKTOP 4.3]`: Build teacher live quiz monitor and submission matrix ([#63](https://github.com/BootlegYouki/L.A.R.A/issues/63))
-* **Sprint 5 (Socratic AI):**
-  * `[DESKTOP 5.1]`: Embed llama.cpp sidecar for on-device candidate SLM execution on laptops ([#32](https://github.com/BootlegYouki/L.A.R.A/issues/32))
-  * `[DESKTOP 5.2]`: Build Socratic chat drawer with lesson split view and bilingual toggle ([#67](https://github.com/BootlegYouki/L.A.R.A/issues/67))
-  * `[DESKTOP 5.3]`: Implement desktop AI router: local sidecar vs Hub WebSocket fallback ([#68](https://github.com/BootlegYouki/L.A.R.A/issues/68))
-* **Sprint 6 (Audit & Stress Test):**
-  * `[DESKTOP 6.1]`: Conduct desktop UX audit: touch/click targets, contrast and loading skeletons ([#71](https://github.com/BootlegYouki/L.A.R.A/issues/71))
+* Issues are titled `[DESKTOP sprint.step]`. The team works them **one at a time, in step order**, both developers together, with one open PR (`rules/team-workflow-and-prs.md` section 1.1).
+* Sprint 0 is `docs/TECH_SPEC.md`; its section 10 records the build order and what each step creates for later steps.
+* Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.

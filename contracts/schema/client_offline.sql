@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS classrooms (
     name TEXT NOT NULL,
     section TEXT NOT NULL,
     class_code TEXT NOT NULL,
-    teacher_id TEXT NOT NULL,
+    teacher_id TEXT NOT NULL,                  -- the owner
+    co_teacher_ids_json TEXT,                  -- JSON array of co-teacher user ids (Classroom.co_teacher_ids)
     archived_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -38,7 +39,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     student_id TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED')),
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED', 'REMOVED')),
     joined_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
@@ -79,6 +80,9 @@ CREATE TABLE IF NOT EXISTS materials (
     file_size_bytes INTEGER NOT NULL,
     download_url TEXT,                         -- Hub relative URL, e.g. /api/materials/{id}/download
     local_file_path TEXT,                      -- CLIENT ONLY: cached file on phone/laptop (NULL if not downloaded)
+    topic_id TEXT,
+    assignment_id TEXT,                        -- set when the file is an attachment of an assignment
+    announcement_id TEXT,                      -- set when the file is an attachment of an announcement
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -106,6 +110,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     due_date INTEGER NOT NULL,
     allow_late INTEGER NOT NULL DEFAULT 0 CHECK(allow_late IN (0, 1)),
     max_points INTEGER NOT NULL DEFAULT 100,
+    topic_id TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -133,6 +138,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
+    topic_id TEXT,
     time_limit_minutes INTEGER NOT NULL,
     shuffle_questions INTEGER NOT NULL DEFAULT 0 CHECK(shuffle_questions IN (0, 1)),
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
@@ -189,6 +195,30 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
+);
+
+-- 15. Topics (group materials, assignments and quizzes in Classwork)
+CREATE TABLE IF NOT EXISTS topics (
+    id TEXT PRIMARY KEY NOT NULL,
+    classroom_id TEXT NOT NULL,
+    name TEXT NOT NULL,                        -- e.g. "Unit 1 - Plants"
+    order_index INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
+);
+
+-- 16. Private comments on an assignment (the learner's own thread; a teacher's device holds their classes' threads)
+CREATE TABLE IF NOT EXISTS private_comments (
+    id TEXT PRIMARY KEY NOT NULL,              -- client-generated UUID when written offline
+    assignment_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    author_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
 );
 
 -- 14. Sync state (CLIENT ONLY key/value). Keys: 'hub_id', 'sync_epoch', 'cursor' (last next_cursor), 'current_user_id'.

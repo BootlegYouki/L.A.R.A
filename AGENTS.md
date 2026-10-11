@@ -10,10 +10,10 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 
 **Three programs, one network:**
 * **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
-* **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers (approve, post, start and monitor quizzes).
-* **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. The full teacher authoring surface.
+* **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
+* **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
-**How a class runs:** admin creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, assign homework (learners photograph their notebook), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
+**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -40,10 +40,11 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
 
-Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001`.
+Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001` (the Hub admin, not a teacher).
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
+* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open PR at a time (`rules/team-workflow-and-prs.md` section 1.1).
 * **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
 * Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 
@@ -51,7 +52,9 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
 * The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
 * **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
-* **Teachers work on desktop and mobile;** desktop is the full authoring surface, mobile the on-the-go set.
+* **The product is Google Classroom, offline, plus quizzes and the Socratic tutor.** When a classroom behavior is not written down, Google Classroom's behavior is the default, limited to what the contract supports. Out of scope: Meet, Drive, Calendar, guardian emails, rubrics and grade categories.
+* **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
+* **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * Canonical values: touch targets 52dp (56dp primary actions and quiz options), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
@@ -126,6 +129,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 * **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. Downloading the model to run on your own device is opt-in, never automatic. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
+0. **One prompt for every path:** `contracts/ai/socratic_system_prompt.txt`. The Hub, mobile and desktop load that file byte for byte and never write their own; changing it is a `contract-change` PR followed by a re-run of the evaluation.
 1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
@@ -158,7 +162,8 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 ## 7. Working Rules For Agents
 
-* **Read before you write.** Open the contract, the rule file and the nested `AGENTS.md` for your area first. Search for existing code before creating new code.
+* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code.
+* **The issue is the scope.** Build its sub-tasks and acceptance criteria, in its Target Files, and nothing else. If the issue disagrees with a contract, rule or the PRD, the higher document wins: stop and report it.
 * **Do not invent behavior.** If a requirement is missing or contradicts another document, write the open question in the PR or issue instead of guessing.
 * **Smallest change that satisfies the issue.** No drive-by refactors, no new dependencies without need, no edits outside your folder.
 * **Evidence before assertions.** Run the commands in 1.2 and attach output. Never say "done" without a passing build or test, and say plainly what you could not verify.

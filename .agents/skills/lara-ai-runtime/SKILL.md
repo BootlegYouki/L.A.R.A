@@ -37,8 +37,8 @@ Android reports less RAM than the number on the box, so a 6 GB phone can read ab
 ## 3. Prompt and grounding
 
 * Select chunks from `material_chunks` by `order_index` and `token_estimate` to fit about 2048 tokens. Files with no extracted text have no chunks: the answer is the "cannot help with that file" message, not an invented hint.
-* Use the decline template from the rules for "what is the answer?" requests, in the learner's language. English, Filipino and Taglish all need tests.
-* Keep one prompt specification. The Hub, the Kotlin builder and the TypeScript builder must produce the same rules; test each against the same set of learner prompts (`tests/ai_eval/`) and add a regression test when you fix a leak.
+* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. Load it byte for byte on every path (the Hub reads it at start; Android and desktop copy it into the app at build time) and fill `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
+* Test each builder against the same learner prompts (`server/ai_eval/`), in English, Filipino and Taglish, and add a regression test when you fix a leak.
 
 ## 4. Android (JNI, arm64-v8a only)
 
