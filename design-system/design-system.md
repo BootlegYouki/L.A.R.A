@@ -4,6 +4,8 @@
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
 > Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`.
 
+> **How to read this document: a guide, not a pixel spec.** The tokens, the invariants in section 0 and the accessibility rules are fixed. The screens in section 9, the sizes in them and the prototype (`prototype/index.html`) show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
+
 ---
 
 ## 0. Read This First (Rules for Agents)
