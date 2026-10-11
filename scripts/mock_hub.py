@@ -598,8 +598,7 @@ def sync_pull(req):
         elif table == "quiz_attempts" and eid in STATE.attempts:
             a = STATE.attempts[eid]
             if a["status"] == "SUBMITTED":
-                out["quiz_attempts"].append({"attempt_id": a["id"], "score": a["score"],
-                                             "total_points": a["total_points"], "submitted_at": a["submitted_at"]})
+                out["quiz_attempts"].append(grade_receipt(STATE.quizzes[a["quiz_id"]], a, for_learner=not teacher))
 
     people = {req.user["id"]}
     for cid in ids:
@@ -962,8 +961,14 @@ def quiz_submit(req):
     b = req.json()
     need(b, "started_at", "submitted_at", "answers")
     att = submit_attempt(req.user, req.groups[0], b["started_at"], b["submitted_at"], b["answers"])
-    return {"attempt_id": att["id"], "score": att["score"], "total_points": att["total_points"],
-            "submitted_at": att["submitted_at"]}
+    return grade_receipt(STATE.quizzes[req.groups[0]], att, for_learner=True)
+
+
+def grade_receipt(quiz, att, for_learner):
+    # Held scores stay hidden from the learner until the teacher closes the quiz (PRD FR-4.6, FR-4.7).
+    held = for_learner and not quiz["release_scores_immediately"] and quiz["status"] != "CLOSED"
+    return {"attempt_id": att["id"], "score": None if held else att["score"],
+            "total_points": att["total_points"], "submitted_at": att["submitted_at"]}
 
 
 @route("POST", r"/api/quizzes/([^/]+)/close", role="TEACHER")
@@ -979,6 +984,11 @@ def quiz_close(req):
             score, total = grade(quiz, att["answers"])
             att.update(status="SUBMITTED", submitted_at=now_ms(), score=score, total_points=total, updated_at=now_ms())
             STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], att["student_id"])
+        elif att["quiz_id"] == quiz["id"] and not quiz["release_scores_immediately"]:
+            STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], att["student_id"])
+            STATE.broadcast({"event": "EVENT_GRADE_CONFIRMED", "quiz_id": quiz["id"], "attempt_id": att["id"],
+                             "score": att["score"], "total_points": att["total_points"], "timestamp": now_ms()},
+                            {att["student_id"]})
     STATE.broadcast({"event": "EVENT_QUIZ_CLOSED", "quiz_id": quiz["id"], "timestamp": now_ms()},
                     STATE.students_of(quiz["classroom_id"]))
     return {"success": True}

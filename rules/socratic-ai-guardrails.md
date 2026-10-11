@@ -41,7 +41,7 @@ Over 50% of Filipino student smartphones are 3GB/4GB RAM entry-level devices (In
    * App heap memory must remain **strictly < 250MB**.
 3. **If Physical RAM >= 6GB or Laptop/Desktop:**
    * If a supported active GGUF model exists in local storage: Execute 100% locally via `llama.cpp` (JNI on Android, sidecar binary on Desktop).
-   * If not downloaded: Offer Wi-Fi download from captive portal, defaulting to Hub stream.
+   * If not downloaded: use the Hub stream, and offer the opt-in download from the Hub (`GET /api/model`, `GET /api/model/file`). Never download automatically.
 
 
 ---
@@ -49,6 +49,8 @@ Over 50% of Filipino student smartphones are 3GB/4GB RAM entry-level devices (In
 ## 3. Strict Socratic Pedagogical Behavior
 
 L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It is Socratic, so the same rules hold at every grade level; there is no grade setting.
+
+**One system prompt, one file:** [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt). The Hub, the Android builder and the desktop builder load that file byte for byte (clients copy it into the app at build time) and fill its two placeholders, `{reply_language}` and `{lesson_chunks}`. No team writes its own wording. Changing the prompt is a `contract-change` PR, and the evaluation in section 5 is re-run on the new text.
 
 ### Non-Negotiable Directives:
 1. **Zero Direct Answers:** Under no circumstances should the model output the final solution, answer key, or complete homework answers.
@@ -64,7 +66,7 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
 
 ## 4. Hub FIFO Inference Queue
 
-To prevent the teacher's laptop from overloading when multiple low-RAM devices ask questions simultaneously:
+To prevent the Hub PC from overloading when multiple low-RAM devices ask questions simultaneously:
 * Configure `llama-server` with **2 to 4 parallel inference slots**.
 * Additional requests enter a **FIFO Queue**.
 * Push real-time queue position updates over WebSockets: *"Pangalawa ka sa pila - est. 4s"* (`EVENT_QUEUE_STATUS`).
@@ -78,7 +80,7 @@ To prevent the teacher's laptop from overloading when multiple low-RAM devices a
 No model has been validated yet. Choose the model from data.
 
 ### 5.1 Test set
-A fixed, versioned set of about 50 learner prompts in `tests/ai_eval/` (English, Filipino and Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
+A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English, Filipino and Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
 
 The development team writes the set. Filipino and Taglish prompts are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
 
