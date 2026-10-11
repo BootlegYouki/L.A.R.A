@@ -41,10 +41,10 @@ A short worked example (about 10 lines) for each non-obvious pattern: a reposito
 ## 9. Pitfalls
 Known traps for this stack and hardware, each with the fix. Example: "Transsion phones kill background work: use WorkManager."
 
-## 10. Parallel Work (PR Boundaries)
-| Area | Owns (folders/files) | Sprint 1 | Sprint 2 | ... |
-|---|---|---|---|---|
-Any developer on the team can take any issue. Two open PRs must not edit the same file. Anything several PRs need (a shared interface, a DB entity) is built by one issue first; the others depend on it or use a stub until it merges.
+## 10. Build Order
+| Step | Issue | Builds (folders/files) | Needs first |
+|---|---|---|---|
+The team works one issue at a time, in step order, with one open PR (`rules/team-workflow-and-prs.md` section 1.1). List every issue of Sprints 1 and 2 in the order you will build them, what each one creates, and which earlier step it needs. Anything a later step reuses (a shared interface, a DB entity) is named here once, in the step that creates it.
 
 ## 11. Dependencies on Other Teams
 What you need from the other two teams and when. Default is: use `scripts/mock_hub.py` until the real endpoint merges.
