@@ -62,12 +62,12 @@ All JSON keys serialized across HTTP REST responses and WebSocket event envelope
 
 ## 4. Privacy Redaction (children's data)
 
-The same discipline as the answer key applies to personal data. A pupil can read their own device's database, so clients must never receive or store:
+The same discipline as the answer key applies to personal data. A learner can read their own device's database, so clients must never receive or store:
 
 * `pin_hash` or any PIN data.
-* Another person's `lrn_or_id`. Clients receive other people's `id`, `full_name` and `role` only (`PublicUser`). A pupil sees their own LRN; a teacher sees their roster's.
+* Another person's `lrn_or_id`. Clients receive other people's `id`, `full_name` and `role` only (`PublicUser`). A learner sees their own LRN; a teacher sees their roster's.
 * Server-side `file_path` values (clients use `download_url`).
-* Another pupil's submissions or quiz attempts.
+* Another learner's submissions or quiz attempts.
 
 ---
 

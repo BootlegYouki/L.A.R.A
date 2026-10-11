@@ -17,7 +17,7 @@
 -- 1. Users (Teachers & Pupils)
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY NOT NULL,
-    lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit DepEd LRN (pupil) or teacher/admin ID
+    lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit LRN (pupil) or teacher/admin ID
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT')),
     pin_hash TEXT NOT NULL,                    -- argon2id of the 4-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at INTEGER NOT NULL
 );
 
--- 2. Classrooms (Subjects / Sections) with DepEd grading weights
+-- 2. Classrooms (Subjects / Sections)
 CREATE TABLE IF NOT EXISTS classrooms (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,                        -- e.g. "Science 4"
@@ -34,15 +34,9 @@ CREATE TABLE IF NOT EXISTS classrooms (
     class_code TEXT UNIQUE NOT NULL
         CHECK(length(class_code) = 6 AND class_code = upper(class_code)),   -- e.g. "K7M4QX", no 0/O/1/I
     teacher_id TEXT NOT NULL,
-    -- Weights of the three DepEd components for this subject. Defaults are a starting point only;
-    -- the teacher edits them to match the current DepEd order for the subject.
-    weight_written_works INTEGER NOT NULL DEFAULT 40,
-    weight_performance_tasks INTEGER NOT NULL DEFAULT 40,
-    weight_quarterly_assessment INTEGER NOT NULL DEFAULT 20,
     archived_at INTEGER,                       -- set at the end of the school year instead of deleting
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    CHECK(weight_written_works + weight_performance_tasks + weight_quarterly_assessment = 100),
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
@@ -110,14 +104,12 @@ CREATE TABLE IF NOT EXISTS material_chunks (
     UNIQUE(material_id, order_index)
 );
 
--- 8. Assignments (DepEd categorized, per quarter)
+-- 8. Assignments
 CREATE TABLE IF NOT EXISTS assignments (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT NOT NULL DEFAULT '',
-    deped_category TEXT NOT NULL DEFAULT 'PERFORMANCE_TASK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
-    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),   -- DepEd class records are per quarter
     due_date INTEGER NOT NULL,
     allow_late INTEGER NOT NULL DEFAULT 0 CHECK(allow_late IN (0, 1)),
     max_points INTEGER NOT NULL DEFAULT 100 CHECK(max_points > 0),
@@ -142,14 +134,12 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     UNIQUE(assignment_id, student_id)
 );
 
--- 10. Quizzes (synchronized start, DepEd category and quarter)
+-- 10. Quizzes (synchronized start)
 CREATE TABLE IF NOT EXISTS quizzes (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
-    deped_category TEXT NOT NULL DEFAULT 'WRITTEN_WORK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
-    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),
     time_limit_minutes INTEGER NOT NULL CHECK(time_limit_minutes > 0),   -- global duration, not per item
     shuffle_questions INTEGER NOT NULL DEFAULT 0 CHECK(shuffle_questions IN (0, 1)),
     release_scores_immediately INTEGER NOT NULL DEFAULT 1 CHECK(release_scores_immediately IN (0, 1)),
@@ -254,9 +244,9 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id, st
 CREATE INDEX IF NOT EXISTS idx_announcements_feed ON announcements(classroom_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_announcement_comments_order ON announcement_comments(announcement_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_materials_class_type ON materials(classroom_id, file_type);
-CREATE INDEX IF NOT EXISTS idx_assignments_class_due ON assignments(classroom_id, quarter, due_date ASC);
+CREATE INDEX IF NOT EXISTS idx_assignments_class_due ON assignments(classroom_id, due_date ASC);
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON assignment_submissions(student_id);
-CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id, quarter, status);
+CREATE INDEX IF NOT EXISTS idx_quizzes_class ON quizzes(classroom_id, status);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_student ON quiz_attempts(student_id, status);
 CREATE INDEX IF NOT EXISTS idx_ai_chat_student ON ai_chat_messages(student_id, classroom_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_sync_revisions_scope ON sync_revisions(classroom_id, seq);

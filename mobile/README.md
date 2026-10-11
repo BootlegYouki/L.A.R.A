@@ -1,6 +1,6 @@
 # L.A.R.A Mobile Client (`mobile/`)
 
-> **Subsystem Scope:** Native Android application for **Pupils (Grades 1–6)** and **Teachers**.  
+> **Subsystem Scope:** Native Android application for **Learners (Grades 1–12)** and **Teachers**.  
 > **Repository Role:** Dual-role client operating 100% offline within the classroom local area network (LAN).
 
 ---
@@ -11,7 +11,7 @@
 | :--- | :--- |
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`mobile/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#38](https://github.com/BootlegYouki/L.A.R.A/issues/38)). The Lead approves it before Sprint 1 work merges. |
-| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` learner, `123456789013` learner (join with the code), `ADMIN-0001`. |
 | 4 | Take the next issue whose dependencies are merged: [all mobile issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Mobile). The sprint-by-sprint roadmap is in section 5. |
 | 5 | Scaffold first: [#23](https://github.com/BootlegYouki/L.A.R.A/issues/23). Copy `design-system/mobile/*.kt` to `app/src/main/java/org/lara/app/ui/theme/` and `design-system/mobile/res/font/*.ttf` to `app/src/main/res/font/`. Package is `org.lara.app`. |
 | 6 | Before every PR: run the commands in [`mobile/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `mobile/docs/`. |
@@ -38,7 +38,7 @@
 5. **UI & Design Authority:**
    * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
-   * Touch targets must be **minimum 52dp (preferred 56dp)** for young elementary pupils.
+   * Touch targets must be **minimum 52dp (preferred 56dp)** for young learners (Grades 1 to 3 have the least fine motor control).
    * Text contrast must meet **minimum 4.5:1**.
    * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` and translated to Filipino in `values-tl/strings.xml`.
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
@@ -50,7 +50,7 @@
    python3 ../scripts/verify_invariants.py
    ```
 8. **Mandatory Documentation:** Every major feature PR must include updated architectural notes in [`mobile/docs/`](./docs/).
-9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error screen on launch. When disconnected from the classroom server (e.g. at home), pupils must be able to view enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline. Homework photos queue locally as `'QUEUED_FOR_SYNC'`. If the device has ≥6GB RAM and has downloaded a GGUF model, Socratic AI works 100% offline at home too; otherwise, AI features gracefully indicate they unlock upon reconnecting to the classroom Hub.
+9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error screen on launch. When disconnected from the classroom server (e.g. at home), learners must be able to view enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline. Homework photos queue locally as `'QUEUED_FOR_SYNC'`. If the device has ≥6GB RAM and has downloaded a GGUF model, Socratic AI works 100% offline at home too; otherwise, AI features gracefully indicate they unlock upon reconnecting to the classroom Hub.
 
 
 ---
@@ -81,7 +81,7 @@ The app switches navigation graphs depending on authenticated role:
   * **Join Request Approvals:** Bottom sheet showing student Name, LRN, and one-click Accept/Decline buttons.
   * **Stream Broadcasting:** FAB allowing teachers to post announcements to the class directly from their smartphone.
   * **Quiz Remote Controller:** Remote "Start Quiz" trigger button to broadcast synchronized countdowns across the classroom.
-  * **Live Submission Telemetry:** Card showing real-time count of pupils currently answering and auto-graded score distributions.
+  * **Live Submission Telemetry:** Card showing real-time count of learners currently answering and auto-graded score distributions.
 
 ### 2.2 Paperless Quiz Engine
 * Timed full-screen view with visual countdown timer pill (Green >5m, Yellow ≤5m, Red pulsing ≤2m).
@@ -177,4 +177,4 @@ All mobile issues follow `[MOBILE Sprint.Step]`. Each issue names its dependenci
   * `[MOBILE 5.4]`: Implement llama.cpp JNI bridge for arm64-v8a ([#70](https://github.com/BootlegYouki/L.A.R.A/issues/70))
 * **Sprint 6 (Audit & Stress Test):**
   * `[MOBILE 6.1]`: Profile memory and battery consumption on 3GB/4GB Android devices (Transsion/realme) ([#18](https://github.com/BootlegYouki/L.A.R.A/issues/18))
-  * `[MOBILE 6.2]`: Conduct elementary UX audit: touch targets, contrast and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))
+  * `[MOBILE 6.2]`: Conduct accessibility UX audit: touch targets, contrast and loading skeletons ([#28](https://github.com/BootlegYouki/L.A.R.A/issues/28))

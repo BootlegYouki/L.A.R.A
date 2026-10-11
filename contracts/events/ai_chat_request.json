@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AIChatRequestEvent",
-  "description": "Pupil to Hub over ws://<hub>:8081: ask the Socratic tutor. The Hub builds the grounded prompt from material_chunks. Rejected with EVENT_ERROR QUIZ_IN_PROGRESS while the pupil has an IN_PROGRESS quiz attempt.",
+  "description": "Learner to Hub over ws://<hub>:8081: ask the Socratic tutor. The Hub builds the grounded prompt from material_chunks. Rejected with EVENT_ERROR QUIZ_IN_PROGRESS while the learner has an IN_PROGRESS quiz attempt.",
   "type": "object",
   "required": [
     "event",

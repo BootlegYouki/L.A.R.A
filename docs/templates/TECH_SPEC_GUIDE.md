@@ -39,7 +39,7 @@ A good spec for humans and a good spec for agents are the same thing, taken a li
 * **Put the exact commands in.** Build, test, run against the mock hub. An agent runs them to prove its work.
 * **Name the traps.** The gotchas you already know (Transsion battery killers, `MulticastLock`, SQLx migrations without PRAGMAs) belong in the Pitfalls section, because an agent will not know them otherwise.
 * **Date it and keep it current.** When a decision changes, change the spec in the same PR as the code. A stale spec is worse than none, because agents trust it.
-* **Do not put secrets or real pupil data in it.** Use the seed accounts from `AGENTS.md`.
+* **Do not put secrets or real learner data in it.** Use the seed accounts from `AGENTS.md`.
 
 ## Reviewing a spec with an AI
 

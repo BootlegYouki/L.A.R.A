@@ -103,8 +103,6 @@ CREATE TABLE IF NOT EXISTS assignments (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT NOT NULL DEFAULT '',
-    deped_category TEXT NOT NULL DEFAULT 'PERFORMANCE_TASK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
-    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),
     due_date INTEGER NOT NULL,
     allow_late INTEGER NOT NULL DEFAULT 0 CHECK(allow_late IN (0, 1)),
     max_points INTEGER NOT NULL DEFAULT 100,
@@ -135,8 +133,6 @@ CREATE TABLE IF NOT EXISTS quizzes (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     instructions TEXT,
-    deped_category TEXT NOT NULL DEFAULT 'WRITTEN_WORK' CHECK(deped_category IN ('WRITTEN_WORK', 'PERFORMANCE_TASK', 'QUARTERLY_ASSESSMENT')),
-    quarter INTEGER NOT NULL DEFAULT 1 CHECK(quarter BETWEEN 1 AND 4),
     time_limit_minutes INTEGER NOT NULL,
     shuffle_questions INTEGER NOT NULL DEFAULT 0 CHECK(shuffle_questions IN (0, 1)),
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
@@ -211,7 +207,7 @@ CREATE INDEX IF NOT EXISTS idx_client_enrollments_student ON enrollments(student
 CREATE INDEX IF NOT EXISTS idx_client_materials_class_type ON materials(classroom_id, file_type);
 CREATE INDEX IF NOT EXISTS idx_client_announcements_feed ON announcements(classroom_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_comments_order ON announcement_comments(announcement_id, created_at ASC);
-CREATE INDEX IF NOT EXISTS idx_client_assignments_due ON assignments(classroom_id, quarter, due_date ASC);
+CREATE INDEX IF NOT EXISTS idx_client_assignments_due ON assignments(classroom_id, due_date ASC);
 CREATE INDEX IF NOT EXISTS idx_client_submissions_sync ON assignment_submissions(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_attempts_sync ON quiz_attempts(sync_status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_client_ai_chat ON ai_chat_messages(classroom_id, created_at ASC);

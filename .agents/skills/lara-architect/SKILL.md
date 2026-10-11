@@ -27,7 +27,7 @@ All applications operate strictly within an isolated local area network (the cla
   * **mDNS / Zeroconf:** Register service as `_lara._tcp.local` on port 8080.
   * **UDP Subnet Beacon:** Broadcast lightweight JSON heartbeat every 3 seconds to `255.255.255.255:8888`:
     `{"app": "lara", "version": "1.0.0", "name": "Grade 4 - Science", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}`
-  * **Manual Fallback:** Always provide an elementary-friendly input box to type the host IP manually if router client isolation blocks broadcast.
+  * **Manual Fallback:** Always provide an easy-to-use input box to type the host IP manually if router client isolation blocks broadcast.
 * **Firewall & AP Isolation Countermeasures:**
   * **Windows Defender Firewall:** Server installer must automatically register inbound TCP rules (`8080`, `8081`) and UDP (`8888`) via `netsh advfirewall`.
   * **Router AP Isolation:** If router blocks peer-to-peer traffic, use manual IP entry or switch teacher laptop to Mobile Hotspot mode.
@@ -79,7 +79,7 @@ The `contracts/` directory is the single source of truth for all network communi
 
 ## 4. Pluggable Socratic AI & Experimental SLM Guardrails (`rules/socratic-ai-guardrails.md`)
 
-The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary students (Grades 1 to 6), not an answer engine. 
+The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino students (Grades 1 to 12), not an answer engine. 
 
 ### Pluggable GGUF Runtime
 * The inference architecture is **model-agnostic and pluggable via GGUF and `llama.cpp`** (Android JNI `arm64-v8a`, Desktop Tauri sidecar, and Hub `llama-server`).
@@ -99,8 +99,8 @@ The AI tutor (**L.A.R.A AI**) is a pedagogical guide for Filipino elementary stu
    *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
 2. **Strict Grounding:** Always ground hints exclusively in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover the question, say so and point back to the lesson; never answer from general knowledge.
 3. **Step-by-Step Questioning:** Offer one small hint followed by a guiding question.
-4. **Bilingual:** Detect and reply in the pupil's preferred language (English or natural conversational Filipino/Taglish).
-5. **Quiz Lockout:** While the pupil has an `IN_PROGRESS` quiz attempt, the chat UI is never composed (the AI tab may show a disabled explanation) and the Hub rejects AI requests with `HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`.
+4. **Bilingual:** Detect and reply in the learner's preferred language (English or natural conversational Filipino/Taglish).
+5. **Quiz Lockout:** While the learner has an `IN_PROGRESS` quiz attempt, the chat UI is never composed (the AI tab may show a disabled explanation) and the Hub rejects AI requests with `HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`.
 
 ### Model Choice Is Open
 MiniCPM5-2B is only a baseline candidate. Choose the model from the evaluation in `rules/socratic-ai-guardrails.md` section 5 (scored test set run on the real Hub machine). Do not claim a model is good enough without those numbers.
@@ -109,7 +109,7 @@ MiniCPM5-2B is only a baseline candidate. Choose the model from the evaluation i
 
 ## 5. Paperless Assessment (Quiz) Engine Rules (`rules/quiz-and-anti-cheat.md`)
 
-Designed to replace paper test printing for DepEd teachers.
+Designed to replace paper test printing for Philippine public school teachers.
 
 1. **Global Time Limit:** Countdowns run on overall quiz time (e.g., 20 mins for 15 items), not per-question timers.
 2. **Visual Countdown Pill:** Prominent timer (Green > 5m -> Yellow <= 5m -> Red pulsing <= 2m).
@@ -123,11 +123,11 @@ Designed to replace paper test printing for DepEd teachers.
 
 * **Design authority:** `design-system/design-system.md` and `design-system/` are canonical (tokens only, no gradients, Nunito, Phosphor, purple only for the AI tutor). Layouts are free if they use the documented components and follow Google Classroom as the structural reference.
 * **Components:** `androidx.compose.material3` themed with `design-system/mobile/*` on Android; Tailwind with `design-system/desktop/tailwind.theme.ts` on Desktop.
-* **Touch Targets (Grades 1–6):** Minimum **52dp**, **56dp** for primary actions and quiz options.
+* **Touch Targets (Grades 1–12):** Minimum **52dp**, **56dp** for primary actions and quiz options.
 * **Contrast & Typography:** Minimum **4.5:1** text-to-background contrast across all surfaces. Minimum 14sp body text, 18sp headings.
 * **Bilingual Localization:** Zero hardcoded strings. English strings in `values/strings.xml`, Filipino strings in `values-tl/strings.xml`.
 * **CameraX Homework Capture:** Viewfinder must display a clear rectangular document framing guide with automatic downscaling and JPEG compression (<800KB).
-* **DepEd Export:** Local Hub desktop app provides one-click export of student grades to `.xlsx` / `.csv` formatted for official DepEd Class Records directly to plugged-in USB flash drives.
+* **Gradebook Export:** Local Hub desktop app provides one-click export of points per learner per assignment and quiz to `.xlsx` / `.csv`, directly to a plugged-in USB flash drive. No DepEd categories or weights.
 
 ---
 
@@ -138,7 +138,7 @@ The mobile Android application is a **dual-role client** supporting both Student
 * **Join Approvals:** Mobile bottom sheet to Accept or Decline student enrollment requests on the go.
 * **Stream Broadcasting:** FAB allowing teachers to post announcements to the classroom feed directly from their smartphone.
 * **Quiz Remote Controller:** Remote "Start Quiz" trigger button to broadcast synchronized countdowns while walking around the room.
-* **Live Assessment Monitor:** Real-time submission counter card displaying how many pupils have completed the test.
+* **Live Assessment Monitor:** Real-time submission counter card displaying how many learners have completed the test.
 
 ---
 
