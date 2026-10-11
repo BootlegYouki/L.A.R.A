@@ -39,7 +39,7 @@ The people who review the project check it **as end users**: they run the app li
    python3 scripts/verify_invariants.py   # no cloud dependencies, Filipino strings match English
    ```
 4. **Pick an issue** whose dependencies are merged: [sprint board](https://github.com/users/BootlegYouki/projects/2), or filter by team: [mobile](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22) · [desktop](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22) · [server](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). Comment that you are taking it. Titles look like `[MOBILE 2.3]` (team, sprint, step).
-5. **Give your agent the starter prompt** below, branch from `staging`, and work.
+5. **Give your agent the starter prompt** below, branch from `staging`, and work. Always base your branch and your PR on `staging`, never on `main`: the Lead alone decides what is promoted to `main`.
 
 ### Your team's tools
 
@@ -80,7 +80,7 @@ Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents
 | :--- | :--- |
 | **One issue = one team = one PR** | Keep it small. Do not touch another team's folder. |
 | **Contract first** | [`contracts/`](./contracts/) is the only thing the three programs share. Never change an endpoint, event or column in code before it exists there, in the mock hub and in the tests. |
-| **Branch flow** | Branch from `staging`, open the PR to `staging`. `main` only receives `staging`; CI flags anything else. |
+| **Branch flow** | Branch from `staging`, open the PR to `staging`. Never base work on `main`: the Lead decides what goes to `main`, and it only receives `staging`. CI flags anything else. |
 | **Any developer takes any issue** | There are no fixed developer roles. Two open PRs must not edit the same file; the issue's Target Files are the boundary. |
 | **Docs travel with code** | Update your folder's `docs/` (purpose, key files, data flow, gotchas). |
 | **Children's data** | Never log PINs, tokens or LRNs. Never export learner data off the Hub. |
