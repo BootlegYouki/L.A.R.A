@@ -2,12 +2,12 @@
 
 Maintained by the **Mobile Team**. This folder is where the Lead Developer and future teammates get context without reading commits. A PR that adds or changes a feature must update the matching file here.
 
-> **Reset (Sprint 0):** the Android project from `[MOBILE 1.1]` was removed because the mobile team changed. `TECH_SPEC.md` is the previous team's draft: the new team rewrites and gets it approved before any Sprint 1 PR. The old code is in git history (PR #23).
+> **Reset (Sprint 0):** a new mobile team is taking over. The Android project from `[MOBILE 1.1]` and the previous team's Tech Spec were removed, so `TECH_SPEC.md` is the blank template. The new team writes it under `[MOBILE 0.1]` and gets it approved before any Sprint 1 PR.
 
 ## Required documents
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
-| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, parallel-PR file map, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
+| [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | `navigation.md` | Student and Teacher graphs, role routing, bottom navigation | Sprint 1 and 2 |
 | `room_schema.md` | Entities versus `client_offline.sql`, DAOs, schema test | Sprint 1 |
 | `discovery.md` | NSD, UDP, `MulticastLock`, manual IP, reconnect | Sprint 1 |
