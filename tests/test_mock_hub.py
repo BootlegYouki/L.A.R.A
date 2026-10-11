@@ -248,6 +248,113 @@ class TestMockHub(unittest.TestCase):
         teacher_view = self.pull(self.teacher)
         self.assertTrue(all("lrn_or_id" in u for u in teacher_view["users"]))
 
+    def enroll_ana(self):
+        ana = login(BASE, "123456789013")
+        call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)
+        _, roster, _ = call(BASE, "GET", f"/api/classrooms/{CLASSROOM}/roster", token=self.teacher)
+        sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
+        call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
+        return ana, sid
+
+    def test_teacher_can_fix_or_remove_an_assignment_and_grades_are_kept(self):
+        first = self.pull(self.pupil)
+        asg = first["assignments"][0]
+        _, edited, _ = call(BASE, "PATCH", f"/api/assignments/{asg['id']}", {"title": "Bagong pamagat"}, self.teacher)
+        self.assertEqual(edited["title"], "Bagong pamagat")
+        self.assertEqual(self.pull(self.pupil, cursor=first["next_cursor"])["assignments"][0]["title"], "Bagong pamagat")
+        status, _, _ = call(BASE, "DELETE", f"/api/assignments/{asg['id']}", token=self.teacher)
+        self.assertEqual(status, 200)
+        after = self.pull(self.pupil, cursor=first["next_cursor"])
+        self.assertIn({"entity_table": "assignments", "entity_id": asg["id"]}, after["deleted"])
+        self.assertIn(asg["id"], self.server.state.assignments, "archived on the Hub, never destroyed")
+        status, _, _ = call(BASE, "PATCH", f"/api/assignments/{asg['id']}", {"title": "x"}, self.pupil)
+        self.assertEqual(status, 403)
+
+    def test_quiz_can_be_edited_only_while_it_is_a_draft(self):
+        _, quiz, _ = call(BASE, "POST", "/api/quizzes", QUIZ, self.teacher)
+        status, edited, _ = call(BASE, "PATCH", f"/api/quizzes/{quiz['id']}", {**QUIZ, "title": "Ecosystem 2"}, self.teacher)
+        self.assertEqual((status, edited["title"]), (200, "Ecosystem 2"))
+        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
+        status, body, _ = call(BASE, "PATCH", f"/api/quizzes/{quiz['id']}", QUIZ, self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (409, "QUIZ_NOT_DRAFT"))
+
+    def test_topics_group_classwork_and_deleting_one_keeps_the_work(self):
+        _, topic, _ = call(BASE, "POST", "/api/topics", {"classroom_id": CLASSROOM, "name": "Unit 1"}, self.teacher)
+        asg = self.pull(self.teacher)["assignments"][0]["id"]
+        call(BASE, "PATCH", f"/api/assignments/{asg}", {"topic_id": topic["id"]}, self.teacher)
+        data = self.pull(self.pupil)
+        self.assertEqual(data["topics"][0]["name"], "Unit 1")
+        self.assertEqual(data["assignments"][0]["topic_id"], topic["id"])
+        call(BASE, "DELETE", f"/api/topics/{topic['id']}", token=self.teacher)
+        after = self.pull(self.pupil, cursor=data["next_cursor"])
+        self.assertIn({"entity_table": "topics", "entity_id": topic["id"]}, after["deleted"])
+        self.assertIsNone(after["assignments"][0]["topic_id"])
+
+    def test_private_comments_reach_only_that_learner_and_the_teacher(self):
+        ana, _ = self.enroll_ana()
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        call(BASE, "POST", f"/api/assignments/{asg}/private-comments", {"content": "Hindi ko po maintindihan"}, self.pupil)
+        juan_id = next(u["id"] for u in self.pull(self.pupil)["users"] if u["full_name"] == "Juan dela Cruz")
+        status, _, _ = call(BASE, "GET", f"/api/assignments/{asg}/private-comments", token=self.teacher)
+        self.assertEqual(status, 400, "a teacher must say whose thread")
+        _, thread, _ = call(BASE, "GET", f"/api/assignments/{asg}/private-comments?student_id={juan_id}", token=self.teacher)
+        self.assertEqual(len(thread), 1)
+        call(BASE, "POST", f"/api/assignments/{asg}/private-comments", {"content": "Tingnan ang pahina 2", "student_id": juan_id}, self.teacher)
+        self.assertEqual(len(self.pull(self.pupil)["private_comments"]), 2)
+        self.assertEqual(self.pull(ana)["private_comments"], [], "a classmate never receives the thread")
+        _, anas, _ = call(BASE, "GET", f"/api/assignments/{asg}/private-comments", token=ana)
+        self.assertEqual(anas, [])
+
+    def test_removed_learner_loses_the_class_and_co_teacher_gains_it(self):
+        ana, sid = self.enroll_ana()
+        ana_ws = WsClient("127.0.0.1", WS, ana)
+        call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
+        self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "REMOVED")
+        ana_ws.close()
+        self.assertEqual(call(BASE, "GET", "/api/classrooms", token=ana)[1], [])
+        self.assertEqual(self.pull(ana)["announcements"], [])
+
+        admin = login(BASE, "ADMIN-0001")
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        jose = login(BASE, "T-0002")
+        self.assertEqual(call(BASE, "GET", "/api/classrooms", token=jose)[1], [])
+        _, room, _ = call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/teachers", {"lrn_or_id": "T-0002"}, self.teacher)
+        self.assertEqual(len(room["co_teacher_ids"]), 1)
+        status, _, _ = call(BASE, "POST", "/api/announcements", {"classroom_id": CLASSROOM, "title": "Hi", "content": "x"}, jose)
+        self.assertEqual(status, 200, "a co-teacher can post")
+        status, _, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, jose)
+        self.assertEqual(status, 403, "only the owner renames or archives")
+        _, room, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "Science 4A", "archived": True}, self.teacher)
+        self.assertEqual(room["name"], "Science 4A")
+        self.assertIsNotNone(room["archived_at"])
+
+    def test_admin_is_its_own_account_and_setup_runs_once(self):
+        status, body, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "X", "pin": "9999"})
+        self.assertEqual((status, body["error"]["code"]), (409, "ADMIN_EXISTS"))
+        admin = login(BASE, "ADMIN-0001")
+        status, _, _ = call(BASE, "POST", "/api/classrooms", {"name": "x", "section": "y"}, admin)
+        self.assertEqual(status, 403, "the admin is not a teacher")
+        self.assertNotIn("Hub Admin", json.dumps(self.pull(self.teacher)["users"]), "the admin is never synced")
+        self.server.state.users.clear()
+        status, session, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "ICT Coordinator", "pin": "4321"})
+        self.assertEqual((status, session["user"]["role"]), (200, "ADMIN"))
+
+    def test_material_can_be_attached_renamed_and_deleted(self):
+        asg = self.pull(self.teacher)["assignments"][0]["id"]
+        boundary = "XX"
+        parts = "".join(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'
+                        for k, v in (("classroom_id", CLASSROOM), ("title", "Worksheet"), ("file_type", "WORKSHEET"),
+                                     ("assignment_id", asg)))
+        body = (parts + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="w.pdf"\r\n\r\nPDF\r\n--{boundary}--\r\n').encode()
+        _, mat, _ = call(BASE, "POST", "/api/materials", token=self.teacher, raw=body,
+                         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        self.assertEqual(mat["assignment_id"], asg)
+        _, renamed, _ = call(BASE, "PATCH", f"/api/materials/{mat['id']}", {"title": "Worksheet 1"}, self.teacher)
+        self.assertEqual(renamed["title"], "Worksheet 1")
+        cursor = self.pull(self.pupil)["next_cursor"]
+        call(BASE, "DELETE", f"/api/materials/{mat['id']}", token=self.teacher)
+        self.assertIn({"entity_table": "materials", "entity_id": mat["id"]}, self.pull(self.pupil, cursor=cursor)["deleted"])
+
     def test_submissions_are_scoped_to_their_owner(self):
         ana = login(BASE, "123456789013")
         call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)

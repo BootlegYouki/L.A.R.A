@@ -3,7 +3,7 @@
 Read the root `AGENTS.md` first. This file adds what is specific to `mobile/`.
 
 ## What you are building
-A native Android app (package `org.lara.app`) with a **Student** graph and a **Teacher** graph. Target hardware is 3 to 4 GB RAM budget phones (Infinix, TECNO, itel, realme): the app **heap must stay under 250 MB**.
+A native Android app (package `org.lara.app`) with a **Student** graph and a **Teacher** graph. The Teacher graph has every teacher feature the desktop app has, including building quizzes (root `AGENTS.md` section 1.4). Target hardware is 3 to 4 GB RAM budget phones (Infinix, TECNO, itel, realme): the app **heap must stay under 250 MB**.
 
 ## Commands (run in `mobile/`)
 `./gradlew test lint`. Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py` (use the emulator host address or the PC's LAN IP).

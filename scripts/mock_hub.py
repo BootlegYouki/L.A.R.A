@@ -9,7 +9,7 @@ build against a realistic Hub before the Rust server exists:
 - WebSocket event broker (:8081)                       -> contracts/events/
 
 State is in memory and resets on restart. Seeded accounts (PIN 1234 for all):
-  ADMIN-0001      teacher, also accepted by /api/admin/* routes
+  ADMIN-0001      the Hub admin (role ADMIN); only this account may call /api/admin/*, backup and restore
   T-0001          teacher "Maria Santos" (owns Science 4)
   123456789012    pupil   "Juan dela Cruz" (enrolled, ACTIVE)
   123456789013    pupil   "Ana Reyes"      (not enrolled; join with class code K7M4QX)
@@ -72,6 +72,9 @@ class HubState:
         self.submission_files = {}
         self.quizzes = {}
         self.attempts = {}
+        self.topics = {}
+        self.private_comments = {}
+        self.co_teachers = {}                    # classroom_id -> set of co-teacher user ids
         self.ledger = []
         self.seq = 0
         self.hub_id = new_id()
@@ -81,7 +84,7 @@ class HubState:
 
     def _seed(self):
         t = now_ms()
-        admin = self.add_user(ADMIN_ID, "Hub Admin", "TEACHER", "1234")
+        self.add_user(ADMIN_ID, "Hub Admin", "ADMIN", "1234")
         teacher = self.add_user("T-0001", "Maria Santos", "TEACHER", "1234")
         pupil = self.add_user("123456789012", "Juan dela Cruz", "STUDENT", "1234")
         self.add_user("123456789013", "Ana Reyes", "STUDENT", "1234")
@@ -162,7 +165,7 @@ class HubState:
 
     def visible_classroom_ids(self, user):
         if user["role"] == "TEACHER":
-            return {c["id"] for c in self.classrooms.values() if c["teacher_id"] == user["id"]}
+            return {c["id"] for c in self.classrooms.values() if user["id"] in self.teachers_of(c["id"])}
         return self.active_classroom_ids(user["id"])
 
     def has_active_attempt(self, student_id):
@@ -178,7 +181,7 @@ class HubState:
 
     def teachers_of(self, classroom_id):
         c = self.classrooms.get(classroom_id)
-        return {c["teacher_id"]} if c else set()
+        return ({c["teacher_id"]} | self.co_teachers.get(classroom_id, set())) if c else set()
 
     def students_of(self, classroom_id):
         return {e["student_id"] for e in self.enrollments.values()
@@ -331,7 +334,7 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
                         raise ApiError(401, "UNAUTHORIZED", "Missing or expired token")
                     if role == "TEACHER" and user["role"] != "TEACHER":
                         raise ApiError(403, "FORBIDDEN", "Teacher only")
-                    if role == "ADMIN" and user["lrn_or_id"] != ADMIN_ID:
+                    if role == "ADMIN" and user["role"] != "ADMIN":
                         raise ApiError(403, "FORBIDDEN", "Hub admin only")
                     if role == "STUDENT" and user["role"] != "STUDENT":
                         raise ApiError(403, "FORBIDDEN", "Pupil only")
@@ -381,11 +384,13 @@ def need(body, *keys):
         raise ApiError(400, "BAD_REQUEST", "Missing: " + ", ".join(missing))
 
 
-def owned_classroom(req, classroom_id):
+def owned_classroom(req, classroom_id, owner_only=False):
+    """The caller must teach the class: the owner, or a co-teacher unless owner_only."""
     c = STATE.classrooms.get(classroom_id)
     if not c:
         raise ApiError(404, "NOT_FOUND", "Classroom not found")
-    if c["teacher_id"] != req.user["id"]:
+    allowed = {c["teacher_id"]} if owner_only else STATE.teachers_of(classroom_id)
+    if req.user["id"] not in allowed:
         raise ApiError(403, "FORBIDDEN", "Not your classroom")
     return c
 
@@ -436,6 +441,19 @@ def logout(req):
 
 
 # ---- admin
+@route("POST", r"/api/admin/setup", auth=False)
+def admin_setup(req):
+    # The real Hub accepts this only from the Hub PC itself (loopback). The mock is seeded with an admin,
+    # so this always answers ADMIN_EXISTS unless a test clears the seed.
+    b = req.json()
+    need(b, "full_name", "pin")
+    if any(u["role"] == "ADMIN" for u in STATE.users.values()):
+        raise ApiError(409, "ADMIN_EXISTS", "The Hub admin is already set up")
+    if not re.fullmatch(r"\d{4}", str(b["pin"])):
+        raise ApiError(400, "BAD_REQUEST", "PIN must be 4 digits")
+    return STATE.open_session(STATE.add_user(ADMIN_ID, b["full_name"], "ADMIN", b["pin"]))
+
+
 @route("GET", r"/api/admin/users", role="ADMIN")
 def admin_list(req):
     return [STATE.public_user(u) for u in STATE.users.values()]
@@ -465,6 +483,8 @@ def admin_reset(req):
 # ---- classrooms
 def public_classroom(c, user):
     out = {k: c[k] for k in ("id", "name", "section", "class_code", "teacher_id")}
+    out["archived_at"] = c.get("archived_at")
+    out["co_teacher_ids"] = sorted(STATE.co_teachers.get(c["id"], set()))
     if user["role"] == "STUDENT":
         for e in STATE.enrollments.values():
             if e["classroom_id"] == c["id"] and e["student_id"] == user["id"]:
@@ -476,7 +496,7 @@ def public_classroom(c, user):
 def classrooms_list(req):
     if req.user["role"] == "TEACHER":
         return [public_classroom(c, req.user) for c in STATE.classrooms.values()
-                if c["teacher_id"] == req.user["id"]]
+                if req.user["id"] in STATE.teachers_of(c["id"])]
     mine = {e["classroom_id"] for e in STATE.enrollments.values()
             if e["student_id"] == req.user["id"] and e["status"] in ("ACTIVE", "PENDING")}
     return [public_classroom(STATE.classrooms[i], req.user) for i in mine]
@@ -548,6 +568,49 @@ def reject(req):
     return decide(req, "REJECTED")
 
 
+@route("POST", r"/api/classrooms/([^/]+)/remove", role="TEACHER")
+def remove_learner(req):
+    return decide(req, "REMOVED")
+
+
+@route("PATCH", r"/api/classrooms/([^/]+)", role="TEACHER")
+def classroom_patch(req):
+    c = owned_classroom(req, req.groups[0], owner_only=True)
+    b = req.json()
+    for k in ("name", "section"):
+        if k in b:
+            c[k] = b[k]
+    if "archived" in b:
+        c["archived_at"] = now_ms() if b["archived"] else None
+    c["updated_at"] = now_ms()
+    STATE.log("classrooms", c["id"], c["id"])
+    return public_classroom(c, req.user)
+
+
+@route("POST", r"/api/classrooms/([^/]+)/teachers", role="TEACHER")
+def co_teacher_add(req):
+    c = owned_classroom(req, req.groups[0], owner_only=True)
+    need(req.json(), "lrn_or_id")
+    t = next((u for u in STATE.users.values()
+              if u["lrn_or_id"] == req.json()["lrn_or_id"] and u["role"] == "TEACHER"), None)
+    if not t:
+        raise ApiError(404, "NOT_FOUND", "No teacher with that ID")
+    if t["id"] != c["teacher_id"]:
+        STATE.co_teachers.setdefault(c["id"], set()).add(t["id"])
+    c["updated_at"] = now_ms()
+    STATE.log("classrooms", c["id"], c["id"])
+    return public_classroom(c, req.user)
+
+
+@route("DELETE", r"/api/classrooms/([^/]+)/teachers/([^/]+)", role="TEACHER")
+def co_teacher_remove(req):
+    c = owned_classroom(req, req.groups[0], owner_only=True)
+    STATE.co_teachers.get(c["id"], set()).discard(req.groups[1])
+    c["updated_at"] = now_ms()
+    STATE.log("classrooms", c["id"], c["id"])
+    return {"success": True}
+
+
 # ---- sync
 @route("POST", r"/api/sync/pull")
 def sync_pull(req):
@@ -568,8 +631,9 @@ def sync_pull(req):
             continue
         latest[(e["table"], e["id"])] = e
 
-    out = {k: [] for k in ("classrooms", "enrollments", "announcements", "comments", "materials", "material_chunks",
-                           "assignments", "submissions", "quizzes", "quiz_attempts")}
+    out = {k: [] for k in ("classrooms", "enrollments", "topics", "announcements", "comments", "materials",
+                           "material_chunks", "assignments", "submissions", "private_comments", "quizzes",
+                           "quiz_attempts")}
     deleted = []
     for (table, eid), e in latest.items():
         if e["action"] == "DELETE":
@@ -578,6 +642,10 @@ def sync_pull(req):
             out["classrooms"].append(public_classroom(STATE.classrooms[eid], req.user))
         elif table == "enrollments" and eid in STATE.enrollments:
             out["enrollments"].append(STATE.enrollments[eid])
+        elif table == "topics" and eid in STATE.topics:
+            out["topics"].append(STATE.topics[eid])
+        elif table == "private_comments" and eid in STATE.private_comments:
+            out["private_comments"].append(STATE.private_comments[eid])
         elif table == "announcements" and eid in STATE.announcements:
             out["announcements"].append(STATE.announcements[eid])
         elif table == "announcement_comments" and eid in STATE.comments:
@@ -594,7 +662,7 @@ def sync_pull(req):
             q = STATE.quizzes[eid]
             if q["status"] != "DRAFT" or teacher:
                 out["quizzes"].append({k: q.get(k) for k in ("id", "classroom_id", "title", "status", "time_limit_minutes",
-                                                              "started_at")})
+                                                              "started_at", "topic_id")})
         elif table == "quiz_attempts" and eid in STATE.attempts:
             a = STATE.attempts[eid]
             if a["status"] == "SUBMITTED":
@@ -636,6 +704,13 @@ def sync_push(req):
             receipts.append({"id": c["id"], "status": "SYNCED"})
         else:
             receipts.append({"id": c["id"], "status": "REJECTED", "reason": "COMMENTS_DISABLED"})
+    for c in b.get("private_comments", []):
+        asg = STATE.assignments.get(c["assignment_id"])
+        if asg and not asg.get("archived_at"):
+            add_private_comment(asg, req.user["id"], req.user["id"], c["content"], c["id"], c["created_at"])
+            receipts.append({"id": c["id"], "status": "SYNCED"})
+        else:
+            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "NOT_FOUND"})
     return {"acknowledged": True, "receipts": receipts}
 
 
@@ -703,7 +778,72 @@ def comment_create(req):
     return c
 
 
+# ---- topics
+@route("POST", r"/api/topics", role="TEACHER")
+def topic_create(req):
+    b = req.json()
+    need(b, "classroom_id", "name")
+    owned_classroom(req, b["classroom_id"])
+    t = now_ms()
+    order = 1 + max([x["order_index"] for x in STATE.topics.values() if x["classroom_id"] == b["classroom_id"]] or [0])
+    topic = {"id": new_id(), "classroom_id": b["classroom_id"], "name": b["name"], "order_index": order,
+             "created_at": t, "updated_at": t}
+    STATE.topics[topic["id"]] = topic
+    STATE.log("topics", topic["id"], topic["classroom_id"])
+    return topic
+
+
+def owned_entity(req, store, label):
+    e = store.get(req.groups[0])
+    if not e or e.get("archived_at"):
+        raise ApiError(404, "NOT_FOUND", f"{label} not found")
+    owned_classroom(req, e["classroom_id"])
+    return e
+
+
+def patch_entity(req, store, label, table, keys):
+    e = owned_entity(req, store, label)
+    for k in keys:
+        if k in req.json():
+            e[k] = req.json()[k]
+    e["updated_at"] = now_ms()
+    STATE.log(table, e["id"], e["classroom_id"])
+    return e
+
+
+@route("PATCH", r"/api/topics/([^/]+)", role="TEACHER")
+def topic_patch(req):
+    return patch_entity(req, STATE.topics, "Topic", "topics", ("name", "order_index"))
+
+
+@route("DELETE", r"/api/topics/([^/]+)", role="TEACHER")
+def topic_delete(req):
+    topic = owned_entity(req, STATE.topics, "Topic")
+    del STATE.topics[topic["id"]]
+    STATE.log("topics", topic["id"], topic["classroom_id"], action="DELETE")
+    for table, store in (("materials", STATE.materials), ("assignments", STATE.assignments), ("quizzes", STATE.quizzes)):
+        for e in store.values():
+            if e.get("topic_id") == topic["id"]:
+                e["topic_id"], e["updated_at"] = None, now_ms()
+                STATE.log(table, e["id"], e["classroom_id"])
+    return {"success": True}
+
+
 # ---- materials
+@route("PATCH", r"/api/materials/([^/]+)", role="TEACHER")
+def material_patch(req):
+    return patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+
+
+@route("DELETE", r"/api/materials/([^/]+)", role="TEACHER")
+def material_delete(req):
+    m = owned_entity(req, STATE.materials, "Material")
+    del STATE.materials[m["id"]]
+    STATE.chunks.pop(m["id"], None)
+    STATE.log("materials", m["id"], m["classroom_id"], action="DELETE")
+    return {"success": True}
+
+
 @route("POST", r"/api/materials", role="TEACHER")
 def material_create(req):
     f, files = req.multipart()
@@ -715,7 +855,8 @@ def material_create(req):
     t, mid = now_ms(), new_id()
     m = {"id": mid, "classroom_id": f["classroom_id"], "title": f["title"], "file_type": f["file_type"],
          "file_size_bytes": len(data), "download_url": f"/api/materials/{mid}/download",
-         "created_at": t, "updated_at": t}
+         "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
+         "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
     STATE.materials[mid] = m
     STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
@@ -789,10 +930,66 @@ def assignment_create(req):
     t = now_ms()
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
          "instructions": b.get("instructions", ""), "allow_late": b.get("allow_late", False),
-         "max_points": b["max_points"], "due_date": b["due_date"], "created_at": t, "updated_at": t}
+         "max_points": b["max_points"], "due_date": b["due_date"], "topic_id": b.get("topic_id"),
+         "created_at": t, "updated_at": t}
     STATE.assignments[a["id"]] = a
     STATE.log("assignments", a["id"], a["classroom_id"])
     return a
+
+
+@route("PATCH", r"/api/assignments/([^/]+)", role="TEACHER")
+def assignment_patch(req):
+    return patch_entity(req, STATE.assignments, "Assignment", "assignments",
+                        ("title", "instructions", "max_points", "due_date", "allow_late", "topic_id"))
+
+
+@route("DELETE", r"/api/assignments/([^/]+)", role="TEACHER")
+def assignment_delete(req):
+    # Archived, never destroyed: submissions and grades stay on the Hub (rules/database-and-sync.md section 4).
+    a = owned_entity(req, STATE.assignments, "Assignment")
+    a["archived_at"] = a["updated_at"] = now_ms()
+    STATE.log("assignments", a["id"], a["classroom_id"], action="DELETE")
+    return {"success": True}
+
+
+def add_private_comment(asg, student_id, author_id, content, comment_id=None, created_at=None):
+    t = now_ms()
+    c = {"id": comment_id or new_id(), "assignment_id": asg["id"], "student_id": student_id,
+         "author_id": author_id, "content": content, "created_at": created_at or t, "updated_at": t}
+    STATE.private_comments[c["id"]] = c
+    STATE.log("private_comments", c["id"], asg["classroom_id"], student_id)
+    return c
+
+
+def private_thread(req, student_id):
+    """Resolve whose thread the caller may touch: a learner only their own, a teacher any learner of the class."""
+    asg = STATE.assignments.get(req.groups[0])
+    if not asg or asg.get("archived_at"):
+        raise ApiError(404, "NOT_FOUND", "Assignment not found")
+    if req.user["role"] == "STUDENT":
+        if asg["classroom_id"] not in STATE.active_classroom_ids(req.user["id"]):
+            raise ApiError(403, "FORBIDDEN", "Not your class")
+        return asg, req.user["id"]
+    owned_classroom(req, asg["classroom_id"])
+    if not student_id:
+        raise ApiError(400, "BAD_REQUEST", "Missing: student_id")
+    return asg, student_id
+
+
+@route("GET", r"/api/assignments/([^/]+)/private-comments")
+def private_comments_list(req):
+    m = re.search(r"[?&]student_id=([^&]+)", req.handler.path)
+    asg, sid = private_thread(req, m.group(1) if m else None)
+    return sorted((c for c in STATE.private_comments.values()
+                   if c["assignment_id"] == asg["id"] and c["student_id"] == sid), key=lambda c: c["created_at"])
+
+
+@route("POST", r"/api/assignments/([^/]+)/private-comments")
+def private_comment_create(req):
+    b = req.json()
+    need(b, "content")
+    asg, sid = private_thread(req, b.get("student_id"))
+    return add_private_comment(asg, sid, req.user["id"], b["content"])
 
 
 @route("POST", r"/api/assignments/([^/]+)/submit", role="STUDENT")
@@ -849,9 +1046,17 @@ def submission_file(req):
 @route("POST", r"/api/quizzes", role="TEACHER")
 def quiz_create(req):
     b = req.json()
-    need(b, "classroom_id", "title", "time_limit_minutes", "questions")
-    owned_classroom(req, b["classroom_id"])
+    owned_classroom(req, b.get("classroom_id"))
     t = now_ms()
+    quiz = {"id": new_id(), "classroom_id": b["classroom_id"], **quiz_fields(b),
+            "status": "DRAFT", "started_at": None, "created_at": t, "updated_at": t}
+    STATE.quizzes[quiz["id"]] = quiz
+    STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
+    return quiz
+
+
+def quiz_fields(b):
+    need(b, "classroom_id", "title", "time_limit_minutes", "questions")
     qs = []
     for i, q in enumerate(b["questions"]):
         need(q, "question_text", "question_type", "correct_answer")
@@ -859,12 +1064,18 @@ def quiz_create(req):
                    "question_text": q["question_text"], "question_type": q["question_type"],
                    "options": q.get("options", []), "points": q.get("points", 1),
                    "correct_answer": q["correct_answer"], "synonyms": q.get("synonyms", [])})
-    quiz = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
-            "instructions": b.get("instructions"), "time_limit_minutes": b["time_limit_minutes"],
-            "shuffle_questions": b.get("shuffle_questions", False),
+    return {"title": b["title"], "instructions": b.get("instructions"),
+            "time_limit_minutes": b["time_limit_minutes"], "shuffle_questions": b.get("shuffle_questions", False),
             "release_scores_immediately": b.get("release_scores_immediately", True),
-            "status": "DRAFT", "started_at": None, "questions": qs, "created_at": t, "updated_at": t}
-    STATE.quizzes[quiz["id"]] = quiz
+            "topic_id": b.get("topic_id"), "questions": qs}
+
+
+@route("PATCH", r"/api/quizzes/([^/]+)", role="TEACHER")
+def quiz_patch(req):
+    quiz = owned_entity(req, STATE.quizzes, "Quiz")
+    if quiz["status"] != "DRAFT":
+        raise ApiError(409, "QUIZ_NOT_DRAFT", "A quiz can be edited only before it starts")
+    quiz.update(quiz_fields({**req.json(), "classroom_id": quiz["classroom_id"]}), updated_at=now_ms())
     STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     return quiz
 
