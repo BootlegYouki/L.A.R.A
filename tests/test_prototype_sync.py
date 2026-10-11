@@ -1,4 +1,4 @@
-"""Fails when prototype/index.html no longer matches the remake screen in design-system/showcase.html."""
+"""Fails when design-system/prototype.html no longer matches the remake screen in design-system/showcase.html."""
 import subprocess
 import sys
 import unittest

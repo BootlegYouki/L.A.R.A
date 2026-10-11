@@ -35,10 +35,11 @@ design-system/
 │   ├── fonts/              # Nunito woff2 + fonts.css
 │   └── phosphor/           # Phosphor Regular, Fill, Bold woff2 + phosphor.css
 ├── design-system.md        # Written rules (tokens, components, accessibility, Google Classroom reference)
-└── showcase.html           # Interactive sample, the visual source of truth (open in a browser)
+├── showcase.html           # Interactive sample, the visual source of truth (open in a browser)
+└── prototype.html          # Full-window app of the remade desktop screens (generated from showcase.html)
 ```
 
-Outside this folder, `prototype/index.html` runs the remade desktop screens (Home, Stream, quiz) as a full-window app, learner or teacher, with normal, empty, loading and offline states. It is generated from `showcase.html` by `python3 scripts/build_prototype.py`; a test fails when it is stale. Serve the repo root with any static server (for example `python3 -m http.server`) and open `/prototype/index.html`.
+`prototype.html` runs the remade desktop screens (Home, Stream, quiz) as a full-window app, learner or teacher, with normal, empty, loading and offline states. It is generated from `showcase.html` by `python3 scripts/build_prototype.py`; a test fails when it is stale. Serve this folder with any static server (for example `python3 -m http.server`) and open `/prototype.html`.
 
 ## Principles
 1. **Solid fills only, zero gradients.**
