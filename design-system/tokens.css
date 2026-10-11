@@ -68,6 +68,7 @@
 
   /* Touch targets */
   --min-touch-target: 52px;
+  --control-height-desktop: 40px;
   --primary-touch-target: 56px;
 
   /* Navy-tinted layered shadows (never gray) */

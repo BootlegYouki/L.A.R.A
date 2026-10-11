@@ -60,6 +60,7 @@
       --radius-pill: 9999px;
 
       --min-touch-target: 52px;
+      --control-height-desktop: 40px;
 
       /* Layered shadows tinted with navy */
       --shadow-card: 0 1px 3px 0 rgba(23, 33, 61, 0.05), 0 1px 2px -1px rgba(23, 33, 61, 0.05);
@@ -114,7 +115,7 @@
     }
 
     /* ---------- Page frame ---------- */
-    .doc-layout { display: grid; grid-template-columns: 276px minmax(0, 1fr) 224px; min-height: calc(100vh - 60px); }
+    .doc-layout { display: grid; grid-template-columns: 276px minmax(0, 1fr); min-height: calc(100vh - 60px); }
     .ds-sidebar {
       border-right: 1px solid var(--color-border); background: var(--color-surface-white);
       position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; padding: 16px 14px 40px;
@@ -260,13 +261,6 @@
     .ds-pager strong { font-size: 16px; font-weight: 900; }
     .ds-pager i { font-size: 22px; color: var(--color-primary-green); }
 
-    /* ---------- On this page ---------- */
-    .doc-toc { padding: 40px 20px; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
-    .toc-title { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); margin-bottom: 10px; }
-    .toc-list { list-style: none; border-left: 2px solid var(--color-border); }
-    .toc-item { display: block; font-size: 14px; font-weight: 700; color: var(--color-text-secondary); text-decoration: none; padding: 6px 0 6px 14px; margin-left: -2px; border-left: 2px solid transparent; }
-    .toc-item:hover { color: var(--color-dark-green); }
-    .toc-item.active { color: var(--color-dark-green); border-left-color: var(--color-primary-green); font-weight: 800; }
 
     /* ---------- Overview ---------- */
     .ov-hero {
@@ -463,20 +457,6 @@
     .modal-actions .btn { flex: 1; }
 
     /* Phone frame */
-    .phone { width: 300px; max-width: 100%; height: 540px; border: 8px solid var(--color-text-primary); border-radius: 36px; background: var(--color-canvas-bg); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-elevated); }
-    .phone-status { height: 22px; background: var(--color-dark-green); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-    .app-bar { height: 64px; background: var(--color-dark-green); color: #fff; display: flex; align-items: center; gap: 10px; padding: 0 12px; flex-shrink: 0; }
-    .app-bar h3 { font-size: 18px; font-weight: 900; flex: 1; }
-    .app-bar button { width: 52px; height: 52px; border-radius: 50%; background: transparent; border: none; color: #fff; font-size: 22px; cursor: pointer; }
-    .phone-body { flex: 1; padding: 14px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
-    .bottom-nav { height: 68px; background: #fff; border-top: 1px solid var(--color-border); display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; }
-    .bn-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 800; color: var(--color-text-secondary); min-width: 64px; min-height: 52px; justify-content: center; cursor: pointer; border-radius: 12px; border: none; background: transparent; position: relative; }
-    .bn-item i { font-size: 24px; }
-    .bn-item.active { color: var(--color-primary-green); }
-    .bn-item.active .bn-pill { background: var(--color-light-green); }
-    .bn-pill { padding: 2px 18px; border-radius: var(--radius-pill); display: flex; }
-    .bn-item.ai.active { color: var(--color-primary-purple); }
-    .bn-item.ai.active .bn-pill { background: var(--color-light-purple); }
     .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 12px 18px 22px; box-shadow: var(--shadow-modal); transform: translateY(105%); transition: transform 0.25s ease; z-index: 6; }
     .sheet.open { transform: translateY(0); }
     .sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: #CBD5E1; margin: 0 auto 14px; }
@@ -583,285 +563,218 @@
     .vf-bar { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 28px; }
     .shutter { width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 4px solid var(--color-light-green); }
 
-
-
     /* ==========================================================
        CLASSROOM SCREENS
        Google Classroom's layout, built from L.A.R.A tokens only.
        ========================================================== */
     body.wide .ds-main { max-width: 1240px; }
     body.wide .doc-layout { grid-template-columns: 276px minmax(0, 1fr); }
-    body.wide .doc-toc { display: none; }
-    @media (min-width: 1760px) {
-      body.wide .doc-layout { grid-template-columns: 276px minmax(0, 1fr) 224px; }
-      body.wide .doc-toc { display: block; }
-    }
     @media (max-width: 860px) { body.wide .doc-layout { grid-template-columns: minmax(0, 1fr); } }
 
     .preview-card.screen { padding: 16px; align-items: stretch; justify-content: flex-start; }
     .cr-switch { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); flex-wrap: wrap; }
-
-    .cr-screen { container: cr / inline-size; width: 100%; background: var(--color-canvas-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; text-align: left; color: var(--color-text-primary); box-shadow: var(--shadow-card); }
-    .cr-screen button { font-family: inherit; }
-    .cr-screen .segmented, .cr-switch .segmented { max-width: 100%; overflow-x: auto; }
-    /* Badges keep the brand's uppercase look. The text stays sentence case so screen readers read words. */
-    .cr-screen .badge, .cr-phones .badge, .cr-stage .badge, .cr-lite .badge { text-transform: uppercase; }
     .cr-switch .seg-item { white-space: nowrap; flex-shrink: 0; padding: 0 14px; }
-    .cr-screen [data-only][hidden] { display: none !important; }
 
-    /* Top bar */
-    .cr-top { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 12px; }
     .cr-icon { width: 52px; height: 52px; border-radius: 50%; border: none; background: transparent; color: var(--color-text-secondary); font-size: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     .cr-icon:hover { background: var(--color-surface-subtle); color: var(--color-text-primary); }
-    .cr-crumb { display: flex; align-items: center; min-width: 0; }
-    .cr-crumb strong { display: block; font-size: 17px; font-weight: 900; line-height: 1.2; white-space: nowrap; }
-    .cr-crumb small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); white-space: nowrap; }
-    .cr-top > .ph-caret-right { color: var(--color-text-secondary); font-size: 14px; margin: 0 4px; }
     .cr-spacer { flex: 1; min-width: 0; }
 
-    /* Frame: drawer and sheet */
-    .cr-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: stretch; }
-    .cr-drawer { padding: 4px 12px 20px; min-width: 0; }
-    .cr-nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 16px; border-radius: var(--radius-pill); border: none; background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; }
-    .cr-nav:hover { background: var(--color-surface-subtle); }
-    .cr-nav.active { background: var(--color-light-green); color: var(--color-dark-green); font-weight: 900; }
-    .cr-nav > i { font-size: 22px; flex-shrink: 0; }
-    .cr-nav .cr-nav-text { flex: 1; min-width: 0; line-height: 1.25; }
-    .cr-nav small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-nav.active small { color: var(--color-dark-green); }
-    .cr-nav-sec { display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 12px 16px 4px; font-size: 14px; font-weight: 900; color: var(--color-text-primary); }
-    .cr-nav-sec i { font-size: 22px; color: var(--color-text-secondary); }
-    .cr-nav-sec .end { margin-left: auto; }
-    .cr-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-subtle); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: var(--color-text-secondary); flex-shrink: 0; }
-    .cr-nav.active .cr-dot { background: #fff; color: var(--color-dark-green); }
-    .cr-sheet { background: #fff; border-top-left-radius: var(--radius-xl); border-left: 1px solid var(--color-border); border-top: 1px solid var(--color-border); min-width: 0; min-height: 520px; }
-    .cr-sheet.plain { background: transparent; border: none; border-radius: 0; }
-
-    /* Class tabs */
-    .cr-tabs { display: flex; align-items: stretch; padding: 0 8px 0 16px; border-bottom: 1px solid var(--color-border); overflow-x: auto; }
-    .cr-tab { position: relative; min-height: 56px; padding: 0 20px; display: inline-flex; align-items: center; gap: 8px; border: none; background: transparent; font-size: 15px; font-weight: 800; color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
-    .cr-tab:hover { color: var(--color-text-primary); }
-    .cr-tab[aria-selected="true"] { color: var(--color-dark-green); }
-    .cr-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 4px; border-radius: 4px 4px 0 0; background: var(--color-primary-green); }
-    .cr-tab.ai { margin-left: auto; color: var(--color-dark-purple); }
-    .cr-tab.ai:hover { color: var(--color-primary-purple); }
-    .cr-tab i { font-size: 20px; }
-
-    /* Panels, links, home */
-    .cr-pad { padding: 24px; }
-    .cr-greet { padding: 8px 4px 20px; }
-    .cr-greet h3 { font-size: 28px; line-height: 1.25; font-weight: 900; }
-    .cr-greet p { font-size: 16px; font-weight: 600; color: var(--color-text-secondary); margin-top: 2px; }
-    .cr-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 8px 24px 24px; margin-bottom: 20px; box-shadow: var(--shadow-card); }
-    .cr-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
-    .cr-panel > header h4 { font-size: 22px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
     .cr-link { display: inline-flex; align-items: center; gap: 6px; min-height: 52px; padding: 0 12px; border: none; border-radius: var(--radius-pill); background: transparent; color: var(--color-dark-green); font-size: 14px; font-weight: 800; cursor: pointer; }
     .cr-link:hover { background: var(--color-light-green); }
     .cr-link i { font-size: 18px; }
-    .cr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 16px; }
 
-    /* Class card */
-    .cr-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; min-width: 0; box-shadow: var(--shadow-card); }
-    .cr-card:hover { box-shadow: var(--shadow-card-hover); }
-    .cr-card-head { position: relative; background: var(--color-dark-green); color: #fff; min-height: 104px; padding: 14px 16px; }
-    .cr-card-head h3 { font-size: 22px; font-weight: 900; line-height: 1.2; padding-right: 76px; }
-    .cr-card-head p { font-size: 14px; font-weight: 700; margin-top: 2px; }
-    .cr-card-head small { display: block; font-size: 13px; font-weight: 700; margin-top: 2px; color: var(--color-light-green); }
-    .cr-card-head .cr-subj { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    .cr-card-head .avatar { position: absolute; right: 16px; bottom: -28px; width: 60px; height: 60px; font-size: 20px; border: 3px solid #fff; z-index: 1; }
-    .cr-code { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--color-light-green); color: var(--color-dark-green); font-size: 12px; font-weight: 800; }
-    .cr-card-body { flex: 1; padding: 20px 16px 12px; min-height: 108px; font-size: 14px; font-weight: 600; color: var(--color-text-secondary); }
-    .cr-card-body ul { list-style: none; display: grid; gap: 8px; padding-right: 56px; }
-    .cr-card-body li { display: flex; align-items: flex-start; gap: 8px; line-height: 1.35; }
-    .cr-card-body li i { font-size: 18px; margin-top: 1px; color: var(--color-dark-green); flex-shrink: 0; }
-    .cr-card-body li strong { display: block; color: var(--color-text-primary); font-weight: 800; }
-    .cr-card-body .progress { height: 8px; margin: 8px 0 4px; }
-    .cr-card-foot { display: flex; align-items: center; gap: 4px; padding: 4px 8px 4px 16px; border-top: 1px solid var(--color-border); min-height: 60px; }
-
-    /* Banner, stream */
-    .cr-banner { position: relative; background: var(--color-dark-green); color: #fff; border-radius: var(--radius-lg); min-height: 168px; padding: 24px 28px; display: flex; flex-direction: column; justify-content: flex-end; }
-    .cr-banner h2 { font-size: 34px; font-weight: 900; line-height: 1.15; }
-    .cr-banner p { font-size: 18px; font-weight: 700; margin-top: 2px; color: var(--color-light-green); }
-    .cr-banner .cr-subj { position: absolute; top: 20px; right: 20px; width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 40px; }
-    .cr-banner .cr-info { position: absolute; right: 16px; bottom: 12px; color: #fff; background: rgba(255,255,255,0.2); }
-    .cr-banner .cr-info:hover { background: rgba(255,255,255,0.3); color: #fff; }
-    .cr-stream { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 24px; margin-top: 20px; align-items: start; }
-    .cr-side { display: grid; gap: 16px; }
-    .cr-side-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px; background: #fff; }
-    .cr-side-card h4 { font-size: 16px; font-weight: 900; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-    .cr-side-card p { font-size: 14px; font-weight: 600; color: var(--color-text-secondary); line-height: 1.5; }
-    .cr-side-card .big { font-size: 26px; font-weight: 900; letter-spacing: 1px; color: var(--color-text-primary); }
-    .cr-side-card ul { list-style: none; display: grid; gap: 10px; margin-top: 8px; }
-    .cr-side-card li { font-size: 13px; font-weight: 700; line-height: 1.35; }
-    .cr-side-card li small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-composer { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 8px 12px 8px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow-card); margin-bottom: 16px; color: var(--color-text-secondary); font-size: 15px; font-weight: 700; cursor: text; }
-    .cr-composer .grow { flex: 1; min-width: 0; }
-    .cr-post { background: var(--color-canvas-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 16px; overflow: hidden; }
-    .cr-post-head { display: flex; align-items: center; gap: 12px; padding: 16px 8px 8px 16px; }
-    .cr-post-head .who { flex: 1; min-width: 0; }
-    .cr-post-head strong { display: block; font-size: 15px; font-weight: 900; }
-    .cr-post-head small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-post-body { padding: 0 16px 14px; font-size: 15px; line-height: 1.65; font-weight: 600; }
-    .cr-attach { display: flex; align-items: center; gap: 12px; margin: 0 16px 16px; padding: 10px 14px 10px 10px; border: 1px solid var(--color-border); background: #fff; border-radius: var(--radius-md); max-width: 380px; min-height: 64px; }
-    .cr-attach .tile { width: 44px; height: 44px; }
-    .cr-attach strong { display: block; font-size: 14px; font-weight: 800; }
-    .cr-attach small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-comments { border-top: 1px solid var(--color-border); padding: 12px 16px 16px; display: grid; gap: 12px; }
-    .cr-comments .head { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; }
-    .cr-comment { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 600; line-height: 1.5; }
-    .cr-comment strong { font-weight: 900; }
-    .cr-comment small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); margin-left: 6px; }
-    .cr-reply { display: flex; align-items: center; gap: 10px; }
-    .cr-reply .form-input { border-radius: var(--radius-pill); min-height: 52px; background: #fff; flex: 1; min-width: 0; }
-
-    /* Type tiles used by classwork rows, attachments and to-do items */
+    /* Type tiles */
     .tile { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: var(--color-light-green); color: var(--color-dark-green); }
     .tile.material { background: var(--color-info-light); color: var(--color-info-dark); }
     .tile.quiz { background: var(--color-warning-light); color: var(--color-warning-dark); }
 
-    /* Classwork */
-    .cr-cw { max-width: 860px; margin: 0 auto; padding: 24px; }
-    .cr-cw-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-    .cr-topic { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 0 4px; border-bottom: 2px solid var(--color-primary-green); margin-top: 8px; }
-    .cr-topic h4 { font-size: 22px; font-weight: 900; }
-    .cr-topic .end { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
-    .cr-row { display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 10px 4px; border-bottom: 1px solid var(--color-border); width: 100%; background: transparent; border-left: none; border-right: none; border-top: none; text-align: left; color: inherit; font-family: inherit; }
-    button.cr-row { cursor: pointer; }
-    .cr-row button.main { min-height: 52px; border: none; background: transparent; text-align: left; font-family: inherit; color: inherit; cursor: pointer; align-self: stretch; padding: 0; }
-    .cr-row:hover { background: var(--color-canvas-bg); }
-    .cr-row .main { flex: 1; min-width: 0; }
-    .cr-row .main strong { display: block; font-size: 16px; font-weight: 800; }
-    .cr-row .main small { font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-row .end { display: flex; align-items: center; gap: 10px; flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--color-text-secondary); text-align: right; }
-    .cr-row-open { background: var(--color-canvas-bg); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 4px 20px 8px 62px; border-bottom: 1px solid var(--color-border); }
-    .cr-row-open .meta { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-row-open p { padding: 10px 0 14px; font-size: 15px; font-weight: 600; line-height: 1.6; }
-    .cr-row-open footer { border-top: 1px solid var(--color-border); display: flex; gap: 8px; align-items: center; }
+    /* Remake slice (Home and Stream, desktop). Measured in Google Classroom at 1440px, applied with L.A.R.A tokens. */
+    .rm { container: rm / inline-size; position: relative; width: 100%; min-height: 700px; overflow: hidden; background: var(--color-canvas-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+    .rm [data-only][hidden], .rm [hidden] { display: none !important; }
+    .rm [data-s] { display: none; }
+    .rm[data-screen="home"] [data-s~="home"], .rm[data-screen="stream"] [data-s~="stream"], .rm[data-screen="later"] [data-s~="later"] { display: block; }
+    .rm-top { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 12px; }
+    .rm-crumb { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--color-text-secondary); }
+    .rm[data-screen="home"] .rm-crumb { display: none; }
+    .rm-crumb strong { display: block; font-size: 16px; line-height: 24px; font-weight: 800; color: var(--color-text-primary); white-space: nowrap; }
+    .rm-crumb small { display: block; font-size: 12px; line-height: 16px; font-weight: 700; white-space: nowrap; }
+    .rm-hub { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 800; background: var(--color-light-green); color: var(--color-dark-green); border: 1px solid var(--color-success-border); }
+    .rm-hub .off { display: none; }
+    .rm[data-state="offline"] .rm-hub { background: var(--color-warning-light); color: var(--color-warning-dark); border-color: var(--color-warning-border); }
+    .rm[data-state="offline"] .rm-hub .on { display: none; }
+    .rm[data-state="offline"] .rm-hub .off { display: inline-flex; align-items: center; gap: 8px; }
+    .rm-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: stretch; }
+    .rm-drawer { padding: 4px 12px 20px; min-width: 0; }
+    .rm[data-nav="rail"] .rm-body { grid-template-columns: 76px minmax(0, 1fr); }
+    .rm[data-nav="rail"] .rm-nav { justify-content: center; padding: 6px 0; }
+    .rm[data-nav="rail"] .rm-nav .t, .rm[data-nav="rail"] .rm-sec span, .rm[data-nav="rail"] .rm-sec .end, .rm[data-nav="rail"] .rm-drawer .rm-has { display: none; }
+    .rm[data-nav="rail"] .rm-sec { justify-content: center; padding: 12px 0 4px; }
+    .rm-nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 16px; border: none; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 800; text-align: left; cursor: pointer; }
+    .rm-nav:hover { background: var(--color-surface-subtle); }
+    .rm-nav.active { background: var(--color-light-green); color: var(--color-dark-green); font-weight: 900; }
+    .rm-nav > i { font-size: 22px; flex-shrink: 0; }
+    .rm-nav .t { flex: 1; min-width: 0; line-height: 1.25; }
+    .rm-nav small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-nav.active small { color: var(--color-dark-green); }
+    .rm-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-subtle); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; flex-shrink: 0; }
+    .rm-nav.active .rm-dot { background: var(--color-surface-white); }
+    .rm-sec { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 16px 4px; font-size: 14px; font-weight: 900; color: var(--color-text-primary); }
+    .rm-sec i { font-size: 22px; color: var(--color-text-secondary); }
+    .rm-sec .end { margin-left: auto; font-size: 18px; }
+    .rm-rule { height: 1px; margin: 12px 8px; background: var(--color-border); }
+    .rm-sheet { position: relative; min-height: 636px; background: var(--color-surface-white); border-top: 1px solid var(--color-border); border-left: 1px solid var(--color-border); border-top-left-radius: var(--radius-xl); }
+    .rm-tabs { display: flex; align-items: stretch; padding: 0 8px 0 16px; border-bottom: 1px solid var(--color-border); overflow-x: auto; }
+    .rm-tab { position: relative; min-height: 56px; padding: 0 24px; border: none; background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+    .rm-tab:hover { color: var(--color-text-primary); }
+    .rm-tab[aria-selected="true"] { color: var(--color-dark-green); }
+    .rm-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 4px; border-radius: 4px 4px 0 0; background: var(--color-primary-green); }
+    .rm-wrap { max-width: 932px; margin: 0 auto; padding: 24px; }
+    .rm-offline { display: none; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border-radius: var(--radius-md); background: var(--color-warning-light); border: 1px solid var(--color-warning-border); color: var(--color-warning-dark); font-size: 14px; font-weight: 800; }
+    .rm[data-state="offline"] .rm-offline { display: flex; }
+    .rm h3.rm-h { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; margin-top: 8px; }
+    .rm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 8px; }
+    .rm-wrap.wide { max-width: 1240px; }
+    .rm-card { position: relative; display: flex; flex-direction: column; gap: 14px; min-height: 232px; padding: 20px; background: var(--color-surface-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); transition: border-color 0.15s, box-shadow 0.15s; }
+    .rm-card:hover, .rm-card:focus-within { border-color: var(--color-primary-green); box-shadow: var(--shadow-card-hover); }
+    .rm-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .rm-card-top .cr-icon { position: relative; z-index: 1; margin: -8px -8px 0 0; }
+    .rm-card-ic { width: 56px; height: 56px; border-radius: var(--radius-md); background: var(--color-dark-green); color: var(--color-surface-white); display: flex; align-items: center; justify-content: center; font-size: 30px; }
+    .rm-card-main { display: block; padding: 0; border: none; background: transparent; text-align: left; color: inherit; font-family: inherit; cursor: pointer; }
+    .rm-card-main::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-lg); }
+    .rm-card-main strong { display: block; font-size: 24px; line-height: 30px; font-weight: 900; }
+    .rm-card-main span { display: block; margin-top: 2px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--color-surface-subtle); color: var(--color-text-secondary); font-size: 13px; line-height: 18px; font-weight: 800; }
+    .rm-pill i { font-size: 18px; flex-shrink: 0; }
+    .rm-pill.due { background: var(--color-warning-light); color: var(--color-warning-dark); }
+    .rm-pill.ok { background: var(--color-light-green); color: var(--color-dark-green); }
+    .rm-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--color-border); font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-who { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+    .rm-who i { font-size: 20px; }
+    .rm-open { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 900; color: var(--color-dark-green); }
+    .rm-panel { margin-top: 8px; }
+    .rm-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 240px; padding: 20px 24px; border-radius: var(--radius-md); background: var(--color-dark-green); color: var(--color-surface-white); }
+    .rm-banner h2 { font-size: 36px; line-height: 44px; font-weight: 900; padding-right: 160px; }
+    .rm-banner p { font-size: 22px; line-height: 28px; font-weight: 700; color: var(--color-light-green); }
+    .rm-banner .subj { position: absolute; right: 40px; bottom: 32px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+    .rm-banner .rm-custom { position: absolute; top: 12px; right: 16px; background: var(--color-surface-white); color: var(--color-dark-green); border: none; }
+    .rm-banner .rm-info { position: absolute; right: 12px; bottom: 8px; color: var(--color-surface-white); }
+    .rm-cols { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; margin-top: 24px; align-items: start; }
+    .rm-aside { display: grid; gap: 16px; }
+    .rm-sc { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-sc h4 { display: flex; align-items: center; justify-content: space-between; min-height: 36px; font-size: 16px; line-height: 24px; font-weight: 900; }
+    .rm-sc .code { font-size: 22px; line-height: 28px; font-weight: 900; letter-spacing: 1px; }
+    .rm-sc p { font-size: 13px; line-height: 18px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-bar { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .rm-tonal { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 24px 0 16px; border: none; border-radius: var(--radius-pill); background: var(--color-light-green); color: var(--color-dark-green); font-size: 14px; font-weight: 900; cursor: pointer; }
+    .rm-tonal:hover { box-shadow: var(--shadow-card-hover); }
+    .rm-note { display: flex; align-items: center; gap: 12px; min-height: 72px; margin-bottom: 16px; padding: 8px 8px 8px 24px; border-radius: var(--radius-md); background: var(--color-surface-subtle); }
+    .rm-note .main { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; min-height: 52px; border: none; background: transparent; text-align: left; color: inherit; font-family: inherit; cursor: pointer; padding: 0; }
+    .rm-note .ic { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: var(--color-light-green); color: var(--color-dark-green); }
+    .rm-note .ic.quiz { background: var(--color-warning-light); color: var(--color-warning-dark); }
+    .rm-note .ic.material { background: var(--color-info-light); color: var(--color-info-dark); }
+    .rm-note .tx { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 800; }
+    .rm-note .tx small { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-post { margin-bottom: 16px; border-radius: var(--radius-md); background: var(--color-surface-subtle); overflow: hidden; }
+    .rm-post-head { display: flex; align-items: center; gap: 16px; padding: 16px 8px 8px 24px; }
+    .rm-post-head .who { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 900; }
+    .rm-post-head .who small { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-post-body { padding: 4px 24px 16px; font-size: 14px; line-height: 20px; font-weight: 700; }
+    .rm-comments { border-top: 1px solid var(--color-border); padding: 8px 16px 12px 20px; display: grid; gap: 8px; }
+    .rm-comment { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 20px; font-weight: 700; }
+    .rm-comment strong { font-weight: 900; }
+    .rm-comment small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); margin-left: 6px; }
+    .rm-reply { display: flex; align-items: center; gap: 8px; }
+    .rm-reply .form-input { flex: 1; min-width: 0; min-height: 52px; border-radius: var(--radius-pill); background: var(--color-surface-white); }
+    .rm-empty { display: none; align-items: center; gap: 32px; padding: 32px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-empty .art { width: 96px; height: 96px; border-radius: 50%; background: var(--color-light-green); color: var(--color-dark-green); display: flex; align-items: center; justify-content: center; font-size: 44px; flex-shrink: 0; }
+    .rm-empty h4 { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-empty p { margin-top: 4px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-skel { display: none; gap: 16px; }
+    .rm-skel i { display: block; border-radius: var(--radius-md); background: var(--color-surface-subtle); }
+    .rm[data-state="loading"] .rm-skel { display: grid; }
+    .rm[data-state="loading"] .rm-has { display: none; }
+    .rm[data-state="empty"] .rm-has { display: none; }
+    .rm[data-state="empty"] .rm-empty { display: flex; }
+    .rm[data-state="loading"] .rm-empty { display: none; }
+    .rm:not([data-cls="0"]) .rm-feed { display: none; }
+    .rm:not([data-cls="0"]) .rm-feed-empty { display: flex; }
+    .rm[data-state="loading"] .rm-feed-empty { display: none; }
+    .rm-modal { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-start; justify-content: center; padding: 72px 16px 16px; background: rgba(23, 33, 61, 0.45); }
+    .rm-modal[hidden] { display: none; }
+    .rm-dialog { width: min(640px, 100%); border-radius: var(--radius-xl); background: var(--color-surface-white); box-shadow: var(--shadow-modal); padding: 24px; display: grid; gap: 16px; }
+    .rm-dialog h3 { font-size: 24px; line-height: 32px; font-weight: 900; }
+    .rm-dialog .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-dialog textarea { min-height: 140px; resize: vertical; }
+    .rm-dialog footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+    .rm-dialog footer .hint { margin-right: auto; font-size: 13px; font-weight: 700; color: var(--color-warning-dark); }
+    .rm[data-screen="quiz"] [data-s~="quiz"] { display: block; }
+    .rm[data-screen="quiz"][data-role="learner"][data-qs="run"] .rm-body { grid-template-columns: minmax(0, 1fr); }
+    .rm[data-screen="quiz"][data-role="learner"][data-qs="run"] .rm-drawer { display: none; }
+    .rm-qwrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+    .rm-qwrap.wide { max-width: 960px; }
+    .rm-qcard { display: grid; gap: 16px; padding: 24px; border: 2px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-white); box-shadow: var(--shadow-elevated); }
+    .rm-qcard h3 { font-size: 24px; line-height: 32px; font-weight: 900; }
+    .rm-qhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .rm-qmeta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rm-qlist { display: grid; gap: 10px; list-style: none; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-qlist li { display: flex; gap: 10px; align-items: flex-start; }
+    .rm-qlist i { font-size: 20px; color: var(--color-dark-green); flex-shrink: 0; }
+    .rm-timer { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); border: 1px solid var(--color-success-border); background: var(--color-light-green); color: var(--color-dark-green); font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .rm-timer.warn { background: var(--color-warning-light); color: var(--color-warning-dark); border-color: var(--color-warning-border); }
+    .rm-timer.crit { background: var(--color-danger-light); color: var(--color-danger-dark); border-color: var(--color-danger-border); }
+    .rm-dots { display: flex; gap: 6px; }
+    .rm-dots i { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--color-border); }
+    .rm-dots i.done { background: var(--color-primary-green); }
+    .rm-dots i.cur { background: var(--color-dark-green); }
+    .rm-qbody { display: grid; gap: 16px; }
+    .rm-qcount { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-qtext { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-opts { display: grid; gap: 12px; }
+    .rm-opt { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 12px 18px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); color: inherit; font-family: inherit; font-size: 16px; font-weight: 800; text-align: left; cursor: pointer; }
+    .rm-opt:hover { border-color: var(--color-primary-green); box-shadow: var(--shadow-card-hover); }
+    .rm-opt i { font-size: 22px; color: var(--color-text-muted); }
+    .rm-opt[aria-checked="true"] { border-color: var(--color-primary-green); background: var(--color-light-green); }
+    .rm-opt[aria-checked="true"] i { color: var(--color-primary-green); }
+    .rm-qfoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .rm-qnote { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 18px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-qnote i { font-size: 18px; flex-shrink: 0; }
+    .rm-q { display: none; }
+    .rm .rm-qd-q { display: none; }
+    .rm[data-state="offline"] .rm-qd-q { display: inline-flex; }
+    .rm[data-state="offline"] .rm-sv { display: none; }
+    .rm[data-qs="intro"] .rm-qi, .rm[data-qs="run"] .rm-qr, .rm[data-qs="done"] .rm-qd { display: grid; }
+    .rm-ring { width: 96px; height: 96px; }
+    .rm-ring circle { fill: none; stroke-width: 10; }
+    .rm-ring .bg { stroke: var(--color-border); }
+    .rm-ring .fg { stroke: var(--color-primary-green); stroke-linecap: round; }
+    .rm-result { display: flex; align-items: center; gap: 24px; }
+    .rm-result h4 { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-result p { margin-top: 4px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-demo { display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-size: 12px; font-weight: 800; color: var(--color-text-muted); }
+    .rm-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .rm-stat { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-stat strong { display: block; font-size: 28px; line-height: 36px; font-weight: 900; }
+    .rm-stat span { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-lrow { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 4px; border-bottom: 1px solid var(--color-border); }
+    .rm-lrow .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 800; }
+    .rm-prog { width: 160px; height: 8px; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+    .rm-prog i { display: block; height: 100%; background: var(--color-primary-green); }
+    .rm-lrow .cnt { width: 56px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); text-align: right; }
+    .rm[data-qt="idle"] [data-qt-show]:not([data-qt-show~="idle"]), .rm[data-qt="live"] [data-qt-show]:not([data-qt-show~="live"]), .rm[data-qt="closed"] [data-qt-show]:not([data-qt-show~="closed"]) { display: none; }
+    .rm.rm-lite { min-height: 0; overflow: visible; border: none; background: transparent; }
+    .rm-lite-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; }
+    .rm .btn, .rm .rm-tonal, .rm .cr-link { min-height: var(--control-height-desktop); }
+    .rm .cr-icon { width: var(--control-height-desktop); height: var(--control-height-desktop); }
+    .rm .rm-tab, .rm .rm-nav { min-height: 48px; }
+    .rm .rm-reply .form-input, .rm .rm-note .main { min-height: var(--control-height-desktop); }
+    @container rm (max-width: 760px) { .rm-body { grid-template-columns: minmax(0, 1fr); } .rm-drawer { display: none; } .rm-cols { grid-template-columns: minmax(0, 1fr); } .rm-banner h2 { padding-right: 0; } .rm-banner .subj { display: none; } }
 
-    /* People and review */
-    .cr-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 16px 4px 12px; border-bottom: 2px solid var(--color-primary-green); }
-    .cr-sec-head h4 { font-size: 24px; font-weight: 900; }
-    .cr-sec-head span { font-size: 14px; font-weight: 800; color: var(--color-text-secondary); }
-    .cr-person { display: flex; align-items: center; gap: 14px; min-height: 68px; padding: 8px 4px; border-bottom: 1px solid var(--color-border); }
-    .cr-person .main { flex: 1; min-width: 0; font-size: 16px; font-weight: 800; }
-    .cr-person .main small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-person .end { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-
-    /* Assignment detail */
-    .cr-detail { display: grid; grid-template-columns: minmax(0, 1fr) 304px; gap: 28px; padding: 24px 28px 32px; align-items: start; }
-    .cr-detail .titlerow { display: flex; align-items: center; gap: 16px; }
-    .cr-detail .titlerow .tile { width: 52px; height: 52px; font-size: 28px; border-radius: 50%; }
-    .cr-detail h2 { font-size: 26px; font-weight: 900; line-height: 1.25; flex: 1; min-width: 0; }
-    .cr-detail .byline { font-size: 14px; font-weight: 700; color: var(--color-text-secondary); margin-top: 10px; }
-    .cr-detail .points { font-size: 15px; font-weight: 800; margin: 6px 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--color-border); }
-    .cr-detail .instructions { font-size: 16px; font-weight: 600; line-height: 1.7; max-width: 62ch; }
-    .cr-detail .section-label { display: flex; align-items: center; gap: 10px; margin: 28px 0 10px; font-size: 16px; font-weight: 900; }
-    .cr-work { background: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 20px; display: grid; gap: 14px; }
-    .cr-work > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .cr-work > header h4 { font-size: 22px; font-weight: 900; }
-    .cr-work .note { font-size: 13px; font-weight: 700; color: var(--color-text-secondary); line-height: 1.5; }
-    .cr-photo { height: 150px; border-radius: var(--radius-md); background: #fff; border: 2px dashed var(--color-primary-green); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--color-dark-green); font-size: 14px; font-weight: 800; text-align: center; padding: 8px; }
-    .cr-photo i { font-size: 32px; }
-    .cr-photo.filled { border-style: solid; border-color: var(--color-border); color: var(--color-text-secondary); }
-    .cr-score { font-size: 15px; font-weight: 800; }
-    .cr-score strong { font-size: 30px; font-weight: 900; }
-
-    .cr-review { display: grid; grid-template-columns: 240px minmax(0, 1fr) 280px; min-height: 480px; }
-    .cr-review > * { min-width: 0; }
-    .cr-review .list { border-right: 1px solid var(--color-border); padding: 12px; display: grid; gap: 4px; align-content: start; }
-    .cr-review .list .group { font-size: 13px; font-weight: 900; padding: 10px 8px 4px; color: var(--color-text-secondary); }
-    .cr-learner { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 10px; border-radius: var(--radius-md); border: none; background: transparent; width: 100%; text-align: left; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--color-text-primary); }
-    .cr-learner:hover { background: var(--color-surface-subtle); }
-    .cr-learner.active { background: var(--color-light-green); color: var(--color-dark-green); }
-    .cr-learner small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
-    .cr-learner.active small { color: var(--color-dark-green); }
-    .cr-review .viewer { padding: 20px; background: var(--color-canvas-bg); display: flex; flex-direction: column; gap: 12px; }
-    .cr-review .paper { flex: 1; min-height: 300px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--color-text-secondary); font-weight: 800; font-size: 14px; text-align: center; padding: 16px; }
-    .cr-review .paper i { font-size: 44px; color: var(--color-text-muted); }
-    .cr-review .grade { padding: 16px; display: grid; gap: 14px; align-content: start; border-left: 1px solid var(--color-border); }
-    .cr-grade-input { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 900; }
-    .cr-grade-input .form-input { width: 96px; text-align: center; font-size: 22px; font-weight: 900; }
-    .cr-quick { display: flex; flex-wrap: wrap; gap: 8px; }
-
-    /* To-do */
-    .cr-todo { max-width: 760px; margin: 0 auto; padding: 24px; }
-    .cr-todo .select-wrap { max-width: 360px; margin-bottom: 16px; }
-    .cr-group-head { display: flex; align-items: center; justify-content: space-between; min-height: 60px; padding: 0 4px; font-size: 22px; font-weight: 900; }
-    .cr-group-head .end { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); }
+    /* Item rows (Home, Due soon) */
     .cr-item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 4px; border-top: 1px solid var(--color-border); }
     .cr-item .main { flex: 1; min-width: 0; }
     .cr-item .main strong { display: block; font-size: 15px; font-weight: 800; }
     .cr-item .main small { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); margin-top: 2px; }
-
-    /* Join dialog stage */
-    .cr-stage { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; align-items: flex-start; padding: 28px 16px; background: var(--color-canvas-bg); }
-    .cr-dialog { background: #fff; border-radius: var(--radius-xl); padding: 24px; width: min(100%, 400px); box-shadow: var(--shadow-modal); border: 1px solid var(--color-border); }
-    .cr-dialog h4 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
-    .cr-dialog > p { font-size: 15px; font-weight: 600; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 16px; }
-    .cr-dialog .pin-grid { margin-bottom: 8px; flex-wrap: wrap; }
-    .cr-dialog .pin-box { width: 44px; }
-    .cr-dialog .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
-
-    /* Phones */
-    .cr-phones { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; align-items: flex-start; width: 100%; }
-    .cr-phone-wrap { display: grid; gap: 10px; justify-items: center; }
-    .cr-phone-wrap > span { font-size: 14px; font-weight: 800; }
-    .phone.cr-phone { width: min(320px, 100%); height: 600px; }
-    .cr-phone-wrap { max-width: 100%; }
-    .cr-phone .app-bar { height: 64px; gap: 4px; }
-    .cr-phone .app-bar h3 { font-size: 18px; line-height: 1.15; }
-    .cr-phone .app-bar h3 small { display: block; font-size: 12px; font-weight: 700; color: var(--color-light-green); }
-    .cr-phone .app-bar button { width: 52px; height: 52px; }
-    .cr-phone .phone-body { padding: 12px; overflow-y: auto; gap: 12px; }
-    .cr-phone .cr-card-head h3 { font-size: 20px; }
-    .cr-phone .cr-card-body { min-height: 64px; }
-    .cr-phone .cr-panel { padding: 4px 14px 14px; border-radius: var(--radius-lg); margin-bottom: 0; }
-    .cr-phone .cr-panel > header { min-height: 52px; }
-    .cr-phone .cr-panel > header h4 { font-size: 18px; }
-    .cr-phone .cr-greet { padding: 0 2px 4px; }
-    .cr-phone .cr-greet h3 { font-size: 22px; }
-    .cr-phone .cr-greet p { font-size: 14px; }
-    .cr-phone .cr-post { margin-bottom: 0; }
-    .cr-phone .cr-banner { min-height: 112px; padding: 14px 16px; }
-    .cr-phone .cr-banner h2 { font-size: 24px; }
-    .cr-phone .cr-banner p { font-size: 14px; }
-    .cr-phone .cr-banner .cr-subj { width: 48px; height: 48px; font-size: 26px; top: 12px; right: 12px; }
-    .cr-phone .cr-row { min-height: 68px; }
-    .cr-phone .cr-row .main strong { font-size: 15px; }
-    .cr-phone .bn-item { min-width: 60px; font-size: 10px; }
-
-    /* Narrow previews fold the layout the way Classroom does */
-    @container cr (max-width: 860px) {
-      .cr-body { grid-template-columns: minmax(0, 1fr); }
-      .cr-drawer { display: none; }
-      .cr-sheet { border-left: none; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
-      .cr-hub { display: none; }
-      .cr-review { grid-template-columns: 200px minmax(0, 1fr); }
-      .cr-review .grade { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--color-border); }
-    }
-    @container cr (max-width: 520px) {
-      .cr-top { padding: 0 4px; gap: 4px; }
-      .cr-top .doc-brand-badge { display: none; }
-      .cr-crumb strong { font-size: 16px; }
-      .cr-banner { padding: 18px 18px; }
-      .cr-banner .cr-subj { width: 52px; height: 52px; font-size: 28px; }
-      .cr-detail .titlerow .tile { width: 44px; height: 44px; font-size: 24px; }
-      .cr-detail h2 { font-size: 22px; }
-      .cr-row { gap: 10px; flex-wrap: wrap; }
-      .cr-row .end { width: 100%; padding-left: 54px; justify-content: flex-start; }
-      .cr-person .end { justify-content: flex-start; }
-      .cr-person { flex-wrap: wrap; }
-    }
-    @container cr (max-width: 700px) {
-      .cr-stream, .cr-detail { grid-template-columns: minmax(0, 1fr); }
-      .cr-side { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-      .cr-pad, .cr-cw, .cr-todo { padding: 16px; }
-      .cr-panel { padding: 4px 16px 16px; }
-      .cr-banner h2 { font-size: 26px; }
-      .cr-row .end .when { display: none; }
-      .cr-review { grid-template-columns: minmax(0, 1fr); }
-      .cr-review .list { border-right: none; border-bottom: 1px solid var(--color-border); }
-    }
 
     /* Doc labels read as sentences, not shouted eyebrows */
     .group-title { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 900; color: var(--color-text-primary); }
@@ -879,7 +792,7 @@
     .swatch-note { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; max-width: 70ch; }
 
     /* ---------- Responsive ---------- */
-    @media (max-width: 1100px) { .doc-layout { grid-template-columns: 260px minmax(0, 1fr); } .doc-toc { display: none; } }
+    @media (max-width: 1100px) { .doc-layout { grid-template-columns: 260px minmax(0, 1fr); } }
     @media (max-width: 860px) {
       .doc-layout { grid-template-columns: minmax(0, 1fr); }
       .ds-menu-btn { display: inline-flex; }
@@ -927,7 +840,6 @@
   <div class="doc-layout">
     <nav class="ds-sidebar" id="sidebar" aria-label="Components"></nav>
     <main class="ds-main" id="main" tabindex="-1"></main>
-    <aside class="doc-toc" id="toc" aria-label="On this page"></aside>
   </div>
   <div class="ds-scrim" id="nav-scrim"></div>
 
@@ -1027,932 +939,256 @@ function crSwitch(views, labelText, kind) {
     '</div></div>';
 }
 
-function crTop(cls) {
-  const crumb = cls ? '<i class="ph ph-caret-right"></i><div class="cr-crumb"><div><strong>' + cls.name + '</strong><small>' + cls.section + '</small></div></div>' : '';
-  return '<header class="cr-top"><button class="cr-icon" type="button" aria-label="Open menu"><i class="ph ph-list"></i></button>' +
-    '<span class="doc-brand-badge">L.A.R.A.</span>' + crumb + '<span class="cr-spacer"></span>' +
-    '<span class="radar-pill cr-hub"><span class="radar-dot"></span><span>Connected to Hub</span></span>' +
-    '<button class="cr-icon" type="button" aria-label="Join or create a class"><i class="ph ph-plus"></i></button>' +
-    '<button class="cr-icon" type="button" aria-label="Your account"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></button></header>';
-}
-
-function crDrawer(active, cls) {
-  const nav = (id, icon, text, extra) => '<button class="cr-nav' + (active === id ? ' active' : '') + '" type="button"' + (active === id ? ' aria-current="page"' : '') + '><i class="' + (icon.indexOf('ph-fill') === 0 ? icon : 'ph ' + icon) + '"></i><span class="cr-nav-text">' + text + '</span>' + (extra || '') + '</button>';
-  const klass = c => '<button class="cr-nav' + (cls && cls.name === c.name && active === 'class' ? ' active' : '') + '" type="button"' + (cls && cls.name === c.name && active === 'class' ? ' aria-current="page"' : '') + '><span class="cr-dot">' + c.name.charAt(0) + '</span><span class="cr-nav-text">' + c.name + '<small>' + c.section + '</small></span></button>';
-  return nav('home', active === 'home' ? 'ph-fill ph-house' : 'ph-house', 'Home') +
-    '<div data-only="learner">' + nav('todo', active === 'todo' ? 'ph-fill ph-check-square' : 'ph-check-square', 'To-do') + '</div>' +
-    '<div data-only="teacher">' + nav('review', 'ph-clipboard-text', 'To review', '<span class="count-dot">5</span>') + '</div>' +
-    '<div class="cr-nav-sec"><i class="ph ph-graduation-cap"></i><span data-only="learner">Enrolled</span><span data-only="teacher">Teaching</span><i class="ph ph-caret-up end"></i></div>' +
-    CR_CLASSES.map(klass).join('') +
-    '<div data-only="teacher"><div class="cr-nav-sec"><i class="ph ph-toolbox"></i>Class tools</div>' + nav('attendance', 'ph-calendar-check', 'Attendance') + nav('usb', 'ph-usb', 'USB export') + '</div>' +
-    '<div style="height:8px"></div>' +
-    nav('archived', 'ph-archive', 'Archived classes') + nav('settings', 'ph-gear', 'Settings');
-}
-
-function crTabs(active) {
-  const t = (id, label, icon, only) => '<button class="cr-tab" role="tab" type="button" aria-selected="' + (active === id) + '"' + (only ? ' data-only="' + only + '"' : '') + '><i class="ph ' + icon + '"></i>' + label + '</button>';
-  return '<div class="cr-tabs" role="tablist" aria-label="Class sections">' +
-    t('stream', 'Stream', 'ph-chat-circle-dots') + t('classwork', 'Classwork', 'ph-notebook') + t('quizzes', 'Quizzes', 'ph-timer') +
-    t('people', 'People', 'ph-users', 'teacher') + t('grades', 'Grades', 'ph-table', 'teacher') +
-    '<button class="cr-tab ai" type="button" data-only="learner"><i class="ph ph-sparkle"></i>Ask L.A.R.A.</button></div>';
-}
-
-/* One screen: top bar, drawer, white sheet.
-   o = { cls, active, role, state, content, tabs, plain, views, viewKind, viewLabel } */
-function crScreen(o) {
-  return (o.views ? crSwitch(o.views, o.viewLabel, o.viewKind) : '') +
-    '<div class="cr-screen" data-role="' + (o.role || 'learner') + '"' + (o.state ? ' data-state="' + o.state + '"' : '') + '>' + crTop(o.cls) +
-    '<div class="cr-body"><nav class="cr-drawer" aria-label="Classes">' + crDrawer(o.active, o.cls) + '</nav>' +
-    '<div class="cr-sheet' + (o.plain ? ' plain' : '') + '">' + (o.tabs ? crTabs(o.tabs) : '') + o.content + '</div></div></div>';
-}
-
-function crCard(c, i) {
-  const due = [
-    ['<li><i class="ph ph-timer"></i><span><strong>Pagsusulit #2</strong>Due Fri, Oct 9, 8:00 AM</span></li>'],
-    ['<li><i class="ph ph-notebook"></i><span><strong>Fractions drill</strong>Due Mon, Oct 12</span></li>'],
-    ['<li><i class="ph ph-check-circle"></i><span>You are all caught up. Nice work!</span></li>'],
-    ['<li><i class="ph ph-check-circle"></i><span>Nothing due yet. Take a break!</span></li>']
-  ][i][0];
-  const body = i === 1
-    ? '<ul>' + due + '</ul><div class="progress" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" aria-label="Saving lessons for home study"><span style="width:68%"></span></div><span style="font-size:12px;font-weight:800">Saving lessons for home study: 68%</span>'
-    : '<ul>' + due + '</ul>';
-  return '<article class="cr-card"><div class="cr-card-head"><h3>' + c.name + '</h3><p>' + c.section + '</p><small>' + c.teacher + '</small>' +
-    '<span data-only="teacher"><span class="cr-code"><i class="ph ph-key"></i>K7M-4QX</span></span>' +
-    '<span class="cr-subj" aria-hidden="true"><i class="ph ph-' + c.icon + '"></i></span><span class="avatar" aria-hidden="true">' + c.init + '</span></div>' +
-    '<div class="cr-card-body">' + body + '</div>' +
-    '<footer class="cr-card-foot"><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Saved</span><span class="cr-spacer"></span>' +
-    '<button class="cr-icon" type="button" aria-label="Your work in ' + c.name + '"><i class="ph ph-clipboard-text"></i></button>' +
-    '<button class="cr-icon" type="button" aria-label="More options for ' + c.name + '"><i class="ph ph-dots-three-vertical"></i></button></footer></article>';
-}
-
 const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];
 
-/* ---------------------------- Screen previews ---------------------------- */
-function crHomePreview() {
-  const due = '<section class="cr-panel" data-only="learner" aria-label="Due soon"><header><h4>Due soon <span class="count-dot">2</span></h4>' +
-    '<button class="cr-icon" type="button" aria-label="Collapse due soon"><i class="ph ph-arrows-in-line-vertical"></i></button></header>' +
-    '<div class="cr-item" style="border-top:1px solid var(--color-border)"><span class="tile quiz"><i class="ph ph-timer"></i></span><div class="main"><strong>Pagsusulit #2: Parts of a Leaf</strong><small>Science 4</small></div><span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span></div>' +
-    '<div class="cr-item"><span class="tile"><i class="ph ph-notebook"></i></span><div class="main"><strong>Fractions drill</strong><small>Math 4</small></div><span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span></div></section>';
-  const waiting = '<section class="cr-panel" data-only="teacher" aria-label="Waiting for you"><header><h4>Waiting for you <span class="count-dot">7</span></h4></header>' +
-    '<div class="cr-item" style="border-top:1px solid var(--color-border)"><span class="tile"><i class="ph ph-clipboard-text"></i></span><div class="main"><strong>5 learners turned in Handout #2</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Review</button></div>' +
-    '<div class="cr-item"><span class="tile material"><i class="ph ph-users"></i></span><div class="main"><strong>2 learners want to join</strong><small>Science 4</small></div><button class="btn btn-secondary" type="button">Open People</button></div></section>';
-  const classes = '<section class="cr-panel" aria-label="Classes"><header><h4>Classes</h4>' +
-    '<button class="cr-link" type="button" data-only="learner"><i class="ph ph-plus"></i>Join class</button><button class="cr-link" type="button" data-only="teacher"><i class="ph ph-plus"></i>Create class</button></header>' +
-    '<div class="cr-grid">' + CR_CLASSES.map(crCard).join('') + '</div></section>';
-  return crScreen({
-    active: 'home', plain: true, views: CR_VIEWS,
-    content: '<div class="cr-pad"><div class="cr-greet"><h3 data-only="learner">Magandang umaga, Ana!</h3><h3 data-only="teacher">Magandang umaga, Ms. Reyes!</h3>' +
-      '<p data-only="learner">You have 2 things to turn in this week.</p><p data-only="teacher">7 things are waiting for you today.</p></div>' + due + waiting + classes + '</div>'
+/* ---------------------------- Remake slice: Home and Stream (desktop) ---------------------------- */
+const RM_DUE = ['Pagsusulit #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
+const RM_STATES = [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['offline', 'Offline']];
+
+function rmIcon(name, cls) { return '<i class="ph ' + (cls || '') + ' ph-' + name + '"></i>'; }
+function rmBtn(icon, label, extra) { return '<button class="cr-icon" type="button" aria-label="' + label + '"' + (extra || '') + '>' + rmIcon(icon) + '</button>'; }
+
+function rmDrawer() {
+  const nav = (id, icon, text, extra) => '<button class="rm-nav" type="button" data-rm="go" data-id="' + id + '" data-screen="' + (id === 'home' ? 'home' : 'later') + '"' + (extra || '') + '>' + rmIcon(icon) + '<span class="t">' + text + '</span></button>';
+  return nav('home', 'house', 'Home') +
+    '<div class="rm-sec"><i class="ph ph-graduation-cap"></i><span data-only="learner">Enrolled</span><span data-only="teacher">Teaching</span><i class="ph ph-caret-up end"></i></div>' +
+    '<div data-only="learner">' + nav('todo', 'check-square', 'To-do', ' data-label="To-do"') + '</div>' +
+    '<div data-only="teacher">' + nav('review', 'clipboard-text', 'To review', ' data-label="To review"') + '</div>' +
+    '<div class="rm-has">' + CR_CLASSES.map((c, i) => '<button class="rm-nav" type="button" data-rm="go" data-id="class" data-screen="stream" data-cls="' + i + '"><span class="rm-dot">' + c.name.charAt(0) + '</span><span class="t">' + c.name + '<small>' + c.section + '</small></span></button>').join('') + '</div>' +
+    '<div class="rm-rule"></div>' + nav('archived', 'archive', 'Archived classes', ' data-label="Archived classes"') + nav('settings', 'gear', 'Settings', ' data-label="Settings"');
+}
+
+function rmCard(c, i) {
+  const learnerInfo = RM_DUE[i] ? '<span class="rm-pill due">' + rmIcon('timer') + RM_DUE[i] + '</span>' : '<span class="rm-pill ok">' + rmIcon('check-circle') + 'All caught up</span>';
+  const teacherInfo = i === 0 ? '<span class="rm-pill due">' + rmIcon('clipboard-text') + '5 turned in: Handout #2</span>' : '<span class="rm-pill ok">' + rmIcon('check-circle') + 'Nothing to review</span>';
+  return '<article class="rm-card"><div class="rm-card-top"><span class="rm-card-ic" aria-hidden="true">' + rmIcon(c.icon) + '</span>' + rmBtn('dots-three-vertical', 'More options for ' + c.name) + '</div>' +
+    '<button class="rm-card-main" type="button" data-rm="go" data-screen="stream" data-cls="' + i + '"><strong>' + c.name + '</strong><span>' + c.section + '</span></button>' +
+    '<div data-only="learner">' + learnerInfo + '</div><div data-only="teacher">' + teacherInfo + '</div>' +
+    '<footer class="rm-card-foot"><span class="rm-who" data-only="learner"><span class="avatar sm" aria-hidden="true">' + c.init + '</span>' + c.teacher + '</span><span class="rm-who" data-only="teacher">' + rmIcon('users') + '27 learners</span>' +
+    '<span class="rm-open" aria-hidden="true">Open ' + rmIcon('arrow-right') + '</span></footer></article>';
+}
+
+function rmHome() {
+  const item = (tile, icon, title, sub, end) => '<div class="cr-item"><span class="tile ' + tile + '">' + rmIcon(icon) + '</span><div class="main"><strong>' + title + '</strong><small>' + sub + '</small></div>' + end + '</div>';
+  const due = '<section class="rm-panel rm-has" aria-label="Due soon"><div class="rm-head"><h3 class="rm-h"><span data-only="learner">Due soon</span><span data-only="teacher">Recently due</span></h3><span><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="To-do"><span data-only="learner">View To-do</span><span data-only="teacher">View work in progress</span></button>' + rmBtn('arrows-in-line-vertical', 'Collapse this section') + '</span></div>' +
+    '<div data-only="learner">' + item('quiz', 'timer', 'Pagsusulit #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
+    '<div data-only="teacher">' + item('', 'clipboard-text', 'Handout #2: Parts of a Leaf', 'Science 4 - 5 turned in, 27 assigned', '<button class="btn btn-secondary" type="button" data-rm="go" data-screen="later" data-label="Student work">Review</button>') + '</div></section>';
+  const classes = '<section class="rm-panel rm-has" aria-label="Classes"><div class="rm-head"><h3 class="rm-h">Classes</h3><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div><div class="rm-grid">' + CR_CLASSES.map(rmCard).join('') + '</div></section>';
+  const empty = '<section class="rm-empty" aria-label="No classes yet"><span class="art">' + rmIcon('graduation-cap') + '</span><div><h4>Add a class to get started</h4><p data-only="learner">Ask your teacher for the 6-character class code, then type it here.</p><p data-only="teacher">Create a class and share its code. You approve each learner who asks to join.</p>' +
+    '<button class="rm-tonal" type="button" style="margin-top:12px" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div></section>';
+  const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:28px;width:160px"></i><i style="height:72px"></i><i style="height:72px"></i><div style="display:grid;grid-template-columns:repeat(auto-fill,257px);gap:16px"><i style="height:296px"></i><i style="height:296px"></i><i style="height:296px"></i></div></div>';
+  return '<div data-s="home"><div class="rm-wrap wide"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' + due + classes + empty + skel + '</div></div>';
+}
+
+const RM_TIMES = [['600', '10:00'], ['290', '4:50'], ['100', '1:40']];
+const RM_QUIZ = { title: 'Pagsusulit #2: Parts of a Leaf', questions: [
+  ['What gives a leaf its green color?', ['Stomata', 'Chlorophyll', 'Phloem', 'Veins']],
+  ['Which part lets air move in and out of a leaf?', ['Stomata', 'Petiole', 'Xylem', 'Blade']],
+  ['What do leaves make using sunlight?', ['Soil', 'Food (sugar)', 'Water', 'Rocks']],
+  ['The flat, wide part of a leaf is called the...', ['Blade', 'Stem', 'Root', 'Seed']],
+  ['Which part joins the leaf to the stem?', ['Petiole', 'Blade', 'Vein', 'Edge']]] };
+const RM_LEARNERS = [['AS', 'Ana S.'], ['JD', 'Juan D.'], ['MR', 'Mika R.'], ['PC', 'Paolo C.'], ['LM', 'Liza M.'], ['BT', 'Ben T.']];
+const RM_LIVE = [['p', 3], ['s', 5], ['p', 1], ['n', 0], ['s', 5], ['p', 4]];
+
+function rmTimer() { return '<span class="rm-timer">' + rmIcon('timer') + '<span data-q-time>10:00 left</span></span>'; }
+
+function rmQuiz() {
+  const back = '<button class="cr-link" type="button" data-rm="go" data-screen="stream" style="justify-self:start;padding-left:0">' + rmIcon('arrow-left') + 'Back to Stream</button>';
+  const meta = '<div class="rm-qmeta"><span class="badge badge-neutral">' + rmIcon('list-numbers') + ' 5 questions</span><span class="badge badge-neutral">' + rmIcon('timer') + ' 10 minutes</span><span class="badge badge-neutral" data-rm-name>Science 4</span></div>';
+  const demo = '<div class="rm-demo">Prototype only:<button class="cr-link" type="button" data-rm="quiz-reset">Restart the demo</button></div>';
+  const offline = '<div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. Keep going: the timer keeps running and your answers are saved on this device.</div>';
+  const intro = '<section class="rm-qcard rm-q rm-qi">' + back + '<h3>' + RM_QUIZ.title + '</h3>' + meta +
+    '<ul class="rm-qlist"><li>' + rmIcon('timer') + 'One timer for the whole quiz. It starts when you press Start quiz and cannot be paused.</li>' +
+    '<li>' + rmIcon('cloud-slash') + 'If the Wi-Fi drops, keep going. Your answers are saved on this device and sent when the Hub is back.</li>' +
+    '<li>' + rmIcon('lock-key') + 'Ask L.A.R.A. is off until you submit.</li></ul>' +
+    '<div class="rm-qfoot"><span class="rm-qnote">' + rmIcon('check-circle') + 'You can change an answer until you submit.</span><button class="btn btn-primary" type="button" data-rm="quiz-start">Start quiz</button></div></section>';
+  const run = '<section class="rm-qcard rm-q rm-qr"><div class="rm-qhead"><strong>' + RM_QUIZ.title + '</strong>' + rmTimer() + '</div><div class="rm-qbody"></div>' +
+    '<div class="rm-qnote">' + rmIcon('cloud-slash') + 'Each answer is saved on this device as you pick it.</div><div class="rm-qnote">' + rmIcon('lock-key') + 'Ask L.A.R.A. is off during a quiz.</div></section>';
+  const done = '<section class="rm-qcard rm-q rm-qd"><div class="rm-result"><svg class="rm-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40" stroke-dasharray="201 251" transform="rotate(-90 50 50)"/></svg>' +
+    '<div><h4 data-q-done-title>Your answers are in</h4><p>Sample result: 4 of 5. Nice work. Let us look at the one you missed together.</p></div></div>' +
+    '<div class="rm-qnote"><span class="badge badge-synced rm-sv"><i class="ph ph-check-circle"></i> Saved</span><span class="badge badge-queued rm-qd-q"><i class="ph ph-clock"></i> Queued for sync</span>Your teacher sees it as soon as the Hub is reachable.</div>' +
+    '<div class="rm-qfoot"><button class="btn btn-secondary" type="button" data-rm="go" data-screen="stream">Back to Stream</button></div></section>';
+  const mon = '<div class="rm-qwrap wide"><button class="cr-link" type="button" data-rm="go" data-screen="stream" style="justify-self:start;padding-left:0">' + rmIcon('arrow-left') + 'Back to Stream</button>' +
+    '<section class="rm-qcard"><div class="rm-qhead"><div><h3>' + RM_QUIZ.title + '</h3><div class="rm-qmeta" style="margin-top:8px"><span class="badge badge-neutral" data-qt-show="live">' + rmIcon('broadcast') + ' Live</span><span class="badge badge-neutral" data-qt-show="idle">' + rmIcon('hourglass') + ' Not started</span><span class="badge badge-neutral" data-qt-show="closed">' + rmIcon('lock') + ' Closed</span></div></div>' +
+    '<div style="display:flex;align-items:center;gap:8px"><span data-qt-show="idle live">' + rmTimer() + '</span><button class="btn btn-primary" type="button" data-rm="quiz-open" data-qt-show="idle">Start quiz</button><button class="btn btn-secondary" type="button" data-rm="quiz-close" data-qt-show="live">Close quiz</button></div></div>' +
+    '<div class="rm-stats"><div class="rm-stat"><strong data-qs-n="p">0</strong><span>In progress</span></div><div class="rm-stat"><strong data-qs-n="s">0</strong><span>Submitted</span></div><div class="rm-stat"><strong data-qs-n="n">27</strong><span>Not started</span></div></div>' +
+    '<div class="rm-mon"></div><div class="rm-qnote">' + rmIcon('info') + 'Closing the quiz submits and grades everyone still answering. Building a quiz comes with the Classwork screens.</div></section>' + demo + '</div>';
+  return '<div data-s="quiz"><div class="rm-wrap"><div data-only="learner"><div class="rm-qwrap">' + offline + intro + run + done + demo + '</div></div><div data-only="teacher">' + mon + '</div></div></div>';
+}
+
+function rmFmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+
+function rmQuizTick(root) {
+  if (!root._qEnd) return;
+  const left = Math.max(0, Math.round((root._qEnd - Date.now()) / 1000));
+  root.querySelectorAll('[data-q-time]').forEach(e => {
+    e.textContent = rmFmt(left) + ' left';
+    const p = e.closest('.rm-timer'); p.classList.toggle('warn', left <= 300 && left > 120); p.classList.toggle('crit', left <= 120);
   });
+  if (left === 0) {
+    clearInterval(root._qTimer);
+    if (root.dataset.qs === 'run') rmQuizSubmit(root, true);
+    if (root.dataset.qt === 'live') rmQuizClose(root);
+  }
 }
 
-/* The first stream post, reused by the Stream Announcement component page */
-function crPost() {
-  return '<article class="cr-post"><header class="cr-post-head"><span class="avatar">MR</span><div class="who"><strong>Ms. Reyes</strong><small>Oct 5, 2:15 PM</small><small style="display:block">Classroom Wi-Fi Hub</small></div>' +
-    '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span><button class="cr-icon" type="button" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></header>' +
-    '<div class="cr-post-body">Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!</div>' +
-    '<div class="cr-attach"><span class="tile material"><i class="ph ph-book-open"></i></span><div><strong>Handout #2: Parts of a Leaf</strong><small>PDF, saved on this device</small></div></div>' +
-    '<div class="cr-comments"><div class="head"><i class="ph ph-users"></i> 1 class comment</div>' +
-    '<div class="cr-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
-    '<div class="cr-reply"><span class="avatar sm">AS</span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment"><button class="cr-icon" type="button" aria-label="Send comment"><i class="ph ph-paper-plane-tilt"></i></button></div></div></article>';
+function rmQuizClock(root) {
+  if (!root._qEnd || Date.now() >= root._qEnd) root._qEnd = Date.now() + (+root.dataset.time || 600) * 1000;
+  clearInterval(root._qTimer); root._qTimer = setInterval(() => rmQuizTick(root), 1000); rmQuizTick(root);
 }
 
-function crStreamPreview() {
+function rmQuizRender(root) {
+  const i = root._qIdx, qs = RM_QUIZ.questions, q = qs[i], ans = root._qAns, last = i === qs.length - 1;
+  root.querySelector('.rm-qbody').innerHTML = '<div class="rm-dots" aria-hidden="true">' + qs.map((_, k) => '<i class="' + (k === i ? 'cur' : ans[k] !== undefined ? 'done' : '') + '"></i>').join('') + '</div>' +
+    '<p class="rm-qcount">Question ' + (i + 1) + ' of ' + qs.length + '</p><p class="rm-qtext">' + q[0] + '</p>' +
+    '<div class="rm-opts" role="radiogroup" aria-label="Answers">' + q[1].map((o, k) => '<button type="button" class="rm-opt" role="radio" data-rm="quiz-pick" data-k="' + k + '" aria-checked="' + (ans[i] === k) + '">' + (ans[i] === k ? '<i class="ph-fill ph-check-circle"></i>' : '<i class="ph ph-circle"></i>') + '<span>' + o + '</span></button>').join('') + '</div>' +
+    '<div class="rm-qfoot"><button class="btn btn-secondary" type="button" data-rm="quiz-prev"' + (i === 0 ? ' disabled' : '') + '>Previous</button>' +
+    (last ? '<span class="rm-qnote">' + ans.filter(a => a !== undefined).length + ' of ' + qs.length + ' answered</span><button class="btn btn-primary" type="button" data-rm="quiz-submit">Submit</button>' : '<button class="btn btn-primary" type="button" data-rm="quiz-next">Next</button>') + '</div>';
+}
+
+function rmQuizSubmit(root, timeUp) {
+  clearInterval(root._qTimer);
+  root.dataset.qs = 'done';
+  root.querySelector('[data-q-done-title]').textContent = timeUp ? 'Time is up. Your answers were sent in' : 'Your answers are in';
+  rmSync(root);
+}
+
+function rmQuizTeacher(root) {
+  const t = root.dataset.qt, rows = RM_LEARNERS.map((l, k) => {
+    const st = t === 'idle' ? ['n', 0] : t === 'closed' ? ['s', 5] : RM_LIVE[k];
+    const badge = st[0] === 's' ? '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Submitted</span>' : st[0] === 'p' ? '<span class="badge badge-queued"><i class="ph ph-pencil-simple"></i> Answering</span>' : '<span class="badge badge-neutral"><i class="ph ph-hourglass"></i> Not started</span>';
+    return '<div class="rm-lrow"><span class="avatar sm">' + l[0] + '</span><span class="nm">' + l[1] + '</span><span class="rm-prog" aria-hidden="true"><i style="width:' + st[1] * 20 + '%"></i></span><span class="cnt">' + st[1] + ' of 5</span>' + badge + '</div>';
+  }).join('');
+  root.querySelector('.rm-mon').innerHTML = rows;
+  const n = t === 'idle' ? [0, 0, 27] : t === 'closed' ? [0, 27, 0] : [14, 9, 4];
+  ['p', 's', 'n'].forEach((k, j) => { root.querySelector('[data-qs-n="' + k + '"]').textContent = n[j]; });
+}
+
+function rmQuizClose(root) { clearInterval(root._qTimer); root.dataset.qt = 'closed'; rmQuizTeacher(root); rmSync(root); }
+
+function rmNote(kind, icon, text, when, screen) {
+  return '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="' + (screen || 'later') + '" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
+}
+
+function rmComments() {
+  return '<div class="rm-comments"><div class="rm-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
+    '<button class="cr-link rm-add" type="button" data-rm="comment-toggle" style="justify-self:start">' + rmIcon('chat-text') + 'Add comment</button>' +
+    '<div class="rm-reply" hidden><span class="avatar sm"><span data-only="learner">AS</span><span data-only="teacher">MR</span></span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment">' + rmBtn('paper-plane-tilt', 'Send comment', ' data-rm="comment-send"') + '</div></div>';
+}
+
+function rmLite(inner, role) { return '<div class="rm rm-lite" data-role="' + role + '" data-state="normal">' + inner + '</div>'; }
+
+function rmCardPreview() {
+  return '<div class="rm-lite-grid">' + rmLite(rmCard(CR_CLASSES[0], 0), 'learner') + rmLite(rmCard(CR_CLASSES[3], 3), 'learner') + rmLite(rmCard(CR_CLASSES[0], 0), 'teacher') + '</div>';
+}
+
+function rmPostPreview() {
+  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
+}
+
+function rmAnnouncement(init, who, when, body, tail) {
+  return '<article class="rm-post"><header class="rm-post-head"><span class="avatar">' + init + '</span><div class="who">' + who + '<small>' + when + '</small></div>' + rmBtn('dots-three-vertical', 'Announcement options') + '</header>' +
+    '<div class="rm-post-body">' + body + '</div>' + (tail || '') + '</article>';
+}
+
+function rmStream() {
   const c = CR_SCI;
-  const composer = '<div class="cr-composer" data-only="teacher"><span class="avatar">MR</span><span class="grow">Post an announcement to your class</span>' +
-    '<button class="btn btn-secondary btn-sm" type="button" style="min-height:52px"><i class="ph ph-paperclip"></i> Add</button></div>';
-  const side = '<div class="cr-side">' +
-    '<div class="cr-side-card" data-only="teacher"><h4>Class code <i class="ph ph-arrows-out-simple" style="color:var(--color-text-secondary)"></i></h4><p class="big">K7M-4QX</p><p>Learners type this to ask to join. You approve each one.</p></div>' +
-    '<div class="cr-side-card"><h4>Upcoming</h4><p data-only="learner">Handout #2 is due Fri, Oct 9.</p><p data-only="teacher">2 items are due this week.</p><button class="cr-link" type="button" style="padding-left:0">View all</button></div></div>';
-  const post = crPost() +
-    '<article class="cr-post"><header class="cr-post-head"><span class="avatar">MR</span><div class="who"><strong>Ms. Reyes</strong><small>Oct 2, 9:00 AM</small></div><span class="badge badge-neutral"><i class="ph ph-chat-slash"></i> Comments off</span><button class="cr-icon" type="button" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></header>' +
-    '<div class="cr-post-body">Reminder: bring your notebook and a pencil tomorrow.</div></article>';
-  return crScreen({
-    cls: c, active: 'class', tabs: 'stream', views: CR_VIEWS,
-    content: '<div class="cr-pad"><div class="cr-banner"><span class="cr-subj" aria-hidden="true"><i class="ph ph-' + c.icon + '"></i></span><h2>' + c.name + '</h2><p>' + c.section + '</p>' +
-      '<button class="cr-icon cr-info" type="button" aria-label="View class information"><i class="ph ph-info"></i></button></div>' +
-      '<div class="cr-stream">' + side + '<div>' + composer + post + '</div></div></div>'
-  });
+  const note = rmNote;
+  const comments = rmComments();
+  const feed = '<div class="rm-feed rm-has">' +
+    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
+    note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
+    '<div class="rm-posts">' + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', comments) + '</div></div>';
+  const empty = '<section class="rm-empty rm-feed-empty" aria-label="Nothing posted yet"><span class="art">' + rmIcon('chat-circle-dots') + '</span><div><h4>This is where you can talk to your class</h4><p data-only="teacher">Use the stream to share announcements, post assignments and answer learners\' questions.</p><p data-only="learner">When your teacher posts something, you will see it here.</p></div></section>';
+  const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:72px"></i><i style="height:72px"></i><i style="height:153px"></i></div>';
+  const aside = '<div class="rm-aside"><div class="rm-sc" data-only="teacher"><h4>Class code ' + rmBtn('dots-three-vertical', 'More options for class code') + '</h4><span class="code">K7M-4QX</span><p>Learners type this to ask to join. You approve each one.</p></div>' +
+    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Pagsusulit #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
+  const bar = '<div class="rm-bar" data-only="teacher"><button class="rm-tonal" type="button" data-rm="open-compose">' + rmIcon('pencil-simple') + 'New announcement</button><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Repost">' + rmIcon('repeat') + 'Repost</button></div>';
+  const tabs = '<div data-s="stream later"><div class="rm-tabs" role="tablist" aria-label="Class sections">' +
+    [['stream', 'Stream', ''], ['classwork', 'Classwork', ''], ['people', 'People', ''], ['grades', 'Grades', 'teacher']].map(t => '<button class="rm-tab" role="tab" type="button" data-rm="go" data-tab="' + t[0] + '" data-screen="' + (t[0] === 'stream' ? 'stream' : 'later') + '" data-label="' + t[1] + '"' + (t[2] ? ' data-only="teacher"' : '') + ' aria-selected="' + (t[0] === 'stream') + '">' + t[1] + '</button>').join('') +
+    '<span class="cr-spacer"></span><span data-only="teacher">' + rmBtn('gear', 'Class settings', ' data-rm="go" data-screen="later" data-label="Class settings"') + '</span></div></div>';
+  const stream = '<div data-s="stream"><div class="rm-wrap wide"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' +
+    '<div class="rm-banner"><span class="subj" aria-hidden="true"><i class="ph ph-' + c.icon + '" data-rm-icon></i></span><h2 data-rm-name>' + c.name + '</h2><p data-rm-sec>' + c.section + '</p>' +
+    '<span data-only="teacher"><button class="rm-tonal rm-custom" type="button" data-rm="go" data-screen="later" data-label="Customize">' + rmIcon('pencil-simple') + 'Customize</button></span>' +
+    '<button class="cr-icon rm-info" type="button" aria-label="View class information">' + rmIcon('info') + '</button></div>' +
+    '<div class="rm-cols">' + aside + '<div>' + bar + feed + empty + skel + '</div></div></div></div>';
+  const later = '<div data-s="later"><div class="rm-wrap"><section class="rm-empty" style="display:flex" aria-live="polite"><span class="art">' + rmIcon('hammer') + '</span><div><h4 data-rm-later>Next slice</h4><p>Only Home and Stream are in this first slice. This screen comes after you approve it.</p>' +
+    '<button class="rm-tonal" type="button" style="margin-top:12px" data-rm="go" data-screen="home">' + rmIcon('house') + 'Back to Home</button></div></section></div></div>';
+  return tabs + stream + later;
 }
 
-function crClassworkPreview() {
-  const row = (tile, icon, title, meta, end, extra, open) => '<div class="cr-row"' + (open ? ' style="background:var(--color-canvas-bg)"' : '') + '><span class="tile ' + tile + '"><i class="ph ' + icon + '"></i></span>' +
-    '<button class="main" type="button" aria-expanded="' + !!open + '"><strong>' + title + '</strong><small>' + meta + '</small></button><span class="end">' + end + '</span>' + (extra || '') + '</div>';
-  const kebab = '<button class="cr-icon" type="button" data-only="teacher" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button>';
-  const save = '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Saved</span>';
-  const todo = '<span class="badge badge-queued" data-only="learner"><i class="ph ph-clock"></i> To do</span>';
-  return crScreen({
-    cls: CR_SCI, active: 'class', tabs: 'classwork', views: CR_VIEWS,
-    content: '<div class="cr-cw"><div class="cr-cw-actions"><button class="btn btn-primary" type="button" data-only="teacher"><i class="ph ph-plus"></i> Create</button>' +
-      '<span class="cr-spacer"></span><button class="btn btn-secondary btn-pill" type="button" data-only="learner"><i class="ph ph-clipboard-text"></i> View your work</button>' +
-      '<button class="cr-link" type="button"><i class="ph ph-arrows-in-line-vertical"></i>Collapse all</button></div>' +
-      '<div class="cr-topic"><h4>Week 5: Plants</h4><span class="end">4 items <i class="ph ph-caret-up" style="font-size:20px"></i></span></div>' +
-      row('quiz', 'ph-timer', 'Pagsusulit #2: Parts of a Leaf', 'Posted Oct 5', '<span class="when">Due Fri, Oct 9, 8:00 AM</span>' + todo, kebab) +
-      row('', 'ph-notebook', 'Homework: Draw and label a leaf', 'Posted Oct 5', '<span class="when">Due Mon, Oct 12</span>' + todo, kebab) +
-      row('', 'ph-notebook', 'Worksheet: Parts of a plant', 'Posted Oct 2', '<span class="when">Due Oct 6</span><span class="badge badge-synced" data-only="learner"><i class="ph ph-check-circle"></i> Turned in</span>', kebab, true) +
-      '<div class="cr-row-open"><div class="meta"><span>Posted Oct 2, 9:00 AM</span><span data-only="learner">You turned this in on time. Well done!</span><span data-only="teacher">12 turned in, 28 not yet</span></div>' +
-      '<p>Color and label the parts of the plant. Take a clear photo of your notebook page.</p><footer><button class="cr-link" type="button" style="padding-left:0">View instructions</button></footer></div>' +
-      row('material', 'ph-book-open', 'Handout #2: Parts of a Leaf', 'Posted Oct 5', '<span class="when">Posted Oct 5</span>' + save, kebab) +
-      row('material', 'ph-play-circle', 'Video: How plants make food', 'Posted Sep 28', '<span class="when">Posted Sep 28</span><button class="btn btn-secondary btn-sm" type="button" style="min-height:52px" data-only="learner"><i class="ph ph-download-simple"></i> Save for home</button>', kebab) +
-      '<div class="cr-topic" style="margin-top:20px"><h4>Week 4: Living things</h4><span class="end">2 items <i class="ph ph-caret-down" style="font-size:20px"></i></span></div></div>'
-  });
+function rmModal() {
+  return '<div class="rm-modal" hidden><div class="rm-dialog" role="dialog" aria-modal="true" aria-label="Announcement"><h3>Announcement</h3>' +
+    '<div class="meta"><span class="badge badge-neutral"><i class="ph ph-chalkboard-teacher"></i> <span data-rm-name>Science 4</span></span><span class="badge badge-neutral"><i class="ph ph-users"></i> All learners</span></div>' +
+    '<textarea class="form-input" aria-label="Announce something to your class" placeholder="Announce something to your class"></textarea>' +
+    '<div class="meta">' + rmBtn('paperclip', 'Attach a file') + rmBtn('link', 'Add link') + '</div>' +
+    '<footer><span class="hint rm-offhint" hidden>Waiting for the Hub. Posting needs the classroom network.</span><button class="btn btn-secondary" type="button" data-rm="close-compose">Cancel</button><button class="btn btn-primary" type="button" data-rm="post">Post</button></footer></div></div>';
 }
 
-function crPeoplePreview() {
-  const person = (init, name, tone, end) => '<div class="cr-person"><span class="avatar ' + tone + '">' + init + '</span><div class="main">' + name + '</div><div class="end">' + end + '</div></div>';
-  const active = '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Active</span>';
-  const accept = '<span class="badge badge-queued"><i class="ph ph-hourglass-medium"></i> Pending</span><button class="btn btn-primary btn-sm" type="button"><i class="ph ph-check"></i> Accept</button><button class="btn btn-secondary btn-sm" type="button">Decline</button>';
-  return crScreen({
-    cls: CR_SCI, active: 'class', tabs: 'people', role: 'teacher',
-    content: '<div class="cr-cw"><div class="alert-banner alert-banner-info" style="margin-bottom:8px"><i class="ph ph-users"></i><span><strong>2 learners want to join:</strong> Check that you know them, then accept.</span></div>' +
-      '<div class="cr-sec-head"><h4>Teachers</h4><button class="cr-link" type="button"><i class="ph ph-plus"></i>Add teacher</button></div>' +
-      person('MR', 'Ms. Reyes', '', '') +
-      '<div class="cr-sec-head" style="margin-top:20px"><h4>Learners</h4><span>40 learners</span></div>' +
-      person('JD', 'Juan Dela Cruz', 'blue', accept) +
-      person('MS', 'Maria Santos', 'amber', accept) +
-      person('AL', 'Ana Lopez', '', active) +
-      person('PG', 'Paolo Garcia', 'blue', active) +
-      person('RT', 'Rhea Tan', 'amber', active) + '</div>'
-  });
+function rmApp() {
+  const top = '<header class="rm-top">' + rmBtn('list', 'Main menu', ' data-rm="toggle-nav" aria-expanded="true"') + '<span class="doc-brand-badge">L.A.R.A.</span>' +
+    '<div class="rm-crumb"><i class="ph ph-caret-right"></i><div><strong data-rm-name>' + CR_SCI.name + '</strong><small data-rm-sec>' + CR_SCI.section + '</small></div></div><span class="cr-spacer"></span>' +
+    '<span class="rm-hub"><span class="on"><i class="ph ph-broadcast"></i> Connected to Hub</span><span class="off"><i class="ph ph-wifi-slash"></i> Not connected to Hub</span></span>' +
+    rmBtn('plus', 'Join or create a class') + '<span class="cr-icon" style="cursor:default"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></span></header>';
+  return crSwitch(CR_VIEWS) + crSwitch(RM_STATES, 'State', 'state') + crSwitch(RM_TIMES, 'Quiz clock starts at', 'time') +
+    '<div class="rm" data-role="learner" data-state="normal" data-screen="home" data-cls="0" data-tab="stream" data-qs="intro" data-qt="idle" data-time="600">' + top +
+    '<div class="rm-body"><nav class="rm-drawer" aria-label="Classes">' + rmDrawer() + '</nav><div class="rm-sheet">' + rmStream() + rmHome() + rmQuiz() + '</div></div>' + rmModal() + '</div>';
 }
 
-function crAssignmentPreview() {
-  const work = state => {
-    const top = {
-      todo: ['<span class="badge badge-queued"><i class="ph ph-clock"></i> To do</span>', '<div class="cr-photo"><i class="ph ph-camera"></i>Take a photo of your notebook page</div>',
-        '<button class="btn btn-primary" type="button" style="min-height:56px"><i class="ph ph-camera"></i> Kunan ng litrato</button><button class="btn btn-secondary" type="button"><i class="ph ph-image"></i> Choose a photo</button>', '<p class="note">Your photo is saved on this device first. It goes to your teacher when you are connected to the Hub.</p>'],
-      queued: ['<span class="badge badge-queued"><i class="ph ph-cloud-slash"></i> Queued for sync</span>', '<div class="cr-photo filled"><i class="ph ph-image"></i>leaf-notebook.jpg<br>Saved on this device</div>',
-        '<button class="btn btn-secondary" type="button"><i class="ph ph-arrow-counter-clockwise"></i> Take a new photo</button>', '<p class="note">You are not connected to the Hub yet. Your work will turn in by itself when you are.</p>'],
-      turned: ['<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Turned in</span>', '<div class="cr-photo filled"><i class="ph ph-image"></i>leaf-notebook.jpg<br>Your teacher has it</div>',
-        '<button class="btn btn-secondary" type="button"><i class="ph ph-arrow-counter-clockwise"></i> Take it back to edit</button>', '<p class="note">Nice work, Ana! You turned this in on time.</p>'],
-      graded: ['<span class="badge badge-info"><i class="ph ph-clipboard-text"></i> Graded</span>', '<p class="cr-score"><strong>45</strong> / 50</p><p style="font-size:15px;font-weight:700;line-height:1.6">Good job on the labels! Next time, add the veins of the leaf too.</p>',
-        '<button class="btn btn-secondary" type="button"><i class="ph ph-image"></i> See your work</button>', '<p class="note">Graded Oct 8 by Ms. Reyes.</p>']
-    }[state];
-    return '<div data-st="' + state + '" class="cr-work"><header><h4>Your work</h4>' + top[0] + '</header>' + top[1] + top[2] +
-      (state === 'todo' ? '<button class="btn btn-primary" type="button" disabled>Turn in</button><p class="note">Take a photo first, then Turn in is ready.</p>' : '') +
-      (state === 'queued' ? '<button class="btn btn-primary" type="button">Turn in</button>' : '') + top[3] + '</div>';
-  };
-  const detail = '<div class="cr-detail"><div><div class="titlerow"><span class="tile"><i class="ph ph-notebook"></i></span><h2>Homework: Draw and label a leaf</h2><button class="cr-icon" type="button" aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></div>' +
-    '<p class="byline">Ms. Reyes, posted Oct 5</p><p class="points">50 points &nbsp;|&nbsp; Due Mon, Oct 12, 5:00 PM</p>' +
-    '<p class="instructions">Draw one leaf in your notebook. Label the blade, the veins and the stalk. Take a clear photo of the page and turn it in. Not sure where to start? Read Handout #2 first.</p>' +
-    '<div class="cr-attach" style="margin:20px 0 0"><span class="tile material"><i class="ph ph-book-open"></i></span><div><strong>Handout #2: Parts of a Leaf</strong><small>PDF, saved on this device</small></div></div>' +
-    '<div class="section-label"><i class="ph ph-users"></i> Class comments</div><button class="btn btn-secondary btn-pill" type="button"><i class="ph ph-chat-text"></i> Add comment</button></div>' +
-    '<aside aria-label="Your work">' + ['todo', 'queued', 'turned', 'graded'].map(work).join('') +
-    '<div class="cr-work" style="margin-top:16px"><header><h4 style="font-size:18px">Private comments</h4><i class="ph ph-lock-key" style="font-size:22px;color:var(--color-text-secondary)"></i></header>' +
-    '<div class="cr-reply"><input class="form-input" placeholder="Write to Ms. Reyes" aria-label="Private comment to your teacher"><button class="cr-icon" type="button" aria-label="Send private comment"><i class="ph ph-paper-plane-tilt"></i></button></div>' +
-    '<p class="note">Only you and your teacher can see these.</p></div></aside></div>';
-  return crScreen({
-    cls: CR_SCI, active: 'class', content: detail,
-    views: [['todo', 'To do'], ['queued', 'Queued'], ['turned', 'Turned in'], ['graded', 'Graded']], viewKind: 'state', viewLabel: 'Learner sees', state: 'todo'
-  });
-}
-
-function crReviewPreview() {
-  const learner = (init, name, sub, icon, tone, active) => '<button class="cr-learner' + (active ? ' active' : '') + '" type="button"><span class="avatar sm ' + tone + '">' + init + '</span><span style="flex:1;min-width:0">' + name + '<small>' + sub + '</small></span><i class="ph ' + icon + '" style="font-size:20px"></i></button>';
-  const list = '<div class="list"><div class="group">Turned in (5)</div>' +
-    learner('AL', 'Ana Lopez', 'Turned in 8:12 AM', 'ph-check-circle', '', true) + learner('PG', 'Paolo Garcia', 'Turned in 8:30 AM', 'ph-check-circle', 'blue', false) + learner('RT', 'Rhea Tan', 'Queued, arrived 9:05 AM', 'ph-cloud-slash', 'amber', false) +
-    '<div class="group">Not turned in yet (35)</div>' + learner('JD', 'Juan Dela Cruz', 'Not turned in yet', 'ph-clock', 'blue', false) + '</div>';
-  const viewer = '<div class="viewer"><div class="row" style="justify-content:space-between"><strong style="font-size:18px;font-weight:900">Ana Lopez</strong><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Turned in</span></div>' +
-    '<div class="paper"><i class="ph ph-image"></i>Homework photo<br><span style="font-weight:700">Zoom, rotate and mark it here</span></div></div>';
-  const grade = '<div class="grade"><div><div class="label-xs">Score</div><div class="cr-grade-input"><input class="form-input" value="45" inputmode="numeric" aria-label="Score out of 50"> / 50</div></div>' +
-    '<div><div class="label-xs">Short message to Ana</div><textarea class="form-input" style="min-height:96px" aria-label="Feedback for Ana">Good job on the labels! Next time, add the veins too.</textarea>' +
-    '<div class="cr-quick" style="margin-top:8px"><span class="chip">Great effort!</span><span class="chip">Please retake the photo</span></div></div>' +
-    '<button class="btn btn-primary" type="button"><i class="ph ph-paper-plane-tilt"></i> Return to Ana</button></div>';
-  return crScreen({
-    cls: CR_SCI, active: 'class', role: 'teacher',
-    content: '<div style="padding:16px 24px;border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="cr-icon" type="button" aria-label="Back to classwork"><i class="ph ph-arrow-left"></i></button><span class="tile"><i class="ph ph-notebook"></i></span><div style="flex:1 1 180px;min-width:0"><strong style="font-size:18px;font-weight:900">Homework: Draw and label a leaf</strong><div style="font-size:13px;font-weight:700;color:var(--color-text-secondary)">Due Mon, Oct 12 | 50 points</div></div>' +
-      '<div class="segmented" role="tablist" aria-label="Assignment sections"><button class="seg-item" role="tab" type="button" aria-selected="false">Instructions</button><button class="seg-item active" role="tab" type="button" aria-selected="true">Learner work</button></div></div>' +
-      '<div class="cr-review">' + list + viewer + grade + '</div>'
-  });
-}
-
-function crTodoPreview() {
-  const item = (tile, icon, title, cls, meta) => '<div class="cr-item"><span class="tile ' + tile + '"><i class="ph ' + icon + '"></i></span><div class="main"><strong>' + title + '</strong><small>' + cls + '</small><small>' + meta + '</small></div></div>';
-  const group = (label, count, open, body) => '<div><div class="cr-group-head"><span>' + label + '</span><span class="end">' + count + ' <i class="ph ph-caret-' + (open ? 'up' : 'down') + '" style="font-size:20px"></i></span></div>' + (body || '') + '</div>';
-  return crScreen({
-    active: 'todo',
-    content: '<div class="cr-tabs" role="tablist" aria-label="To-do sections"><button class="cr-tab" role="tab" type="button" aria-selected="true">To do</button><button class="cr-tab" role="tab" type="button" aria-selected="false">Not turned in yet</button><button class="cr-tab" role="tab" type="button" aria-selected="false">Done</button></div>' +
-      '<div class="cr-todo"><div class="form-group select-wrap" style="margin-bottom:12px"><label class="form-label" for="todo-class">Class</label><select class="form-input" id="todo-class"><option>All classes</option><option>Science 4</option><option>Math 4</option></select><i class="ph ph-caret-down" style="top:auto;bottom:16px;transform:none"></i></div>' +
-      group('This week', 2, true, item('quiz', 'ph-timer', 'Pagsusulit #2: Parts of a Leaf', 'Science 4', 'Due Fri, Oct 9, 8:00 AM') + item('', 'ph-notebook', 'Homework: Draw and label a leaf', 'Science 4', 'Due Mon, Oct 12, 5:00 PM')) +
-      group('Next week', 1, false) + group('Later', 0, false) + group('No due date', 1, false) +
-      '<div style="margin-top:20px;font-size:14px;font-weight:700;color:var(--color-text-secondary)">All caught up on the other days? Nice work, Ana!</div></div>'
-  });
-}
-
-function crJoinPreview() {
-  const code = '<div class="pin-grid" role="group" aria-label="Class code">' + ['K', '7', 'M'].map(ch => '<input class="pin-box" maxlength="1" value="' + ch + '" aria-label="Class code character">').join('') +
-    '<span style="align-self:center;font-weight:900;color:var(--color-text-secondary)">-</span>' + ['4', 'Q', 'X'].map(ch => '<input class="pin-box" maxlength="1" value="' + ch + '" aria-label="Class code character">').join('') + '</div>';
-  return '<div class="cr-stage"><div class="cr-dialog" role="dialog" aria-label="Join class"><h4>Join class</h4><p>Ask your teacher for the 6-letter class code, then type it here.</p>' +
-    '<label class="form-label">Class code</label>' + code + '<p class="form-hint" style="margin-bottom:0">You are joining as Ana Santos.</p>' +
-    '<div class="actions"><button class="btn btn-secondary" type="button">Cancel</button><button class="btn btn-primary" type="button">Join</button></div></div>' +
-    '<div class="cr-dialog" role="status"><div class="empty-icon" style="margin-bottom:12px;background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-hourglass-medium"></i></div><h4>Waiting for Ms. Reyes</h4>' +
-    '<p>Your request to join Science 4 was sent. Your teacher will say yes soon. You can close this and come back.</p>' +
-    '<span class="badge badge-queued"><i class="ph ph-clock"></i> Waiting for approval</span>' +
-    '<div class="actions"><button class="btn btn-secondary" type="button">Back to Home</button></div></div></div>';
-}
-
-function crPhonesPreview() {
-  const status = '<div class="phone-status"><span>9:41</span><span>Hub</span></div>';
-  const bottom = active => '<nav class="bottom-nav" aria-label="Class sections">' +
-    [['stream', 'ph-chat-circle-dots', 'Stream'], ['classwork', 'ph-notebook', 'Classwork'], ['quizzes', 'ph-timer', 'Quizzes'], ['ai', 'ph-sparkle', 'AI Tutor']].map(n =>
-      '<button class="bn-item' + (n[0] === 'ai' ? ' ai' : '') + (active === n[0] ? ' active' : '') + '" type="button"><span class="bn-pill"><i class="' + (active === n[0] ? 'ph-fill ' : 'ph ') + n[1] + '"></i></span>' + n[2] + '</button>').join('') + '</nav>';
-  const home = '<div class="phone cr-phone">' + status + '<div class="app-bar"><button aria-label="Open menu"><i class="ph ph-list"></i></button><h3>L.A.R.A.</h3><button aria-label="Join a class"><i class="ph ph-plus"></i></button></div>' +
-    '<div class="phone-body"><div class="cr-greet"><h3>Magandang umaga, Ana!</h3><p>2 things to turn in this week.</p></div>' +
-    '<section class="cr-panel"><header><h4>Due soon <span class="count-dot">2</span></h4><button class="cr-icon" type="button" aria-label="Expand due soon"><i class="ph ph-arrows-out-line-vertical"></i></button></header></section>' +
-    '<section class="cr-panel"><header><h4>Classes</h4><button class="cr-link" type="button"><i class="ph ph-plus"></i>Join</button></header>' + crCard(CR_CLASSES[0], 0) + '</section></div></div>';
-  const stream = '<div class="phone cr-phone">' + status + '<div class="app-bar"><button aria-label="Back to Home"><i class="ph ph-arrow-left"></i></button><h3>Science 4<small>Grade 4 - Rizal</small></h3><button aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></div>' +
-    '<div class="phone-body"><div class="cr-banner"><span class="cr-subj" aria-hidden="true"><i class="ph ph-flask"></i></span><h2>Science 4</h2><p>Grade 4 - Rizal</p></div>' +
-    '<article class="cr-post"><header class="cr-post-head"><span class="avatar">MR</span><div class="who"><strong>Ms. Reyes</strong><small>Oct 5, 2:15 PM</small></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></header>' +
-    '<div class="cr-post-body">Good morning, class! Please read Handout #2 before Friday. You can do it!</div>' +
-    '<div class="cr-attach"><span class="tile material"><i class="ph ph-book-open"></i></span><div><strong>Handout #2</strong><small>Saved on this device</small></div></div></article></div>' + bottom('stream') + '</div>';
-  const cw = '<div class="phone cr-phone">' + status + '<div class="app-bar"><button aria-label="Back to Home"><i class="ph ph-arrow-left"></i></button><h3>Science 4<small>Grade 4 - Rizal</small></h3><button aria-label="More options"><i class="ph ph-dots-three-vertical"></i></button></div>' +
-    '<div class="phone-body" style="gap:0"><div class="cr-cw-actions" style="margin-bottom:0"><button class="btn btn-secondary btn-pill" type="button"><i class="ph ph-clipboard-text"></i> Your work</button><button class="cr-link" type="button">Collapse all</button></div>' +
-    '<div class="cr-topic"><h4 style="font-size:18px">Week 5: Plants</h4><i class="ph ph-caret-up" style="font-size:20px"></i></div>' +
-    '<button class="cr-row" type="button"><span class="tile quiz"><i class="ph ph-timer"></i></span><span class="main"><strong>Pagsusulit #2</strong><small>Due Fri, Oct 9, 8:00 AM</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button>' +
-    '<button class="cr-row" type="button"><span class="tile"><i class="ph ph-notebook"></i></span><span class="main"><strong>Draw and label a leaf</strong><small>Due Mon, Oct 12</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button>' +
-    '<button class="cr-row" type="button"><span class="tile material"><i class="ph ph-book-open"></i></span><span class="main"><strong>Handout #2</strong><small>Saved on this device</small></span><i class="ph ph-caret-right" style="font-size:20px"></i></button></div>' + bottom('classwork') + '</div>';
-  return '<div class="cr-phones" data-role="learner"><div class="cr-phone-wrap">' + home + '<span>Home</span></div><div class="cr-phone-wrap">' + stream + '<span>Stream</span></div><div class="cr-phone-wrap">' + cw + '<span>Classwork</span></div></div>';
-}
-
-/* Code shared by a component page and the screens that use it */
-const CR_CARD_REACT = `export function ClassCard({ c, onOpen }: { c: ClassSummary; onOpen: () => void }) {
+/* ---------------------------- Screen previews ---------------------------- */
+const CR_CARD_REACT = `export function ClassCard({ c, role, onOpen }: { c: ClassSummary; role: Role; onOpen: () => void }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-lara-border bg-white shadow-card hover:shadow-card-hover">
-      <header className="relative min-h-[104px] bg-lara-primary-dark p-4 text-white">
-        <h3 className="pr-[76px] text-[22px] font-black leading-tight">{c.name}</h3>
-        <p className="text-sm font-bold">{c.section}</p>
-        <span className="absolute right-3.5 top-3.5 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-2xl">{c.icon}</span>
-        <Avatar name={c.teacher} className="absolute -bottom-7 right-4 h-[60px] w-[60px] border-[3px] border-white" />
-      </header>
-      <button onClick={onOpen} className="flex-1 px-4 pb-3 pt-5 text-left text-sm font-semibold text-lara-ink-2">
-        {c.nextDue ? <DueLine item={c.nextDue} /> : 'Nothing due yet. Take a break!'}
+    <article className="group relative flex min-h-[232px] flex-col gap-3.5 rounded-2xl border border-lara-border bg-white p-5 shadow-card
+      hover:border-lara-primary hover:shadow-card-hover focus-within:border-lara-primary">
+      <div className="flex items-center justify-between">
+        <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-lara-primary-dark text-3xl text-white" aria-hidden>{c.icon}</span>
+        <IconButton className="relative z-10 -mr-2 -mt-2" label={'More options for ' + c.name} icon={<DotsThreeVertical />} />
+      </div>
+      <button onClick={onOpen} className="text-left after:absolute after:inset-0 after:rounded-2xl">
+        <strong className="block text-2xl font-black leading-[30px]">{c.name}</strong>
+        <span className="mt-0.5 block text-sm font-bold text-lara-ink-2">{c.section}</span>
       </button>
-      <footer className="flex items-center gap-1 border-t border-lara-border py-1 pl-4 pr-2">
-        <SyncBadge state={c.cacheState} />
-        <span className="flex-1" />
-        <IconButton label={'Your work in ' + c.name} icon={<ClipboardText />} />
-        <IconButton label={'More options for ' + c.name} icon={<DotsThreeVertical />} />
+      <StatusPill tone={c.pending ? 'amber' : 'green'} icon={c.pending ? <Timer /> : <CheckCircle />}>{c.statusText}</StatusPill>
+      <footer className="mt-auto flex items-center justify-between border-t border-lara-border pt-3.5 text-[13px] font-extrabold text-lara-ink-2">
+        {role === 'learner' ? <span className="flex items-center gap-2"><Avatar size="sm" name={c.teacher} />{c.teacher}</span>
+                            : <span className="flex items-center gap-2"><Users size={20} />{c.learners} learners</span>}
+        <span className="flex items-center gap-1.5 text-sm font-black text-lara-primary-dark" aria-hidden>Open <ArrowRight /></span>
       </footer>
     </article>
   );
 }`;
-const CR_CARD_KOTLIN = `@Composable
-fun ClassCard(c: ClassSummary, onOpen: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .laraShadow(2.dp, LaraShapes.large)
-            .clip(LaraShapes.large)
-            .background(Color.White)
-            .border(1.dp, LaraColors.Border, LaraShapes.large),
-    ) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 104.dp).background(LaraColors.PrimaryDark).padding(16.dp)) {
-            Column(Modifier.padding(end = 76.dp)) {
-                Text(c.name, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Text(c.section, color = Color.White, style = MaterialTheme.typography.labelLarge)
-            }
-            SubjectIcon(c.icon, Modifier.align(Alignment.TopEnd))
-        }
-        Text(
-            c.nextDue ?: "Nothing due yet. Take a break!",
-            Modifier.clickable(onClick = onOpen).heightIn(min = MinTouchTarget).padding(16.dp),
-            color = LaraColors.TextSecondary,
-        )
-    }
-}`;
+const CR_CARD_KOTLIN = `// The phone version of the class card is supplied separately.`;
 const CR_POST_REACT = `function Post({ post }: { post: StreamPost }) {
   return (
-    <article className="mb-4 overflow-hidden rounded-2xl border border-lara-border bg-lara-canvas">
-      <header className="flex items-center gap-3 p-4 pb-2">
+    <article className="mb-4 overflow-hidden rounded-xl bg-lara-subtle">
+      <header className="flex items-center gap-4 py-4 pl-6 pr-2 pb-2">
         <Avatar name={post.author} />
-        <div className="flex-1">
-          <h3 className="text-[15px] font-black">{post.author}</h3>
-          <p className="text-xs font-bold text-lara-ink-2">{post.when}, from Classroom Wi-Fi Hub</p>
-        </div>
-        <SyncBadge state={post.syncStatus} />
+        <div className="flex-1 text-sm font-black">{post.author}
+          <small className="block text-[13px] font-bold text-lara-ink-2">{post.when}</small></div>
+        <IconButton label="Announcement options" icon={<DotsThreeVertical />} />
       </header>
-      <p className="px-4 pb-3.5 text-[15px] font-semibold leading-relaxed">{post.body}</p>
+      <p className="px-6 pb-4 pt-1 text-sm font-bold">{post.body}</p>
       {post.commentsEnabled ? <Comments postId={post.id} /> : <CommentsOffNote />}
     </article>
   );
-}`;
-const CR_POST_KOTLIN = `@Composable
-fun StreamPostCard(post: StreamPost, onComment: (String, String) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(LaraShapes.large)
-            .background(LaraColors.Canvas)
-            .border(1.dp, LaraColors.Border, LaraShapes.large),
-    ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            LaraAvatar(post.author)
-            Column(Modifier.weight(1f)) {
-                Text(post.author, style = MaterialTheme.typography.labelLarge)
-                Text(post.whenText + ", from Classroom Wi-Fi Hub", style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-            }
-            SyncBadge(post.syncStatus)
-        }
-        Text(post.body, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodyLarge)
-        if (post.commentsEnabled) Comments(post.id, onComment) else CommentsOffNote()
-    }
-}`;
+}
+
+// New classwork is a 72px one-line row: a 40px type circle, "Ms. Reyes posted a new quiz: ...", the date and a kebab.`;
+const CR_POST_KOTLIN = `// The phone version of the stream post is supplied separately.`;
 
 /* ---------------------------- The screens group ---------------------------- */
 const CR_GROUP = { name: 'Classroom Screens', items: [
 {
-  id: 'screen-home', title: 'Home and app shell', icon: 'house', wide: true, screen: true,
-  desc: 'The frame every screen sits in: a top bar, a class drawer that stays put, and a white content sheet. Home follows Google Classroom, with a friendly greeting, a Due soon panel and a grid of class cards.',
-  preview: crHomePreview(),
-  react: `export function AppShell({ drawer, children }: Props) {
-  return (
-    <div className="min-h-screen bg-lara-canvas text-lara-ink">
-      <TopBar />
-      <div className="grid grid-cols-[260px_1fr]">
-        <nav aria-label="Classes" className="px-3 pb-5">{drawer}</nav>
-        <main className="min-h-[520px] rounded-tl-3xl border-l border-t border-lara-border bg-white">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+  id: 'screen-remake', title: 'Remake: Home, Stream and Quiz (desktop)', icon: 'browsers', wide: true, screen: true, tag: 'REMAKE',
+  desc: 'The remade desktop screens: Home, class Stream and the timed quiz (learner and teacher). Layout and sizes were measured in Google Classroom at 1440px, then dressed in L.A.R.A tokens with a look of its own. Switch between learner and teacher, change the state, open a class, post an announcement, comment, and open the quiz row on the Stream. The same screens run full window in prototype.html.',
+  preview: rmApp(),
+  react: `// Desktop prototype only. React code follows once the layout is approved.`,
+  kotlin: `// The phone version is supplied separately.`,
+  dos: ['Keep the Classroom structure: a top bar, a class drawer, a white sheet, then Stream, Classwork, People (and Grades for teachers).', 'Show the Hub status in the top bar, as words and an icon, never color alone.', 'Let a learner comment, but only a teacher post an announcement.', 'Take the AI out of the quiz screen completely, and keep the timer on the class clock.'],
+  donts: ['Do not add a Calendar or Drive entry: both are out of scope.', 'Do not put the class code where a learner can see it.', 'Do not add an AI tutor entry to these screens until the Lead decides where it lives.'],
+  a11y: ['Tabs, drawer items and icon buttons are real buttons with names, 52px square.', 'The offline banner and the Hub pill carry an icon and words.', 'The announcement dialog is labelled and Cancel closes it.']
 }
 
-export function DrawerItem({ icon, label, sub, active, onClick }: Props) {
-  return (
-    <button onClick={onClick} aria-current={active ? 'page' : undefined}
-      className={'flex min-h-[52px] w-full items-center gap-3 rounded-full px-4 text-left text-sm ' +
-        (active ? 'bg-lara-primary-light font-black text-lara-primary-dark' : 'font-bold text-lara-ink-2 hover:bg-lara-subtle')}>
-      {icon}
-      <span className="flex-1 leading-tight">{label}
-        {sub && <small className="block text-xs font-bold">{sub}</small>}</span>
-    </button>
-  );
-}
-
-${CR_CARD_REACT}`,
-  kotlin: `@Composable
-fun AppShell(drawer: @Composable ColumnScope.() -> Unit, content: @Composable () -> Unit) {
-    val state = rememberDrawerState(DrawerValue.Closed)
-    ModalNavigationDrawer(
-        drawerState = state,
-        drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = LaraColors.Canvas, content = drawer)
-        },
-    ) {
-        Scaffold(
-            containerColor = LaraColors.Canvas,
-            topBar = { LaraTopBar(onMenu = { /* state.open() in a coroutine */ }) },
-        ) { padding -> Box(Modifier.padding(padding)) { content() } }
-    }
-}
-
-@Composable
-fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, sub: String? = null, onClick: () -> Unit) {
-    NavigationDrawerItem(
-        label = {
-            Column {
-                Text(label, fontWeight = if (selected) FontWeight.Black else FontWeight.Bold)
-                if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-            }
-        },
-        icon = { Icon(icon, null) },
-        selected = selected,
-        onClick = onClick,
-        shape = CircleShape,
-        modifier = Modifier.heightIn(min = MinTouchTarget).padding(horizontal = 12.dp),
-        colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = LaraColors.PrimaryLight,
-            selectedTextColor = LaraColors.PrimaryDark,
-            selectedIconColor = LaraColors.PrimaryDark,
-            unselectedContainerColor = Color.Transparent,
-            unselectedTextColor = LaraColors.TextSecondary,
-        ),
-    )
-}
-
-${CR_CARD_KOTLIN}`,
-  dos: ['Keep the top bar, drawer and sheet in the same place on every screen so a learner learns the frame once.', 'Greet the learner by first name and say what is due in one short sentence.', 'Put a subject icon and the teacher avatar on every class card so a younger learner can find a class without reading.', 'Show the Hub beacon in the top bar so a learner knows why a class may be out of date.'],
-  donts: ['Do not add a second navigation bar. The drawer and the class tabs are enough.', 'Do not use a photo or a gradient as a class banner. Use Dark Green with the subject icon.', 'Do not show a learner the class code. Only the teacher sees it.', 'Do not block Home with a loader when the Hub is unreachable. Show the saved classes and the offline banner.'],
-  a11y: ['The drawer is a nav landmark and the current item has aria-current="page".', 'A class card is one link named after the class. The footer icon buttons name the class too.', 'On phones the drawer opens from the menu button, traps focus and closes on Escape or the back gesture.', 'The greeting is a heading, so screen readers can jump to it.']
-},
-{
-  id: 'screen-stream', title: 'Class Stream', icon: 'chat-circle-dots', wide: true, screen: true,
-  desc: 'The first tab of a class. A banner, then an Upcoming card beside the feed of announcements. Teachers also get the class code and an announcement composer, as in Google Classroom.',
-  preview: crStreamPreview(),
-  react: `export function ClassStream({ cls, role, posts }: Props) {
-  return (
-    <div className="p-6">
-      <Banner cls={cls} />
-      <div className="mt-5 grid gap-6 lg:grid-cols-[216px_1fr]">
-        <aside className="grid content-start gap-4">
-          {role === 'teacher' && <ClassCodeCard code={cls.code} />}
-          <UpcomingCard items={cls.upcoming} />
-        </aside>
-        <section aria-label="Stream">
-          {role === 'teacher' && <Composer onOpen={openComposer} />}
-          {posts.length === 0 ? (
-            <EmptyState icon={<ChatCircleDots />} title="No announcements yet"
-              body="When your teacher posts, it shows up here and is saved on this device." />
-          ) : posts.map(p => <Post key={p.id} post={p} />)}
-        </section>
-      </div>
-    </div>
-  );
-}
-
-function Banner({ cls }: { cls: ClassSummary }) {
-  return (
-    <header className="relative flex min-h-[168px] flex-col justify-end rounded-2xl bg-lara-primary-dark px-7 py-6 text-white">
-      <span className="absolute right-5 top-5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white/20 text-[40px]">{cls.icon}</span>
-      <h1 className="text-[34px] font-black leading-tight">{cls.name}</h1>
-      <p className="text-lg font-bold text-lara-primary-light">{cls.section}</p>
-    </header>
-  );
-}
-
-${CR_POST_REACT}`,
-  kotlin: `@Composable
-fun ClassStream(state: StreamState, onPost: () -> Unit, onComment: (postId: String, text: String) -> Unit) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        item { ClassBanner(state.cls) }
-        if (state.isTeacher) item { Composer(onClick = onPost) }
-        item { UpcomingCard(state.upcoming) }
-        if (state.posts.isEmpty()) {
-            item {
-                EmptyState(
-                    icon = PhosphorIcons.Regular.ChatCircleDots,
-                    title = stringResource(R.string.stream_empty_title),
-                    body = stringResource(R.string.stream_empty_body),
-                    action = {},
-                )
-            }
-        }
-        items(state.posts, key = { it.id }) { StreamPostCard(it, onComment) }
-    }
-}
-
-${CR_POST_KOTLIN}`,
-  dos: ['Show a sync badge on every post, and the source label, so it is clear what is saved and what is waiting.', 'Keep comments to one level, like Classroom. A reply box sits under the last comment.', 'Let a teacher turn comments off per post. Show "Comments off" instead of hiding the box.', 'Write empty states as an invitation: say what will appear and that it is saved on this device.'],
-  donts: ['Do not show other learners\' full names or LRNs in comments. Use first names.', 'Do not let learners post to the stream. Only teachers announce; learners comment.', 'Do not use a gradient or photo in the banner.', 'Do not compare learners or show who has not read a post.'],
-  a11y: ['The feed is a labelled region and each post is an article with the author as its heading.', 'The comment box has a visible placeholder and an accessible name, and Send is an icon button with a name.', 'New announcements pushed from the Hub are announced politely, without moving focus.', 'The banner icon is decorative. The class name is the page heading.']
-},
-{
-  id: 'screen-classwork', title: 'Classwork', icon: 'notebook', wide: true, screen: true,
-  desc: 'Topics with a list of work under each, like Classroom. Every row has a type tile, a title, a due date and a status. Tap a row to see a short preview, then open the full instructions.',
-  preview: crClassworkPreview(),
-  react: `export function Classwork({ topics, role }: Props) {
-  return (
-    <div className="mx-auto max-w-[860px] p-6">
-      <div className="mb-2 flex items-center gap-2">
-        {role === 'teacher' && <CreateMenu />}
-        <span className="flex-1" />
-        {role === 'learner' && <Button variant="secondary" pill icon={<ClipboardText />}>View your work</Button>}
-        <Button variant="ghost" icon={<ArrowsInLineVertical />}>Collapse all</Button>
-      </div>
-      {topics.map(t => (
-        <section key={t.id} aria-label={t.title}>
-          <header className="flex min-h-[64px] items-center justify-between border-b-2 border-lara-primary px-1">
-            <h2 className="text-[22px] font-black">{t.title}</h2>
-            <span className="text-[13px] font-extrabold text-lara-ink-2">{t.items.length} items</span>
-          </header>
-          {t.items.map(w => <WorkRow key={w.id} work={w} role={role} />)}
-        </section>
-      ))}
-    </div>
-  );
-}
-
-const tile = { assignment: 'bg-lara-primary-light text-lara-primary-dark', material: 'bg-lara-info-light text-[#0369A1]', quiz: 'bg-lara-warning-light text-[#B54708]' };
-
-function WorkRow({ work, role }: Props) {
-  return (
-    <button className="flex min-h-[72px] w-full items-center gap-3.5 border-b border-lara-border px-1 py-2.5 text-left hover:bg-lara-canvas">
-      <span className={'flex h-11 w-11 items-center justify-center rounded-xl text-[22px] ' + tile[work.kind]}>{work.icon}</span>
-      <span className="flex-1">
-        <strong className="block text-base font-extrabold">{work.title}</strong>
-        <small className="text-[13px] font-bold text-lara-ink-2">{work.posted}</small>
-      </span>
-      <span className="flex items-center gap-2.5 text-sm font-bold text-lara-ink-2">
-        {work.due && <span>{work.due}</span>}
-        <StatusBadge status={work.status} />
-        {work.canSave && <SaveForHome id={work.id} />}
-      </span>
-    </button>
-  );
-}`,
-  kotlin: `@Composable
-fun ClassworkList(topics: List<Topic>, role: Role, onOpen: (String) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 16.dp)) {
-        topics.forEach { topic ->
-            stickyHeader(key = "topic-" + topic.id) { TopicHeader(topic.title, topic.items.size) }
-            items(topic.items, key = { it.id }) { WorkRow(it, role, onClick = { onOpen(it.id) }) }
-        }
-    }
-}
-
-@Composable
-fun TopicHeader(title: String, count: Int) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp).background(Color.White).drawBehind {
-            drawLine(LaraColors.Primary, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 2.dp.toPx())
-        },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-        Text("$count items", style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-    }
-}
-
-@Composable
-fun WorkRow(work: Work, role: Role, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 72.dp).clickable(onClick = onClick).padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        TypeTile(work.kind, work.icon)
-        Column(Modifier.weight(1f)) {
-            Text(work.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(work.dueOrPosted, style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-        }
-        StatusBadge(work.status)
-    }
-}`,
-  dos: ['Group work under topics and let each topic collapse. Keep "Collapse all" in the same place as Classroom.', 'Tint the type tile: green for homework, blue for handouts and videos, amber for quizzes. The icon says the type too.', 'Show "Saved" or "Save for home" on materials so a learner knows what works with no Wi-Fi.', 'Say what happens next in the preview: "You turned this in on time. Well done!"'],
-  donts: ['Do not show "Late" or "Missing" to a learner. Use "Not turned in yet" and keep the red badge for teachers.', 'Do not show a Start button after the due date unless the teacher allows late work.', 'Do not use purple for any work type. Purple is only for the AI tutor.', 'Do not put more than three actions on a row. Use the kebab for the rest.'],
-  a11y: ['Each row is a button with a name like "Homework: Draw and label a leaf, due Mon, Oct 12, to do".', 'The expanded preview uses aria-expanded on its row.', 'Topic headings are real headings so screen reader users can jump between topics.', 'Status is shown with an icon and a word, never color alone.']
-},
-{
-  id: 'screen-people', title: 'People and join requests', icon: 'users', wide: true, screen: true,
-  desc: 'Teacher only. Teachers on top, learners below with a count, the same as Classroom. Learners who entered the class code wait here with Accept and Decline until the teacher decides.',
-  preview: crPeoplePreview(),
-  react: `export function People({ teachers, learners, onAccept, onDecline }: Props) {
-  const pending = learners.filter(p => p.status === 'PENDING_APPROVAL');
-  return (
-    <div className="mx-auto max-w-[860px] p-6">
-      {pending.length > 0 && (
-        <AlertBanner kind="info" icon={<Users />} title={pending.length + ' learners want to join'}>
-          Check that you know them, then accept.
-        </AlertBanner>
-      )}
-      <SectionHead title="Teachers" action={<Button variant="ghost" icon={<Plus />}>Add teacher</Button>} />
-      {teachers.map(t => <PersonRow key={t.id} person={t} />)}
-      <SectionHead title="Learners" count={learners.length + ' learners'} />
-      {learners.map(p => (
-        <PersonRow key={p.id} person={p}>
-          {p.status === 'PENDING_APPROVAL' ? (
-            <>
-              <StatusBadge status="pending" />
-              <Button size="sm" icon={<Check />} onClick={() => onAccept(p.id)}>Accept</Button>
-              <Button size="sm" variant="secondary" onClick={() => onDecline(p.id)}>Decline</Button>
-            </>
-          ) : <StatusBadge status="active" />}
-        </PersonRow>
-      ))}
-    </div>
-  );
-}`,
-  kotlin: `@Composable
-fun PeopleScreen(state: PeopleState, onAccept: (String) -> Unit, onDecline: (String) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(16.dp)) {
-        if (state.pending > 0) {
-            item {
-                AlertBanner(
-                    title = pluralStringResource(R.plurals.learners_want_to_join, state.pending, state.pending),
-                    message = stringResource(R.string.check_then_accept),
-                    icon = PhosphorIcons.Regular.Users,
-                    container = LaraColors.InfoLight,
-                    content = LaraColors.TextPrimary,
-                    border = LaraColors.Border,
-                )
-            }
-        }
-        item { SectionHead(stringResource(R.string.teachers), null) }
-        items(state.teachers, key = { it.id }) { PersonCard(it) }
-        item { SectionHead(stringResource(R.string.learners), state.learners.size.toString()) }
-        items(state.learners, key = { it.id }) { p ->
-            PersonCard(p) {
-                if (p.status == Status.PENDING) {
-                    LaraButton("Accept", onClick = { onAccept(p.id) })
-                    LaraButton("Decline", style = ButtonStyle.Secondary, onClick = { onDecline(p.id) })
-                } else StatusBadge(p.status)
-            }
-        }
-    }
-}`,
-  dos: ['Show pending learners first with Accept and Decline on the row. One tap each, as the PRD asks.', 'Use initials for avatars. Never show a learner photo.', 'On phones show each person as a card, not a table row.', 'Confirm with a toast: "Juan joined Science 4."'],
-  donts: ['Do not show the roster to learners. Learners never see each other\'s names or LRNs here.', 'Do not accept or decline by swipe alone. Use visible buttons.', 'Do not delete a declined learner. Mark them Rejected and keep the record.', 'Do not show an LRN in the list. Open the learner to see it.'],
-  a11y: ['The pending banner is a status region. Accept and Decline name the learner: "Accept Juan Dela Cruz".', 'Status badges carry an icon and a word.', 'Rows are a list; each learner is one list item.', 'The 40px compact buttons are allowed here because this is a teacher table.']
-},
-{
-  id: 'screen-assignment', title: 'Assignment detail and Your work', icon: 'clipboard-text', wide: true, screen: true,
-  desc: 'Instructions on the left and a Your work card on the right, like Classroom. Learners photograph their notebook and turn it in. The card changes with the state: to do, queued, turned in, graded.',
-  preview: crAssignmentPreview(),
-  react: `export function AssignmentDetail({ a, mine }: Props) {
-  return (
-    <div className="grid gap-8 px-7 py-6 lg:grid-cols-[1fr_320px]">
-      <article>
-        <header className="flex items-center gap-4">
-          <TypeTile kind="assignment" size={52} round />
-          <h1 className="flex-1 text-[30px] font-black leading-tight">{a.title}</h1>
-        </header>
-        <p className="mt-2.5 text-sm font-bold text-lara-ink-2">{a.teacher}, posted {a.posted}</p>
-        <p className="mb-4 mt-1.5 border-b border-lara-border pb-4 text-[15px] font-extrabold">
-          {a.points} points &nbsp;|&nbsp; Due {a.due}
-        </p>
-        <p className="max-w-[62ch] text-base font-semibold leading-[1.7]">{a.instructions}</p>
-        {a.attachments.map(f => <AttachmentCard key={f.id} file={f} />)}
-        <ClassComments assignmentId={a.id} />
-      </article>
-      <aside aria-label="Your work" className="grid content-start gap-4">
-        <YourWork a={a} mine={mine} />
-        <PrivateComments assignmentId={a.id} />
-      </aside>
-    </div>
-  );
-}
-
-function YourWork({ a, mine }: Props) {
-  const s = mine.status; // ASSIGNED | QUEUED_FOR_SYNC | TURNED_IN | GRADED
-  return (
-    <section className="grid gap-3.5 rounded-3xl border border-lara-border bg-lara-subtle p-5">
-      <header className="flex items-center justify-between">
-        <h2 className="text-[22px] font-black">Your work</h2>
-        <StatusBadge status={s} />
-      </header>
-      {s === 'GRADED' ? <ScoreNote score={mine.score} max={a.points} note={mine.feedback} /> : <PhotoSlot photo={mine.photo} />}
-      {s === 'ASSIGNED' && <Button size="primary" icon={<Camera />} onClick={openCamera}>Kunan ng litrato</Button>}
-      {(s === 'ASSIGNED' || s === 'QUEUED_FOR_SYNC') && <Button disabled={!mine.photo} onClick={turnIn}>Turn in</Button>}
-      {s === 'TURNED_IN' && <Button variant="secondary" icon={<ArrowCounterClockwise />} onClick={takeBack}>Take it back to edit</Button>}
-      <HelpNote state={s} />
-    </section>
-  );
-}`,
-  kotlin: `@Composable
-fun YourWorkCard(a: Assignment, mine: Submission, onCamera: () -> Unit, onTurnIn: () -> Unit, onTakeBack: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(LaraShapes.extraLarge)
-            .background(LaraColors.SurfaceSubtle)
-            .border(1.dp, LaraColors.Border, LaraShapes.extraLarge)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Your work", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            StatusBadge(mine.status)
-        }
-        when (mine.status) {
-            Status.GRADED -> ScoreNote(mine.score, a.points, mine.feedback)
-            else -> PhotoSlot(mine.photoUri)
-        }
-        if (mine.status == Status.ASSIGNED) {
-            LaraButton("Kunan ng litrato", onClick = onCamera, modifier = Modifier.heightIn(min = 56.dp).fillMaxWidth())
-        }
-        if (mine.status == Status.ASSIGNED || mine.status == Status.QUEUED_FOR_SYNC) {
-            LaraButton("Turn in", enabled = mine.photoUri != null, onClick = onTurnIn, modifier = Modifier.fillMaxWidth())
-        }
-        if (mine.status == Status.TURNED_IN) {
-            LaraButton("Take it back to edit", style = ButtonStyle.Secondary, onClick = onTakeBack)
-        }
-        Text(stringResource(helpFor(mine.status)), style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-    }
-}`,
-  dos: ['Make "Kunan ng litrato" the one primary action while the work is not started, at 56dp.', 'Explain the next step under the buttons: "Take a photo first, then Turn in is ready."', 'When offline, save the photo first, show "Queued for sync", and let the learner leave. It uploads by itself.', 'Praise before correction in the teacher message: "Good job on the labels! Next time, add the veins."'],
-  donts: ['Do not say "Late" or "Missing". Say "Turned in after the due date" only to the teacher.', 'Do not block Turn in when the Hub is unreachable.', 'Do not show a grade without the teacher\'s message when there is one.', 'Do not allow Take it back after the teacher has graded the work.'],
-  a11y: ['Status changes are announced politely: "Queued for sync. It will turn in when you are connected."', 'The photo slot is a button with the name "Add a photo of your notebook page".', 'Private comments say who can see them, in text.', 'Score is read as "45 out of 50", not as a fraction image.']
-},
-{
-  id: 'screen-review', title: 'Review learner work', icon: 'note-pencil', wide: true, screen: true,
-  desc: 'Teacher only. Laid out like Classroom\'s review page: learners on the left, their photo in the middle, a score and a short message on the right. The teacher returns the work with one button.',
-  preview: crReviewPreview(),
-  react: `export function ReviewWork({ assignment, learners, selected, onSelect, onReturn }: Props) {
-  return (
-    <div className="grid min-h-[480px] grid-cols-[240px_1fr_280px]">
-      <nav aria-label="Learners" className="grid content-start gap-1 border-r border-lara-border p-3">
-        <GroupLabel>Turned in ({learners.turnedIn.length})</GroupLabel>
-        {learners.turnedIn.map(p => (
-          <LearnerButton key={p.id} learner={p} active={p.id === selected.id} onClick={() => onSelect(p.id)} />
-        ))}
-        <GroupLabel>Not turned in yet ({learners.waiting.length})</GroupLabel>
-        {learners.waiting.map(p => <LearnerButton key={p.id} learner={p} />)}
-      </nav>
-      <section aria-label={'Work by ' + selected.name} className="flex flex-col gap-3 bg-lara-canvas p-5">
-        <PhotoViewer src={selected.photoUrl} />
-      </section>
-      <aside className="grid content-start gap-3.5 border-l border-lara-border p-4">
-        <ScoreField max={assignment.points} value={selected.score} />
-        <MessageField learner={selected.firstName} suggestions={['Great effort!', 'Please retake the photo']} />
-        <Button icon={<PaperPlaneTilt />} onClick={() => onReturn(selected.id)}>Return to {selected.firstName}</Button>
-      </aside>
-    </div>
-  );
-}`,
-  kotlin: `@Composable
-fun ReviewWork(state: ReviewState, onSelect: (String) -> Unit, onReturn: (String, Int, String) -> Unit) {
-    var score by rememberSaveable(state.selected.id) { mutableStateOf(state.selected.score?.toString().orEmpty()) }
-    var message by rememberSaveable(state.selected.id) { mutableStateOf(state.selected.message) }
-    Column(Modifier.fillMaxSize()) {
-        LearnerStrip(state.learners, state.selected.id, onSelect)
-        PhotoViewer(state.selected.photoUri, Modifier.weight(1f))
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            LaraTextField(value = score, onValueChange = { score = it.filter(Char::isDigit) }, label = "Score out of " + state.points, keyboardType = KeyboardType.Number)
-            LaraTextField(value = message, onValueChange = { message = it }, label = "Short message to " + state.selected.firstName)
-            LaraButton("Return to " + state.selected.firstName, onClick = { onReturn(state.selected.id, score.toIntOrNull() ?: 0, message) })
-        }
-    }
-}`,
-  dos: ['Keep the learner list, photo and score visible together on desktop. On phones show the list as a strip above the photo.', 'Offer one-tap encouraging phrases so a teacher can reply fast.', 'Show photos that arrived from a queue with "Queued, arrived 9:05 AM".', 'Return work with one button and show "Returned to Ana" in a toast.'],
-  donts: ['Do not show other learners\' scores while grading one learner.', 'Do not auto-return when the score field changes.', 'Do not compress or crop the learner\'s photo in the viewer.', 'Do not export or send these photos anywhere off the Hub.'],
-  a11y: ['The learner list is a nav with the current learner marked aria-current.', 'The score field has a label with the maximum: "Score out of 50".', 'Zoom and rotate controls are labelled buttons.', 'Returning work is announced: "Returned to Ana Lopez".']
-},
-{
-  id: 'screen-todo', title: 'To-do', icon: 'check-square', wide: true, screen: true,
-  desc: 'Everything a learner still has to do, across all classes, in the groups Classroom uses: This week, Next week, Later and No due date. The tabs read in friendly words.',
-  preview: crTodoPreview(),
-  react: `export function Todo({ groups, classes }: Props) {
-  const [tab, setTab] = useState<'todo' | 'notYet' | 'done'>('todo');
-  return (
-    <div>
-      <TabBar value={tab} onChange={setTab}
-        tabs={[['todo', 'To do'], ['notYet', 'Not turned in yet'], ['done', 'Done']]} />
-      <div className="mx-auto max-w-[760px] p-6">
-        <Select label="Class" options={['All classes', ...classes]} />
-        {groups.map(g => (
-          <Disclosure key={g.id} defaultOpen={g.items.length > 0}>
-            <Disclosure.Button className="flex min-h-[60px] w-full items-center justify-between px-1 text-[22px] font-black">
-              {g.title}
-              <span className="flex items-center gap-2 text-sm font-extrabold text-lara-ink-2">{g.items.length} <CaretDown /></span>
-            </Disclosure.Button>
-            <Disclosure.Panel>
-              {g.items.map(i => <TodoItem key={i.id} item={i} />)}
-            </Disclosure.Panel>
-          </Disclosure>
-        ))}
-        {groups.every(g => g.items.length === 0) && (
-          <EmptyState icon={<CheckCircle />} title="All caught up" body="Nothing to turn in. Take a break!" />
-        )}
-      </div>
-    </div>
-  );
-}`,
-  kotlin: `@Composable
-fun TodoScreen(state: TodoState, onTab: (TodoTab) -> Unit, onOpen: (String) -> Unit) {
-    Column(Modifier.fillMaxSize()) {
-        PrimaryTabRow(selectedTabIndex = state.tab.ordinal, containerColor = Color.White) {
-            TodoTab.entries.forEach { tab ->
-                Tab(
-                    selected = state.tab == tab,
-                    onClick = { onTab(tab) },
-                    modifier = Modifier.heightIn(min = 56.dp),
-                    text = { Text(stringResource(tab.label), fontWeight = FontWeight.ExtraBold) },
-                    selectedContentColor = LaraColors.PrimaryDark,
-                    unselectedContentColor = LaraColors.TextSecondary,
-                )
-            }
-        }
-        LazyColumn(contentPadding = PaddingValues(16.dp)) {
-            state.groups.forEach { g ->
-                item(key = "g-" + g.id) { GroupHeader(g.title, g.items.size, g.expanded) }
-                if (g.expanded) items(g.items, key = { it.id }) { TodoItemRow(it, onClick = { onOpen(it.id) }) }
-            }
-            if (state.isEmpty) item { EmptyState(PhosphorIcons.Regular.CheckCircle, "All caught up", "Nothing to turn in. Take a break!") {} }
-        }
-    }
-}`,
-  dos: ['Keep Classroom\'s grouping: This week, Next week, Later, No due date. Show the count on every group.', 'Name the tabs in plain words: To do, Not turned in yet, Done.', 'End with a kind line when the list is empty.', 'Open a group by default only when it has items.'],
-  donts: ['Do not show a red count for learners. The badge on the tab is neutral.', 'Do not sort by who is behind. Sort by due date.', 'Do not add a leaderboard or a streak counter.', 'Do not hide Done work. Learners like to look back.'],
-  a11y: ['Tabs follow the tab pattern with arrow keys; the count is part of the group heading.', 'Each group is a disclosure with aria-expanded.', 'Items are links named "title, class, due date".', 'The empty message is a status region.']
-},
-{
-  id: 'screen-join', title: 'Join a class', icon: 'key', wide: true, screen: true,
-  desc: 'A learner types the 6-letter class code, like Classroom. Then the teacher has to say yes, so the next screen explains the wait kindly. Codes show as XXX-XXX and never contain 0, O, 1 or I.',
-  preview: crJoinPreview(),
-  react: `export function JoinClassDialog({ open, onOpenChange, onJoin, name }: Props) {
-  const [code, setCode] = useState('');
-  const clean = code.replace('-', '').toUpperCase();
-  const valid = /^[A-HJ-NP-Z2-9]{6}$/.test(clean);
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-lara-ink/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[min(100%-40px,400px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 shadow-modal">
-          <Dialog.Title className="mb-1.5 text-[22px] font-black">Join class</Dialog.Title>
-          <Dialog.Description className="mb-4 text-[15px] font-semibold leading-relaxed text-lara-ink-2">
-            Ask your teacher for the 6-letter class code, then type it here.
-          </Dialog.Description>
-          <CodeBoxes value={clean} onChange={setCode} groupSize={3} />
-          <p className="mt-2 text-xs font-semibold text-lara-ink-2">You are joining as {name}.</p>
-          <div className="mt-4 flex justify-end gap-2.5">
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button disabled={!valid} onClick={() => onJoin(clean)}>Join</Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
-export function WaitingForApproval({ teacher, className }: Props) {
-  return (
-    <section role="status" className="rounded-3xl bg-white p-6 shadow-modal">
-      <EmptyIcon tone="warning" icon={<HourglassMedium />} />
-      <h2 className="text-[22px] font-black">Waiting for {teacher}</h2>
-      <p className="mb-3 text-[15px] font-semibold text-lara-ink-2">
-        Your request to join {className} was sent. Your teacher will say yes soon. You can close this and come back.
-      </p>
-      <Badge tone="queued" icon={<Clock />}>Waiting for approval</Badge>
-    </section>
-  );
-}`,
-  kotlin: `@Composable
-fun JoinClassDialog(name: String, onJoin: (String) -> Unit, onDismiss: () -> Unit) {
-    var code by rememberSaveable { mutableStateOf("") }
-    val valid = Regex("^[A-HJ-NP-Z2-9]{6}$").matches(code)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = LaraShapes.extraLarge,
-        containerColor = Color.White,
-        title = { Text("Join class", fontWeight = FontWeight.Black) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Ask your teacher for the 6-letter class code, then type it here.", color = LaraColors.TextSecondary)
-                ClassCodeBoxes(value = code, onValueChange = { code = it.uppercase().take(6) })
-                Text("You are joining as " + name + ".", style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-            }
-        },
-        confirmButton = { LaraButton("Join", enabled = valid, onClick = { onJoin(code) }) },
-        dismissButton = { LaraButton("Cancel", style = ButtonStyle.Secondary, onClick = onDismiss) },
-    )
-}`,
-  dos: ['Use six large boxes in two groups of three. Open the letters keyboard and capitalize automatically.', 'Say who has to approve and that the learner can leave. "You can close this and come back."', 'Keep the class code out of any learner screen after joining.', 'Explain a wrong code in one line: "That code does not match a class. Check it with your teacher."'],
-  donts: ['Do not accept 0, O, 1 or I. The codes never contain them.', 'Do not show a spinner that blocks the screen while waiting for approval.', 'Do not tell the learner the teacher declined in red. Say: "Your teacher did not add you. Ask them why."', 'Do not call it "internet". Say "Hub" or "classroom network".'],
-  a11y: ['The dialog traps focus and returns it to the Join button on close.', 'Each code box has an accessible name: "Class code, character 1 of 6".', 'The waiting state is a status region.', 'Paste works across all six boxes.']
-},
-{
-  id: 'screen-mobile', title: 'Phone screens', icon: 'device-mobile', wide: true, screen: true, tag: 'MOBILE',
-  desc: 'The same screens on a learner\'s phone. Classroom puts its class tabs under the top bar. L.A.R.A keeps the top bar and one column of cards, and moves the tabs to a bottom navigation within thumb reach, where Quizzes and the AI Tutor join them.',
-  preview: crPhonesPreview(),
-  react: `// Phone web layout (desktop and Hub portal on small screens)
-export function PhoneClassLayout({ cls, active, children }: Props) {
-  return (
-    <div className="flex h-dvh flex-col bg-lara-canvas">
-      <header className="flex h-16 items-center gap-1 bg-lara-primary-dark px-1 text-white">
-        <IconButton label="Back to Home" icon={<ArrowLeft />} />
-        <h1 className="flex-1 text-lg font-black leading-tight">
-          {cls.name}<small className="block text-xs font-bold text-lara-primary-light">{cls.section}</small>
-        </h1>
-        <IconButton label="More options" icon={<DotsThreeVertical />} />
-      </header>
-      <main className="flex-1 overflow-y-auto p-3">{children}</main>
-      <nav aria-label="Class sections" className="flex h-[68px] items-center justify-around border-t border-lara-border bg-white">
-        {['stream', 'classwork', 'quizzes', 'ai'].map(id => (
-          <BottomNavItem key={id} id={id} active={active === id} ai={id === 'ai'} locked={id === 'ai' && quizActive} />
-        ))}
-      </nav>
-    </div>
-  );
-}`,
-  kotlin: `@Composable
-fun ClassScaffold(cls: ClassSummary, active: ClassTab, quizActive: Boolean, onTab: (ClassTab) -> Unit, content: @Composable (PaddingValues) -> Unit) {
-    Scaffold(
-        containerColor = LaraColors.Canvas,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(cls.name, fontWeight = FontWeight.Black)
-                        Text(cls.section, style = MaterialTheme.typography.bodySmall)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = LaraColors.PrimaryDark, titleContentColor = Color.White),
-            )
-        },
-        bottomBar = {
-            NavigationBar(containerColor = Color.White, modifier = Modifier.height(68.dp)) {
-                ClassTab.entries.forEach { tab ->
-                    val ai = tab == ClassTab.AI
-                    NavigationBarItem(
-                        selected = active == tab,
-                        onClick = { onTab(tab) },
-                        enabled = !(ai && quizActive),
-                        icon = { Icon(if (active == tab) tab.filledIcon else tab.icon, null) },
-                        label = { Text(stringResource(tab.label)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = if (ai) LaraColors.AiLight else LaraColors.PrimaryLight,
-                            selectedIconColor = if (ai) LaraColors.Ai else LaraColors.Primary,
-                        ),
-                    )
-                }
-            }
-        },
-        content = content,
-    )
-}`,
-  dos: ['Use one column of cards and the bottom navigation, so every class tab is within thumb reach.', 'Put the class name and section in the top bar, so the learner always knows where they are.', 'Keep 52dp targets everywhere, and 56dp for primary actions.', 'Disable the AI Tutor item during a quiz and say why when it is tapped.'],
-  donts: ['Do not show tables on phones. Use cards.', 'Do not move the bottom navigation between screens. It stays in the same place on every class screen.', 'Do not put People or Grades on the learner bottom bar. They are teacher screens.', 'Do not load a model on phones under 6 GB. Use the Hub for the tutor.'],
-  a11y: ['The bottom bar is a nav landmark and the current item has aria-current or selected state.', 'Icon-only buttons in the top bar have names.', 'The page respects system font scaling, so rows grow instead of truncating.', 'Back gesture goes up one level: class to Home, never out of the app.']
-}
 ]};
 
 const GROUPS = [
@@ -2582,148 +1818,6 @@ fun ConfirmDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
   a11y: ['Trap focus inside the dialog and return it to the trigger on close.', 'Close on Escape and on the Android back gesture.']
 },
 {
-  id: 'sheet', title: 'Bottom Sheet', icon: 'rows', tag: 'MOBILE',
-  desc: 'A mobile-only surface that slides up for secondary actions such as attachments or sort options.',
-  preview: `<div class="phone"><div class="phone-status"><span>9:41</span><span>LTE</span></div>
-    <div class="app-bar"><button aria-label="Back"><i class="ph ph-arrow-left"></i></button><h3>Handout #2</h3></div>
-    <div class="phone-body">
-      <div class="card card-pad"><h4 style="font-weight:900;font-size:16px">Parts of a Leaf</h4><p style="font-size:13px;color:var(--color-text-secondary);font-weight:600;margin-top:4px">Draw and label the blade, petiole and veins.</p></div>
-      <button class="btn btn-primary btn-block" data-sheet-open="sheet-demo"><i class="ph ph-plus"></i> Add work</button>
-    </div>
-    <div class="sheet-scrim" id="sheet-demo-scrim" data-sheet-close="sheet-demo"></div>
-    <div class="sheet" id="sheet-demo"><div class="sheet-handle"></div>
-      <div class="list-item" style="padding:12px 4px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-camera"></i></div><div class="list-main"><h4>Take a photo</h4><p>Frame your notebook page</p></div></div>
-      <div class="list-item" style="padding:12px 4px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-file-arrow-up"></i></div><div class="list-main"><h4>Upload a file</h4><p>PDF or image</p></div></div>
-      <button class="btn btn-secondary btn-block" style="margin-top:10px" data-sheet-close="sheet-demo">Cancel</button>
-    </div></div>`,
-  react: `// Desktop and web fall back to a Dialog; on small screens use a drawer
-import { Drawer } from 'vaul';
-
-<Drawer.Root>
-  <Drawer.Trigger className="min-h-[52px] px-6 rounded-xl bg-lara-primary text-white font-extrabold">
-    Add work
-  </Drawer.Trigger>
-  <Drawer.Portal>
-    <Drawer.Overlay className="fixed inset-0 bg-lara-ink/45" />
-    <Drawer.Content className="fixed bottom-0 inset-x-0 rounded-t-3xl bg-white px-[18px] pt-3 pb-6 shadow-modal">
-      <div className="mx-auto mb-3.5 h-[5px] w-10 rounded-full bg-slate-300" />
-      {/* list items */}
-    </Drawer.Content>
-  </Drawer.Portal>
-</Drawer.Root>`,
-  kotlin: `@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddWorkSheet(onDismiss: () -> Unit, onCamera: () -> Unit, onUpload: () -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = Color.White,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0xFFCBD5E1)) },
-    ) {
-        Column(Modifier.padding(horizontal = 18.dp).padding(bottom = 22.dp)) {
-            LaraListItem("Take a photo", "Frame your notebook page", PhosphorIcons.Regular.Camera, onClick = onCamera)
-            LaraListItem("Upload a file", "PDF or image", PhosphorIcons.Regular.FileArrowUp, onClick = onUpload)
-            LaraButton("Cancel", style = ButtonStyle.Secondary, modifier = Modifier.fillMaxWidth(), onClick = onDismiss)
-        }
-    }
-}`,
-  dos: ['Keep to four actions or fewer.', 'Support swipe down and tap on scrim to dismiss.'],
-  donts: ['Do not place forms with many fields in a sheet.', 'Do not use on desktop; use a dialog or popover.'],
-  a11y: ['Move focus into the sheet on open.', 'Provide a visible Cancel button in addition to the swipe gesture.']
-}
-]},
-
-/* ----------------------------- CORE CONTROLS ----------------------------- */
-{ name: 'Core Controls', items: [
-{
-  id: 'button', title: 'Button', icon: 'hand-pointing',
-  desc: 'Tactile, high-contrast action triggers with a strict 52px touch target floor for primary learners. A 40px compact size is permitted on teacher desktop screens only.',
-  wide: true,
-  preview: `<div class="stack" style="align-items:center;gap:20px">
-    <div class="row">
-      <button class="btn btn-primary"><i class="ph ph-check"></i><span>Primary</span></button>
-      <button class="btn btn-ai"><i class="ph ph-sparkle"></i><span>Socratic AI</span></button>
-      <button class="btn btn-secondary"><i class="ph ph-download-simple"></i><span>Secondary</span></button>
-      <button class="btn btn-ghost"><span>Ghost</span></button>
-      <button class="btn btn-danger"><i class="ph ph-trash"></i><span>Destructive</span></button>
-      <button class="btn btn-primary" disabled><i class="ph ph-lock"></i><span>Locked</span></button>
-    </div>
-    <div class="row">
-      <button class="btn btn-primary btn-sm"><i class="ph ph-plus"></i><span>Compact</span></button>
-      <button class="btn btn-primary btn-pill"><span>Pill</span><i class="ph ph-arrow-right"></i></button>
-      <button class="btn btn-secondary btn-icon" aria-label="Settings"><i class="ph ph-gear"></i></button>
-      <button class="btn btn-primary btn-icon btn-pill" aria-label="Add"><i class="ph ph-plus"></i></button>
-      <button class="btn btn-primary loading"><i class="ph ph-circle-notch spin"></i><span>Saving</span></button>
-    </div>
-    <div style="width:100%;max-width:360px"><button class="btn btn-primary btn-block"><i class="ph ph-play"></i><span>Start Quiz</span></button></div>
-  </div>`,
-  react: `type Variant = 'primary' | 'ai' | 'secondary' | 'ghost' | 'danger';
-
-const variants: Record<Variant, string> = {
-  primary: 'bg-lara-primary hover:bg-lara-primary-dark text-white',
-  ai: 'bg-lara-ai hover:bg-lara-ai-dark text-white',
-  secondary: 'bg-white text-lara-ink border-lara-border hover:border-lara-ink-2',
-  ghost: 'bg-transparent text-lara-primary-dark hover:bg-lara-primary-light shadow-none',
-  danger: 'bg-lara-danger-light text-lara-danger border-[#FECDCA] hover:bg-[#FECDCA]',
-};
-
-export function Button({ variant = 'primary', size = 'md', loading, icon, children, ...rest }: Props) {
-  return (
-    <button
-      {...rest}
-      disabled={rest.disabled || loading}
-      className={[
-        'inline-flex items-center justify-center gap-2 rounded-xl border-2 border-transparent font-extrabold',
-        'shadow-card active:scale-[0.98] transition-all',
-        'disabled:bg-lara-border disabled:text-lara-ink-3 disabled:shadow-none disabled:cursor-not-allowed',
-        size === 'md' ? 'min-h-[52px] px-[22px] text-[15px]' : 'min-h-10 px-4 text-sm',
-        variants[variant],
-      ].join(' ')}
-    >
-      {loading ? <CircleNotch className="animate-spin" size={20} /> : icon}
-      {children}
-    </button>
-  );
-}`,
-  kotlin: `enum class ButtonStyle { Primary, Ai, Secondary, Ghost, Danger }
-
-@Composable
-fun LaraButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    style: ButtonStyle = ButtonStyle.Primary,
-    icon: ImageVector? = null,
-    loading: Boolean = false,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-) {
-    val colors = when (style) {
-        ButtonStyle.Primary -> ButtonDefaults.buttonColors(LaraColors.Primary, Color.White, LaraColors.Border, LaraColors.TextMuted)
-        ButtonStyle.Ai -> ButtonDefaults.buttonColors(LaraColors.Ai, Color.White, LaraColors.Border, LaraColors.TextMuted)
-        ButtonStyle.Secondary -> ButtonDefaults.buttonColors(Color.White, LaraColors.TextPrimary)
-        ButtonStyle.Ghost -> ButtonDefaults.buttonColors(Color.Transparent, LaraColors.PrimaryDark)
-        ButtonStyle.Danger -> ButtonDefaults.buttonColors(LaraColors.DangerLight, LaraColors.Danger)
-    }
-    Button(
-        onClick = onClick,
-        enabled = enabled && !loading,
-        modifier = modifier.heightIn(min = MinTouchTarget),
-        shape = RoundedCornerShape(12.dp),
-        colors = colors,
-        border = if (style == ButtonStyle.Secondary) BorderStroke(2.dp, LaraColors.Border) else null,
-        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
-    ) {
-        if (loading) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-        else icon?.let { Icon(it, null, Modifier.size(20.dp)) }
-        Spacer(Modifier.width(8.dp))
-        Text(text, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
-    }
-}`,
-  dos: ['Use one primary button per view.', 'Use a verb plus object for labels, such as "Start quiz".'],
-  donts: ['Do not disable a button without explaining why nearby.', 'Do not use Destructive for cancel actions.'],
-  a11y: ['Minimum 52 by 52 touch target on learner screens.', 'Icon-only buttons require aria-label or contentDescription.', 'Loading buttons remain focusable and announce their busy state.']
-},
-{
   id: 'input', title: 'Input and PIN Boxes', icon: 'textbox',
   desc: 'Easy-to-read text fields with 52px height, validation states, a textarea, and large PIN digit boxes for class codes.',
   wide: true,
@@ -3252,21 +2346,21 @@ fun LaraListItem(
 { name: 'Classroom UI', items: [
 {
   id: 'cards', title: 'Classroom Card', icon: 'chalkboard-teacher', wide: true,
-  desc: 'The class card on Home, laid out like Google Classroom: a Dark Green header with the class name, a subject icon and the teacher\'s initials, then what is due, then a footer. Teachers also see the class code.',
-  preview: crSwitch(CR_VIEWS) + '<div class="cr-lite" data-role="learner" style="width:100%"><div class="cr-grid" style="max-width:660px;margin:0 auto">' + crCard(CR_CLASSES[0], 0) + crCard(CR_CLASSES[1], 1) + '</div></div>',
+  desc: 'The class card on Home: a Dark Green subject tile, the class name, a status pill and a footer with the teacher (learners) or the learner count (teachers). The whole card opens the class. Shown for a learner, a learner with nothing due, and a teacher.',
+  preview: rmCardPreview(),
   react: `${CR_CARD_REACT}`,
   kotlin: `${CR_CARD_KOTLIN}`,
-  dos: ['Show the subject icon and the teacher avatar so a younger learner can find a class without reading.', 'Show the next thing due, or one friendly line when nothing is due.', 'Show how much is saved on this device, and a cache bar while lessons download.', 'Show the class code to the teacher only.'],
-  donts: ['Do not vary the header color per subject. Subject identity comes from the title and the icon.', 'Do not use a photo, a theme picture or a gradient in the header.', 'Do not show a learner the class code.', 'Do not put more than two icon buttons in the footer.'],
-  a11y: ['The card is an article. The class name is its heading and the whole card opens the class.', 'Footer icon buttons name the class: "Your work in Science 4".', 'The avatar and subject icon are decorative.', 'The cache bar exposes its value, minimum and maximum.']
+  dos: ['Show the subject icon and the teacher avatar so a younger learner can find a class without reading.', 'Say what is due or to review in one status pill, with an icon and words, and one friendly pill when nothing is.', 'Make the whole card the link, with the kebab above it.', 'Let cards stretch to fill the row (280 wide at least).'],
+  donts: ['Do not vary the tile color per subject. Subject identity comes from the title and the icon.', 'Do not use a photo, a theme picture or a gradient.', 'Do not show the class code on a card.', 'Do not copy Classroom\'s colored header band.'],
+  a11y: ['The card is an article. The class name is its button and the whole card opens the class.', 'The kebab names the class: "More options for Science 4".', 'The tile and the avatar are decorative; the status pill carries an icon and words.', 'Hover and keyboard focus both turn the border Primary Green.']
 },
 {
   id: 'stream', title: 'Stream Announcement', icon: 'chat-circle-dots', wide: true,
-  desc: 'One post in the class Stream: author, date, the Hub as its source, a sync badge, an attachment and one level of comments, as in Google Classroom.',
-  preview: '<div style="width:100%;max-width:640px;margin:0 auto">' + crPost() + '</div>',
+  desc: 'The class Stream feed: a one-line row for new classwork, then an announcement card with one level of comments. Comments show Saved, or Queued for sync when the Hub is unreachable.',
+  preview: rmPostPreview(),
   react: `${CR_POST_REACT}`,
   kotlin: `${CR_POST_KOTLIN}`,
-  dos: ['Show the sync state on every post authored while offline.', 'Keep comments to one level, like Classroom.', 'Let a teacher turn comments off per post and show "Comments off" in the header.', 'Show attachments as cards that say whether they are saved on this device.'],
+  dos: ['Show Queued for sync on every comment written while offline.', 'Keep comments to one level, like Classroom.', 'Show new classwork as a 72px one-line row with a 40px type circle.', 'Open the reply box only after Add comment.'],
   donts: ['Do not auto-play attachments.', 'Do not show comments from other classes.', 'Do not show other learners\' full names or LRNs. Use first names.', 'Do not let learners start a post.'],
   a11y: ['Use an article for each post and a list for comments.', 'The comment box has an accessible name and a Send button with a name.', 'New posts pushed from the Hub are announced politely.']
 },
@@ -3274,11 +2368,11 @@ fun LaraListItem(
   id: 'classwork', title: 'Assignment Card', icon: 'notebook', tag: 'NEW',
   desc: 'A classwork item with due date, points, status and a clear primary action, shared by learners and teachers.',
   wide: true,
-  preview: `<div class="stack" style="max-width:560px;margin:0 auto">
+  preview: `<div class="rm rm-lite" data-role="learner" style="max-width:560px;margin:0 auto"><div class="stack">
     <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div><h4 style="font-weight:900;font-size:16px">Pagsusulit #2: Parts of a Leaf</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Due Fri, Oct 9, 11:59 PM | 20 points | 15 min</p></div></div><span class="badge badge-queued">Not started</span></div><div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-play"></i> Start quiz</button><button class="btn btn-secondary"><i class="ph ph-book-open"></i> Review lesson</button></div></div>
     <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div><h4 style="font-weight:900;font-size:16px">Leaf drawing homework</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Was due Mon, Oct 5 | 10 points</p></div></div><span class="badge badge-neutral"><i class="ph ph-clock"></i> Not turned in yet</span></div><div style="margin-top:16px"><button class="btn btn-primary"><i class="ph ph-camera"></i> Kunan ng litrato</button></div></div>
     <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-check-circle"></i></div><div><h4 style="font-weight:900;font-size:16px">Quiz 1: Living Things</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Graded Sep 28 | 9 / 10</p></div></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Graded</span></div></div>
-  </div>`,
+  </div></div>`,
   react: `type State = 'todo' | 'notYet' | 'done';
 
 export function AssignmentCard({ a }: { a: Assignment }) {
@@ -3394,32 +2488,20 @@ fun AttendanceRow(name: String, mark: Mark?, onMark: (Mark) -> Unit) {
 },
 {
   id: 'navigation', title: 'Navigation', icon: 'sidebar', wide: true,
-  desc: 'Bottom navigation and a 64px top app bar for phones. On desktop, a class drawer with 52px pill items, like Google Classroom. The AI tab is the only purple destination.',
+  desc: 'A class drawer with 48px pill items that folds into a 76px icon rail (menu button), like Google Classroom.',
   preview: `<div class="row" style="align-items:flex-start;gap:28px">
-    <div class="phone"><div class="phone-status"><span>9:41</span><span>LTE</span></div>
-      <div class="app-bar"><button aria-label="Menu"><i class="ph ph-list"></i></button><h3>Science 4</h3><button aria-label="Notifications"><i class="ph ph-bell"></i></button></div>
-      <div class="phone-body"><div class="alert-banner alert-banner-warning" style="padding:10px 12px;font-size:12px"><i class="ph ph-wifi-slash" style="font-size:18px"></i><span>Offline mode. Changes are saved locally.</span></div>
-        <div class="card card-pad" style="font-size:13px;font-weight:700">Good morning class! Please download Handout #2 before leaving today.</div></div>
-      <nav class="bottom-nav" id="bn-demo" aria-label="Primary">
-        <button class="bn-item active"><span class="bn-pill"><i class="ph-fill ph-chat-circle-dots"></i></span>Stream</button>
-        <button class="bn-item"><span class="bn-pill"><i class="ph ph-notebook"></i></span>Classwork</button>
-        <button class="bn-item"><span class="bn-pill"><i class="ph ph-timer"></i></span>Quizzes</button>
-        <button class="bn-item ai"><span class="bn-pill"><i class="ph ph-sparkle"></i></span>AI Tutor</button>
-      </nav></div>
     <div class="side-nav" id="sn-demo" style="max-width:280px;padding:8px">
-      <button class="cr-nav active" type="button" aria-current="page"><i class="ph-fill ph-house"></i><span class="cr-nav-text">Home</span></button>
-      <button class="cr-nav" type="button"><i class="ph ph-clipboard-text"></i><span class="cr-nav-text">To review</span><span class="count-dot">5</span></button>
-      <div class="cr-nav-sec"><i class="ph ph-chalkboard-teacher"></i>Teaching<i class="ph ph-caret-up end"></i></div>
-      <button class="cr-nav" type="button"><span class="cr-dot">S</span><span class="cr-nav-text">Science 4<small>Grade 4 - Rizal</small></span></button>
-      <button class="cr-nav" type="button"><span class="cr-dot">M</span><span class="cr-nav-text">Math 4<small>Grade 4 - Rizal</small></span></button>
-      <div class="cr-nav-sec"><i class="ph ph-toolbox"></i>Class tools</div>
-      <button class="cr-nav" type="button"><i class="ph ph-calendar-check"></i><span class="cr-nav-text">Attendance</span></button>
-      <button class="cr-nav" type="button"><i class="ph ph-usb"></i><span class="cr-nav-text">USB export</span></button>
-      <button class="cr-nav" type="button"><i class="ph ph-archive"></i><span class="cr-nav-text">Archived classes</span></button>
-      <button class="cr-nav" type="button"><i class="ph ph-gear"></i><span class="cr-nav-text">Settings</span></button>
+      <button class="rm-nav active" type="button" aria-current="page"><i class="ph-fill ph-house"></i><span class="t">Home</span></button>
+      <div class="rm-sec"><i class="ph ph-graduation-cap"></i>Teaching<i class="ph ph-caret-up end"></i></div>
+      <button class="rm-nav" type="button"><i class="ph ph-clipboard-text"></i><span class="t">To review</span></button>
+      <button class="rm-nav" type="button"><span class="rm-dot">S</span><span class="t">Science 4<small>Grade 4 - Rizal</small></span></button>
+      <button class="rm-nav" type="button"><span class="rm-dot">M</span><span class="t">Math 4<small>Grade 4 - Rizal</small></span></button>
+      <div class="rm-rule"></div>
+      <button class="rm-nav" type="button"><i class="ph ph-archive"></i><span class="t">Archived classes</span></button>
+      <button class="rm-nav" type="button"><i class="ph ph-gear"></i><span class="t">Settings</span></button>
     </div>
   </div>`,
-  react: `// Desktop drawer (260 wide, pill items)
+  react: `// Desktop drawer (260 wide, 48px pill items). With rail, 76 wide and icons only, the class list hidden.
 export function Drawer({ role, classes, activeId, onSelect }: Props) {
   return (
     <nav aria-label="Classes" className="w-[260px] px-3 pb-5">
@@ -3431,70 +2513,14 @@ export function Drawer({ role, classes, activeId, onSelect }: Props) {
       {classes.map(c => (
         <DrawerItem key={c.id} initial={c.name[0]} label={c.name} sub={c.section} active={activeId === c.id} onClick={() => onSelect(c.id)} />
       ))}
-      {role === 'teacher' && (
-        <>
-          <DrawerSection icon={<Toolbox />} title="Class tools" />
-          <DrawerItem icon={<CalendarCheck />} label="Attendance" onClick={() => onSelect('attendance')} />
-          <DrawerItem icon={<Usb />} label="USB export" onClick={() => onSelect('usb')} />
-        </>
-      )}
+      <hr className="mx-2 my-3 border-lara-border" />
       <DrawerItem icon={<Archive />} label="Archived classes" onClick={() => onSelect('archived')} />
       <DrawerItem icon={<Gear />} label="Settings" onClick={() => onSelect('settings')} />
     </nav>
   );
 }
-
-// Web mobile bottom bar
-export function BottomNav({ items, active, onSelect }: Props) {
-  return (
-    <nav aria-label="Primary" className="h-[68px] bg-white border-t border-lara-border flex justify-around items-center">
-      {items.map(i => (
-        <button key={i.id} onClick={() => onSelect(i.id)} aria-current={active === i.id ? 'page' : undefined}
-          className={'flex flex-col items-center gap-0.5 min-w-16 min-h-[52px] justify-center text-[11px] font-extrabold ' +
-            (active === i.id ? (i.ai ? 'text-lara-ai' : 'text-lara-primary') : 'text-lara-ink-2')}>
-          <span className={'px-[18px] py-0.5 rounded-full ' + (active === i.id ? (i.ai ? 'bg-lara-ai-light' : 'bg-lara-primary-light') : '')}>
-            <i.Icon size={24} weight={active === i.id ? 'fill' : 'regular'} />
-          </span>
-          {i.label}
-        </button>
-      ))}
-    </nav>
-  );
 }`,
-  kotlin: `@Composable
-fun LaraBottomBar(tabs: List<Tab>, selected: Int, onSelect: (Int) -> Unit) {
-    NavigationBar(containerColor = Color.White, modifier = Modifier.height(68.dp)) {
-        tabs.forEachIndexed { i, tab ->
-            val accent = if (tab.isAi) LaraColors.Ai else LaraColors.Primary
-            val accentLight = if (tab.isAi) LaraColors.AiLight else LaraColors.PrimaryLight
-            NavigationBarItem(
-                selected = selected == i,
-                onClick = { onSelect(i) },
-                icon = { Icon(if (selected == i) tab.filled else tab.regular, null, Modifier.size(24.dp)) },
-                label = { Text(tab.label, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = accent, selectedTextColor = accent,
-                    indicatorColor = accentLight,
-                    unselectedIconColor = LaraColors.TextSecondary, unselectedTextColor = LaraColors.TextSecondary,
-                ),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LaraTopBar(title: String, onMenu: () -> Unit, onBell: () -> Unit) {
-    TopAppBar(
-        title = { Text(title, fontWeight = FontWeight.Black) },
-        navigationIcon = { IconButton(onMenu) { Icon(PhosphorIcons.Regular.List, "Menu") } },
-        actions = { IconButton(onBell) { Icon(PhosphorIcons.Regular.Bell, "Notifications") } },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = LaraColors.PrimaryDark, titleContentColor = Color.White,
-            navigationIconContentColor = Color.White, actionIconContentColor = Color.White,
-        ),
-    )
-}`,
+  kotlin: `// Phone navigation is supplied separately.`,
   dos: ['On desktop keep the class drawer in the same place on every screen and fold it behind the menu button below 860px.', 'Keep to four bottom destinations on mobile.', 'Use the Fill icon weight only for the active item.'],
   donts: ['Do not hide the AI tab; during an exam disable it and say why.', 'Do not nest a second level of navigation inside the bottom bar.'],
   a11y: ['Mark the current destination with aria-current="page".', 'Every nav item meets the 52px minimum height.']
@@ -3703,46 +2729,6 @@ fun TutorBubble(fromLearner: Boolean, lesson: String?, text: String) {
   a11y: ['Announce new tutor messages with aria-live="polite".', 'Provide a text label for the typing indicator.']
 },
 {
-  id: 'camera', title: 'CameraX Overlay', icon: 'camera', tag: 'MOBILE', wide: true,
-  desc: 'Viewfinder overlay helping young learners frame handwritten notebook pages, with automatic JPEG compression below 800KB.',
-  preview: `<div class="viewfinder" style="max-width:560px;margin:0 auto"><div class="vf-frame">FRAME NOTEBOOK PAGE HERE</div><div style="margin-top:10px;font-size:11px;opacity:.85">Auto-compress to JPEG under 800KB</div><div class="vf-bar"><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Flash"><i class="ph ph-lightning"></i></button><div class="shutter" role="button" aria-label="Take photo"></div><button class="btn btn-icon btn-pill" style="background:rgba(255,255,255,.18);color:#fff;box-shadow:none" aria-label="Close"><i class="ph ph-x"></i></button></div></div>`,
-  react: `// Web fallback for the teacher hub: file input with capture hint
-<label className="inline-flex items-center gap-2 min-h-[52px] px-6 rounded-xl bg-lara-primary text-white font-extrabold cursor-pointer">
-  <Camera size={20} /> Take photo
-  <input type="file" accept="image/*" capture="environment" className="sr-only"
-    onChange={async e => onPhoto(await compressToJpeg(e.target.files![0], 800 * 1024))} />
-</label>`,
-  kotlin: `@Composable
-fun HomeworkCamera(onCapture: (Uri) -> Unit, onClose: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(LaraColors.TextPrimary)) {
-        AndroidView(factory = { ctx -> PreviewView(ctx) /* bind CameraX Preview + ImageCapture */ }, Modifier.fillMaxSize())
-
-        // Framing guide
-        Box(
-            Modifier.align(Alignment.Center).fillMaxWidth(0.85f).fillMaxHeight(0.7f)
-                .drawBehind {
-                    drawRoundRect(
-                        color = LaraColors.Primary, cornerRadius = CornerRadius(12.dp.toPx()),
-                        style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))),
-                    )
-                },
-            contentAlignment = Alignment.Center,
-        ) { Text("FRAME NOTEBOOK PAGE HERE", color = LaraColors.PrimaryLight, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp) }
-
-        // Shutter
-        Box(
-            Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).size(64.dp)
-                .background(Color.White, CircleShape).border(4.dp, LaraColors.PrimaryLight, CircleShape)
-                .clickable { /* imageCapture.takePicture(...) then compress to <= 800 KB */ }
-                .semantics { contentDescription = "Take photo" },
-        )
-    }
-}`,
-  dos: ['Show a live preview of the compressed result before submit.', 'Offer retake as the most prominent secondary action.'],
-  donts: ['Do not upload full-resolution originals over the school network.'],
-  a11y: ['Shutter has a text label; support volume keys as a hardware shutter.']
-},
-{
   id: 'hub', title: 'Hub Sync Panel', icon: 'broadcast', tag: 'NEW', wide: true,
   desc: 'Shows the LAN connection to the Teacher Hub, the offline queue, and the last successful sync. Designed for classrooms with no internet.',
   preview: `<div class="card card-pad" style="max-width:520px;margin:0 auto">
@@ -3892,7 +2878,7 @@ function renderSection(c) {
       (c.tag ? '<span class="ds-tag' + (c.tag === 'MOBILE' ? ' mobile' : '') + '">' + sentence(c.tag) + '</span>' : '') + '</div>' +
     '<p class="ds-lede">' + c.desc + '</p>' +
     '<div class="ds-head-actions"><button class="ds-chip-btn" type="button" data-copy-link><i class="ph ph-link"></i> Copy link</button></div></header>' +
-    '<div data-toc="Preview and code" data-anchor="preview" style="scroll-margin-top:84px">' +
+    '<div style="scroll-margin-top:84px">' +
     '<div class="ds-tabs" role="tablist" aria-label="View as">' +
       tabs.map((t, i) => '<button class="ds-tab" role="tab" type="button" id="' + c.id + '-tab-' + t[0] + '" data-panel="' + t[0] + '" aria-controls="' + c.id + '-panel-' + t[0] +
         '" aria-selected="' + (i === 0) + '" tabindex="' + (i === 0 ? 0 : -1) + '"><i class="ph ' + t[2] + '"></i>' + t[1] + '</button>').join('') +
@@ -3901,9 +2887,9 @@ function renderSection(c) {
     '<div class="panel" role="tabpanel" id="' + c.id + '-panel-react" aria-labelledby="' + c.id + '-tab-react" data-panel="react" hidden>' + codeBlock('React + Tailwind (TypeScript)', c.react) + '</div>' +
     '<div class="panel" role="tabpanel" id="' + c.id + '-panel-kotlin" aria-labelledby="' + c.id + '-tab-kotlin" data-panel="kotlin" hidden>' + codeBlock('Kotlin (Jetpack Compose, Material 3)', c.kotlin) + '</div>' +
     '</div>' +
-    '<h2 class="ds-h2" data-toc="Guidelines" id="' + c.id + '-guidelines"><i class="ph ph-list-checks"></i>Guidelines</h2>' +
+    '<h2 class="ds-h2" id="' + c.id + '-guidelines"><i class="ph ph-list-checks"></i>Guidelines</h2>' +
     '<div class="ds-rules">' + ruleCard('do', 'Do', 'ph-check-circle', 'ph-check', c.dos) + ruleCard('dont', 'Avoid', 'ph-x-circle', 'ph-x', c.donts) + '</div>' +
-    '<h2 class="ds-h2" data-toc="Accessibility" id="' + c.id + '-a11y"><i class="ph ph-person-simple-circle"></i>Accessibility</h2>' +
+    '<h2 class="ds-h2" id="' + c.id + '-a11y"><i class="ph ph-person-simple-circle"></i>Accessibility</h2>' +
     ruleCard('a11y', 'Build it so every learner can use it', 'ph-person-simple-circle', 'ph-check-circle', c.a11y) +
     pager(c.id) + '</section>';
 }
@@ -3914,19 +2900,19 @@ const PRINCIPLES = [
   ['sparkle', 'Purple means AI', 'Purple appears only on Socratic tutor surfaces, so learners always know who is talking.', true],
   ['shapes', 'Phosphor icons only', 'Regular by default, Fill for the active navigation item, Bold inside checkboxes.'],
   ['text-aa', 'Nunito everywhere', 'Bundled with every app. Never loaded from a CDN.'],
-  ['hand-pointing', 'Big touch targets', '52 minimum, 56 for primary actions and quiz options.'],
+  ['hand-pointing', 'Sizes follow the device', '52 on phones, 40 for desktop buttons like Classroom, 56 for quiz options.'],
   ['eye', 'Never color alone', 'Pair every status color with an icon and a text label.'],
   ['wifi-slash', 'Offline first', 'Every screen has an offline state. Say Hub or classroom network, never internet.']
 ];
 
 const COMPARE = [
-  ['Structure', 'Top bar, class drawer, tabs for Stream, Classwork and People', 'The same, plus Quizzes and Ask L.A.R.A. Teachers also get People and Grades'],
+  ['Structure', 'Top bar, class drawer, tabs for Stream, Classwork and People', 'The same places. Teachers also get Grades and a settings gear. Quizzes open from the Stream'],
   ['Corners', 'Small rounding on cards, large pills on panels', 'Rounder: 16px on cards, 24px on panels, full pills on buttons'],
   ['Color', 'Blue links and tabs on a pale gray page', 'Green on a mint Canvas. Purple only on the AI tutor'],
-  ['Class banner', 'A theme picture or photo', 'Solid Dark Green with a subject icon and the teacher\'s initials'],
-  ['Touch targets', '40px icon buttons', '52px everywhere, 56px for the main action'],
+  ['Class banner', 'A theme picture or photo', 'Solid Dark Green with a big subject icon'],
+  ['Touch targets', '40px buttons and icon buttons', 'The same 40px on desktop, 52px on phones, 56px for quiz options'],
   ['Status words', 'Missing, Turned in late', 'Not turned in yet. Teachers see the exact lateness'],
-  ['Greeting', 'None', 'Magandang umaga, Ana! and one sentence about what is due'],
+  ['Class card', 'Colored header band and a teacher photo', 'A green subject tile, a status pill and the teacher or learner count'],
   ['Offline', 'Needs the internet', 'Hub beacon, Saved badges, Queued for sync. Nothing blocks'],
   ['Classmates', 'Learners can see each other', 'Teacher only. Learners never see other learners\' names or LRNs']
 ];
@@ -3937,7 +2923,7 @@ function renderOverview() {
       (i.tag ? '<span class="ds-tag' + (i.tag === 'MOBILE' ? ' mobile' : '') + '">' + sentence(i.tag) + '</span>' : '') + '</a>').join('') + '</div>').join('');
   return '<section id="doc-overview" class="comp-section" hidden>' +
     '<div class="ov-hero"><div><h1>Built for small hands and no internet.</h1>' +
-    '<p>The design system behind the L.A.R.A. Hub, learner phones and teacher laptops. Solid colors, Nunito, Phosphor icons and 52dp touch targets, all bundled offline.</p>' +
+    '<p>The design system behind the L.A.R.A. Hub, learner phones and teacher laptops. Solid colors, Nunito, Phosphor icons and right-sized touch targets, all bundled offline.</p>' +
     '<div class="cta"><a class="btn btn-light" href="#screen-home"><i class="ph ph-chalkboard-teacher"></i> See the Classroom screens</a>' +
     '<button class="btn btn-line" type="button" data-scroll="ov-areas"><i class="ph ph-squares-four"></i> Browse components</button></div></div>' +
     '<div class="ov-demo" aria-label="Example of the system in use">' +
@@ -3948,18 +2934,18 @@ function renderOverview() {
       '<div class="ov-bubble"><div class="bot"><i class="ph ph-sparkle"></i></div>' +
         '<p>Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?</p></div>' +
     '</div></div>' +
-    '<h2 class="ov-section-title" data-toc="Principles" id="ov-principles">Eight rules every screen follows</h2>' +
+    '<h2 class="ov-section-title" id="ov-principles">Eight rules every screen follows</h2>' +
     '<p class="ov-section-sub">Google Classroom is the structural reference. These rules give it a Filipino school brand.</p>' +
     '<ul class="ov-principles">' + PRINCIPLES.map(p => '<li><span class="ico' + (p[3] ? ' ai' : '') + '"><i class="ph ph-' + p[0] + '"></i></span><div><strong>' + p[1] + '</strong><span>' + p[2] + '</span></div></li>').join('') + '</ul>' +
-    '<h2 class="ov-section-title" data-toc="Classroom layout" id="ov-classroom">Classroom\'s layout, our voice</h2>' +
+    '<h2 class="ov-section-title" id="ov-classroom">Classroom\'s layout, our voice</h2>' +
     '<p class="ov-section-sub">Teachers and learners already know Google Classroom, so every screen keeps its structure: top bar, class drawer, Stream, Classwork, People and the Your work card. We only change how it looks and sounds.</p>' +
     '<div class="scroll-x"><table class="tbl ov-compare"><thead><tr><th scope="col">Part</th><th scope="col">Google Classroom</th><th scope="col">L.A.R.A.</th></tr></thead><tbody>' +
       COMPARE.map(r => '<tr><th scope="row">' + r[0] + '</th><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('') +
     '</tbody></table></div><p style="margin-top:14px"><a class="btn btn-secondary" href="#screen-home"><i class="ph ph-arrow-right"></i> Open the screens</a></p>' +
-    '<h2 class="ov-section-title" data-toc="Components" id="ov-areas">Components</h2>' +
+    '<h2 class="ov-section-title" id="ov-areas">Components</h2>' +
     '<p class="ov-section-sub">Every component has a live preview, React + Tailwind code, Kotlin Compose code, and usage and accessibility guidance.</p>' +
     '<div class="ov-areas">' + areas + '</div>' +
-    '<h2 class="ov-section-title" data-toc="Keeping it in sync" id="ov-sync">Keeping the files in sync</h2>' +
+    '<h2 class="ov-section-title" id="ov-sync">Keeping the files in sync</h2>' +
     '<p class="ov-section-sub">This page is the design. The token files follow it, and a test fails when they drift.</p>' +
     '<ol class="ov-sync">' +
       '<li><span>Change the design here: the token variables and the React and Kotlin code blocks in <code>showcase.html</code>.</span></li>' +
@@ -3984,14 +2970,6 @@ function renderSidebar() {
   document.getElementById('sidebar').innerHTML = h;
 }
 
-function renderToc(sec) {
-  const items = Array.from(sec.querySelectorAll('[data-toc]'));
-  const toc = document.getElementById('toc');
-  toc.innerHTML = '<div class="toc-title">On this page</div><ul class="toc-list">' +
-    items.map((el, i) => '<li><a class="toc-item" href="#" data-toc-index="' + i + '">' + el.dataset.toc + '</a></li>').join('') + '</ul>';
-  toc.querySelectorAll('.toc-item').forEach((a, i) => { a._target = items[i]; });
-}
-
 /* ==========================================================================
    BEHAVIOUR
    ========================================================================== */
@@ -4012,10 +2990,8 @@ function showComponent(id) {
   const c = ALL.find(x => x.id === id);
   document.title = c ? c.title + ' | L.A.R.A. Design System' : OVERVIEW_TITLE;
   document.body.classList.toggle('wide', !!(c && c.screen));
-  renderToc(sec);
   setNav(false);
   window.scrollTo({ top: 0, behavior: 'instant' });
-  spy();
 }
 
 function selectTab(tab, focus) {
@@ -4057,19 +3033,6 @@ function triggerToast(type, titleOverride, descOverride) {
   setTimeout(() => t.remove(), 4000);
 }
 
-/* Which "On this page" entry is current */
-let spyQueued = false;
-function spy() {
-  spyQueued = false;
-  const links = Array.from(document.querySelectorAll('.toc-item'));
-  if (!links.length) return;
-  let cur = 0;
-  links.forEach((l, i) => { if (l._target && l._target.getBoundingClientRect().top <= 140) cur = i; });
-  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = links.length - 1;
-  links.forEach((l, i) => { l.classList.toggle('active', i === cur); if (i === cur) l.setAttribute('aria-current', 'location'); else l.removeAttribute('aria-current'); });
-}
-window.addEventListener('scroll', () => { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spy); } }, { passive: true });
-
 function closeOverlays() {
   document.querySelectorAll('.scrim.open').forEach(x => {
     x.classList.remove('open');
@@ -4100,22 +3063,8 @@ document.addEventListener('click', e => {
   const sc = t.closest('[data-scroll]');
   if (sc) { const el = document.getElementById(sc.dataset.scroll); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
 
-  // On this page
-  const toc = t.closest('.toc-item');
-  if (toc) {
-    e.preventDefault();
-    const target = toc._target;
-    if (target && target.dataset.anchor === 'preview') {
-      const codeTab = target.closest('.comp-section').querySelector('.ds-tab[aria-selected="true"]');
-      if (codeTab) codeTab.focus({ preventScroll: true });
-    }
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return;
-  }
 
   // Demo navs (non-routing)
-  const bn = t.closest('#bn-demo .bn-item');
-  if (bn) { bn.parentElement.querySelectorAll('.bn-item').forEach(x => x.classList.remove('active')); bn.classList.add('active'); return; }
   const sn = t.closest('#sn-demo .cr-nav');
   if (sn) { sn.parentElement.querySelectorAll('.cr-nav').forEach(x => { x.classList.remove('active'); x.removeAttribute('aria-current'); }); sn.classList.add('active'); sn.setAttribute('aria-current', 'page'); return; }
 
@@ -4281,6 +3230,74 @@ function enhance() {
     if (el.classList.contains('chip') && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', el.classList.contains('selected'));
   });
 }
+
+/* Remake slice: Home and Stream behave like a small app (desktop) */
+function rmSync(root) {
+  const s = root.dataset.screen, c = root.dataset.cls, k = CR_CLASSES[+c];
+  root.querySelectorAll('.rm-nav').forEach(n => {
+    const on = n.dataset.id === 'home' ? s === 'home' : n.dataset.id === 'class' && s !== 'home' && n.dataset.cls === c;
+    n.classList.toggle('active', on);
+    if (on) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+  });
+  root.querySelectorAll('[data-rm-name]').forEach(e => { e.textContent = k.name; });
+  root.querySelectorAll('[data-rm-sec]').forEach(e => { e.textContent = k.section; });
+  root.querySelectorAll('[data-rm-icon]').forEach(e => { e.className = 'ph ph-' + k.icon; });
+  root.querySelectorAll('.rm-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === (s === 'stream' ? 'stream' : root.dataset.tab))));
+  root.querySelector('.rm-offhint').hidden = root.dataset.state !== 'offline';
+  root.querySelector('.rm-modal [data-rm="post"]').disabled = root.dataset.state === 'offline';
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-rm], [data-cr-state], [data-cr-role], [data-cr-time]');
+  const root = t && t.closest('.rm') || (t && t.closest('.preview-card') && t.closest('.preview-card').querySelector('.rm'));
+  if (!t || !root) return;
+  if (!t.dataset.rm) { if (t.dataset.crTime) root.dataset.time = t.dataset.crTime; setTimeout(() => rmSync(root), 0); return; }
+  const a = t.dataset.rm;
+  if (a === 'go') {
+    root.dataset.screen = t.dataset.screen;
+    if (t.dataset.cls !== undefined) root.dataset.cls = t.dataset.cls;
+    if (t.dataset.tab) root.dataset.tab = t.dataset.tab;
+    if (t.dataset.screen === 'quiz') rmQuizTeacher(root);
+    if (t.dataset.label) root.querySelector('[data-rm-later]').textContent = t.dataset.label + ' is the next slice';
+    rmSync(root);
+  } else if (a === 'quiz-start') {
+    rmQuizClock(root); root._qAns = []; root._qIdx = 0; root.dataset.qs = 'run'; rmQuizRender(root); rmSync(root);
+  } else if (a === 'quiz-pick') {
+    root._qAns[root._qIdx] = +t.dataset.k; rmQuizRender(root);
+  } else if (a === 'quiz-next' || a === 'quiz-prev') {
+    root._qIdx += a === 'quiz-next' ? 1 : -1; rmQuizRender(root);
+  } else if (a === 'quiz-submit') {
+    rmQuizSubmit(root, false);
+  } else if (a === 'quiz-open') {
+    rmQuizClock(root); root.dataset.qt = 'live'; rmQuizTeacher(root);
+  } else if (a === 'quiz-close') {
+    rmQuizClose(root);
+  } else if (a === 'quiz-reset') {
+    clearInterval(root._qTimer); root._qEnd = 0; root.dataset.qs = 'intro'; root.dataset.qt = 'idle'; rmQuizTeacher(root);
+    root.querySelectorAll('[data-q-time]').forEach(e => { e.textContent = rmFmt(+root.dataset.time || 600) + ' left'; e.closest('.rm-timer').classList.remove('warn', 'crit'); });
+  } else if (a === 'toggle-nav') {
+    const rail = root.dataset.nav !== 'rail'; root.dataset.nav = rail ? 'rail' : ''; t.setAttribute('aria-expanded', String(!rail));
+  } else if (a === 'open-compose') {
+    rmSync(root); root.querySelector('.rm-modal').hidden = false; root.querySelector('.rm-modal textarea').focus();
+  } else if (a === 'close-compose') {
+    root.querySelector('.rm-modal').hidden = true;
+  } else if (a === 'post') {
+    const ta = root.querySelector('.rm-modal textarea'), text = ta.value.trim();
+    if (!text) { ta.focus(); return; }
+    const box = document.createElement('div'); box.textContent = text;
+    root.querySelector('.rm-posts').insertAdjacentHTML('afterbegin', rmAnnouncement('MR', 'Ms. Reyes', 'Just now', box.innerHTML));
+    ta.value = ''; root.querySelector('.rm-modal').hidden = true;
+  } else if (a === 'comment-toggle') {
+    const r = t.closest('.rm-comments').querySelector('.rm-reply'); r.hidden = !r.hidden; if (!r.hidden) r.querySelector('input').focus();
+  } else if (a === 'comment-send') {
+    const inp = t.closest('.rm-reply').querySelector('input'), text = inp.value.trim();
+    if (!text) { inp.focus(); return; }
+    const box = document.createElement('div'); box.textContent = text;
+    const who = root.dataset.role === 'teacher' ? ['MR', 'Ms. Reyes', ''] : ['AS', 'Ana', 'blue'];
+    const badge = root.dataset.state === 'offline' ? '<span class="badge badge-queued"><i class="ph ph-clock"></i> Queued for sync</span>' : '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Saved</span>';
+    t.closest('.rm-comments').querySelector('.rm-add').insertAdjacentHTML('beforebegin', '<div class="rm-comment"><span class="avatar sm ' + who[2] + '">' + who[0] + '</span><div><strong>' + who[1] + '</strong><small>Just now</small> ' + badge + '<br>' + box.innerHTML + '</div></div>');
+    inp.value = '';
+  }
+});
 
 /* ---------- Boot ---------- */
 renderSidebar();

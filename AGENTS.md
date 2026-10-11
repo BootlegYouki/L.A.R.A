@@ -56,7 +56,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
 * **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
-* Canonical values: touch targets 52dp (56dp primary actions and quiz options), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
+* Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
@@ -107,10 +107,10 @@ Rule documents (read the ones for your task):
 
 ## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
-* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference (see section 9 of the design system).
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference: tokens, invariants and accessibility rules are fixed, while the screens are a strong guide, not a pixel spec. Where real development shows something must change, change it, keep the spirit and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference (see section 9 of the design system). The remade desktop screens (Home, Stream, quiz) can be tried in `design-system/prototype.html`.
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
-* **Touch targets:** minimum 52dp, 56dp for primary actions and quiz options. Never rely on color alone: pair status color with an icon and text.
+* **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
 * **Bilingual:** all user-facing text in English and Filipino, no hardcoded strings (`values/strings.xml` + `values-tl/strings.xml`; a JSON dictionary on desktop with runtime toggle).
 * **Every screen** needs an offline state, an empty state and a loading skeleton.
 * **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
@@ -176,7 +176,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 - [ ] Contract, mock hub and tests updated first if the API changed
 - [ ] Build, tests and `verify_invariants.py` pass, output attached
 - [ ] Works with the Hub unreachable (offline state defined)
-- [ ] English and Filipino strings, tokens only, targets at least 52dp
+- [ ] English and Filipino strings, tokens only, targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or foreign LRN reaches a client
 - [ ] AI unavailable during a quiz
 - [ ] Team docs updated

@@ -4,6 +4,8 @@
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
 > Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`.
 
+> **How to read this document: a guide, not a pixel spec.** The tokens, the invariants in section 0 and the accessibility rules are fixed. The screens in section 9, the sizes in them and the prototype (`prototype.html`) show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
+
 ---
 
 ## 0. Read This First (Rules for Agents)
@@ -16,7 +18,7 @@ These rules apply to every UI change. If a request conflicts with them, follow t
 2. **Tokens only.** Use the named tokens in section 1. Do not invent hex values, shades, or opacity-tinted variants of brand colors. The only permitted transparency is the white 20% overlay on dark green headers and the navy scrim on modals and sheets.
 3. **Purple means AI.** `#5145E5` and its variants appear only on Socratic AI surfaces (tutor chat, AI tab, AI buttons, grounding tags). Never use purple for decoration, links, or generic emphasis.
 4. **Phosphor Icons only.** Regular weight by default, Fill only for the active navigation item, Bold only inside checkboxes. Do not mix icon families.
-5. **52 minimum touch target.** Every interactive control on learner-facing screens is at least 52dp (Compose) or 52px (web). Quiz options are at least 56. The 40px compact size is allowed on the Teacher Desktop Hub only.
+5. **Target sizes follow the device.** On phones every interactive control is at least 52dp, and quiz options at least 56dp. On desktop (mouse and keyboard) buttons and icon buttons are 40px, and tabs and drawer items 48px, the same as Google Classroom, with at least 8px between neighbours. Quiz options stay 56 on every device.
 6. **Nunito everywhere.** Bundled locally in the Android app. Never load fonts from a CDN on mobile because the app must work offline.
 7. **Never rely on color alone.** Every status needs an icon and a text label as well as a color.
 8. **Offline first.** Every screen must have a defined offline state. Show sync status with the standard badges and banners. Never describe the classroom connection as "internet"; say "Hub" or "classroom network".
@@ -175,8 +177,8 @@ Each component below has live previews and copy-ready React and Kotlin code in t
 - Variants: Primary (green), AI (purple), Secondary (white, 2px border), Ghost (transparent, dark green text), Destructive (light red fill, red text and border).
 - One Primary per view. Label with a verb plus object ("Start quiz").
 - Disabled: `#E4EAF0` fill with Muted text, and nearby text must explain why. Loading: spinner replaces icon, button stays in place.
-- Icon-only buttons are 52 by 52 (40 by 40 compact) and need an accessible name.
-- Tailwind core: `min-h-[52px] px-[22px] rounded-xl font-extrabold shadow-card active:scale-[0.98]`.
+- Icon-only buttons are 52 by 52 on phones and 40 by 40 on desktop, and need an accessible name.
+- Tailwind core, phone: `min-h-[52px] px-[22px] rounded-xl font-extrabold shadow-card active:scale-[0.98]`. Desktop: `min-h-control px-6 rounded-full font-extrabold` (`control` is 40px in `desktop/tailwind.theme.ts`).
 
 ### 5.2 Inputs
 - 52 minimum height, 2px border, radius 12, label always visible above the field, never placeholder-only.
@@ -232,12 +234,12 @@ Each component below has live previews and copy-ready React and Kotlin code in t
 
 ### 5.12 Classroom UI
 Screen layouts are in section 9. These are the parts they are built from.
-- **Classroom card:** white, 1 px Border, radius 16, `shadow-card`. Header is Dark Green (`#176B36`) and at least 104 high with the class name (Title 22 Black), section and teacher in white, a 44 px subject icon in a white 20% circle at the top right, and a 60 px teacher initials avatar with a 3 px white ring overlapping the bottom edge. Body shows the next one or two things due, or one friendly line. Footer has a Saved badge and 52 px icon buttons. Teachers also see the class code in a Light Green tag with Dark Green text (the old white 20% tag measures 4.0:1 and fails contrast).
-- **Class banner:** Dark Green, at least 168 high, radius 16, class name (34 Black), section (18 Bold, Light Green), a 72 px subject icon in a white 20% circle, a 52 px info button. No picture, no gradient.
-- **Class tabs:** 56 high, 15 ExtraBold, selected is Dark Green text with a 4 px Primary Green bar rounded on top, 1 px Border under the bar. Ask L.A.R.A. is the only purple tab.
-- **Side card (Upcoming, Class code):** white, 1 px Border, radius 16, 16 padding, title 16 Black. Class code is shown large (26 Black) as `K7M-4QX` and only to teachers.
-- **Composer (teacher):** white, 1 px Border, radius 16, at least 68 high, avatar, "Post an announcement to your class", Add button.
-- **Stream post:** Canvas fill, 1 px Border, radius 16. Header: avatar, name, date, source label ("Classroom Wi-Fi Hub") on its own line, Synced or Queued for sync badge, kebab. Attachment card (white, radius 12), one level of comments, a 52 high pill reply box. A teacher can turn comments off per post and the post shows a "Comments off" badge.
+- **Class card:** white, 1 px Border, radius 16, `shadow-card`, 20 padding. A 56 px Dark Green tile with the subject icon, the class name (24 Black), the section, a status pill (Amber or Light Green, icon plus words), then a footer with the teacher or the learner count and "Open". The whole card is the link; hover turns the border Primary Green. Never shows the class code. Layout in 9.3.
+- **Class banner:** Dark Green, 240 high, radius 12, class name (36 Black), section (22 Bold, Light Green), a 120 px subject icon in a white 18% circle, a 40 px info button. No picture, no gradient.
+- **Class tabs:** 48 high, 14 ExtraBold, selected is Dark Green text with a 4 px Primary Green bar rounded on top, 1 px Border under the bar. Learners: Stream, Classwork, People. Teachers add Grades.
+- **Side card (Upcoming, Class code):** white, 1 px Border, radius 12, 16 padding, title 16 Black. The class code is shown large (22 Black, 1 px letter spacing) as `K7M-4QX` and only to teachers.
+- **New announcement (teacher):** a tonal button (Light Green, Dark Green text, 40 high pill) beside a text Repost button. It opens the announcement dialog (9.4). Learners do not post.
+- **Stream post:** Surface Subtle fill, radius 12, no border. Avatar, name, date, kebab; 14 Bold body; one level of comments; a text Add comment button that opens a 40 high pill reply box. Comments show Saved or Queued for sync. New classwork appears as a 72 high one-line row with a 40 px type circle.
 - **Topic header and work row:** topic header is 64 high, Heading 2 (22 Black), item count, caret, 2 px Primary Green rule. A work row is at least 72 high with a 44 px type tile (radius 12): Light Green for homework, Light Blue for handouts and videos, Light Amber for quizzes. Title 16 ExtraBold, a 13 Bold meta line, then due date, status badge and Save for home (learner) or kebab (teacher). An opened row sits on Canvas.
 - **Person row (teacher):** at least 68 high, 40 px initials avatar, name (16 ExtraBold), status badge, Accept and Decline (small) for `PENDING_APPROVAL`.
 - **Assignment card:** icon box, title, meta line (due date, points, duration), status badge, offline-capable primary action. Overdue meta line is red for teachers and neutral for learners, and states the number of days. Do not show Start after the due date unless late work is allowed.
@@ -246,7 +248,7 @@ Screen layouts are in section 9. These are the parts they are built from.
 
 ### 5.13 Navigation
 - **Desktop top bar:** 64 high, Canvas, no border. Menu (52), L.A.R.A. badge, class crumb (name over section), Hub beacon, Join class or Create class (52), account avatar (52).
-- **Desktop drawer:** 260 wide, items 52 high with a full pill shape. Selected is Light Green with Dark Green text and a Fill icon. Red count dots for pending items. Classes show a 32 px initial circle, name and section. Teachers get a **Class tools** group (Attendance, USB export) under their classes. Folds behind the menu button below 860 px.
+- **Desktop drawer:** 260 wide, items 48 high with a full pill shape. Selected is Light Green with Dark Green text. Classes show a 32 px initial circle, name and section. The menu button folds it into a 76 px icon rail. There is no Class tools group: where Export to USB lives is an open decision (9.16). Details in 9.2.
 - **Mobile top app bar:** Dark Green, 64 high, white title (Black) over the section, 52px icon buttons.
 - **Mobile bottom nav:** 68 high, four destinations (Stream, Classwork, Quizzes, AI Tutor), Fill icon and Light Green indicator on the active item, AI Tutor uses purple. Disable the AI tab during an assessment and say why.
 - Mark the current item with `aria-current="page"`.
@@ -254,7 +256,7 @@ Screen layouts are in section 9. These are the parts they are built from.
 ### 5.14 Paperless quiz
 - Quiz card: white, 2px border, radius 16, `shadow-elevated`. Header has the timer pill. Progress is shown as segmented dots (done Primary Green, current Dark Green, pending Border) and text "Question 3 of 5".
 - Options: 56 minimum height, radius 12, 2px border. Selected is Light Green fill with Primary Green border and a filled check icon. Group role is radio.
-- Timer pill: Normal over 5 minutes is Light Green, Warning under 5 minutes is amber, Critical under 1 minute is red. Announce at 5, 1 and 0 minutes only.
+- Timer pill: Normal over 5 minutes is Light Green, Warning at 5 minutes or less is amber, Critical at 2 minutes or less is red (`rules/quiz-and-anti-cheat.md` 2.3). Announce at 5, 2 and 0 minutes only. The desktop quiz screens are in 9.14.
 - Time is synchronized from the Hub clock, never the device clock. Autosave each answer locally on selection. Warn before leaving. Set `FLAG_SECURE` on Android.
 - Results: score ring, encouraging copy regardless of score, per-item review with Correct or Review badge, link each missed item to its lesson page. Never compare a learner with classmates and never use a full-screen red state.
 
@@ -348,95 +350,110 @@ Keep Classroom's English words where people already know them. Change only the o
 
 ## 9. Google Classroom Layout (copy the structure, keep our voice)
 
-Teachers and learners already know Google Classroom. Every L.A.R.A. screen copies the **structure** of the matching Classroom screen, so people find each thing where they expect it, and then says it in L.A.R.A.'s friendly voice (section 7) using L.A.R.A.'s look (sections 1 to 5). Layout is not free design: use the anatomies below. Live, interactive versions of every screen are in the **Classroom Screens** group of `design-system/showcase.html`.
+Teachers and learners already know Google Classroom. Every L.A.R.A. screen copies the **structure** of the matching Classroom screen, so people find each thing where they expect it, and then says it in L.A.R.A.'s friendly voice (section 7) using L.A.R.A.'s look (sections 1 to 5). Layout is not free design: use the anatomies below. Live, interactive versions are in the **Classroom Screens** group of `design-system/showcase.html`, and as a full-window app in `prototype.html`, generated from the showcase by `python3 scripts/build_prototype.py` (a test fails when it is stale). To open it, serve `design-system/` with any static server, for example `python3 -m http.server`, and visit `/prototype.html`. **Home, Stream and the quiz on desktop are the remade screens** (showcase entry "Remake: Home, Stream and Quiz (desktop)"). The first-pass screens were removed from the showcase; each returns when it is remade.
 
-Measurements marked "Classroom" were taken from the learner side of the current Classroom web app (Home, Stream, Classwork, People, assignment detail, To-do, and its phone layout) on a 1810 px wide window, and are given so the proportions can be matched. The teacher side (composer, Create menu, class code card, reviewing work) follows Classroom's documented structure and was not measured. Do not copy its colors, fonts, logo or pictures.
+Measurements marked "Classroom" were read from the computed styles of the current Classroom web app on 2026-10-11, in a 1440 px wide window, for both a learner and a teacher account: Home, Stream, Classwork with its Create menu, the assignment form, the material form, student work with private comments, People, Grades, class settings, the learner's assignment page and To-do. The teacher screens other than Stream are measured but not yet remade (9.15 lists what was found). **Phone layouts were not measured:** a browser shows only Classroom's web layout, so phone screens are derived from these at a narrow width and are supplied separately. Do not copy its colors, fonts, logo or pictures.
+
+**Stage 2 (2026-10-11): do not look like a Classroom clone.** Keep every element where Classroom puts it, but give it L.A.R.A.'s own look: the class card, tonal buttons, the solid Dark Green banner, the Hub pill, status pills, no greeting. Where this section says "L.A.R.A." next to a Classroom measurement, the L.A.R.A. value wins.
 
 ### 9.1 Rules of use
 
 1. **Copy structure, not visuals.** No Google colors, fonts, logos or wordmark. No theme pictures or photos in banners: use Dark Green with a subject icon.
 2. **Same places.** Top bar, class drawer, class tabs, banner, Upcoming card, feed, topics, rows and the Your work card sit where Classroom puts them. Do not move them to be clever.
-3. **Friendlier by default.** Rounder corners, 52 px targets (Classroom uses 40), warm words, an encouraging line on every empty state, no shaming statuses.
+3. **Friendlier by default.** Rounder corners, 52 px targets on phones (desktop copies Classroom's 40), warm words, an encouraging line on every empty state, no shaming statuses.
 4. **Add, never replace.** L.A.R.A. additions (Hub beacon, sync and Saved badges, Quizzes, Ask L.A.R.A., camera, class code approval) go in the places named below. They never push a Classroom element out.
-5. **Roles.** Learners see Stream, Classwork, Quizzes and Ask L.A.R.A. Teachers see Stream, Classwork, Quizzes, People and Grades. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN).
+5. **Roles.** In the remade shell learners see Stream, Classwork and People; teachers also see Grades and the Class settings gear. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN), so a learner's People tab can list teachers only (open question, 9.16). The first pass's Quizzes tab and Ask L.A.R.A. tab are not in the remade shell: where quizzes and the AI tutor are reached is decided with the Classwork slice and the AI entry decision (9.16).
 6. **Every screen** has an offline state, an empty state and a loading skeleton (5.10). Nothing blocks when the Hub is unreachable.
 7. **Teacher features live on Desktop and Mobile, the same set on both** (`AGENTS.md` section 1.4).
+8. **Sizes on desktop follow Classroom** (3.2): 40 px buttons and icon buttons, 48 px tabs and drawer items. Phones keep 52.
 
-### 9.2 App shell (Desktop and Hub portal)
+### 9.2 App shell (desktop)
 
 ```
 +----------------------------------------------------------------------+
-| [menu] [L.A.R.A.] > Science 4                    [Hub] [+] [avatar]  |  top bar, 64
+| [menu] [L.A.R.A.] > Science 4              [Hub pill] [+] [avatar]   |  top bar, 64
 |                    Grade 4 - Rizal                                   |
 +--------------+-------------------------------------------------------+
-| Home         | Stream  Classwork  Quizzes  [People  Grades]  [Ask]   |  class tabs, 56
-| To-do        |-------------------------------------------------------|
-| Enrolled  ^  |                                                       |
+| Home         | Stream  Classwork  People  [Grades]              [gear]|  class tabs, 48
+| Enrolled  ^  |-------------------------------------------------------|
+|  To-do       |                                                       |
 |  Science 4   |   content sheet: white, top-left radius 24            |
-|  Math 4      |                                                       |
-|  ...         |                                                       |
+|  Math 4      |   content is centred, at most 1240 wide               |
 | Archived     |                                                       |
 | Settings     |                                                       |
 +--------------+-------------------------------------------------------+
-   drawer, 260
+   drawer, 260                      [Grades] and [gear] are teacher only
 ```
 
-| Part | Classroom | L.A.R.A. |
+| Part | Classroom (measured at 1440) | L.A.R.A. |
 | :--- | :--- | :--- |
-| Top bar | 64 high, same tint as the page, no border. Menu, logo, class name over section, then add, apps, account | 64 high, Canvas, no border. Menu (52), L.A.R.A. badge, class name over section, Hub beacon, Join class or Create class (52), account avatar (52) |
-| Drawer | 300 wide, items 48 high, full pill shape, selected pill filled | 260 wide, items 52 high, full pill, selected is Light Green with Dark Green text and a Fill icon. Rows: Home, To-do (learner) or To review with a red count (teacher), Enrolled or Teaching with a collapse caret, one row per class (initial in a 32 px circle, name, section), Class tools (teacher only: Attendance, USB export), Archived classes, Settings |
-| Content sheet | White panel beside the drawer, starts under the top bar | White, top-left radius 24, 1 px Border on the top and left edges |
-| Class tabs | 48 high, 14 Medium, selected is blue with a 2 px bar | 56 high, 15 ExtraBold, selected is Dark Green with a 4 px Primary Green bar rounded on top. Learners: Stream, Classwork, Quizzes. Teachers add People and Grades |
-| Ask L.A.R.A. | (none) | Purple item at the right end of the tab bar, learners only. It opens the AI drawer (5.15). The 60 px AI button (5.15) stays on screens without a tab bar (Home, To-do). Both are disabled with an explanation during a quiz |
+| Top bar | 64 high, same tint as the page. Menu, logo, class name over section, then apps and account | 64 high, Canvas, no border. Menu (40), L.A.R.A. badge, class name over section (after a caret, class pages only), Hub pill, Join class or Create class (+), account avatar |
+| Hub pill | (none) | 36 high pill: "Connected to Hub" (Light Green, broadcast icon) or "Not connected to Hub" (Amber, wifi-slash icon). Always icon and words |
+| Drawer, open | 300 wide, items 48 high, full pill, selected pill filled | 260 wide, items 48 high, full pill, selected is Light Green with Dark Green text. Rows: Home, a section header (Enrolled for learners, Teaching for teachers, graduation-cap icon, collapse caret), To-do (learner) or To review (teacher), one row per class (initial in a 32 px circle, name, section), a rule, Archived classes, Settings |
+| Drawer, rail | The menu button folds the drawer into a 76 wide icon rail: Home, the section icon, To-do or To review, Archived, Settings. The class list is hidden | Same. The menu button toggles it (`aria-expanded`). The sheet grows to fill the space |
+| Content sheet | White panel beside the drawer, under the top bar | White, top-left radius 24, 1 px Border on the top and left edges. Content is centred, at most 1240 wide, with 24 padding |
+| Class tabs | 48 high, 14 Medium, selected is blue with a 2 px bar | 48 high, 14 ExtraBold, selected is Dark Green with a 4 px Primary Green bar rounded on top. Learners: Stream, Classwork, People. Teachers add Grades and, at the right end, a Class settings gear |
+| Not in the shell | Calendar and Drive links, Google apps | Left out on purpose: Calendar and Drive are out of scope (`AGENTS.md` 1.4). There is no "Class tools" group in the drawer: where Export to USB lives is an open decision |
 
-Below 860 px the drawer folds behind the menu button, as in Classroom, and the sheet becomes full width.
+The drawer is hidden below 760 px of width until the phone layouts are supplied (9.12).
 
 ### 9.3 Home
 
 ```
- Magandang umaga, Ana!                       greeting (L.A.R.A. addition)
- You have 2 things to turn in this week.
-
- +- Due soon (2) ------------------------ [collapse] +   panel, radius 24
- | [tile] Pagsusulit #2: Parts of a Leaf   Fri, Oct 9 |
- | [tile] Fractions drill                  Mon, Oct 12 |
- +-----------------------------------------------------+
- +- Classes ------------------------------ + Join class +
- | [card] [card] [card] [card]                          |   grid, 16 gap
- +-----------------------------------------------------+
+ Due soon (2)  [View To-do] [collapse]        learner. Teacher: Recently due
+ +--------------------------------------------------------------+
+ | [tile] Pagsusulit #2: Parts of a Leaf  Science 4   [Fri, Oct 9]|
+ | [tile] Fractions drill                 Math 4      [Mon, Oct 12]|
+ +--------------------------------------------------------------+
+ Classes                                        [+ Join class]
+ +---------------+ +---------------+ +---------------+ +--------+
+ | [tile]     :  | | [tile]     :  | |               | |        |
+ | Science 4     | | Math 4        | |  cards stretch to fill     |
+ | Grade 4 Rizal | |               | |  the row, 280 wide at least|
+ | (status pill) | |               | |                            |
+ | MR Ms. Reyes Open > ...                                        |
+ +---------------+ +---------------+ +---------------+ +--------+
 ```
 
-- **Classroom:** a collapsed pill reading "Due soon" (416 by 64, radius 28) above a "Classes" panel (radius 28, 24 padding). Class cards are 296 by 296, radius 12, 1 px border: a 100 px header, a 72 px teacher photo overlapping the header's bottom edge, an empty body, and a 57 px footer with three 40 px icon buttons.
-- **L.A.R.A.:** keep the order and proportions. Panels have radius 24. Cards are at least 250 wide with radius 16, `shadow-card`, and `shadow-card-hover` on hover.
-  - Header: Dark Green, at least 104 high. Class name (Title 22 Black), section, teacher name. A 44 px subject icon in a white 20% circle at the top right. A 60 px teacher avatar with initials and a 3 px white ring overlapping the bottom edge.
-  - Body: the next one or two things due (icon, title, due date). If there is nothing, one friendly line ("Nothing due yet. Take a break!"). One card may show a cache bar ("Saving lessons for home study: 68%").
-  - Footer: Saved badge, then 52 px icon buttons for Your work and More options.
-  - Teachers also see the class code (`K7M-4QX`) in a Light Green tag with Dark Green text on the header. Learners never see it.
-- **Learner Home** shows Due soon. **Teacher Home** replaces it with "Waiting for you" (work to review, learners asking to join) and shows Create class instead of Join class.
-- The greeting follows the time of day ("Magandang umaga", "Magandang hapon") and uses the first name.
+- **Classroom:** a collapsed "Recently due" or "Due soon" pill above a "Classes" section. Class cards are 257 by 296, radius 12, 1 px border: a 100 px coloured header, a 72 px teacher photo overlapping its bottom edge, an empty body, a 57 px footer with three 40 px icon buttons.
+- **L.A.R.A. keeps the order and drops the look.** Cards are not a copy of Classroom's.
+  - Section headings are 22 Black. The heading row is 56 high with a text link ("View To-do", "View work in progress") and a 40 px collapse button on the right.
+  - **Due soon (learner):** rows with a 44 px type tile, title, class name and a due-date badge (Amber when soon, neutral later). **Recently due (teacher):** a row such as "Handout #2: Parts of a Leaf, 5 turned in, 27 assigned" with a Review button.
+  - **Class card:** white, 1 px Border, radius 16, `shadow-card`, 20 padding, 232 high at least. From the top: a 56 px Dark Green tile (radius 12) with the white subject icon and a 40 px kebab on the right; the class name (24 Black); the section (14 Bold, Secondary); one status pill; a rule; a footer with the teacher's initials avatar and name (learner) or a users icon and "27 learners" (teacher) on the left, and "Open" with an arrow in Dark Green on the right.
+  - **Status pill:** 8 by 12 padding, radius 12, 13 ExtraBold, icon plus words. Amber for something due or to review ("Pagsusulit #2 is due Fri, Oct 9", "5 turned in: Handout #2"), Light Green for "All caught up" or "Nothing to review".
+  - **Behaviour:** the whole card opens the class (a stretched button; the kebab stays above it). On hover or focus the border turns Primary Green and the shadow becomes `shadow-card-hover`.
+  - **Grid:** `repeat(auto-fill, minmax(280px, 1fr))`, 20 gap, so cards stretch to fill the 1240 wide content.
+  - The class code is never on a card.
+  - **No greeting.** The first pass had one; Classroom has none and the line was dropped.
+- **Join class** (learner) or **Create class** (teacher) is a text button with a plus icon at the right of the Classes heading.
+- **States:** *Empty* ("Add a class to get started", one line of help, and a tonal Join class or Create class button, with no class rows in the drawer). *Loading* is flat Surface Subtle blocks the size of the rows and cards. *Offline* adds an Amber banner on top, "Hub not reachable. You are seeing what is saved on this device.", and the Hub pill changes.
 
 ### 9.4 Class: Stream
 
 ```
- +-------------------------------------------------------------+
- | banner: Dark Green, class name 34, section 18, icon, [info]  |
- +----------------+--------------------------------------------+
- | Class code *   | [avatar] Post an announcement ...   [Add] *|   * teacher only
- | Upcoming       | post: avatar, name, date, source, Synced   |
- | - Handout #2   |       text, attachment card                |
- |   View all     |       comments (one level), reply box      |
- +----------------+--------------------------------------------+
+ +--------------------------------------------------------------+
+ | banner: Dark Green, 240 high, name 36, section 22   [Customize]*|
+ |                                  (subject icon)           (i) |
+ +----------------+---------------------------------------------+
+ | Class code *   | [New announcement] * [Repost] *              |   * teacher only
+ | Upcoming       | row: quiz / material / assignment posted     |
+ | View all       | post: avatar, name, date, text               |
+ |                |       comments (one level) [Add comment]     |
+ +----------------+---------------------------------------------+
+   220 wide          24 gap                feed fills the rest
 ```
 
-- **Classroom:** banner 932 by 240 (radius 12, title 36, a round info button at the bottom right). Below it an Upcoming card 196 wide (radius 12, 1 px border, "View all" link) beside a 712 wide feed, 24 apart. Posts have a tinted fill, radius 12, a name and date, a kebab menu, attachment cards (296 by 82) and a comments block ending in a 40 high pill reply box.
+- **Classroom:** banner 932 by 240 (radius 12, title 36, a round info button at the bottom right, a Customize button for teachers). Below it a 220 wide column (class code card, Upcoming card, radius 12, 1 px border) beside a 712 wide feed. A tonal "New announcement" button (40 high pill) and a text "Reuse post" button sit above the feed. New classwork shows as 72 high one-line rows; announcements are cards with a divider and an "Add comment" button.
 - **L.A.R.A.:**
-  - Banner: Dark Green, at least 168 high, radius 16, a 72 px subject icon at the top right, a 52 px info button at the bottom right. No picture.
-  - Left column 216 wide: teacher sees the Class code card (large `K7M-4QX`, a hint that learners must be approved) above Upcoming.
-  - Teacher composer: avatar, "Post an announcement to your class", an Add button. It sits above the first post.
-  - Post card: Canvas fill, 1 px Border, radius 16. Header: avatar, name, date, the source label "Classroom Wi-Fi Hub" on its own line, a Synced or Queued for sync badge, kebab. A teacher can turn comments off per post: show a "Comments off" badge and hide the reply box.
-  - Comments: one level. The reply box is a 52 high pill with a Send icon button.
-  - Below 700 px the left column stacks above the feed.
-  - Empty: "No announcements yet. When your teacher posts, it shows up here and is saved on this device."
+  - **Banner:** Dark Green, 240 high, radius 12, class name 36 Black, section 22 Bold in Light Green, a 120 px subject icon in a white 18% circle at the right, a 40 px info button at the bottom right. No picture. Teachers get a white pill "Customize" at the top right.
+  - **Left column, 220 wide:** teacher sees the **Class code** card first (title 16 Black with a kebab, the code `K7M-4QX` at 22 Black with 1 px letter spacing, a hint that learners must be approved). **Upcoming** card for everyone: the next due item for learners, "No work due soon" for a teacher with nothing, and a View all link. Both cards are white, 1 px Border, radius 12, 16 padding.
+  - **Teacher bar:** a tonal **New announcement** button (Light Green fill, Dark Green text, 40 high pill, pencil icon) and a text **Repost** button. Learners have no bar: they comment, they do not post.
+  - **New announcement dialog:** 640 wide, radius 24, `shadow-modal`, 24 padding, over a dimmed sheet. Title "Announcement" (24 Black), two neutral chips (the class and "All learners"), a text area "Announce something to your class", attach and link icon buttons, Cancel and Post. Post is disabled while the Hub is unreachable, with the hint "Waiting for the Hub. Posting needs the classroom network."
+  - **Classwork rows:** 72 high, Surface Subtle, radius 12, no border. A 40 px circle (Amber for a quiz, Light Blue for a material, Light Green for an assignment), "Ms. Reyes posted a new quiz: Pagsusulit #2" (14 ExtraBold), the date under it, a 40 px kebab. The row opens the work (next slice).
+  - **Announcement card:** Surface Subtle, radius 12, no border. Header: 40 px initials avatar, name, date, kebab. Body 14 Bold. A rule, then comments (one level, 12 gap, a 32 px avatar, first name only), a text **Add comment** button that opens a pill reply box (40 high) with a Send icon button.
+  - **Comment badges:** a comment sent while the Hub is unreachable shows "Queued for sync" (Amber), otherwise "Saved" (Light Green).
+  - **Empty** ("This is where you can talk to your class", plus a line for teachers about announcements and one for learners about what appears here) also shows for any class that has no posts. *Loading* is Surface Subtle blocks. *Offline* adds the same Amber banner as Home.
+  - Below 760 px of width the left column stacks above the feed.
 
 ### 9.5 Class: Classwork
 
@@ -533,14 +550,85 @@ Classroom's phone layout is a top bar, one column of cards, and the class tabs u
 
 | Classroom screen | L.A.R.A. screen | Showcase entry | What L.A.R.A. adds |
 | :--- | :--- | :--- | :--- |
-| Home, class cards | Home with Due soon and class cards (5.12) | Home and app shell | Greeting, Hub beacon, Saved badge, cache bar |
-| Stream tab | Stream (5.12) | Class Stream | Sync badges, source label, comments off |
-| Classwork tab | Classwork | Classwork | Save for home, offline-capable actions, Quizzes |
-| People tab | People (teacher only) | People and join requests | Pending approval with Accept and Decline |
-| Assignment and Turn in | Assignment detail with camera | Assignment detail and Your work | Photo queued as `QUEUED_FOR_SYNC`, kind helper text |
-| Student work | Review learner work | Review learner work | Encouraging message phrases, queued arrivals |
-| To-do | To-do | To-do | Friendly tab names |
-| Join class | Join a class and waiting | Join a class | Class code format, approval wait |
-| Quiz (Google Forms) | Paperless quiz (5.14) | Paperless Quiz | Shared countdown, auto-submit, no AI |
+| Home, class cards | Home with Due soon or Recently due and class cards (9.3, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, status pills, offline banner |
+| Stream tab | Stream (9.4, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, Queued for sync comments, empty and offline states |
+| Classwork tab | Classwork | (not in the showcase yet) | Save for home, offline-capable actions, Quizzes |
+| People tab | People (teacher only) | (not in the showcase yet) | Pending approval with Accept and Decline |
+| Assignment and Turn in | Assignment detail with camera | (not in the showcase yet) | Photo queued as `QUEUED_FOR_SYNC`, kind helper text |
+| Student work | Review learner work | (not in the showcase yet) | Encouraging message phrases, queued arrivals |
+| To-do | To-do | (not in the showcase yet) | Friendly tab names |
+| Join class | Join a class and waiting | (not in the showcase yet) | Class code format, approval wait |
+| Quiz (Google Forms) | Quiz (9.14, 5.14) | Remake: Home, Stream and Quiz (desktop) | Shared countdown, auto-submit, no AI, queued submission, teacher monitor |
 | Grades tab | Grades and gradebook | Gradebook Table | Points, USB export |
 | (none) | Socratic AI tutor (5.15) | Socratic AI Tutor | Purple surfaces only, grounding tag, locked during quizzes |
+
+The first-pass screens for the rows marked "not in the showcase yet" were removed from the showcase because they no longer matched the remade look. Their section 9 text is still the starting point, and each screen returns to the showcase when it is remade (measurements in 9.15). The phone screens return when they are supplied.
+
+### 9.14 Quiz (desktop)
+
+Classroom has no timed quiz (it hands off to Google Forms), so this screen is L.A.R.A.'s own. It sits in the remade shell and reuses the paperless-quiz rules (5.14 and `rules/quiz-and-anti-cheat.md`). It opens from the "posted a new quiz" row on the Stream. Building a quiz comes with the Classwork screens.
+
+**Learner**
+
+```
+ <- Back to Stream
+ +-----------------------------------------------+      intro: card, 760 wide, 2 px border, radius 16
+ | Pagsusulit #2: Parts of a Leaf                |
+ | [5 questions] [10 minutes] [Science 4]       |
+ | - one timer for the whole quiz ...            |
+ | - if the Wi-Fi drops, keep going ...          |
+ | - Ask L.A.R.A. is off until you submit        |
+ |                              [Start quiz]     |
+ +-----------------------------------------------+
+ running: [title]                  [timer 04:50 left]     drawer hidden, no tabs
+          [=====][-----][-----][-----][-----]   Question 1 of 5
+          What gives a leaf its green color?
+          ( ) Stomata   (x) Chlorophyll   ...                 options 56 high
+          [Previous]                              [Next | Submit]
+ done:    score ring, "Your answers are in", Saved or Queued for sync badge, [Back to Stream]
+```
+
+- **Intro:** title (24 Black), three neutral badges (questions, minutes, class), three lines with icons (one timer for the whole quiz and no pausing, answers saved on the device if the Wi-Fi drops, Ask L.A.R.A. is off until you submit), and a Primary **Start quiz** button. The 40 px desktop button rule applies; options are the only 56 px items.
+- **Running:** the drawer and tabs are hidden so nothing pulls the learner away. Header: title and the **timer pill** (36 high, 14 Black, tabular numbers): Light Green over 5 minutes, Amber at 5 minutes or less, Red at 2 minutes or less (`rules/quiz-and-anti-cheat.md` 2.3), always icon and words. Below: segmented progress (done Primary Green, current Dark Green, pending Border), "Question 3 of 5", the question (22 Black), then options as radio buttons (56 high, 2 px Border, radius 12, selected is Light Green with a Primary Green border and a filled check). Previous (disabled on question 1), Next, and Submit on the last question with "3 of 5 answered". Two quiet notes: answers are saved on this device, and Ask L.A.R.A. is off during a quiz.
+- **The AI is not on this screen at all** (not hidden, not disabled): `rules/quiz-and-anti-cheat.md` section 1.
+- **Offline:** the Amber banner reads "Hub not reachable. Keep going: the timer keeps running and your answers are saved on this device." Finishing works the same.
+- **Time up:** the quiz submits itself and the done title reads "Time is up. Your answers were sent in".
+- **Done:** a score ring and an encouraging line whatever the score, a **Saved** badge (Light Green) or **Queued for sync** badge (Amber, offline) and a line that the teacher sees it once the Hub is reachable. The prototype shows a sample "4 of 5". It does not hold the answer key: the real score comes from the Hub, and while the teacher holds scores the receipt carries no score. Per-item review (Correct or Review badges with lesson links, 5.14) is not remade yet.
+
+**Teacher (monitor)**
+
+- Card 960 wide with the title, a status badge (Not started, Live, Closed), the shared **clock** and one action: **Start quiz** (Primary) before it starts, **Close quiz** (Secondary) while live. Closing submits and grades everyone still answering.
+- Three stat tiles (In progress, Submitted, Not started), then one row per learner: 32 px initials avatar, first name and initial, a progress bar with "3 of 5", and a status badge (Answering Amber, Submitted Light Green, Not started neutral).
+- The clock is the class clock: it starts when the teacher presses Start quiz, learners join the same countdown, and it never comes from a device clock (`rules/quiz-and-anti-cheat.md` 2.2). In the prototype one clock is shared in the page.
+- Building a quiz, question images, shuffle and holding scores are not in this slice.
+
+**Prototype controls.** The floating bar has a **Quiz clock starts at** switch (10:00, 4:50, 1:40) so the Amber and Red timer states can be seen without waiting, and a "Restart the demo" link. Neither belongs in the real app.
+
+### 9.15 Measurements for the next slices
+
+Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the screens not remade yet. Sizes are Classroom's; remake them in L.A.R.A.'s look (stage 2 above).
+
+| Screen | What Classroom does |
+| :--- | :--- |
+| Classwork (teacher) | A Create button (40 high pill) with a menu: Assignment, Quiz assignment, Question, Material, Reuse post, Topic. A "Topic filter" select, "Collapse all", then topic sections (22 heading, 2 px rule) of 59 high rows: a 36 px type circle, title, "Posted 2:04 PM", kebab. A new topic shows "Students will see this topic once work is added to it". Learners get a "View your work" button, and a row opens to the instructions, a "View instructions" link and a 296 by 82 attachment card |
+| Create dialogs | Full-window dialog with a close button, type icon and title, a Save-status text and a split Assign button. Left card (960 wide): Title (required), Instructions (optional) with Bold, Italic, Underline, bulleted list, Remove formatting, then "Attach": Drive, YouTube, Create, Upload, Link (48 px circles with captions). Right column (316 wide): For (class), Assign to (All students), Points (100), Due (No due date), Topic (No topic, Create topic, or a topic), Rubric. Material has no points or due date. The Add link dialog has one required Link field |
+| Announcement dialog | 932 wide, radius 8: "Post in <class>", "All students", the text area "Announce something to your class", the same format and attach icons, Cancel and Post |
+| Student work (teacher) | Two tabs, Instructions and Student work. A toolbar: split Return button (disabled until someone is selected), email icon, a points field. Left list 448 wide: All students checkbox, "Sort by status", then groups (Turned in, Assigned) of 64 high rows with avatar, name, the last private comment as a preview, and "__/100". Right panel: counts (1 Turned in, 0 Assigned), an "Accepting submissions" switch, a student filter, then the chosen learner's work with "No grade" at the top right and a **Private comments** block (count, comments with a name and time, an "Add private comment..." pill with a Send icon) |
+| Learner assignment page | Title row with a 40 px icon circle, a 32 title, teacher and time, "100 points", instructions, attachments, "Class comments". Right column 300 wide: **Your work** card (status text, "Add or create", "Mark as done" or "Turn in") and a **Private comments** card ("Add comment to <teacher>", "Private comments are only visible to you and your teachers"). Marking done with no attachment asks "You didn't attach work for ..., so your teacher will just see it's done." After turning in the status is green "Turned in" and the button becomes "Unsubmit" |
+| To-do (learner) | Three tabs (Assigned, Missing, Done), a class filter select, an empty state "Nothing on your to-do list right now / Check back later for new assignments" |
+| People | Teachers and Students sections (28 heading, 2 px rule) each with an Invite icon button. Students: a select-all checkbox, an Actions button, a sort button, 61 high rows with a checkbox, 32 px avatar, name and a kebab. Empty: "Add students to this class" with Invite students |
+| Grades (teacher) | A table: a "Sort by last name" select over the learner column, one column per assignment (due date line, title link, "out of 100", a header menu), a "Class average" row and one row per learner with "__/100" cells. Empty: "This is where you'll view and manage grades". A first-visit dialog explains draft grades for missing work |
+| Class settings | Full-window page of cards: Class Details (name, description, section, levels, subject, room), General (Invite codes with an invite link and class code, Stream: "Students can post and comment" or stricter, Classwork on the Stream, Show deleted items), Grading (draft grade for missing work, overall grade calculation, grade categories). **L.A.R.A. departs:** no Meet link, no categories, and learners cannot post to the Stream |
+
+### 9.16 Open decisions
+
+These need the Lead's answer before the matching screen is built. Nothing above settles them.
+
+1. **White on Primary Green is 3.56:1** against the 4.5:1 rule. The Primary buttons in the prototype (Post, Start quiz, Next, Submit) show the current token. Options: darken the button green (touches the code mirrors and the token test) or use Dark Green for filled buttons.
+2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry.
+3. **Where Export to USB lives** (the Hub window per PRD FR-5.2, or the Grades tab per the first pass).
+4. **Learner People tab:** Classroom shows classmates; L.A.R.A. never shows learners to learners. Teachers only, or no tab?
+5. **Quizzes tab:** the first pass had one; the remake reaches quizzes from the Stream and Classwork (Create, Quiz assignment) like Classroom. Confirm when Classwork is remade.
+6. **Teacher posting while the Hub is unreachable:** the prototype disables Post with a hint. Comments queue, announcements do not.
+7. **Class settings default** for who may post: the prototype assumes learners comment only.
+8. **Filipino strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) need a Filipino-speaking teacher's check.

@@ -85,7 +85,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
    * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the backend must reject AI requests (`HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`).
 5. **Accessibility & Touch Degradation (Grades 1 to 12 Invariant):**
-   * Check for: Clickable elements with touch targets < 52dp (56dp for primary actions and quiz options), hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+   * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
 
 ---
 
