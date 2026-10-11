@@ -1,7 +1,7 @@
 # L.A.R.A Local Hub Server (`server/`)
 
 > **Subsystem Scope:** Teacher Host System & Local Area Network (LAN) Server.  
-> **Deployment:** one Hub per school on a **dedicated, always-on PC wired to the router**, serving every teacher and pupil. The same app also runs on a team laptop for demos.  
+> **Deployment:** one Hub per school on a **dedicated, always-on PC wired to the router**, serving every teacher and learner. The same app also runs on a team laptop for demos.  
 > **Repository Role:** Single source of truth for the offline classroom: serves the captive APK portal, orchestrates live quiz WebSockets, manages the SQLite delta-sync ledger, and runs the multi-slot SLM inference queue.
 
 ---
@@ -12,7 +12,7 @@
 | :--- | :--- |
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`server/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36)). The Lead approves it before Sprint 1 work merges. |
-| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` pupil, `123456789013` pupil (join with the code), `ADMIN-0001`. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` learner, `123456789013` learner (join with the code), `ADMIN-0001`. |
 | 4 | Take the next issue whose dependencies are merged: [all server issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Server). The sprint-by-sprint roadmap is in section 5. |
 | 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so developers can add routes in parallel PRs without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
 | 6 | Before every PR: run the commands in [`server/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `server/docs/`. |
@@ -67,7 +67,7 @@
   * `mdns-sd` registering `_lara._tcp.local` on port 8080.
   * UDP socket broadcasting JSON heartbeat packets to `255.255.255.255:8888` every 3 seconds.
 * **Pluggable SLM Engine:** Child `llama-server` process hosting candidate GGUF models (MiniCPM5-2B, Qwen2.5, Llama 3.2, SmolLM2) with continuous batching (2 to 4 parallel slots) and a WebSocket FIFO queue.
-* **DepEd Report Exporter:** Direct generation of official DepEd Class Record spreadsheets (`.xlsx`) using `rust_xlsxwriter` with automatic detection of mounted USB flash drives across Windows and Linux.
+* **Gradebook Exporter:** Direct generation of gradebook spreadsheets (`.xlsx`, learners by work, points only) using `rust_xlsxwriter` with automatic detection of mounted USB flash drives across Windows and Linux.
 * **Disaster Recovery:** One-click encrypted snapshot backup (`.lara-backup`) to plugged-in USB flash drives.
 
 ---
@@ -134,7 +134,7 @@ server/
 │   │   ├── discovery/                # mDNS responder & UDP beacon
 │   │   ├── routes/                   # Classrooms, Sync, Quizzes, Video stream
 │   │   ├── websocket/                # Realtime event broker & AI streaming
-│   │   ├── services/                 # Auto-grader, DepEd exporter, text chunker
+│   │   ├── services/                 # Auto-grader, gradebook exporter, text chunker
 │   │   ├── ai/                       # llama-server process manager & FIFO queue
 │   │   └── db/                       # SQLx migrations & SQLite schema
 │   └── bin/                          # llama-server pre-compiled binary
@@ -170,7 +170,7 @@ All server issues follow `[SERVER Sprint.Step]`. Each issue names its dependenci
 * **Sprint 4 (Paperless Quiz & Gradebook):**
   * `[SERVER 4.1]`: Quiz broker: synchronized start/close events and time-limit validation ([#11](https://github.com/BootlegYouki/L.A.R.A/issues/11))
   * `[SERVER 4.2]`: Instant auto-grading engine for Multiple Choice, True/False, and Identification questions ([#12](https://github.com/BootlegYouki/L.A.R.A/issues/12))
-  * `[SERVER 4.3]`: One-click DepEd Class Record export (.xlsx/.csv) to plugged-in USB flash drives ([#13](https://github.com/BootlegYouki/L.A.R.A/issues/13))
+  * `[SERVER 4.3]`: One-click gradebook export (.xlsx/.csv) to plugged-in USB flash drives ([#13](https://github.com/BootlegYouki/L.A.R.A/issues/13))
   * `[SERVER 4.4]`: Implement one-click SQLite database backup & restore (.lara-backup) to USB flash drive ([#21](https://github.com/BootlegYouki/L.A.R.A/issues/21))
   * `[SERVER 4.5]`: Implement quiz CRUD, redacted student view and attempt begin ([#61](https://github.com/BootlegYouki/L.A.R.A/issues/61))
 * **Sprint 5 (Socratic AI):**

@@ -33,7 +33,7 @@ All AI agents and contributors must follow these rules.
     ```json
     {"app": "lara", "version": "1.2.0", "name": "Grade 4 - Science", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}
     ```
-  * **Manual Fallback:** All clients must always expose an elementary-friendly input dialog allowing users to type the host IP manually if router client isolation blocks broadcast.
+  * **Manual Fallback:** All clients must always expose an easy-to-use input dialog allowing users to type the host IP manually if router client isolation blocks broadcast.
 
 ---
 
@@ -77,7 +77,7 @@ Operating a multi-client classroom server over local Wi-Fi introduces OS firewal
 
 ### 4.2 Router AP Isolation (Client Isolation) Workarounds
 * Sub-₱1,500 commercial routers or portable pocket Wi-Fi units may ship with "AP Isolation / Client Isolation" enabled, which blocks device-to-device communication and drops UDP broadcast packets (`:8888`).
-* **Countermeasure 1 (Manual IP Fallback):** The mobile and desktop clients must always feature an elementary-friendly manual IP input box so pupils can connect directly via unicast TCP (`http://<hub-ip>:8080`).
+* **Countermeasure 1 (Manual IP Fallback):** The mobile and desktop clients must always feature an easy-to-use manual IP input box so learners can connect directly via unicast TCP (`http://<hub-ip>:8080`).
 * **Countermeasure 2 (Laptop Hotspot Mode):** If a physical router strictly isolates clients and settings cannot be changed, the teacher must use **Windows/Linux Mobile Hotspot** directly from their laptop. Hotspot mode eliminates router client isolation and operates 100% offline.
 
 ### 4.3 Android MulticastLock Requirement (Mobile Client)

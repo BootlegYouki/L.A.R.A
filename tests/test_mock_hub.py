@@ -15,7 +15,7 @@ BASE = f"http://127.0.0.1:{HTTP}"
 CLASSROOM = "c1a2b3c4-0001-4000-8000-000000000001"
 
 QUIZ = {
-    "classroom_id": CLASSROOM, "title": "Ecosystem", "time_limit_minutes": 15, "deped_category": "WRITTEN_WORK",
+    "classroom_id": CLASSROOM, "title": "Ecosystem", "time_limit_minutes": 15,
     "questions": [
         {"question_text": "Gumagawa ng pagkain ang halaman.", "question_type": "MULTIPLE_CHOICE",
          "options": ["Photosynthesis", "Evaporation"], "points": 1, "correct_answer": "Photosynthesis"},

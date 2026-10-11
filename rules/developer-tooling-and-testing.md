@@ -12,10 +12,10 @@ The `contracts/` directory is the single source of truth for all network communi
 
 * **Canonical REST Specification:** [`contracts/openapi.yaml`](../contracts/openapi.yaml)
 * **WebSocket Event Schemas:** [`contracts/events/`](../contracts/events/)
-  * `join_request.json`: Pupil sends 6-char Class Code to Local Hub.
+  * `join_request.json`: Learner sends 6-char Class Code to Local Hub.
   * `join_approval.json`: Teacher approves enrollment from phone or desktop.
   * `quiz_start.json`: Teacher triggers synchronized classroom quiz countdown.
-  * `quiz_submit.json`: Pupil submits completed answers for auto-grading.
+  * `quiz_submit.json`: Learner submits completed answers for auto-grading.
   * `ai_stream.json`: Local Hub streams Socratic hint tokens.
   * `queue_status.json`: Local Hub reports FIFO waiting position and estimated wait time.
 * **Serialization Case Rule:** All network keys transmitted over HTTP and WebSockets must strictly use **`snake_case`**.
@@ -33,14 +33,14 @@ Run from the repository root:
 ```bash
 python3 scripts/mock_hub.py
 ```
-State is in memory and resets on restart. Seeded accounts (PIN `1234`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), pupil `123456789012` (enrolled), pupil `123456789013` (not enrolled, use for the join and approval flow), and `ADMIN-0001` (accepted by `/api/admin/*`).
+State is in memory and resets on restart. Seeded accounts (PIN `1234`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (not enrolled, use for the join and approval flow), and `ADMIN-0001` (accepted by `/api/admin/*`).
 
 ### What It Simulates
 1. **UDP Discovery Beacon (`255.255.255.255:8888`):** every 3 seconds.
 2. **Captive Web Portal (`/download`).**
 3. **REST (`:8080`):** every operation in `contracts/openapi.yaml`: auth, admin accounts, classrooms and approval, delta-sync, announcements and comments, materials (upload, download, chunks, `206` streaming), assignments and homework upload, teacher grading, quizzes (create, start, begin, submit, close, results), export and backup. Bearer auth is enforced. Media routes also accept `?token=`.
 4. **WebSocket (`:8081`):** `EVENT_HELLO` handshake, then pushes `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH`, `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE`, and streams `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM` for `EVENT_AI_CHAT_REQUEST`.
-5. **Rules it enforces so clients meet them early:** pupil quiz payloads never contain `correct_answer`; AI requests fail with `QUIZ_IN_PROGRESS` while the pupil has an `IN_PROGRESS` attempt; quiz submissions later than the limit plus 60 seconds fail with `TIME_LIMIT_EXCEEDED`; unknown routes return `ROUTE_NOT_FOUND`.
+5. **Rules it enforces so clients meet them early:** learner quiz payloads never contain `correct_answer`; AI requests fail with `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt; quiz submissions later than the limit plus 60 seconds fail with `TIME_LIMIT_EXCEEDED`; unknown routes return `ROUTE_NOT_FOUND`.
 
 ### Parity Rule
 Any change to `contracts/` must be mirrored in the mock hub in the same PR. `tests/test_contract_coverage.py` fails CI otherwise.

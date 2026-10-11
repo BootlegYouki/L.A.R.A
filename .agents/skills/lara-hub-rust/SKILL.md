@@ -38,16 +38,16 @@ Read `AGENTS.md` and `server/AGENTS.md` first, then the contract you implement. 
 ## 3. Range streaming and the 2.0 MB/s cap
 
 * Do not hand-write Range parsing. `tower_http::services::ServeFile` and `ServeDir` handle a single `Range` request with `206 Partial Content` and `Content-Range`, and answer `416` for multi-range requests, which players do not send.
-* The cap is **per client** (per token), not per connection. Wrap the response body in a stream that sleeps between chunks to hold the client at 2.0 MB/s, with one shared bucket per token. Test two streams from one pupil and 20 pupils at once.
+* The cap is **per client** (per token), not per connection. Wrap the response body in a stream that sleeps between chunks to hold the client at 2.0 MB/s, with one shared bucket per token. Test two streams from one learner and 20 learners at once.
 * Media routes accept `?token=` because HTML5 video cannot send headers. Only media routes do.
 * Downloads of handouts and the AI model file must also honor Range so an interrupted transfer resumes.
 
 ## 4. Auth
 
 * Hash PINs with **argon2id**. Rate-limit logins (5 per minute per LRN). Issue random opaque tokens and store only their SHA-256; sessions expire in 12 hours.
-* Bearer extractor on every route except `/download`, register and login. Authorize by role **and class ownership** on the server: a teacher sees only their classes, a pupil only their own submissions and attempts.
+* Bearer extractor on every route except `/download`, register and login. Authorize by role **and class ownership** on the server: a teacher sees only their classes, a learner only their own submissions and attempts.
 * Errors use the envelope `{ "error": { "code", "message" } }` with the documented codes.
-* Never log PINs, tokens or LRNs, and never return `pin_hash`, another pupil's LRN, `correct_answer` or a server file path. Student response types are separate structs that cannot contain `correct_answer`; add a test that scans every student route's JSON.
+* Never log PINs, tokens or LRNs, and never return `pin_hash`, another learner's LRN, `correct_answer` or a server file path. Student response types are separate structs that cannot contain `correct_answer`; add a test that scans every student route's JSON.
 
 ## 5. WebSocket broker (`:8081`)
 

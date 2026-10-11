@@ -44,17 +44,17 @@ A single-file Python 3 program (standard library only) that implements **every**
 
 ### 2.2 Behavior it enforces (so clients meet the rules early)
 * Bearer auth on every route except `/download`, register and login; media routes also accept `?token=`.
-* Pupil quiz payloads never contain `correct_answer`; the teacher view does.
-* AI requests fail with `QUIZ_IN_PROGRESS` while the pupil has an `IN_PROGRESS` attempt; otherwise the mock streams a canned Socratic reply with `EVENT_QUEUE_STATUS` and `grounded_chunk_id`.
+* Learner quiz payloads never contain `correct_answer`; the teacher view does.
+* AI requests fail with `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt; otherwise the mock streams a canned Socratic reply with `EVENT_QUEUE_STATUS` and `grounded_chunk_id`.
 * Quiz submissions later than the limit plus 60 s fail with `TIME_LIMIT_EXCEEDED`.
-* Delta-sync uses an integer cursor from a change ledger, with tombstones, `hub_id`, `sync_epoch` and `reset`; pulls never contain PIN data or other people's LRN, and pupils never see classmates' homework.
+* Delta-sync uses an integer cursor from a change ledger, with tombstones, `hub_id`, `sync_epoch` and `reset`; pulls never contain PIN data or other people's LRN, and learners never see classmates' homework.
 * Unknown routes return `404 ROUTE_NOT_FOUND`, which lets the coverage test tell a missing route from a missing entity.
 
 ### 2.3 Usage and seed data
 ```bash
 python3 scripts/mock_hub.py
 ```
-State is in memory and reseeds on every start. Accounts (PIN `1234`): `ADMIN-0001`, teacher `T-0001` (Science 4, code `K7M4QX`), pupil `123456789012` (enrolled), pupil `123456789013` (join with the code).
+State is in memory and reseeds on every start. Accounts (PIN `1234`): `ADMIN-0001`, teacher `T-0001` (Science 4, code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (join with the code).
 
 ### 2.4 Parity guarantee
 `tests/test_contract_coverage.py` fails CI if any `openapi.yaml` operation has no mock route, if the mock serves an undocumented `/api/` route, or if an event schema is not emitted or handled by the mock. A contract change is therefore incomplete until the mock hub follows.

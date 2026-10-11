@@ -6,14 +6,14 @@ Mandatory architectural invariants, technical constraints, coding standards and 
 
 ## 0. What L.A.R.A Is (60-second context)
 
-An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Philippine public elementary schools (Grades 1 to 6). It runs entirely on the classroom's own Wi-Fi, with no internet at all. First deployment: the capstone defense plus one pilot class of about 40 pupils.
+An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Philippine public schools (Grades 1 to 12, elementary to senior high). It runs entirely on the classroom's own Wi-Fi, with no internet at all. First deployment: the capstone defense plus one pilot class of about 40 learners.
 
 **Three programs, one network:**
 * **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
-* **Mobile app (`mobile/`):** Android for pupils (budget 3 to 4 GB phones) and teachers (approve, post, start and monitor quizzes).
+* **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers (approve, post, start and monitor quizzes).
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. The full teacher authoring surface.
 
-**How a class runs:** admin creates teacher accounts, a teacher creates a class and gets a 6-character code, pupils self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so pupils can study at home offline. Teachers post announcements, upload handouts and videos, assign homework (pupils photograph their notebook), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
+**How a class runs:** admin creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, assign homework (learners photograph their notebook), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -40,7 +40,7 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
 
-Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled pupil), `123456789013` (join with the code), `ADMIN-0001`.
+Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001`.
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
@@ -50,11 +50,11 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 ### 1.4 Decisions already made (do not re-litigate)
 * Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
 * The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
-* **Accounts:** admin creates teachers; pupils self-register, join by class code, teacher approves.
+* **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
 * **Teachers work on desktop and mobile;** desktop is the full authoring surface, mobile the on-the-go set.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * Canonical values: touch targets 52dp (56dp primary actions and quiz options), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
-* **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the pupil back to the lesson.
+* **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
 ---
@@ -63,7 +63,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 
 1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
 2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
-3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, DepEd export, backup.
+3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, gradebook export, backup.
 4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
 Rule documents (read the ones for your task):
@@ -86,7 +86,7 @@ Rule documents (read the ones for your task):
 
 ### 3.2 Offline-first persistence
 * Both clients keep an offline mirror of enrolled classes, announcements, handouts, videos and quiz history in local SQLite.
-* A pupil can launch the app at home with no Wi-Fi and read, watch and (when capable) use the local AI without errors or blocking loaders.
+* A learner can launch the app at home with no Wi-Fi and read, watch and (when capable) use the local AI without errors or blocking loaders.
 * Offline actions (finished quizzes, homework photos, comments) are saved with `sync_status = 'QUEUED_FOR_SYNC'` and flush automatically when the Hub is reachable. Never describe the connection as "internet"; say "Hub" or "classroom network".
 
 ### 3.3 Network protocol and ports
@@ -98,11 +98,11 @@ Rule documents (read the ones for your task):
 * Every route except `/download`, register and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI.
 * **Never reach a client:** PIN hashes, other people's LRN, answer keys (`correct_answer`, synonyms), server file paths. Student serializers are separate types that cannot contain `correct_answer`.
 * Never log PINs, tokens, LRNs or homework file contents. Never delete users, classrooms or graded rows; deactivate or archive.
-* Pupils' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. Do not add features that export or transmit them off the Hub.
+* Learners' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. Do not add features that export or transmit them off the Hub.
 
 ---
 
-## 4. UI/UX Guidelines (Elementary Accessibility)
+## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
 * **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference (see section 9 of the design system).
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
@@ -111,13 +111,13 @@ Rule documents (read the ones for your task):
 * **Bilingual:** all user-facing text in English and Filipino, no hardcoded strings (`values/strings.xml` + `values-tl/strings.xml`; a JSON dictionary on desktop with runtime toggle).
 * **Every screen** needs an offline state, an empty state and a loading skeleton.
 * **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
-* **DepEd export:** `.xlsx` and `.csv` class records per quarter and subject, direct to USB.
+* **Gradebook export:** `.xlsx` and `.csv` of learners by assignment and quiz with points, per class, direct to USB. Like Google Classroom, L.A.R.A records points only; each teacher applies their own grading system.
 
 ---
 
 ## 5. Socratic AI Tutor (L.A.R.A AI)
 
-A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on the Hub). Full rules: `rules/socratic-ai-guardrails.md`.
+A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. Inference is pluggable GGUF via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on the Hub). Full rules: `rules/socratic-ai-guardrails.md`.
 
 ### 5.1 Routing
 * **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
@@ -129,8 +129,8 @@ A guide for Grades 1 to 6, never an answer engine. Inference is pluggable GGUF v
 1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
-4. **Reply in the pupil's chosen language** (English or natural Filipino/Taglish).
-5. **Quiz lockout:** while a pupil has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
+4. **Reply in the learner's chosen language** (English or natural Filipino/Taglish).
+5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
 MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. There may be two choices: a smarter model on the Hub and a smaller one for devices that can run it. Each must pass the same evaluation; if the small one does not, devices use the Hub.
@@ -183,9 +183,8 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 | Term | Meaning |
 |---|---|
 | **Hub** | The server app on the school PC: database, files, WebSocket, AI queue |
-| **Class Code** | 6-character code a pupil enters to ask to join a class (stored `K7M4QX`, shown `K7M-4QX`) |
-| **LRN** | Learner Reference Number, the 12-digit DepEd pupil ID. Personal data |
-| **DepEd categories** | Written Work, Performance Task, Quarterly Assessment, weighted per subject, per quarter |
+| **Class Code** | 6-character code a learner enters to ask to join a class (stored `K7M4QX`, shown `K7M-4QX`) |
+| **LRN** | Learner Reference Number, the 12-digit DepEd learner ID. Personal data |
 | **QUEUED_FOR_SYNC** | Work created offline, waiting for the Hub |
 | **Cursor / `seq`** | Strictly increasing sync position; never a clock time |
 | **Socratic** | Guide with questions and one clue at a time instead of giving the answer |

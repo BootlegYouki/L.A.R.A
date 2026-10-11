@@ -12,17 +12,17 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 | Event | Direction | Trigger |
 |---|---|---|
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | client to Hub / Hub to client | connect |
-| `EVENT_JOIN_REQUEST` | Hub to teacher | pupil `POST /api/classrooms/join` |
-| `EVENT_JOIN_APPROVAL` | Hub to pupil | teacher approve or reject |
-| `EVENT_ANNOUNCEMENT_PUSH` | Hub to enrolled pupils | `POST /api/announcements` |
+| `EVENT_JOIN_REQUEST` | Hub to teacher | learner `POST /api/classrooms/join` |
+| `EVENT_JOIN_APPROVAL` | Hub to learner | teacher approve or reject |
+| `EVENT_ANNOUNCEMENT_PUSH` | Hub to enrolled learners | `POST /api/announcements` |
 | `EVENT_QUIZ_START` | Hub broadcast | `POST /api/quizzes/{id}/start` |
 | `EVENT_QUIZ_CLOSED` | Hub broadcast | `POST /api/quizzes/{id}/close` |
-| `EVENT_QUIZ_SUBMIT` | pupil to Hub | alternative to REST submit; same grading path |
-| `EVENT_GRADE_CONFIRMED` | Hub to pupil | grading finished |
-| `EVENT_PRESENCE` | Hub to teacher | pupil connect, quiz progress |
-| `EVENT_AI_CHAT_REQUEST` | pupil to Hub | tutor question |
-| `EVENT_QUEUE_STATUS` | Hub to pupil | FIFO queue position change |
-| `EVENT_AI_TOKEN_STREAM` | Hub to pupil | generated tokens |
+| `EVENT_QUIZ_SUBMIT` | learner to Hub | alternative to REST submit; same grading path |
+| `EVENT_GRADE_CONFIRMED` | Hub to learner | grading finished |
+| `EVENT_PRESENCE` | Hub to teacher | learner connect, quiz progress |
+| `EVENT_AI_CHAT_REQUEST` | learner to Hub | tutor question |
+| `EVENT_QUEUE_STATUS` | Hub to learner | FIFO queue position change |
+| `EVENT_AI_TOKEN_STREAM` | Hub to learner | generated tokens |
 | `EVENT_ERROR` | Hub to client | any rejected request |
 
 ## Rules

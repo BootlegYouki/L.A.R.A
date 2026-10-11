@@ -90,7 +90,6 @@ class HubState:
             "section": "Aguinaldo", "class_code": "K7M4QX",
             "teacher_id": teacher["id"], "created_at": t, "updated_at": t,
         }
-        classroom.update(weight_written_works=40, weight_performance_tasks=40, weight_quarterly_assessment=20)
         self.classrooms[classroom["id"]] = classroom
         self.log("classrooms", classroom["id"], classroom["id"])
         enr = {"id": new_id(), "classroom_id": classroom["id"], "student_id": pupil["id"],
@@ -124,8 +123,7 @@ class HubState:
         for chunk in self.chunks[mat["id"]]:
             self.log("material_chunks", chunk["id"], classroom["id"])
         asg = {"id": new_id(), "classroom_id": classroom["id"], "title": "Gumuhit ng Food Chain",
-               "instructions": "Kunan ng litrato ang iyong guhit.", "deped_category": "PERFORMANCE_TASK",
-               "quarter": 1, "allow_late": False,
+               "instructions": "Kunan ng litrato ang iyong guhit.", "allow_late": False,
                "max_points": 20, "due_date": t + 7 * 86_400_000, "created_at": t, "updated_at": t}
         self.assignments[asg["id"]] = asg
         self.log("assignments", asg["id"], classroom["id"])
@@ -217,7 +215,7 @@ def strip_private(obj):
 
 
 def student_quiz(quiz):
-    out = {k: quiz.get(k) for k in ("id", "classroom_id", "title", "time_limit_minutes", "deped_category", "started_at")}
+    out = {k: quiz.get(k) for k in ("id", "classroom_id", "title", "time_limit_minutes", "started_at")}
     out["questions"] = [{k: v for k, v in q.items() if k not in ("correct_answer", "synonyms")}
                         for q in quiz["questions"]]
     return out
@@ -467,8 +465,6 @@ def admin_reset(req):
 # ---- classrooms
 def public_classroom(c, user):
     out = {k: c[k] for k in ("id", "name", "section", "class_code", "teacher_id")}
-    if user["id"] == c["teacher_id"]:
-        out.update({k: c[k] for k in ("weight_written_works", "weight_performance_tasks", "weight_quarterly_assessment")})
     if user["role"] == "STUDENT":
         for e in STATE.enrollments.values():
             if e["classroom_id"] == c["id"] and e["student_id"] == user["id"]:
@@ -494,12 +490,7 @@ def classroom_create(req):
     code = "".join(random.choice(CLASS_CODE_ALPHABET) for _ in range(6))
     t = now_ms()
     c = {"id": new_id(), "name": b["name"], "section": b["section"], "class_code": code,
-         "teacher_id": req.user["id"], "created_at": t, "updated_at": t,
-         "weight_written_works": b.get("weight_written_works", 40),
-         "weight_performance_tasks": b.get("weight_performance_tasks", 40),
-         "weight_quarterly_assessment": b.get("weight_quarterly_assessment", 20)}
-    if c["weight_written_works"] + c["weight_performance_tasks"] + c["weight_quarterly_assessment"] != 100:
-        raise ApiError(400, "BAD_REQUEST", "Weights must add up to 100")
+         "teacher_id": req.user["id"], "created_at": t, "updated_at": t}
     STATE.classrooms[c["id"]] = c
     STATE.log("classrooms", c["id"], c["id"])
     return public_classroom(c, req.user)
@@ -603,7 +594,7 @@ def sync_pull(req):
             q = STATE.quizzes[eid]
             if q["status"] != "DRAFT" or teacher:
                 out["quizzes"].append({k: q.get(k) for k in ("id", "classroom_id", "title", "status", "time_limit_minutes",
-                                                              "deped_category", "started_at")})
+                                                              "started_at")})
         elif table == "quiz_attempts" and eid in STATE.attempts:
             a = STATE.attempts[eid]
             if a["status"] == "SUBMITTED":
@@ -794,12 +785,11 @@ def model_file(req):
 @route("POST", r"/api/assignments", role="TEACHER")
 def assignment_create(req):
     b = req.json()
-    need(b, "classroom_id", "title", "deped_category", "max_points", "due_date")
+    need(b, "classroom_id", "title", "max_points", "due_date")
     owned_classroom(req, b["classroom_id"])
     t = now_ms()
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
-         "instructions": b.get("instructions", ""), "deped_category": b["deped_category"],
-         "quarter": b.get("quarter", 1), "allow_late": b.get("allow_late", False),
+         "instructions": b.get("instructions", ""), "allow_late": b.get("allow_late", False),
          "max_points": b["max_points"], "due_date": b["due_date"], "created_at": t, "updated_at": t}
     STATE.assignments[a["id"]] = a
     STATE.log("assignments", a["id"], a["classroom_id"])
@@ -860,7 +850,7 @@ def submission_file(req):
 @route("POST", r"/api/quizzes", role="TEACHER")
 def quiz_create(req):
     b = req.json()
-    need(b, "classroom_id", "title", "time_limit_minutes", "deped_category", "questions")
+    need(b, "classroom_id", "title", "time_limit_minutes", "questions")
     owned_classroom(req, b["classroom_id"])
     t = now_ms()
     qs = []
@@ -872,7 +862,7 @@ def quiz_create(req):
                    "correct_answer": q["correct_answer"], "synonyms": q.get("synonyms", [])})
     quiz = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"],
             "instructions": b.get("instructions"), "time_limit_minutes": b["time_limit_minutes"],
-            "deped_category": b["deped_category"], "quarter": b.get("quarter", 1), "shuffle_questions": b.get("shuffle_questions", False),
+            "shuffle_questions": b.get("shuffle_questions", False),
             "release_scores_immediately": b.get("release_scores_immediately", True),
             "status": "DRAFT", "started_at": None, "questions": qs, "created_at": t, "updated_at": t}
     STATE.quizzes[quiz["id"]] = quiz
@@ -1017,7 +1007,7 @@ def export_class_record(req):
     b = req.json()
     need(b, "classroom_id", "format")
     owned_classroom(req, b["classroom_id"])
-    name = "DepEd_ClassRecord." + ("xlsx" if b["format"] == "XLSX" else "csv")
+    name = "Gradebook." + ("xlsx" if b["format"] == "XLSX" else "csv")
     out = {"file_name": name}
     if b.get("target_path"):
         out["saved_to"] = b["target_path"].rstrip("/\\") + "/" + name
