@@ -26,5 +26,5 @@ Step by step: how does the teacher or learner use it?
 
 ## 5. Acceptance criteria
 - [ ] Works 100% offline on the classroom network with zero internet
-- [ ] Uses design-system tokens, touch targets at least 52dp (56dp primary)
+- [ ] Uses design-system tokens, touch targets at least 52dp on phones (56dp primary), 40px buttons on desktop
 - [ ] English and Filipino text

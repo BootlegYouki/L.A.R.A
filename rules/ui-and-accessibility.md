@@ -23,8 +23,9 @@ All AI agents and contributors must follow these rules.
 
 Young children (especially in Grades 1 to 3) have developing fine motor control. Touch targets must prevent miss-taps:
 
-* **Minimum Clickable Height:** **52dp** on all buttons, list items, radio cards, and tabs.
-* **Preferred Primary Actions:** **56dp** for major call-to-actions (FAB, "Submit Work", "Start Quiz", "Kunan ng Litrato").
+* **Minimum Clickable Height on phones:** **52dp** on all buttons, list items, radio cards, and tabs.
+* **Preferred Primary Actions on phones:** **56dp** for major call-to-actions (FAB, "Submit Work", "Start Quiz", "Kunan ng Litrato").
+* **Desktop (mouse and keyboard):** buttons and icon buttons are **40px**, tabs and drawer items **48px**, as in Google Classroom. Quiz options stay **56** on every device.
 * **Spacing:** Minimum 8dp between adjacent interactive buttons.
 
 ---

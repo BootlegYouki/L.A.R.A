@@ -36,7 +36,7 @@
 5. **UI & Design Authority:**
    * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
    * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
-   * Touch and click targets must be minimum 52dp (40px compact only on teacher tables), contrast ratio ≥ 4.5:1.
+   * Click targets follow Google Classroom: 40px buttons and icon buttons, 48px tabs and drawer items, contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
    ```bash

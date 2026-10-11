@@ -31,7 +31,7 @@ Each line is something a reviewer can see pass or fail.
 - [ ] ...
 - [ ] The team's verify command passes and its output is in the PR (`cargo check && cargo test`, `npm run build`, or `./gradlew test lint`)
 - [ ] Works with the Hub unreachable (offline state defined)
-- [ ] English and Filipino strings, design tokens only, touch targets at least 52dp (56dp primary)
+- [ ] English and Filipino strings, design tokens only, touch targets at least 52dp on phones (56dp primary), 40px buttons on desktop
 
 ### Docs & Design
 - Update the team's `docs/` folder (purpose, key files, data flow, gotchas).
