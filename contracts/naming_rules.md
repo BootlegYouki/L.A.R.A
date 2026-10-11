@@ -75,7 +75,7 @@ The same discipline as the answer key applies to personal data. A learner can re
 
 The database DDL is standardized in `contracts/schema/` to guarantee parity between the Hub and the clients:
 
-* **`server_master.sql`** (16 tables): the authoritative Hub schema, including `correct_answer`, the `sync_revisions` change ledger (integer `seq` cursor), `hub_meta`, `sessions` and `material_chunks`.
-* **`client_offline.sql`** (14 tables): the offline slice for Android Room and Desktop SQLite. Adds `sync_status`, `local_file_path` and `sync_state`; strips `correct_answer`, `pin_hash` and classmates' LRN.
+* **`server_master.sql`**: the authoritative Hub schema, including `correct_answer`, the `sync_revisions` change ledger (integer `seq` cursor), `hub_meta`, `sessions` and `material_chunks`.
+* **`client_offline.sql`**: the offline slice for Android Room and Desktop SQLite. Adds `sync_status`, `local_file_path` and `sync_state`; strips `correct_answer`, `pin_hash` and classmates' LRN.
 
 How to change any contract: see [`README.md`](./README.md).

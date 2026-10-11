@@ -101,7 +101,7 @@ The app switches navigation graphs depending on authenticated role:
 
 ## 3. Client Offline Database Schema (Android Room)
 
-> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * One Room entity per table, package `org.lara.app.data.local.entities.*`, same column names and nullability. Add a schema test that compares Room's exported schema with the SQL file.
 * **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.

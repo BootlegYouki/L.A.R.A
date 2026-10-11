@@ -106,7 +106,7 @@
 
 ## 3. Dedicated Server SQLite Schema (Master Local Hub)
 
-> **Source of truth:** [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql) (16 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/server_master.sql`](../contracts/schema/server_master.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * **Migrations:** one SQL migration per logical group under `backend/src/db/migrations/`, reproducing `server_master.sql` exactly. PRAGMAs are connection options, not migration statements.
 * **Never log or return:** `users.pin_hash`, `quiz_questions.correct_answer`, `synonyms_json`, server `file_path` values, raw session tokens.

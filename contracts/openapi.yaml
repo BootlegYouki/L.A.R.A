@@ -104,6 +104,34 @@ paths:
           $ref: "#/components/responses/Ok"
 
   # ---------------------------------------------------------------- ADMIN (Hub console only)
+  /api/admin/setup:
+    post:
+      summary: First run only. Create the single Hub admin account (lrn_or_id ADMIN-0001, role ADMIN) with the PIN typed on the Hub PC. Accepted only from the Hub machine itself (loopback). Answers 409 ADMIN_EXISTS once an admin exists; after that the Hub window signs in through /api/auth/login.
+      tags: [admin]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name, pin]
+              properties:
+                full_name:
+                  type: string
+                pin:
+                  type: string
+                  pattern: "^[0-9]{4}$"
+      responses:
+        "200":
+          description: Signed-in admin session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "409":
+          $ref: "#/components/responses/Error"
+
   /api/admin/users:
     get:
       summary: List all accounts (admin)
@@ -170,7 +198,7 @@ paths:
   # ---------------------------------------------------------------- CLASSROOMS
   /api/classrooms:
     get:
-      summary: List classrooms visible to the caller (teacher - owned; student - ACTIVE and PENDING enrollments)
+      summary: List classrooms visible to the caller (teacher - owned or co-taught; learner - ACTIVE and PENDING enrollments)
       tags: [classrooms]
       responses:
         "200":
@@ -234,12 +262,91 @@ paths:
                 properties:
                   status:
                     type: string
-                    enum: ["PENDING", "ACTIVE", "REJECTED"]
+                    enum: ["PENDING", "ACTIVE", "REJECTED", "REMOVED"]
                   classroom_id:
                     type: string
                     format: uuid
         "404":
           $ref: "#/components/responses/Error"
+
+  /api/classrooms/{id}:
+    patch:
+      summary: Rename a class or archive it (owning teacher only). An archived class is read-only for everyone and keeps all its grades.
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                section:
+                  type: string
+                archived:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated classroom
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Classroom"
+
+  /api/classrooms/{id}/remove:
+    post:
+      summary: Remove an ACTIVE learner from the class (teacher). The enrollment becomes REMOVED, the learner gets EVENT_JOIN_APPROVAL with status REMOVED and loses access; their submissions and scores are kept on the Hub.
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/StudentRef"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  /api/classrooms/{id}/teachers:
+    post:
+      summary: Add a co-teacher by their teacher ID (owning teacher only). A co-teacher can do everything in the class except rename, archive or manage teachers.
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lrn_or_id]
+              properties:
+                lrn_or_id:
+                  type: string
+      responses:
+        "200":
+          description: Updated classroom
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Classroom"
+
+  /api/classrooms/{id}/teachers/{teacher_id}:
+    delete:
+      summary: Remove a co-teacher (owning teacher only)
+      tags: [classrooms]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: teacher_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
 
   /api/classrooms/{id}/roster:
     get:
@@ -317,7 +424,7 @@ paths:
 
   /api/sync/push:
     post:
-      summary: Delta-sync push for queued offline work (quiz attempts, homework metadata)
+      summary: Delta-sync push for queued offline work (quiz attempts, stream comments, private comments)
       tags: [sync]
       requestBody:
         required: true
@@ -334,6 +441,10 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/CommentPush"
+                private_comments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PrivateCommentPush"
       responses:
         "200":
           description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit.
@@ -361,6 +472,64 @@ paths:
                           description: e.g. TIME_LIMIT_EXCEEDED
 
   # ---------------------------------------------------------------- STREAM
+  /api/topics:
+    post:
+      summary: Create a topic that groups classwork, for example "Unit 1 - Plants" (teacher)
+      tags: [classwork]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classroom_id, name]
+              properties:
+                classroom_id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Created topic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+
+  /api/topics/{id}:
+    patch:
+      summary: Rename or reorder a topic (teacher)
+      tags: [classwork]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                order_index:
+                  type: integer
+      responses:
+        "200":
+          description: Updated topic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Topic"
+    delete:
+      summary: Delete a topic (teacher). Its materials, assignments and quizzes stay and lose their topic_id. Produces a DELETE tombstone in sync.
+      tags: [classwork]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
   /api/announcements:
     post:
       summary: Post an announcement to a classroom stream (teacher). Emits EVENT_ANNOUNCEMENT_PUSH.
@@ -467,7 +636,7 @@ paths:
   # ---------------------------------------------------------------- MATERIALS
   /api/materials:
     post:
-      summary: Upload a lesson file (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
+      summary: Upload a lesson file, or an attachment for an assignment or announcement (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
       tags: [materials]
       requestBody:
         required: true
@@ -485,6 +654,17 @@ paths:
                 file_type:
                   type: string
                   enum: ["VIDEO", "DOCUMENT", "WORKSHEET"]
+                topic_id:
+                  type: string
+                  format: uuid
+                assignment_id:
+                  type: string
+                  format: uuid
+                  description: Set to attach this file to an assignment. It then shows on that assignment, not in the Classwork list.
+                announcement_id:
+                  type: string
+                  format: uuid
+                  description: Set to attach this file to an announcement.
                 file:
                   type: string
                   format: binary
@@ -497,6 +677,40 @@ paths:
                 $ref: "#/components/schemas/Material"
         "413":
           $ref: "#/components/responses/Error"
+
+  /api/materials/{id}:
+    patch:
+      summary: Rename a material or move it to a topic (teacher)
+      tags: [materials]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                topic_id:
+                  type: [string, "null"]
+                  format: uuid
+      responses:
+        "200":
+          description: Updated material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Material"
+    delete:
+      summary: Delete a material and its lesson chunks (teacher). Produces a DELETE tombstone in sync; clients remove the cached file.
+      tags: [materials]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
 
   /api/materials/{id}/download:
     get:
@@ -611,6 +825,9 @@ paths:
                 allow_late:
                   type: boolean
                   default: false
+                topic_id:
+                  type: string
+                  format: uuid
       responses:
         "200":
           description: Created assignment
@@ -618,6 +835,95 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Assignment"
+
+  /api/assignments/{id}:
+    patch:
+      summary: Edit an assignment (teacher)
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                instructions:
+                  type: string
+                max_points:
+                  type: integer
+                due_date:
+                  type: integer
+                allow_late:
+                  type: boolean
+                topic_id:
+                  type: [string, "null"]
+                  format: uuid
+      responses:
+        "200":
+          description: Updated assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+    delete:
+      summary: Remove an assignment posted by mistake (teacher). The Hub archives it (rows and any grades are kept, never destroyed), hides it from the gradebook and export, and sends clients a DELETE tombstone.
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+
+  /api/assignments/{id}/private-comments:
+    get:
+      summary: Private comments between one learner and the class teachers on this assignment. A learner gets their own thread; a teacher must pass student_id.
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Comments, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PrivateComment"
+    post:
+      summary: Add a private comment. A learner posts to their own thread; a teacher must send student_id. Classmates never see it.
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                student_id:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivateComment"
 
   /api/assignments/{id}/submit:
     post:
@@ -741,7 +1047,7 @@ paths:
 
   /api/quizzes/{id}:
     get:
-      summary: Fetch a quiz. Pupils get the redacted payload; the owning teacher gets correct_answer.
+      summary: Fetch a quiz. Learners get the redacted payload; the owning teacher gets correct_answer.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -754,6 +1060,26 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/StudentQuizResponse"
                   - $ref: "#/components/schemas/TeacherQuiz"
+    patch:
+      summary: Replace a quiz's settings and questions while it is still DRAFT (teacher). Answers 409 QUIZ_NOT_DRAFT once the quiz has started, so scores stay fair.
+      tags: [quizzes]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeacherQuizInput"
+      responses:
+        "200":
+          description: Updated quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherQuiz"
+        "409":
+          $ref: "#/components/responses/Error"
 
   /api/quizzes/{id}/start:
     post:
@@ -777,7 +1103,7 @@ paths:
 
   /api/quizzes/{id}/begin:
     post:
-      summary: Pupil begins the active quiz. Creates the IN_PROGRESS attempt that triggers the AI lockout.
+      summary: Learner begins the active quiz. Creates the IN_PROGRESS attempt that triggers the AI lockout.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1043,7 +1369,8 @@ components:
           type: string
         role:
           type: string
-          enum: ["TEACHER", "STUDENT"]
+          enum: ["TEACHER", "STUDENT", "ADMIN"]
+          description: ADMIN is the single Hub admin account. It is never synced to a client and never appears as PublicUser.
 
     Classroom:
       type: object
@@ -1065,10 +1392,16 @@ components:
           type: string
           format: uuid
         archived_at:
-          type: integer
+          type: [integer, "null"]
+        co_teacher_ids:
+          type: array
+          description: Teachers added by the owner (teacher_id). Their names arrive as PublicUser.
+          items:
+            type: string
+            format: uuid
         enrollment_status:
           type: string
-          enum: ["PENDING", "ACTIVE", "REJECTED"]
+          enum: ["PENDING", "ACTIVE", "REJECTED", "REMOVED"]
           description: Present for learner callers only
 
     RosterEntry:
@@ -1084,7 +1417,7 @@ components:
           type: string
         status:
           type: string
-          enum: ["PENDING", "ACTIVE", "REJECTED"]
+          enum: ["PENDING", "ACTIVE", "REJECTED", "REMOVED"]
         joined_at:
           type: integer
 
@@ -1163,6 +1496,17 @@ components:
           type: integer
         download_url:
           type: string
+        topic_id:
+          type: [string, "null"]
+          format: uuid
+        assignment_id:
+          type: [string, "null"]
+          format: uuid
+          description: Set when the file is an attachment of that assignment.
+        announcement_id:
+          type: [string, "null"]
+          format: uuid
+          description: Set when the file is an attachment of that announcement.
         updated_at:
           type: integer
 
@@ -1217,7 +1561,66 @@ components:
           type: integer
         allow_late:
           type: boolean
+        topic_id:
+          type: [string, "null"]
+          format: uuid
         updated_at:
+          type: integer
+
+    Topic:
+      type: object
+      required: [id, classroom_id, name, order_index, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        classroom_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        order_index:
+          type: integer
+        updated_at:
+          type: integer
+
+    PrivateComment:
+      type: object
+      required: [id, assignment_id, student_id, author_id, content, created_at]
+      description: One message in the private thread between a learner (student_id) and the class teachers on one assignment.
+      properties:
+        id:
+          type: string
+          format: uuid
+        assignment_id:
+          type: string
+          format: uuid
+        student_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+
+    PrivateCommentPush:
+      type: object
+      required: [id, assignment_id, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        assignment_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
           type: integer
 
     Submission:
@@ -1260,7 +1663,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: ["PENDING", "ACTIVE", "REJECTED"]
+          enum: ["PENDING", "ACTIVE", "REJECTED", "REMOVED"]
         joined_at:
           type: integer
         updated_at:
@@ -1279,7 +1682,7 @@ components:
     StudentQuestion:
       type: object
       required: [id, order_index, question_text, question_type, options, points]
-      description: Pupil-facing question. MUST NOT contain correct_answer.
+      description: Learner-facing question. MUST NOT contain correct_answer.
       properties:
         id:
           type: string
@@ -1355,6 +1758,9 @@ components:
         release_scores_immediately:
           type: boolean
           default: true
+        topic_id:
+          type: [string, "null"]
+          format: uuid
         questions:
           type: array
           items:
@@ -1459,6 +1865,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Enrollment"
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/Topic"
+        private_comments:
+          type: array
+          description: Only the caller's own threads (learner) or their classes' threads (teacher).
+          items:
+            $ref: "#/components/schemas/PrivateComment"
         announcements:
           type: array
           items:
