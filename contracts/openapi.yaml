@@ -37,7 +37,7 @@ paths:
   # ---------------------------------------------------------------- AUTH
   /api/auth/register:
     post:
-      summary: Self-register a pupil account (teacher accounts are created by the Hub admin)
+      summary: Self-register a learner account (teacher accounts are created by the Hub admin)
       security: []
       tags: [auth]
       requestBody:
@@ -118,7 +118,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
     post:
-      summary: Create a teacher or pupil account (admin)
+      summary: Create a teacher or learner account (admin)
       tags: [admin]
       requestBody:
         required: true
@@ -259,7 +259,7 @@ paths:
 
   /api/classrooms/{id}/approve:
     post:
-      summary: Approve a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL to the pupil.
+      summary: Approve a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL to the learner.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -621,7 +621,7 @@ paths:
 
   /api/assignments/{id}/submit:
     post:
-      summary: Upload a homework photo or document (pupil). Idempotent on (assignment_id, student_id); a resubmission replaces the file.
+      summary: Upload a homework photo or document (learner). Idempotent on (assignment_id, student_id); a resubmission replaces the file.
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -651,7 +651,7 @@ paths:
 
   /api/assignments/{id}/submissions:
     get:
-      summary: List pupil submissions for an assignment (teacher)
+      summary: List learner submissions for an assignment (teacher)
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -692,7 +692,7 @@ paths:
 
   /api/submissions/{id}/file:
     get:
-      summary: Fetch the stored submission image or document (teacher or owning pupil)
+      summary: Fetch the stored submission image or document (teacher or owning learner)
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -798,7 +798,7 @@ paths:
 
   /api/quizzes/{id}/close:
     post:
-      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted.
+      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted. Closing also releases held scores (release_scores_immediately false) - each learner gets EVENT_GRADE_CONFIRMED and the score on the next pull.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -808,7 +808,7 @@ paths:
 
   /api/quizzes/{id}/submit:
     post:
-      summary: Submit pupil answers for instant auto-grading. Emits EVENT_GRADE_CONFIRMED.
+      summary: Submit learner answers for instant auto-grading. Emits EVENT_GRADE_CONFIRMED unless scores are held; then the receipt's score is null until the teacher closes the quiz.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -840,13 +840,13 @@ paths:
 
   /api/quizzes/{id}/results:
     get:
-      summary: Live and final results matrix for all pupils (teacher)
+      summary: Live and final results matrix for all learners (teacher)
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
         "200":
-          description: One row per enrolled pupil
+          description: One row per enrolled learner
           content:
             application/json:
               schema:
@@ -1069,7 +1069,7 @@ components:
         enrollment_status:
           type: string
           enum: ["PENDING", "ACTIVE", "REJECTED"]
-          description: Present for pupil callers only
+          description: Present for learner callers only
 
     RosterEntry:
       type: object
@@ -1402,7 +1402,8 @@ components:
           type: string
           format: uuid
         score:
-          type: integer
+          type: [integer, "null"]
+          description: Null for a learner while the teacher holds scores (release_scores_immediately false and the quiz is not CLOSED). Teachers always see it.
         total_points:
           type: integer
         submitted_at:

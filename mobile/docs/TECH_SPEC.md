@@ -1,6 +1,6 @@
 # Mobile Technical Spec
 
-> Owner: Mobile Team Lead (Lead of team slot)  |  Reviewer: Lead Developer (Tech Lead)  |  Status: Draft  |  Last updated: 2026-10-08
+> Owner: Mobile team  |  Reviewer: Lead Developer (Tech Lead)  |  Status: Draft  |  Last updated: 2026-10-08
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
 
@@ -11,10 +11,10 @@
 | Sprint | Issues | PRD modules |
 |---|---|---|
 | 1 Scaffolding & LAN discovery | `[MOBILE 1.1]` #23, `[MOBILE 1.2]` #4, `[MOBILE 1.3]` #41 | PRD §3.1 discovery; §6.1 client schema |
-| 2 Roles, classrooms & delta-sync | `[MOBILE 2.1]` #24, `[MOBILE 2.2]` #49, `[MOBILE 2.3]` #50, `[MOBILE 2.4]` #51, `[MOBILE 2.5]` #52 | FR-1.1, FR-1.2, FR-1.3; §6.2 sync |
+| 2 Roles, classrooms & delta-sync | `[MOBILE 2.1]` #24, `[MOBILE 2.2]` #49, `[MOBILE 2.3]` #50, `[MOBILE 2.4]` #51, `[MOBILE 2.5]` #52, `[MOBILE 2.6]` #106 | FR-1.1, FR-1.2, FR-1.3; §6.2 sync |
 | 3 Stream, media & homework | `[MOBILE 3.1]` #25, `[MOBILE 3.2]` #9, `[MOBILE 3.3]` #59, `[MOBILE 3.4]` #60 | FR-2.1, FR-2.2, FR-2.3, FR-3.1, FR-3.3, FR-3.5 |
-| 4 Paperless quiz & gradebook | `[MOBILE 4.1]` #26, `[MOBILE 4.2]` #64, `[MOBILE 4.3]` #65 | FR-4.1..FR-4.6, FR-5.1 (read-only matrix) |
-| 5 Socratic AI | `[MOBILE 5.1]` #15, `[MOBILE 5.2]` #27, `[MOBILE 5.3]` #69, `[MOBILE 5.4]` #70 | PRD §5 (all) |
+| 4 Paperless quiz & gradebook | `[MOBILE 4.1]` #26, `[MOBILE 4.2]` #64, `[MOBILE 4.3]` #65, `[MOBILE 4.4]` #107 | FR-4.1..FR-4.6, FR-5.1 (read-only matrix) |
+| 5 Socratic AI | `[MOBILE 5.1]` #15, `[MOBILE 5.2]` #27, `[MOBILE 5.3]` #69, `[MOBILE 5.4]` #70, `[MOBILE 5.5]` #102 | PRD §5 (all) |
 | 6 Audit & stress test | `[MOBILE 6.1]` #18, `[MOBILE 6.2]` #28 | PRD §8, §10 |
 
 **Non-goals (this team must not build these; cite `docs/PRD.md` §9 Out-of-Scope):**
@@ -75,7 +75,7 @@ flowchart TD
 | Background sync & upload | `WorkManager` | Survives Transsion/realme battery killers and process death; retriable | Raw coroutine scope — killed by vendor battery optimization (`rules/networking-and-lan.md` §4.3) |
 | Quiz countdown clock | `SystemClock.elapsedRealtime()` + offset from `EVENT_HELLO_ACK` | Monotonic; survives wall-clock changes and Wi-Fi drops (`rules/quiz-and-anti-cheat.md` §2, §3) | `System.currentTimeMillis()` — Hub/phone wall clocks are unreliable offline |
 | Token storage | Encrypted storage (`EncryptedSharedPreferences`) | Token is a bearer credential; `rules/database-and-sync.md` §2 forbids plaintext secrets on the client | Plaintext prefs / Room column — leaks on a rooted budget phone |
-| Dev A/Dev B seam | Repository interfaces in `domain/`, owned by Dev A | Lets Dev B build UI against fakes with zero shared files (check 7) | Sharing concrete `data/` classes — two devs would edit one file |
+| UI and data seam | Repository interfaces in `domain/` | Screens depend on interfaces, so they can be built and tested against fakes | Screens calling concrete `data/` classes directly |
 
 ## 4. File Map
 Tree this team creates (from `mobile/AGENTS.md` §Layout and `mobile/README.md` §4). One line per folder: what it holds / what must not.
@@ -257,15 +257,19 @@ if (attempt.status != AttemptStatus.IN_PROGRESS) {
 | Answer-key leakage | `correct_answer`/`synonyms` **must not** appear in any DTO, entity, or log; students use the redacted quiz payload |
 | Loading a model under 6 GB RAM | `InferenceRouter` **must** gate local GGUF behind `ActivityManager` total RAM ≥ 6 GB; otherwise Hub-assisted only |
 
-## 10. Dev A / Dev B Work Split
-Platform/Infra vs Feature/UI. Zero shared files; the seam is the repository interface in `domain/` (owned by Dev A, consumed by Dev B via fakes until merged). Scaffold #23 copies theme files once (Dev B).
+## 10. Build Order
+The mobile team works one issue at a time, in step order, with one open PR (`rules/team-workflow-and-prs.md` §1.1). Both developers work the same issue. There are no developer slots.
 
-| Slot | Owns (folders/files) | Sprint 1 | Sprint 2 | Sprint 3 | Sprint 4 | Sprint 5 | Sprint 6 |
-|---|---|---|---|---|---|---|---|
-| Dev A (Infra) | `data/{local,remote,sync,repository}`, `ai/`, `cpp/`, repository interfaces in `domain/` | #41 Room/DAOs/repos; #4 discovery/`MulticastLock` | #52 `DeltaSyncWorker` (pull/push/tombstones) | `HomeworkUploadWorker` + `SubmissionRepository` (consumed by #9) | #65 quiz offline queue + auto-flush | #15 RAM router, #69 `SocraticPromptBuilder`+lockout, #70 JNI | #18 heap/battery profiling |
-| Dev B (UI) | `ui/{screens,navigation,components}`, `ui/theme`, CameraX capture UI, Media3 player UI, `res/values*` | #23 scaffold + tokens + nav shell | #24 role nav, #49 login/register, #50 join dialog, #51 approval sheet | #25 stream+PDF, #9 CameraX capture + JPEG <800 KB, #59 video player, #60 post FAB | #26 quiz flow + `CountdownPill` + AI unmount, #64 teacher controller | #27 Socratic sheet + bilingual toggle | #28 UX audit (targets, contrast, skeletons) |
+| Sprint | Order | What each step creates that later steps reuse |
+|---|---|---|
+| 1 | #23 scaffold, #4 discovery, #41 Room | `LaraTheme` and tokens (#23); `HubConnection` and `MulticastLock` handling (#4); entities, DAOs and repository interfaces in `domain/` (#41) |
+| 2 | #24 nav shell, #49 login, #50 join, #51 approval sheet, #52 sync, #106 settings | Student and Teacher graphs (#24); token storage (#49); `DeltaSyncWorker` (#52) |
+| 3 | #25 stream and PDF, #9 camera, #59 video, #60 post announcement | `SubmissionRepository` and `HomeworkUploadWorker` (#9) |
+| 4 | #26 quiz flow, #64 teacher controller, #65 offline queue, #107 My Work | `CountdownPill` and the quiz-state observer that keeps the AI uncomposed (#26) |
+| 5 | #15 RAM router, #27 chat sheet, #69 prompt and lockout, #70 JNI, #102 model download | `InferenceRouter` (#15) |
+| 6 | #18 profiling, #28 UX audit | |
 
-Rule: two developers **must not** edit the same file in parallel; one issue is one slot. Where both need a type (a repository contract, a shared model, `HomeworkUploadWorker`), Dev A owns it in `data/`/`domain/` and Dev B uses a fake until it merges. #9 (CameraX capture + compression) is Dev B; it calls `SubmissionRepository.enqueue(...)`, whose impl and `HomeworkUploadWorker` are Dev A's, built as sync infra before #9 so Dev B stubs the interface until it lands.
+A later step imports what an earlier step created; it never re-creates it.
 
 ## 11. Dependencies on Other Teams
 - **Server (`server/`):** every REST route and WS event. Default: build against `scripts/mock_hub.py`, which implements the whole contract. A route is "real" only once its server issue merges; switch to the real Hub on **integration day** (`rules/team-workflow-and-prs.md` §1.1).
@@ -275,11 +279,11 @@ Rule: two developers **must not** edit the same file in parallel; one issue is o
 ## 12. Risks and Unknowns
 | Risk or spike | Owner | Decision date | Fallback |
 |---|---|---|---|
-| AI model unchosen; quality on weak hardware unproven (AGENTS §5.4) | Dev A | before Sprint 5 start | Hub-assisted mode only; no on-device model shipped until the eval produces numbers |
-| `llama.cpp` JNI `arm64-v8a` build + packaging (#70) | Dev A | mid-Sprint 5 | Ship Hub-assisted path only; defer local inference |
-| Heap < 250 MB / battery on 3–4 GB Transsion/realme phones (#18) | Dev A | Sprint 6 | Reduce page sizes, cap caches, drop any local-AI attempt |
-| mDNS/UDP fails under router AP isolation | Dev B | Sprint 1 (during #4) | Manual IP entry (already required); document in `discovery.md` |
-| Media3 Range streaming vs 2.0 MB/s Hub cap on cheap routers | Dev B | Sprint 3 (during #59) | "Save for Home" download then local playback |
+| AI model unchosen; quality on weak hardware unproven (AGENTS §5.4) | Mobile team | before Sprint 5 start | Hub-assisted mode only; no on-device model shipped until the eval produces numbers |
+| `llama.cpp` JNI `arm64-v8a` build + packaging (#70) | Mobile team | mid-Sprint 5 | Ship Hub-assisted path only; defer local inference |
+| Heap < 250 MB / battery on 3–4 GB Transsion/realme phones (#18) | Mobile team | Sprint 6 | Reduce page sizes, cap caches, drop any local-AI attempt |
+| mDNS/UDP fails under router AP isolation | Mobile team | Sprint 1 (during #4) | Manual IP entry (already required); document in `discovery.md` |
+| Media3 Range streaming vs 2.0 MB/s Hub cap on cheap routers | Mobile team | Sprint 3 (during #59) | "Save for Home" download then local playback |
 
 ## 13. Commands and Verification
 Run from the repo root unless noted. Mobile build: `./gradlew test lint` (in `mobile/`). Mock hub: `python3 scripts/mock_hub.py`. Guardrails: `python3 scripts/verify_invariants.py`. Contract/mock tests: `python3 -m unittest discover tests`.

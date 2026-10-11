@@ -139,6 +139,24 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(pupil_ws.recv_until("EVENT_GRADE_CONFIRMED")["score"], 2)
         pupil_ws.close()
 
+    def test_held_scores_stay_hidden_until_the_teacher_closes_the_quiz(self):
+        _, quiz, _ = call(BASE, "POST", "/api/quizzes", {**QUIZ, "release_scores_immediately": False}, self.teacher)
+        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
+        _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
+        _, receipt, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/submit", {
+            "started_at": begin["started_at"], "submitted_at": int(time.time() * 1000), "answers": []}, self.pupil)
+        self.assertIsNone(receipt["score"])
+        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
+        mine = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
+        self.assertIsNone(mine[0]["score"])
+        pupil_ws = WsClient("127.0.0.1", WS, self.pupil)
+        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)
+        self.assertEqual(pupil_ws.recv_until("EVENT_GRADE_CONFIRMED")["attempt_id"], receipt["attempt_id"])
+        pupil_ws.close()
+        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": pull["next_cursor"]}, self.pupil)
+        released = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
+        self.assertEqual(released[0]["score"], 0)
+
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
