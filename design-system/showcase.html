@@ -719,6 +719,116 @@
     .tile.material { background: var(--color-info-light); color: var(--color-info-dark); }
     .tile.quiz { background: var(--color-warning-light); color: var(--color-warning-dark); }
 
+    /* Remake slice (Home and Stream, desktop). Measured in Google Classroom at 1440px, applied with L.A.R.A tokens. */
+    .rm { container: rm / inline-size; position: relative; width: 100%; min-height: 700px; overflow: hidden; background: var(--color-canvas-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+    .rm [data-only][hidden], .rm [hidden] { display: none !important; }
+    .rm [data-s] { display: none; }
+    .rm[data-screen="home"] [data-s~="home"], .rm[data-screen="stream"] [data-s~="stream"], .rm[data-screen="later"] [data-s~="later"] { display: block; }
+    .rm-top { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 12px; }
+    .rm-crumb { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--color-text-secondary); }
+    .rm[data-screen="home"] .rm-crumb { display: none; }
+    .rm-crumb strong { display: block; font-size: 16px; line-height: 24px; font-weight: 800; color: var(--color-text-primary); white-space: nowrap; }
+    .rm-crumb small { display: block; font-size: 12px; line-height: 16px; font-weight: 700; white-space: nowrap; }
+    .rm-hub { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 800; background: var(--color-light-green); color: var(--color-dark-green); border: 1px solid var(--color-success-border); }
+    .rm-hub .off { display: none; }
+    .rm[data-state="offline"] .rm-hub { background: var(--color-warning-light); color: var(--color-warning-dark); border-color: var(--color-warning-border); }
+    .rm[data-state="offline"] .rm-hub .on { display: none; }
+    .rm[data-state="offline"] .rm-hub .off { display: inline-flex; align-items: center; gap: 8px; }
+    .rm-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: stretch; }
+    .rm-drawer { padding: 4px 12px 20px; min-width: 0; }
+    .rm-nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 16px; border: none; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 800; text-align: left; cursor: pointer; }
+    .rm-nav:hover { background: var(--color-surface-subtle); }
+    .rm-nav.active { background: var(--color-light-green); color: var(--color-dark-green); font-weight: 900; }
+    .rm-nav > i { font-size: 22px; flex-shrink: 0; }
+    .rm-nav .t { flex: 1; min-width: 0; line-height: 1.25; }
+    .rm-nav small { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-nav.active small { color: var(--color-dark-green); }
+    .rm-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-subtle); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; flex-shrink: 0; }
+    .rm-nav.active .rm-dot { background: var(--color-surface-white); }
+    .rm-sec { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 16px 4px; font-size: 14px; font-weight: 900; color: var(--color-text-primary); }
+    .rm-sec i { font-size: 22px; color: var(--color-text-secondary); }
+    .rm-sec .end { margin-left: auto; font-size: 18px; }
+    .rm-rule { height: 1px; margin: 12px 8px; background: var(--color-border); }
+    .rm-sheet { position: relative; min-height: 636px; background: var(--color-surface-white); border-top: 1px solid var(--color-border); border-left: 1px solid var(--color-border); border-top-left-radius: var(--radius-xl); }
+    .rm-tabs { display: flex; align-items: stretch; padding: 0 8px 0 16px; border-bottom: 1px solid var(--color-border); overflow-x: auto; }
+    .rm-tab { position: relative; min-height: 56px; padding: 0 24px; border: none; background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+    .rm-tab:hover { color: var(--color-text-primary); }
+    .rm-tab[aria-selected="true"] { color: var(--color-dark-green); }
+    .rm-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 4px; border-radius: 4px 4px 0 0; background: var(--color-primary-green); }
+    .rm-wrap { max-width: 932px; margin: 0 auto; padding: 24px; }
+    .rm-offline { display: none; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border-radius: var(--radius-md); background: var(--color-warning-light); border: 1px solid var(--color-warning-border); color: var(--color-warning-dark); font-size: 14px; font-weight: 800; }
+    .rm[data-state="offline"] .rm-offline { display: flex; }
+    .rm h3.rm-h { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; margin-top: 8px; }
+    .rm-grid { display: grid; grid-template-columns: repeat(auto-fill, 257px); gap: 16px; margin-top: 8px; }
+    .rm-card { display: flex; flex-direction: column; min-height: 296px; background: var(--color-surface-white); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .rm-card:hover { box-shadow: var(--shadow-card-hover); }
+    .rm-card-head { position: relative; display: block; width: 100%; min-height: 100px; padding: 16px; border: none; background: var(--color-dark-green); color: var(--color-surface-white); text-align: left; cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .rm-card-head strong { display: block; padding-right: 64px; font-size: 24px; line-height: 32px; font-weight: 900; }
+    .rm-card-head span { display: block; font-size: 14px; line-height: 20px; font-weight: 700; }
+    .rm-card-head small { display: block; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--color-light-green); }
+    .rm-card-head .avatar { position: absolute; right: 16px; bottom: -36px; width: 72px; height: 72px; font-size: 24px; border: 3px solid var(--color-surface-white); z-index: 1; }
+    .rm-card-body { flex: 1; padding: 12px 96px 12px 16px; font-size: 13px; line-height: 18px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-card-body em { display: block; font-style: normal; font-size: 14px; font-weight: 900; color: var(--color-text-primary); }
+    .rm-card-foot { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-height: 60px; padding: 4px 8px; border-top: 1px solid var(--color-border); }
+    .rm-panel { margin-top: 8px; }
+    .rm-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 240px; padding: 20px 24px; border-radius: var(--radius-md); background: var(--color-dark-green); color: var(--color-surface-white); }
+    .rm-banner h2 { font-size: 36px; line-height: 44px; font-weight: 900; padding-right: 160px; }
+    .rm-banner p { font-size: 22px; line-height: 28px; font-weight: 700; color: var(--color-light-green); }
+    .rm-banner .subj { position: absolute; right: 40px; bottom: 32px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+    .rm-banner .rm-custom { position: absolute; top: 12px; right: 16px; background: var(--color-surface-white); color: var(--color-dark-green); border: none; }
+    .rm-banner .rm-info { position: absolute; right: 12px; bottom: 8px; color: var(--color-surface-white); }
+    .rm-cols { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; margin-top: 24px; align-items: start; }
+    .rm-aside { display: grid; gap: 16px; }
+    .rm-sc { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-sc h4 { display: flex; align-items: center; justify-content: space-between; min-height: 36px; font-size: 16px; line-height: 24px; font-weight: 900; }
+    .rm-sc .code { font-size: 22px; line-height: 28px; font-weight: 900; letter-spacing: 1px; }
+    .rm-sc p { font-size: 13px; line-height: 18px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-bar { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .rm-tonal { display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 24px 0 16px; border: none; border-radius: var(--radius-pill); background: var(--color-light-green); color: var(--color-dark-green); font-size: 14px; font-weight: 900; cursor: pointer; }
+    .rm-tonal:hover { box-shadow: var(--shadow-card-hover); }
+    .rm-note { display: flex; align-items: center; gap: 12px; min-height: 72px; margin-bottom: 16px; padding: 8px 8px 8px 24px; border-radius: var(--radius-md); background: var(--color-surface-subtle); }
+    .rm-note .main { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; min-height: 52px; border: none; background: transparent; text-align: left; color: inherit; font-family: inherit; cursor: pointer; padding: 0; }
+    .rm-note .ic { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: var(--color-light-green); color: var(--color-dark-green); }
+    .rm-note .ic.quiz { background: var(--color-warning-light); color: var(--color-warning-dark); }
+    .rm-note .ic.material { background: var(--color-info-light); color: var(--color-info-dark); }
+    .rm-note .tx { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 800; }
+    .rm-note .tx small { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-post { margin-bottom: 16px; border-radius: var(--radius-md); background: var(--color-surface-subtle); overflow: hidden; }
+    .rm-post-head { display: flex; align-items: center; gap: 16px; padding: 16px 8px 8px 24px; }
+    .rm-post-head .who { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 900; }
+    .rm-post-head .who small { display: block; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-post-body { padding: 4px 24px 16px; font-size: 14px; line-height: 20px; font-weight: 700; }
+    .rm-comments { border-top: 1px solid var(--color-border); padding: 8px 16px 12px 20px; display: grid; gap: 8px; }
+    .rm-comment { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 20px; font-weight: 700; }
+    .rm-comment strong { font-weight: 900; }
+    .rm-comment small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); margin-left: 6px; }
+    .rm-reply { display: flex; align-items: center; gap: 8px; }
+    .rm-reply .form-input { flex: 1; min-width: 0; min-height: 52px; border-radius: var(--radius-pill); background: var(--color-surface-white); }
+    .rm-empty { display: none; align-items: center; gap: 32px; padding: 32px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-white); }
+    .rm-empty .art { width: 96px; height: 96px; border-radius: 50%; background: var(--color-light-green); color: var(--color-dark-green); display: flex; align-items: center; justify-content: center; font-size: 44px; flex-shrink: 0; }
+    .rm-empty h4 { font-size: 22px; line-height: 28px; font-weight: 900; }
+    .rm-empty p { margin-top: 4px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--color-text-secondary); }
+    .rm-skel { display: none; gap: 16px; }
+    .rm-skel i { display: block; border-radius: var(--radius-md); background: var(--color-surface-subtle); }
+    .rm[data-state="loading"] .rm-skel { display: grid; }
+    .rm[data-state="loading"] .rm-has { display: none; }
+    .rm[data-state="empty"] .rm-has { display: none; }
+    .rm[data-state="empty"] .rm-empty { display: flex; }
+    .rm[data-state="loading"] .rm-empty { display: none; }
+    .rm:not([data-cls="0"]) .rm-feed { display: none; }
+    .rm:not([data-cls="0"]) .rm-feed-empty { display: flex; }
+    .rm[data-state="loading"] .rm-feed-empty { display: none; }
+    .rm-modal { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-start; justify-content: center; padding: 72px 16px 16px; background: rgba(23, 33, 61, 0.45); }
+    .rm-modal[hidden] { display: none; }
+    .rm-dialog { width: min(640px, 100%); border-radius: var(--radius-xl); background: var(--color-surface-white); box-shadow: var(--shadow-modal); padding: 24px; display: grid; gap: 16px; }
+    .rm-dialog h3 { font-size: 24px; line-height: 32px; font-weight: 900; }
+    .rm-dialog .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 800; color: var(--color-text-secondary); }
+    .rm-dialog textarea { min-height: 140px; resize: vertical; }
+    .rm-dialog footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+    .rm-dialog footer .hint { margin-right: auto; font-size: 13px; font-weight: 700; color: var(--color-warning-dark); }
+    @container rm (max-width: 760px) { .rm-body { grid-template-columns: minmax(0, 1fr); } .rm-drawer { display: none; } .rm-cols { grid-template-columns: minmax(0, 1fr); } .rm-banner h2 { padding-right: 0; } .rm-banner .subj { display: none; } }
+
     /* Classwork */
     .cr-cw { max-width: 860px; margin: 0 auto; padding: 24px; }
     .cr-cw-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -1087,6 +1197,94 @@ function crCard(c, i) {
 
 const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];
 
+/* ---------------------------- Remake slice: Home and Stream (desktop) ---------------------------- */
+const RM_DUE = ['Pagsusulit #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
+const RM_STATES = [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['offline', 'Offline']];
+
+function rmIcon(name, cls) { return '<i class="ph ' + (cls || '') + ' ph-' + name + '"></i>'; }
+function rmBtn(icon, label, extra) { return '<button class="cr-icon" type="button" aria-label="' + label + '"' + (extra || '') + '>' + rmIcon(icon) + '</button>'; }
+
+function rmDrawer() {
+  const nav = (id, icon, text, extra) => '<button class="rm-nav" type="button" data-rm="go" data-id="' + id + '" data-screen="' + (id === 'home' ? 'home' : 'later') + '"' + (extra || '') + '>' + rmIcon(icon) + '<span class="t">' + text + '</span></button>';
+  return nav('home', 'house', 'Home') +
+    '<div class="rm-sec"><i class="ph ph-graduation-cap"></i><span data-only="learner">Enrolled</span><span data-only="teacher">Teaching</span><i class="ph ph-caret-up end"></i></div>' +
+    '<div data-only="learner">' + nav('todo', 'check-square', 'To-do', ' data-label="To-do"') + '</div>' +
+    '<div data-only="teacher">' + nav('review', 'clipboard-text', 'To review', ' data-label="To review"') + '</div>' +
+    '<div class="rm-has">' + CR_CLASSES.map((c, i) => '<button class="rm-nav" type="button" data-rm="go" data-id="class" data-screen="stream" data-cls="' + i + '"><span class="rm-dot">' + c.name.charAt(0) + '</span><span class="t">' + c.name + '<small>' + c.section + '</small></span></button>').join('') + '</div>' +
+    '<div class="rm-rule"></div>' + nav('archived', 'archive', 'Archived classes', ' data-label="Archived classes"') + nav('settings', 'gear', 'Settings', ' data-label="Settings"');
+}
+
+function rmCard(c, i) {
+  return '<article class="rm-card"><button class="rm-card-head" type="button" data-rm="go" data-screen="stream" data-cls="' + i + '" aria-label="Open ' + c.name + '"><strong>' + c.name + '</strong><span>' + c.section + '</span>' +
+    '<small data-only="learner">' + c.teacher + '</small><span class="avatar" aria-hidden="true">' + c.init + '</span></button>' +
+    '<div class="rm-card-body" data-only="learner">' + (RM_DUE[i] ? '<em>Due soon</em>' + RM_DUE[i] : 'Nothing due yet') + '</div>' +
+    '<div class="rm-card-body" data-only="teacher">' + (i === 0 ? '<em>5 turned in</em>Handout #2 needs review' : 'Nothing to review') + '</div>' +
+    '<footer class="rm-card-foot"><span data-only="learner">' + rmBtn('clipboard-text', 'Your work in ' + c.name) + '</span><span data-only="teacher">' + rmBtn('table', 'Open grades for ' + c.name) + '</span>' + rmBtn('dots-three-vertical', 'More options for ' + c.name) + '</footer></article>';
+}
+
+function rmHome() {
+  const item = (tile, icon, title, sub, end) => '<div class="cr-item"><span class="tile ' + tile + '">' + rmIcon(icon) + '</span><div class="main"><strong>' + title + '</strong><small>' + sub + '</small></div>' + end + '</div>';
+  const due = '<section class="rm-panel rm-has" aria-label="Due soon"><div class="rm-head"><h3 class="rm-h"><span data-only="learner">Due soon</span><span data-only="teacher">Recently due</span></h3><span><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="To-do"><span data-only="learner">View To-do</span><span data-only="teacher">View work in progress</span></button>' + rmBtn('arrows-in-line-vertical', 'Collapse this section') + '</span></div>' +
+    '<div data-only="learner">' + item('quiz', 'timer', 'Pagsusulit #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
+    '<div data-only="teacher">' + item('', 'clipboard-text', 'Handout #2: Parts of a Leaf', 'Science 4 - 5 turned in, 27 assigned', '<button class="btn btn-secondary" type="button" data-rm="go" data-screen="later" data-label="Student work">Review</button>') + '</div></section>';
+  const classes = '<section class="rm-panel rm-has" aria-label="Classes"><div class="rm-head"><h3 class="rm-h">Classes</h3><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div><div class="rm-grid">' + CR_CLASSES.map(rmCard).join('') + '</div></section>';
+  const empty = '<section class="rm-empty" aria-label="No classes yet"><span class="art">' + rmIcon('graduation-cap') + '</span><div><h4>Add a class to get started</h4><p data-only="learner">Ask your teacher for the 6-character class code, then type it here.</p><p data-only="teacher">Create a class and share its code. You approve each learner who asks to join.</p>' +
+    '<button class="rm-tonal" type="button" style="margin-top:12px" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div></section>';
+  const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:28px;width:160px"></i><i style="height:72px"></i><i style="height:72px"></i><div style="display:grid;grid-template-columns:repeat(auto-fill,257px);gap:16px"><i style="height:296px"></i><i style="height:296px"></i><i style="height:296px"></i></div></div>';
+  return '<div data-s="home"><div class="rm-wrap"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' + due + classes + empty + skel + '</div></div>';
+}
+
+function rmAnnouncement(init, who, when, body, tail) {
+  return '<article class="rm-post"><header class="rm-post-head"><span class="avatar">' + init + '</span><div class="who">' + who + '<small>' + when + '</small></div>' + rmBtn('dots-three-vertical', 'Announcement options') + '</header>' +
+    '<div class="rm-post-body">' + body + '</div>' + (tail || '') + '</article>';
+}
+
+function rmStream() {
+  const c = CR_SCI;
+  const note = (kind, icon, text, when) => '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="later" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
+  const comments = '<div class="rm-comments"><div class="rm-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
+    '<button class="cr-link rm-add" type="button" data-rm="comment-toggle" style="justify-self:start">' + rmIcon('chat-text') + 'Add comment</button>' +
+    '<div class="rm-reply" hidden><span class="avatar sm"><span data-only="learner">AS</span><span data-only="teacher">MR</span></span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment">' + rmBtn('paper-plane-tilt', 'Send comment', ' data-rm="comment-send"') + '</div></div>';
+  const feed = '<div class="rm-feed rm-has">' +
+    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM') +
+    note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
+    '<div class="rm-posts">' + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', comments) + '</div></div>';
+  const empty = '<section class="rm-empty rm-feed-empty" aria-label="Nothing posted yet"><span class="art">' + rmIcon('chat-circle-dots') + '</span><div><h4>This is where you can talk to your class</h4><p data-only="teacher">Use the stream to share announcements, post assignments and answer learners\' questions.</p><p data-only="learner">When your teacher posts something, you will see it here.</p></div></section>';
+  const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:72px"></i><i style="height:72px"></i><i style="height:153px"></i></div>';
+  const aside = '<div class="rm-aside"><div class="rm-sc" data-only="teacher"><h4>Class code ' + rmBtn('dots-three-vertical', 'More options for class code') + '</h4><span class="code">K7M-4QX</span><p>Learners type this to ask to join. You approve each one.</p></div>' +
+    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Pagsusulit #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
+  const bar = '<div class="rm-bar" data-only="teacher"><button class="rm-tonal" type="button" data-rm="open-compose">' + rmIcon('pencil-simple') + 'New announcement</button><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Repost">' + rmIcon('repeat') + 'Repost</button></div>';
+  const tabs = '<div data-s="stream later"><div class="rm-tabs" role="tablist" aria-label="Class sections">' +
+    [['stream', 'Stream', ''], ['classwork', 'Classwork', ''], ['people', 'People', ''], ['grades', 'Grades', 'teacher']].map(t => '<button class="rm-tab" role="tab" type="button" data-rm="go" data-tab="' + t[0] + '" data-screen="' + (t[0] === 'stream' ? 'stream' : 'later') + '" data-label="' + t[1] + '"' + (t[2] ? ' data-only="teacher"' : '') + ' aria-selected="' + (t[0] === 'stream') + '">' + t[1] + '</button>').join('') +
+    '<span class="cr-spacer"></span><span data-only="teacher">' + rmBtn('gear', 'Class settings', ' data-rm="go" data-screen="later" data-label="Class settings"') + '</span></div></div>';
+  const stream = '<div data-s="stream"><div class="rm-wrap"><div class="rm-offline">' + rmIcon('wifi-slash') + 'Hub not reachable. You are seeing what is saved on this device.</div>' +
+    '<div class="rm-banner"><span class="subj" aria-hidden="true"><i class="ph ph-' + c.icon + '" data-rm-icon></i></span><h2 data-rm-name>' + c.name + '</h2><p data-rm-sec>' + c.section + '</p>' +
+    '<span data-only="teacher"><button class="rm-tonal rm-custom" type="button" data-rm="go" data-screen="later" data-label="Customize">' + rmIcon('pencil-simple') + 'Customize</button></span>' +
+    '<button class="cr-icon rm-info" type="button" aria-label="View class information">' + rmIcon('info') + '</button></div>' +
+    '<div class="rm-cols">' + aside + '<div>' + bar + feed + empty + skel + '</div></div></div></div>';
+  const later = '<div data-s="later"><div class="rm-wrap"><section class="rm-empty" style="display:flex" aria-live="polite"><span class="art">' + rmIcon('hammer') + '</span><div><h4 data-rm-later>Next slice</h4><p>Only Home and Stream are in this first slice. This screen comes after you approve it.</p>' +
+    '<button class="rm-tonal" type="button" style="margin-top:12px" data-rm="go" data-screen="home">' + rmIcon('house') + 'Back to Home</button></div></section></div></div>';
+  return tabs + stream + later;
+}
+
+function rmModal() {
+  return '<div class="rm-modal" hidden><div class="rm-dialog" role="dialog" aria-modal="true" aria-label="Announcement"><h3>Announcement</h3>' +
+    '<div class="meta"><span class="badge badge-neutral"><i class="ph ph-chalkboard-teacher"></i> <span data-rm-name>Science 4</span></span><span class="badge badge-neutral"><i class="ph ph-users"></i> All learners</span></div>' +
+    '<textarea class="form-input" aria-label="Announce something to your class" placeholder="Announce something to your class"></textarea>' +
+    '<div class="meta">' + rmBtn('paperclip', 'Attach a file') + rmBtn('link', 'Add link') + '</div>' +
+    '<footer><span class="hint rm-offhint" hidden>Waiting for the Hub. Posting needs the classroom network.</span><button class="btn btn-secondary" type="button" data-rm="close-compose">Cancel</button><button class="btn btn-primary" type="button" data-rm="post">Post</button></footer></div></div>';
+}
+
+function rmApp() {
+  const top = '<header class="rm-top">' + rmBtn('list', 'Open menu') + '<span class="doc-brand-badge">L.A.R.A.</span>' +
+    '<div class="rm-crumb"><i class="ph ph-caret-right"></i><div><strong data-rm-name>' + CR_SCI.name + '</strong><small data-rm-sec>' + CR_SCI.section + '</small></div></div><span class="cr-spacer"></span>' +
+    '<span class="rm-hub"><span class="on"><i class="ph ph-broadcast"></i> Connected to Hub</span><span class="off"><i class="ph ph-wifi-slash"></i> Not connected to Hub</span></span>' +
+    rmBtn('plus', 'Join or create a class') + '<span class="cr-icon" style="cursor:default"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></span></header>';
+  return crSwitch(CR_VIEWS) + crSwitch(RM_STATES, 'State', 'state') +
+    '<div class="rm" data-role="learner" data-state="normal" data-screen="home" data-cls="0" data-tab="stream">' + top +
+    '<div class="rm-body"><nav class="rm-drawer" aria-label="Classes">' + rmDrawer() + '</nav><div class="rm-sheet">' + rmStream() + rmHome() + '</div></div>' + rmModal() + '</div>';
+}
+
 /* ---------------------------- Screen previews ---------------------------- */
 function crHomePreview() {
   const due = '<section class="cr-panel" data-only="learner" aria-label="Due soon"><header><h4>Due soon <span class="count-dot">2</span></h4>' +
@@ -1357,6 +1555,16 @@ fun StreamPostCard(post: StreamPost, onComment: (String, String) -> Unit) {
 
 /* ---------------------------- The screens group ---------------------------- */
 const CR_GROUP = { name: 'Classroom Screens', items: [
+{
+  id: 'screen-remake', title: 'Remake: Home and Stream (desktop)', icon: 'browsers', wide: true, screen: true, tag: 'REMAKE',
+  desc: 'First slice of the Classroom remake, desktop only. Layout and sizes were measured in Google Classroom at 1440px, then dressed in L.A.R.A tokens. Switch between learner and teacher, change the state, open a class from Home and try the announcement and comment boxes.',
+  preview: rmApp(),
+  react: `// Desktop prototype only. React code follows once the layout is approved.`,
+  kotlin: `// The phone version is supplied separately.`,
+  dos: ['Keep the Classroom structure: a top bar, a class drawer, a white sheet, then Stream, Classwork, People (and Grades for teachers).', 'Show the Hub status in the top bar, as words and an icon, never color alone.', 'Let a learner comment, but only a teacher post an announcement.'],
+  donts: ['Do not add a Calendar or Drive entry: both are out of scope.', 'Do not put the class code where a learner can see it.', 'Do not add an AI tutor entry to these screens until the Lead decides where it lives.'],
+  a11y: ['Tabs, drawer items and icon buttons are real buttons with names, 52px square.', 'The offline banner and the Hub pill carry an icon and words.', 'The announcement dialog is labelled and Cancel closes it.']
+},
 {
   id: 'screen-home', title: 'Home and app shell', icon: 'house', wide: true, screen: true,
   desc: 'The frame every screen sits in: a top bar, a class drawer that stays put, and a white content sheet. Home follows Google Classroom, with a friendly greeting, a Due soon panel and a grid of class cards.',
@@ -4281,6 +4489,56 @@ function enhance() {
     if (el.classList.contains('chip') && !el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', el.classList.contains('selected'));
   });
 }
+
+/* Remake slice: Home and Stream behave like a small app (desktop) */
+function rmSync(root) {
+  const s = root.dataset.screen, c = root.dataset.cls, k = CR_CLASSES[+c];
+  root.querySelectorAll('.rm-nav').forEach(n => {
+    const on = n.dataset.id === 'home' ? s === 'home' : n.dataset.id === 'class' && s !== 'home' && n.dataset.cls === c;
+    n.classList.toggle('active', on);
+    if (on) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+  });
+  root.querySelectorAll('[data-rm-name]').forEach(e => { e.textContent = k.name; });
+  root.querySelectorAll('[data-rm-sec]').forEach(e => { e.textContent = k.section; });
+  root.querySelectorAll('[data-rm-icon]').forEach(e => { e.className = 'ph ph-' + k.icon; });
+  root.querySelectorAll('.rm-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === (s === 'stream' ? 'stream' : root.dataset.tab))));
+  root.querySelector('.rm-offhint').hidden = root.dataset.state !== 'offline';
+  root.querySelector('.rm-modal [data-rm="post"]').disabled = root.dataset.state === 'offline';
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-rm], [data-cr-state], [data-cr-role]');
+  const root = t && t.closest('.rm') || (t && t.closest('.preview-card') && t.closest('.preview-card').querySelector('.rm'));
+  if (!t || !root) return;
+  if (!t.dataset.rm) { setTimeout(() => rmSync(root), 0); return; }
+  const a = t.dataset.rm;
+  if (a === 'go') {
+    root.dataset.screen = t.dataset.screen;
+    if (t.dataset.cls !== undefined) root.dataset.cls = t.dataset.cls;
+    if (t.dataset.tab) root.dataset.tab = t.dataset.tab;
+    if (t.dataset.label) root.querySelector('[data-rm-later]').textContent = t.dataset.label + ' is the next slice';
+    rmSync(root);
+  } else if (a === 'open-compose') {
+    rmSync(root); root.querySelector('.rm-modal').hidden = false; root.querySelector('.rm-modal textarea').focus();
+  } else if (a === 'close-compose') {
+    root.querySelector('.rm-modal').hidden = true;
+  } else if (a === 'post') {
+    const ta = root.querySelector('.rm-modal textarea'), text = ta.value.trim();
+    if (!text) { ta.focus(); return; }
+    const box = document.createElement('div'); box.textContent = text;
+    root.querySelector('.rm-posts').insertAdjacentHTML('afterbegin', rmAnnouncement('MR', 'Ms. Reyes', 'Just now', box.innerHTML));
+    ta.value = ''; root.querySelector('.rm-modal').hidden = true;
+  } else if (a === 'comment-toggle') {
+    const r = t.closest('.rm-comments').querySelector('.rm-reply'); r.hidden = !r.hidden; if (!r.hidden) r.querySelector('input').focus();
+  } else if (a === 'comment-send') {
+    const inp = t.closest('.rm-reply').querySelector('input'), text = inp.value.trim();
+    if (!text) { inp.focus(); return; }
+    const box = document.createElement('div'); box.textContent = text;
+    const who = root.dataset.role === 'teacher' ? ['MR', 'Ms. Reyes', ''] : ['AS', 'Ana', 'blue'];
+    const badge = root.dataset.state === 'offline' ? '<span class="badge badge-queued"><i class="ph ph-clock"></i> Queued for sync</span>' : '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Saved</span>';
+    t.closest('.rm-comments').querySelector('.rm-add').insertAdjacentHTML('beforebegin', '<div class="rm-comment"><span class="avatar sm ' + who[2] + '">' + who[0] + '</span><div><strong>' + who[1] + '</strong><small>Just now</small> ' + badge + '<br>' + box.innerHTML + '</div></div>');
+    inp.value = '';
+  }
+});
 
 /* ---------- Boot ---------- */
 renderSidebar();
