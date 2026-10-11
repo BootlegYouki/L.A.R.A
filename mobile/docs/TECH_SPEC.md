@@ -20,7 +20,6 @@
 **Non-goals (this team must not build these; cite `docs/PRD.md` §9 Out-of-Scope):**
 - AI auto-grading of handwritten photos or essays — subjective grading stays manual on the teacher side.
 - Any cloud sync or external service (Firebase, Google Play Services, CDNs, remote telemetry) — see `rules/networking-and-lan.md` §1.
-- The full teacher desktop authoring surface — mobile is the "on-the-go" teacher set only (approve, post, start/monitor quizzes); full authoring is the `desktop/` team (AGENTS §1.4).
 - LoRa / Bluetooth mesh, and live video conferencing.
 - The Hub, its database, REST/WS server, `llama-server` queue, gradebook `.xlsx` export generation — all owned by `server/`. Mobile only triggers/reads export via the contract.
 
@@ -171,7 +170,7 @@ After a reconnect, send `last_event_id` in `EVENT_HELLO`; anything still missed 
 
 ## 7. Data and Offline Behavior
 
-**Local storage.** `LaraDatabase` holds one Room entity per table in [`contracts/schema/client_offline.sql`](../../contracts/schema/client_offline.sql) (14 tables; linked, not copied). A schema test compares Room's exported schema against the SQL file (`room_schema.md`). The client **must not** define `users.pin_hash`, other people's `lrn_or_id`, `quiz_questions.correct_answer`/`synonyms_json`, or server file paths (`rules/database-and-sync.md` §2). Client-only columns: `sync_status`, `materials.local_file_path`, and the `sync_state` key/value table (`hub_id`, `sync_epoch`, `cursor`, `current_user_id`).
+**Local storage.** `LaraDatabase` holds one Room entity per table in [`contracts/schema/client_offline.sql`](../../contracts/schema/client_offline.sql) (linked, not copied). A schema test compares Room's exported schema against the SQL file (`room_schema.md`). The client **must not** define `users.pin_hash`, other people's `lrn_or_id`, `quiz_questions.correct_answer`/`synonyms_json`, or server file paths (`rules/database-and-sync.md` §2). Client-only columns: `sync_status`, `materials.local_file_path`, and the `sync_state` key/value table (`hub_id`, `sync_epoch`, `cursor`, `current_user_id`).
 
 **`sync_status` lifecycle** (on `assignment_submissions`, `quiz_attempts`, `announcement_comments`):
 `QUEUED_FOR_SYNC` (created offline) → push/upload → on a `SYNCED` receipt mark `SYNCED`; on a `REJECTED` receipt the row stays visible with a kind explanation and is **never** silently deleted (`rules/database-and-sync.md` §3.4).

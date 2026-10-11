@@ -7,7 +7,7 @@
     "event": { "type": "string", "const": "EVENT_JOIN_APPROVAL" },
     "classroom_id": { "type": "string" },
     "student_id": { "type": "string" },
-    "status": { "type": "string", "enum": ["ACTIVE", "REJECTED"] },
+    "status": { "type": "string", "enum": ["ACTIVE", "REJECTED", "REMOVED"] },
     "timestamp": { "type": "integer" }
   }
 }

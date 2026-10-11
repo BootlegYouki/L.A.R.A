@@ -10,12 +10,12 @@ All AI agents and contributors must follow these rules.
 
 The schema is defined **only** in `contracts/schema/`:
 
-* `server_master.sql`: the Hub's authoritative database (16 tables).
-* `client_offline.sql`: the offline slice for Android Room and the Desktop client (14 tables).
+* `server_master.sql`: the Hub's authoritative database.
+* `client_offline.sql`: the offline slice for Android Room and the Desktop client.
 
 Never copy column lists into other documents. READMEs, the PRD and issues link to these files. A schema change is a `contract-change` PR (see `rules/team-workflow-and-prs.md`): update both SQL files, `contracts/openapi.yaml` if the API shape changes, `scripts/mock_hub.py` and `tests/` together.
 
-Core tables share names and column meaning across server and clients: `users`, `classrooms`, `enrollments`, `announcements`, `announcement_comments`, `materials`, `material_chunks`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`, `ai_chat_messages`. Server-only: `sessions`, `sync_revisions`, `hub_meta`. Client-only: `sync_state`.
+Core tables share names and column meaning across server and clients: `users`, `classrooms`, `enrollments`, `announcements`, `announcement_comments`, `materials`, `material_chunks`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`, `ai_chat_messages`, `topics`, `private_comments`. Server-only: `sessions`, `sync_revisions`, `hub_meta`, `classroom_teachers` (clients get co-teachers as `Classroom.co_teacher_ids`). Client-only: `sync_state`.
 
 ### Conventions
 * IDs are UUID v4 `TEXT`. Timestamps are epoch **milliseconds** `INTEGER`. Booleans are `INTEGER` 0/1.
@@ -36,11 +36,13 @@ A learner can open their own phone's SQLite file, so the client schema is public
 | `quiz_questions.correct_answer`, `synonyms_json` | Answer keys |
 | `materials.file_path`, `assignment_submissions.file_path` (server paths) | Server disk layout. Clients use `download_url` and their own local paths |
 | `sessions`, `hub_meta`, `sync_revisions` | Server internals |
+| The `ADMIN` user row | The Hub admin exists only on the Hub |
+| Another learner's `private_comments` | A private thread belongs to one learner and the class teachers; its revisions carry `student_id` |
 
 Clients get other people's names through `PublicUser` (`id`, `full_name`, `role`) in the pull response.
 
 ### Client-specific columns
-* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'`) on `assignment_submissions`, `quiz_attempts` and `announcement_comments`: work created offline waiting to upload.
+* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'`) on `assignment_submissions`, `quiz_attempts`, `announcement_comments` and `private_comments`: work created offline waiting to upload.
 * `materials.local_file_path`: absolute path of the cached PDF or MP4.
 * `sync_state` (key/value): `hub_id`, `sync_epoch`, `cursor`, `current_user_id`.
 
@@ -66,7 +68,7 @@ Each revision has `classroom_id` (NULL for global records) and `student_id` (NUL
 * The same applies if a client was offline longer than the tombstone retention window (the Hub bumps the epoch when it prunes).
 
 ### 3.4 Push (`POST /api/sync/push`)
-* Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts and comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
+* Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts, stream comments and private comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
 * Hub validates and grades server-side, writes `sync_revisions` in the same transaction, and returns one receipt per item (`SYNCED` or `REJECTED` + reason such as `TIME_LIMIT_EXCEEDED`).
 * Client marks `SYNCED` only from a receipt. A `REJECTED` row stays visible to the learner with a kind explanation and is never silently deleted.
 
@@ -78,6 +80,8 @@ Server is authoritative for classroom metadata, rosters and grades. The client i
 ## 4. Integrity & Deletion Rules
 
 * **Never delete users, classrooms or graded rows in production code.** Deactivate users (`is_active`) and archive classrooms (`archived_at`). Grade-bearing tables reference `users` with `ON DELETE RESTRICT`; deleting a classroom cascades and would erase grades.
+* **Deleting an assignment archives it** (`assignments.archived_at`): clients get a `DELETE` tombstone, the gradebook and export skip it, and its submissions and grades stay on the Hub. Materials, topics and announcements hold no grades and are really deleted. A removed learner's enrollment becomes `REMOVED`; nothing of theirs is deleted.
+* **"Teaches the class" means the owner (`classrooms.teacher_id`) or a row in `classroom_teachers`.** Every teacher route authorises against that, except rename, archive and managing teachers, which are owner only.
 * At most one `ACTIVE` quiz per classroom (partial unique index `uq_one_active_quiz_per_classroom`). `GET /api/quizzes/active` relies on it.
 * A `quiz_attempts` row exists from quiz start with `status = 'IN_PROGRESS'`; `submitted_at`, `score` and `total_points` are NULL until `SUBMITTED` (enforced by a CHECK). The AI quiz lockout is enforced while the learner has an `IN_PROGRESS` row.
 * One attempt per learner per quiz in v1 (`UNIQUE(quiz_id, student_id)`).

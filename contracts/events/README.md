@@ -13,7 +13,7 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 |---|---|---|
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | client to Hub / Hub to client | connect |
 | `EVENT_JOIN_REQUEST` | Hub to teacher | learner `POST /api/classrooms/join` |
-| `EVENT_JOIN_APPROVAL` | Hub to learner | teacher approve or reject |
+| `EVENT_JOIN_APPROVAL` | Hub to learner | teacher approve, reject or remove (`status` `ACTIVE`, `REJECTED`, `REMOVED`) |
 | `EVENT_ANNOUNCEMENT_PUSH` | Hub to enrolled learners | `POST /api/announcements` |
 | `EVENT_QUIZ_START` | Hub broadcast | `POST /api/quizzes/{id}/start` |
 | `EVENT_QUIZ_CLOSED` | Hub broadcast | `POST /api/quizzes/{id}/close` |

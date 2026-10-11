@@ -10,10 +10,10 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 
 **Three programs, one network:**
 * **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
-* **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers (approve, post, start and monitor quizzes).
-* **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. The full teacher authoring surface.
+* **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
+* **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
-**How a class runs:** admin creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, assign homework (learners photograph their notebook), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
+**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -40,7 +40,7 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
 
-Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001`.
+Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001` (the Hub admin, not a teacher).
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
@@ -52,7 +52,9 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
 * The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
 * **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
-* **Teachers work on desktop and mobile;** desktop is the full authoring surface, mobile the on-the-go set.
+* **The product is Google Classroom, offline, plus quizzes and the Socratic tutor.** When a classroom behavior is not written down, Google Classroom's behavior is the default, limited to what the contract supports. Out of scope: Meet, Drive, Calendar, guardian emails, rubrics and grade categories.
+* **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
+* **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * Canonical values: touch targets 52dp (56dp primary actions and quiz options), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.

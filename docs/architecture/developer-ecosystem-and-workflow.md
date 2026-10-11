@@ -68,7 +68,7 @@ State is in memory and reseeds on every start. Accounts (PIN `1234`): `ADMIN-000
 contracts/
 ├── openapi.yaml           # REST: auth, admin, classrooms, sync, stream, materials, assignments, quizzes, export
 ├── events/                # WebSocket event schemas (JSON Schema) + README (handshake, direction table)
-├── schema/                # server_master.sql (16 tables) and client_offline.sql (14 tables)
+├── schema/                # server_master.sql and client_offline.sql
 ├── README.md              # how to change a contract
 └── naming_rules.md        # serialization, privacy and error rules
 ```

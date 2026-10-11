@@ -98,7 +98,7 @@
 
 ## 3. Client Offline Database Schema (`@tauri-apps/plugin-sql`)
 
-> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql) (14 tables). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
+> **Source of truth:** [`contracts/schema/client_offline.sql`](../contracts/schema/client_offline.sql). Rules and protocol: [`rules/database-and-sync.md`](../rules/database-and-sync.md). Do not copy column lists into this README.
 
 * Write migrations that reproduce `client_offline.sql` and enable `foreign_keys` when the connection opens.
 * **Never store** a PIN hash, another person's LRN, `correct_answer`, or server file paths. The signed-in user's own LRN is allowed.

@@ -66,7 +66,9 @@ class TestContracts(unittest.TestCase):
         cur_server = conn_server.cursor()
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 16, f"Server master must have exactly 16 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 19, f"Server master must have exactly 19 tables, got {server_tables}")
+        for added in ("classroom_teachers", "topics", "private_comments"):
+            self.assertIn(added, server_tables)
         self.assertIn("hub_meta", server_tables)
         self.assertIn("sessions", server_tables)
         self.assertIn("material_chunks", server_tables)
@@ -106,7 +108,8 @@ class TestContracts(unittest.TestCase):
         cur_client = conn_client.cursor()
         cur_client.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         client_tables = [r[0] for r in cur_client.fetchall()]
-        self.assertEqual(len(client_tables), 14, f"Client offline must have exactly 14 tables, got {client_tables}")
+        self.assertEqual(len(client_tables), 16, f"Client offline must have exactly 16 tables, got {client_tables}")
+        self.assertNotIn("classroom_teachers", client_tables)
         self.assertIn("sync_state", client_tables)
         self.assertNotIn("sessions", client_tables)
         self.assertNotIn("sync_revisions", client_tables)
