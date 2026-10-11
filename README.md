@@ -32,7 +32,7 @@ The people who review the project check it **as end users**: they run the app li
    ```bash
    python3 scripts/mock_hub.py        # REST :8080, WebSocket :8081, UDP beacon :8888
    ```
-   Seed accounts (PIN `1234`): teacher `T-0001` (class code `K7M-4QX`), learner `123456789012` (enrolled), learner `123456789013` (joins with the code), admin `ADMIN-0001`.
+   Seed accounts (PIN `1234`): teacher `T-0001` (class code `K7M-4QX`), learner `123456789012` (enrolled), learner `123456789013` (joins with the code), admin `ADMIN-0001` (the Hub admin, not a teacher).
 3. **Check your setup is healthy** (these are what CI runs):
    ```bash
    python3 -m unittest discover tests     # contracts, schema, mock hub, guardrails
