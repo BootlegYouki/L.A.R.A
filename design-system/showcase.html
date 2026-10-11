@@ -736,6 +736,10 @@
     .rm[data-state="offline"] .rm-hub .off { display: inline-flex; align-items: center; gap: 8px; }
     .rm-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: stretch; }
     .rm-drawer { padding: 4px 12px 20px; min-width: 0; }
+    .rm[data-nav="rail"] .rm-body { grid-template-columns: 76px minmax(0, 1fr); }
+    .rm[data-nav="rail"] .rm-nav { justify-content: center; padding: 6px 0; }
+    .rm[data-nav="rail"] .rm-nav .t, .rm[data-nav="rail"] .rm-sec span, .rm[data-nav="rail"] .rm-sec .end, .rm[data-nav="rail"] .rm-drawer .rm-has { display: none; }
+    .rm[data-nav="rail"] .rm-sec { justify-content: center; padding: 12px 0 4px; }
     .rm-nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 16px; border: none; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-secondary); font-size: 14px; font-weight: 800; text-align: left; cursor: pointer; }
     .rm-nav:hover { background: var(--color-surface-subtle); }
     .rm-nav.active { background: var(--color-light-green); color: var(--color-dark-green); font-weight: 900; }
@@ -1276,7 +1280,7 @@ function rmModal() {
 }
 
 function rmApp() {
-  const top = '<header class="rm-top">' + rmBtn('list', 'Open menu') + '<span class="doc-brand-badge">L.A.R.A.</span>' +
+  const top = '<header class="rm-top">' + rmBtn('list', 'Main menu', ' data-rm="toggle-nav" aria-expanded="true"') + '<span class="doc-brand-badge">L.A.R.A.</span>' +
     '<div class="rm-crumb"><i class="ph ph-caret-right"></i><div><strong data-rm-name>' + CR_SCI.name + '</strong><small data-rm-sec>' + CR_SCI.section + '</small></div></div><span class="cr-spacer"></span>' +
     '<span class="rm-hub"><span class="on"><i class="ph ph-broadcast"></i> Connected to Hub</span><span class="off"><i class="ph ph-wifi-slash"></i> Not connected to Hub</span></span>' +
     rmBtn('plus', 'Join or create a class') + '<span class="cr-icon" style="cursor:default"><span class="avatar sm" data-only="learner">AS</span><span class="avatar sm" data-only="teacher">MR</span></span></header>';
@@ -4517,6 +4521,8 @@ document.addEventListener('click', e => {
     if (t.dataset.tab) root.dataset.tab = t.dataset.tab;
     if (t.dataset.label) root.querySelector('[data-rm-later]').textContent = t.dataset.label + ' is the next slice';
     rmSync(root);
+  } else if (a === 'toggle-nav') {
+    const rail = root.dataset.nav !== 'rail'; root.dataset.nav = rail ? 'rail' : ''; t.setAttribute('aria-expanded', String(!rail));
   } else if (a === 'open-compose') {
     rmSync(root); root.querySelector('.rm-modal').hidden = false; root.querySelector('.rm-modal textarea').focus();
   } else if (a === 'close-compose') {
