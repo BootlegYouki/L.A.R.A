@@ -6,7 +6,7 @@
 | :--- | :--- | :--- |
 | **Hub** | [`server/`](./server/) | A dedicated always-on school PC (Linux for the pilot). Database, files, quizzes, AI queue, USB export. |
 | **Mobile app** | [`mobile/`](./mobile/) | Android phones (3 to 4 GB RAM budget phones are the target). Learners and teachers. |
-| **Desktop app** | [`desktop/`](./desktop/) | Student laptops, lab PCs, teacher PCs. Learners and the full teacher authoring surface. |
+| **Desktop app** | [`desktop/`](./desktop/) | Student laptops, lab PCs, teacher PCs. Learners and teachers, the same features as the phone on a large screen. |
 
 What the product is, in full: [`docs/PRD.md`](./docs/PRD.md). The three things it must do well: **a classroom** (stream, handouts, videos, homework photos), **paperless timed quizzes** (auto-graded, gradebook exported to USB), **an AI tutor that never gives the answer**. All of it works with the internet unplugged.
 
@@ -38,7 +38,7 @@ The people who review the project check it **as end users**: they run the app li
    python3 -m unittest discover tests     # contracts, schema, mock hub, guardrails
    python3 scripts/verify_invariants.py   # no cloud dependencies, Filipino strings match English
    ```
-4. **Pick an issue** whose dependencies are merged: [sprint board](https://github.com/users/BootlegYouki/projects/2), or filter by team: [mobile](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22) · [desktop](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22) · [server](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). Comment that you are taking it. Titles look like `[MOBILE 2.3]` (team, sprint, step).
+4. **Take your team's next issue.** A team works one issue at a time, in step order (`2.1`, then `2.2`), both developers together, with one open PR. Find it on the [sprint board](https://github.com/users/BootlegYouki/projects/2), or filter by team: [mobile](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22) · [desktop](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22) · [server](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). Comment that you are taking it. Titles look like `[MOBILE 2.3]` (team, sprint, step).
 5. **Give your agent the starter prompt** below, branch from `staging`, and work. Always base your branch and your PR on `staging`, never on `main`: the Lead alone decides what is promoted to `main`.
 
 ### Your team's tools
@@ -58,7 +58,8 @@ Paste this at the start of every session, with your issue name:
 ```text
 You are working on L.A.R.A, an offline LAN classroom app. Task: [TEAM x.y] <title>.
 Before writing code, read in this order: AGENTS.md, then <team>/AGENTS.md, the issue text, the
-contracts it names in contracts/, and the rules/ file for its area. Then:
+PRD requirement and the contracts it names, the rules/ file for its area, and <team>/docs/TECH_SPEC.md
+for file names and patterns. The issue is the whole scope: its sub-tasks, Target Files and acceptance criteria. Then:
 - Change only my team's folder. Never edit contracts/, rules/, design-system/, scripts/, tests/ or .github/.
 - If the API, an event or a column must change, stop and tell me: that needs its own contract-change PR first.
 - No internet at runtime: no Firebase, Google Play Services, CDNs, Google Fonts or analytics. Fonts and icons come from design-system/assets/.
@@ -67,7 +68,9 @@ contracts it names in contracts/, and the rules/ file for its area. Then:
 - Never put answer keys, PIN data or other learners' LRNs where a client can see them.
 - Make the smallest change that satisfies the issue. If a requirement is missing or two documents
   disagree, ask me instead of guessing.
-- When done, run the team commands and verify_invariants.py, and write the "How to test" steps for a non-programmer.
+- Use the names and patterns already in the code and the Tech Spec. Do not invent a second name for something that exists.
+- When done, run the team commands and verify_invariants.py, show the evidence for each acceptance criterion,
+  and write the "How to test" steps for a non-programmer.
 ```
 
 Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents/skills/`](./.agents/skills/README.md); the README there shows how to turn them on.
@@ -81,7 +84,7 @@ Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents
 | **One issue = one team = one PR** | Keep it small. Do not touch another team's folder. |
 | **Contract first** | [`contracts/`](./contracts/) is the only thing the three programs share. Never change an endpoint, event or column in code before it exists there, in the mock hub and in the tests. |
 | **Branch flow** | Branch from `staging`, open the PR to `staging`. Never base work on `main`: the Lead decides what goes to `main`, and it only receives `staging`. CI flags anything else. |
-| **Any developer takes any issue** | There are no fixed developer roles. Two open PRs must not edit the same file; the issue's Target Files are the boundary. |
+| **One issue at a time per team** | The three teams work in parallel. Inside a team, both developers work the same issue, in step order, and open one PR. Start the next issue when that PR is merged. |
 | **Docs travel with code** | Update your folder's `docs/` (purpose, key files, data flow, gotchas). |
 | **Children's data** | Never log PINs, tokens or LRNs. Never export learner data off the Hub. |
 
