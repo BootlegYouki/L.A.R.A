@@ -305,6 +305,21 @@ class TestMockHub(unittest.TestCase):
         _, anas, _ = call(BASE, "GET", f"/api/assignments/{asg}/private-comments", token=ana)
         self.assertEqual(anas, [])
 
+    def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        mine = {"id": "pc-1", "assignment_id": asg, "content": "Akin ito", "created_at": 1}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [mine]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED")
+        outsider = login(BASE, "123456789013")          # not enrolled in the class
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [{**mine, "id": "pc-2"}]}, outsider)
+        self.assertEqual(res["receipts"][0], {"id": "pc-2", "status": "REJECTED", "reason": "FORBIDDEN"})
+        ana, _ = self.enroll_ana()                       # enrolled, but pc-1 belongs to Juan
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [{**mine, "content": "hijack"}]}, ana)
+        self.assertEqual(res["receipts"][0]["status"], "REJECTED")
+        self.assertEqual(self.server.state.private_comments["pc-1"]["content"], "Akin ito")
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [mine]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED", "the owner's retry is still idempotent")
+
     def test_removed_learner_loses_the_class_and_co_teacher_gains_it(self):
         ana, sid = self.enroll_ana()
         ana_ws = WsClient("127.0.0.1", WS, ana)
