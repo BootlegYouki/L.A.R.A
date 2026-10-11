@@ -44,6 +44,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
+* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open PR at a time (`rules/team-workflow-and-prs.md` section 1.1).
 * **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
 * Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 
@@ -126,6 +127,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 * **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. Downloading the model to run on your own device is opt-in, never automatic. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
+0. **One prompt for every path:** `contracts/ai/socratic_system_prompt.txt`. The Hub, mobile and desktop load that file byte for byte and never write their own; changing it is a `contract-change` PR followed by a re-run of the evaluation.
 1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
@@ -158,7 +160,8 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 ## 7. Working Rules For Agents
 
-* **Read before you write.** Open the contract, the rule file and the nested `AGENTS.md` for your area first. Search for existing code before creating new code.
+* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code.
+* **The issue is the scope.** Build its sub-tasks and acceptance criteria, in its Target Files, and nothing else. If the issue disagrees with a contract, rule or the PRD, the higher document wins: stop and report it.
 * **Do not invent behavior.** If a requirement is missing or contradicts another document, write the open question in the PR or issue instead of guessing.
 * **Smallest change that satisfies the issue.** No drive-by refactors, no new dependencies without need, no edits outside your folder.
 * **Evidence before assertions.** Run the commands in 1.2 and attach output. Never say "done" without a passing build or test, and say plainly what you could not verify.

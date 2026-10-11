@@ -25,8 +25,9 @@ The engineering group operates across three independent streams overseen by the 
 4. **Mock hub parity is enforced.** `tests/test_contract_coverage.py` fails CI when a contract route or event has no mock implementation.
 5. **File ownership.** A team edits only its own folder. `contracts/`, `design-system/`, `rules/`, `scripts/`, `tests/` and `.github/` are Lead-owned (see `.github/CODEOWNERS`).
 6. **Integration day.** The last working day of each sprint, clients switch from the mock hub to the real Hub on `staging`. Failures become bug issues labelled with the owning team. The sprint is done only when the Definition of Done runs end to end against the real Hub.
-7. **Developers inside a team.** There are no fixed developer roles or slots: any developer on the team can take any issue whose dependencies are merged. The unit of work is the PR. Two open PRs must not edit the same file; the issue's Target Files list is the ownership boundary. If two issues need the same file, the later one depends on the earlier one.
+7. **Inside a team: one issue at a time, in step order.** The three teams are the only parallel streams. Both developers on a team work the same issue together (with their AI agents) and open one PR for it. The team takes its issues in step order (`2.1`, then `2.2`, ...) and starts the next only after the current PR is merged into `staging`, so a team never has two feature PRs open at once and there are no developer roles or slots to assign. An issue whose `Depends on` names another team's step builds against the mock hub and does not wait.
 8. **Technical Spec before code.** Each team writes `<team>/docs/TECH_SPEC.md` from `docs/templates/TECH_SPEC_TEMPLATE.md` and the Lead approves it before Sprint 1 work starts. The spec cites `contracts/` and never redefines product behavior; `docs/PRD.md` is the single product source.
+9. **Reports are the one shared place a team PR may add to.** Benchmark, audit and evaluation write-ups go in `docs/benchmarks/`, `docs/audits/` and `docs/evaluations/` (new files only). Everything else outside the team folder stays Lead-owned.
 
 ---
 

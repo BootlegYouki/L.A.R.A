@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "GradeConfirmedEvent",
-  "description": "Hub to learner: score receipt right after a submit is graded. Not sent when the teacher chose to hold scores.",
+  "description": "Hub to learner: score receipt right after a submit is graded. When the teacher chose to hold scores it is sent later, when the teacher closes the quiz.",
   "type": "object",
   "required": [
     "event",
