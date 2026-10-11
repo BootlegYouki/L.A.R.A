@@ -248,7 +248,7 @@ Screen layouts are in section 9. These are the parts they are built from.
 
 ### 5.13 Navigation
 - **Desktop top bar:** 64 high, Canvas, no border. Menu (52), L.A.R.A. badge, class crumb (name over section), Hub beacon, Join class or Create class (52), account avatar (52).
-- **Desktop drawer:** 260 wide, items 52 high with a full pill shape. Selected is Light Green with Dark Green text and a Fill icon. Red count dots for pending items. Classes show a 32 px initial circle, name and section. Teachers get a **Class tools** group (Attendance, USB export) under their classes. Folds behind the menu button below 860 px.
+- **Desktop drawer:** 260 wide, items 48 high with a full pill shape. Selected is Light Green with Dark Green text. Classes show a 32 px initial circle, name and section. The menu button folds it into a 76 px icon rail. There is no Class tools group: where Export to USB lives is an open decision (9.16). Details in 9.2.
 - **Mobile top app bar:** Dark Green, 64 high, white title (Black) over the section, 52px icon buttons.
 - **Mobile bottom nav:** 68 high, four destinations (Stream, Classwork, Quizzes, AI Tutor), Fill icon and Light Green indicator on the active item, AI Tutor uses purple. Disable the AI tab during an assessment and say why.
 - Mark the current item with `aria-current="page"`.
@@ -350,7 +350,7 @@ Keep Classroom's English words where people already know them. Change only the o
 
 ## 9. Google Classroom Layout (copy the structure, keep our voice)
 
-Teachers and learners already know Google Classroom. Every L.A.R.A. screen copies the **structure** of the matching Classroom screen, so people find each thing where they expect it, and then says it in L.A.R.A.'s friendly voice (section 7) using L.A.R.A.'s look (sections 1 to 5). Layout is not free design: use the anatomies below. Live, interactive versions are in the **Classroom Screens** group of `design-system/showcase.html`, and as a full-window app in `prototype/index.html`, generated from the showcase by `python3 scripts/build_prototype.py` (a test fails when it is stale). To open it, serve the repo root with any static server, for example `python3 -m http.server`, and visit `/prototype/index.html`. **Home, Stream and the quiz on desktop are the remade screens** (showcase entry "Remake: Home, Stream and Quiz (desktop)"); the other showcase screens are the first pass and are replaced one by one.
+Teachers and learners already know Google Classroom. Every L.A.R.A. screen copies the **structure** of the matching Classroom screen, so people find each thing where they expect it, and then says it in L.A.R.A.'s friendly voice (section 7) using L.A.R.A.'s look (sections 1 to 5). Layout is not free design: use the anatomies below. Live, interactive versions are in the **Classroom Screens** group of `design-system/showcase.html`, and as a full-window app in `prototype/index.html`, generated from the showcase by `python3 scripts/build_prototype.py` (a test fails when it is stale). To open it, serve the repo root with any static server, for example `python3 -m http.server`, and visit `/prototype/index.html`. **Home, Stream and the quiz on desktop are the remade screens** (showcase entry "Remake: Home, Stream and Quiz (desktop)"). The first-pass screens were removed from the showcase; each returns when it is remade.
 
 Measurements marked "Classroom" were read from the computed styles of the current Classroom web app on 2026-10-11, in a 1440 px wide window, for both a learner and a teacher account: Home, Stream, Classwork with its Create menu, the assignment form, the material form, student work with private comments, People, Grades, class settings, the learner's assignment page and To-do. The teacher screens other than Stream are measured but not yet remade (9.15 lists what was found). **Phone layouts were not measured:** a browser shows only Classroom's web layout, so phone screens are derived from these at a narrow width and are supplied separately. Do not copy its colors, fonts, logo or pictures.
 
@@ -550,17 +550,19 @@ Classroom's phone layout is a top bar, one column of cards, and the class tabs u
 
 | Classroom screen | L.A.R.A. screen | Showcase entry | What L.A.R.A. adds |
 | :--- | :--- | :--- | :--- |
-| Home, class cards | Home with Due soon or Recently due and class cards (9.3, 5.12) | Remake: Home and Stream (desktop) | Hub pill, status pills, offline banner |
-| Stream tab | Stream (9.4, 5.12) | Remake: Home and Stream (desktop) | Hub pill, Queued for sync comments, empty and offline states |
-| Classwork tab | Classwork | Classwork | Save for home, offline-capable actions, Quizzes |
-| People tab | People (teacher only) | People and join requests | Pending approval with Accept and Decline |
-| Assignment and Turn in | Assignment detail with camera | Assignment detail and Your work | Photo queued as `QUEUED_FOR_SYNC`, kind helper text |
-| Student work | Review learner work | Review learner work | Encouraging message phrases, queued arrivals |
-| To-do | To-do | To-do | Friendly tab names |
-| Join class | Join a class and waiting | Join a class | Class code format, approval wait |
+| Home, class cards | Home with Due soon or Recently due and class cards (9.3, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, status pills, offline banner |
+| Stream tab | Stream (9.4, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, Queued for sync comments, empty and offline states |
+| Classwork tab | Classwork | (not in the showcase yet) | Save for home, offline-capable actions, Quizzes |
+| People tab | People (teacher only) | (not in the showcase yet) | Pending approval with Accept and Decline |
+| Assignment and Turn in | Assignment detail with camera | (not in the showcase yet) | Photo queued as `QUEUED_FOR_SYNC`, kind helper text |
+| Student work | Review learner work | (not in the showcase yet) | Encouraging message phrases, queued arrivals |
+| To-do | To-do | (not in the showcase yet) | Friendly tab names |
+| Join class | Join a class and waiting | (not in the showcase yet) | Class code format, approval wait |
 | Quiz (Google Forms) | Quiz (9.14, 5.14) | Remake: Home, Stream and Quiz (desktop) | Shared countdown, auto-submit, no AI, queued submission, teacher monitor |
 | Grades tab | Grades and gradebook | Gradebook Table | Points, USB export |
 | (none) | Socratic AI tutor (5.15) | Socratic AI Tutor | Purple surfaces only, grounding tag, locked during quizzes |
+
+The first-pass screens for the rows marked "not in the showcase yet" were removed from the showcase because they no longer matched the remade look. Their section 9 text is still the starting point, and each screen returns to the showcase when it is remade (measurements in 9.15). The phone screens return when they are supplied.
 
 ### 9.14 Quiz (desktop)
 
