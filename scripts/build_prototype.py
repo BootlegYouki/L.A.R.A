@@ -61,7 +61,7 @@ def build():
     css = "\n".join(r for r in rules(style) if KEEP.match(r))
     a = s.index("/* ---------------------------- Remake slice: Home and Stream (desktop)")
     js = s[s.index("const CR_CLASSES = ["):s.index("/* data-only=\"learner\"")]
-    js += s[s.index("function crSwitch("):s.index("function crTop(")]
+    js += s[s.index("function crSwitch("):s.index("const CR_VIEWS")]
     js += "const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];\n"
     js += s[a:s.index("/* ---------------------------- Screen previews", a)]
     b = s.index("/* Remake slice: Home and Stream behave like a small app")

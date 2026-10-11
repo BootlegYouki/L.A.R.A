@@ -79,7 +79,6 @@ textarea.form-input { min-height: 110px; resize: vertical; }
 .avatar-group .avatar:first-child { margin-left: 0; }
 body.wide .ds-main { max-width: 1240px; }
 body.wide .doc-layout { grid-template-columns: 276px minmax(0, 1fr); }
-body.wide .doc-toc { display: none; }
 .cr-switch { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); flex-wrap: wrap; }
 .cr-switch .seg-item { white-space: nowrap; flex-shrink: 0; padding: 0 14px; }
 .cr-icon { width: 52px; height: 52px; border-radius: 50%; border: none; background: transparent; color: var(--color-text-secondary); font-size: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
@@ -264,6 +263,8 @@ body.wide .doc-toc { display: none; }
 .rm-prog i { display: block; height: 100%; background: var(--color-primary-green); }
 .rm-lrow .cnt { width: 56px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); text-align: right; }
 .rm[data-qt="idle"] [data-qt-show]:not([data-qt-show~="idle"]), .rm[data-qt="live"] [data-qt-show]:not([data-qt-show~="live"]), .rm[data-qt="closed"] [data-qt-show]:not([data-qt-show~="closed"]) { display: none; }
+.rm.rm-lite { min-height: 0; overflow: visible; border: none; background: transparent; }
+.rm-lite-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; }
 .rm .btn, .rm .rm-tonal, .rm .cr-link { min-height: var(--control-height-desktop); }
 .rm .cr-icon { width: var(--control-height-desktop); height: var(--control-height-desktop); }
 .rm .rm-tab, .rm .rm-nav { min-height: 48px; }
@@ -426,6 +427,26 @@ function rmQuizTeacher(root) {
 
 function rmQuizClose(root) { clearInterval(root._qTimer); root.dataset.qt = 'closed'; rmQuizTeacher(root); rmSync(root); }
 
+function rmNote(kind, icon, text, when, screen) {
+  return '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="' + (screen || 'later') + '" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
+}
+
+function rmComments() {
+  return '<div class="rm-comments"><div class="rm-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
+    '<button class="cr-link rm-add" type="button" data-rm="comment-toggle" style="justify-self:start">' + rmIcon('chat-text') + 'Add comment</button>' +
+    '<div class="rm-reply" hidden><span class="avatar sm"><span data-only="learner">AS</span><span data-only="teacher">MR</span></span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment">' + rmBtn('paper-plane-tilt', 'Send comment', ' data-rm="comment-send"') + '</div></div>';
+}
+
+function rmLite(inner, role) { return '<div class="rm rm-lite" data-role="' + role + '" data-state="normal">' + inner + '</div>'; }
+
+function rmCardPreview() {
+  return '<div class="rm-lite-grid">' + rmLite(rmCard(CR_CLASSES[0], 0), 'learner') + rmLite(rmCard(CR_CLASSES[3], 3), 'learner') + rmLite(rmCard(CR_CLASSES[0], 0), 'teacher') + '</div>';
+}
+
+function rmPostPreview() {
+  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
+}
+
 function rmAnnouncement(init, who, when, body, tail) {
   return '<article class="rm-post"><header class="rm-post-head"><span class="avatar">' + init + '</span><div class="who">' + who + '<small>' + when + '</small></div>' + rmBtn('dots-three-vertical', 'Announcement options') + '</header>' +
     '<div class="rm-post-body">' + body + '</div>' + (tail || '') + '</article>';
@@ -433,10 +454,8 @@ function rmAnnouncement(init, who, when, body, tail) {
 
 function rmStream() {
   const c = CR_SCI;
-  const note = (kind, icon, text, when, screen) => '<div class="rm-note"><button class="main" type="button" data-rm="go" data-screen="' + (screen || 'later') + '" data-label="' + text.replace(/^.*?: /, '') + '"><span class="ic ' + kind + '">' + rmIcon(icon) + '</span><span class="tx">Ms. Reyes posted a new ' + text + '<small>' + when + '</small></span></button>' + rmBtn('dots-three-vertical', 'More options') + '</div>';
-  const comments = '<div class="rm-comments"><div class="rm-comment"><span class="avatar sm blue">JD</span><div><strong>Juan</strong><small>Oct 5, 3:02 PM</small><br>Thank you po, Ma\'am! I will read it tonight.</div></div>' +
-    '<button class="cr-link rm-add" type="button" data-rm="comment-toggle" style="justify-self:start">' + rmIcon('chat-text') + 'Add comment</button>' +
-    '<div class="rm-reply" hidden><span class="avatar sm"><span data-only="learner">AS</span><span data-only="teacher">MR</span></span><input class="form-input" placeholder="Add a class comment" aria-label="Add a class comment">' + rmBtn('paper-plane-tilt', 'Send comment', ' data-rm="comment-send"') + '</div></div>';
+  const note = rmNote;
+  const comments = rmComments();
   const feed = '<div class="rm-feed rm-has">' +
     note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
     note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
