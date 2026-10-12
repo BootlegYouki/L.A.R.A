@@ -1,6 +1,6 @@
 # L.A.R.A. Design System and Component Specification
 
-> Canonical design rules for every L.A.R.A. surface: the Android learner app (Kotlin, Jetpack Compose), the Teacher Desktop Hub (React + Tailwind), and the Server Web Portal (React + Tailwind).
+> Canonical design rules for every L.A.R.A. surface: the Android app for learners and teachers (Kotlin, Jetpack Compose), the Desktop app for learners and teachers (Tauri, React + Tailwind), and the Hub window (admin console, React + Tailwind).
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
 > Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`. The remade desktop Home, Stream and quiz as a full-window app: `design-system/prototype.html`.
 
@@ -116,7 +116,7 @@ Rules:
 | Primary action ("Start Quiz") and AI FAB | 56 |
 | Quiz option cards | 56 |
 | Attendance toggle buttons | 44 square, minimum 8 apart (teacher tablet or desktop only) |
-| Compact button (Teacher Hub desktop only) | 40 |
+| Compact button (desktop only) | 40 |
 
 ### 3.3 Radii
 
