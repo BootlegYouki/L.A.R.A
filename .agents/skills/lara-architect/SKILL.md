@@ -18,7 +18,7 @@ Three teams (`server/`, `desktop/`, `mobile/`) work in parallel. Inside a team t
    |---|---|---|
    | 1 | `contracts/` (`openapi.yaml`, `events/`, `schema/`, `ai/socratic_system_prompt.txt`, `naming_rules.md`) | Every route, event, column, error code and the tutor's prompt |
    | 2 | `AGENTS.md` and the `rules/` file for the area | Invariants and decisions already made |
-   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) and `design-system/prototype.html` (remade desktop screens) | Every visual and wording choice. Tokens and invariants are fixed; screens are a guide, so report deviations |
+   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) and `design-system/prototype.html` (the reference for the remade desktop screens; it wins over the text) | Every visual and wording choice. Tokens and invariants are fixed; build to match the prototype and report any deviation |
    | 4 | `docs/PRD.md` (the FR the issue cites) | What the feature does for the teacher or learner |
    | 5 | `<team>/AGENTS.md`, `<team>/docs/TECH_SPEC.md` | File map, names, code patterns, known traps |
 

@@ -36,7 +36,7 @@
    * All network JSON fields are strictly **`snake_case`**. Annotate Kotlin fields with `@SerialName("field_name")`.
    * **Anti-Cheat Redaction:** The student client must **never** contain fields or Room columns for `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The phone layouts are not remade yet; the desktop prototype ([`design-system/prototype.html`](../design-system/prototype.html)) shows the structure and states.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The phone layouts are not remade yet; the desktop prototype ([`design-system/prototype.html`](../design-system/prototype.html)) is the reference for the structure, wording and states, until the Lead supplies the phone layouts.
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young learners (Grades 1 to 3 have the least fine motor control).
    * Text contrast must meet **minimum 4.5:1**.
