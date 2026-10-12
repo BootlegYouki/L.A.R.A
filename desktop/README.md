@@ -34,7 +34,7 @@
    * All network JSON fields are strictly **`snake_case`**.
    * **Anti-Cheat Redaction:** The student view must never receive or parse `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The remade Home, Stream and quiz are the reference in [`design-system/prototype.html`](../design-system/prototype.html): build to match it.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The remade Home, Stream and quiz are shown in [`design-system/prototype.html`](../design-system/prototype.html), the visual reference for the vision. The details are yours.
    * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
    * Click targets follow Google Classroom: 40px buttons and icon buttons, 48px tabs and drawer items, contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.
