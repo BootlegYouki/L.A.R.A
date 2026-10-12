@@ -212,6 +212,7 @@ Closes #6
 | **You found a bug outside your folder** | Open a Bug Report issue for the owning team. Do not fix it in your PR. |
 | **You are blocked or the requirement is unclear** | Write the question on the issue, tag the Lead, and work on another card meanwhile. |
 | **You pushed something sensitive (token, PIN, real LRN, photo of a child)** | Tell the Lead **immediately**; do not just delete the commit. The secret must be treated as exposed. |
+| **You think the plan is wrong or could be better** | Open a *Design Proposal* issue (label `type:proposal`) with evidence. Keep working by the current plan until the Lead answers; never change the plan inside a feature PR (`rules/team-workflow-and-prs.md` section 1.2). |
 | **Docs-only change** | Same process: branch `docs/<team>-<topic>`, PR to `staging`, CI must pass. |
 
 ### Common mistakes (each one gets a PR sent back)
@@ -236,10 +237,6 @@ Closes #6
 - [ ] CI green, evidence attached, card still In Progress until merged
 
 ---
-
-## Proposing a better design
-
-If you think the plan is wrong or could be better, open a *Design Proposal* issue (label `type:proposal`) with evidence. Keep working by the current plan until the Lead answers, and never change the plan inside a feature PR. Details: `rules/team-workflow-and-prs.md` section 1.2.
 
 ## 5. Fatal Rejection Rules
 
