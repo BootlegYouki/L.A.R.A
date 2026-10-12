@@ -66,7 +66,7 @@ class TestMockHub(unittest.TestCase):
         _, active, _ = call(BASE, "GET", "/api/quizzes/active", token=self.pupil)
         _, by_id, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.pupil)
         for payload in (active, by_id):
-            self.assertNotIn("correct_answer", json.dumps(payload), "CRITICAL: answer key leaked to pupil")
+            self.assertNotIn("correct_answer", json.dumps(payload), "CRITICAL: answer key leaked to learner")
         _, teacher_view, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.teacher)
         self.assertIn("correct_answer", json.dumps(teacher_view))
 

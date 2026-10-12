@@ -6,6 +6,8 @@ version: 1.0.1
 
 # Tauri v2+ Development Skill
 
+> **L.A.R.A note (project rules win over this skill).** The desktop app never uses the updater, any remote endpoint or an HTTPS call to the internet; it talks only to the Hub on the LAN. Add a plugin only when an issue needs it, with the least-privilege capability, and bundle every asset locally. Mobile targets, `tauri-plugin-http` to external hosts and CDN-style `devUrl` settings are not used in production. See `desktop/AGENTS.md` and `.agents/skills/lara-desktop-web/SKILL.md`.
+
 > Build cross-platform desktop and mobile apps with web frontends and Rust backends.
 
 ## Before You Start

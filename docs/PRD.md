@@ -71,8 +71,8 @@ flowchart TD
  DroidAI["Optional Local SLM<br/>(llama.cpp JNI - RAM ≥ 6GB)"]
  end
 
- subgraph DesktopClient["Desktop Client (Tauri + React + TS + Tailwind M3)"]
- DeskUI["React Tailwind M3 UI"]
+ subgraph DesktopClient["Desktop Client (Tauri + React + TS + Tailwind)"]
+ DeskUI["React + Tailwind UI<br/>(Bilingual: EN / FIL)"]
  DeskSQLite[("Local SQLite DB")]
  DeskVideo["HTML5 Video Player"]
  DeskAI["Local SLM (llama.cpp) or Hub Stream"]
@@ -128,8 +128,8 @@ flowchart TD
 ### 4.2 Module 2: Stream & Announcements
 * **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices.
 * **FR-2.2 Comment Moderation:** Teachers can enable or disable student commenting per post to prevent distractions.
-* **FR-2.4 Attachments:** A teacher can attach files to an announcement.
 * **FR-2.3 Offline Persistence:** All stream items are cached in the client’s local SQLite database for viewing outside the school network.
+* **FR-2.4 Attachments:** A teacher can attach files to an announcement.
 
 ### 4.3 Module 3: Classwork, Handouts, Videos & Homework Submissions
 * **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images.
@@ -145,7 +145,7 @@ flowchart TD
  * **In-App Camera Capture:** Learners can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app (or attach an image file).
  * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. The moment the learner walks into school and connects to the Hub Wi-Fi, the submission uploads automatically.
  * **Grade and Feedback Visibility:** Learners see their score and the teacher's feedback once homework is graded, and it stays available offline.
- * **Teacher Grading Interface:** Teacher reviews learner photo submissions in the desktop app, assigns a score, and types short encouraging feedback.
+ * **Teacher Grading Interface:** Teacher reviews learner photo submissions in the app (on desktop or on the phone), assigns a score, and types short encouraging feedback.
 
 * **FR-3.6 Fixing Mistakes:** Teachers can edit and delete materials and assignments after posting. A deleted assignment disappears for everyone and from the gradebook, but its submissions and grades are kept on the Hub, never destroyed.
 * **FR-3.7 Topics:** Teachers group materials, assignments and quizzes under topics (for example "Unit 1: Plants"). Deleting a topic keeps its work.
@@ -196,8 +196,8 @@ sequenceDiagram
 * **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, the test is locked and answers are immediately transmitted to the Hub.
 * **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the learner reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
 * **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment; closing the quiz is what releases held scores.
-* **FR-4.8 Editing a Quiz:** A teacher can change a quiz's questions, answers and settings while it is still a draft. Once started it is locked so scores stay fair.
 * **FR-4.7 Result History:** Learners can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
+* **FR-4.8 Editing a Quiz:** A teacher can change a quiz's questions, answers and settings while it is still a draft. Once started it is locked so scores stay fair.
 
 ### 4.5 Module 5: Gradebook & Export
 * **FR-5.1 Gradebook Dashboard:** Teachers can view a consolidated spreadsheet-like matrix of all students, their quiz scores, and homework grades.
@@ -348,7 +348,7 @@ sequenceDiagram
 | **Server Local DB** | **SQLite (via SQLx)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
 | **Realtime Protocol** | **WebSockets (`ws` / Rust `tokio-tungstenite`)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
 | **SLM Runtime** | **`llama.cpp` / `llama-server`** | Highly optimized CPU/GPU GGUF inference; supports 4-bit quantization and multi-slot continuous batching. |
-| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large touch targets (52dp+ / 56dp), dynamic color palettes, bilingual strings. |
+| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large targets (52dp on phones, 56dp primary actions and quiz options, 40px buttons on desktop), a fixed brand palette (no dynamic color), bilingual strings. |
 
 ---
 
