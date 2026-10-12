@@ -2,7 +2,7 @@
 
 > Canonical design rules for every L.A.R.A. surface: the Android learner app (Kotlin, Jetpack Compose), the Teacher Desktop Hub (React + Tailwind), and the Server Web Portal (React + Tailwind).
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
-> Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`.
+> Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`. The remade desktop Home, Stream and quiz as a full-window app: `design-system/prototype.html`.
 
 > **How to read this document: a guide, not a pixel spec.** The tokens, the invariants in section 0 and the accessibility rules are fixed. The screens in section 9, the sizes in them and the prototype (`prototype.html`) show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
 
@@ -342,7 +342,7 @@ Keep Classroom's English words where people already know them. Change only the o
 - [ ] Assessment lock rules respected (no AI during an active quiz)
 - [ ] Accessible names, roles and states set; focus order checked
 - [ ] Strings localized (English and Filipino) with no hard-coded text
-- [ ] A screen keeps the structure and positions in section 9 and matches its entry in the Classroom Screens group of `design-system/showcase.html`
+- [ ] A screen keeps the structure and positions in section 9 and matches its entry in the Classroom Screens group of `design-system/showcase.html` (for the remade desktop screens, also `design-system/prototype.html`)
 - [ ] Words follow section 7: warm, no shaming statuses for learners, a kind empty state, a next step in every helper line
 - [ ] Matches the corresponding entry in `design-system/showcase.html`. If you add or change a component, update the showcase and this file in the same change
 

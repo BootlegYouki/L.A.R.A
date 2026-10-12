@@ -111,7 +111,7 @@ Read the PR description, run your "How to test" steps like an end user, then try
 | :--- | :--- |
 | [`contracts/`](./contracts/) | REST (`openapi.yaml`), WebSocket events, SQL schemas, naming rules. The source of truth. |
 | [`rules/`](./rules/) | Invariants for networking, sync, quizzes, AI, UI, tooling. |
-| [`design-system/`](./design-system/) | Tokens, components and the Google Classroom layout reference. Open `showcase.html` offline. |
+| [`design-system/`](./design-system/) | Tokens, components and the Google Classroom layout reference. Open `showcase.html` (components) and `prototype.html` (the desktop Home, Stream and quiz as an app) offline. |
 | [`docs/`](./docs/README.md) | PRD, templates, and the documentation map. |
 | [`scripts/`](./scripts/) and [`tests/`](./tests/) | The mock hub, the guardrail scanner, and their tests. |
 | `server/`, `desktop/`, `mobile/` | One program each, with its own `AGENTS.md` and `docs/`. |
