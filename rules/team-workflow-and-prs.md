@@ -115,3 +115,4 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 * Server authorisation by role and class ownership, not only in the UI.
 * Evidence is real: build or test output, a log or screenshot against the mock hub, and a plain statement of anything not verified.
 * Docs updated in the team folder (and `TECH_SPEC.md` if the design changed).
+* Any deviation from the design system or the plan is named in the PR. A one-screen change is fine; a wider one needs a Design Proposal (section 1.2).
