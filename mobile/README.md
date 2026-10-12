@@ -76,7 +76,7 @@
 
 ### 2.1 Dual-Role Architecture (Student & Teacher)
 The app switches navigation graphs depending on authenticated role:
-* **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz).
+* **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz). Where the tutor is reached on a phone is still an open decision (`design-system/design-system.md` section 9.16), so build it behind one entry point that is easy to move.
 * **Teacher NavGraph (`TeacherNavGraph`):** every teacher feature the desktop app has (root `AGENTS.md` section 1.4): create and manage classes, approve and remove learners, post announcements, upload materials, create and edit assignments, topics, grade homework photos, private comments, build quizzes, start and monitor them, and see grades.
 
 ### 2.2 Paperless Quiz Engine

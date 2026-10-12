@@ -17,7 +17,7 @@ The behavior behind these files is demonstrated by [`../scripts/mock_hub.py`](..
 
 Contract changes are **never** part of a feature PR. They go first, in their own small PR, so all three teams branch from the same truth.
 
-1. **Ask:** open or comment on the issue explaining the need. The Lead decides.
+1. **Ask:** open or comment on the issue explaining the need. The Lead decides. If you think the design itself is wrong or could be better, not just a missing field, open a *Design Proposal* issue first (`rules/team-workflow-and-prs.md` section 1.2).
 2. **Change together** (one PR, label `contract-change`):
    * `contracts/openapi.yaml`, `contracts/events/*.json` and/or `contracts/schema/*.sql`. Keep both SQL files in parity (see `rules/database-and-sync.md`).
    * `scripts/mock_hub.py` so it serves the change.
