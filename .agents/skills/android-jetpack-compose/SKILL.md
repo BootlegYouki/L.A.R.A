@@ -13,6 +13,8 @@ allowed-tools:
 
 # Android - Jetpack Compose
 
+> **L.A.R.A note (project rules win over this skill).** Use the patterns here for state, hoisting, effects and lists only. Theming comes from `LaraTheme` and `design-system/mobile/` (fixed brand palette, no dynamic color, no gradients, no `Purple40`-style template colors), the `AnalyticsScreen` sample must never be copied (no analytics of any kind), icons are Phosphor, and every string is a resource in English and Filipino. See `mobile/AGENTS.md`.
+
 Modern declarative UI toolkit for building native Android interfaces.
 
 ## Key Concepts

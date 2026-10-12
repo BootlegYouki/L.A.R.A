@@ -24,7 +24,7 @@ Where a skill and a project rule disagree, `AGENTS.md` and `contracts/` win (see
 | Skill | Source | License | Version |
 |---|---|---|---|
 | `rust-skills` | https://github.com/leonardomso/rust-skills | MIT (`rust-skills/LICENSE`) | commit `fd2a861`; `checks/` scripts not copied |
-| `android-jetpack-compose`, `tauri-v2` | community skills | see each folder | as committed |
+| `android-jetpack-compose`, `tauri-v2` | community skills | see each folder | as committed, plus a short "L.A.R.A note" at the top of each SKILL.md saying the project rules win (default theme colors, an analytics sample, the updater) |
 
 ## Rules for adding a skill
 
