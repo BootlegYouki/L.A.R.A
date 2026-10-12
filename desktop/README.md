@@ -34,7 +34,7 @@
    * All network JSON fields are strictly **`snake_case`**.
    * **Anti-Cheat Redaction:** The student view must never receive or parse `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The remade Home, Stream and quiz are the reference in [`design-system/prototype.html`](../design-system/prototype.html): build to match it.
    * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
    * Click targets follow Google Classroom: 40px buttons and icon buttons, 48px tabs and drawer items, contrast ratio ≥ 4.5:1.
    * Externalize all strings to support instant runtime toggling between English and Filipino.
@@ -77,17 +77,19 @@
 * Seamless offline transition: When disconnected from classroom Wi-Fi, cached handouts and downloaded video lessons remain playable offline.
 
 ### 2.2 Dual-Role Capabilities
-* **Student Mode:**
+* **Learner Mode (Google Classroom, offline):**
   * Class Code enrollment dialog (`K7M-4QX`) with real-time pending approval status.
-  * Announcement stream with teacher comment moderation.
-  * Lesson handouts with zoom controls.
-  * Full-screen paperless quiz engine with synchronized timer and instant auto-grading.
-  * Socratic AI drawer with split-screen view (lesson on left, tutor on right).
+  * Home with class cards and "Due soon", a To-do list, and the class Stream with comments (teacher moderation applies).
+  * Classwork grouped by topics: lesson handouts with zoom, videos (stream or Save for Home), assignments with attachments, a photo or file turned in (queued offline), private comments with the teacher, and grades and feedback in My Work.
+  * Full-screen paperless quiz engine with synchronized timer, instant auto-grading and a result history.
+  * Socratic AI drawer with split-screen view (lesson on left, tutor on right), removed while a quiz is open.
 * **Teacher Mode (every teacher feature, the same set as the mobile app; the Hub window is only an admin console):**
-  * **Classroom, announcements, materials and assignments:** create a class and share its code, post to the stream (comments on or off), upload lessons and videos, create assignments, review and grade homework photos.
-  * **Teacher Quiz Builder Wizard:** Multi-step wizard to create tests, manage question banks, and randomize question order.
-  * **Live Quiz Submission Matrix:** Real-time telemetry grid showing which learners are currently answering and their auto-graded scores.
-  * **Class Roster Table:** List of enrolled learners with one-click Accept/Decline actions.
+  * **Classes:** create a class and share its code, rename, archive, add co-teachers, approve or decline and remove learners.
+  * **Stream and Classwork:** post announcements (comments on or off), upload lessons and videos, create assignments, group everything under topics, attach files, edit and delete posts.
+  * **Homework:** review and grade learner photos, with feedback and private comments.
+  * **Teacher Quiz Builder Wizard:** multi-step wizard to create tests, manage question banks and randomize question order, then start, monitor and close them.
+  * **Live Quiz Submission Matrix:** real-time grid showing which learners are answering and their auto-graded scores.
+  * **Gradebook:** matrix of learners by assignment and quiz, with points only.
 
 ### 2.3 On-Device Socratic AI Sidecar
 * On student laptops and lab PCs with ≥ 4GB RAM, the desktop client executes candidate GGUF models locally via a spawned `llama.cpp` sidecar process.
@@ -124,8 +126,8 @@ desktop/
 ├── src/
 │   ├── main.tsx                      # React root
 │   ├── App.tsx                       # Router & layout shell
-│   ├── index.css                     # Tailwind CSS & Material 3 variables
-│   ├── components/                   # Reusable M3 cards, buttons, video player
+│   ├── index.css                     # Tailwind CSS and the design tokens
+│   ├── components/                   # Reusable cards, buttons, video player
 │   ├── pages/                        # Stream, Classwork, Quiz, Teacher Dashboard
 │   ├── services/                     # Tauri SQL DB, WebSocket, Mock Hub client
 │   ├── store/                        # Zustand global state stores

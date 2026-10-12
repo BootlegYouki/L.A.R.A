@@ -31,6 +31,18 @@ The engineering group operates across three independent streams overseen by the 
 
 ---
 
+## 1.2 Proposing a Better Design (open to every developer and agent)
+
+The plan (the PRD, the contracts, the design system and the sprint issues) is our best current idea, not a finished truth. If you see something we missed, or a better way to do it, say so. A good proposal is part of the job, not a complaint.
+
+1. **Propose in an issue, not in code.** Open an issue from the *Design Proposal* template (label `type:proposal`). Cover: the problem you hit with the evidence (a failing case, a measurement, a prototype, a classroom scenario), what the plan says today (cite the file and section), your proposed change, what it would touch (contracts, rules, design system, PRD, which issues and sprints), the cost and risk, and what happens if we do nothing. One proposal, one change.
+2. **Keep working by the current plan** while the proposal is open. Do not build the idea first and ask afterwards. If the plan blocks your issue completely, stop, say so in the issue, and the Lead will decide the next step.
+3. **Evidence over opinion.** "I found a better way" needs a number, a prototype or a concrete failure. A proposal that only says the plan is wrong is sent back for evidence.
+4. **Everything is open to proposal, nothing is open to quiet change.** That includes product behavior, architecture, screens, the contract, the sprint order and the invariants in `AGENTS.md` section 3. An invariant (zero internet, offline first, children's data, quiz lockout) changes only through a proposal the Lead accepts, never inside a feature PR.
+5. **The Lead decides** and records the answer and the reason in the issue: accepted, accepted with changes, deferred (with a date or sprint) or declined. Only the Lead's yes starts work.
+6. **After a yes, the documents change first,** in this order and in one Lead-owned PR: `contracts/` (plus the mock hub and tests), `AGENTS.md` and `rules/`, `design-system/`, `docs/PRD.md`, then the affected issues and Tech Specs. Teams then build from the updated documents. A decision that lives only in a comment is a future contradiction.
+7. **Design deviations found while building** (a screen that cannot work as drawn) follow the lighter path in `design-system/design-system.md`: change the screen, keep the spirit and report it in the PR. Anything wider than one screen is a proposal.
+
 ## 2. Protected Branches & GitFlow
 
 * **`main` (Protected):** Defense-ready production branch. Merges happen only from `staging` via Pull Request upon sprint completion. Direct push and force push are disabled.
@@ -103,3 +115,4 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 * Server authorisation by role and class ownership, not only in the UI.
 * Evidence is real: build or test output, a log or screenshot against the mock hub, and a plain statement of anything not verified.
 * Docs updated in the team folder (and `TECH_SPEC.md` if the design changed).
+* Any deviation from the design system or the plan is named in the PR. A one-screen change is fine; a wider one needs a Design Proposal (section 1.2).

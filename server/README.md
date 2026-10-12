@@ -74,14 +74,14 @@
 
 ## 2. Core Functional Modules
 
-### 2.1 Teacher Control & Status Dashboard
+### 2.1 Admin Console & Status Dashboard
 * Displays current host LAN IP address (e.g., `192.168.1.50`) in large text for classroom projection or board writing.
-* Live status tiles: Connected Student Count, Active Quizzes, CPU/RAM utilization, and Firewall Port Reachability.
+* Live status tiles: Connected Device Count, Active Quizzes, CPU/RAM utilization, and Firewall Port Reachability.
 
 ### 2.2 Captive Download Web Portal (`http://<hub-ip>:8080/download`)
-* Lightweight HTML web portal allowing students and teachers to bootstrap their devices over classroom Wi-Fi without Google Play or internet access.
+* Lightweight HTML web portal allowing learners and teachers to bootstrap their devices over classroom Wi-Fi without Google Play or internet access.
 * Serves:
-  * `LARA-Student.apk` (Android client)
+  * `LARA-Student.apk` (the Android client, for learners and teachers)
   * `LARA-Desktop-Setup.exe` and `.deb` (Desktop client)
   * Active candidate `.gguf` model weights for laptops and ≥6GB RAM phones.
 
@@ -113,7 +113,7 @@
 * **Sync ledger:** every write a client must see also inserts a `sync_revisions` row in the same transaction. The cursor is `seq`, never a timestamp.
 * **Identity:** create `hub_meta.hub_id` on first run; bump `hub_meta.sync_epoch` on restore from backup or when pruning old tombstones.
 * **Deletion:** never delete users, classrooms or graded rows. Deactivate or archive.
-* **Student-facing serializers** are separate types that cannot contain `correct_answer`. A test must scan every student route's JSON for it.
+* **Learner-facing serializers** are separate types that cannot contain `correct_answer`. A test must scan every learner route's JSON for it.
 
 ---
 

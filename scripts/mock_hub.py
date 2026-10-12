@@ -11,8 +11,8 @@ build against a realistic Hub before the Rust server exists:
 State is in memory and resets on restart. Seeded accounts (PIN 1234 for all):
   ADMIN-0001      the Hub admin (role ADMIN); only this account may call /api/admin/*, backup and restore
   T-0001          teacher "Maria Santos" (owns Science 4)
-  123456789012    pupil   "Juan dela Cruz" (enrolled, ACTIVE)
-  123456789013    pupil   "Ana Reyes"      (not enrolled; join with class code K7M4QX)
+  123456789012    learner   "Juan dela Cruz" (enrolled, ACTIVE)
+  123456789013    learner   "Ana Reyes"      (not enrolled; join with class code K7M4QX)
 
 Unknown routes answer 404 with error code ROUTE_NOT_FOUND so tests/test_contract_coverage.py
 can tell a missing route from a missing entity (NOT_FOUND).
@@ -337,7 +337,7 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
                     if role == "ADMIN" and user["role"] != "ADMIN":
                         raise ApiError(403, "FORBIDDEN", "Hub admin only")
                     if role == "STUDENT" and user["role"] != "STUDENT":
-                        raise ApiError(403, "FORBIDDEN", "Pupil only")
+                        raise ApiError(403, "FORBIDDEN", "Learners only")
                 req = Request(self, user, raw, match.groups())
                 with STATE.lock:
                     result = fn(req)
@@ -1510,7 +1510,7 @@ if __name__ == "__main__":
     print(f"  - WebSocket:    ws://{lan_ip}:8081")
     print("  - UDP Beacon:   Broadcasting to 255.255.255.255:8888")
     print("  - Teacher:      T-0001 / PIN 1234   (class code K7M4QX)")
-    print("  - Pupil:        123456789012 / PIN 1234")
+    print("  - Learner:      123456789012 / PIN 1234")
     print("  - Admin:        ADMIN-0001 / PIN 1234")
     print("=" * 65)
     print("Press Ctrl+C to stop.\n")
