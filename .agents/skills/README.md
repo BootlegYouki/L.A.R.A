@@ -4,7 +4,7 @@ Skills the AI agents on this project can load. Only skills that this project nee
 
 | Skill | For | What it gives the agent |
 |---|---|---|
-| [`lara-architect`](./lara-architect/SKILL.md) | All developers | How to work an issue: reading order, where each truth lives, what gets a PR rejected, checks before the PR |
+| [`lara-architect`](./lara-architect/SKILL.md) | All developers | How to work an issue: reading order, where each truth lives, what gets a PR rejected, how to propose a better design, checks before the PR |
 | [`lara-android-offline`](./lara-android-offline/SKILL.md) | Mobile | Room offline mirror and atomic sync, cleartext LAN HTTP, WorkManager, CameraX under 800 KB, Media3, the 250 MB heap budget |
 | [`lara-desktop-web`](./lara-desktop-web/SKILL.md) | Desktop | Tauri 2 and React 19 offline, strict TypeScript, plugin-sql and atomic sync, Tailwind 4 tokens and bundled fonts, quiz timer |
 | [`lara-hub-rust`](./lara-hub-rust/SKILL.md) | Server | SQLx on SQLite (WAL, `sync_revisions`), uploads past Axum's 2 MB limit, Range streaming with the 2 MB/s cap, auth, WebSocket broker |
@@ -23,8 +23,8 @@ Where a skill and a project rule disagree, `AGENTS.md` and `contracts/` win (see
 
 | Skill | Source | License | Version |
 |---|---|---|---|
-| `rust-skills` | https://github.com/leonardomso/rust-skills | MIT (`rust-skills/LICENSE`) | commit `fd2a861`; `checks/` scripts not copied |
-| `android-jetpack-compose`, `tauri-v2` | community skills | see each folder | as committed |
+| `rust-skills` | https://github.com/leonardomso/rust-skills | MIT (`rust-skills/LICENSE`) | commit `fd2a861`; `checks/` scripts not copied; a short "L.A.R.A note" at the top of `SKILL.md` overrides `panic = "abort"`, `target-cpu=native` and any telemetry |
+| `android-jetpack-compose`, `tauri-v2` | community skills | see each folder | as committed, plus a short "L.A.R.A note" at the top of each SKILL.md saying the project rules win (default theme colors, an analytics sample, the updater) |
 
 ## Rules for adding a skill
 

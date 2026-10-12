@@ -3,7 +3,7 @@
 -- ==============================================================================
 -- This is the offline SLICE of the server schema for the classes the user belongs to.
 -- Security: contains NO pin_hash, NO classmates' LRN, NO correct_answer, NO server file paths.
--- A pupil can read their own phone's SQLite file, so anything stored here is public to that pupil.
+-- A learner can read their own phone's SQLite file, so anything stored here is public to that learner.
 -- Offline invariant: sync_status and local_file_path support home study mode.
 --
 -- Room cannot express CHECK constraints, partial indexes or AUTOINCREMENT from entities. Mirror the
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 11. Quiz Questions (NO correct_answer, NO synonyms: the answer key never reaches a pupil device)
+-- 11. Quiz Questions (NO correct_answer, NO synonyms: the answer key never reaches a learner device)
 CREATE TABLE IF NOT EXISTS quiz_questions (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,

@@ -135,7 +135,7 @@ GitHub prints a link to open the PR. Or use the CLI:
 gh pr create --base staging --title "feat(server): class code generation and approval gate" --body-file pr.md
 ```
 * **Base branch must be `staging`**, never `main`.
-* **Title** is a Conventional Commit line (the Lead squash-merges, and this title becomes the commit message on `staging`).
+* **Title** is a Conventional Commit line (the Lead merges with a merge commit, so your commits stay in the history of `staging`; keep them small and plainly named).
 * **Body:** fill **every** section of the template (see the example below). The line `Closes #6` links and auto-closes the issue when the PR merges.
 * Not ready for review? Open it as a **Draft** (`gh pr create --draft` or "Create draft pull request") and click *Ready for review* when finished. Draft PRs are not reviewed.
 * Leave the card in **In Progress** while it is in review. It moves to **Done** when the PR merges.
@@ -167,7 +167,7 @@ Click **Details** on the red check to see the log. Push a fix to the same branch
 4. Push the fixes, then click **Re-request review**. Repeat until approved.
 
 ### Step 10: After the merge
-The Lead **squash-merges** into `staging`. Then:
+The Lead merges into `staging` with a **merge commit**. Then:
 ```bash
 git checkout staging
 git pull origin staging
@@ -212,6 +212,7 @@ Closes #6
 | **You found a bug outside your folder** | Open a Bug Report issue for the owning team. Do not fix it in your PR. |
 | **You are blocked or the requirement is unclear** | Write the question on the issue, tag the Lead, and work on another card meanwhile. |
 | **You pushed something sensitive (token, PIN, real LRN, photo of a child)** | Tell the Lead **immediately**; do not just delete the commit. The secret must be treated as exposed. |
+| **You think the plan is wrong or could be better** | Open a *Design Proposal* issue (label `type:proposal`) with evidence. Keep working by the current plan until the Lead answers; never change the plan inside a feature PR (`rules/team-workflow-and-prs.md` section 1.2). |
 | **Docs-only change** | Same process: branch `docs/<team>-<topic>`, PR to `staging`, CI must pass. |
 
 ### Common mistakes (each one gets a PR sent back)

@@ -68,6 +68,7 @@ for file names and patterns. The issue is the whole scope: its sub-tasks, Target
 - Never put answer keys, PIN data or other learners' LRNs where a client can see them.
 - Make the smallest change that satisfies the issue. If a requirement is missing or two documents
   disagree, ask me instead of guessing.
+- If you think the plan is wrong or could be better, do not change it in code: open a Design Proposal issue (type:proposal) with evidence and keep building by the plan until the Lead answers.
 - Use the names and patterns already in the code and the Tech Spec. Do not invent a second name for something that exists.
 - When done, run the team commands and verify_invariants.py, show the evidence for each acceptance criterion,
   and write the "How to test" steps for a non-programmer.
@@ -86,6 +87,7 @@ Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents
 | **Branch flow** | Branch from `staging`, open the PR to `staging`. Never base work on `main`: the Lead decides what goes to `main`, and it only receives `staging`. CI flags anything else. |
 | **One issue at a time per team** | The three teams work in parallel. Inside a team, both developers work the same issue, in step order, and open one PR. Start the next issue when that PR is merged. |
 | **Docs travel with code** | Update your folder's `docs/` (purpose, key files, data flow, gotchas). |
+| **Disagree with the plan?** | Say so: open a *Design Proposal* issue (`type:proposal`) with evidence. The Lead decides; the documents change first, then the code. |
 | **Children's data** | Never log PINs, tokens or LRNs. Never export learner data off the Hub. |
 
 Full rules: [`CONTRIBUTING.md`](./CONTRIBUTING.md), [`rules/`](./rules/), and for agents [`AGENTS.md`](./AGENTS.md).
@@ -111,7 +113,7 @@ Read the PR description, run your "How to test" steps like an end user, then try
 | :--- | :--- |
 | [`contracts/`](./contracts/) | REST (`openapi.yaml`), WebSocket events, SQL schemas, naming rules. The source of truth. |
 | [`rules/`](./rules/) | Invariants for networking, sync, quizzes, AI, UI, tooling. |
-| [`design-system/`](./design-system/) | Tokens, components and the Google Classroom layout reference. Open `showcase.html` offline. |
+| [`design-system/`](./design-system/) | Tokens, components and the Google Classroom layout reference. Open `showcase.html` (components) and `prototype.html` (the reference for the desktop Home, Stream and quiz) offline. |
 | [`docs/`](./docs/README.md) | PRD, templates, and the documentation map. |
 | [`scripts/`](./scripts/) and [`tests/`](./tests/) | The mock hub, the guardrail scanner, and their tests. |
 | `server/`, `desktop/`, `mobile/` | One program each, with its own `AGENTS.md` and `docs/`. |

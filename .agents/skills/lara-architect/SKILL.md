@@ -18,13 +18,14 @@ Three teams (`server/`, `desktop/`, `mobile/`) work in parallel. Inside a team t
    |---|---|---|
    | 1 | `contracts/` (`openapi.yaml`, `events/`, `schema/`, `ai/socratic_system_prompt.txt`, `naming_rules.md`) | Every route, event, column, error code and the tutor's prompt |
    | 2 | `AGENTS.md` and the `rules/` file for the area | Invariants and decisions already made |
-   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) | Every visual and wording choice |
+   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) and `design-system/prototype.html` (the reference for the remade desktop screens; it wins over the text) | Every visual and wording choice. Tokens and invariants are fixed; build to match the prototype and report any deviation |
    | 4 | `docs/PRD.md` (the FR the issue cites) | What the feature does for the teacher or learner |
    | 5 | `<team>/AGENTS.md`, `<team>/docs/TECH_SPEC.md` | File map, names, code patterns, known traps |
 
 3. **Load the team skill:** `lara-hub-rust` (server), `lara-desktop-web` (desktop), `lara-android-offline` (mobile), and `lara-ai-runtime` for any AI issue.
 4. **Search for existing code** that already does part of the job, and reuse its names.
 5. **Stop and report** when a requirement is missing or two sources disagree. Write the open question in the issue or PR. Guessing is how sessions drift apart.
+6. **Propose when you see better.** The plan is our best current idea, not a finished truth. If it looks wrong, incomplete or improvable, open a *Design Proposal* issue (`type:proposal`, template in `.github/ISSUE_TEMPLATE/proposal.md`) with evidence: a failing case, a measurement or a prototype. Keep building the current issue by the plan, never put the change in the feature PR, and never weaken an invariant on your own. Process: `rules/team-workflow-and-prs.md` section 1.2. A missing requirement is a question; a requirement you think is wrong or poor is a proposal.
 
 Done when you can name the routes or events you will touch, the files you will create, and the check that proves each acceptance criterion.
 
