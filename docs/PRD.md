@@ -196,8 +196,8 @@ sequenceDiagram
 * **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, the test is locked and answers are immediately transmitted to the Hub.
 * **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the learner reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
 * **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment; closing the quiz is what releases held scores.
-* **FR-4.8 Editing a Quiz:** A teacher can change a quiz's questions, answers and settings while it is still a draft. Once started it is locked so scores stay fair.
 * **FR-4.7 Result History:** Learners can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
+* **FR-4.8 Editing a Quiz:** A teacher can change a quiz's questions, answers and settings while it is still a draft. Once started it is locked so scores stay fair.
 
 ### 4.5 Module 5: Gradebook & Export
 * **FR-5.1 Gradebook Dashboard:** Teachers can view a consolidated spreadsheet-like matrix of all students, their quiz scores, and homework grades.
