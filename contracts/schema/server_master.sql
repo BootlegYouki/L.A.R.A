@@ -14,10 +14,10 @@
 -- Tables holding grades reference users with ON DELETE RESTRICT to enforce this.
 -- ==============================================================================
 
--- 1. Users (Teachers & Pupils)
+-- 1. Users (Teachers & Learners)
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY NOT NULL,
-    lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit LRN (pupil) or teacher/admin ID
+    lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit LRN (learner) or teacher/admin ID
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT', 'ADMIN')),   -- one ADMIN row, created by POST /api/admin/setup; never synced
     pin_hash TEXT NOT NULL,                    -- argon2id of the 4-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 5. Announcement Comments (Pupils & Teachers)
+-- 5. Announcement Comments (Learners & Teachers)
 CREATE TABLE IF NOT EXISTS announcement_comments (
     id TEXT PRIMARY KEY NOT NULL,
     announcement_id TEXT NOT NULL,
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     options_json TEXT,                         -- JSON array of strings, e.g. ["A", "B", "C", "D"]
     points INTEGER NOT NULL DEFAULT 1 CHECK(points > 0),
     image_path TEXT,
-    correct_answer TEXT NOT NULL,              -- NEVER sent to pupils. Never selected by student-facing queries.
+    correct_answer TEXT NOT NULL,              -- NEVER sent to learners. Never selected by student-facing queries.
     synonyms_json TEXT,                        -- JSON array of accepted alternates for IDENTIFICATION
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 
 -- 12. Student Quiz Attempts & Scores
 -- A row is created by POST /api/quizzes/{id}/begin with status IN_PROGRESS. The AI lockout
--- (HTTP 403 / QUIZ_IN_PROGRESS) is enforced while a pupil has any IN_PROGRESS row.
+-- (HTTP 403 / QUIZ_IN_PROGRESS) is enforced while a learner has any IN_PROGRESS row.
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     CHECK(status = 'IN_PROGRESS' OR (submitted_at IS NOT NULL AND score IS NOT NULL AND total_points IS NOT NULL)),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE RESTRICT,
-    UNIQUE(quiz_id, student_id)                -- one attempt per pupil per quiz (no retakes in v1)
+    UNIQUE(quiz_id, student_id)                -- one attempt per learner per quiz (no retakes in v1)
 );
 
 -- 13. Socratic AI Chat History (Hub-assisted conversations)
@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS private_comments (
 CREATE TABLE IF NOT EXISTS sync_revisions (
     seq INTEGER PRIMARY KEY AUTOINCREMENT,
     classroom_id TEXT,                         -- NULL for global records (users)
-    student_id TEXT,                           -- NULL = whole classroom; set = only that pupil and the teacher (submissions, attempts)
+    student_id TEXT,                           -- NULL = whole classroom; set = only that learner and the teacher (submissions, attempts)
     entity_table TEXT NOT NULL,                -- e.g. 'announcements', 'materials', 'quizzes'
     entity_id TEXT NOT NULL,
     action TEXT NOT NULL DEFAULT 'UPSERT' CHECK(action IN ('UPSERT', 'DELETE')),

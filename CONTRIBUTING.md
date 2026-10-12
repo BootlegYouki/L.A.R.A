@@ -237,6 +237,10 @@ Closes #6
 
 ---
 
+## Proposing a better design
+
+If you think the plan is wrong or could be better, open a *Design Proposal* issue (label `type:proposal`) with evidence. Keep working by the current plan until the Lead answers, and never change the plan inside a feature PR. Details: `rules/team-workflow-and-prs.md` section 1.2.
+
 ## 5. Fatal Rejection Rules
 
 A PR containing any of these is rejected immediately:

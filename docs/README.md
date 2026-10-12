@@ -36,6 +36,9 @@ Start here to find the right document. When two documents disagree, the one high
 | `benchmarks/` | Created in Sprint 5 and 6: AI model evaluation, router stress test, phone profiling |
 | `evaluations/`, `audits/` | Created in Sprint 6: SUS and ISO 25010 results, WAN-unplugged audit |
 
+## Disagree with the plan?
+Open a *Design Proposal* issue (`type:proposal`). Anyone may, and the Lead decides. See `rules/team-workflow-and-prs.md` section 1.2.
+
 ## Rules for keeping docs healthy
 * The schema and API live only in `contracts/`. Link to them, never copy column lists or routes.
 * Product behavior lives only in `PRD.md`. Tech Specs and issues cite it, they do not redefine it.

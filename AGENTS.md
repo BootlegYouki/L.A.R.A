@@ -60,6 +60,9 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
+### 1.5 If you think the plan is wrong or could be better
+Say so, in an issue, with evidence. Every developer and agent may propose a better design for any part of the project, the invariants included. Open a *Design Proposal* issue (`type:proposal`), keep building by the current plan until the Lead answers, and never change the plan inside a feature PR. Process: `rules/team-workflow-and-prs.md` section 1.2.
+
 ---
 
 ## 2. Team Organization
