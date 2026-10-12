@@ -58,7 +58,7 @@ Exact commands to build, test and run against the mock hub (agents run these to 
 For each Sprint 1 and Sprint 2 deliverable, the check that proves it.
 
 ## 14. Open Questions
-Anything unclear or in conflict with a contract or the PRD. Write it here and raise it with the Lead; never guess.
+Anything unclear or in conflict with a contract or the PRD. Write it here and raise it with the Lead; never guess. If you think the plan itself is wrong or could be better, open a *Design Proposal* issue (`rules/team-workflow-and-prs.md` section 1.2) and link it here.
 
 ## 15. Invariants Checklist
 - [ ] No internet or CDN dependency (fonts and icons come from `design-system/assets/`)

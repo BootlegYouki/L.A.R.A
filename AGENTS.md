@@ -24,7 +24,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 ### 1.1 Source of truth (when two documents disagree, higher wins)
 1. `contracts/` (OpenAPI, WebSocket event schemas, SQL schemas, `naming_rules.md`): the only shared surface between teams.
 2. This file and `rules/*.md`.
-3. `design-system/design-system.md` and `design-system/` (UI authority).
+3. `design-system/design-system.md` and `design-system/` (UI authority). For the remade desktop screens, `design-system/prototype.html` is the reference and wins over the text.
 4. `docs/PRD.md` (product behavior and functional requirements).
 5. Team `README.md`, `docs/TECH_SPEC.md` and GitHub issues.
 
@@ -59,6 +59,9 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
+
+### 1.5 If you think the plan is wrong or could be better
+Say so, in an issue, with evidence. Every developer and agent may propose a better design for any part of the project, the invariants included. Open a *Design Proposal* issue (`type:proposal`), keep building by the current plan until the Lead answers, and never change the plan inside a feature PR. Process: `rules/team-workflow-and-prs.md` section 1.2.
 
 ---
 
@@ -107,7 +110,7 @@ Rule documents (read the ones for your task):
 
 ## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
-* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference: tokens, invariants and accessibility rules are fixed, while the screens are a strong guide, not a pixel spec. Where real development shows something must change, change it, keep the spirit and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference (see section 9 of the design system). The remade desktop screens (Home, Stream, quiz) can be tried in `design-system/prototype.html`.
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the reference for the remade desktop screens (Home, Stream and the quiz): it was built and approved under the Lead's supervision. Where the text of the design system and the prototype disagree on one of those screens, the prototype wins and the text is fixed. Tokens, invariants and accessibility rules are fixed. Build the remade screens to match the prototype; where real development shows something must change, change it, keep the spirit and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Screens the prototype does not cover yet are yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.

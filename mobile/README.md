@@ -36,7 +36,7 @@
    * All network JSON fields are strictly **`snake_case`**. Annotate Kotlin fields with `@SerialName("field_name")`.
    * **Anti-Cheat Redaction:** The student client must **never** contain fields or Room columns for `correct_answer` during active quizzes.
 5. **UI & Design Authority:**
-   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference.
+   * [`design-system/design-system.md`](../design-system/design-system.md) and `design-system/` are canonical. Layouts are yours to design if you use only the documented tokens and components and follow Google Classroom as the structural reference. Tokens, invariants and accessibility rules are fixed; the screens are a guide, not a pixel spec, so report a deviation in the PR. The phone layouts are not remade yet; the desktop prototype ([`design-system/prototype.html`](../design-system/prototype.html)) is the reference for the structure, wording and states, until the Lead supplies the phone layouts.
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young learners (Grades 1 to 3 have the least fine motor control).
    * Text contrast must meet **minimum 4.5:1**.
@@ -76,7 +76,7 @@
 
 ### 2.1 Dual-Role Architecture (Student & Teacher)
 The app switches navigation graphs depending on authenticated role:
-* **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz).
+* **Student NavGraph:** Bottom Navigation (68 high) with four destinations: `Stream`, `Classwork`, `Quizzes`, `AI Tutor` (purple; shown as a disabled placeholder with an explanation during a quiz). Where the tutor is reached on a phone is still an open decision (`design-system/design-system.md` section 9.16), so build it behind one entry point that is easy to move.
 * **Teacher NavGraph (`TeacherNavGraph`):** every teacher feature the desktop app has (root `AGENTS.md` section 1.4): create and manage classes, approve and remove learners, post announcements, upload materials, create and edit assignments, topics, grade homework photos, private comments, build quizzes, start and monitor them, and see grades.
 
 ### 2.2 Paperless Quiz Engine

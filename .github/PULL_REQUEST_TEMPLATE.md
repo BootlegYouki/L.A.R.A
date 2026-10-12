@@ -24,6 +24,7 @@ Describe the tests executed to verify these changes:
 - [ ] Verified offline persistence in Room/SQLite DB
 - [ ] Verified Material Design 3 accessibility (phones minimum 52dp, 56dp primary actions; desktop buttons 40px)
 - [ ] Verified bilingual text (English & Filipino)
+- [ ] Screen matches `design-system/design-system.md`; any deviation (and why) is listed under Not Verified or in the description
 
 ## Evidence
 Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.
