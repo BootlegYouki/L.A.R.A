@@ -4,7 +4,7 @@
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
 > Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`. The remade desktop Home, Stream and quiz as a full-window app: `design-system/prototype.html`.
 
-> **How to read this document: a guide, not a pixel spec.** The tokens, the invariants in section 0 and the accessibility rules are fixed. The screens in section 9, the sizes in them and the prototype (`prototype.html`) show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
+> **How to read this document: the prototype is the reference.** The prototype (`design-system/prototype.html`) is the reference for the remade desktop screens (Home, Stream and the quiz): it was built and approved under the Lead's supervision. Where the text of the design system and the prototype disagree on one of those screens, the prototype wins and the text is fixed. The tokens, the invariants in section 0 and the accessibility rules are fixed. For screens the prototype does not cover yet, the screens in section 9 and their sizes show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
 
 ---
 
@@ -358,6 +358,8 @@ Measurements marked "Classroom" were read from the computed styles of the curren
 
 ### 9.1 Rules of use
 
+0. **The prototype is the reference** for Home, Stream and the quiz (`design-system/prototype.html`, made under the Lead's supervision). If a sentence in this section 9 disagrees with it for those screens, the prototype is right and the sentence is a bug to report. Edit the screens in `showcase.html` and regenerate the prototype; never edit `prototype.html` by hand.
+
 1. **Copy structure, not visuals.** No Google colors, fonts, logos or wordmark. No theme pictures or photos in banners: use Dark Green with a subject icon.
 2. **Same places.** Top bar, class drawer, class tabs, banner, Upcoming card, feed, topics, rows and the Your work card sit where Classroom puts them. Do not move them to be clever.
 3. **Friendlier by default.** Rounder corners, 52 px targets on phones (desktop copies Classroom's 40), warm words, an encouraging line on every empty state, no shaming statuses.
@@ -622,7 +624,7 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 
 ### 9.16 Decisions
 
-**Settled by the prototype** (the Lead said to base the design on it, 2026-10-12; change them with a Design Proposal if real use says otherwise):
+**Settled by the prototype** (the Lead made the prototype the reference, 2026-10-12; change them with a Design Proposal if real use says otherwise):
 
 - **Learner People tab:** the tab shows for both roles. Learners see the Teachers section only. The learner list with Accept and Decline is the teacher's view (9.6).
 - **No Quizzes tab (desktop; the phone layouts follow when the Lead supplies them):** quizzes are reached from the Stream rows and from Classwork (Create, Quiz assignment), as in Classroom. The class tabs are Stream, Classwork, People and, for teachers, Grades (9.2).

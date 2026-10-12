@@ -4,7 +4,7 @@
 
 Owned by the Lead Developer. Developers **use** these files; they do not edit them in a feature PR.
 
-**A guide, not a pixel spec.** Tokens, invariants and accessibility rules are fixed; the screens and the prototype show the intended direction and will need adjusting once real development starts. Change what does not work, keep the spirit, never bend an invariant, and report every deviation in the PR so the Lead can update these files (`design-system.md`, top note).
+**The prototype is the reference** for the remade desktop screens (Home, Stream, quiz). It was built and approved under the Lead's supervision, and it wins over the text of `design-system.md` where they differ. Tokens, invariants and accessibility rules are fixed. Match it; where real development shows something must change, change it, keep the spirit, never bend an invariant, and report every deviation in the PR so the Lead can update these files (`design-system.md`, top note).
 
 ## The three sources and how they relate
 
@@ -39,7 +39,7 @@ design-system/
 └── prototype.html          # Full-window app of the remade desktop screens (generated from showcase.html)
 ```
 
-`prototype.html` runs the remade desktop screens (Home, Stream, quiz) as a full-window app, learner or teacher, with normal, empty, loading and offline states. It is generated from `showcase.html` by `python3 scripts/build_prototype.py`; a test fails when it is stale. Serve this folder with any static server (for example `python3 -m http.server`) and open `/prototype.html`.
+`prototype.html` runs the remade desktop screens (Home, Stream, quiz) as a full-window app, learner or teacher, with normal, empty, loading and offline states. It is the reference for those screens. It is generated from `showcase.html` by `python3 scripts/build_prototype.py` (edit the showcase, never the generated file); a test fails when it is stale. Serve this folder with any static server (for example `python3 -m http.server`) and open `/prototype.html`.
 
 ## Principles
 1. **Solid fills only, zero gradients.**
