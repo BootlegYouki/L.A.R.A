@@ -67,7 +67,7 @@ If any violation is detected, the script exits with code 1 and prints the exact 
 
 ## 4. Automated Verification Test Suite (`tests/`)
 
-All contract schemas, mock hub endpoints, and guardrail scanners are covered by automated unit tests in `tests/`.
+All contract schemas, mock hub endpoints and guardrail scanners are covered by automated unit tests in `tests/`. So are the design tokens (`test_design_tokens.py` compares `design-system/showcase.html` with every token mirror) and the prototype (`test_prototype_sync.py` fails when `design-system/prototype.html` is stale; regenerate it with `python3 scripts/build_prototype.py`).
 
 ### Running Tests Locally
 ```bash
