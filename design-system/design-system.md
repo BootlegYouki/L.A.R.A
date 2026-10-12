@@ -362,7 +362,7 @@ Measurements marked "Classroom" were read from the computed styles of the curren
 2. **Same places.** Top bar, class drawer, class tabs, banner, Upcoming card, feed, topics, rows and the Your work card sit where Classroom puts them. Do not move them to be clever.
 3. **Friendlier by default.** Rounder corners, 52 px targets on phones (desktop copies Classroom's 40), warm words, an encouraging line on every empty state, no shaming statuses.
 4. **Add, never replace.** L.A.R.A. additions (Hub beacon, sync and Saved badges, Quizzes, Ask L.A.R.A., camera, class code approval) go in the places named below. They never push a Classroom element out.
-5. **Roles.** In the remade shell learners see Stream, Classwork and People; teachers also see Grades and the Class settings gear. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN), so a learner's People tab can list teachers only (open question, 9.16). The first pass's Quizzes tab and Ask L.A.R.A. tab are not in the remade shell: where quizzes and the AI tutor are reached is decided with the Classwork slice and the AI entry decision (9.16).
+5. **Roles.** In the remade shell learners see Stream, Classwork and People; teachers also see Grades and the Class settings gear. Learners never see other learners (no roster, no names in comments beyond a first name, never an LRN), so a learner's People tab lists teachers only (settled from the prototype, 9.16). The first pass's Quizzes tab and Ask L.A.R.A. tab are not in the remade shell: quizzes are reached from the Stream and Classwork (settled, 9.16), and where the AI tutor is reached is still open (9.16).
 6. **Every screen** has an offline state, an empty state and a loading skeleton (5.10). Nothing blocks when the Hub is unreachable.
 7. **Teacher features live on Desktop and Mobile, the same set on both** (`AGENTS.md` section 1.4).
 8. **Sizes on desktop follow Classroom** (3.2): 40 px buttons and icon buttons, 48 px tabs and drawer items. Phones keep 52.
@@ -477,10 +477,10 @@ Status words (learners see the left column, teachers the right):
 | Not turned in yet | Missing | Neutral for learners, Red for teachers |
 | Graded, 45 / 50 | Graded | Blue, `clipboard-text` |
 
-### 9.6 Class: People (teacher)
+### 9.6 Class: People
 
 - **Classroom:** "Teachers" and "Classmates" sections, each a large heading with a rule, a count ("136 students") and rows of a 32 px avatar and a name.
-- **L.A.R.A.:** teacher only. A learner never sees this screen.
+- **L.A.R.A.:** the People tab is in the tab row for both roles, as in the prototype. A learner sees only the "Teachers" section (names and roles, never an LRN) and never the list of other learners. Everything below about learners, Pending and Accept or Decline is the teacher's view.
   - An info banner on top when learners are waiting: "2 learners want to join: Check that you know them, then accept."
   - Sections "Teachers" and "Learners" (24 Black heading, count, 2 px Primary Green rule). Rows are at least 68 high with a 40 px initials avatar.
   - A learner in `PENDING_APPROVAL` shows a Pending badge, **Accept** (primary, small) and **Decline** (secondary, small). Active shows an Active badge. Rejected shows a Rejected badge and keeps the record. The 40 px small buttons are allowed on this teacher table.
@@ -553,7 +553,7 @@ Classroom's phone layout is a top bar, one column of cards, and the class tabs u
 | Home, class cards | Home with Due soon or Recently due and class cards (9.3, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, status pills, offline banner |
 | Stream tab | Stream (9.4, 5.12) | Remake: Home, Stream and Quiz (desktop) | Hub pill, Queued for sync comments, empty and offline states |
 | Classwork tab | Classwork | (not in the showcase yet) | Save for home, offline-capable actions, Quizzes |
-| People tab | People (teacher only) | (not in the showcase yet) | Pending approval with Accept and Decline |
+| People tab | People (learners see Teachers only) | (not in the showcase yet) | Pending approval with Accept and Decline |
 | Assignment and Turn in | Assignment detail with camera | (not in the showcase yet) | Photo queued as `QUEUED_FOR_SYNC`, kind helper text |
 | Student work | Review learner work | (not in the showcase yet) | Encouraging message phrases, queued arrivals |
 | To-do | To-do | (not in the showcase yet) | Friendly tab names |
@@ -620,15 +620,18 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 | Grades (teacher) | A table: a "Sort by last name" select over the learner column, one column per assignment (due date line, title link, "out of 100", a header menu), a "Class average" row and one row per learner with "__/100" cells. Empty: "This is where you'll view and manage grades". A first-visit dialog explains draft grades for missing work |
 | Class settings | Full-window page of cards: Class Details (name, description, section, levels, subject, room), General (Invite codes with an invite link and class code, Stream: "Students can post and comment" or stricter, Classwork on the Stream, Show deleted items), Grading (draft grade for missing work, overall grade calculation, grade categories). **L.A.R.A. departs:** no Meet link, no categories, and learners cannot post to the Stream |
 
-### 9.16 Open decisions
+### 9.16 Decisions
 
-These need the Lead's answer before the matching screen is built. Nothing above settles them.
+**Settled by the prototype** (the Lead said to base the design on it, 2026-10-12; change them with a Design Proposal if real use says otherwise):
 
-1. **White on Primary Green is 3.56:1** against the 4.5:1 rule. The Primary buttons in the prototype (Post, Start quiz, Next, Submit) show the current token. Options: darken the button green (touches the code mirrors and the token test) or use Dark Green for filled buttons.
-2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry.
+- **Learner People tab:** the tab shows for both roles. Learners see the Teachers section only. The learner list with Accept and Decline is the teacher's view (9.6).
+- **No Quizzes tab (desktop; the phone layouts follow when the Lead supplies them):** quizzes are reached from the Stream rows and from Classwork (Create, Quiz assignment), as in Classroom. The class tabs are Stream, Classwork, People and, for teachers, Grades (9.2).
+- **Teacher posting while the Hub is unreachable:** Post is disabled with the hint "Waiting for the Hub. Posting needs the classroom network." Comments queue as `QUEUED_FOR_SYNC` and show a "Queued for sync" badge; announcements do not queue (9.4).
+- **Who may post by default:** the teacher posts, learners comment only (no learner posts to the stream), as stated in the PRD scope.
+
+**Still open, the Lead decides** (recommendations are in the Lead's session notes and can be turned into a Design Proposal):
+
+1. **White on Primary Green is 3.56:1** against the 4.5:1 rule. The Primary buttons in the prototype (Post, Start quiz, Next, Submit) show the current token. Options: darken the button green (touches the code mirrors and the token test), use Dark Green for filled buttons, or keep white only for large bold text.
+2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry; only the quiz screens say it is off during a quiz.
 3. **Where Export to USB lives** (the Hub window per PRD FR-5.2, or the Grades tab per the first pass).
-4. **Learner People tab:** Classroom shows classmates; L.A.R.A. never shows learners to learners. Teachers only, or no tab?
-5. **Quizzes tab:** the first pass had one; the remake reaches quizzes from the Stream and Classwork (Create, Quiz assignment) like Classroom. Confirm when Classwork is remade.
-6. **Teacher posting while the Hub is unreachable:** the prototype disables Post with a hint. Comments queue, announcements do not.
-7. **Class settings default** for who may post: the prototype assumes learners comment only.
-8. **Filipino strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) need a Filipino-speaking teacher's check.
+4. **Filipino strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) need a Filipino-speaking teacher's check.
