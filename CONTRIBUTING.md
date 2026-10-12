@@ -135,7 +135,7 @@ GitHub prints a link to open the PR. Or use the CLI:
 gh pr create --base staging --title "feat(server): class code generation and approval gate" --body-file pr.md
 ```
 * **Base branch must be `staging`**, never `main`.
-* **Title** is a Conventional Commit line (the Lead squash-merges, and this title becomes the commit message on `staging`).
+* **Title** is a Conventional Commit line (the Lead merges with a merge commit, so your commits stay in the history of `staging`; keep them small and plainly named).
 * **Body:** fill **every** section of the template (see the example below). The line `Closes #6` links and auto-closes the issue when the PR merges.
 * Not ready for review? Open it as a **Draft** (`gh pr create --draft` or "Create draft pull request") and click *Ready for review* when finished. Draft PRs are not reviewed.
 * Leave the card in **In Progress** while it is in review. It moves to **Done** when the PR merges.
@@ -167,7 +167,7 @@ Click **Details** on the red check to see the log. Push a fix to the same branch
 4. Push the fixes, then click **Re-request review**. Repeat until approved.
 
 ### Step 10: After the merge
-The Lead **squash-merges** into `staging`. Then:
+The Lead merges into `staging` with a **merge commit**. Then:
 ```bash
 git checkout staging
 git pull origin staging
