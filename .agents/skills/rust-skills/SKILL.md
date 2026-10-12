@@ -21,6 +21,8 @@ metadata:
 
 # Rust Best Practices
 
+> **L.A.R.A note (project rules win over this skill).** Three defaults below do not fit our Hub: (1) do not set `panic = "abort"` on the Hub, because one panicking request must not kill the process and risk the school's data (keep unwinding, catch at the task boundary); (2) do not use `target-cpu=native` (`opt-target-cpu`) for anything we ship, because the installer runs on different school PCs than the build machine; (3) logging follows `rules/` first: never log PINs, tokens, LRNs or homework contents (`obs-no-sensitive-data`), and no telemetry or remote tracing exporter, since the Hub never calls out. Everything else (ownership, errors, async, testing) applies as written. See `server/AGENTS.md` and `.agents/skills/lara-hub-rust/SKILL.md`.
+
 Comprehensive guide for writing high-quality, idiomatic, and highly optimized Rust code. Contains 265 rules across 26 categories, prioritized by impact to guide LLMs in code generation and refactoring. Current for Rust 1.96 (2024 edition).
 
 ## When to Apply
