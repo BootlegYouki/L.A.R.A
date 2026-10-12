@@ -24,7 +24,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 ### 1.1 Source of truth (when two documents disagree, higher wins)
 1. `contracts/` (OpenAPI, WebSocket event schemas, SQL schemas, `naming_rules.md`): the only shared surface between teams.
 2. This file and `rules/*.md`.
-3. `design-system/design-system.md` and `design-system/` (UI authority). For the remade desktop screens, `design-system/prototype.html` is the reference and wins over the text.
+3. `design-system/design-system.md` and `design-system/` (UI authority). `design-system/prototype.html` is the visual reference for the remade desktop screens.
 4. `docs/PRD.md` (product behavior and functional requirements).
 5. Team `README.md`, `docs/TECH_SPEC.md` and GitHub issues.
 
@@ -110,7 +110,7 @@ Rule documents (read the ones for your task):
 
 ## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
-* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the reference for the remade desktop screens (Home, Stream and the quiz): it was built and approved under the Lead's supervision. Where the text of the design system and the prototype disagree on one of those screens, the prototype wins and the text is fixed. Tokens, invariants and accessibility rules are fixed. Build the remade screens to match the prototype; where real development shows something must change, change it, keep the spirit and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Screens the prototype does not cover yet are yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the visual reference for the remade desktop screens (Home, Stream and the quiz): it was built under the Lead's supervision so developers have the vision. It is a reference, not a spec: the developers handle the details and everything it does not show. Tokens, invariants and accessibility rules are fixed. Keep the vision and the spirit; where real development shows something must change, change it and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Anything the prototype does not show is yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
