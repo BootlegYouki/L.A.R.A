@@ -110,6 +110,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 10. **Destructive Data Handling:** deleting users, classrooms or graded rows instead of deactivating or archiving.
 
 ### Also checked (usually a comment, not a blocker)
+* A new screen follows the design system's section 9 anatomy and showcase entry (and the prototype where it exists) and the PR names them; a screen with its own invented layout is sent back.
 * Design tokens only (no invented hex, gradients, non-Phosphor icons, non-Nunito fonts); purple used only for the AI tutor.
 * Offline state, empty state and loading skeleton exist for every new screen; English and Filipino strings present.
 * Server authorisation by role and class ownership, not only in the UI.
