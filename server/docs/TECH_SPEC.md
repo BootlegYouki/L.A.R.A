@@ -1,6 +1,6 @@
 # Server Technical Spec
 
-> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Draft  |  Last updated: 2026-10-24
+> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-10-25
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
 
@@ -333,14 +333,14 @@ python3 scripts/mock_hub.py               # reference behavior
 | 2.5 Class management | Ported `test_removed_learner_loses_the_class_and_co_teacher_gains_it` |
 
 ## 14. Open Questions
-Raised with the Lead; none is guessed in code. Until answered, the Hub matches `scripts/mock_hub.py`.
-1. **Quiz start:** which code for starting a non-`DRAFT` quiz or a second `ACTIVE` one? The mock allows both; the unique index makes the real Hub fail.
+Raised with the Lead; none is guessed in code. Until answered, the Hub matches `scripts/mock_hub.py`. A **Call** is the Server team's answer for the PR #36 review; a call that needs a `contract-change` is built only after that PR merges, and the Hub matches the mock until then.
+1. **Quiz start:** which code for starting a non-`DRAFT` quiz or a second `ACTIVE` one? The mock allows both; the unique index makes the real Hub fail. **Call:** 409 `QUIZ_NOT_DRAFT` for a non-`DRAFT` quiz; 409 `QUIZ_IN_PROGRESS` for a second `ACTIVE` quiz in the class, message naming the active one. No new code; a `contract-change` documents both on `/start` and updates the mock. Needed before 4.1.
 2. **`EVENT_ERROR` has no `TIME_LIMIT_EXCEEDED`** (the mock sends `BAD_REQUEST`). `EVENT_QUIZ_SUBMIT` has no `started_at`; we use the Hub's attempt row and ignore its `student_id`.
-3. **Sync visibility:** a learner approved after their cursor never gets the class's older rows; a removed learner's pull omits the `REMOVED` enrollment. Proposed: snapshot newly visible classes, and send the enrollment for classes no longer visible. Also `GradeReceipt` in a teacher's pull has no `student_id` or `quiz_id`.
-4. **Step numbers vs `Depends on`:** confirm section 10's order or renumber.
-5. **Shared code in later issues:** `record_revision` (#7) is needed from 1.2, `class_access` (#121) from 2.1, `check_quiz_lockout` (#16) from 5.1. We create each in the earlier step.
-6. **Who may export:** the mock allows teachers only; the contract says "teacher / Hub console" and FR-5.2 puts it in the Hub window (signed in as `ADMIN`). See design system 9.16 #3.
-7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only?
+3. **Sync visibility:** a learner approved after their cursor never gets the class's older rows; a removed learner's pull omits the `REMOVED` enrollment. Proposed: snapshot newly visible classes, and send the enrollment for classes no longer visible. Also `GradeReceipt` in a teacher's pull has no `student_id` or `quiz_id`. **Call:** take the proposal. When the caller's enrollment turns `ACTIVE` after their cursor, `pull_page` adds a snapshot of that class's current visible rows; rows whose `student_id` is the caller are always visible, so the `REMOVED` enrollment arrives and the client clears the class. A `contract-change` adds optional `student_id` and `quiz_id` to `GradeReceipt`. Needed before 2.2.
+4. **Step numbers vs `Depends on`:** confirm section 10's order or renumber. **Call:** keep section 10's order and the step numbers as labels (renumbering breaks issue and PR links); correct the `Depends on` lines of #6, #10, #8, #11 and #12 to match.
+5. **Shared code in later issues:** `record_revision` (#7) is needed from 1.2, `class_access` (#121) from 2.1, `check_quiz_lockout` (#16) from 5.1. We create each in the earlier step. **Call:** confirmed. The earlier PR says "pulls forward X from #N"; the later issue extends it.
+6. **Who may export:** the mock allows teachers only; the contract says "teacher / Hub console" and FR-5.2 puts it in the Hub window (signed in as `ADMIN`). See design system 9.16 #3. **Call:** both. `TEACHER` for classes they teach, `ADMIN` for any class. `target_path` is required and must be a USB drive detected on the Hub PC, else 400: returning the file as the response body would put learner data on a client device, against section 1's non-goals. A `contract-change` makes `target_path` required, or the Lead drops the non-goal. Needed before 4.3.
+7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only? **Call:** failed attempts only, 5 per minute per `lrn_or_id`, reset by a successful login. Over the limit: 429 `TOO_MANY_ATTEMPTS` with `Retry-After`, so clients show "wait a minute" instead of "wrong PIN". A `contract-change` adds both; needed before 2.0.
 8. **Mock codes missing from the contract:** `ALREADY_EXISTS`, `QUIZ_CLOSED`, `ROUTE_NOT_FOUND`. We use them as the mock does.
 9. **Archived class writes:** "read-only for everyone" has no error code.
 10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`).
