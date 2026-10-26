@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Android Network Security Configuration cannot express private IPv4 CIDR or
+         prefix restrictions. Application code must enforce endpoint-level policy:
+         MOBILE 1.2 validates HubEndpoint; MOBILE 2.2 enforces it in HubClient.
+         MOBILE 1.1 supplies the helper and tests, not runtime network enforcement. -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

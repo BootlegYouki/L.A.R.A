@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">L.A.R.A.</string>
+    <string name="shell_title">Your classroom, together</string>
+    <string name="offline_title">Not connected to the Hub</string>
+    <string name="offline_body">This app is getting ready for your classroom. Hub connection and saved lessons will be available in a later update.</string>
+    <string name="empty_title">No classes yet</string>
+    <string name="empty_body">Your classes will appear here after account setup and connection to your classroom Hub are available.</string>
+    <string name="about_action">About L.A.R.A.</string>
+    <string name="about_title">Learning with your classroom</string>
+    <string name="about_body">L.A.R.A. brings lessons and classroom activities to your device. This version sets up the app; account setup and classroom features are coming later.</string>
+    <string name="back_action">Back to home</string>
+</resources>
