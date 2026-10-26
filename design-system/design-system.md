@@ -4,7 +4,7 @@
 > Layout: Google Classroom's screens, copied closely (section 9). Look and voice: a friendly L.A.R.A. brand for Filipino learners (Grades 1 to 12) (sections 1 to 5 and 7).
 > Interactive reference with live previews and copy-ready code for both platforms: `design-system/showcase.html`. The remade desktop Home, Stream and quiz as a full-window app: `design-system/prototype.html`.
 
-> **How to read this document: the prototype is the reference.** The prototype (`design-system/prototype.html`) is the reference for the remade desktop screens (Home, Stream and the quiz): it was built and approved under the Lead's supervision. Where the text of the design system and the prototype disagree on one of those screens, the prototype wins and the text is fixed. The tokens, the invariants in section 0 and the accessibility rules are fixed. For screens the prototype does not cover yet, the screens in section 9 and their sizes are the design to build from: follow their structure, places and sizes. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
+> **How to read this document: the prototype is the visual reference.** The prototype (`design-system/prototype.html`) is the visual reference for the remade desktop screens (Home, Stream and the quiz): it was built under the Lead's supervision so developers have the vision. It is a reference, not a spec: the developers handle the details and everything it does not show. The tokens, the invariants in section 0 and the accessibility rules are fixed. For screens the prototype does not cover yet, the screens in section 9 and their sizes show the intended direction, a strong clue, not a drawing to copy blindly. Real development will turn up things this design could not know: real data, a slow phone, a long class name, a Hub limit, a layout that does not fit. When that happens, build what works and keep the spirit (Classroom's places, L.A.R.A.'s look and voice). Never bend an invariant (offline first, privacy, quiz lockout, contrast, target sizes, tokens only). Say what you changed and why in the PR, so the Lead can update this document. A silent deviation is the only wrong choice. The prototype's code is a demo: do not copy it into an app.
 
 ---
 
@@ -358,7 +358,7 @@ Measurements marked "Classroom" were read from the computed styles of the curren
 
 ### 9.1 Rules of use
 
-0. **The prototype is the reference** for Home, Stream and the quiz (`design-system/prototype.html`, made under the Lead's supervision). If a sentence in this section 9 disagrees with it for those screens, the prototype is right and the sentence is a bug to report. Edit the screens in `showcase.html` and regenerate the prototype; never edit `prototype.html` by hand.
+0. **The prototype shows the vision** for Home, Stream and the quiz (`design-system/prototype.html`, made under the Lead's supervision). It is a reference, not a spec: the developers handle the details. Edit the screens in `showcase.html` and regenerate the prototype; never edit `prototype.html` by hand.
 
 1. **Copy structure, not visuals.** No Google colors, fonts, logos or wordmark. No theme pictures or photos in banners: use Dark Green with a subject icon.
 2. **Same places.** Top bar, class drawer, class tabs, banner, Upcoming card, feed, topics, rows and the Your work card sit where Classroom puts them. Do not move them to be clever.
@@ -631,9 +631,9 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 - **Teacher posting while the Hub is unreachable:** Post is disabled with the hint "Waiting for the Hub. Posting needs the classroom network." Comments queue as `QUEUED_FOR_SYNC` and show a "Queued for sync" badge; announcements do not queue (9.4).
 - **Who may post by default:** the teacher posts, learners comment only (no learner posts to the stream), as stated in the PRD scope.
 
-**Still open, the Lead decides** (recommendations are in the Lead's session notes and can be turned into a Design Proposal):
+**Left to the developers.** The prototype does not answer these, and the Lead does not need to settle them first. The team that builds the screen decides, follows the fixed rules, and reports the choice in the PR (or opens a Design Proposal if it is wider than one screen):
 
-1. **White on Primary Green is 3.56:1** against the 4.5:1 rule. The Primary buttons in the prototype (Post, Start quiz, Next, Submit) show the current token. Options: darken the button green (touches the code mirrors and the token test), use Dark Green for filled buttons, or keep white only for large bold text.
-2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry; only the quiz screens say it is off during a quiz.
-3. **Where Export to USB lives** (the Hub window per PRD FR-5.2, or the Grades tab per the first pass).
+1. **White on Primary Green is 3.56:1.** The 4.5:1 accessibility rule stands, so a screen must meet it: use Dark Green for filled buttons, darken the button green (touches the code mirrors and the token test), or keep white only for large bold text.
+2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry; the quiz screens only say it is off during a quiz. The quiz lockout rule applies wherever it goes.
+3. **Where Export to USB lives.** PRD FR-5.2 says the Hub window.
 4. **Filipino strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) need a Filipino-speaking teacher's check.
