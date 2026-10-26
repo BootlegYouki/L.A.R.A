@@ -37,6 +37,22 @@ impl TestHub {
         self.request(Method::GET, path, token).await
     }
 
+    /// For non-JSON responses (the portal page, CSS, binaries): status, `Content-Type`, body bytes.
+    pub async fn get_raw(&self, path: &str) -> (u16, String, Vec<u8>) {
+        let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
+        let res = self.client.get(url).send().await.unwrap();
+        let status = res.status().as_u16();
+        let content_type =
+            res.headers().get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("").to_string();
+        let body = res.bytes().await.unwrap().to_vec();
+        (status, content_type, body)
+    }
+
+    /// The Hub's `<data_dir>/releases`, where the portal serves client installers from.
+    pub fn releases_dir(&self) -> &std::path::Path {
+        &self.hub.state().releases_dir
+    }
+
     pub async fn request(&self, method: Method, path: &str, token: Option<&str>) -> (u16, Value) {
         let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
         let mut req = self.client.request(method, url);
