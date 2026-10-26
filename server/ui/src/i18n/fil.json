@@ -1,0 +1,14 @@
+{
+  "app_title": "L.A.R.A Hub",
+  "switch_language": "English",
+  "switch_language_label": "Lumipat sa English",
+  "beacon_running": "Gumagana ang Hub",
+  "beacon_no_network": "Walang network",
+  "beacon_stopped": "Nakahinto ang Hub",
+  "loading": "Naglo-load",
+  "address_label": "Address ng Hub",
+  "address_help": "Maaaring i-type ito ng mga mag-aaral at guro kung hindi makita ng kanilang device ang Hub.",
+  "address_none": "Ikonekta ang PC na ito sa router ng silid-aralan para magkaroon ng address ang Hub.",
+  "error_title": "Hindi nagsimula ang Hub",
+  "error_body": "Maaaring may ibang program na gumagamit ng port 8080 o 8081. Isara ito, saka buksan muli ang L.A.R.A Hub."
+}
