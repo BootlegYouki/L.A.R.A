@@ -60,3 +60,14 @@ Both captures are 1200 x 800 CSS pixels in the same WebView2 rendering engine, e
 - Filipino wording awaits teammate review.
 
 Source, dependencies, screenshots and build caches are on G:. Windows keeps the small runtime SQL database and WebView state in the app's standard C: data folders, with explicit access granted for testing.
+
+## Design review corrections (2026-10-26)
+
+- The badge uses the existing Dark Green token with white text, rather than the prototype's Primary Green fill: measured contrast improves from 3.56:1 to 6.58:1, meeting the fixed 4.5:1 requirement. This intentional deviation changes no shared token.
+- Font sizes/explicit text line heights use rem. The top bar keeps its normal 64px size and can grow/wrap when text is enlarged; controls retain minimum desktop target sizes.
+- The selected Home glyph uses Phosphor Fill, while other navigation glyphs remain Regular.
+- The narrow layout keeps the Hub pill's words visually visible alongside the wifi-slash icon; it no longer hides them.
+
+Native WebView2 checks passed all 18 combinations: English/Filipino, 100%/150%/200% root font size, and 720/760/1200px viewport widths. Text size was increased through the document root in the test session, not by changing system settings. Checks asserted no horizontal document overflow against clientWidth (excluding the vertical scrollbar), visible Hub words inside the pill, a filled Home icon, the badge's actual computed background, proportional heading font size, and the normal 64px top bar. Screenshots were refreshed after these fixes. This does not replace a full assistive-technology audit.
+
+![Filipino at 200 percent text size and 720px viewport](screenshots/shell-native-fil-200-percent.png)
