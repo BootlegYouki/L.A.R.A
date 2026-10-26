@@ -1,5 +1,9 @@
---------- beginning of main
-10-26 21:58:20.462 19687 19687 D LaraDiscovery: Multicast lock acquired
-10-26 21:58:22.663 19687 19687 D LaraDiscovery: First Hub discovered after 2202 ms of scanning
-10-26 21:59:21.685 19687 19687 D LaraDiscovery: Multicast lock released
-10-26 21:59:23.727 19687 19687 D LaraDiscovery: Multicast lock acquired
+--------- beginning of main
+
+10-26 21:58:20.462 19687 19687 D LaraDiscovery: Multicast lock acquired
+
+10-26 21:58:22.663 19687 19687 D LaraDiscovery: First Hub discovered after 2202 ms of scanning
+
+10-26 21:59:21.685 19687 19687 D LaraDiscovery: Multicast lock released
+
+10-26 21:59:23.727 19687 19687 D LaraDiscovery: Multicast lock acquired
