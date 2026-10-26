@@ -24,7 +24,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 ### 1.1 Source of truth (when two documents disagree, higher wins)
 1. `contracts/` (OpenAPI, WebSocket event schemas, SQL schemas, `naming_rules.md`): the only shared surface between teams.
 2. This file and `rules/*.md`.
-3. `design-system/design-system.md` and `design-system/` (UI authority). For the remade desktop screens, `design-system/prototype.html` is the reference and wins over the text.
+3. `design-system/design-system.md` and `design-system/` (UI authority). `design-system/prototype.html` is the visual reference for the remade desktop screens.
 4. `docs/PRD.md` (product behavior and functional requirements).
 5. Team `README.md`, `docs/TECH_SPEC.md` and GitHub issues.
 
@@ -56,6 +56,8 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
 * **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
+* **Remote/Suspension Mode is the one sanctioned exception to LAN-only** (decided 2026-10-26): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it from outside the school network while classes are suspended (e.g. bad weather). Same accounts, same bearer tokens, same contract, same sync cursor — nothing about in-school behavior changes, and the tunnel is the only sanctioned path off the LAN (section 3.5).
+* **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
@@ -86,8 +88,8 @@ Rule documents (read the ones for your task):
 ## 3. Non-Negotiable System Invariants
 
 ### 3.1 Zero Internet Dependency (LAN only)
-* Everything must work 100% locally on an isolated router or hotspot with no uplink.
-* **Never add:** Firebase, Google Play Services, external CDNs, Google Fonts links, remote analytics, remote API keys.
+* Everything must work 100% locally on an isolated router or hotspot with no uplink. The one exception is **Remote/Suspension Mode** (section 3.5): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it while classes are suspended. This does not make the app internet-dependent — every feature still works with no uplink at all when the Hub is reachable only on the LAN, and the tunnel carries nothing but the Hub's own REST/WebSocket traffic.
+* **Never add:** Firebase, Google Play Services, external CDNs, Google Fonts links, remote analytics, remote API keys, or any third party in the data path other than the Cloudflare Tunnel itself (which only relays encrypted traffic to the Hub; it is transport, not a backend, and never sees plaintext content).
 * All assets (fonts, icons, installers, model weights, media) are bundled locally or served by the Hub. Fonts and icons come from `design-system/assets/`.
 
 ### 3.2 Offline-first persistence
@@ -98,19 +100,27 @@ Rule documents (read the ones for your task):
 ### 3.3 Network protocol and ports
 * **HTTP `:8080`:** captive portal `/download`, REST, file transfer, video streaming strictly via HTTP Range (`206 Partial Content`), per-client cap **2.0 MB/s**, video uploads capped at 250 MB.
 * **WebSocket `:8081`:** live quiz timers, presence, enrollment approvals, announcement pushes, Hub-assisted AI tokens. Handshake in `contracts/events/README.md`.
-* **Discovery:** mDNS `_lara._tcp.local` on 8080, UDP JSON beacon every 3 s to `255.255.255.255:8888`. A manual IP entry fallback must always exist on the connection screen.
+* **Discovery:** mDNS `_lara._tcp.local` on 8080, UDP JSON beacon every 3 s to `255.255.255.255:8888`. A manual IP entry fallback must always exist on the connection screen. mDNS and the UDP beacon are LAN-only and never attempted off the school network; the same fallback field also accepts a saved Hub remote URL (the Cloudflare Tunnel hostname) when the device is off the LAN (section 3.5).
 
 ### 3.4 Security and privacy (children's data)
-* Every route except `/download`, register and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI.
+* Every route except `/download`, register and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI. This holds identically over the Remote/Suspension Mode tunnel — the tunnel changes transport, never authorization.
 * **Never reach a client:** PIN hashes, other people's LRN, answer keys (`correct_answer`, synonyms), server file paths. Student serializers are separate types that cannot contain `correct_answer`.
 * Never log PINs, tokens, LRNs or homework file contents. Never delete users, classrooms or graded rows; deactivate or archive.
-* Learners' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. Do not add features that export or transmit them off the Hub.
+* Learners' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. They may transit the internet only through the Hub's own Remote/Suspension Mode tunnel (section 3.5); never add a feature that exports or transmits them anywhere else (analytics, third-party storage, another server).
+
+### 3.5 Remote/Suspension Mode (the one exception to LAN-only)
+* **Purpose:** while a class is suspended and school is closed, learners and teachers may still use the app from home: stream, materials, assignments, grades, homework submission, private comments, the AI tutor, and quizzes (section 1.4). On school grounds the app always uses local LAN/mDNS discovery; the tunnel is a fallback a client only tries when LAN discovery fails and the user has saved that Hub's remote address.
+* **Transport:** the Hub PC runs `cloudflared` and exposes `:8080`/`:8081` through a Cloudflare Tunnel at a stable subdomain (e.g. `hub-<school>.lara.app`), TLS-terminated by Cloudflare. No other third party sits in the data path; Cloudflare relays encrypted traffic only and never becomes a backend or a store of record.
+* **Accounts and auth are unchanged:** identical bearer tokens, roles and class-ownership checks as on the LAN (section 3.4). There is no separate remote-only account tier.
+* **Quizzes:** a learner may start or resume a timed quiz remotely. The classroom-LAN feature of a live, tick-by-tick synced countdown (`EVENT_QUIZ_START` pushed to every client) does not apply over the tunnel; instead each remote client runs its own local countdown from the quiz's duration, anchored to the `started_at` it fetches from the Hub. The Hub remains the sole source of truth for timing: it still validates `submitted_at - started_at <= limit + 60s` exactly as in-school (`rules/quiz-and-anti-cheat.md`). Lockout and auto-grading rules are unchanged.
+* **Offline-first (section 3.2) still applies:** when the tunnel or the Hub is unreachable, clients queue writes as `QUEUED_FOR_SYNC` exactly as on a dropped LAN connection, and never describe the connection as "internet"; say "Hub" or "classroom network" even when reached remotely.
+* **Setup is opt-in per Hub**, never automatic: an admin enables the tunnel from the Hub dashboard. A Hub that never enables it behaves exactly as before this section existed.
 
 ---
 
 ## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
-* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the reference for the remade desktop screens (Home, Stream and the quiz): it was built and approved under the Lead's supervision. Where the text of the design system and the prototype disagree on one of those screens, the prototype wins and the text is fixed. Tokens, invariants and accessibility rules are fixed. Build the remade screens to match the prototype; where real development shows something must change, change it, keep the spirit and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Screens the prototype does not cover yet are yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the visual reference for the remade desktop screens (Home, Stream and the quiz): it was built under the Lead's supervision so developers have the vision. It is a reference, not a spec: the developers handle the details and everything it does not show. Tokens, invariants and accessibility rules are fixed. Keep the vision and the spirit; where real development shows something must change, change it and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Anything the prototype does not show is yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
@@ -198,3 +208,4 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 | **Socratic** | Guide with questions and one clue at a time instead of giving the answer |
 | **Grounding** | Tying every tutor reply to a specific lesson chunk |
 | **Mock hub** | `scripts/mock_hub.py`, a Python stand-in for the Hub that implements the whole contract |
+| **Remote/Suspension Mode** | The one sanctioned exception to LAN-only: a Hub reachable from outside the school network through its own Cloudflare Tunnel, for use while classes are suspended (section 3.5) |

@@ -35,5 +35,5 @@ Each line is something a reviewer can see pass or fail.
 
 ### Docs & Design
 - Update the team's `docs/` folder (purpose, key files, data flow, gotchas).
-- **Design system:** the component sections (5.x) and, for a screen, the layout section (9.x) of `design-system/design-system.md`, and for a remade desktop screen `design-system/prototype.html`, which is the reference (or N/A).
+- **Design system:** the component sections (5.x) and, for a screen, the layout section (9.x) of `design-system/design-system.md`, and for a remade desktop screen `design-system/prototype.html`, the visual reference (or N/A).
 - PR evidence: build or test output plus a log or screenshot against the mock hub, WAN unplugged.

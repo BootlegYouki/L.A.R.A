@@ -26,6 +26,7 @@ To guarantee assessment integrity, the Socratic AI tutor is strictly forbidden f
    * Yellow: Remaining time <= 5 minutes.
    * Red (Pulsing): Remaining time <= 2 minutes.
 4. **Hard Timeout Auto-Submit:** When the countdown reaches `00:00`, the client UI must instantly lock all input fields and submit current answers without waiting for a user click.
+5. **Remote/Suspension Mode (`rules/networking-and-lan.md` section 5):** `EVENT_QUIZ_START`'s live, tick-by-tick synced countdown is a classroom-LAN feature and is not relied upon over the Cloudflare Tunnel. A client connected remotely instead runs its own local countdown from `duration_seconds`, anchored to the `started_at` it fetches from the Hub (not a push), and still shows the same visual pill (rule 3) and hard-timeout auto-submit (rule 4). The Hub does not trust this local countdown for grading — section 3 rule 5's `submitted_at - started_at` check is still what decides whether a submission is on time, exactly as it already does for an in-school disconnection.
 
 ---
 
