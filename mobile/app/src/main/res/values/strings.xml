@@ -10,4 +10,17 @@
     <string name="about_title">Learning with your classroom</string>
     <string name="about_body">L.A.R.A. brings lessons and classroom activities to your device. This version sets up the app; account setup and classroom features are coming later.</string>
     <string name="back_action">Back to home</string>
+    <string name="nav_stream">Stream</string>
+    <string name="nav_classwork">Classwork</string>
+    <string name="nav_quizzes">Quizzes</string>
+    <string name="nav_ai_tutor">AI Tutor</string>
+    <string name="nav_people">People</string>
+    <string name="nav_grades">Grades</string>
+    <string name="teacher_classroom">Teacher classroom</string>
+    <string name="learner_classroom">Your classroom</string>
+    <string name="ai_quiz_locked">AI Tutor is unavailable while a quiz is in progress.</string>
+    <string name="shell_offline">Hub unreachable. Showing what is saved on this device.</string>
+    <string name="shell_empty">No saved items yet.</string>
+    <string name="shell_loading">Loading saved classroom items</string>
+    <string name="shell_ai_unavailable">AI is not available right now.</string>
 </resources>
