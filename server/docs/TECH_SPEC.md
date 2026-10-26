@@ -1,6 +1,6 @@
 # Server Technical Spec
 
-> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-10-25
+> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-10-26
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
 
@@ -118,6 +118,9 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `LlamaServerManager`, `AiQueue`, `PromptBuilder` | struct | Child process; bounded FIFO over slots; fills `contracts/ai/socratic_system_prompt.txt` |
 | `guardrails::check_quiz_lockout` | fn | `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt |
 | `PortHealth`, `TestHub` | struct | Port bind/reachability; integration-test server |
+| `StartError` | enum | Why `serve` could not start (data dir, database, migrations, port bind) |
+| `Sessions` (`auth`) | struct | `user_for_token` for the extractor and the WebSocket handshake; in memory and test-seeded until 2.0 moves it to the `sessions` table |
+| `discovery::lan_ip`, `lan_address` | fn, Tauri command | IPv4 of the default-route adapter; the window's address display |
 | Wire types | structs | Exactly the `openapi.yaml` schema names (`AuthSession`, `PublicUser`, `Classroom`, `StudentQuizResponse`, `TeacherQuiz`, `GradeReceipt`, `SyncPullResponse`, ...) |
 | `<Entity>Input` | structs | Inline request bodies, following `TeacherQuizInput` (`AnnouncementInput`, `AssignmentInput`, ...) |
 
@@ -341,7 +344,7 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 5. **Shared code in later issues:** `record_revision` (#7) is needed from 1.2, `class_access` (#121) from 2.1, `check_quiz_lockout` (#16) from 5.1. We create each in the earlier step. **Call:** confirmed. The earlier PR says "pulls forward X from #N"; the later issue extends it.
 6. **Who may export:** the mock allows teachers only; the contract says "teacher / Hub console" and FR-5.2 puts it in the Hub window (signed in as `ADMIN`). See design system 9.16 #3. **Call:** both. `TEACHER` for classes they teach, `ADMIN` for any class. `target_path` is required and must be a USB drive detected on the Hub PC, else 400: returning the file as the response body would put learner data on a client device, against section 1's non-goals. A `contract-change` makes `target_path` required, or the Lead drops the non-goal. Needed before 4.3.
 7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only? **Call:** failed attempts only, 5 per minute per `lrn_or_id`, reset by a successful login. Over the limit: 429 `TOO_MANY_ATTEMPTS` with `Retry-After`, so clients show "wait a minute" instead of "wrong PIN". A `contract-change` adds both; needed before 2.0.
-8. **Mock codes missing from the contract:** `ALREADY_EXISTS`, `QUIZ_CLOSED`, `ROUTE_NOT_FOUND`. We use them as the mock does.
+8. **Mock codes missing from the contract:** `ALREADY_EXISTS`, `QUIZ_CLOSED`, `ROUTE_NOT_FOUND`. We use them as the mock does. The 1.0 scaffold adds `501 NOT_IMPLEMENTED` for area stubs; it disappears as each step replaces its stubs, so no client relies on it.
 9. **Archived class writes:** "read-only for everyone" has no error code.
 10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`).
 11. **Tombstone retention window** is undefined, so pruning is not scheduled.

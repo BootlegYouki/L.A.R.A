@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "../../../design-system/desktop/theme.css";
+
+/* Skeleton: opacity pulse 1 to 0.45 over 1.4s (design-system section 3.5). */
+@keyframes lara-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@utility skeleton {
+  animation: lara-pulse 1.4s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
