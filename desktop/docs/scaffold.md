@@ -87,3 +87,5 @@ Intentional differences from the interactive prototype:
 - The prototype's CSS uses 52px drawer rows in places; this implementation follows the canonical desktop rule of 48px.
 
 Do not copy prototype demo JavaScript or sample learner records into production. See [verification.md](verification.md) for measured evidence and the same-size comparison.
+
+Final accessibility corrections: the badge intentionally uses the canonical Dark Green token (white text contrast 6.58:1) instead of the prototype's Primary Green (3.56:1). Typography uses rem, the selected Home icon is Phosphor Fill, and narrow layouts retain visible Hub words. At enlarged text sizes the top bar may grow beyond 64px to keep controls and labels readable; at default size it remains 64px. Native evidence covers EN/FIL, three widths and up to 200% root text size.

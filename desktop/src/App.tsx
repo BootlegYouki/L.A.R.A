@@ -27,7 +27,7 @@ export default function App() {
       <div className="shell-body">
         <nav id="navigation" className="drawer" aria-label={t.navigation}>
           <a href="#content" className="drawer-item selected" aria-current="page" aria-label={t.home}>
-            <i className="ph ph-house" aria-hidden="true" /><span className="drawer-label">{t.home}</span></a>
+            <i className="ph-fill ph-house" aria-hidden="true" /><span className="drawer-label">{t.home}</span></a>
           <div className="drawer-section" aria-label={t.enrolled}><i className="ph ph-graduation-cap" aria-hidden="true" />
             <span className="drawer-label">{t.enrolled}</span></div>
           <div className="drawer-rule" />

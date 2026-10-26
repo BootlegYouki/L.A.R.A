@@ -18,6 +18,7 @@ it('offers the prototype empty Home shell without fake classes or active join ac
   expect(html).toContain('Hub not reachable. You are seeing what is saved on this device.');
   expect(html).toContain('aria-expanded="true"');
   expect(html).toContain('aria-current="page"');
+  expect(html).toContain('ph-fill ph-house');
   expect(html).toMatch(/disabled="" aria-describedby="offline-notice"/);
   expect(html).not.toContain('next desktop steps');
   expect(html).not.toContain('Science 4');
