@@ -1,0 +1,14 @@
+{
+  "app_title": "L.A.R.A Hub",
+  "switch_language": "Filipino",
+  "switch_language_label": "Switch to Filipino",
+  "beacon_running": "Hub is running",
+  "beacon_no_network": "No classroom network",
+  "beacon_stopped": "Hub stopped",
+  "loading": "Loading",
+  "address_label": "Hub address",
+  "address_help": "Learners and teachers can type this address if their device does not find the Hub.",
+  "address_none": "Connect this PC to the classroom router to get a Hub address.",
+  "error_title": "The Hub did not start",
+  "error_body": "Another program may be using port 8080 or 8081. Close it, then open L.A.R.A Hub again."
+}
