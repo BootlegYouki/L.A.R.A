@@ -1,82 +1,62 @@
-# Desktop scaffold verification — #29
+# Desktop scaffold verification — #29, prototype correction
 
-Verified on Windows on 2026-10-26. Uses synthetic test data only.
+Verified on Windows 2026-10-26, after restoring the reverted #161 code. Only desktop/ changes are included. The approved spec from #162 remains intact.
 
 ## Automated checks
-```text
-npm run lint
-> eslint . --max-warnings 0
-(exit 0)
 
-npm test
-Test Files  3 passed (3)
-     Tests  9 passed (9)
+| Check | Result |
+|---|---|
+| `npm run lint` | Passed, zero lint warnings |
+| `npm test` | 4 files, 14 tests passed (9 existing + 5 shell-state tests) |
+| `npm run build` | Strict TypeScript and Vite production build passed |
+| `cargo check --manifest-path src-tauri/Cargo.toml` | Passed |
+| `cargo build --manifest-path src-tauri/Cargo.toml` | Passed; generated the native executable used below |
+| `python scripts/verify_invariants.py` | Passed |
+| `python -m unittest discover tests` | 66 tests, 11.020 seconds, OK |
 
-npm run build
-> tsc --noEmit && vite build
-vite v6.4.5 building for production...
-41 modules transformed.
-built in 1.28s
+Warnings: Node 22 emits the expected experimental node:sqlite warning in tests. Rust incremental-cache hard links are unsupported in this environment and fall back to file copies; no Rust compile error. Shared tests emit socket ResourceWarnings. An initial shared run failed because its temporary directories were outside the allowed workspace; rerunning with TEMP/TMP on G: passed all 66 tests. No shared tests were modified.
 
-cargo check --all-targets
-Checking tao v0.37.2
-Checking webview2-com v0.39.1
-Finished dev profile [unoptimized + debuginfo] target(s) in 1m 37s
+Shell tests verify English/Filipino empty UI, inactive join actions, safe loading/error states with retry, absence of fake classes/roadmap text, and escaping of cached class names. Existing tests prove schema parity, SQLite reopen preservation/foreign keys, account filtering, stalled-open timeout/retry, deduplicated loading and language state.
 
-python -m unittest discover tests
-Ran 66 tests in 11.909s
-OK
+## Native app checks
 
-python scripts/verify_invariants.py
-All L.A.R.A offline invariants and localization rules PASSED.
-```
+Built the real `lara-desktop.exe` and ran it with the Vite dev server. The app was inspected through its development WebView2 debugging endpoint (loopback, enabled only in the test process environment; no shipped config change). Screenshots are of the actual Tauri webview, not a browser mock of the SQL plugin.
 
-The native check used Rust 1.99.1 and Visual Studio 2022 C++ tools. JavaScript checks used Node 22.19.0.
-Node's built-in SQLite prints an ExperimentalWarning during tests; it is test-only and does not replace the native SQL plugin.
+- Real SQL plugin opened its existing database and reached the empty Home state with no Hub process; no blocking network dialog.
+- Measured client viewport: 1200 x 800 CSS pixels. Top bar: 64px; open drawer: 260px; sheet starts at (260, 64); top-left radius: 24px.
+- Every measured button was at least 40px tall; drawer items were 48px. No horizontal overflow.
+- Menu toggled 260px drawer to 76px rail and updated `aria-expanded`, then reopened correctly.
+- English/Filipino changed headings, notice, navigation, help and button labels. The app process exited and the native executable was launched again: Filipino remained selected and the offline SQLite empty state reopened. Returned to English after testing.
+- Keyboard Tab reached Skip to content; Enter moved focus to main content.
+- WebView viewport checks at 720, 760 and 1200px in both languages found no horizontal overflow; the drawer hides below 760px. These are responsive layout checks, not evidence of mobile support.
 
-## Native launch and database evidence
-`npm run tauri dev` started Vite on loopback port 1420, compiled the native client and launched the L.A.R.A. window. A first run under restricted filesystem permissions exposed a denied app-config directory; after granting the app's own directory, relaunch completed with the real SQL plugin.
+## Same-size prototype comparison
 
-Read-only inspection of the database created by that window:
-```text
-Tables:
-_sqlx_migrations
-ai_chat_messages
-announcement_comments
-announcements
-assignment_submissions
-assignments
-classrooms
-enrollments
-material_chunks
-materials
-private_comments
-quiz_attempts
-quiz_questions
-quizzes
-sync_state
-topics
-users
+Both captures are 1200 x 800 CSS pixels in the same WebView2 rendering engine, excluding the OS titlebar. The reference is the unmodified `design-system/prototype.html`, served locally, with its Empty control selected. Prototype controls remain visible to identify the reference state. See intentional differences in [scaffold.md](scaffold.md#prototype-correction-after-163): the Lead explicitly requests a Classes heading and offline banner in the real app, whereas the reference Empty state hides that heading and retains its demo connected pill.
 
-Applied migrations:
-[(1, 'client_offline_schema', 1)]
-```
+| Actual native app — English, no Hub | Prototype — Empty reference |
+|---|---|
+| ![Native shell at 1200 by 800](screenshots/shell-native-en.png) | ![Unmodified prototype Empty state at 1200 by 800](screenshots/prototype-empty-1200x800.png) |
 
-Observed in the real native window with no Hub running:
-- Top app bar, Hub-not-connected notice and empty-class content; no blocking connection dialog.
-- Selecting Filipino changed the headings, notice, empty state, help text and switch label.
-- Reloading retained Filipino and returned to the empty-class content.
-- No fake classroom or fake connected status.
+![Native Filipino shell at 1200 by 800](screenshots/shell-native-fil.png)
 
-A stalled native database invocation now times out after 15 seconds and permits retry; the timeout/retry regression test passes. This does not cancel a native operation already running: the migration remains managed transactionally by the SQL plugin.
+## Reproduce manually
+
+1. In desktop/: `npm ci`, `npm run lint`, `npm test`, `npm run build`, then `npm run tauri dev` with native Tauri prerequisites installed. No seed account is required for #29.
+2. Keep the Hub stopped. Confirm the amber pill/banner, Classes heading and empty state. Plus/Join, Archived and Settings must be inactive; there is no fake successful enrollment/navigation.
+3. Click the menu to fold/unfold the drawer. Use keyboard Tab/Enter for the menu, language button and skip link. Check visible focus.
+4. Choose Filipino, close the whole application, reopen it, confirm Filipino and the local empty state; switch back to English.
+5. From design-system/, run `python -m http.server 1430 --bind 127.0.0.1`; open `/prototype.html`, choose Empty and compare at the same client dimensions. Do not delete an existing database to manufacture an empty screen.
+6. From repo root run `python scripts/verify_invariants.py` and `python -m unittest discover tests` (Python + PyYAML).
 
 ## Not verified
-- Physical classroom Wi-Fi/router with its WAN cable unplugged.
-- Linux/macOS native launch, release installers or hardware performance.
-- Hub authentication, discovery, connectivity, sync, materials, quizzes and AI: outside #29.
-- Cached-class cards in the native window with a signed-in account (sign-in/sync are not implemented). The class query is exercised against real SQLite in tests.
-- Full application-close/reopen preference test; preference persistence was checked by webview reload.
-- Filipino wording still needs a fluent teammate's review.
-- Kiervy's completed technical spec has not yet been supplied or reconciled with this scaffold.
 
-Project source, Rust, npm dependencies and build caches are on G:. Windows resolves the SQL plugin's small runtime database and WebView state to the standard app-data folders for `org.lara.desktop` on C:.
+- Physical classroom router with WAN cable unplugged, real Hub integration or low-spec hardware performance.
+- Linux/macOS launch and release installers. The previous lead's Linux check does not prove this revision's native UI on Linux.
+- Full manual contrast/screen-reader audit. Keyboard skip/menu behavior and measured sizes were checked; tokens/fonts/icons remain canonical.
+- Production release executable launch: native checks used a debug build with the dev webview. Production frontend build passed, but installers are outside #29.
+- Signed-in native cached-class cards: sign-in/sync are later issues. Query isolation and SQLite persistence are tested with synthetic temporary databases.
+- Discovery, accounts, enrollment, sync, materials, quizzes and AI are outside this scaffold. The static offline status intentionally does not claim a working connection.
+- Filipino wording awaits teammate review.
+
+Source, dependencies, screenshots and build caches are on G:. Windows keeps the small runtime SQL database and WebView state in the app's standard C: data folders, with explicit access granted for testing.
