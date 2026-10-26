@@ -177,3 +177,15 @@ async fn shutdown_closes_open_sockets() {
     let ended = tokio::time::timeout(Duration::from_secs(5), ws.next()).await.unwrap();
     assert!(matches!(ended, None | Some(Ok(Message::Close(_))) | Some(Err(_))));
 }
+
+/// Discovery (the UDP beacon task and the mDNS responder) is started inside `serve` and must not
+/// break startup or clean shutdown. A router that drops broadcast packets never stops the Hub, so
+/// starting on a machine with or without a reachable LAN both have to succeed here.
+#[tokio::test]
+async fn hub_with_discovery_starts_and_stops_cleanly() {
+    let hub = TestHub::start().await;
+    // The HTTP listener still answers, proving the added discovery tasks did not stall serve().
+    let (status, _) = hub.get("/api/nope", None).await;
+    assert_eq!(status, 404);
+    tokio::time::timeout(Duration::from_secs(5), hub.stop()).await.unwrap();
+}
