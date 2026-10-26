@@ -52,7 +52,7 @@ Clean Architecture with MVVM and unidirectional state. Single Gradle module `app
 | PDF | `android.graphics.pdf.PdfRenderer`, one page bitmap at a time | Platform, no dependency | PdfBox/MuPDF (heap) |
 | Video | Media3 ExoPlayer, `OkHttpDataSource` with bearer header, `SimpleCache` for Save for Home | 206 Range, header auth | MediaPlayer, `?token=` in URL (leaks into logs) |
 | Time | `SystemClock.elapsedRealtime()` plus Hub offset from `EVENT_HELLO_ACK.server_time` | Wall clock can be changed by the learner | `System.currentTimeMillis()` |
-| Cleartext | `network_security_config.xml` allows cleartext only for private LAN ranges; tunnel is `https`/`wss` | Hub speaks plain HTTP on :8080 | `usesCleartextTraffic="true"` globally |
+| Cleartext | Lead-approved correction: XML `<base-config cleartextTrafficPermitted="true">`, no manifest `usesCleartextTraffic`. `isAllowedHubUrl()` allows HTTP/WS only to literal IPv4 in 10/8, 172.16/12, 192.168/16 and 127/8 (including 10.0.2.2); HTTPS/WSS require valid URLs | Android XML cannot express CIDR/prefix restrictions. MOBILE 1.1 supplies helper/tests only; MOBILE 1.2 validates HubEndpoint construction; MOBILE 2.2 enforces in HubClient. Helper is not yet runtime enforcement | XML-only IP-range policy; manifest `usesCleartextTraffic` |
 
 ## 4. File Map
 ```text
@@ -213,7 +213,7 @@ sealed interface StreamUiState {
 |---|---|
 | Transsion and realme kill background work | WorkManager only; test with vendor battery optimization on; document the "allow auto-start" steps in `mobile/docs/sync_worker.md` |
 | UDP beacons dropped by Wi-Fi power saving | Hold `WifiManager.createMulticastLock("lara_discovery_lock")` only while the discovery screen scans; release in `finally` |
-| Cleartext HTTP blocked on API 28+ | `network_security_config.xml` with `cleartextTrafficPermitted` for 10.x, 172.16-31.x, 192.168.x, loopback and emulator 10.0.2.2; remote host is https |
+| Cleartext HTTP blocked on API 28+ | Lead-approved XML base-config permits cleartext; application code validates the ranges in section 3. MOBILE 1.1 provides helper/tests, 1.2 validates HubEndpoint, 2.2 enforces HubClient requests including WebSocket and redirect paths. XML CIDRs/wildcard IPs are unsupported. Remote transport remains HTTPS/WSS |
 | Full-size bitmaps cause OOM (heap under 250 MB) | `inSampleSize` decode; one PDF page at a time; Coil with size hints; never `readBytes()` a file; stream uploads |
 | `NsdManager` resolve fails with "already active" and listener leaks | Serialize `resolveService`, stop discovery on screen exit, retry once; the UDP beacon and manual IP are the fallback |
 | Router client isolation blocks discovery | Manual IP field always visible; IPv4 regex from [MOBILE 1.2] |
@@ -231,7 +231,7 @@ One open PR at a time. A later step imports the named piece; it never re-creates
 
 | Step | Issue | Builds | Needs first |
 |---|---|---|---|
-| 1 | [MOBILE 1.1] | `mobile/build.gradle.kts`, `mobile/app/build.gradle.kts`, `ui/theme/*`, `MainActivity`, `LaraApp`, `AppContainer`, `network_security_config.xml`, strings files | Sprint 0 |
+| 1 | [MOBILE 1.1] | `mobile/build.gradle.kts`, `mobile/app/build.gradle.kts`, `ui/theme/*`, `MainActivity`, `LaraApp`, `AppContainer`, `network_security_config.xml`, Hub URL helper/tests (no client integration), strings files | Sprint 0 |
 | 2 | [MOBILE 1.2] | `data/remote/discovery/*`, `HubEndpoint`, `HubEndpointStore`, discovery screen | 1.1 |
 | 3 | [MOBILE 1.3] | `LaraDatabase`, entities, DAOs, `domain/` repository interfaces (incl. `hasInProgressAttempt()`), repositories, DTOs, schema test | 1.1 |
 | 4 | [MOBILE 2.2] | `HubClient`, `TokenStore`, `AuthApi`, auth screens, role routing | 1.1, 1.2, 1.3 |
