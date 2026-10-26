@@ -1,0 +1,3 @@
+# SQLx checksums each migration; CRLF on Windows and LF on Linux would make the same file
+# "edited" between two Hub builds, and a backup could not be restored across them.
+src/db/migrations/*.sql text eol=lf
