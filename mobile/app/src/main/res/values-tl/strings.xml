@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">L.A.R.A.</string>
+    <string name="shell_title">Sama-sama sa ating klase</string>
+    <string name="offline_title">Hindi nakakonekta sa Hub</string>
+    <string name="offline_body">Inihahanda ang app para sa inyong klase. Magiging available ang koneksyon sa Hub at mga naka-save na aralin sa susunod na update.</string>
+    <string name="empty_title">Wala pang mga klase</string>
+    <string name="empty_body">Makikita rito ang iyong mga klase kapag maaari nang mag-set up ng account at kumonekta sa Hub ng inyong klase.</string>
+    <string name="about_action">Tungkol sa L.A.R.A.</string>
+    <string name="about_title">Pag-aaral kasama ang iyong klase</string>
+    <string name="about_body">Inihahatid ng L.A.R.A. ang mga aralin at gawain sa iyong device. Pundasyon pa lamang ng app ang bersyong ito; susunod ang pag-set up ng account at mga tampok para sa klase.</string>
+    <string name="back_action">Bumalik sa simula</string>
+</resources>
