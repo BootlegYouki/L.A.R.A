@@ -3,7 +3,7 @@
 ## Purpose and scope
 The Tauri 2 desktop window hosts a React 19 / strict TypeScript / Tailwind 4 shell. It opens the canonical client SQLite database without contacting a Hub, reads the current account's saved classes, and supports English and Filipino. This is the foundation for later desktop steps, not a working sign-in or connection screen.
 
-The developer relayed the Lead's direction to start the scaffold while the desktop technical spec is being prepared. `TECH_SPEC.md` is deliberately left for that work; this note records the implementation choices for review and reconciliation.
+The desktop technical spec was approved and merged in #162. After #161 was reverted by #163, this branch restores the scaffold and corrects its shell against `design-system/prototype.html` and design-system sections 9.2–9.3. It does not implement discovery, accounts or enrollment.
 
 ## Key files and entry points
 
@@ -68,6 +68,22 @@ python scripts/verify_invariants.py
 - Physical school-router testing with the WAN cable unplugged is an integration-day check, not implied by a local build or unit test.
 - Windows verification does not establish Linux/macOS launch or packaging.
 - Have a Filipino-speaking teammate review the interface wording.
-- Align file names and state/service decisions with Kiervy's completed tech spec before adding further desktop features.
+- Follow the approved `TECH_SPEC.md`; future changes require normal review.
 
 Recorded results: [verification.md](./verification.md).
+
+## Prototype correction after #163
+
+The native shell now has a borderless 64px Canvas top bar (menu, green L.A.R.A. badge, amber Hub pill, temporary language switch, plus, account placeholder), a 260px drawer folding into a 76px rail, and a white content sheet with 24px top-left radius, top/left border and a 1240px maximum content wrapper. Drawer entries are 48px; buttons are 40px. Below 760px the drawer and its menu toggle hide per design-system 9.2.
+
+Home uses the requested Classes heading, Join class actions and graduation-cap empty state. The offline banner uses the exact required English wording. The old description and next-steps note are removed from both dictionaries.
+
+Intentional differences from the interactive prototype:
+- No seeded classes, To-do list, teacher role, initials or connected status: these are demo data/features beyond #29. The account is a neutral user placeholder.
+- Join class (including top-bar plus), Archived classes and Settings are disabled native buttons; they do not pretend to open unfinished features. Join controls reference the offline notice. Their behavior belongs to later desktop issues. Home and the menu/language controls work.
+- The language toggle remains in the top bar until Settings, as the Lead allowed.
+- The Classes heading stays visible even with no classes, as explicitly requested by the Lead; the prototype hides that heading in its Empty demo state.
+- The prototype exposes Empty and Offline as mutually exclusive controls. Its screenshot is the unmodified Empty state, so its Hub pill still says connected. The actual native screenshot combines a real empty database with no Hub and shows the offline banner/pill. The demo control panel is not part of the product.
+- The prototype's CSS uses 52px drawer rows in places; this implementation follows the canonical desktop rule of 48px.
+
+Do not copy prototype demo JavaScript or sample learner records into production. See [verification.md](verification.md) for measured evidence and the same-size comparison.
