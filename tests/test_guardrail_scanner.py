@@ -42,10 +42,6 @@ def _scan_repo(files, extra_env=None):
         return subprocess.run([sys.executable, SCRIPT], cwd=d, capture_output=True, text=True, env=env)
 
 class TestGuardrailScanner(unittest.TestCase):
-    def test_scanner_imported(self):
-        self.assertIsNotNone(check_forbidden_patterns, "check_forbidden_patterns must exist")
-        self.assertIsNotNone(check_string_parity, "check_string_parity must exist")
-
     def test_scanner_flags_forbidden_cloud_libs(self):
         bad_diff = """
         +import { initializeApp } from 'firebase/app';
@@ -60,15 +56,6 @@ class TestGuardrailScanner(unittest.TestCase):
         self.assertIn("prisma", violation_text)
         self.assertIn("cdnjs", violation_text)
         self.assertIn("fonts.googleapis", violation_text)
-
-    def test_scanner_passes_clean_diff(self):
-        clean_diff = """
-        +import androidx.room.Database;
-        +import androidx.compose.material3.Button;
-        +use sqlx::sqlite::SqlitePool;
-        """
-        violations = check_forbidden_patterns(clean_diff)
-        self.assertEqual(len(violations), 0)
 
     def test_string_parity_flags_missing_tagalog_keys(self):
         en_xml = """<resources>
@@ -110,8 +97,15 @@ class TestGuardrailScanner(unittest.TestCase):
         for needle in ("play-services", "com.google.gms", "googleapis", "crashlytics"):
             self.assertIn(needle, text)
 
+    def test_analytics_pattern_matches_the_sdk_not_the_word(self):
+        self.assertEqual(check_forbidden_patterns("+// audio amplitude of the waveform"), [])
+        self.assertTrue(check_forbidden_patterns('+implementation("com.amplitude:analytics-android:1.0")'))
+        self.assertTrue(check_forbidden_patterns('+import { init } from "@amplitude/analytics-browser"'))
+
     def test_scanner_passes_normal_android_build_lines(self):
         ok = """
+        +import androidx.room.Database;
+        +use sqlx::sqlite::SqlitePool;
         +    google()
         +    mavenCentral()
         +    implementation("androidx.camera:camera-core:1.3.0")

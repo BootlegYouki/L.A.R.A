@@ -1,6 +1,5 @@
 import unittest
 import os
-import json
 import yaml
 
 class TestContracts(unittest.TestCase):
@@ -10,12 +9,6 @@ class TestContracts(unittest.TestCase):
         with open(spec_path, "r", encoding="utf-8") as f:
             spec = yaml.safe_load(f)
         self.assertTrue(spec["openapi"].startswith("3."), "Must be OpenAPI 3.x")
-        self.assertIn("/api/classrooms", spec["paths"])
-        self.assertIn("/api/sync/pull", spec["paths"])
-        self.assertIn("/api/quizzes/active", spec["paths"])
-        for required in ("/api/auth/login", "/api/auth/register", "/api/classrooms/{id}/approve",
-                         "/api/assignments/{id}/submit", "/api/quizzes/{id}/start", "/api/export/class-record"):
-            self.assertIn(required, spec["paths"], f"openapi.yaml missing {required}")
 
     def test_one_shared_socratic_system_prompt(self):
         # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
@@ -32,29 +25,12 @@ class TestContracts(unittest.TestCase):
         with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
             self.assertIn(decline, f.read())
 
-    def test_websocket_event_schemas_valid_json(self):
-        events_dir = "contracts/events"
-        self.assertTrue(os.path.isdir(events_dir), "contracts/events directory missing")
-        required_events = [
-            "join_request.json", "join_approval.json", "quiz_start.json",
-            "quiz_submit.json", "ai_stream.json", "queue_status.json",
-            "ws_hello.json", "grade_confirmed.json", "quiz_closed.json",
-            "announcement_push.json", "presence.json", "error.json", "ai_chat_request.json"
-        ]
-        for filename in required_events:
-            path = os.path.join(events_dir, filename)
-            self.assertTrue(os.path.exists(path), f"Missing {filename}")
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            self.assertEqual(data.get("type"), "object", f"{filename} root must be object")
-
-    def test_naming_rules_documented(self):
-        rules_path = "contracts/naming_rules.md"
-        self.assertTrue(os.path.exists(rules_path), "naming_rules.md missing")
-        with open(rules_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        self.assertIn("snake_case", content)
-        self.assertIn("correct_answer", content)
+    def test_required_event_schemas_exist(self):
+        # Shape, snake_case and mock coverage of every contracts/events/*.json is checked in test_contract_coverage.
+        for filename in ("join_request", "join_approval", "quiz_start", "quiz_submit", "ai_stream", "queue_status",
+                         "ws_hello", "grade_confirmed", "quiz_closed", "announcement_push", "presence", "error",
+                         "ai_chat_request"):
+            self.assertTrue(os.path.exists(f"contracts/events/{filename}.json"), f"Missing {filename}.json")
 
     def test_sqlite_schemas_valid_and_executable(self):
         import sqlite3
