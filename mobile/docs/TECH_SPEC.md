@@ -16,7 +16,7 @@
 | 5 | 5.1 router, 5.2 tutor sheet, 5.3 prompt and lockout, 5.4 JNI, 5.5 model download | PRD 5.x |
 | 6 | 6.1 profiling, 6.2 UX audit, 6.3 remote Hub screen | PRD 3.2, 8 |
 
-**Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); a phone "Export to USB" action (open, section 14); admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
+**Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); writing to the Hub PC's USB from the phone; admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
 
 ## 2. Architecture
 Clean Architecture with MVVM and unidirectional state. Single Gradle module `app`.
@@ -129,7 +129,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `POST /api/quizzes/{id}/begin` | `QuizAttemptRepository` | 403 `FORBIDDEN` | Cannot begin offline; if already begun, continue local |
 | `POST /api/quizzes/{id}/submit` | `QuizAttemptRepository`, `QuizPushWorker` | 422 `TIME_LIMIT_EXCEEDED`: keep row `REJECTED`, kind message | Queue as `QUEUED_FOR_SYNC` |
 | `GET /api/quizzes/{id}/results` | `GradebookRepository` | 403 | Cached results |
-| `POST /api/export/class-record` | not used in v1 | n/a | See section 14 |
+| `POST /api/export/class-record` | `GradebookRepository` (download to phone, no `target_path`) | 403 | Needs Hub |
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | `RealtimeClient` | close 4401: relogin; `hub_id` or `sync_epoch` mismatch: `SyncRepository.pull` | Backoff 1, 2, 4, max 10 s, no dialog |
 | `EVENT_JOIN_REQUEST` (teacher), `EVENT_JOIN_APPROVAL` | `RealtimeClient` to repositories | n/a | Missed: next pull or `GET /api/classrooms` |
 | `EVENT_ANNOUNCEMENT_PUSH` | `RealtimeClient` then enqueue sync | n/a | Missed: periodic sync |
@@ -318,10 +318,11 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 13. **Yes.** The PENDING card comes from the join response, `GET /api/classrooms` and `EVENT_JOIN_APPROVAL`.
 15. **Navigation Compose 2.8** (section 3). AI tab placement on phones is decided in [MOBILE 5.2] from `design-system/design-system.md` 9.16.
 
-Still open (do not block Sprint 1 or 2; each must be answered before the step named):
-9. Remote URL form and how `:8081` WebSocket is reached through the tunnel are not in the contract. Needs a `contract-change` before [MOBILE 6.3]. Until then the field accepts an `https://` URL; the IPv4 regex applies only to LAN entries.
-10. Phone "Export to USB" for the gradebook (`POST /api/export/class-record` returns the file when `target_path` is omitted). Decide before [MOBILE 4.6]; not built until then.
-11. Per-route error codes are sparse in `contracts/openapi.yaml` (submit 422 has no code; begin, start, close have none). Clients handle by HTTP status plus the known codes; a `contract-change` will add codes before Sprint 4.
+9. **Remote URL (tentative).** There is no Cloudflare plan yet, so [MOBILE 6.3] stays blocked until [SERVER 6.2] adds the remote address format to the contract. Working assumption until then: one `https://` hostname with REST at `/api/...` and the WebSocket at `wss://<host>/ws`. `HubEndpoint` must keep the REST base and the WebSocket URL as two fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`) so the remote form drops in without changing callers. Sprints 1 to 5 build LAN only; the IPv4 regex applies to LAN entries only.
+10. **Phone export: "Download to phone".** [MOBILE 4.6] calls `POST /api/export/class-record` without `target_path` and saves the returned `.xlsx`/`.csv` to the phone's Downloads (MediaStore), with a share action. Never send `target_path` from the phone; writing to the Hub PC's USB stays on the Hub window (FR-5.2). Needs the Hub; disabled with a helper line when unreachable.
+11. **Error codes.** Until a `contract-change` adds per-route codes (to be merged before Sprint 4, owned by the Lead), clients map by HTTP status plus the known codes and show a kind generic message for anything else. No mobile step before [MOBILE 4.1] is blocked.
+
+Still open (answer before the step named):
 14. [MOBILE 5.2] waits for [SERVER 1.5] results; the 6 GB gate is measured in [MOBILE 5.1].
 
 ## 15. Invariants Checklist
