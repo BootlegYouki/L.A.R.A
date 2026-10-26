@@ -8,13 +8,14 @@ All AI agents and contributors must follow these rules.
 
 ## 1. Non-Negotiable Zero-Internet Invariant
 
-* The system operates exclusively within an isolated local area network: the classroom router, or the Hub PC's own hotspot as a fallback.
+* The system operates exclusively within an isolated local area network: the classroom router, or the Hub PC's own hotspot as a fallback. The **one** sanctioned exception is Remote/Suspension Mode (section 5): a Hub-run Cloudflare Tunnel, opt-in per Hub, used only while classes are suspended. Nothing in this app ever requires an uplink to function in class.
 * **Never add cloud dependencies:**
   * No Firebase (Firestore, Auth, Messaging).
   * No Google Play Services / In-App Billing.
   * No external CDNs (cdnjs, unpkg, jsdelivr).
   * No Google Fonts web links (fonts must be bundled locally).
   * No remote telemetry, crashlytics, or analytics.
+  * No third party in the data path beyond the Cloudflare Tunnel itself, which only relays encrypted bytes to the Hub and never stores, inspects or re-serves them.
 
 ---
 
@@ -33,7 +34,7 @@ All AI agents and contributors must follow these rules.
     ```json
     {"app": "lara", "version": "<hub app version>", "name": "<school or room name set by the admin>", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}
     ```
-  * **Manual Fallback:** All clients must always expose an easy-to-use input dialog allowing users to type the host IP manually if router client isolation blocks broadcast.
+  * **Manual Fallback:** All clients must always expose an easy-to-use input dialog allowing users to type the host IP manually if router client isolation blocks broadcast. The same field accepts a saved Hub remote URL (the Cloudflare Tunnel hostname) when the device is off the school LAN; see section 5.
 
 ---
 
@@ -91,4 +92,19 @@ Operating a multi-client classroom server over local Wi-Fi introduces OS firewal
       acquire()
   }
   ```
+
+---
+
+## 5. Remote/Suspension Mode (Cloudflare Tunnel)
+
+The one sanctioned exception to section 1's zero-internet invariant. See `AGENTS.md` section 3.5 for the product-level decision; this section is the networking detail.
+
+* **What it's for:** letting a Hub's own accounts reach it from outside the school network while classes are suspended (e.g. bad weather), so homework submission, the stream, materials, grades, private comments, the AI tutor and quizzes keep working from home. It changes transport only — never authorization, never the contract.
+* **Mechanism:** the Hub PC runs `cloudflared` as a managed child process (like `llama-server`), pointed at the Hub's own `:8080` and `:8081`. Cloudflare terminates TLS at its edge and proxies to the tunnel; the Hub never opens an inbound port on the public internet itself (no router port-forwarding, no dynamic DNS to the Hub's own IP). This keeps the Hub PC off the open internet even while reachable through the tunnel.
+* **Opt-in and admin-controlled:** disabled by default. An admin enables it from the Hub dashboard, which then shows the assigned remote URL (e.g. `hub-<school>.lara.app`) for the admin to share with teachers and learners. Disabling it tears down the tunnel; nothing else about the Hub changes.
+* **Discovery stays LAN-first:** mDNS and the UDP beacon (section 2) are never attempted over the tunnel — they are broadcast/multicast and do not route off the LAN. A client on the school network always finds the Hub locally first; the remote URL is only used by a client that already has it saved and cannot reach the Hub locally.
+* **Auth is unchanged:** the same bearer token and `EVENT_HELLO` handshake (section 2.1) apply byte-for-byte over the tunnel. The tunnel does not add, remove or weaken any authorization check.
+* **Rate and size limits still apply:** the per-client **2.0 MB/s** video cap and the **250 MB** upload cap (section 3) hold over the tunnel exactly as on the LAN; home internet connections will often be the actual bottleneck, which is expected and not a bug.
+* **Quiz timing over the tunnel:** `EVENT_QUIZ_START`'s live tick-by-tick sync assumes classroom-LAN latency and is not relied upon remotely. A remote client instead runs its own local countdown from the quiz's duration, anchored to `started_at`, and the Hub still validates `submitted_at - started_at <= limit + 60s` as the authority (`rules/quiz-and-anti-cheat.md`).
+* **Never:** expose the Hub's ports directly to the internet by any means other than the Cloudflare Tunnel (no port-forwarding, no other reverse-proxy, no dynamic DNS pointed at the Hub). The tunnel is the single sanctioned path off the LAN so there is exactly one thing to audit and one thing that can be disabled.
 
