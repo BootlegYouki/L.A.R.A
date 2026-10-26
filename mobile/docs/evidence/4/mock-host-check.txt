@@ -1,0 +1,2 @@
+UDP received after 0.064s on PC (not phone timing): {'app': 'lara', 'version': '1.0.0-mock', 'name': 'Grade 4 - Science (Mock Hub)', 'ip': '192.168.100.12', 'http_port': 18080, 'ws_port': 18081}
+Mock portal: HTTP 200; text/html; charset=utf-8

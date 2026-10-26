@@ -1,0 +1,237 @@
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set DIRNAME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\ 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if "C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\" == "" set DIRNAME=. 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_BASE_NAME=gradlew 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_HOME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\ 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>for %i in ("C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\") do set APP_HOME=%~fi 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_HOME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\ 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m" 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\ 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set JAVA_EXE=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if exist "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" goto execute 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set CLASSPATH=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>"C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" -Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain assembleDebug test lint --console=plain 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:mergeDebugResources
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:processReleaseManifestForPackage
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeReleaseResources
+> Task :app:processDebugResources
+> Task :app:processReleaseResources
+> Task :app:compileDebugKotlin
+> Task :app:compileReleaseKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:compileReleaseJavaWithJavac NO-SOURCE
+> Task :app:mergeProjectDexDebug
+> Task :app:bundleReleaseClassesToCompileJar
+> Task :app:processReleaseJavaRes
+> Task :app:bundleReleaseClassesToRuntimeJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:mergeDebugJavaResource
+> Task :app:compileReleaseUnitTestKotlin
+> Task :app:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processReleaseUnitTestJavaRes UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:testReleaseUnitTest
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest
+> Task :app:test
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///C:/Users/DJ%20Rapmasta/Documents/L.A.R.A/mobile/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug FAILED
+Lint found 1 errors, 12 warnings. First failure:
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\java\org\lara\app\data\remote\discovery\WifiMonitor.kt:20: Error: Call requires API level 30 (current min is 26): android.net.NetworkRequest.Builder#clearCapabilities [NewApi]
+        val request = NetworkRequest.Builder().clearCapabilities()
+                                               ~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "NewApi":
+   This check scans through all the Android API calls in the application and
+   warns about any calls that are not available on all versions targeted by
+   this application (according to its minimum SDK attribute in the manifest).
+
+   If you really want to use this API and don't need to support older devices
+   just set the minSdkVersion in your build.gradle or AndroidManifest.xml
+   files.
+
+   If your code is deliberately accessing newer APIs, and you have ensured
+   (e.g. with conditional execution) that this code will only ever be called
+   on a supported platform, then you can annotate your class or method with
+   the @TargetApi annotation specifying the local minimum SDK to apply, such
+   as @TargetApi(11), such that this check considers 11 rather than your
+   manifest file's minimum SDK as the required API level.
+
+   If you are deliberately setting android: attributes in style definitions,
+   make sure you place this in a values-vNN folder in order to avoid running
+   into runtime conflicts on certain devices where manufacturers have added
+   custom attributes whose ids conflict with the new ones on later platforms.
+
+   Similarly, you can use tools:targetApi="11" in an XML file to indicate that
+   the element will only be inflated in an adequate context.
+
+
+The full lint text report is located at:
+  C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build\intermediates\lint_intermediate_text_report\debug\lintReportDebug\lint-results-debug.txt
+.\gradlew.bat : 
+At line:2 char:61
++ ... user-home'; .\gradlew.bat assembleDebug test lint --console=plain > d ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:lintDebug'.
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  Lint found 1 errors, 12 warnings. First failure:
+  
+  C:\Users\DJ 
+Rapmasta\Documents\L.A.R.A\mobile\app\src\main\java\org\lara\app\data\remote\discovery\WifiMonitor.kt:20: Error: Call 
+requires API level 30 (current min is 26): android.net.NetworkRequest.Builder#clearCapabilities [NewApi]
+          val request = NetworkRequest.Builder().clearCapabilities()
+                                                 ~~~~~~~~~~~~~~~~~
+  
+     Explanation for issues of type "NewApi":
+     This check scans through all the Android API calls in the application and
+     warns about any calls that are not available on all versions targeted by
+     this application (according to its minimum SDK attribute in the manifest).
+  
+     If you really want to use this API and don't need to support older devices
+     just set the minSdkVersion in your build.gradle or AndroidManifest.xml
+     files.
+  
+     If your code is deliberately accessing newer APIs, and you have ensured
+     (e.g. with conditional execution) that this code will only ever be called
+     on a supported platform, then you can annotate your class or method with
+     the @TargetApi annotation specifying the local minimum SDK to apply, such
+     as @TargetApi(11), such that this check considers 11 rather than your
+     manifest file's minimum SDK as the required API level.
+  
+     If you are deliberately setting android: attributes in style definitions,
+     make sure you place this in a values-vNN folder in order to avoid running
+     into runtime conflicts on certain devices where manufacturers have added
+     custom attributes whose ids conflict with the new ones on later platforms.
+  
+     Similarly, you can use tools:targetApi="11" in an XML file to indicate that
+     the element will only be inflated in an adequate context.
+  
+  
+  The full lint text report is located at:
+    C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build\intermediates\lint_intermediate_text_report\debug\lintRepor
+tDebug\lint-results-debug.txt
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 18s
+74 actionable tasks: 42 executed, 32 up-to-date
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if 1 EQU 0 goto mainEnd 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>rem the _cmd.exe /c_ return code! 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set EXIT_CODE=1 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if 1 EQU 0 set EXIT_CODE=1 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if not "" == "" exit 1 
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>exit /b 1 

@@ -1,10 +1,14 @@
 package org.lara.app
 
 import android.app.Application
+import android.content.Context
+import org.lara.app.data.remote.discovery.AndroidHubDiscovery
+import org.lara.app.domain.discovery.HubDiscovery
 
 class LaraApp : Application() {
-    val container: AppContainer by lazy { AppContainer() }
+    val container: AppContainer by lazy { AppContainer(this) }
 }
 
-// Services are added by their owning issues; the scaffold opens no database or connection.
-class AppContainer
+class AppContainer(context: Context) {
+    val discovery: HubDiscovery = AndroidHubDiscovery(context)
+}

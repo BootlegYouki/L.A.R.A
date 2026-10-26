@@ -12,7 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LaraTheme { LaraNavigation() }
+            LaraTheme { LaraNavigation((application as LaraApp).container.discovery) }
         }
     }
 }
