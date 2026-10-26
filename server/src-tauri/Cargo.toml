@@ -1,0 +1,16 @@
+[package]
+name = "lara-hub-window"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+lara_hub = { path = "../backend" }
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "2", features = [] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
