@@ -8,11 +8,25 @@ export interface SavedClassroom {
 
 let connection: Promise<Database> | undefined;
 
+async function withDatabaseTimeout<T>(operation: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Local database did not respond')), 15_000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function openDatabase(): Promise<Database> {
-  connection ??= Database.load('sqlite:lara_client.db').then(async (db) => {
+  connection ??= withDatabaseTimeout(Database.load('sqlite:lara_client.db').then(async (db) => {
     await db.execute('PRAGMA foreign_keys = ON');
     return db;
-  }).catch((error: unknown) => {
+  })).catch((error: unknown) => {
     connection = undefined;
     throw error;
   });
@@ -32,5 +46,5 @@ export const savedClassesQuery = `
 
 export async function readSavedClasses(): Promise<SavedClassroom[]> {
   const db = await openDatabase();
-  return db.select<SavedClassroom[]>(savedClassesQuery);
+  return withDatabaseTimeout(db.select<SavedClassroom[]>(savedClassesQuery));
 }
