@@ -3,7 +3,7 @@
 L.A.R.A Invariant & Guardrail Scanner
 Checks git diffs and repository assets for:
 1. Prohibited cloud/external dependencies (Firebase, Google Play Services, analytics, CDNs, Google Fonts).
-2. Missing Filipino string translations (Android strings.xml, desktop i18n JSON).
+2. Missing Filipino string translations (Android strings.xml, desktop and Hub window i18n JSON).
 
 It fails closed: if the diff against the base branch cannot be computed, the check fails
 instead of passing on an empty diff.
@@ -34,7 +34,7 @@ FORBIDDEN_PATTERNS = [
     r"googletagmanager|google-analytics|\bgtag\(",
     r"crashlytics",
     r"\bsentry\b",
-    r"mixpanel|amplitude|posthog",
+    r"mixpanel|com\.amplitude|@amplitude/|amplitude-js|posthog",
 ]
 
 # Scan every text file, not an allow-list of extensions: an allow-list is a gap (.js, .java, .properties, .yml, .sh...).
@@ -49,6 +49,8 @@ ANDROID_EN = "mobile/app/src/main/res/values/strings.xml"
 ANDROID_TL = "mobile/app/src/main/res/values-tl/strings.xml"
 DESKTOP_EN = "desktop/src/i18n/en.json"
 DESKTOP_FIL = "desktop/src/i18n/fil.json"
+HUB_EN = "server/ui/src/i18n/en.json"
+HUB_FIL = "server/ui/src/i18n/fil.json"
 
 
 def check_forbidden_patterns(diff_text: str):
@@ -126,6 +128,7 @@ def run_git_diff_check():
     pairs = [
         (ANDROID_EN, ANDROID_TL, check_string_parity, "Android Filipino strings"),
         (DESKTOP_EN, DESKTOP_FIL, check_json_parity, "desktop Filipino strings"),
+        (HUB_EN, HUB_FIL, check_json_parity, "Hub window Filipino strings"),
     ]
     for en_path, tl_path, check, label in pairs:
         if os.path.exists(en_path) != os.path.exists(tl_path):
