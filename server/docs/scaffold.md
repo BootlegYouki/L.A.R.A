@@ -21,11 +21,11 @@ The skeleton every later server step adds to: one process that opens the databas
 
 ## Data flow and state
 * **Start:** create `data_dir`, open `<data_dir>/lara.db`, apply pending migrations, bind `0.0.0.0:8080` and `0.0.0.0:8081`. Any failure returns `StartError`; the window then shows "The Hub did not start" instead of closing.
-* **Migrations:** `db/migrations/` is still empty; step 1.2 adds `001_initial_schema.sql`. `backend/build.rs` makes Cargo rebuild when a file is added there, otherwise `sqlx::migrate!` would keep the old embedded list.
+* **Migrations:** step 1.2 added `001_initial_schema.sql` (see [`database_sync.md`](./database_sync.md)). `backend/build.rs` makes Cargo rebuild when a file is added there, otherwise `sqlx::migrate!` would keep the old embedded list.
 * **REST stubs:** register, login and admin setup answer `501 NOT_IMPLEMENTED`. Every other stub runs `AuthUser` first, so without a valid token it answers `401 UNAUTHORIZED` like the mock, and `501` after. Unknown paths and wrong methods answer `404 ROUTE_NOT_FOUND` (the mock matches method and path together). `/api/assignments/{id}/private-comments`, topics, announcements, model, backup and `/download` are not registered yet (their own steps).
 * **Tokens:** `Sessions` is an in-memory map that only `TestHub` fills. Nothing issues tokens before step 2.0 (login), so the real Hub rejects every token: REST `401`, WebSocket close `4401`. Step 2.0 replaces the map with the `sessions` table (SHA-256 only).
 * **WebSocket:** the first frame must be `EVENT_HELLO` within 10 s. Earlier frames get `EVENT_ERROR` `UNAUTHORIZED` (not JSON: `BAD_REQUEST`); a missing or unknown token closes with `4401`. On success the Hub queues `EVENT_HELLO_ACK` (`server_time`, `hub_id`, `sync_epoch`) and registers the connection in `Broker` under the user id. Each connection has one writer draining a bounded queue of 64 frames; a full queue drops that connection only. Other events are ignored until their steps (AI 5.1, quiz submit 4.1).
-* **Hub identity:** `hub_id` is a new UUID on every start and `sync_epoch` is 1, as in the mock, until step 1.2 keeps both in `hub_meta`.
+* **Hub identity:** `hub_id` and `sync_epoch` come from `hub_meta`, created on first run (step 1.2, [`database_sync.md`](./database_sync.md)).
 * **Window:** `ui` calls `lan_address` every 5 s (DHCP can change the address) and shows the IP in large text with a beacon pill: green "Hub is running", muted "No classroom network" or "Hub stopped". While stopped it keeps the address (useful for troubleshooting) but hides "learners can type this address". The window never opens the database.
 
 ## Gotchas and edge cases
