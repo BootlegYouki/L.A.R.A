@@ -1,1 +1,1 @@
-✅ All L.A.R.A offline invariants and localization rules PASSED.
+✅ All L.A.R.A offline invariants and localization rules PASSED.

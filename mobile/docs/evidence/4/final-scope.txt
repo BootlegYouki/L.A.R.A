@@ -1,51 +1,101 @@
- M mobile/README.md
- M mobile/app/build.gradle.kts
- M mobile/app/src/main/AndroidManifest.xml
- M mobile/app/src/main/java/org/lara/app/LaraApp.kt
- M mobile/app/src/main/java/org/lara/app/MainActivity.kt
- M mobile/app/src/main/java/org/lara/app/ui/navigation/LaraNavigation.kt
- M mobile/app/src/main/res/values-tl/strings.xml
- M mobile/app/src/main/res/values/strings.xml
- M mobile/docs/README.md
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/AndroidHubDiscovery.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/BeaconParser.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubEndpoint.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubEndpointStore.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubProbe.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/MulticastLockManager.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/NsdScanner.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/UdpScanner.kt
-?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/WifiMonitor.kt
-?? mobile/app/src/main/java/org/lara/app/domain/discovery/HubDiscovery.kt
-?? mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryScreen.kt
-?? mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryViewModel.kt
-?? mobile/app/src/test/java/org/lara/app/data/remote/discovery/DiscoveryLogicTest.kt
-?? mobile/app/src/test/java/org/lara/app/data/remote/discovery/HubProbeTest.kt
-?? mobile/app/src/test/java/org/lara/app/ui/screens/discovery/DiscoveryViewModelTest.kt
-?? mobile/docs/discovery.md
-?? mobile/docs/evidence/4/README.md
-?? mobile/docs/evidence/4/device-log-final.txt
-?? mobile/docs/evidence/4/device-log.txt
-?? mobile/docs/evidence/4/discovery-lan.png
-?? mobile/docs/evidence/4/discovery-lan.xml
-?? mobile/docs/evidence/4/discovery-offline.png
-?? mobile/docs/evidence/4/discovery-offline.xml
-?? mobile/docs/evidence/4/expired-results.xml
-?? mobile/docs/evidence/4/final-discovery.png
-?? mobile/docs/evidence/4/final-discovery.xml
-?? mobile/docs/evidence/4/final-launch.txt
-?? mobile/docs/evidence/4/final-scope.txt
-?? mobile/docs/evidence/4/gradle-checks.txt
-?? mobile/docs/evidence/4/initial-lint-failure.txt
-?? mobile/docs/evidence/4/invariants.txt
-?? mobile/docs/evidence/4/lifecycle-log.txt
-?? mobile/docs/evidence/4/manual-success.png
-?? mobile/docs/evidence/4/manual-success.xml
-?? mobile/docs/evidence/4/manual-unreachable.png
-?? mobile/docs/evidence/4/manual-unreachable.xml
-?? mobile/docs/evidence/4/mock-host-check.txt
-?? mobile/docs/evidence/4/repository-tests.txt
-?? mobile/docs/evidence/4/return-discovery.xml
-?? mobile/docs/evidence/4/selected-hub.png
-?? mobile/docs/evidence/4/selected-hub.xml
-?? mobile/docs/evidence/4/unit-results.txt
+ M mobile/README.md
+
+ M mobile/app/build.gradle.kts
+
+ M mobile/app/src/main/AndroidManifest.xml
+
+ M mobile/app/src/main/java/org/lara/app/LaraApp.kt
+
+ M mobile/app/src/main/java/org/lara/app/MainActivity.kt
+
+ M mobile/app/src/main/java/org/lara/app/ui/navigation/LaraNavigation.kt
+
+ M mobile/app/src/main/res/values-tl/strings.xml
+
+ M mobile/app/src/main/res/values/strings.xml
+
+ M mobile/docs/README.md
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/AndroidHubDiscovery.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/BeaconParser.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubEndpoint.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubEndpointStore.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/HubProbe.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/MulticastLockManager.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/NsdScanner.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/UdpScanner.kt
+
+?? mobile/app/src/main/java/org/lara/app/data/remote/discovery/WifiMonitor.kt
+
+?? mobile/app/src/main/java/org/lara/app/domain/discovery/HubDiscovery.kt
+
+?? mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryScreen.kt
+
+?? mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryViewModel.kt
+
+?? mobile/app/src/test/java/org/lara/app/data/remote/discovery/DiscoveryLogicTest.kt
+
+?? mobile/app/src/test/java/org/lara/app/data/remote/discovery/HubProbeTest.kt
+
+?? mobile/app/src/test/java/org/lara/app/ui/screens/discovery/DiscoveryViewModelTest.kt
+
+?? mobile/docs/discovery.md
+
+?? mobile/docs/evidence/4/README.md
+
+?? mobile/docs/evidence/4/device-log-final.txt
+
+?? mobile/docs/evidence/4/device-log.txt
+
+?? mobile/docs/evidence/4/discovery-lan.png
+
+?? mobile/docs/evidence/4/discovery-lan.xml
+
+?? mobile/docs/evidence/4/discovery-offline.png
+
+?? mobile/docs/evidence/4/discovery-offline.xml
+
+?? mobile/docs/evidence/4/expired-results.xml
+
+?? mobile/docs/evidence/4/final-discovery.png
+
+?? mobile/docs/evidence/4/final-discovery.xml
+
+?? mobile/docs/evidence/4/final-launch.txt
+
+?? mobile/docs/evidence/4/final-scope.txt
+
+?? mobile/docs/evidence/4/gradle-checks.txt
+
+?? mobile/docs/evidence/4/initial-lint-failure.txt
+
+?? mobile/docs/evidence/4/invariants.txt
+
+?? mobile/docs/evidence/4/lifecycle-log.txt
+
+?? mobile/docs/evidence/4/manual-success.png
+
+?? mobile/docs/evidence/4/manual-success.xml
+
+?? mobile/docs/evidence/4/manual-unreachable.png
+
+?? mobile/docs/evidence/4/manual-unreachable.xml
+
+?? mobile/docs/evidence/4/mock-host-check.txt
+
+?? mobile/docs/evidence/4/repository-tests.txt
+
+?? mobile/docs/evidence/4/return-discovery.xml
+
+?? mobile/docs/evidence/4/selected-hub.png
+
+?? mobile/docs/evidence/4/selected-hub.xml
+
+?? mobile/docs/evidence/4/unit-results.txt
