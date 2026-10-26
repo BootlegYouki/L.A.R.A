@@ -19,7 +19,7 @@
 
 **Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
-**Status:** No backend code yet. The contracts, SQL schema and a full behavioral reference (the mock hub) are ready.
+**Status:** Scaffold only (#39): the Hub starts, listens on 8080 and 8081, runs migrations and shows its address in a window; every API route answers `501` until its step lands. See [`docs/scaffold.md`](./docs/scaffold.md). Run it headless with `cargo run --bin lara-hub` in `backend/`, or open the window with `npm run build` in `ui/`, then `cargo run --release --features tauri/custom-protocol` in `src-tauri/`.
 
 ---
 
