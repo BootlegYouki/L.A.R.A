@@ -13,7 +13,14 @@ async fn main() -> ExitCode {
         .init();
 
     let data_dir = std::env::var_os("LARA_DATA_DIR").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("lara-data"));
-    let hub = match lara_hub::serve(HubConfig::new(data_dir)).await {
+    let mut config = HubConfig::new(data_dir);
+    // The window sets the room name once step 2.3 lands; headless runs (dev, CI) may set it here.
+    if let Ok(name) = std::env::var("LARA_HUB_NAME") {
+        if !name.trim().is_empty() {
+            config.hub_name = name;
+        }
+    }
+    let hub = match lara_hub::serve(config).await {
         Ok(hub) => hub,
         Err(e) => {
             tracing::error!("Hub did not start: {e}");
