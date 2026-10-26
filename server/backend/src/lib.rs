@@ -55,6 +55,9 @@ pub struct HubHandle {
     ws_addr: SocketAddr,
     shutdown: watch::Sender<bool>,
     tasks: Vec<JoinHandle<()>>,
+    /// Advertises `_lara._tcp.local` for its whole life; dropping it unregisters the service.
+    /// `None` when mDNS could not start (the UDP beacon still runs).
+    _mdns: Option<discovery::mdns::MdnsResponder>,
 }
 
 impl HubHandle {
@@ -113,10 +116,28 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
             tracing::error!(error = %e, "HTTP listener stopped");
         }
     });
-    let ws_task = tokio::spawn(websocket::run(ws, state.clone(), stop));
+    let ws_task = tokio::spawn(websocket::run(ws, state.clone(), stop.clone()));
+
+    // Discovery advertises the ports we actually bound (tests use ephemeral ports, so this must be
+    // the real address, not the configured one). Both are best-effort: a router that blocks them
+    // never stops the Hub, because clients can always type the IP by hand.
+    let beacon_info = discovery::udp::BeaconInfo {
+        name: config.hub_name.clone(),
+        http_port: http_addr.port(),
+        ws_port: ws_addr.port(),
+    };
+    let beacon_task = tokio::spawn(discovery::udp::run(beacon_info, stop));
+    let mdns = discovery::mdns::start(&config.hub_name, http_addr.port(), discovery::lan_ip());
 
     tracing::info!(%http_addr, %ws_addr, "Hub listening");
-    Ok(HubHandle { state, http_addr, ws_addr, shutdown, tasks: vec![http_task, ws_task] })
+    Ok(HubHandle {
+        state,
+        http_addr,
+        ws_addr,
+        shutdown,
+        tasks: vec![http_task, ws_task, beacon_task],
+        _mdns: mdns,
+    })
 }
 
 async fn bind(port: u16) -> Result<(TcpListener, SocketAddr), StartError> {
