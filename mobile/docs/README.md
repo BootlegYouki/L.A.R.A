@@ -3,6 +3,10 @@
 Maintained by the **Mobile Team**. This folder is where the Lead Developer and future teammates get context without reading commits. A PR that adds or changes a feature must update the matching file here.
 
 ## Required documents
+
+The MOBILE 1.1 foundation is documented in [scaffold.md](./scaffold.md), with
+validation evidence under [evidence/23/](./evidence/23/README.md).
+
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
