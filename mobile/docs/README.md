@@ -2,8 +2,6 @@
 
 Maintained by the **Mobile Team**. This folder is where the Lead Developer and future teammates get context without reading commits. A PR that adds or changes a feature must update the matching file here.
 
-> **Reset (Sprint 0):** a new mobile team is taking over. The Android project from `[MOBILE 1.1]` and the previous team's Tech Spec were removed, so `TECH_SPEC.md` is the blank template. The new team writes it under `[MOBILE 0.1]` and gets it approved before any Sprint 1 PR.
-
 ## Required documents
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
