@@ -22,7 +22,7 @@ The developer relayed the Lead's direction to start the scaffold while the deskt
 
 ## Data flow and persistence
 1. React asks the Zustand store to load saved classes. Concurrent startup calls share the same pending read.
-2. `Database.load('sqlite:lara_client.db')` opens the SQL plugin database under the OS app-config directory for `org.lara.desktop`. It applies registered migrations transactionally. A failed initialization is not cached permanently; Try again can reopen it.
+2. `Database.load('sqlite:lara_client.db')` opens the SQL plugin database under the OS app-config directory for `org.lara.desktop`. It applies registered migrations transactionally. A failed initialization is not cached permanently; Try again can reopen it. Native initialization and reads have a 15-second UI timeout so a stalled invocation cannot leave the skeleton running forever. A timeout does not cancel a native operation already running.
 3. Foreign keys are enabled explicitly on open. The locked SQL plugin's SQLx SQLite driver also defaults foreign keys to ON on every pooled connection. A JavaScript PRAGMA alone must not be taken as proof about every pooled connection.
 4. The query reads only classes owned/co-taught by `sync_state.current_user_id`, or with that learner's ACTIVE enrollment. With no current user it returns no classes. Class codes and other users' personal information are not selected. These local filters do not replace future authentication or Hub authorization.
 5. Classroom data stays in SQLite. Only the language preference goes to localStorage; a denied/unavailable preference store does not stop the interface. Persisted state cannot hydrate classroom rows or a stale ready/error status.
@@ -70,3 +70,4 @@ python scripts/verify_invariants.py
 - Have a Filipino-speaking teammate review the interface wording.
 - Align file names and state/service decisions with Kiervy's completed tech spec before adding further desktop features.
 
+Recorded results: [verification.md](./verification.md).

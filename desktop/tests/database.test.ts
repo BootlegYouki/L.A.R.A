@@ -15,7 +15,10 @@ describe('client database', () => {
   let directory: string | undefined;
   afterEach(() => {
     db?.close();
-    if (directory) rmSync(directory, { recursive: true, force: true });
+    if (directory) {
+      expect(directory.startsWith(join(tmpdir(), 'lara-desktop-'))).toBe(true);
+      rmSync(directory, { recursive: true, force: true });
+    }
     db = undefined;
     directory = undefined;
   });
