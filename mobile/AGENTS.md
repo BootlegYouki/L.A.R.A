@@ -22,7 +22,7 @@ A native Android app (package `org.lara.app`) with a **Student** graph and a **T
 * **Quiz:** use `SystemClock.elapsedRealtime()` for the countdown (server start time plus clock offset from `EVENT_HELLO_ACK`), save answers to Room on every change, auto-submit at 00:00 and on `EVENT_QUIZ_CLOSED`. Never compose the AI FAB, sheet or tab content while an attempt is `IN_PROGRESS`.
 * **Camera:** CameraX with a document guide, compress to JPEG under 800 KB, status `QUEUED_FOR_SYNC` with a client-generated `submission_id` reused on every retry.
 * **Transsion and realme battery killers:** use WorkManager for sync and uploads; test with the vendor battery optimization on.
-* **UI:** build each screen from the design system (section 9 anatomy, its `showcase.html` entry, `prototype.html` for structure, wording and states) and name that design in the PR; `LaraTheme` and tokens from `design-system/mobile/` only (no `Color(0xFF...)` in screens), Phosphor icons, 52dp targets (56dp primary), `values/strings.xml` and `values-tl/strings.xml` in parity (CI checks it).
+* **UI:** `LaraTheme` and tokens from `design-system/mobile/` only (no `Color(0xFF...)` in screens), Phosphor icons, 52dp targets (56dp primary), `values/strings.xml` and `values-tl/strings.xml` in parity (CI checks it).
 
 ## Layout
 `ui/{screens,navigation,components,theme}`, `data/{local,remote,sync,repository}`, `ai/`, `cpp/` for the JNI bridge. Document navigation, Room and CameraX gotchas in `mobile/docs/`.

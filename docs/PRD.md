@@ -110,6 +110,15 @@ flowchart TD
  * **HTTP/1.1 REST (Port 8080):** Large binary transfers (APKs, PDF handouts, MP4 video streams, student homework photo submissions) with HTTP Byte-Range support (`Range: bytes=X-`).
  * **WebSocket (Port 8081):** Real-time bidirectional event bus (announcements push, live quiz synchronization, automated timeout enforcement, instant grade delivery, and Hub-assisted SLM token streaming).
 
+### 3.2 Remote/Suspension Mode (the one sanctioned exception to LAN-only)
+* An admin may opt a Hub into reachability from outside the school network, for use while classes are suspended (typhoons, holidays) and learners are away from the LAN. Disabled by default; enabled per-Hub from the admin dashboard.
+* Transport is a **Cloudflare Tunnel** (`cloudflared`), run as a Hub-managed child process exactly like `llama-server`. Cloudflare terminates TLS and relays bytes to the Hub; the Hub never opens an inbound port or port-forwards on its own. This is the only path off the classroom LAN.
+* Accounts, bearer-token auth, the REST/WebSocket contract and the sync cursor are unchanged over the tunnel — there is no separate remote-only auth tier or route set.
+* Full remote classroom access: stream, materials, assignments, grades, homework submission, private comments, the AI tutor, and quizzes.
+* **Quiz timing exception:** `EVENT_QUIZ_START`'s live, tick-by-tick synced countdown is classroom-LAN-only. A remote client instead runs its own local countdown anchored to the `started_at` it fetches from the Hub. The Hub remains the sole timing authority: the existing `submitted_at - started_at <= limit + 60s` server check still decides whether a submission is on time, exactly as it already does for an in-school disconnection.
+* Offline-first persistence (section 6) still applies over the tunnel: queued writes still flush as `QUEUED_FOR_SYNC`. Never describe this as "going online" in product copy — it is still "the Hub", just reached from off the school's LAN.
+* This is the only sanctioned exception to the Zero Internet Dependency guardrail (section 8, NFR 1): no other feature may add an internet call, telemetry, or a third party in the data path beyond the Cloudflare Tunnel itself.
+
 ---
 
 ## 4. Functional Specifications
@@ -354,7 +363,7 @@ sequenceDiagram
 
 ## 8. Non-Functional Requirements & Guardrails
 
-1. **Zero Internet Dependency:** The system must function 100% locally across an isolated Wi-Fi router or peer hotspot with no uplink to the global internet.
+1. **Zero Internet Dependency:** The system must function 100% locally across an isolated Wi-Fi router or peer hotspot with no uplink to the global internet, except through the one sanctioned Remote/Suspension Mode tunnel (section 3.2), which an admin must explicitly enable per Hub.
 2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. On-device SLM execution is strictly gated behind a 6GB physical RAM hardware check.
 3. **Low-Latency Quiz Sync:** Submissions and timer events must register with the Hub within <300ms across 40 concurrent connected devices.
 4. **Resumable Transfers:** Any interrupted file transfer (PDF, video, photo submission, or model bundle) must resume from the last received byte via HTTP Range headers.
@@ -365,7 +374,7 @@ sequenceDiagram
 ## 9. Scope Boundaries (In-Scope vs. Out-of-Scope)
 
 ### In-Scope (Capstone Target):
-* Offline local Wi-Fi / hotspot operation (no internet required).
+* Offline local Wi-Fi / hotspot operation (no internet required), plus opt-in Remote/Suspension Mode for reachability off the school LAN (section 3.2).
 * Local Hub standalone desktop application with captive download portal and 3-step sideloading guide.
 * Native Android client (Material 3) with CameraX homework photo capture.
 * Desktop client (Tauri + React).
@@ -383,7 +392,7 @@ sequenceDiagram
 
 ### Out-of-Scope (Future Enhancements):
 * Long-distance mesh networking (e.g., LoRa or Bluetooth multi-hop between classrooms).
-* Integration with cloud services (Google Drive, Firebase, DepEd central cloud).
+* Integration with cloud services (Google Drive, Firebase, DepEd central cloud) — the Cloudflare Tunnel in section 3.2 is a transport relay, not a cloud service integration; it stores and processes nothing.
 * AI auto-grading of handwritten photos or essays (all subjective homework grading remains manual for the teacher).
 * Live video conferencing / video calls.
 * Google Classroom features that need the internet or are outside the pilot: Meet, Drive, Calendar, guardian summaries, rubrics, grade categories, scheduled posts and learners posting to the stream (learners comment only).
