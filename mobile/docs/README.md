@@ -7,6 +7,9 @@ Maintained by the **Mobile Team**. This folder is where the Lead Developer and f
 The MOBILE 1.1 foundation is documented in [scaffold.md](./scaffold.md), with
 validation evidence under [evidence/23/](./evidence/23/README.md).
 
+MOBILE 1.2 discovery is documented in [discovery.md](./discovery.md), with
+implementation review and available evidence under [evidence/4/](./evidence/4/README.md).
+
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
