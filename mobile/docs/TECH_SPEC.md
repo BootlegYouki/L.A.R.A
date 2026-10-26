@@ -16,7 +16,7 @@
 | 5 | 5.1 router, 5.2 tutor sheet, 5.3 prompt and lockout, 5.4 JNI, 5.5 model download | PRD 5.x |
 | 6 | 6.1 profiling, 6.2 UX audit, 6.3 remote Hub screen | PRD 3.2, 8 |
 
-**Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); writing to the Hub PC's USB from the phone; admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
+**Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); a gradebook export on the phone (the Hub never sends learner data files to a client, server spec Q6); admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
 
 ## 2. Architecture
 Clean Architecture with MVVM and unidirectional state. Single Gradle module `app`.
@@ -101,7 +101,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 
 | Contract route or event | Our module | On error codes | On timeout or Hub unreachable |
 |---|---|---|---|
-| `POST /api/auth/login`, `register` | `AuthApi` | login 401 wrong-PIN message; register 409 "already registered" | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
+| `POST /api/auth/login`, `register` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); register 409 `ALREADY_EXISTS` | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
 | `POST /api/auth/logout` | `AuthApi` (Settings) | any: still clear local token after queued-row check | Clear locally, ignore failure |
 | `GET/POST /api/classrooms` | `ClassroomRepository` | 403 | Room data; create is needs Hub |
 | `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` bilingual message | Disabled with helper line |
@@ -125,11 +125,11 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `PATCH /api/submissions/{id}` | `GradingRepository` | 422 or 400 points above max (also blocked in UI) | Needs Hub |
 | `POST /api/quizzes`, `PATCH /api/quizzes/{id}` | `QuizAuthoringRepository` | 409 `QUIZ_NOT_DRAFT` read-only message | Unsaved edits live only in the ViewModel (memory); save needs Hub |
 | `GET /api/quizzes/active`, `GET /api/quizzes/{id}` | `QuizRepository` | 404 none active (not an error screen) | Room metadata; questions fetched once on start and cached |
-| `POST /api/quizzes/{id}/start`, `.../close` | `QuizControllerRepository` | 403; 409 undocumented (section 14) | Needs Hub, banner and polling |
-| `POST /api/quizzes/{id}/begin` | `QuizAttemptRepository` | 403 `FORBIDDEN` | Cannot begin offline; if already begun, continue local |
+| `POST /api/quizzes/{id}/start`, `.../close` | `QuizControllerRepository` | 403; start: 409 `QUIZ_NOT_DRAFT` (already started) or 409 `QUIZ_IN_PROGRESS` (another quiz active, message names it) (server spec Q1) | Needs Hub, banner and polling |
+| `POST /api/quizzes/{id}/begin` | `QuizAttemptRepository` | 403 `FORBIDDEN`; 409 `QUIZ_CLOSED` | Cannot begin offline; if already begun, continue local |
 | `POST /api/quizzes/{id}/submit` | `QuizAttemptRepository`, `QuizPushWorker` | 422 `TIME_LIMIT_EXCEEDED`: keep row `REJECTED`, kind message | Queue as `QUEUED_FOR_SYNC` |
 | `GET /api/quizzes/{id}/results` | `GradebookRepository` | 403 | Cached results |
-| `POST /api/export/class-record` | `GradebookRepository` (download to phone, no `target_path`) | 403 | Needs Hub |
+| `POST /api/export/class-record` | not used (export is on the Hub window, server spec Q6) | n/a | n/a |
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | `RealtimeClient` | close 4401: relogin; `hub_id` or `sync_epoch` mismatch: `SyncRepository.pull` | Backoff 1, 2, 4, max 10 s, no dialog |
 | `EVENT_JOIN_REQUEST` (teacher), `EVENT_JOIN_APPROVAL` | `RealtimeClient` to repositories | n/a | Missed: next pull or `GET /api/classrooms` |
 | `EVENT_ANNOUNCEMENT_PUSH` | `RealtimeClient` then enqueue sync | n/a | Missed: periodic sync |
@@ -311,16 +311,16 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 3. **No client-side draft store.** `POST /api/quizzes` already creates a `DRAFT` quiz on the Hub and `PATCH /api/quizzes/{id}` edits it while it is `DRAFT`, so the draft lives on the Hub. The builder keeps unsaved edits only in ViewModel memory, never in Room, files or prefs, and saving needs the Hub. `correct_answer` from `GET /api/quizzes/{id}` (owning teacher) is held in memory only and never logged.
 4. **Yes.** `hasInProgressAttempt()` lands in [MOBILE 1.3]; build [MOBILE 5.3] before [MOBILE 5.2].
 5. **Yes.** `QuizPushWorker` is thin expedited work calling `SyncRepository.pushQueued()`; [MOBILE 4.1] creates `QuizAttemptRepository`.
-6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; `ModelDownloader` stays in `ai/`. [MOBILE 6.1] writes its report to `mobile/docs/budget_device_benchmarks.md` (team folder), not `docs/benchmarks/`.
+6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; `ModelDownloader` stays in `ai/`. [MOBILE 6.1] writes its report to `docs/benchmarks/mobile_battery_memory_report.md` as the issue says (allowed by `rules/team-workflow-and-prs.md` 1.1.9).
 7. **Yes.** Keystore-wrapped `TokenStore`, not `EncryptedSharedPreferences`.
 8. **16 tables.** The contract wins over the issue text.
 12. **Accepted.** No `last_event_id`; the client relies on pull.
-13. **Yes.** The PENDING card comes from the join response, `GET /api/classrooms` and `EVENT_JOIN_APPROVAL`.
+13. **Yes.** The PENDING card comes from the join response, `GET /api/classrooms` and `EVENT_JOIN_APPROVAL`. Per server spec Q3, after approval the next pull carries a snapshot of the class, and a removed learner's pull carries the `REMOVED` enrollment: the client then deletes that class's mirrored rows (never `QUEUED_FOR_SYNC` rows).
 15. **Navigation Compose 2.8** (section 3). AI tab placement on phones is decided in [MOBILE 5.2] from `design-system/design-system.md` 9.16.
 
-9. **Remote URL (tentative).** There is no Cloudflare plan yet, so [MOBILE 6.3] stays blocked until [SERVER 6.2] adds the remote address format to the contract. Working assumption until then: one `https://` hostname with REST at `/api/...` and the WebSocket at `wss://<host>/ws`. `HubEndpoint` must keep the REST base and the WebSocket URL as two fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`) so the remote form drops in without changing callers. Sprints 1 to 5 build LAN only; the IPv4 regex applies to LAN entries only.
-10. **Phone export: "Download to phone".** [MOBILE 4.6] calls `POST /api/export/class-record` without `target_path` and saves the returned `.xlsx`/`.csv` to the phone's Downloads (MediaStore), with a share action. Never send `target_path` from the phone; writing to the Hub PC's USB stays on the Hub window (FR-5.2). Needs the Hub; disabled with a helper line when unreachable.
-11. **Error codes.** Until a `contract-change` adds per-route codes (to be merged before Sprint 4, owned by the Lead), clients map by HTTP status plus the known codes and show a kind generic message for anything else. No mobile step before [MOBILE 4.1] is blocked.
+9. **Remote URL (tentative).** There is no Cloudflare plan yet, so [MOBILE 6.3] stays blocked until [SERVER 6.2] adds the remote address format to the contract. [SERVER 6.2] decides the address form; mobile does not. `HubEndpoint` must keep the REST base and the WebSocket URL as two fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`) so the remote form drops in without changing callers. Sprints 1 to 5 build LAN only; the IPv4 regex applies to LAN entries only.
+10. **No export on the phone.** The approved server spec (Q6) makes `target_path` required and never returns the file to a client, because that would put learner data on a client device. Export stays on the Hub window (FR-5.2). [MOBILE 4.6] builds the grades view only. A teacher-triggered export to the Hub PC's USB from the phone would need a route that lists drives; that is a Design Proposal, not this spec.
+11. **Error codes follow the server spec's calls** (`server/docs/TECH_SPEC.md` section 14: Q1 start codes, Q7 login limit, Q8 `ALREADY_EXISTS`, `QUIZ_CLOSED`). The client maps by HTTP status plus these codes and shows a kind generic message for anything else, until the `contract-change` PRs those calls name are merged.
 
 Still open (answer before the step named):
 14. [MOBILE 5.2] waits for [SERVER 1.5] results; the 6 GB gate is measured in [MOBILE 5.1].
