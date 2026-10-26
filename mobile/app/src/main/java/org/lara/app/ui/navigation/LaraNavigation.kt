@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,7 +46,21 @@ private data object About
 private data object Discovery
 
 @Composable
-fun LaraNavigation(discovery: HubDiscovery) {
+fun LaraNavigation(
+    discovery: HubDiscovery,
+    state: ShellState? = null,
+    sessionKey: String = "",
+    content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
+) {
+    if (state != null) {
+        key(sessionKey, state.role) {
+            when (state.role) {
+                ShellRole.STUDENT -> StudentNavGraph(state, content = content)
+                ShellRole.TEACHER -> TeacherNavGraph(state, content = content)
+            }
+        }
+        return
+    }
     val controller = rememberNavController()
     Scaffold(containerColor = LaraColors.Canvas) { insets ->
         NavHost(
