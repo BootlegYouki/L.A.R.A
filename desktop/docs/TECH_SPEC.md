@@ -1,6 +1,6 @@
 # Desktop Technical Spec
 
-> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Draft — pending Kiervy and Lead review | Last updated: 2026-10-26
+> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Approved by the Lead 2026-10-26 (answers in section 14) | Last updated: 2026-10-26
 > Sprint 0: [#37](https://github.com/BootlegYouki/L.A.R.A/issues/37). Kiervy may revise these implementation choices before approval. This draft does not claim his review or replace product requirements. Lead approval must precede a Sprint 1 merge.
 
 ## 1. Scope and Non-Goals
@@ -210,7 +210,7 @@ Both developers work each issue together, one issue at a time. “Creates” ass
 
 Until #48, #45–47 persist only their explicitly fetched, validated snapshots through `db.ts`; they must not impersonate the delta engine or advance its cursor. #48 becomes the one refresh/queue owner. Remove the scaffold `foundation_note` when sign-in lands.
 
-Later order: Sprint 3 #30, #55–58, #124–125; Sprint 4 #31, #62–63, #104, #108; Sprint 5 #32, #67–68, #103; Sprint 6 #71. Reuse the same transport, SQL, context, realtime and dictionaries. AI UI waits for server evaluation evidence; sidecar packaging/model selection/performance remain explicit later gates.
+Later order: Sprint 3 #30, #55–58, #124–125; Sprint 4 #31, #62–63, #104, #108; Sprint 5 #32, #67–68, #103; Sprint 6 #71, #150 (remote Hub screen, after [SERVER 6.2]). Reuse the same transport, SQL, context, realtime and dictionaries. AI UI waits for server evaluation evidence; sidecar packaging/model selection/performance remain explicit later gates.
 
 ## 11. Dependencies on Other Teams
 
@@ -271,14 +271,16 @@ Sprint 0 evidence (2026-10-26): `python scripts/verify_invariants.py` passed; `p
 
 ## 14. Open Questions
 
-1. #40 specifies a “settings table”, but the canonical client schema has none. Proposed resolution is nonsecret `settings.ts` preferences (section 3); Lead must confirm or merge a contract change before adding a table. Define remote HTTP/WSS address pairing through a contracted configuration; do not assume port 8081 is publicly exposed by the tunnel.
-2. #48 reset, new ACTIVE membership snapshots and revoked access need explicit server behavior. How do queued parent rows remain valid while inaccessible mirrored data is hidden? Confirm with fixture/contract tests before implementing a purge.
-3. Push rejection reasons have no durable client column. Push receipts identify items by `id`; `EVENT_GRADE_CONFIRMED` provides `quiz_id` and `attempt_id`, so use those exact identifiers and recover full records through pull. Ask Lead for any genuinely missing schema/event extension. Permanent rejection must not become a silent retry storm.
-4. #31 requests a local question bank with answers, while the higher rules forbid storing answer keys on clients. Keep authoring input transient; do not implement persisted keys without a reviewed contract/rule resolution.
-5. WS reconnect mentions `last_event_id` without defining IDs on every event. Pull is the recovery path until an approved replay contract exists. Remote quiz resume must obtain authoritative timing; do not invent a new start timestamp.
-6. Server spec proposals about USB export/authorization are not automatically accepted API changes. Follow current OpenAPI and raise discrepancies to Lead before #104.
+Lead answers (2026-10-26). They match the approved server and mobile specs so both clients build the same behavior.
 
-Kiervy and Lead may change implementation choices in this draft. Any product/contract change still follows [team workflow](../../rules/team-workflow-and-prs.md); draft approval does not silently resolve these questions. Once reviewed, Lead records `Status: Approved` in the spec PR.
+1. **Settings table: no SQL table.** Accepted: nonsecret preferences (language, saved Hub address) live in `settings.ts`; #40's "settings table" means this. Keep the REST base and the WebSocket URL as two separate saved fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`). The remote address form is decided by [SERVER 6.2] in the contract; build LAN only until then (#150 waits for it).
+2. **Reset, new membership, revoked access:** answered by server spec Q3. When the caller's enrollment turns `ACTIVE` after their cursor, the Hub's next pull carries a snapshot of that class. A removed learner's pull carries the `REMOVED` enrollment; the client then deletes that class's mirrored rows, never `QUEUED_FOR_SYNC` rows, and keeps any parent row a queued row still needs until it syncs.
+3. **Rejected push items:** correct, the client schema has only `SYNCED` and `QUEUED_FOR_SYNC` and no reason column. This is a contract gap the Lead will close with a `contract-change` before #48; until then do not retry an item that came back `REJECTED`, and show the reason for the current session only.
+4. **Question bank (#31): no persisted answer keys.** The quiz builder keeps answers in memory only and saves through `POST /api/quizzes` / `PATCH /api/quizzes/{id}` (the draft lives on the Hub). The "reusable question bank saved locally" sub-task of #31 is dropped unless a later contract adds a Hub-side bank.
+5. **`last_event_id`: not used.** Pull is the only recovery path after a reconnect. Remote quiz timing anchors to `started_at` from `POST /api/quizzes/{id}/begin` or `GET /api/quizzes/active`.
+6. **Export:** follow the current OpenAPI; raise any gap to the Lead before #104.
+
+Kiervy may still propose changes to implementation choices through a normal docs PR; product or contract changes follow [team workflow](../../rules/team-workflow-and-prs.md).
 
 ## 15. Invariants Checklist
 
@@ -290,4 +292,4 @@ These checks describe the proposed design, not proof that all features are imple
 - [x] Touch targets at least 52dp on phones (56dp primary and quiz options), 40px buttons on desktop; desktop tabs/drawer 48px
 - [x] `correct_answer` never stored on a client; persistent question bank conflict explicitly blocked
 - [x] AI unavailable during an active quiz; drawer/buttons unmounted and local generation stopped
-- [ ] Kiervy review and Lead approval recorded; affected open questions resolved before their implementation gates
+- [x] Lead approval recorded (2026-10-26); open questions answered in section 14
