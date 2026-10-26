@@ -8,10 +8,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.dirname(__file__))
 
 from scripts.mock_hub import MockHubServer  # noqa: E402
-from hub_client import WsClient, call, login  # noqa: E402
+from hub_client import EXTERNAL_HUB, WsClient, call, external_target, login  # noqa: E402
 
 HTTP, WS = 8089, 8099
-BASE = f"http://127.0.0.1:{HTTP}"
+BASE, WS_HOST = f"http://127.0.0.1:{HTTP}", "127.0.0.1"
+if EXTERNAL_HUB:
+    BASE, WS_HOST, WS = external_target()
+
 CLASSROOM = "c1a2b3c4-0001-4000-8000-000000000001"
 
 QUIZ = {
@@ -25,19 +28,26 @@ QUIZ = {
 }
 
 
+needs_mock = unittest.skipIf(bool(EXTERNAL_HUB), "inspects mock hub internals (self.server.state)")
+
+
 class TestMockHub(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        if EXTERNAL_HUB:
+            return
         cls.server = MockHubServer(http_port=HTTP, ws_port=WS, udp_port=8899, broadcast_interval=1.0)
         cls.server.start()
         time.sleep(0.3)
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.stop()
+        if not EXTERNAL_HUB:
+            cls.server.stop()
 
     def setUp(self):
-        self.server.state.__init__()
+        if not EXTERNAL_HUB:
+            self.server.state.__init__()
         self.teacher = login(BASE, "T-0001")
         self.pupil = login(BASE, "123456789012")
 
@@ -108,8 +118,8 @@ class TestMockHub(unittest.TestCase):
 
     def test_join_approve_flow_pushes_websocket_events(self):
         ana = login(BASE, "123456789013")
-        teacher_ws = WsClient("127.0.0.1", WS, self.teacher)
-        ana_ws = WsClient("127.0.0.1", WS, ana)
+        teacher_ws = WsClient(WS_HOST, WS, self.teacher)
+        ana_ws = WsClient(WS_HOST, WS, ana)
         status, receipt, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M-4QX"}, ana)
         self.assertEqual((status, receipt["status"]), (200, "PENDING"))
         self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["lrn"], "123456789013")
@@ -128,7 +138,7 @@ class TestMockHub(unittest.TestCase):
         quiz = self.make_active_quiz()
         _, full, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.teacher)
         ids = [q["id"] for q in full["questions"]]
-        pupil_ws = WsClient("127.0.0.1", WS, self.pupil)
+        pupil_ws = WsClient(WS_HOST, WS, self.pupil)
         _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
         now = int(time.time() * 1000)
         _, receipt, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/submit", {
@@ -149,7 +159,7 @@ class TestMockHub(unittest.TestCase):
         _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
         mine = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
         self.assertIsNone(mine[0]["score"])
-        pupil_ws = WsClient("127.0.0.1", WS, self.pupil)
+        pupil_ws = WsClient(WS_HOST, WS, self.pupil)
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)
         self.assertEqual(pupil_ws.recv_until("EVENT_GRADE_CONFIRMED")["attempt_id"], receipt["attempt_id"])
         pupil_ws.close()
@@ -168,7 +178,7 @@ class TestMockHub(unittest.TestCase):
     def test_ai_tutor_locked_while_quiz_in_progress(self):
         quiz = self.make_active_quiz()
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
-        ws = WsClient("127.0.0.1", WS, self.pupil)
+        ws = WsClient(WS_HOST, WS, self.pupil)
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r1", "classroom_id": CLASSROOM,
                  "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Ano ang sagot sa #3?", "language": "FIL"})
         err = ws.recv_until("EVENT_ERROR")
@@ -176,7 +186,7 @@ class TestMockHub(unittest.TestCase):
         ws.close()
 
     def test_ai_tutor_streams_when_no_quiz_active(self):
-        ws = WsClient("127.0.0.1", WS, login(BASE, "123456789012"))
+        ws = WsClient(WS_HOST, WS, login(BASE, "123456789012"))
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r2", "classroom_id": CLASSROOM,
                  "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Tulong po", "language": "FIL"})
         self.assertEqual(ws.recv_until("EVENT_QUEUE_STATUS")["position"], 2)
@@ -191,7 +201,7 @@ class TestMockHub(unittest.TestCase):
         ws.close()
 
     def test_bad_websocket_token_closes_with_4401(self):
-        ws = WsClient("127.0.0.1", WS)
+        ws = WsClient(WS_HOST, WS)
         ws.send({"event": "EVENT_HELLO", "token": "nope"})
         self.assertEqual(ws.recv(), {"event": "CLOSED", "code": 4401})
 
@@ -256,6 +266,7 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         return ana, sid
 
+    @needs_mock
     def test_teacher_can_fix_or_remove_an_assignment_and_grades_are_kept(self):
         first = self.pull(self.pupil)
         asg = first["assignments"][0]
@@ -330,6 +341,7 @@ class TestMockHub(unittest.TestCase):
         _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
         self.assertEqual(res["receipts"][0]["status"], "SYNCED")
 
+    @needs_mock
     def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):
         asg = self.pull(self.pupil)["assignments"][0]["id"]
         mine = {"id": "pc-1", "assignment_id": asg, "content": "Akin ito", "created_at": 1}
@@ -347,7 +359,7 @@ class TestMockHub(unittest.TestCase):
 
     def test_removed_learner_loses_the_class_and_co_teacher_gains_it(self):
         ana, sid = self.enroll_ana()
-        ana_ws = WsClient("127.0.0.1", WS, ana)
+        ana_ws = WsClient(WS_HOST, WS, ana)
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
         self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "REMOVED")
         ana_ws.close()
@@ -368,6 +380,7 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(room["name"], "Science 4A")
         self.assertIsNotNone(room["archived_at"])
 
+    @needs_mock
     def test_admin_is_its_own_account_and_setup_runs_once(self):
         status, body, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "X", "pin": "9999"})
         self.assertEqual((status, body["error"]["code"]), (409, "ADMIN_EXISTS"))

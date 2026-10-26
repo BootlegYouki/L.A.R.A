@@ -55,10 +55,10 @@ python3 scripts/verify_invariants.py
 
 ### What It Enforces
 1. **Zero Cloud Dependencies:** Scans the git diff of every text file (not only code; build files, CSS and config count) for additions introducing forbidden libraries or external links. Markdown, `docs/`, `rules/`, `tests/`, `scripts/` and binary assets are skipped.
-   * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, `amplitude`, `posthog`, Google Analytics and Tag Manager.
+   * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, the Amplitude SDK (`com.amplitude`, `@amplitude/`, `amplitude-js`; the plain word is fine), `posthog`, Google Analytics and Tag Manager.
    * Google Play Services (`play-services`, `com.google.android.gms`, `google-services`) and `googleapis.com` / `gstatic.com` (web fonts must be bundled locally).
    * External CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`).
-2. **String Parity:** Every key in `mobile/app/src/main/res/values/strings.xml` needs a key in `values-tl/strings.xml`, and every key in `desktop/src/i18n/en.json` needs one in `fil.json`. A language file without its pair fails.
+2. **String Parity:** Every key in `mobile/app/src/main/res/values/strings.xml` needs a key in `values-tl/strings.xml`, and every key in `desktop/src/i18n/en.json` and `server/ui/src/i18n/en.json` needs one in its `fil.json`. A language file without its pair fails.
 3. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
 
 If any violation is detected, the script exits with code 1 and prints the exact offending lines.
@@ -73,6 +73,14 @@ All contract schemas, mock hub endpoints and guardrail scanners are covered by a
 ```bash
 python3 -m unittest discover tests
 ```
+
+### Running the Hub tests against the real Hub
+`tests/test_mock_hub.py` and `tests/test_contract_coverage.py` can target an already-running Hub instead of the mock, so one suite checks both:
+```bash
+cd server/backend && cargo run          # Hub on :8080 / :8081
+LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub tests.test_contract_coverage
+```
+`LARA_HUB_WS_URL` (default `ws://<host of LARA_HUB_URL>:8081`) overrides the WebSocket address. With the switch set the tests do not start the mock, and the ones that read mock internals (`ROUTES`, `mock_hub.py` source, `server.state`) are skipped. CI does not run this mode yet: the Hub still answers `501 NOT_IMPLEMENTED` for most routes (all tests fail at login), so it would be red. The server team runs it as routes land. Preconditions the real Hub does not meet yet: the tests log in with the mock's seed accounts (`T-0001`, `123456789012`, `ADMIN-0001`, PIN `1234`) and its seed classroom and quiz ids, and the Hub has no seed accounts (admin comes from `POST /api/admin/setup`), so a fresh Hub needs equivalent data loaded first, and the tests assume a state reset the real Hub cannot do. Once the suite is green against the real Hub, the server team may drop their Rust ports of these tests.
 
 ### Quality Gate Rule
 * All tests in `tests/` must pass before pushing to `staging` or `main`.

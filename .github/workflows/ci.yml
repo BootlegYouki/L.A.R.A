@@ -17,6 +17,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Heavy jobs are skipped (not removed) when their area is untouched. A skipped job counts as passing for a
+  # required check, so keep each job's `name:` unchanged or branch protection stops matching.
+  changes:
+    name: Detect Changed Areas
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      mobile: ${{ steps.diff.outputs.mobile }}
+      desktop: ${{ steps.diff.outputs.desktop }}
+      server: ${{ steps.diff.outputs.server }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed areas
+        id: diff
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then base="origin/$BASE_REF"; else base="$BEFORE_SHA"; fi
+          # No usable base (new branch, force push, all-zero SHA): run everything rather than skip something.
+          if [ -z "$base" ] || [ "${base//0/}" = "" ] || ! files=$(git diff --name-only "$base"...HEAD 2>/dev/null); then
+            echo "::notice::No usable base commit, treating every area as changed."
+            files=".github/workflows/ci.yml"
+          fi
+          hit() { echo "$files" | grep -qE "$1" && echo true || echo false; }
+          all=$(hit '^\.github/workflows/')
+          for area in mobile desktop server; do
+            v=$(hit "^($area|design-system/$area|contracts)/")  # design-system/server does not exist; harmless
+            [ "$all" = true ] && v=true
+            echo "$area=$v" >> "$GITHUB_OUTPUT"
+            echo "$area changed: $v"
+          done
+
   contracts-and-tools:
     name: Contracts & Mock Hub Validation
     runs-on: ubuntu-latest
@@ -38,6 +75,8 @@ jobs:
 
   mobile-ci:
     name: Android Mobile CI
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -64,6 +103,10 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Set up Gradle (cache)
+        if: steps.check_mobile.outputs.has_mobile == 'true'
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Build & Lint Android App
         if: steps.check_mobile.outputs.has_mobile == 'true'
         working-directory: mobile
@@ -74,6 +117,8 @@ jobs:
 
   desktop-ci:
     name: Desktop Client CI
+    needs: changes
+    if: needs.changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -85,6 +130,8 @@ jobs:
         run: |
           if [ -f "desktop/package.json" ]; then
             echo "has_desktop=true" >> $GITHUB_OUTPUT
+            # setup-node's npm cache errors when the lockfile is missing.
+            if [ -f desktop/package-lock.json ]; then echo "has_lock=true" >> $GITHUB_OUTPUT; fi
           elif [ -n "$(find desktop/src desktop/src-tauri \( -name '*.ts' -o -name '*.tsx' -o -name '*.rs' \) 2>/dev/null | head -1)" ]; then
             echo "::error::desktop/ has source code but no package.json, so nothing would be built."
             exit 1
@@ -98,24 +145,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: ${{ steps.check_desktop.outputs.has_lock == 'true' && 'npm' || '' }}
+          cache-dependency-path: desktop/package-lock.json
 
       - name: Install & Validate Desktop Client
         if: steps.check_desktop.outputs.has_desktop == 'true'
         working-directory: desktop
         run: |
           npm ci
-          npm run lint
+          npm run lint --if-present
           npm run build
 
   server-ci:
     name: Server Local Hub CI
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Check if server cargo exists
+      - name: Check which server parts exist
         id: check_server
         run: |
           if [ -f "server/backend/Cargo.toml" ]; then
@@ -127,14 +178,64 @@ jobs:
             echo "has_server=false" >> $GITHUB_OUTPUT
             echo "::notice::No server code yet, build skipped."
           fi
+          if [ -f "server/ui/package.json" ]; then
+            echo "has_ui=true" >> $GITHUB_OUTPUT
+          elif [ -n "$(find server/ui/src \( -name '*.ts' -o -name '*.tsx' \) 2>/dev/null | head -1)" ]; then
+            echo "::error::server/ui has source code but no package.json, so nothing would be built."
+            exit 1
+          fi
+          if [ -f "server/src-tauri/Cargo.toml" ]; then
+            echo "has_tauri=true" >> $GITHUB_OUTPUT
+          elif [ -n "$(find server/src-tauri/src -name '*.rs' 2>/dev/null | head -1)" ]; then
+            echo "::error::server/src-tauri has Rust code but no Cargo.toml, so nothing would be built."
+            exit 1
+          fi
 
       - name: Set up Rust
         if: steps.check_server.outputs.has_server == 'true'
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
-      - name: Run Cargo Check
+      - name: Cache Cargo build
+        if: steps.check_server.outputs.has_server == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            server/backend
+            server/src-tauri
+
+      - name: Lint & Test Hub Backend
         if: steps.check_server.outputs.has_server == 'true'
         working-directory: server/backend
         run: |
-          cargo check --all-targets
+          cargo clippy --all-targets -- -D warnings
           cargo test
+
+      - name: Set up Node.js
+        if: steps.check_server.outputs.has_ui == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/ui/package-lock.json
+
+      # Before the Tauri compile: tauri.conf.json's frontendDist (../ui/dist) must exist when the app is built.
+      - name: Build Hub Window UI
+        if: steps.check_server.outputs.has_ui == 'true'
+        working-directory: server/ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Tauri system dependencies
+        if: steps.check_server.outputs.has_tauri == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev libgtk-3-dev
+
+      - name: Check Hub Window (Tauri)
+        if: steps.check_server.outputs.has_tauri == 'true'
+        working-directory: server/src-tauri
+        run: cargo check --all-targets
