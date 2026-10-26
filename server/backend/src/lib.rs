@@ -31,7 +31,7 @@ pub struct AppState {
     pub broker: Arc<Broker>,
     pub sessions: Arc<Sessions>,
     pub clock: Arc<dyn Clock>,
-    /// In memory, new on every start like the mock, until step 1.2 keeps it in `hub_meta`.
+    /// From `hub_meta`, created on first run (`db::load_hub_meta`).
     pub hub_id: Arc<str>,
     pub sync_epoch: i64,
 }
@@ -89,14 +89,15 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         .map_err(|source| StartError::DataDir { path: config.data_dir.clone(), source })?;
     let db = db::connect(&config.data_dir).await?;
     db::migrate(&db).await?;
+    let meta = db::load_hub_meta(&db).await?;
 
     let state = AppState {
         db,
         broker: Arc::default(),
         sessions: Arc::default(),
         clock: Arc::new(SystemClock),
-        hub_id: uuid::Uuid::new_v4().to_string().into(),
-        sync_epoch: 1,
+        hub_id: meta.hub_id.into(),
+        sync_epoch: meta.sync_epoch,
     };
 
     let (http, http_addr) = bind(config.http_port).await?;
