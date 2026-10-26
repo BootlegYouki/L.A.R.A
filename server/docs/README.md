@@ -8,7 +8,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | [`scaffold.md`](./scaffold.md) | Process model, `serve`, migration runner, error envelope, route stubs, WebSocket handshake, Hub window | Sprint 1 (#39) |
 | `discovery_mdns_udp.md` | mDNS and UDP beacon behavior, LAN IP detection, AP-isolation notes | Sprint 1 |
-| `database_sync.md` | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |
+| [`database_sync.md`](./database_sync.md) | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |
 | `auth_sessions.md` | PIN hashing, session tokens, role and ownership guards, rate limits | Sprint 2 |
 | `websocket_broker.md` | Registry, handshake, presence, replay, event emission points | Sprint 2 |
 | `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
