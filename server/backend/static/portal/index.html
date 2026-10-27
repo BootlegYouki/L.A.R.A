@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <title>L.A.R.A &mdash; Get the App / Kunin ang App</title>
+  <!-- Every asset is served by the Hub itself. No CDN, no Google Fonts, no internet. -->
+  <link rel="stylesheet" href="/download/assets/fonts.css" />
+  <link rel="stylesheet" href="/download/assets/tokens.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--color-canvas-bg);
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      padding: var(--space-6) var(--space-4) var(--space-12);
+    }
+    .shell { max-width: 560px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: var(--space-8); }
+    .logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 64px; height: 64px; margin-bottom: var(--space-4);
+      background: var(--color-primary-green); color: var(--color-surface-white);
+      border-radius: var(--radius-lg); font-size: 28px; font-weight: 900;
+    }
+    h1 { font-size: 28px; font-weight: 900; margin: 0 0 var(--space-2); }
+    .tagline { color: var(--color-text-secondary); margin: 0; font-weight: 700; }
+    .tagline .fil { display: block; color: var(--color-text-muted); font-weight: 700; }
+
+    .card {
+      background: var(--color-surface-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Primary download action: 56px tall (primary touch target token). */
+    .btn-download {
+      display: flex; align-items: center; justify-content: center; gap: var(--space-3);
+      width: 100%; min-height: var(--primary-touch-target);
+      padding: 0 var(--space-6);
+      background: var(--color-primary-green); color: var(--color-surface-white);
+      border: none; border-radius: var(--radius-md);
+      font-family: var(--font-sans); font-size: 18px; font-weight: 800;
+      text-decoration: none; cursor: pointer;
+    }
+    .btn-download:hover { background: var(--color-dark-green); }
+    .btn-download .ph { font-size: 24px; }
+    .btn-download .fil { font-weight: 700; opacity: 0.9; }
+
+    .btn-secondary {
+      display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+      width: 100%; min-height: var(--min-touch-target);
+      margin-top: var(--space-3); padding: 0 var(--space-5);
+      background: var(--color-surface-white); color: var(--color-dark-green);
+      border: 1px solid var(--color-success-border); border-radius: var(--radius-md);
+      font-family: var(--font-sans); font-size: 15px; font-weight: 700;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { background: var(--color-light-green); }
+
+    h2 { font-size: 18px; font-weight: 800; margin: 0 0 var(--space-5); }
+    h2 .fil { display: block; font-size: 14px; font-weight: 700; color: var(--color-text-muted); }
+
+    ol.steps { list-style: none; margin: 0; padding: 0; }
+    ol.steps > li {
+      display: flex; gap: var(--space-4);
+      padding-bottom: var(--space-5); margin-bottom: var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+    }
+    ol.steps > li:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
+    .num {
+      flex: 0 0 auto;
+      width: 36px; height: 36px; border-radius: var(--radius-pill);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-light-green); color: var(--color-dark-green);
+      font-weight: 900; font-size: 17px;
+    }
+    .step-body { flex: 1 1 auto; }
+    .step-en { font-weight: 700; margin: 0 0 var(--space-1); }
+    .step-fil { color: var(--color-text-secondary); margin: 0; font-weight: 700; }
+
+    /* Status note pairs color with an icon and a text label (never color alone). */
+    .note {
+      display: flex; gap: var(--space-3); align-items: flex-start;
+      background: var(--color-info-light);
+      border: 1px solid var(--color-info-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      color: var(--color-info-dark);
+    }
+    .note .ph { font-size: 20px; flex: 0 0 auto; margin-top: 1px; }
+    .note p { margin: 0; font-size: 14px; font-weight: 700; }
+    .note .fil { display: block; color: var(--color-text-secondary); font-weight: 700; }
+
+    footer { text-align: center; color: var(--color-text-muted); font-size: 13px; font-weight: 700; margin-top: var(--space-8); }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="logo" aria-hidden="true">L</div>
+      <h1>L.A.R.A</h1>
+      <p class="tagline">
+        Your classroom, on your phone.
+        <span class="fil">Ang silid-aralan mo, nasa telepono mo.</span>
+      </p>
+    </header>
+
+    <section class="card" aria-labelledby="get-app">
+      <h2 id="get-app" class="sr-only" hidden>Download</h2>
+      <!-- href stays under the /download portal prefix the Hub serves. -->
+      <a class="btn-download" href="/download/lara-student.apk" download>
+        <span class="ph ph-device-mobile" aria-hidden="true"></span>
+        <span>
+          Download L.A.R.A. (Android)
+          <span class="fil">I-download ang L.A.R.A. (Android)</span>
+        </span>
+      </a>
+      <a class="btn-secondary" href="/download/lara-desktop-setup.exe" download>
+        <span class="ph ph-desktop" aria-hidden="true"></span>
+        <span>Desktop &mdash; Windows (.exe) &middot; Laptop o PC</span>
+      </a>
+      <a class="btn-secondary" href="/download/lara-desktop-setup.deb" download>
+        <span class="ph ph-desktop" aria-hidden="true"></span>
+        <span>Desktop &mdash; Linux (.deb) &middot; Laptop o PC</span>
+      </a>
+    </section>
+
+    <section class="card" aria-labelledby="guide-title">
+      <h2 id="guide-title">
+        How to install &mdash; 3 steps
+        <span class="fil">Paano i-install &mdash; 3 hakbang</span>
+      </h2>
+      <ol class="steps">
+        <li>
+          <span class="num" aria-hidden="true">1</span>
+          <div class="step-body">
+            <p class="step-en">Tap the big <strong>Download L.A.R.A. (Android)</strong> button above.</p>
+            <p class="step-fil">Pindutin ang malaking <strong>I-download ang L.A.R.A. (Android)</strong> na button sa itaas.</p>
+          </div>
+        </li>
+        <li>
+          <span class="num" aria-hidden="true">2</span>
+          <div class="step-body">
+            <p class="step-en">When your browser asks, tap <strong>Settings</strong> and turn on <strong>&ldquo;Allow from this source&rdquo;</strong>.</p>
+            <p class="step-fil">Kapag nagtanong ang browser, pindutin ang <strong>Settings</strong> at i-on ang <strong>&ldquo;Allow from this source&rdquo;</strong>.</p>
+          </div>
+        </li>
+        <li>
+          <span class="num" aria-hidden="true">3</span>
+          <div class="step-body">
+            <p class="step-en">Tap <strong>Install</strong>, open L.A.R.A., then enter your Name and Student ID (LRN).</p>
+            <p class="step-fil">Pindutin ang <strong>Install</strong>, buksan ang L.A.R.A., tapos ilagay ang iyong Pangalan at Student ID (LRN).</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <div class="note" role="note">
+      <span class="ph ph-wifi-high" aria-hidden="true"></span>
+      <p>
+        Everything here works on the classroom network, with no internet needed.
+        <span class="fil">Gumagana ang lahat dito sa classroom network, hindi na kailangan ng internet.</span>
+      </p>
+    </div>
+
+    <footer>
+      <p>L.A.R.A &mdash; Localized Augmented Resource &amp; Assessment</p>
+    </footer>
+  </main>
+</body>
+</html>
