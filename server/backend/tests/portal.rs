@@ -71,13 +71,35 @@ async fn missing_installer_is_404_and_a_present_one_downloads() {
     let (status, _, _) = hub.get_raw("/download/lara-student.apk").await;
     assert_eq!(status, 404);
 
-    // Once a file is in <data_dir>/releases it is served as a binary.
+    // Once a file is in <data_dir>/releases it is served, with the Android package mime so the
+    // browser offers to install the APK rather than save an unknown file.
     tokio::fs::create_dir_all(hub.releases_dir()).await.unwrap();
     tokio::fs::write(hub.releases_dir().join("lara-student.apk"), b"APK-BYTES").await.unwrap();
     let (status, content_type, body) = hub.get_raw("/download/lara-student.apk").await;
     assert_eq!(status, 200);
-    assert_eq!(content_type, "application/octet-stream");
+    assert_eq!(content_type, "application/vnd.android.package-archive");
     assert_eq!(body, b"APK-BYTES");
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn installer_download_resumes_with_a_range_request() {
+    let hub = TestHub::start().await;
+    tokio::fs::create_dir_all(hub.releases_dir()).await.unwrap();
+    // A body long enough to split; the content is irrelevant.
+    let bytes: Vec<u8> = (0..1000u32).map(|i| i as u8).collect();
+    tokio::fs::write(hub.releases_dir().join("lara-student.apk"), &bytes).await.unwrap();
+
+    // Second half of a dropped download: ServeFile answers 206 with the right Content-Range and the
+    // tail bytes, so a client can resume instead of restarting from zero.
+    let (status, content_range, tail) = hub.get_range("/download/lara-student.apk", "bytes=500-").await;
+    assert_eq!(status, 206);
+    assert_eq!(content_range.as_deref(), Some("bytes 500-999/1000"));
+    assert_eq!(tail, bytes[500..]);
+
+    // A range past the end is a 416, not a panic or a wrong body.
+    let (status, _, _) = hub.get_range("/download/lara-student.apk", "bytes=99999-").await;
+    assert_eq!(status, 416);
     hub.stop().await;
 }
 

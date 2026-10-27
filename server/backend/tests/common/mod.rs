@@ -48,6 +48,17 @@ impl TestHub {
         (status, content_type, body)
     }
 
+    /// A ranged GET (for the resumable installer download): status, the `Content-Range` header, body.
+    pub async fn get_range(&self, path: &str, range: &str) -> (u16, Option<String>, Vec<u8>) {
+        let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
+        let res = self.client.get(url).header("Range", range).send().await.unwrap();
+        let status = res.status().as_u16();
+        let content_range =
+            res.headers().get("content-range").and_then(|v| v.to_str().ok()).map(String::from);
+        let body = res.bytes().await.unwrap().to_vec();
+        (status, content_range, body)
+    }
+
     /// The Hub's `<data_dir>/releases`, where the portal serves client installers from.
     pub fn releases_dir(&self) -> &std::path::Path {
         &self.hub.state().releases_dir
