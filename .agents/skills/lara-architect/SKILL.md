@@ -18,14 +18,13 @@ Three teams (`server/`, `desktop/`, `mobile/`) work in parallel. Inside a team t
    |---|---|---|
    | 1 | `contracts/` (`openapi.yaml`, `events/`, `schema/`, `ai/socratic_system_prompt.txt`, `naming_rules.md`) | Every route, event, column, error code and the tutor's prompt |
    | 2 | `AGENTS.md` and the `rules/` file for the area | Invariants and decisions already made |
-   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) and `design-system/prototype.html` (the visual reference for the remade desktop screens) | Every visual and wording choice. Tokens and invariants are fixed; the prototype gives the vision and you handle the details |
+   | 3 | `design-system/design-system.md` (5.x components, 9.x screen layouts) | Every visual and wording choice |
    | 4 | `docs/PRD.md` (the FR the issue cites) | What the feature does for the teacher or learner |
    | 5 | `<team>/AGENTS.md`, `<team>/docs/TECH_SPEC.md` | File map, names, code patterns, known traps |
 
-3. **Load the team skill:** `lara-hub-rust` (server), `lara-desktop-web` (desktop), `lara-android-offline` (mobile), and `lara-ai-runtime` for any AI issue.
+3. **Load the team skill** if your team has written one: `.agents/skills/lara-server`, `lara-desktop` or `lara-mobile`. Team skills hold the how-to for that folder and link to the documents above instead of copying them.
 4. **Search for existing code** that already does part of the job, and reuse its names.
 5. **Stop and report** when a requirement is missing or two sources disagree. Write the open question in the issue or PR. Guessing is how sessions drift apart.
-6. **Propose when you see better.** The plan is our best current idea, not a finished truth. If it looks wrong, incomplete or improvable, open a *Design Proposal* issue (`type:proposal`, template in `.github/ISSUE_TEMPLATE/proposal.md`) with evidence: a failing case, a measurement or a prototype. Keep building the current issue by the plan, never put the change in the feature PR, and never weaken an invariant on your own. Process: `rules/team-workflow-and-prs.md` section 1.2. A missing requirement is a question; a requirement you think is wrong or poor is a proposal.
 
 Done when you can name the routes or events you will touch, the files you will create, and the check that proves each acceptance criterion.
 
@@ -34,6 +33,7 @@ Done when you can name the routes or events you will touch, the files you will c
 * **Clients build against the mock hub** (`python3 scripts/mock_hub.py`; seed accounts in `AGENTS.md` section 1.2). **The server matches it:** `scripts/mock_hub.py` and `tests/test_mock_hub.py` are the acceptance reference.
 * **Contract first.** A route, event, column or prompt wording that is not in `contracts/` does not exist. Ask the Lead for a `contract-change` PR; never add it in a feature PR.
 * **Stay in your team folder.** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` and `AGENTS.md` are Lead-owned. Reports are the exception: new files in `docs/benchmarks/`, `docs/audits/`, `docs/evaluations/`.
+* **A screen follows the design system, not your taste.** Open every section the issue's `Design system` line cites (components in 5.x, the screen in 9.x) and build from them: banners, pills, inputs, spacing, empty states. For a remade desktop screen, compare it side by side with `design-system/prototype.html`. Take screenshots against the mock hub and put them in the PR. Never ship roadmap text ("coming in a later update") on a screen.
 * **Use the words the product uses:** "learner" (not pupil or student in prose), "Hub" or "classroom network" (never "internet"), and the classroom words in design system section 7.2.
 
 ## 3. What gets a PR rejected
@@ -49,7 +49,7 @@ Full list: `rules/team-workflow-and-prs.md` section 5. The ones agents trip on m
 | Quiz lockout | With an `IN_PROGRESS` attempt the chat UI is not composed and the Hub answers `QUIZ_IN_PROGRESS` | `rules/quiz-and-anti-cheat.md` |
 | Socratic tutor | One prompt file, loaded unchanged; grounded in `material_chunks`; one clue then one question | `rules/socratic-ai-guardrails.md` |
 | Budget phones | Heap under 250 MB; a model loads on a phone only at 6 GB RAM or more | `mobile/AGENTS.md` |
-| Accessibility | Targets 52dp on phones (56dp primary and quiz options), 40px buttons on desktop; English and Filipino for every string; tokens only | `rules/ui-and-accessibility.md` |
+| Accessibility | Targets 52dp (56dp primary and quiz options); English and Filipino for every string; tokens only | `rules/ui-and-accessibility.md` |
 | Data safety | Deactivate or archive; users, classrooms and graded rows are never deleted | `rules/database-and-sync.md` section 4 |
 
 ## 4. Before you open the PR
