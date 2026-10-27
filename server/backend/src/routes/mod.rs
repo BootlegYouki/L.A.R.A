@@ -7,6 +7,7 @@ mod auth;
 mod classrooms;
 mod export;
 mod materials;
+mod portal;
 mod quizzes;
 mod sync;
 
@@ -27,6 +28,7 @@ pub fn router(app: AppState) -> Router {
         .merge(classrooms::router())
         .merge(export::router())
         .merge(materials::router())
+        .merge(portal::router())
         .merge(quizzes::router())
         .merge(sync::router())
         // The mock matches method and path together, so a wrong method is also ROUTE_NOT_FOUND.
