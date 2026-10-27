@@ -15,7 +15,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |
-| `hub_hardware.md` | Pilot machine CPU and RAM, measured capacity, firewall and installer notes | Sprint 1 and 5 |
+| [`hub_hardware.md`](./hub_hardware.md) | Installer (`.exe`/`.deb`), firewall rules and the LAN port check; pilot machine CPU and RAM, measured capacity | Sprint 1 (#20) and 5 |
 
 ## What every document must include
 1. **Purpose:** what problem this module solves.

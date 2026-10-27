@@ -4,6 +4,7 @@
   "identifier": "org.lara.hub",
   "build": {
     "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../ui/dist"
   },
   "app": {
@@ -22,7 +23,23 @@
     }
   },
   "bundle": {
-    "active": false,
-    "icon": ["icons/icon.png", "icons/icon.ico"]
+    "active": true,
+    "targets": ["nsis", "deb", "appimage"],
+    "category": "Education",
+    "shortDescription": "L.A.R.A classroom Hub",
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "windows": {
+      "webviewInstallMode": { "type": "offlineInstaller", "silent": true },
+      "nsis": {
+        "installMode": "perMachine",
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    },
+    "linux": {
+      "deb": {
+        "postInstallScript": "./linux/postinst.sh",
+        "desktopTemplate": "./linux/lara-hub.desktop"
+      }
+    }
   }
 }
