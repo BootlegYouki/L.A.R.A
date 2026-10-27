@@ -93,6 +93,7 @@ server/backend/
   tests/              integration tests on TestHub (temp data_dir, free ports, mock seed accounts)
   bin/                llama-server binaries per OS
 server/src-tauri/     window; Tauri commands admin/*, usb_detector.rs. Never opens the DB
+                      windows/hooks.nsh, linux/postinst.sh: installer firewall rules (1.4)
 server/ui/            React pages: Setup, Login, AdminUsers, Dashboard, Export/Backup; i18n/en.json, fil.json
 server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 ```

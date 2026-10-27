@@ -7,6 +7,7 @@ pub mod config;
 pub mod db;
 pub mod discovery;
 pub mod error;
+pub mod network;
 pub mod routes;
 pub mod websocket;
 
