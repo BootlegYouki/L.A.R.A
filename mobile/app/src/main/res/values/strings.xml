@@ -20,14 +20,16 @@
     <string name="discovery_checking">Checking: Please wait while we reach your Hub.</string>
     <string name="discovery_invalid">Check the address: Copy the numbers and optional port from your teacher, such as 192.168.1.50:8080.</string>
     <string name="discovery_unreachable">Hub unavailable: Check the address with your teacher and try again.</string>
-    <string name="discovery_responding">Hub responding: The download page is reachable. Account connection is coming in a later update.</string>
+    <string name="discovery_responding">Hub responding: The download page is reachable.</string>
     <string name="discovery_offline">Hub disconnected: Join your classroom Wi-Fi, or enter the Hub address below.</string>
     <string name="discovery_warning">Discovery interrupted: You can still enter the Hub address or try scanning again.</string>
-    <string name="discovery_scanning">Looking for your classroom Hub…</string>
-    <string name="discovery_empty">No Hub found yet: Ask your teacher for the address or try again.</string>
+    <string name="discovery_scanning">Searching: Looking for your classroom Hub.</string>
+    <string name="discovery_empty">No Hubs yet. Try scanning again or ask your teacher for the address.</string>
     <string name="discovery_choose">Hubs found: Choose your classroom Hub below.</string>
     <string name="discovery_retry">Scan again</string>
     <string name="discovery_results">Nearby classroom Hubs</string>
     <string name="discovery_hub_address">%1$s:%2$d</string>
-    <string name="discovery_scope">This version finds Hubs and checks their download page. Classes and saved lessons arrive in later updates.</string>
+    <string name="discovery_beacon_searching">Searching</string>
+    <string name="discovery_beacon_connected">Connected</string>
+    <string name="discovery_beacon_disconnected">Not connected</string>
 </resources>
