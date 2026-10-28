@@ -50,6 +50,30 @@ No database tables, events or contract routes are touched by this step.
 * **`postinst.sh` must stay LF.** `src-tauri/.gitattributes` pins `linux/*` to LF; the test checks for `\r`.
 * **Installer wizard language:** NSIS has no Filipino language file, so the wizard's own pages are in English. Everything the Hub itself shows stays bilingual.
 
+## Pilot Hub hardware (1.5, #73)
+**No pilot school PC is available yet.** The AI spike runs on a developer laptop set up as a simulated school PC. Replace this section with the real machine's details when the pilot school is known, and re-run the evaluation there (the commands are in `docs/benchmarks/ai_model_evaluation.md`).
+
+**Reference school PC (assumed, for the Lead to confirm):** a 4-core CPU, 8 GB RAM, no graphics card, Windows 10 or 11. Windows plus the Hub take about 3 to 4 GB of the 8 GB, which leaves about **4 GB for the model** at the chosen slot count.
+
+**Machine the evaluation ran on:**
+| | |
+|---|---|
+| CPU | AMD Ryzen 5 7535HS (6 cores, 12 threads, Zen 3+) |
+| RAM | 16 GB DDR5-4800, one module (single channel, about 38 GB/s) |
+| GPU | Radeon 660M integrated and RTX 2050, **both unused** (`-ngl 0`) |
+| OS | Windows 11 Home 10.0.26200 |
+| Inference | llama.cpp `llama-server` build b11938, `win-cpu-x64` |
+
+**How it imitates the reference PC:**
+| Trait | How | How close |
+|---|---|---|
+| No graphics card | `--gpu-layers 0` (CPU only) | Exact |
+| 4 cores | `--threads 4` | Close. Turbo clocks may be higher than a school PC's |
+| 8 GB RAM | Not limited. Peak RAM is measured, and a model or slot count over the 4 GB budget fails | Exact (memory use does not depend on the machine) |
+| Memory speed | Not simulated | About the same as dual-channel DDR4-2400, about twice a single-stick DDR4 PC |
+
+Speed numbers from this laptop are an **upper bound** for a school PC. Choose a model that clears the targets with room to spare.
+
 ## Open items (not built in this step)
 * **The AI model in the installer.** The issue asks the Lead whether the model (about 1.5 GB or more) ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
 * **Client installers for the portal.** `/download` serves `<data_dir>/releases/`. Nothing in this step copies the student APK or the desktop installers there. They come from the mobile and desktop teams' builds and are copied there by hand until a later step owns it.
