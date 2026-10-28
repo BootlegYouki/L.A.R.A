@@ -38,7 +38,8 @@ container owns the Android implementation; ViewModel factories use manual DI.
 - `ui/screens/discovery/*`: lifecycle-aware StateFlows, scanning skeletons,
   empty/offline/warning feedback, retry, discovered rows, and always-visible manual
   field. Primary controls are 56dp; secondary controls at least 52dp. All copy is
-  in matching English/Filipino string resources; Phosphor Info and existing tokens.
+  in matching English/Filipino string resources; bundled Phosphor Info, Warning Circle,
+  and Check Circle icons use the documented design tokens.
 
 ## Protocol, identity, expiry, and network behavior
 
@@ -131,3 +132,37 @@ on integration day. Physical procedure:
 Platform references checked during implementation:
 [Android NSD API](https://developer.android.com/reference/android/net/nsd/NsdManager)
 and [network callbacks](https://developer.android.com/develop/connectivity/network-ops/reading-network-state).
+
+## PR #164 design review corrections (2026-10-28)
+
+Discovery lists nearby Hubs first, followed by rescan and the manual fallback.
+The scrollable screen uses the 4dp-grid spacing tokens, with separate label,
+input, validation feedback, helper text and primary action. Inputs have a 2dp
+outline (Primary when focused, Danger when invalid), a 12dp radius and at least
+52dp height. The ASCII keyboard exposes both dots and colons; Done dismisses it
+and invokes the same validated check as the button.
+
+A white Hub pill pairs a 10dp dot with localized Searching, Connected or Not
+connected text. `DiscoveryFeedback.kt` derives its state from existing snapshots,
+checks and results. Only RESPONDING produces Connected; this still means the
+public portal responded, not an authenticated account session. Existing network
+session/lifecycle changes invalidate results. This issue adds no continuous
+reachability polling.
+
+One feedback banner uses the warning, success or info palette. Warning uses the
+Phosphor Warning Circle, amber border/fill and the canonical banner text color
+from design-system section 1.3. Success uses Check Circle and green tokens. Titles
+are bold through the colon; descriptions contain one sentence. Invalid addresses
+instead show the icon and error under the field. Empty results have an encouraging
+localized line under the nearby-Hubs heading, including during scanning. Discovery
+roadmap copy and its unused scope string were removed.
+
+The showcase has some off-grid CSS spacing (banner 14/18 and pill 6/14). Android
+uses the mandatory section 3.1 spacing grid instead: banner 16, pill 4/12, gap 8.
+The documented icon, dot and border dimensions are preserved. The existing local
+color mirror now names the already-approved warning banner ink; shared tokens
+were not edited.
+
+No discovery, endpoint validation, security policy, storage, navigation or
+reconnection implementation changed. See [review-fix evidence](evidence/4/review-fixes/README.md)
+for screenshots, checks, remaining device coverage and the reviewer response.

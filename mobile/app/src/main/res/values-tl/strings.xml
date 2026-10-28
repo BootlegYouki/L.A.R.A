@@ -20,14 +20,16 @@
     <string name="discovery_checking">Tinitingnan: Sandali habang kinokontak ang Hub.</string>
     <string name="discovery_invalid">Tingnan ang address: Kopyahin ang mga numero at port mula sa guro, tulad ng 192.168.1.50:8080.</string>
     <string name="discovery_unreachable">Hindi maabot ang Hub: Itanong ang address sa guro at subukan muli.</string>
-    <string name="discovery_responding">Sumasagot ang Hub: Maaabot ang pahina ng pag-download. Ang pagkonekta ng account ay darating sa susunod na update.</string>
+    <string name="discovery_responding">Sumasagot ang Hub: Maaabot ang pahina ng pag-download.</string>
     <string name="discovery_offline">Hindi konektado sa Hub: Sumali sa Wi-Fi ng klase o ilagay ang address ng Hub sa ibaba.</string>
     <string name="discovery_warning">Naantala ang paghahanap: Maaari pa ring ilagay ang address ng Hub o ulitin ang paghahanap.</string>
-    <string name="discovery_scanning">Hinahanap ang Hub ng iyong klase…</string>
-    <string name="discovery_empty">Wala pang nahanap na Hub: Itanong ang address sa guro o subukan muli.</string>
+    <string name="discovery_scanning">Naghahanap: Hinahanap ang Hub ng iyong klase.</string>
+    <string name="discovery_empty">Wala pang Hub. Hanapin muli o itanong ang address sa guro.</string>
     <string name="discovery_choose">May nahanap na Hub: Piliin ang Hub ng iyong klase sa ibaba.</string>
     <string name="discovery_retry">Hanapin muli</string>
     <string name="discovery_results">Mga Hub sa network ng klase</string>
     <string name="discovery_hub_address">%1$s:%2$d</string>
-    <string name="discovery_scope">Hinahanap ng bersyong ito ang mga Hub at tinitingnan ang pahina ng pag-download. Darating ang mga klase at naka-save na aralin sa mga susunod na update.</string>
+    <string name="discovery_beacon_searching">Naghahanap</string>
+    <string name="discovery_beacon_connected">Konektado</string>
+    <string name="discovery_beacon_disconnected">Hindi konektado</string>
 </resources>
