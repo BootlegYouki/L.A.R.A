@@ -1,0 +1,605 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="erd" name="Entity-Relationship Diagram: Hub Master Database">
+    <mxGraphModel dx="5000" dy="3450" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="5000" pageHeight="3450" math="0" shadow="0" background="#ffffff" source_refs="contracts/schema/server_master.sql (all 19 tables; columns and FK cardinalities read using SQLite PRAGMA metadata)">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Entity-Relationship Diagram: Hub Master Database&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=26;fontStyle=1;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="50" y="25" width="4900" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="table:users" value="users" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="users">
+          <mxGeometry x="80" y="150" width="780" height="322" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.lrn_or_id" value="lrn_or_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="lrn_or_id" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.full_name" value="full_name : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="full_name" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.role" value="role : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="role" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.pin_hash" value="pin_hash : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="pin_hash" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.is_active" value="is_active : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="is_active" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="1">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:users.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:users" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:classrooms" value="classrooms" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="classrooms">
+          <mxGeometry x="1010" y="150" width="780" height="322" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.name" value="name : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="name" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.section" value="section : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="section" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.class_code" value="class_code : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="class_code" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.teacher_id" value="FK | teacher_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="teacher_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.archived_at" value="archived_at : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="archived_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classrooms.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classrooms" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:enrollments" value="enrollments" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="enrollments">
+          <mxGeometry x="2870" y="150" width="780" height="252" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.student_id" value="FK | student_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.status" value="status : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="status" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'PENDING'">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.joined_at" value="joined_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="joined_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:enrollments.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:enrollments" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:announcements" value="announcements" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="announcements">
+          <mxGeometry x="80" y="820" width="780" height="287" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.title" value="title : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="title" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.content" value="content : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="content" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.allow_comments" value="allow_comments : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="allow_comments" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="1">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcements.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcements" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:announcement_comments" value="announcement_comments" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="announcement_comments">
+          <mxGeometry x="1010" y="820" width="780" height="252" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.announcement_id" value="FK | announcement_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="announcement_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.author_id" value="FK | author_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="author_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.content" value="content : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="content" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:announcement_comments.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:announcement_comments" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:materials" value="materials" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="materials">
+          <mxGeometry x="80" y="1520" width="780" height="462" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.title" value="title : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="title" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.file_type" value="file_type : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="file_type" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.mime_type" value="mime_type : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="mime_type" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.file_path" value="file_path : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="file_path" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.file_size_bytes" value="file_size_bytes : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="file_size_bytes" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.topic_id" value="FK | topic_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="topic_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.assignment_id" value="FK | assignment_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="assignment_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.announcement_id" value="FK | announcement_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="announcement_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="357" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="392" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:materials.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:materials" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="427" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:material_chunks" value="material_chunks" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="material_chunks">
+          <mxGeometry x="1010" y="1520" width="780" height="287" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.material_id" value="FK | material_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="material_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.order_index" value="order_index : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="order_index" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.heading" value="heading : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="heading" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.text" value="text : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="text" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.token_estimate" value="token_estimate : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="token_estimate" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:material_chunks.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:material_chunks" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:assignments" value="assignments" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="assignments">
+          <mxGeometry x="1940" y="1520" width="780" height="427" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.title" value="title : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="title" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.instructions" value="instructions : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="instructions" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="''">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.due_date" value="due_date : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="due_date" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.allow_late" value="allow_late : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="allow_late" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="0">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.max_points" value="max_points : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="max_points" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="100">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.topic_id" value="FK | topic_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="topic_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.archived_at" value="archived_at : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="archived_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="357" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignments.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignments" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="392" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:assignment_submissions" value="assignment_submissions" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="assignment_submissions">
+          <mxGeometry x="2870" y="1520" width="780" height="357" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.assignment_id" value="FK | assignment_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="assignment_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.student_id" value="FK | student_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.file_path" value="file_path : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="file_path" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.file_type" value="file_type : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="file_type" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'IMAGE'">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.submitted_at" value="submitted_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="submitted_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.score" value="score : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="score" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.teacher_feedback" value="teacher_feedback : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="teacher_feedback" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:assignment_submissions.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:assignment_submissions" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:quizzes" value="quizzes" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="quizzes">
+          <mxGeometry x="80" y="2300" width="780" height="497" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.title" value="title : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="title" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.instructions" value="instructions : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="instructions" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.topic_id" value="topic_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="topic_id" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.time_limit_minutes" value="time_limit_minutes : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="time_limit_minutes" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.shuffle_questions" value="shuffle_questions : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="shuffle_questions" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="0">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.release_scores_immediately" value="release_scores_immediately : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="release_scores_immediately" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="1">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.scores_released_at" value="scores_released_at : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="scores_released_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.status" value="status : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="status" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'DRAFT'">
+          <mxGeometry x="0" y="357" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.started_at" value="started_at : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="started_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="392" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="427" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quizzes.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quizzes" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="462" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:quiz_questions" value="quiz_questions" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="quiz_questions">
+          <mxGeometry x="1010" y="2300" width="780" height="462" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.quiz_id" value="FK | quiz_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="quiz_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.order_index" value="order_index : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="order_index" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.question_text" value="question_text : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="question_text" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.question_type" value="question_type : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="question_type" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.options_json" value="options_json : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="options_json" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.points" value="points : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="points" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="1">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.image_path" value="image_path : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="image_path" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.correct_answer" value="correct_answer : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="correct_answer" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.synonyms_json" value="synonyms_json : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="synonyms_json" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="357" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="392" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_questions.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_questions" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="427" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:quiz_attempts" value="quiz_attempts" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="quiz_attempts">
+          <mxGeometry x="1940" y="2300" width="780" height="392" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.quiz_id" value="FK | quiz_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="quiz_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.student_id" value="FK | student_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.status" value="status : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="status" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'IN_PROGRESS'">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.started_at" value="started_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="started_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.submitted_at" value="submitted_at : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="submitted_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.score" value="score : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="score" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.total_points" value="total_points : INTEGER NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="total_points" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.answers_json" value="answers_json : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="answers_json" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'[]'">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:quiz_attempts.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:quiz_attempts" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="357" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:ai_chat_messages" value="ai_chat_messages" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="ai_chat_messages">
+          <mxGeometry x="2870" y="2300" width="780" height="357" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.student_id" value="FK | student_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.material_id" value="FK | material_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="material_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.chunk_id" value="FK | chunk_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="chunk_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="1" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.language" value="language : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="language" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.role" value="role : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="role" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.content" value="content : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="content" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="287" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:ai_chat_messages.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:ai_chat_messages" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="322" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:classroom_teachers" value="classroom_teachers" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="classroom_teachers">
+          <mxGeometry x="1940" y="150" width="780" height="147" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classroom_teachers.classroom_id" value="PK, FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classroom_teachers" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="1" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classroom_teachers.teacher_id" value="PK, FK | teacher_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classroom_teachers" kind="erd_column" column_name="teacher_id" sql_type="TEXT" pk_position="2" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:classroom_teachers.added_at" value="added_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:classroom_teachers" kind="erd_column" column_name="added_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:topics" value="topics" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="topics">
+          <mxGeometry x="1940" y="820" width="780" height="252" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.classroom_id" value="FK | classroom_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.name" value="name : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="name" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.order_index" value="order_index : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="order_index" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="0">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:topics.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:topics" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:private_comments" value="private_comments" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="private_comments">
+          <mxGeometry x="3800" y="1520" width="780" height="287" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.id" value="PK | id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="id" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.assignment_id" value="FK | assignment_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="assignment_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.student_id" value="FK | student_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.author_id" value="FK | author_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="author_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.content" value="content : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="content" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:private_comments.updated_at" value="updated_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:private_comments" kind="erd_column" column_name="updated_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:sync_revisions" value="sync_revisions" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="sync_revisions">
+          <mxGeometry x="3800" y="820" width="780" height="287" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.seq" value="PK | seq : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="seq" sql_type="INTEGER" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.classroom_id" value="classroom_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="classroom_id" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.student_id" value="student_id : TEXT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="student_id" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="1" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.entity_table" value="entity_table : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="entity_table" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.entity_id" value="entity_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="entity_id" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="182" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.action" value="action : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="action" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="'UPSERT'">
+          <mxGeometry x="0" y="217" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sync_revisions.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sync_revisions" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="252" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:hub_meta" value="hub_meta" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="hub_meta">
+          <mxGeometry x="2870" y="820" width="780" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="col:hub_meta.key" value="PK | key : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:hub_meta" kind="erd_column" column_name="key" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:hub_meta.value" value="value : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:hub_meta" kind="erd_column" column_name="value" sql_type="TEXT" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table:sessions" value="sessions" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=42;rounded=0;html=1;align=left;spacingLeft=10;fontSize=21;fontStyle=1;swimlaneFillColor=#ffffff;" vertex="1" parent="1" kind="erd_table" table_name="sessions">
+          <mxGeometry x="3800" y="150" width="780" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sessions.token_hash" value="PK | token_hash : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sessions" kind="erd_column" column_name="token_hash" sql_type="TEXT" pk_position="1" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="42" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sessions.user_id" value="FK | user_id : TEXT NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sessions" kind="erd_column" column_name="user_id" sql_type="TEXT" pk_position="0" foreign_key="1" nullable="0" default_sql="">
+          <mxGeometry x="0" y="77" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sessions.created_at" value="created_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sessions" kind="erd_column" column_name="created_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="112" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="col:sessions.expires_at" value="expires_at : INTEGER NOT NULL" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;spacingLeft=10;verticalAlign=middle;" vertex="1" parent="table:sessions" kind="erd_column" column_name="expires_at" sql_type="INTEGER" pk_position="0" foreign_key="0" nullable="0" default_sql="">
+          <mxGeometry x="0" y="147" width="780" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:classrooms.teacher_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="classrooms" child_column="teacher_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:enrollments.student_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="enrollments" child_column="student_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:enrollments.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="enrollments" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:announcements.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="announcements" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:announcement_comments.author_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="announcement_comments" child_column="author_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:announcements.id" target="col:announcement_comments.announcement_id" kind="foreign_key" parent_table="announcements" parent_column="id" child_table="announcement_comments" child_column="announcement_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:announcements.id" target="col:materials.announcement_id" kind="foreign_key" parent_table="announcements" parent_column="id" child_table="materials" child_column="announcement_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:assignments.id" target="col:materials.assignment_id" kind="foreign_key" parent_table="assignments" parent_column="id" child_table="materials" child_column="assignment_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:topics.id" target="col:materials.topic_id" kind="foreign_key" parent_table="topics" parent_column="id" child_table="materials" child_column="topic_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="SET NULL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:materials.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="materials" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:materials.id" target="col:material_chunks.material_id" kind="foreign_key" parent_table="materials" parent_column="id" child_table="material_chunks" child_column="material_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:assignments.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="assignments" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:topics.id" target="col:assignments.topic_id" kind="foreign_key" parent_table="topics" parent_column="id" child_table="assignments" child_column="topic_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="SET NULL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:assignment_submissions.student_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="assignment_submissions" child_column="student_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:assignments.id" target="col:assignment_submissions.assignment_id" kind="foreign_key" parent_table="assignments" parent_column="id" child_table="assignment_submissions" child_column="assignment_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:quizzes.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="quizzes" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:quizzes.id" target="col:quiz_questions.quiz_id" kind="foreign_key" parent_table="quizzes" parent_column="id" child_table="quiz_questions" child_column="quiz_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:quiz_attempts.student_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="quiz_attempts" child_column="student_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:quizzes.id" target="col:quiz_attempts.quiz_id" kind="foreign_key" parent_table="quizzes" parent_column="id" child_table="quiz_attempts" child_column="quiz_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:material_chunks.id" target="col:ai_chat_messages.chunk_id" kind="foreign_key" parent_table="material_chunks" parent_column="id" child_table="ai_chat_messages" child_column="chunk_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="SET NULL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERzeroToOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:materials.id" target="col:ai_chat_messages.material_id" kind="foreign_key" parent_table="materials" parent_column="id" child_table="ai_chat_messages" child_column="material_id" parent_cardinality="0..1" child_cardinality="0..*" on_delete="SET NULL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:ai_chat_messages.student_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="ai_chat_messages" child_column="student_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:ai_chat_messages.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="ai_chat_messages" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:classroom_teachers.teacher_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="classroom_teachers" child_column="teacher_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:classroom_teachers.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="classroom_teachers" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:classrooms.id" target="col:topics.classroom_id" kind="foreign_key" parent_table="classrooms" parent_column="id" child_table="topics" child_column="classroom_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:private_comments.author_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="private_comments" child_column="author_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:private_comments.student_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="private_comments" child_column="student_id" parent_cardinality="1" child_cardinality="0..*" on_delete="RESTRICT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:assignments.id" target="col:private_comments.assignment_id" kind="foreign_key" parent_table="assignments" parent_column="id" child_table="private_comments" child_column="assignment_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;startArrow=ERmandOne;startFill=0;endArrow=ERzeroToMany;endFill=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="col:users.id" target="col:sessions.user_id" kind="foreign_key" parent_table="users" parent_column="id" child_table="sessions" child_column="user_id" parent_cardinality="1" child_cardinality="0..*" on_delete="CASCADE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="erd-legend" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;PK = primary key; FK = declared foreign key; both labels mark a composite-key member that is also a foreign key.&lt;br&gt;Parent end: mandatory one for NOT NULL FK, optional zero-or-one for nullable FK. Child end: zero-to-many.&lt;br&gt;No inferred links: quizzes.topic_id, sync_revisions scope/entity columns, and hub_meta have no declared FK relationships.&lt;br&gt;Pins, keys and Hub storage paths are listed because this is the Hub master schema, not a client payload.&lt;br&gt;Protected accounts, classrooms and graded records are retained through deactivation or archiving; SQL CASCADE clauses do not authorize their deletion.&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;fontStyle=0;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="3800" y="2320" width="1110" height="540" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

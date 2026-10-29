@@ -1,0 +1,443 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="dfd-level-0" name="Data Flow Diagram: Level 0">
+    <mxGraphModel dx="3800" dy="3850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3800" pageHeight="3850" math="0" shadow="0" background="#ffffff" source_refs="contracts/openapi.yaml;contracts/events/;contracts/schema/server_master.sql;docs/PRD.md sections 3,4,6">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Data Flow Diagram: Level 0&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=26;fontStyle=1;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="50" y="25" width="3700" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="P1" value="1.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="1.0" process_name="Manage Accounts &amp; Enrollment">
+          <mxGeometry x="720" y="230" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Manage Accounts &amp;amp; Enrollment&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P1" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P2" value="2.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="2.0" process_name="Manage Stream">
+          <mxGeometry x="720" y="750" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Manage Stream&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P2" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P3" value="3.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="3.0" process_name="Manage Classwork">
+          <mxGeometry x="720" y="1280" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Manage Classwork&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P3" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P4" value="4.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="4.0" process_name="Run Quizzes">
+          <mxGeometry x="720" y="1800" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Run Quizzes&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P4" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P6" value="6.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="6.0" process_name="Socratic AI Tutor">
+          <mxGeometry x="720" y="2330" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Socratic AI Tutor&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P6" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P7" value="7.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="7.0" process_name="Synchronize Devices">
+          <mxGeometry x="2640" y="1400" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Synchronize Devices&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P7" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="P5" value="5.0" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;swimlane;horizontal=1;startSize=35;rounded=1;arcSize=15;swimlaneFillColor=#ffffff;html=1;whiteSpace=wrap;align=left;spacingLeft=12;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="5.0" process_name="Gradebook, Export &amp; Backup">
+          <mxGeometry x="2640" y="3200" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Gradebook, Export &amp;amp; Backup&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontSize=20;" vertex="1" parent="P5" kind="process_label">
+          <mxGeometry x="8" y="40" width="344" height="103" as="geometry" />
+        </mxCell>
+        <mxCell id="Learner" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Learner&lt;/div&gt;" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=21;fontStyle=1;" vertex="1" parent="1" kind="external_entity" entity_name="Learner">
+          <mxGeometry x="70" y="1510" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Teacher" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Teacher&lt;/div&gt;" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=21;fontStyle=1;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher">
+          <mxGeometry x="70" y="640" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Admin" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Admin&lt;/div&gt;" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=21;fontStyle=1;" vertex="1" parent="1" kind="external_entity" entity_name="Admin">
+          <mxGeometry x="70" y="3000" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="USB" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;USB Drive&lt;/div&gt;" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=21;fontStyle=1;" vertex="1" parent="1" kind="external_entity" entity_name="USB Drive">
+          <mxGeometry x="3220" y="3260" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="D1" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D1 Accounts &amp; Sessions" table_names="users,sessions">
+          <mxGeometry x="1690" y="220" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D1-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D1&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D1" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D1-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D1" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D1-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Accounts &amp;amp; Sessions&lt;br&gt;users, sessions&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D1" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D2" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D2 Classes &amp; Enrollment" table_names="classrooms,classroom_teachers,enrollments">
+          <mxGeometry x="1690" y="570" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D2-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D2&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D2" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D2-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D2" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D2-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classes &amp;amp; Enrollment&lt;br&gt;classrooms, classroom_teachers, enrollments&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D2" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D3" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D3 Stream" table_names="announcements,announcement_comments">
+          <mxGeometry x="1690" y="970" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D3-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D3&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D3" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D3-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D3" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D3-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Stream&lt;br&gt;announcements, announcement_comments&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D3" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D5" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D5 Classwork" table_names="topics,materials,material_chunks,assignments,assignment_submissions,private_comments">
+          <mxGeometry x="1690" y="1370" width="540" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="D5-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D5&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D5" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="D5-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D5" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D5-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classwork&lt;br&gt;topics, materials, material_chunks, assignments, assignment_submissions, private_comments&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D5" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="D4" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D4 Quizzes" table_names="quizzes,quiz_questions,quiz_attempts">
+          <mxGeometry x="1690" y="1820" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D4-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D4&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D4" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D4-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D4" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D4-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quizzes&lt;br&gt;quizzes, quiz_questions, quiz_attempts&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D4" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D6" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D6 Tutor History" table_names="ai_chat_messages">
+          <mxGeometry x="1690" y="2230" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D6-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D6&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D6" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D6-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D6" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D6-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Tutor History&lt;br&gt;ai_chat_messages&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D6" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D7" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D7 Sync Ledger" table_names="sync_revisions">
+          <mxGeometry x="1690" y="2650" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D7-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D7&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D7" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D7-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D7" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D7-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Sync Ledger&lt;br&gt;sync_revisions&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D7" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="D8" value="" style="strokeColor=#000000;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=17;shape=partialRectangle;top=1;bottom=1;left=1;right=0;html=1;" vertex="1" parent="1" kind="data_store" store_name="D8 Hub Identity" table_names="hub_meta">
+          <mxGeometry x="1690" y="3020" width="540" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D8-id" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;D8&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;align=center;verticalAlign=middle;fontStyle=1;" vertex="1" parent="D8" kind="store_label">
+          <mxGeometry x="0" y="0" width="55" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="D8-divider" style="endArrow=none;startArrow=none;strokeColor=#000000;" edge="1" parent="D8" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="0" as="sourcePoint" />
+            <mxPoint x="55" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D8-name" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Hub Identity&lt;br&gt;hub_meta&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;verticalAlign=middle;" vertex="1" parent="D8" kind="store_label">
+          <mxGeometry x="66" y="8" width="462" height="111" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Registration; credentials; class code&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-2" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Access and enrollment responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P1" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-3" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Credentials; class, co-teacher and approval decisions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-4" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Access responses; roster; operation responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P1" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-5" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Hub PIN setup; credentials; teacher-account instructions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Admin" target="P1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-6" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Setup, access and account responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P1" target="Admin" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-7" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Comments; permitted stream requests&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-8" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Announcements; comments; operation responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P2" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-9" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Announcements; comment controls; comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-10" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Stream records; operation responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P2" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-11" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Homework photo; private comments; classwork requests&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-12" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Materials and classwork; score and feedback; receipts&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P3" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-13" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Topics; materials; assignments; grades; private comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-14" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classwork; submissions; operation responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P3" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-15" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz requests; begin; quiz answers&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-16" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz; start and close information; permitted score receipt&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P4" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-17" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz definition; start, close and results requests&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-18" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz definitions; presence; results; operation responses&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P4" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-19" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;AI question and language; model requests&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-20" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Grounded hint; queue status; model metadata/file; errors&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P6" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-21" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Cursor, Hub identity and queued work&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Learner" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-22" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Sync page; reset; per-item receipts&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P7" target="Learner" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-23" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Cursor, Hub identity and queued comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-24" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Sync page; reset; per-item receipts&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P7" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-25" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Gradebook export request&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Teacher" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-26" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Export result&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P5" target="Teacher" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-27" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Export, backup and restore instructions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="Admin" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-28" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Export, backup and restore results&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="P5" target="Admin" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-29" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Gradebook export files; backup archives&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="USB" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-30" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Backup archive for restoration&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="USB" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-31" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Account and session changes&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="P1" target="D1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-32" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Identity and session records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="D1" target="P1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-33" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class, co-teacher and enrollment changes&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="P1" target="D2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-34" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class ownership and enrollment records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="D2" target="P1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-35" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Visible change revisions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P1" target="D7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-36" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class access scope&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-37" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class access scope&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-38" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class access scope&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-39" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Class access scope&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-40" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Announcements and comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="P2" target="D3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-41" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Stream records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="D3" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-42" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Announcement attachment association&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P2" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-43" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Attached material metadata&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P3" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-44" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Stream revisions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P2" target="D7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-45" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classwork metadata; chunks; submissions; grades; comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="P3" target="D5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-46" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classwork records; Hub file references&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="D5" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-47" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Classwork and grading revisions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P3" target="D7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-48" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz settings; attempt state; answers; scores&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.25;entryY=0.25;" edge="1" parent="1" source="P4" target="D4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-49" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz definitions; keys; attempts&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;exitY=0.8;entryY=0.8;" edge="1" parent="1" source="D4" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-50" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Quiz and grade revisions&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P4" target="D7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-51" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;AI attempt-state check&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P6" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-52" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;AI permit or QUIZ_IN_PROGRESS decision&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P4" target="P6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-53" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted lesson chunks&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D5" target="P6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-54" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Question and grounded reply records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P6" target="D6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-55" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Hub-assisted conversation history&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D6" target="P6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-56" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Queued stream comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P7" target="P2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-57" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Validated outcome and receipt data&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P2" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-58" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Queued private comments&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P7" target="P3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-59" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Validated outcome and receipt data&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P3" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-60" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Queued quiz attempts&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P7" target="P4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-61" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Validated outcome and receipt data&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P4" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-62" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted current records (redacted)&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D1" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-63" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted current records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-64" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted current records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D3" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-65" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted current records (redacted)&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D4" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-66" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Permitted current records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D5" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-67" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;seq revisions; scoped tombstones&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D7" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-68" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;hub_id; sync_epoch&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D8" target="P7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-69" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D1" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-70" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D1" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-71" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records; class and points&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D2" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-72" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D2" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-73" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D3" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-74" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D3" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-75" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records; class and points&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D4" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-76" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D4" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-77" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records; class and points&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D5" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-78" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-79" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D6" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-80" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D6" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-81" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D7" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-82" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D7" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-83" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Snapshot records&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="D8" target="P5" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-84" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Verified restored records; incremented sync_epoch&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P5" target="D8" kind="data_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;div style=&quot;white-space:normal;line-height:1.25;&quot;&gt;Gane-Sarson: square = external entity; divided rounded rectangle = process; open right side = data store.&lt;br&gt;Stores group exactly the 19 master tables. Hub-managed file bytes and model assets are not additional database tables.&lt;br&gt;Specified design; quiz and sync routes are currently scaffolds. QUEUED_FOR_SYNC is client state. D6 is not a current sync-pull collection.&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontColor=#000000;fontFamily=Arial;fontSize=17;fontSize=17;fontStyle=0;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="100" y="3610" width="3550" height="180" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
