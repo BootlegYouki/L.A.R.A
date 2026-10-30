@@ -50,6 +50,45 @@ No database tables, events or contract routes are touched by this step.
 * **`postinst.sh` must stay LF.** `src-tauri/.gitattributes` pins `linux/*` to LF; the test checks for `\r`.
 * **Installer wizard language:** NSIS has no Filipino language file, so the wizard's own pages are in English. Everything the Hub itself shows stays bilingual.
 
+## Pilot Hub hardware (1.5, #73)
+**No pilot school PC is available yet.** The AI spike runs on a developer laptop set up as a simulated school PC. Replace this section with the real machine's details when the pilot school is known, and re-run the evaluation there (the commands are in `docs/benchmarks/ai_model_evaluation.md`).
+
+**Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card.
+
+**RAM budget on the reference PC:**
+| | MB | Source |
+|---|---|---|
+| Installed | 4096 | Reference PC |
+| Firmware and integrated graphics | −250 | Estimate. A 4 GB PC usually shows Linux 3.7 to 3.9 GB (`MemTotal`) |
+| Linux with a light desktop (Xubuntu or Lubuntu), idle | −600 | Estimate. Ubuntu's default GNOME desktop uses about 1.2 GB |
+| Hub: backend and window | −350 | Measured on Windows (`lara-hub-window` release build, idle, 2026-10-30): backend 31 MB; the window's WebView2 processes 183 MB private, 358 MB working set. Linux draws the window with WebKitGTK instead. The backend grows as features land; the load test (6.1, #17) measures it under 40 learners |
+| Reserve | −450 | Judgment. Files and videos the Hub serves fill the page cache, which competes with the model for RAM |
+| **Left for the model (`llama-server`)** | **≈ 2450** | At the chosen slot count |
+
+With Ubuntu's default GNOME desktop the budget drops to about **1.8 GB**, and none of the four measured models fits. A light desktop on the Hub PC matters as much as the model choice. Measure the real figures on the pilot PC with `free -m` while the Hub runs with no `llama-server`.
+
+**Machine the evaluation ran on:**
+| | |
+|---|---|
+| CPU | AMD Ryzen 5 7535HS (6 cores, 12 threads, Zen 3+) |
+| RAM | 16 GB DDR5-4800, one module (single channel, about 38 GB/s) |
+| GPU | Radeon 660M integrated and RTX 2050, **both unused** (`-ngl 0`) |
+| OS | Windows 11 Home 10.0.26200 |
+| Inference | llama.cpp `llama-server` build b11938, `win-cpu-x64` |
+
+**How it imitates the reference PC:**
+| Trait | How | How close |
+|---|---|---|
+| No graphics card | `--gpu-layers 0` (CPU only) | Exact |
+| 4 cores | `--threads 4` | Close. Turbo clocks may be higher than a school PC's |
+| 4 GB RAM | Not limited. Peak RAM is measured, and a model or slot count over the 2450 MB budget fails | Exact (memory use does not depend on the machine) |
+| Linux | Not simulated (ran on Windows) | Close. Windows' peak working set and Linux's peak RSS (`VmHWM`, which the runner reads on Linux) both count the mapped model file, the KV cache and the buffers |
+| Memory speed | Not simulated | About the same as dual-channel DDR4-2400, about twice a single-stick DDR4 PC |
+
+Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC most likely has one memory module, and generating tokens on a CPU is limited mostly by memory speed, so its tokens/s could be about half of these. Choose a model that clears the targets with room to spare.
+
+**On Linux, a model that does not fit slows down before it fails.** `llama-server` maps the model file into memory. When RAM runs short, Linux drops model pages (for example to cache a video being streamed) and reads them back from disk on the next token, so replies slow to a crawl. That is why the budget keeps a reserve.
+
 ## Open items (not built in this step)
 * **The AI model in the installer.** The issue asks the Lead whether the model (about 1.5 GB or more) ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
 * **Client installers for the portal.** `/download` serves `<data_dir>/releases/`. Nothing in this step copies the student APK or the desktop installers there. They come from the mobile and desktop teams' builds and are copied there by hand until a later step owns it.
