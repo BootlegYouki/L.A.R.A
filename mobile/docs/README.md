@@ -10,6 +10,10 @@ validation evidence under [evidence/23/](./evidence/23/README.md).
 MOBILE 1.2 discovery is documented in [discovery.md](./discovery.md), with
 implementation review and available evidence under [evidence/4/](./evidence/4/README.md).
 
+MOBILE 1.3 persistence is documented in [room_schema.md](./room_schema.md), with
+the implementation report in [issue-41-review.md](./issue-41-review.md) and
+verification output under [evidence/41/](./evidence/41/).
+
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |

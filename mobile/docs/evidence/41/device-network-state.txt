@@ -1,0 +1,3 @@
+Original airplane=0 wifi=1
+Test airplane=1 wifi=0
+Restored airplane=0 wifi=1
