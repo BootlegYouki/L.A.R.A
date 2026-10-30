@@ -22,6 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import org.lara.app.domain.discovery.HubDiscovery
+import org.lara.app.ui.screens.discovery.DiscoveryScreen
+import org.lara.app.ui.screens.discovery.DiscoveryViewModel
 import kotlinx.serialization.Serializable
 import org.lara.app.R
 import org.lara.app.ui.theme.LaraColors
@@ -35,30 +41,42 @@ private data object Home
 @Serializable
 private data object About
 
+@Serializable
+private data object Discovery
+
 @Composable
-fun LaraNavigation() {
+fun LaraNavigation(discovery: HubDiscovery) {
     val controller = rememberNavController()
     Scaffold(containerColor = LaraColors.Canvas) { insets ->
         NavHost(
             navController = controller,
-            startDestination = Home,
+            startDestination = Discovery,
             modifier = Modifier.fillMaxSize().padding(insets),
         ) {
             composable<Home> {
                 PlaceholderPage(
                     about = false,
                     onAction = { controller.navigate(About) { launchSingleTop = true } },
+                    onDiscovery = { controller.navigate(Discovery) { launchSingleTop = true } },
                 )
             }
             composable<About> {
                 PlaceholderPage(about = true, onAction = { controller.popBackStack() })
+            }
+            composable<Discovery> {
+                val model: DiscoveryViewModel = viewModel(factory = viewModelFactory {
+                    initializer { DiscoveryViewModel(discovery) }
+                })
+                DiscoveryScreen(model, onBack = {
+                    controller.navigate(Home) { popUpTo<Discovery> { inclusive = true }; launchSingleTop = true }
+                })
             }
         }
     }
 }
 
 @Composable
-private fun PlaceholderPage(about: Boolean, onAction: () -> Unit) {
+private fun PlaceholderPage(about: Boolean, onAction: () -> Unit, onDiscovery: (() -> Unit)? = null) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(LaraSpacing.S4),
@@ -103,6 +121,12 @@ private fun PlaceholderPage(about: Boolean, onAction: () -> Unit) {
                 style = MaterialTheme.typography.bodyLarge,
                 color = LaraColors.TextSecondary,
             )
+        }
+        if (onDiscovery != null) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = onDiscovery,
+                modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
+            ) { Text(stringResource(R.string.discovery_open)) }
         }
         Button(
             onClick = onAction,

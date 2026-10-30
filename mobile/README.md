@@ -18,7 +18,7 @@
 
 **Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
-**Status:** MOBILE 1.1 provides the Android scaffold, bundled theme/Nunito, bilingual disconnected placeholder, and tested Hub URL policy. See [scaffold notes](./docs/scaffold.md) for entry points, build versions, and enforcement deferred to MOBILE 1.2/2.2. Room and real classroom features are not implemented yet.
+**Status:** MOBILE 1.1 provides the Android scaffold, bundled theme/Nunito, bilingual disconnected placeholder, and tested Hub URL policy. See [scaffold notes](./docs/scaffold.md) for entry points, build versions, and enforcement deferred to MOBILE 1.2/2.2. MOBILE 1.2 adds the startup discovery screen, NSD/UDP scanners, validated manual address entry, and portal reachability checks; see [discovery notes](./docs/discovery.md). Room and real classroom features are not implemented yet.
 
 ---
 

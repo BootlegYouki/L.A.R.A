@@ -42,6 +42,8 @@ object LaraColors {
     val SuccessBorder = Color(0xFFC4ECCB)
     val WarningLight = Color(0xFFFEF0C7)
     val WarningDark = Color(0xFFB54708)
+    // Banner text from design-system.md 1.3 and showcase .alert-banner-warning.
+    val WarningBannerText = Color(0xFF93370D)
     val WarningBorder = Color(0xFFFEDF89)
     val DangerLight = Color(0xFFFEE4E2)
     val DangerDark = Color(0xFFB42318)
