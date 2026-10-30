@@ -17,7 +17,7 @@ The prototype does not define a discovery screen. The additional Home panel foll
 
 UDP listens on wildcard IPv4 port 8888. Each datagram is bounded to 4096 bytes before JSON parsing. Required fields are `app`, `version`, `name`, `ip`, `http_port`, `ws_port`. The app must be `lara`; version/name must be nonempty; names are at most 160 characters without control characters; ports must be numeric integers in 1..65535. Only canonical private/loopback IPv4 addresses are accepted, matching Mobile's current LAN policy. Unknown fields are ignored. No credentials are attached to advertisements.
 
-mDNS browses `_lara._tcp.local.`. The native library supplies the trailing root dot; the on-wire service is the required `_lara._tcp.local`. Host and HTTP port come from resolved SRV/A records, with WS defaulting to the contracted 8081 because the Hub defines no mDNS TXT fields. Unsupported/public addresses are ignored. Source records are separate, with a maximum of 128 leases and 64 visible endpoints; rows deduplicate by IPv4 plus HTTP port. Most recently refreshed metadata wins.
+mDNS browses `_lara._tcp.local.`. The native library supplies the trailing root dot; the on-wire service is the required `_lara._tcp.local`. Host and HTTP port come from resolved SRV/A records, with WS defaulting to the contracted 8081 because the Hub defines no mDNS TXT fields. Unsupported/public addresses are ignored. Source records are separate, with a maximum of 128 leases and 64 visible endpoints; rows deduplicate by IPv4 plus HTTP port. Live UDP metadata takes precedence because it supplies explicit HTTP and WebSocket ports; mDNS supplies only HTTP and uses the conventional WS default. Once the UDP lease expires, a live mDNS source remains available. Within the same source priority, most recently refreshed metadata wins.
 
 A fresh mDNS browse is started every four timer ticks, stopping and shutting down the old daemon first. This renews leases from actual PTR responses rather than replaying a daemon cache as if a peer were live. The daemon also checks interface changes every two seconds. UDP bind failures are retried on the next one-second tick; mDNS failure does not stop UDP or manual entry. Entries expire after ten seconds without a fresh advertisement. Service removal drops only that mDNS source, preserving a live UDP source. A scan remains local; it never attempts tunnel discovery.
 
@@ -40,7 +40,7 @@ The React snapshot poll removes stale cards within another second. The three-sec
 **Real-Hub mDNS remains unresolved on this Windows host.** The actual Hub logs incoming `_lara._tcp.local` questions, but the client does not receive a resolved Hub service. A scoped wire check observes the queries without corresponding L.A.R.A response packets. The same native scanner resolves the mDNS-only fixture. This narrows the discrepancy to the real responder/Windows network path, but does not establish its root cause. No firewall, other-team code or third-party dependency source was modified to make the test pass. Keep this limitation visible for the Lead/server team and repeat on separate LAN devices.
 
 Not verified: physical Wi-Fi disable/reconnect, WAN-unplugged router, another machine, Linux/macOS, production installer, release CSP/HTTP/WS/media permissions (owned by later issues), or a normal window-close lifecycle trace. The test processes were stopped explicitly; process exit releasing sockets is distinct from observing graceful scanner cancellation. Manual entry here only validates/selects an address; #40 must check and save a responding endpoint before calling it connected.
-## Final check results
+## Initial native-window check results (before history migration)
 
 ```text
 npm run lint: exit 0
@@ -54,3 +54,38 @@ git diff --check: PASSED
 ```
 
 Node reports its existing experimental SQLite warning. Rust reports the G: filesystem's unsupported incremental hard-link operation and copies files instead; no Rust code warning was reported. The Windows sandbox denied the automated WM_CLOSE message (Win32 error 5), so graceful-close behavior remains unverified. Forced termination of the test process released UDP 8888, confirmed by binding it again. The real native `hub-found` subscription received an independently sent valid beacon. No debug logging or testing permissions were added to the product.
+
+
+## History migration and follow-up verification (October 30)
+
+Following Discussion #185, the feature was recreated from rewritten staging `2390e21` as `feat/desktop-1.2-discovery-v2`. Only our own feature commit was cherry-picked (`f8a4629` became `f439c19`); the old branch was retained. No old staging merge was imported, no protected branch was pushed and no AI co-author trailers were added.
+
+Review found an explicit UDP WebSocket port could be replaced by mDNS's default. The registry now prefers live UDP metadata for the same endpoint. A regression test checks explicit port 8085 is retained while the UDP lease is live and falls back to mDNS only after expiry.
+
+The scanner core now takes the same shared registry and a notification callback; the Tauri adapter emits the existing `hub-found` event. This permits exercising the real scanner loop without a GUI or fake sockets. There is no new product command, payload or dependency.
+
+Run the opt-in network test alone on a local network, with UDP 8888 free and no other L.A.R.A. advertiser running, from desktop/:
+
+```powershell
+$env:LARA_TEST_MDNS_IP = '<this-PC-LAN-IPv4>'
+cargo test --locked --manifest-path src-tauri/Cargo.toml --lib native_scanner_network_lifecycle -- --ignored --nocapture
+```
+
+The ignored-by-default marker prevents normal CI from depending on host multicast/socket access; this test WAS explicitly run. It passed in 43.78 seconds. It checks actual UDP reception and notification, expiry after a stopped advertiser, rediscovery, cooperative scanner cancellation and UDP port release. It then occupies UDP 8888, advertises an independent mDNS-only fixture, checks twenty seconds of stable discovery, removes the publisher, checks expiry and cancels the scanner. This is a protocol stop/return test, not physical Wi-Fi reconnection and not a normal-window-close test.
+
+Current automated results:
+
+```text
+npm run lint: exit 0
+npm test: 20 passed
+npm run build: 44 modules, built in 1.95s
+cargo test --locked --lib: 4 passed, 1 opt-in network test ignored by default
+explicit native_scanner_network_lifecycle run: 1 passed in 43.78s
+cargo check --locked --all-targets: PASSED
+python -m unittest discover tests: 66 passed in 21.392s
+python scripts/verify_invariants.py: PASSED
+```
+
+A second scratch executable directly included the actual Hub `server/backend/src/discovery/mdns.rs` and used its unchanged `start` function with libmdns 0.10.1; a plain mdns-sd 0.21.6 browser did not resolve that service during a twelve-second observation on this Windows host. The failure reproduces outside our scanner's lease/restart logic and outside the full Hub's HTTP/database runtime. The independent mdns-sd publisher succeeds. This narrows the responder/querier interoperability or local Windows network-path discrepancy; it does not prove the exact cause or justify silently changing server code or firewall settings.
+
+**Submission status: held.** Real-Hub mDNS and physical Wi-Fi reconnect/WAN-unplugged checks remain required. The old native-window screenshots still document the unchanged UI; the new core cancellation result does not replace a normal-window-close or fresh native-window check. No #5 PR has been published and #5 must remain open.

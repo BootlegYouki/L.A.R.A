@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     net::Ipv4Addr,
-    sync::Mutex,
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 use tauri::{Emitter, Manager};
@@ -62,10 +62,11 @@ impl Registry {
     fn snapshot(&mut self, now: Instant) -> Vec<HubInfo> {
         self.leases
             .retain(|_, (_, seen)| now.duration_since(*seen) < TTL);
-        let mut leases: Vec<_> = self.leases.values().collect();
-        leases.sort_by_key(|(_, seen)| *seen);
+        let mut leases: Vec<_> = self.leases.iter().collect();
+        // UDP supplies explicit ports; mDNS only supplies the HTTP port.
+        leases.sort_by_key(|(source, (_, seen))| (source.starts_with("udp:"), *seen));
         let mut hubs = HashMap::new();
-        for (hub, _) in leases {
+        for (_, (hub, _)) in leases {
             hubs.insert((hub.ip, hub.http_port), hub.clone());
         }
         let mut hubs: Vec<_> = hubs.into_values().collect();
@@ -77,7 +78,7 @@ impl Registry {
 
 #[derive(Default)]
 pub struct Discovery {
-    registry: Mutex<Registry>,
+    registry: Arc<Mutex<Registry>>,
     stop: Mutex<Option<watch::Sender<bool>>>,
 }
 #[tauri::command]
@@ -96,7 +97,10 @@ pub fn start(app: tauri::AppHandle) {
     if let Ok(mut current) = app.state::<Discovery>().stop.lock() {
         *current = Some(stop);
     }
-    tauri::async_runtime::spawn(scan(app, receiver));
+    let registry = app.state::<Discovery>().registry.clone();
+    tauri::async_runtime::spawn(scan(registry, receiver, move |hub| {
+        let _ = app.emit("hub-found", hub);
+    }));
 }
 pub fn stop(app: &tauri::AppHandle) {
     if let Ok(mut current) = app.state::<Discovery>().stop.lock() {
@@ -106,7 +110,11 @@ pub fn stop(app: &tauri::AppHandle) {
     }
 }
 
-async fn scan(app: tauri::AppHandle, mut stop: watch::Receiver<bool>) {
+async fn scan(
+    registry: Arc<Mutex<Registry>>,
+    mut stop: watch::Receiver<bool>,
+    found: impl Fn(HubInfo) + Send + 'static,
+) {
     let mut socket: Option<UdpSocket> = None;
     let mut mdns = None;
     let mut events: Option<mdns_sd::Receiver<ServiceEvent>> = None;
@@ -146,7 +154,7 @@ async fn scan(app: tauri::AppHandle, mut stop: watch::Receiver<bool>) {
             } => {
                 match packet {
                     Ok((length, _)) => if let Some(hub) = parse_beacon(&buffer[..length]) {
-                        if let Ok(mut registry) = app.state::<Discovery>().registry.lock() {
+                        if let Ok(mut registry) = registry.lock() {
                             registry.seen(format!("udp:{}:{}", hub.ip, hub.http_port), hub, Instant::now());
                         }
                     },
@@ -164,7 +172,7 @@ async fn scan(app: tauri::AppHandle, mut stop: watch::Receiver<bool>) {
                             if let std::net::IpAddr::V4(ip) = address.to_ip_addr() {
                                 let hub = HubInfo { name: name.clone(), ip, http_port: info.get_port(), ws_port: 8081 };
                                 if valid_hub(&hub) {
-                                    if let Ok(mut registry) = app.state::<Discovery>().registry.lock() {
+                                    if let Ok(mut registry) = registry.lock() {
                                         registry.seen(format!("mdns:{}", info.get_fullname()), hub, Instant::now());
                                     }
                                     break;
@@ -173,7 +181,7 @@ async fn scan(app: tauri::AppHandle, mut stop: watch::Receiver<bool>) {
                         }
                     },
                     Ok(ServiceEvent::ServiceRemoved(_, name)) => {
-                        if let Ok(mut registry) = app.state::<Discovery>().registry.lock() {
+                        if let Ok(mut registry) = registry.lock() {
                             registry.leases.remove(&format!("mdns:{name}"));
                         }
                     },
@@ -185,15 +193,13 @@ async fn scan(app: tauri::AppHandle, mut stop: watch::Receiver<bool>) {
                 }
             },
         }
-        let hubs = app
-            .state::<Discovery>()
-            .registry
+        let hubs = registry
             .lock()
             .map(|mut r| r.snapshot(Instant::now()))
             .unwrap_or_default();
         for hub in &hubs {
             if !previous.contains(hub) {
-                let _ = app.emit("hub-found", hub);
+                found(hub.clone());
             }
         }
         previous = hubs;
@@ -250,11 +256,114 @@ mod tests {
         assert_eq!(registry.snapshot(now + TTL).len(), 1);
     }
     #[test]
+    fn explicit_udp_ports_win_until_the_udp_lease_expires() {
+        let mut registry = Registry::default();
+        let now = Instant::now();
+        let udp = HubInfo {
+            ws_port: 8085,
+            ..hub()
+        };
+        registry.seen("udp:192.168.1.50:8080".into(), udp.clone(), now);
+        registry.seen(
+            "mdns:Room._lara._tcp.local.".into(),
+            hub(),
+            now + Duration::from_secs(1),
+        );
+        assert_eq!(registry.snapshot(now + Duration::from_secs(1)), vec![udp]);
+        assert_eq!(registry.snapshot(now + TTL), vec![hub()]);
+    }
+    #[test]
     fn bounds_untrusted_registry_growth() {
         let mut registry = Registry::default();
         for i in 0..1000 {
             registry.seen(i.to_string(), hub(), Instant::now());
         }
         assert_eq!(registry.leases.len(), LIMIT * 2);
+    }
+
+    #[tokio::test]
+    #[ignore = "uses UDP 8888 and multicast; run alone with LARA_TEST_MDNS_IP set to this machine's LAN IPv4"]
+    async fn native_scanner_network_lifecycle() {
+        let registry = Arc::new(Mutex::new(Registry::default()));
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let (stop, receiver) = watch::channel(false);
+        let captured = events.clone();
+        let task = tokio::spawn(scan(registry.clone(), receiver, move |hub| {
+            captured.lock().unwrap().push(hub);
+        }));
+        let socket = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let payload = br#"{"app":"lara","version":"test","name":"UDP lifecycle fixture","ip":"127.0.0.2","http_port":8080,"ws_port":8085}"#;
+        for _ in 0..20 {
+            socket.send_to(payload, "127.0.0.1:8888").await.unwrap();
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            if !registry.lock().unwrap().snapshot(Instant::now()).is_empty() {
+                break;
+            }
+        }
+        assert_eq!(
+            registry.lock().unwrap().snapshot(Instant::now())[0].ws_port,
+            8085
+        );
+        assert!(
+            !events.lock().unwrap().is_empty(),
+            "new Hub notification missing"
+        );
+        tokio::time::sleep(TTL + Duration::from_secs(1)).await;
+        assert!(registry.lock().unwrap().snapshot(Instant::now()).is_empty());
+        socket.send_to(payload, "127.0.0.1:8888").await.unwrap();
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        assert_eq!(registry.lock().unwrap().snapshot(Instant::now()).len(), 1);
+        stop.send(true).unwrap();
+        tokio::time::timeout(Duration::from_secs(3), task)
+            .await
+            .unwrap()
+            .unwrap();
+        let blocker = UdpSocket::bind("0.0.0.0:8888")
+            .await
+            .expect("scanner did not release UDP port on stop");
+        registry.lock().unwrap().leases.clear();
+
+        let ip = std::env::var("LARA_TEST_MDNS_IP").expect("set this machine's LAN IPv4");
+        assert!(allowed_ip(ip.parse().unwrap()));
+        let publisher = ServiceDaemon::new().unwrap();
+        let service = mdns_sd::ServiceInfo::new(
+            SERVICE,
+            "Desktop mDNS Lifecycle Fixture",
+            "lara-lifecycle.local.",
+            ip.as_str(),
+            8080,
+            None,
+        )
+        .unwrap();
+        let fullname = service.get_fullname().to_owned();
+        publisher.register(service).unwrap();
+        let (stop, receiver) = watch::channel(false);
+        let task = tokio::spawn(scan(registry.clone(), receiver, |_| {}));
+        for _ in 0..100 {
+            if !registry.lock().unwrap().snapshot(Instant::now()).is_empty() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        for _ in 0..20 {
+            let hubs = registry.lock().unwrap().snapshot(Instant::now());
+            assert!(
+                hubs.iter()
+                    .any(|h| h.name == "Desktop mDNS Lifecycle Fixture"),
+                "mDNS-only fixture missing: {hubs:?}"
+            );
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+        publisher.unregister(&fullname).unwrap();
+        publisher.shutdown().unwrap().recv_async().await.unwrap();
+        tokio::time::sleep(TTL + Duration::from_secs(1)).await;
+        assert!(registry.lock().unwrap().snapshot(Instant::now()).is_empty());
+        stop.send(true).unwrap();
+        tokio::time::timeout(Duration::from_secs(3), task)
+            .await
+            .unwrap()
+            .unwrap();
+        drop(blocker);
+        assert!(UdpSocket::bind("0.0.0.0:8888").await.is_ok());
     }
 }
