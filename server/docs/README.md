@@ -7,6 +7,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | [`scaffold.md`](./scaffold.md) | Process model, `serve`, migration runner, error envelope, route stubs, WebSocket handshake, Hub window | Sprint 1 (#39) |
+| [`portal.md`](./portal.md) | Captive `GET /download` portal: bilingual 3-step sideload guide, bundled assets, installer serving, path-traversal guard | Sprint 1 (#3) |
 | `discovery_mdns_udp.md` | mDNS and UDP beacon behavior, LAN IP detection, AP-isolation notes | Sprint 1 |
 | [`database_sync.md`](./database_sync.md) | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |
 | `auth_sessions.md` | PIN hashing, session tokens, role and ownership guards, rate limits | Sprint 2 |
@@ -14,7 +15,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |
-| `hub_hardware.md` | Pilot machine CPU and RAM, measured capacity, firewall and installer notes | Sprint 1 and 5 |
+| [`hub_hardware.md`](./hub_hardware.md) | Installer (`.exe`/`.deb`), firewall rules and the LAN port check; pilot machine CPU and RAM, measured capacity | Sprint 1 (#20) and 5 |
 
 ## What every document must include
 1. **Purpose:** what problem this module solves.

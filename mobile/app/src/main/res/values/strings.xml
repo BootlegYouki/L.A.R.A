@@ -23,4 +23,26 @@
     <string name="shell_empty">No saved items yet.</string>
     <string name="shell_loading">Loading saved classroom items</string>
     <string name="shell_ai_unavailable">AI is not available right now.</string>
+    <string name="discovery_open">Find classroom Hub</string>
+    <string name="discovery_title">Connect to your classroom</string>
+    <string name="discovery_manual">Enter the Hub address</string>
+    <string name="discovery_address">Hub address</string>
+    <string name="discovery_example">192.168.1.50:8080</string>
+    <string name="discovery_address_help">Ask your teacher for the address shown on the Hub computer.</string>
+    <string name="discovery_connect">Check Hub</string>
+    <string name="discovery_checking">Checking: Please wait while we reach your Hub.</string>
+    <string name="discovery_invalid">Check the address: Copy the numbers and optional port from your teacher, such as 192.168.1.50:8080.</string>
+    <string name="discovery_unreachable">Hub unavailable: Check the address with your teacher and try again.</string>
+    <string name="discovery_responding">Hub responding: The download page is reachable.</string>
+    <string name="discovery_offline">Hub disconnected: Join your classroom Wi-Fi, or enter the Hub address below.</string>
+    <string name="discovery_warning">Discovery interrupted: You can still enter the Hub address or try scanning again.</string>
+    <string name="discovery_scanning">Searching: Looking for your classroom Hub.</string>
+    <string name="discovery_empty">No Hubs yet. Try scanning again or ask your teacher for the address.</string>
+    <string name="discovery_choose">Hubs found: Choose your classroom Hub below.</string>
+    <string name="discovery_retry">Scan again</string>
+    <string name="discovery_results">Nearby classroom Hubs</string>
+    <string name="discovery_hub_address">%1$s:%2$d</string>
+    <string name="discovery_beacon_searching">Searching</string>
+    <string name="discovery_beacon_connected">Connected</string>
+    <string name="discovery_beacon_disconnected">Not connected</string>
 </resources>

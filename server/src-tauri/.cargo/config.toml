@@ -1,0 +1,5 @@
+# A fresh Windows PC may not have the Visual C++ runtime (VCRUNTIME140.dll), and installing it needs
+# the internet or a second installer. Linking it statically makes the Hub run with nothing else
+# installed (issue #20, "zero-dependency").
+[target.'cfg(all(windows, target_env = "msvc"))']
+rustflags = ["-C", "target-feature=+crt-static"]

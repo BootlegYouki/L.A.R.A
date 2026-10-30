@@ -17,13 +17,15 @@ axum = "0.8"
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 libmdns = "0.10"
 local-ip-address = "0.6"
+mime = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "sqlite", "macros", "migrate"] }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
 tokio-tungstenite = "0.30"
-tower-http = { version = "0.7", features = ["trace"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.7", features = ["trace", "fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }

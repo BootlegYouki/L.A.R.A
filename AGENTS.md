@@ -175,7 +175,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 ## 7. Working Rules For Agents
 
-* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code.
+* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code. The skill `.agents/skills/lara-architect` walks through this process; load it at the start of every issue, plus your team's skill (`.agents/skills/lara-<team>`) when it exists. Each team owns and edits its own skill folder; `lara-architect` is Lead-owned.
 * **The issue is the scope.** Build its sub-tasks and acceptance criteria, in its Target Files, and nothing else. If the issue disagrees with a contract, rule or the PRD, the higher document wins: stop and report it.
 * **Do not invent behavior.** If a requirement is missing or contradicts another document, write the open question in the PR or issue instead of guessing.
 * **Smallest change that satisfies the issue.** No drive-by refactors, no new dependencies without need, no edits outside your folder.

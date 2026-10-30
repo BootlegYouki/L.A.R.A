@@ -60,3 +60,27 @@ jobs:
             echo "::error::PRs into main must come from staging (this one is from '$HEAD'). Retarget it to staging. See rules/team-workflow-and-prs.md section 2."
             exit 1
           fi
+
+  no-ai-coauthor:
+    name: No AI Co-Author
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject AI co-author trailers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # GitHub lists every Co-Authored-By on main as a repo contributor; the AI tools are not contributors.
+          bad=$(git log --format='%h %s%n%b' "$BASE_SHA..$HEAD_SHA" | awk '/^[0-9a-f]{7,} /{c=$0} tolower($0) ~ /^co-authored-by:.*(claude|anthropic|copilot|codex|openai|chatgpt)/{print c; print "    " $0}')
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            echo "::error::Remove the AI Co-Authored-By line from these commits (git rebase -i, reword; or git commit --amend for the last one), then force-push. In Claude Code, set \"includeCoAuthoredBy\": false in settings so it is not added again."
+            exit 1
+          fi

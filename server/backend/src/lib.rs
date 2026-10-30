@@ -7,6 +7,7 @@ pub mod config;
 pub mod db;
 pub mod discovery;
 pub mod error;
+pub mod network;
 pub mod routes;
 pub mod websocket;
 
@@ -34,6 +35,9 @@ pub struct AppState {
     /// From `hub_meta`, created on first run (`db::load_hub_meta`).
     pub hub_id: Arc<str>,
     pub sync_epoch: i64,
+    /// `<data_dir>/releases`: the client installers the captive portal (`routes/portal.rs`) serves.
+    /// The installer step (1.4) and the build put the APK and desktop packages here.
+    pub releases_dir: Arc<std::path::Path>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -98,6 +102,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         clock: Arc::new(SystemClock),
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,
+        releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
     };
 
     let (http, http_addr) = bind(config.http_port).await?;
