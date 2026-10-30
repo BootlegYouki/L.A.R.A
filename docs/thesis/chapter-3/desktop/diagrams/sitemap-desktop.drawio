@@ -1,0 +1,318 @@
+<mxfile host="Electron" modified="2026-10-29T00:00:00.000Z" agent="draw.io" version="22.0.0">
+  <diagram name="Desktop Sitemap" id="sitemap-desktop">
+    <mxGraphModel dx="1434" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="L.A.R.A. Desktop Application Sitemap" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontFamily=Nunito;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="500" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ============ LEARNER NAVIGATION ============ -->
+        <mxCell id="learner-title" value="Learner Navigation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontFamily=Nunito;fillColor=#E8F5E9;" vertex="1" parent="1">
+          <mxGeometry x="70" y="80" width="280" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Root: Connection -->
+        <mxCell id="l-connection" value="Connection Page" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="130" y="130" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l-connection-note" value="Sprint 1.3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="130" y="183" width="160" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Auth Flow -->
+        <mxCell id="l-login" value="Login Page" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="230" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="l-login-note" value="Sprint 2.1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="278" width="120" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-register" value="Registration" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="210" y="230" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="l-register-note" value="Planned" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="210" y="278" width="120" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-join" value="Join Class Modal" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="130" y="320" width="120" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Main Navigation -->
+        <mxCell id="l-home" value="Home" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="130" y="400" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l-home-note" value="Sprint 2.1 • Class cards, Due Soon" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="130" y="453" width="160" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Stream -->
+        <mxCell id="l-stream" value="Stream" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="50" y="510" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="l-stream-note" value="Sprint 3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="553" width="100" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Classwork -->
+        <mxCell id="l-classwork" value="Classwork" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="170" y="510" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-material" value="Materials" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#E3F2FD;strokeColor=#1976D2;" vertex="1" parent="1">
+          <mxGeometry x="120" y="580" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-assignment" value="Assignments" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#E3F2FD;strokeColor=#1976D2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="580" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-quiz-view" value="Quizzes" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#E3F2FD;strokeColor=#1976D2;" vertex="1" parent="1">
+          <mxGeometry x="290" y="580" width="70" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- People -->
+        <mxCell id="l-people" value="People" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="290" y="510" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="l-people-note" value="Sprint 2.3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="290" y="553" width="100" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Grades & My Work -->
+        <mxCell id="l-grades" value="Grades" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="50" y="640" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-mywork" value="My Work" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="160" y="640" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-settings" value="Settings" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="270" y="640" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="l-settings-note" value="Sprint 2.5" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="270" y="683" width="90" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Quiz Taking -->
+        <mxCell id="l-quiz-take" value="Quiz Interface" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="50" y="740" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="l-quiz-take-note" value="Sprint 3 • Timer, AI locked" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="788" width="140" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- AI Tutor -->
+        <mxCell id="l-ai" value="AI Tutor Chat" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#EDE7F6;strokeColor=#5E35B1;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="220" y="740" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="l-ai-note" value="Sprint 5 • Socratic, bilingual" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="220" y="788" width="140" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Learner -->
+        <mxCell id="l-arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.25;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="l-connection" target="l-login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.75;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="l-connection" target="l-register">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#2E7D32;" edge="1" parent="1" source="l-login" target="l-home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="l-home" target="l-stream">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="l-home" target="l-classwork">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="l-home" target="l-people">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#1976D2;" edge="1" parent="1" source="l-classwork" target="l-material">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#1976D2;" edge="1" parent="1" source="l-classwork" target="l-assignment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="l-arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#1976D2;" edge="1" parent="1" source="l-classwork" target="l-quiz-view">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- ============ TEACHER NAVIGATION ============ -->
+        <mxCell id="teacher-title" value="Teacher Navigation (All Learner Screens + Management)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontFamily=Nunito;fillColor=#E3F2FD;" vertex="1" parent="1">
+          <mxGeometry x="550" y="80" width="480" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Teacher starts from same connection/auth -->
+        <mxCell id="t-connection" value="Same: Connection → Login" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="690" y="130" width="200" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Teacher Home -->
+        <mxCell id="t-home" value="Home (Teacher)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFFFFF;strokeColor=#1976D2;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="690" y="220" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="t-home-note" value="+ Create Class, All class cards" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="690" y="273" width="200" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Class Settings -->
+        <mxCell id="t-settings" value="Class Settings" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#1976D2;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="570" y="320" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t-settings-note" value="Sprint 2.6 • Rename,&#xa;Archive, Co-teachers" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="570" y="363" width="120" height="25" as="geometry" />
+        </mxCell>
+        
+        <!-- Stream with post -->
+        <mxCell id="t-stream" value="Stream" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#1976D2;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="720" y="320" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t-stream-sub" value="+ Post Announcement" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#E8F5E9;strokeColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="710" y="373" width="120" height="25" as="geometry" />
+        </mxCell>
+        
+        <!-- People with approval -->
+        <mxCell id="t-people" value="People (Roster)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#1976D2;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="850" y="320" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t-people-sub" value="+ Approve/Reject,&#xa;Remove learners" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#E8F5E9;strokeColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="850" y="373" width="110" height="35" as="geometry" />
+        </mxCell>
+        
+        <!-- Classwork authoring -->
+        <mxCell id="t-classwork" value="Classwork" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#1976D2;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="690" y="450" width="200" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-topics" value="Topics" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#FFF3E0;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="600" y="520" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t-topics-note" value="Create/Edit" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=8;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="600" y="552" width="80" height="12" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-materials" value="Materials" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#FFF3E0;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="690" y="520" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t-materials-note" value="Upload PDF/Video" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=8;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="690" y="552" width="90" height="12" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-assignments" value="Assignments" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Nunito;fillColor=#FFF3E0;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="790" y="520" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t-assignments-note" value="Create, Grade" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=8;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="790" y="552" width="100" height="12" as="geometry" />
+        </mxCell>
+        
+        <!-- Quiz Builder -->
+        <mxCell id="t-quiz-builder" value="Quiz Builder" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="600" y="600" width="130" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="t-quiz-builder-note" value="Sprint 4 • Authoring" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="600" y="648" width="130" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-quiz-monitor" value="Quiz Monitor" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="760" y="600" width="130" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="t-quiz-monitor-note" value="Sprint 3 • Live matrix" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="760" y="648" width="130" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Gradebook -->
+        <mxCell id="t-gradebook" value="Gradebook" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fontStyle=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="600" y="700" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="t-gradebook-note" value="Sprint 4 • Matrix view" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="600" y="748" width="140" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-export" value="Export to USB" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Nunito;fillColor=#F3E5F5;strokeColor=#6A1B9A;" vertex="1" parent="1">
+          <mxGeometry x="620" y="778" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t-export-note" value=".xlsx / .csv" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=8;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="620" y="810" width="100" height="12" as="geometry" />
+        </mxCell>
+        
+        <!-- Teacher also has AI -->
+        <mxCell id="t-ai" value="AI Tutor (Same as Learner)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fontFamily=Nunito;fillColor=#EDE7F6;strokeColor=#5E35B1;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="760" y="710" width="190" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="t-ai-note" value="Sprint 5" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Nunito;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="760" y="758" width="190" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Teacher -->
+        <mxCell id="t-arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#1976D2;" edge="1" parent="1" source="t-connection" target="t-home">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="t-home" target="t-settings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="t-home" target="t-stream">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#000000;" edge="1" parent="1" source="t-home" target="t-people">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#1976D2;" edge="1" parent="1" source="t-home" target="t-classwork">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#E65100;" edge="1" parent="1" source="t-classwork" target="t-topics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#E65100;" edge="1" parent="1" source="t-classwork" target="t-materials">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="t-arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=1;strokeColor=#E65100;" edge="1" parent="1" source="t-classwork" target="t-assignments">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="870" width="960" height="110" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-title" value="Legend:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=1;fontFamily=Nunito;" vertex="1" parent="1">
+          <mxGeometry x="90" y="880" width="100" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-solid" value="Implemented or In Progress (Sprint 0–2)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="90" y="910" width="220" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-dashed" value="Planned (Sprint 3–6)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Nunito;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="340" y="910" width="160" height="35" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-note" value="Desktop follows contract-first development against mock Hub. Teachers access all learner screens plus classroom management, content authoring, quiz building/monitoring, grading, and gradebook export. AI tutor available to both roles (locked during quizzes). Implementation status reflects Sprint 0 planning phase; full feature set documented in Technical Specification." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10;fontFamily=Nunito;" vertex="1" parent="1">
+          <mxGeometry x="540" y="910" width="470" height="60" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
