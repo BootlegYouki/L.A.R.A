@@ -1,0 +1,218 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="draw.io" version="32.6.1" type="device">
+  <diagram id="lara-use-case" name="L.A.R.A. Use Case Diagram">
+    <mxGraphModel dx="1420" dy="1780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="1780" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system" value="L.A.R.A." style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;rounded=0;verticalAlign=top;align=center;spacingTop=10;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="180" y="50" width="1060" height="1550" />
+        </mxCell>
+        <mxCell id="Learner" value="Learner" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="35" y="625" width="40" height="80" />
+        </mxCell>
+        <mxCell id="Teacher" value="Teacher" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1335" y="625" width="40" height="80" />
+        </mxCell>
+        <mxCell id="Admin" value="Admin" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="690" y="1670" width="40" height="80" />
+        </mxCell>
+        <mxCell id="lh" value="Learner activities" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;text;strokeColor=none;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="92" width="290" height="30" />
+        </mxCell>
+        <mxCell id="th" value="Teacher activities" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;text;strokeColor=none;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="92" width="290" height="30" />
+        </mxCell>
+        <mxCell id="learner-1" value="Register" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="130" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-2" value="Join class by code" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="270" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-3" value="View stream" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="410" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-4" value="View materials and videos" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="550" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-5" value="Submit homework photo" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="690" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-6" value="Take quiz" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="830" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-7" value="View grades" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="970" width="290" height="65" />
+        </mxCell>
+        <mxCell id="learner-8" value="Ask AI tutor" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="225" y="1110" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-1" value="Create class" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="130" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-2" value="Approve Learners" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="224" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-3" value="Post announcement" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="318" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-4" value="Manage topics" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="412" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-5" value="Manage materials" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="506" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-6" value="Manage assignments" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="600" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-7" value="Grade submissions" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="694" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-8" value="Build quiz" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="788" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-9" value="Start quiz" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="882" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-10" value="Monitor quiz" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="976" width="290" height="65" />
+        </mxCell>
+        <mxCell id="teacher-11" value="View gradebook" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="905" y="1070" width="290" height="65" />
+        </mxCell>
+        <mxCell id="sh" value="Shared interactions" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;text;strokeColor=none;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="350" y="1265" width="850" height="30" />
+        </mxCell>
+        <mxCell id="private" value="Private comment" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="350" y="1320" width="290" height="70" />
+        </mxCell>
+        <mxCell id="export" value="Export to USB" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1010" y="1320" width="190" height="70" />
+        </mxCell>
+        <mxCell id="ah" value="Hub administration" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;text;strokeColor=none;fillColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="205" y="1435" width="1000" height="30" />
+        </mxCell>
+        <mxCell id="admin-1" value="Set Hub PIN" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="205" y="1490" width="190" height="70" />
+        </mxCell>
+        <mxCell id="admin-2" value="Create Teacher accounts" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="405" y="1490" width="190" height="70" />
+        </mxCell>
+        <mxCell id="admin-3" value="Reset PIN" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="605" y="1490" width="190" height="70" />
+        </mxCell>
+        <mxCell id="admin-4" value="Backup and restore" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="805" y="1490" width="190" height="70" />
+        </mxCell>
+        <mxCell id="admin-5" value="Enable Remote/Suspension Mode" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;ellipse;whiteSpace=wrap;html=0;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1005" y="1490" width="190" height="70" />
+        </mxCell>
+        <mxCell id="constraints" value="Constraints&#10;&#10;AI tutor unavailable during an&#10;IN_PROGRESS quiz attempt.&#10;&#10;Quiz answers are graded by the&#10;Hub after receipt and validation.&#10;&#10;Offline work is retained as&#10;QUEUED_FOR_SYNC.&#10;&#10;Remote/Suspension Mode&#10;retains existing authorization." style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;text;whiteSpace=wrap;html=0;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="565" y="370" width="290" height="430" />
+        </mxCell>
+        <mxCell id="association-0" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-1" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-2">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-2" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-3">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-3" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-4">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-4" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-5">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-5" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-6">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-6" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-7">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-7" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="learner-8">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-8" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-9" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-2">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-10" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-3">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-11" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-4">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-12" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-5">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-13" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-6">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-14" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-7">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-15" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-8">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-16" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-9">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-17" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-10">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-18" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="teacher-11">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-19" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="Admin" target="admin-1">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-20" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="Admin" target="admin-2">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-21" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="Admin" target="admin-3">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-22" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="Admin" target="admin-4">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="association-23" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="Admin" target="admin-5">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="learner-private" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="Learner" target="private">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="130" y="1355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="teacher-private" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="Teacher" target="private">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1290" y="1210" />
+              <mxPoint x="495" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="teacher-export" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Teacher" target="export">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1290" y="1355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="admin-export" style="fontFamily=Arial;fontSize=16;fontColor=#000000;strokeColor=#000000;fillColor=#FFFFFF;endArrow=none;startArrow=none;rounded=0;html=0;strokeWidth=1;exitX=0.5;exitY=0;entryX=1;entryY=0.5;" edge="1" parent="1" source="Admin" target="export">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1230" y="1640" />
+              <mxPoint x="1230" y="1355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
