@@ -20,5 +20,17 @@
   "saved_on_device": "Saved on this device",
   "database_error_title": "Saved classes could not be opened",
   "database_error_body": "Your saved work has not been cleared. Try opening it again.",
-  "retry": "Try again"
+  "retry": "Try again",
+  "manual_invalid": "Enter a local IPv4 address with an optional port from 1 to 65535.",
+  "discovery_error": "Discovery could not be read. You can still open your saved classes or enter an address below.",
+  "discovery_empty": "No Hubs found yet. You can still open your saved classes or enter an address below.",
+  "discovery_loading": "Looking for classroom Hubs",
+  "manual_help": "Ask your teacher for the Hub address, for example 192.168.1.50:8080.",
+  "discovery_title": "Nearby classroom Hubs",
+  "discovery_help": "Join the classroom network to find your Hub. Discovery does not sign you in.",
+  "todo": "To-do",
+  "address_unverified": "This address has not been checked for a connection.",
+  "select_address": "Select address",
+  "manual_address": "Hub IP address",
+  "address_selected": "Selected address:"
 }
