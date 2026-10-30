@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="mobile-sitemap" name="Mobile sitemap">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1360" pageHeight="1530" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="L-discovery" value="Learner Mobile app: Hub discovery / manual address" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="450" y="50" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="L-login" value="Login / Learner registration" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="450" y="135" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="L-home" value="Learner Home: classes / archived classes" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="450" y="220" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="L-side" value="Join class by code&#xA;Pending approval&#xA;Due soon / To-do" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="70" y="325" width="300" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="L-class" value="Selected class workspace" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="500" y="325" width="360" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="L-settings" value="Settings&#xA;Language / Hub / session" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="990" y="325" width="300" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="L-tab-0" value="Stream&#xA;Announcements&#xA;Permitted comments" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="465" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="L-tab-1" value="Classwork / topics&#xA;Material / video viewer&#xA;Save for Home Study&#xA;Assignment detail" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="300" y="465" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="L-tab-2" value="Quizzes&#xA;Available quizzes&#xA;Timed attempt&#xA;Submission status" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="560" y="465" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="L-tab-3" value="AI tutor&#xA;Lesson-grounded chat&#xA;Unavailable during&#xA;an active attempt" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="820" y="465" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="L-tab-4" value="My Work&#xA;Released grades&#xA;Feedback / quiz history" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="465" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="L-assignment" value="Assignment detail: instructions / attachments&#xA;Camera or existing photo / turn in&#xA;Private comments / status / feedback" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="290" y="625" width="420" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="T-discovery" value="Teacher Mobile app: Hub discovery / manual address" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="450" y="840" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="T-login" value="Login (Admin-created Teacher account)" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="450" y="925" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="T-home" value="Teacher Home: classes / archived classes" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1010" width="460" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="T-side" value="Create class&#xA;Work awaiting review" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1115" width="300" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="T-class" value="Selected class workspace" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1115" width="360" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="T-settings" value="Settings&#xA;Language / Hub / session" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="990" y="1115" width="300" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-0" value="Stream&#xA;Announcement editor&#xA;Attachments&#xA;Comment moderation" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-1" value="Classwork / topics&#xA;Materials / assignments&#xA;Homework review&#xA;Grading / comments" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="250" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-2" value="People&#xA;Enrollment decisions&#xA;Learner removal" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-3" value="Quizzes&#xA;Draft builder / editor&#xA;Start / close&#xA;Participation monitor" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-4" value="Grades&#xA;Points gradebook&#xA;XLSX / CSV export" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="910" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="T-tab-5" value="Class settings&#xA;Rename / archive&#xA;Co-teachers&#xA;Owner only" style="whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=16;fontColor=#000000;fillColor=#ffffff;strokeColor=#000000;rounded=0;align=center;verticalAlign=middle;strokeWidth=1.5;dashed=1;dashPattern=6 4;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="1255" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-0" edge="1" parent="1" source="L-discovery" target="L-login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" edge="1" parent="1" source="L-login" target="L-home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-2" edge="1" parent="1" source="L-home" target="L-side" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-3" edge="1" parent="1" source="L-home" target="L-class" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-4" edge="1" parent="1" source="L-home" target="L-settings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-5" edge="1" parent="1" source="L-class" target="L-tab-0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-6" edge="1" parent="1" source="L-class" target="L-tab-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-7" edge="1" parent="1" source="L-class" target="L-tab-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-8" edge="1" parent="1" source="L-class" target="L-tab-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-9" edge="1" parent="1" source="L-class" target="L-tab-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-10" edge="1" parent="1" source="L-tab-1" target="L-assignment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-11" edge="1" parent="1" source="T-discovery" target="T-login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-12" edge="1" parent="1" source="T-login" target="T-home" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-13" edge="1" parent="1" source="T-home" target="T-side" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-14" edge="1" parent="1" source="T-home" target="T-class" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-15" edge="1" parent="1" source="T-home" target="T-settings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-16" edge="1" parent="1" source="T-class" target="T-tab-0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-17" edge="1" parent="1" source="T-class" target="T-tab-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-18" edge="1" parent="1" source="T-class" target="T-tab-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-19" edge="1" parent="1" source="T-class" target="T-tab-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-20" edge="1" parent="1" source="T-class" target="T-tab-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-21" edge="1" parent="1" source="T-class" target="T-tab-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=none;strokeColor=#000000;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="Solid: implemented discovery    Dashed: proposed screens / functionality    Home and About currently contain scaffold placeholders." style="text;html=0;fontFamily=Arial;fontSize=16;align=left;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1490" width="1280" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
