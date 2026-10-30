@@ -1,0 +1,19 @@
+testDebugUnitTest
+org.lara.app.data.remote.discovery.DiscoveryLogicTest: tests=5 failures=0 errors=0 skipped=0
+org.lara.app.data.remote.discovery.HubProbeTest: tests=2 failures=0 errors=0 skipped=0
+org.lara.app.data.remote.HubUrlPolicyTest: tests=4 failures=0 errors=0 skipped=0
+org.lara.app.data.RoomBehaviorTest: tests=11 failures=0 errors=0 skipped=0
+org.lara.app.data.SchemaParityTest: tests=2 failures=0 errors=0 skipped=0
+org.lara.app.data.SyncDtoTest: tests=5 failures=0 errors=0 skipped=0
+org.lara.app.ui.screens.discovery.DiscoveryFeedbackTest: tests=3 failures=0 errors=0 skipped=0
+org.lara.app.ui.screens.discovery.DiscoveryViewModelTest: tests=2 failures=0 errors=0 skipped=0
+
+testReleaseUnitTest
+org.lara.app.data.remote.discovery.DiscoveryLogicTest: tests=5 failures=0 errors=0 skipped=0
+org.lara.app.data.remote.discovery.HubProbeTest: tests=2 failures=0 errors=0 skipped=0
+org.lara.app.data.remote.HubUrlPolicyTest: tests=4 failures=0 errors=0 skipped=0
+org.lara.app.data.RoomBehaviorTest: tests=11 failures=0 errors=0 skipped=0
+org.lara.app.data.SchemaParityTest: tests=2 failures=0 errors=0 skipped=0
+org.lara.app.data.SyncDtoTest: tests=5 failures=0 errors=0 skipped=0
+org.lara.app.ui.screens.discovery.DiscoveryFeedbackTest: tests=3 failures=0 errors=0 skipped=0
+org.lara.app.ui.screens.discovery.DiscoveryViewModelTest: tests=2 failures=0 errors=0 skipped=0

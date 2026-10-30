@@ -1,0 +1,8 @@
+Starting: Intent { cmp=org.lara.app/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: org.lara.app/.MainActivity
+TotalTime: 1080
+WaitTime: 1082
+Complete
+30683
