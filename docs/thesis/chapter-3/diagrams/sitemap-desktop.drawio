@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="Desktop app sitemap" name="Desktop app sitemap">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1120" pageHeight="1460" grid="1" gridSize="10" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Desktop app: proposed Learner and Teacher navigation" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="10" width="1060" height="48" />
+        </mxCell>
+        <mxCell id="lrole" value="Learner — Desktop app" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="80" width="320" height="60" />
+        </mxCell>
+        <mxCell id="laccess" value="Hub connection&#10;Sign in / Register" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="370" y="170" width="380" height="104" />
+        </mxCell>
+        <mxCell id="lhome" value="Home&#10;Classes / Join class&#10;Teacher approval required" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="370" y="310" width="380" height="100" />
+        </mxCell>
+        <mxCell id="le1" source="lrole" target="laccess" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="le2" source="laccess" target="lhome" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="lleaf0" value="Class workspace&#10;Stream / Classwork / People&#10;Materials and video&#10;Assignments / private comments&#10;Quiz participation" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="440" width="340" height="210" />
+        </mxCell>
+        <mxCell id="lbranch0" source="lhome" target="lleaf0" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="lleaf1" value="Personal work&#10;To-do&#10;My Work: scores and feedback&#10;Quiz history&#10;Archived classes" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="440" width="340" height="210" />
+        </mxCell>
+        <mxCell id="lbranch1" source="lhome" target="lleaf1" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="lleaf2" value="Preferences and help&#10;Settings&#10;Language / Hub / Sign out&#10;AI FAB opens tutor chat&#10;Tutor absent during a quiz" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="750" y="440" width="340" height="210" />
+        </mxCell>
+        <mxCell id="lbranch2" source="lhome" target="lleaf2" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="trole" value="Teacher — Desktop app" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="780" width="320" height="60" />
+        </mxCell>
+        <mxCell id="taccess" value="Hub connection&#10;Teacher sign in" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="370" y="870" width="380" height="104" />
+        </mxCell>
+        <mxCell id="thome" value="Home&#10;Teaching classes / Create class" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="370" y="1010" width="380" height="80" />
+        </mxCell>
+        <mxCell id="te1" source="trole" target="taccess" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="te2" source="taccess" target="thome" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="tleaf0" value="Class workspace&#10;Stream / Classwork / Topics&#10;Materials / Assignments&#10;People / Enrollment decisions&#10;Class settings / Co-teachers" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1140" width="340" height="210" />
+        </mxCell>
+        <mxCell id="tbranch0" source="thome" target="tleaf0" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="tleaf1" value="Assessment and review&#10;Quiz builder / Live monitor&#10;Homework review / Grading&#10;Gradebook&#10;Export to USB or device download" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="1140" width="340" height="210" />
+        </mxCell>
+        <mxCell id="tbranch1" source="thome" target="tleaf1" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="tleaf2" value="Preferences and help&#10;To review / Archived classes&#10;Settings&#10;Language / Hub / Sign out&#10;AI FAB opens tutor chat" style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="750" y="1140" width="340" height="210" />
+        </mxCell>
+        <mxCell id="tbranch2" source="thome" target="tleaf2" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="note" value="Classroom records are supplied by the Hub. The Hub Admin console is separate." style="whiteSpace=wrap;html=0;fontFamily=Helvetica;fontSize=22;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;spacing=10;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1388" width="1060" height="50" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
