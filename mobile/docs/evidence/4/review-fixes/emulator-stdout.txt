@@ -1,0 +1,34 @@
+INFO         | Android emulator version 37.2.12.0 (build_id 16428233) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath C:\Users\DJ Rapmasta\AppData\Local\Android\Sdk\system-images\android-35\google_apis\x86_64\
+INFO         | Increasing RAM size to 2560MB
+INFO         | IPv4 server found: 192.168.100.1
+INFO         | Ignore IPv6 address: 182d:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 182d:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 182d:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 3033:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 3033:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 3033:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 4839:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 4839:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 4839:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 683f:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 683f:ded6:2302:0:4020:ded6:2302:0
+INFO         | Ignore IPv6 address: 683f:ded6:2302:0:4020:ded6:2302:0
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:lavapipe gles_mode_selected:swiftshader
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasCompatibleHypervisor
+INFO         |      Ok: Hypervisor compatibility to run avd: `Pixel_6` are met
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `Pixel_6` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `Pixel_6` are met
+WARNING      | Failed to process .ini file C:\Users\DJ Rapmasta\.android\avd\..\avd\Pixel_6.avd\quickbootChoice.ini for reading.
+ERROR        | x86_64 emulation currently requires hardware acceleration!
+CPU acceleration status: Android Emulator hypervisor driver is not installed on this machine
+More info on configuring VM acceleration on Windows:
+https://developer.android.com/studio/run/emulator-acceleration#vm-windows
+General information on acceleration: https://developer.android.com/studio/run/emulator-acceleration.

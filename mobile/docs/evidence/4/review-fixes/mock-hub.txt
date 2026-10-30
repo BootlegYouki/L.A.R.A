@@ -1,0 +1,20 @@
+python : Traceback (most recent call last):
+At line:2 char:22
++ ... ONUTF8='1'; python -u scripts/mock_hub.py *> mobile/docs/evidence/4/r ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  File "C:\Users\DJ Rapmasta\Documents\L.A.R.A\scripts\mock_hub.py", line 1504, in <module>
+    hub.start()
+    ~~~~~~~~~^^
+  File "C:\Users\DJ Rapmasta\Documents\L.A.R.A\scripts\mock_hub.py", line 1483, in start
+    self.httpd = socketserver.ThreadingTCPServer(("0.0.0.0", self.http_port), MockHttpHandler)
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DJ Rapmasta\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 457, in __init__
+    self.server_bind()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\DJ Rapmasta\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions
