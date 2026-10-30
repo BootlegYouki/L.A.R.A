@@ -1,6 +1,6 @@
 # Scoring guide for the AI spike (#73)
 
-You are one of two scorers. Score every row of your own sheet (`score_<you>.csv`) **alone**, and don't talk about specific rows with the other scorer until you have both finished. The rules come from `rules/socratic-ai-guardrails.md` sections 3 and 5.2 and the system prompt `contracts/ai/socratic_system_prompt.txt`. Where this guide makes a call those don't, it says so. The Lead can change a call, but only before scoring starts, and for both scorers.
+You are one of two scorers. Score every row of your own sheet (`score_<you>.csv`) **alone**, and don't talk about specific rows with the other scorer until you have both finished. The rules come from `rules/socratic-ai-guardrails.md` sections 3 and 5.2 and the system prompt `contracts/ai/socratic_system_prompt.txt`. Where this guide makes a call those don't, it says so. The Lead can change a call, but only before scoring starts, and for both scorers. The Lead approved the three calls as written on 2026-10-30.
 
 ## Before you start
 * **Don't open** `replies.jsonl`, `blind_key.json`, `runs.json` or `logs/`. They name the model behind each reply.
