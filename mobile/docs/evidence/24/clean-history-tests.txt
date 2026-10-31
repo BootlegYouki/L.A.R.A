@@ -1,20 +1,20 @@
-[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+﻿[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "GET /download HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
-python.exe : ..C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly 
+python.exe : ..C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly
 cleaning up <HTTPError 400: 'Bad Request'>
 At line:2 char:79
 + ... test-deps'; & 'C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\ ...
 +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (..C:\Users\moen... 'Bad Request'>:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
+
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 400 -
 [HTTP] 127.0.0.1 - "POST /api/auth/logout HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 400 -
 [HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 401 -
-C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up 
+C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up
 <HTTPError 401: 'Unauthorized'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 401 -
@@ -70,10 +70,10 @@ C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: Resou
 [HTTP] 127.0.0.1 - "POST /api/restore HTTP/1.1" 401 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
-..............................C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: 
+..............................C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484:
 ResourceWarning: Implicitly cleaning up <HTTPError 409: 'Conflict'>
   _warnings.warn(self.warn_message, ResourceWarning)
-C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up 
+C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up
 <HTTPError 403: 'Forbidden'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 409 -
@@ -97,12 +97,12 @@ C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: Resou
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 404 -
-....C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up 
+....C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up
 <HTTPError 404: 'Not Found'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
-.C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\case.py:615: ResourceWarning: unclosed 
+.C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\case.py:615: ResourceWarning: unclosed
 <socket.socket fd=692, family=2, type=1, proto=0, laddr=('127.0.0.1', 56835), raddr=('127.0.0.1', 8099)>
   result = method()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
@@ -172,7 +172,7 @@ ResourceWarning: Enable tracemalloc to get the object allocation traceback
 [HTTP] 127.0.0.1 - "GET /api/model/file HTTP/1.1" 401 -
 [HTTP] 127.0.0.1 - "GET /api/model/file?token=[REDACTED] HTTP/1.1" 206 -
 [HTTP] 127.0.0.1 - "GET /api/model/file HTTP/1.1" 416 -
-.........C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly 
+.........C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly
 cleaning up <HTTPError 416: 'Range Not Satisfiable'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -280,7 +280,7 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "POST /api/quizzes/9007fb4c-7424-4760-8113-630422c181c7/start HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes/9007fb4c-7424-4760-8113-630422c181c7/begin HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes/9007fb4c-7424-4760-8113-630422c181c7/submit HTTP/1.1" 422 -
-.............C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly 
+.............C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly
 cleaning up <HTTPError 422: 'Unprocessable Content'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
