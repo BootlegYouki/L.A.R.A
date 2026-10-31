@@ -39,3 +39,13 @@ tab performance and live quiz-state transitions remain for manual checks.
 Because `MainActivity` was restored, a normal new build from this source opens
 the original scaffold until authentication (#49) connects `ShellState`. The
 installed preview APK remains useful for inspecting the four tabs.
+
+## Clean-history migration — 2026-10-31
+
+Recreated from cleaned staging at `2390e21`; feature commit `3bc310e` includes the previously tested discovery integration. The old staging merge was not cherry-picked.
+
+- `gradlew.bat test lint`: BUILD SUCCESSFUL; see `clean-history-android.txt`.
+- Repository suite: 66 tests passed; see `clean-history-tests.txt` (mock media tokens redacted).
+- `scripts/verify_invariants.py`: passed.
+- Fresh physical-phone testing was not repeated. Earlier screenshots are historical shell-preview evidence.
+- Normal startup now opens Sprint 1.2 discovery. Mobile 2.2 must supply the authenticated role and collect Sprint 1.3's active-attempt flow before full session integration is complete.
