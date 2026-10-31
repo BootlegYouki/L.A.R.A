@@ -89,4 +89,5 @@
     <string name="enrollment_open">Open class</string>
     <string name="enrollment_refresh_failed">Could not update class status: Your saved classes remain available. Try connecting to the Hub again.</string>
     <string name="enrollment_session_expired">Please sign in again to connect to the Hub. Your saved work stays on this device.</string>
+    <string name="enrollment_all_classes">All classes</string>
 </resources>

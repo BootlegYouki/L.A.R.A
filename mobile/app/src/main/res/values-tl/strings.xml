@@ -89,4 +89,5 @@
     <string name="enrollment_open">Buksan ang klase</string>
     <string name="enrollment_refresh_failed">Hindi ma-update ang katayuan ng klase: Magagamit pa rin ang naka-save na mga klase. Kumonekta muli sa Hub.</string>
     <string name="enrollment_session_expired">Mag-sign in muli para makakonekta sa Hub. Nananatili sa device ang naka-save na gawain.</string>
+    <string name="enrollment_all_classes">Lahat ng klase</string>
 </resources>

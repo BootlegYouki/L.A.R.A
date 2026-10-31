@@ -61,7 +61,13 @@ class RoomClassworkRepository(
         dao.observeChunks(materialId).map { rows -> rows.map { it.toDomain() } }.cached(scope)
 }
 
-class RoomEnrollmentRepository(private val dao: RosterDao) : EnrollmentRepository {
+class RoomEnrollmentRepository(private val dao: RosterDao,
+    private val onRefresh: (suspend (String) -> Unit)? = null) : EnrollmentRepository {
+    override suspend fun refresh(userId: String): Boolean {
+        val refresh = onRefresh ?: return false
+        refresh(userId)
+        return true
+    }
     override fun learnerClasses(studentId: String, scope: CoroutineScope) =
         dao.observeForStudent(studentId).map { rows -> rows.map {
             org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain())
