@@ -7,14 +7,14 @@
 ## What is still needed before a decision
 1. **Filipino review** of the Filipino and Taglish prompts, recorded in the `review` block of `server/ai_eval/prompts.json`. If the review changes a prompt, bump `version` and re-run.
 2. **Three smaller Hub candidates: done (2026-10-31).** Qwen2.5-1.5B, Llama-3.2-1B and SmolLM2-1.7B (the Lead, 2026-10-30) are in the same `--out` folder, and the score sheets were rewritten to cover all seven models. If the Filipino review changes a prompt, all seven models re-run in a new folder: `run` refuses to add to a folder whose runs were made under a different `review` block.
-3. **Two scorers** fill `score_scorer_a.csv` and `score_scorer_b.csv` independently (690 unique replies each, four criteria, `P` or `F`). At least one must be fluent in Filipino. A prompt's author should not be its only scorer. Both follow `server/ai_eval/SCORING.md`; the Lead approved its three calls as written on 2026-10-30 (a copied stock question fails criterion 3, how refusals are scored on criterion 3, a reply cut off mid-sentence fails criterion 3). Scoring starts once the Filipino review is done. Scorers must not open `replies.jsonl` or `blind_key.json`, which name the models.
-4. **Merge** with `report` (below). Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the generated pass-rate table here.
+3. **Two scorers** fill `score_scorer_a.csv` and `score_scorer_b.csv` independently (377 unique replies each, four criteria, `P` or `F`). The sheets hold only the four models that can fit the 4 GB Hub: MiniCPM5-2B, Qwen2.5-1.5B, Llama-3.2-1B and SmolLM2-1.7B (the Lead, 2026-10-31). The other three models' replies stay in `replies.jsonl` and are scored only if the pilot PC turns out bigger. At least one must be fluent in Filipino. A prompt's author should not be its only scorer. Both follow `server/ai_eval/SCORING.md`; the Lead approved its three calls as written on 2026-10-30 (a copied stock question fails criterion 3, how refusals are scored on criterion 3, a reply cut off mid-sentence fails criterion 3). Scoring starts once the Filipino review is done. Scorers must not open `replies.jsonl` or `blind_key.json`, which name the models.
+4. **Merge** with `report` (below). Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the generated pass-rate table here. **Check criterion 1 first:** every model gave the final answer to P021 ("Maria Clara"). If every scored model fails "never gives the final answer", flag it on #73 before writing conclusions (the Lead, 2026-10-31).
 5. **Re-run on the real pilot Hub** when it is known. Same commands (Linux, below), new `--out` folder. The slot count is set from that run (see "Slots" below).
 
 ## Hardware
 No pilot school PC is available yet, so the runs used a developer laptop set up as a simulated school PC. The full description is in `server/docs/hub_hardware.md` ("Pilot Hub hardware").
 
-* **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card. Linux with a light desktop, the Hub and a reserve leave about **2450 MB for the model**; with Ubuntu's default GNOME desktop, about 1.8 GB. So the Hub PC **must** run a light desktop, Xubuntu or Lubuntu (the Lead, 2026-10-30). The budget, its sources and the requirement are in `server/docs/hub_hardware.md`.
+* **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card. Linux with a light desktop, the Hub and a reserve leave about **2450 MB for the model**; with Ubuntu's default GNOME desktop, about 1.8 GB. So the Hub PC **must** run a light desktop: Xubuntu 24.04, or the AppImage on Lubuntu or a 22.04 release (the Lead, 2026-10-30 and 2026-10-31). The budget, its sources and the requirement are in `server/docs/hub_hardware.md`.
 * **Ran on:** AMD Ryzen 5 7535HS, 16 GB DDR5-4800 single channel, Windows 11 10.0.26200. CPU only (`-ngl 0`), `--threads 4`.
 * **Speeds are an upper bound** for a school PC: its turbo clock and memory are at least as fast as the reference PC's, and up to about twice as fast as a single-stick DDR4 PC's. A 4 GB PC most likely has one memory module, so expect the slower end. The Lead (2026-10-30): keep these numbers as an upper bound and let the pilot run decide. If MiniCPM5-2B falls under 8 tokens/s there, the three smaller models are the fallback.
 
@@ -92,7 +92,7 @@ This llama-server build keeps up to 8192 MB of earlier prompts in RAM by default
 
 * **The cache roughly halves time to first token.** The 54 prompts share 17 lessons, and the cache most likely lets llama-server skip re-reading a lesson it has already seen. On the Hub, a class asking about the same lesson benefits the same way. Without it, neither model meets the 2.5 s target.
 * **Its RAM cost depends on the model.** It added about 410 MB for SmolLM2-1.7B and nothing measurable for Qwen2.5-1.5B. With the cache off, SmolLM2-1.7B fits the budget at 1 slot (2226 MB) but misses the TTFT target. The "Fits" column above is with the default cache.
-* **The Hub should set `--cache-ram` itself.** The default 8192 MB is twice the reference PC's RAM, and a school day covers more lessons than this 54-prompt run. Cap it so the model plus cache stay inside the budget; the AI queue step chooses the value.
+* **The Hub should set `--cache-ram` itself.** The default 8192 MB is twice the reference PC's RAM, and a school day covers more lessons than this 54-prompt run. Cap it so the model plus cache stay inside the budget. The value is chosen in [SERVER 5.1] (#14), the `llama-server` slots and queue step (the Lead, 2026-10-31).
 
 ### Slots
 On this machine, **only 1 slot meets the PRD's 8 to 15 tokens/s.** At 2 and 4 slots, the four CPU threads are shared, so each reply streams at 2 to 6 tokens/s, while total throughput rises only a little (best case Qwen2.5-3B, from 6.0 to 9.9 tokens/s). TTFT at the 95th percentile also grows to 15 to 32 s at 4 slots. `rules/socratic-ai-guardrails.md` section 4 asks for 2 to 4 slots, "capped from measured capacity". These numbers point to 1 slot plus the FIFO queue on a 4-core school PC. **The Lead's decision (2026-10-30):** the slot count is set after the run on the real pilot Hub, and `rules/socratic-ai-guardrails.md` stays unchanged until then.
@@ -128,7 +128,7 @@ python3 server/ai_eval/run_eval.py run \
   --model smollm2-1.7b=$HOME/models/hub/smollm2-1.7b-instruct-q4_k_m.gguf \
   --threads 4 --slots 1 2 4 --out server/ai_eval/results/pilot-hub
 
-python3 server/ai_eval/run_eval.py sheets --out server/ai_eval/results/pilot-hub --scorers scorer_a scorer_b
+python3 server/ai_eval/run_eval.py sheets --out server/ai_eval/results/pilot-hub --scorers scorer_a scorer_b \n  --models minicpm5-2b qwen2.5-1.5b llama-3.2-1b smollm2-1.7b
 
 python3 server/ai_eval/run_eval.py report --out server/ai_eval/results/pilot-hub \
   --scores server/ai_eval/results/pilot-hub/score_scorer_a.csv server/ai_eval/results/pilot-hub/score_scorer_b.csv
@@ -150,7 +150,7 @@ PYTHONUTF8=1 py server/ai_eval/run_eval.py run \
   --model gemma-2-2b=C:/models/hub/gemma-2-2b-it-Q4_K_M.gguf --merge-system gemma-2-2b \
   --threads 4 --slots 1 2 4 --out server/ai_eval/results/sim-school-pc
 
-PYTHONUTF8=1 py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/sim-school-pc --scorers scorer_a scorer_b
+PYTHONUTF8=1 py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/sim-school-pc --scorers scorer_a scorer_b \n  --models minicpm5-2b qwen2.5-1.5b llama-3.2-1b smollm2-1.7b
 
 PYTHONUTF8=1 py server/ai_eval/run_eval.py report --out server/ai_eval/results/sim-school-pc \
   --scores server/ai_eval/results/sim-school-pc/score_scorer_a.csv server/ai_eval/results/sim-school-pc/score_scorer_b.csv

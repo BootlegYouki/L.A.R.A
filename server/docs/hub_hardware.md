@@ -55,14 +55,14 @@ No database tables, events or contract routes are touched by this step.
 
 **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card.
 
-**Requirement (the Lead, 2026-10-30): the Hub PC runs Linux with a light desktop, Xubuntu or Lubuntu.** On a 4 GB PC, Ubuntu's default GNOME desktop leaves no room for any model (below). Of the two, Xubuntu 24.04 is the one where the `.deb` installs offline. On Lubuntu, or any 22.04 release, install the AppImage instead (see "`.deb` dependencies" above).
+**Requirement (the Lead, 2026-10-30 and 2026-10-31): the Hub PC runs Xubuntu 24.04,** a light desktop on which the `.deb` installs offline. On a 4 GB PC, Ubuntu's default GNOME desktop leaves no room for any model (below). The fallback is the AppImage, on Lubuntu or any 22.04 release, which lack the WebKitGTK the `.deb` needs (see "`.deb` dependencies" above).
 
 **RAM budget on the reference PC:**
 | | MB | Source |
 |---|---|---|
 | Installed | 4096 | Reference PC |
 | Firmware and integrated graphics | −250 | Estimate. A 4 GB PC usually shows Linux 3.7 to 3.9 GB (`MemTotal`) |
-| Linux with a light desktop (Xubuntu or Lubuntu), idle | −600 | Estimate. Ubuntu's default GNOME desktop uses about 1.2 GB |
+| Linux with a light desktop (Xubuntu 24.04), idle | −600 | Estimate. Ubuntu's default GNOME desktop uses about 1.2 GB |
 | Hub: backend and window | −350 | Measured on Windows (`lara-hub-window` release build, idle, 2026-10-30): backend 31 MB; the window's WebView2 processes 183 MB private, 358 MB working set. Linux draws the window with WebKitGTK instead. The backend grows as features land; the load test (6.1, #17) measures it under 40 learners |
 | Reserve | −450 | Judgment. Files and videos the Hub serves fill the page cache, which competes with the model for RAM |
 | **Left for the model (`llama-server`)** | **≈ 2450** | At the chosen slot count |
