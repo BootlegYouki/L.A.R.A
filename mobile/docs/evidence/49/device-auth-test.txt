@@ -1,0 +1,6 @@
+
+org.lara.app.auth.MockAuthDeviceTest:.
+
+Time: 0.125
+
+OK (1 test)

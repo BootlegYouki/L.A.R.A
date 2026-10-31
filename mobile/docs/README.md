@@ -18,6 +18,7 @@ verification output under [evidence/41/](./evidence/41/).
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | [navigation.md](./navigation.md) | Student and Teacher graphs, role routing, bottom navigation | Sprint 1 and 2 |
+| [authentication.md](./authentication.md) | Login, learner registration, Keystore session, offline restoration | Sprint 2 |
 | `room_schema.md` | Entities versus `client_offline.sql`, DAOs, schema test | Sprint 1 |
 | `discovery.md` | NSD, UDP, `MulticastLock`, manual IP, reconnect | Sprint 1 |
 | `sync_worker.md` | WorkManager sync, cursor handling, `reset`, offline queue | Sprint 2 |

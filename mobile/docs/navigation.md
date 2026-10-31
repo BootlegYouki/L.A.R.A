@@ -1,6 +1,6 @@
 # Role navigation shell — MOBILE 2.1 (#24)
 
-`LaraNavigation(discovery, state, sessionKey, content)` keeps the Sprint 1.2 Hub discovery graph as the unauthenticated entry. When authentication supplies a non-null `ShellState`, it selects `StudentNavGraph` or `TeacherNavGraph` from the authenticated role. MOBILE 2.2 must map `AuthSession.user.role` to `ShellRole`; `ADMIN` must never enter either graph. Pass the authenticated user ID as `sessionKey` so an account change discards the previous navigation stack.
+`LaraNavigation(discovery, state, sessionKey, content)` keeps the Sprint 1.2 Hub discovery graph as the unauthenticated entry. When authentication supplies a non-null `ShellState`, it selects `StudentNavGraph` or `TeacherNavGraph` from the authenticated role. MOBILE 2.2 `AuthHost` maps the validated cached profile role to `ShellRole`; `ADMIN` must never enter either graph. Pass the authenticated user ID as `sessionKey` so an account change discards the previous navigation stack.
 
 ## Files and data flow
 
@@ -9,7 +9,7 @@
 - `ui/components/BottomNavBar.kt`: four 68dp tabs, bundled regular and fill Phosphor icons, green selection indicator, and purple tutor icon.
 - `ui/navigation/LaraNavigation.kt`: discovery-first unauthenticated graph and account/role composition boundary.
 
-Sprint 1.2 owns `HubDiscovery`, its screen, and endpoint persistence. The shell reuses that graph instead of replacing it. Sprint 1.3 owns the Room database and `QuizRepository.hasInProgressAttempt(studentId)`. After MOBILE 2.2 supplies the authenticated user ID, its session host must collect that Room flow and map it to `ShellState.hasInProgressAttempt`; navigation does not query a DAO directly.
+Sprint 1.2 owns `HubDiscovery`, its screen, and endpoint persistence. The shell reuses that graph instead of replacing it. Sprint 1.3 owns the Room database and `QuizRepository.hasInProgressAttempt(studentId)`. MOBILE 2.2 `AuthHost` collects that Room flow for the authenticated user and maps it to `ShellState.hasInProgressAttempt`; navigation does not query a DAO directly.
 
 The shell content slot receives the selected classroom destination and can compose a Room-backed screen. Default content is explicitly empty. People and Grades are navigation placeholders for their owning issues; authoring, approval, and quiz-management controls belong to later feature screens.
 
@@ -27,4 +27,4 @@ Discovery and the shell share `ui/components/DiscoveryBanner.kt`; the shell sele
 4. Stop the Hub and confirm saved Room content remains visible under the banner.
 5. Run `gradlew.bat test lint`, repository tests, and `verify_invariants.py`.
 
-Full authentication wiring remains blocked until MOBILE 2.2 merges; this branch keeps the boundary injectable so it does not invent `AuthSession` behavior.
+MOBILE 2.2 wires this boundary from `AuthHost`; callers and tests can still inject a shell state. Normal app startup now restores the saved session or presents the sign-in screen with access to discovery.

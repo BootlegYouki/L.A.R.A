@@ -45,4 +45,26 @@
     <string name="discovery_beacon_searching">Searching</string>
     <string name="discovery_beacon_connected">Connected</string>
     <string name="discovery_beacon_disconnected">Not connected</string>
+    <string name="auth_login">Sign in</string>
+    <string name="auth_register">Create learner account</string>
+    <string name="auth_teacher_help">Learners can register here. Ask your Hub administrator for a teacher account.</string>
+    <string name="auth_id">LRN or teacher ID</string>
+    <string name="auth_name">Full name</string>
+    <string name="auth_pin">4-digit PIN</string>
+    <string name="auth_delete">Delete</string>
+    <string name="auth_checking">Signing in to your classroom Hub...</string>
+    <string name="auth_restoring">Opening your saved classroom...</string>
+    <string name="auth_register_instead">New learner? Create an account</string>
+    <string name="auth_login_instead">Already registered? Sign in</string>
+    <string name="auth_invalid">Check your details: Enter your ID and four PIN digits. Learner registration needs a 12-digit LRN and full name.</string>
+    <string name="auth_hub_required">Connect to a Hub: Choose Find classroom Hub below before signing in.</string>
+    <string name="auth_wrong_pin">Try again: Your ID or PIN did not match. Check them with your teacher if you need help.</string>
+    <string name="auth_admin">Hub account: Administrators sign in on the Hub computer.</string>
+    <string name="auth_exists">Account unavailable: This learner may already be registered, or this device has another saved account. Ask your teacher for help.</string>
+    <string name="auth_wait">Please wait: Too many attempts. Wait a minute before trying again.</string>
+    <string name="auth_unreachable">Hub unreachable: Check the classroom Wi-Fi or use Find classroom Hub. Saved classroom work stays on this device.</string>
+    <string name="auth_failed">Could not sign in: Please try again or ask your teacher for help.</string>
+    <string name="auth_storage_error">Saved session unavailable: Sign in again to reopen your classroom.</string>
+    <string name="auth_pin_digit">PIN digit %1$d</string>
+    <string name="auth_retry_seconds">Try again in %1$d seconds.</string>
 </resources>
