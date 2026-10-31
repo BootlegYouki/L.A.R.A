@@ -46,7 +46,7 @@ No database tables, events or contract routes are touched by this step.
 * **Uninstall can delete the school's data.** Tauri's uninstaller offers a "Delete the application data" checkbox (off by default) that removes the app data folder, which holds `lara.db`. Tell admins to leave it unchecked and to back up first (4.4).
 * **WebView2:** the default Tauri mode downloads WebView2 during install, which fails offline. `offlineInstaller` embeds it (about 127 MB larger) and runs it only when the PC lacks WebView2 (Windows 10 before 2021 updates). Windows 11 already has it.
 * **Visual C++ runtime:** Rust links it dynamically by default, and a fresh Windows PC may lack `VCRUNTIME140.dll`. `.cargo/config.toml` links it statically. The file applies when cargo runs inside `src-tauri/`, which is what `tauri build` does.
-* **`.deb` dependencies:** the `.deb` declares `libwebkit2gtk-4.1-0` and `libgtk-3-0`. Ubuntu 22.04+ desktop has both. On a PC without them, `apt` would need the internet, so use the AppImage there: it carries its own libraries. The AppImage has no post-install step, so open the ports with the dashboard's fix (5.3) or by hand.
+* **`.deb` dependencies:** the `.deb` declares `libwebkit2gtk-4.1-0` and `libgtk-3-0`. Ubuntu 24.04 and Xubuntu 24.04 install both. Lubuntu 24.04 lacks `libwebkit2gtk-4.1-0`, and every 22.04 flavour ships only `libwebkit2gtk-4.0-37` (checked against the official desktop image manifests, 2026-10-31). On a PC without them, `apt` would need the internet, so use the AppImage there: it carries its own libraries. The AppImage has no post-install step, so open the ports with the dashboard's fix (5.3) or by hand.
 * **`postinst.sh` must stay LF.** `src-tauri/.gitattributes` pins `linux/*` to LF; the test checks for `\r`.
 * **Installer wizard language:** NSIS has no Filipino language file, so the wizard's own pages are in English. Everything the Hub itself shows stays bilingual.
 
@@ -54,6 +54,8 @@ No database tables, events or contract routes are touched by this step.
 **No pilot school PC is available yet.** The AI spike runs on a developer laptop set up as a simulated school PC. Replace this section with the real machine's details when the pilot school is known, and re-run the evaluation there (the commands are in `docs/benchmarks/ai_model_evaluation.md`).
 
 **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card.
+
+**Requirement (the Lead, 2026-10-30): the Hub PC runs Linux with a light desktop, Xubuntu or Lubuntu.** On a 4 GB PC, Ubuntu's default GNOME desktop leaves no room for any model (below). Of the two, Xubuntu 24.04 is the one where the `.deb` installs offline. On Lubuntu, or any 22.04 release, install the AppImage instead (see "`.deb` dependencies" above).
 
 **RAM budget on the reference PC:**
 | | MB | Source |
@@ -65,7 +67,7 @@ No database tables, events or contract routes are touched by this step.
 | Reserve | −450 | Judgment. Files and videos the Hub serves fill the page cache, which competes with the model for RAM |
 | **Left for the model (`llama-server`)** | **≈ 2450** | At the chosen slot count |
 
-With Ubuntu's default GNOME desktop the budget drops to about **1.8 GB**, and none of the four measured models fits. A light desktop on the Hub PC matters as much as the model choice. Measure the real figures on the pilot PC with `free -m` while the Hub runs with no `llama-server`.
+With Ubuntu's default GNOME desktop the budget drops to about **1.8 GB**, and none of the four measured models fits, which is why the light desktop is a requirement. Measure the real figures on the pilot PC with `free -m` while the Hub runs with no `llama-server`.
 
 **Machine the evaluation ran on:**
 | | |
