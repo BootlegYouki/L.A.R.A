@@ -15,8 +15,11 @@ import org.lara.app.ui.theme.*
 @Composable
 fun PendingApprovalButton(state: ApprovalState, onClick: () -> Unit) {
     // Count is textual as well as a badge for accessibility.
-    BadgedBox(badge = { if (state.pending.isNotEmpty()) Badge { Text(state.pending.size.toString()) } }) {
-        TextButton(onClick, Modifier.heightIn(min = MinTouchTarget)) {
+    BadgedBox(badge = { if (state.pending.isNotEmpty()) Badge(
+        containerColor = LaraColors.PrimaryLight, contentColor = LaraColors.PrimaryDark,
+    ) { Text(state.pending.size.toString()) } }) {
+        TextButton(onClick, Modifier.heightIn(min = MinTouchTarget),
+            colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark)) {
             Text(stringResource(R.string.approval_pending_count, state.pending.size))
         }
     }
@@ -26,18 +29,23 @@ fun PendingApprovalButton(state: ApprovalState, onClick: () -> Unit) {
 @Composable
 fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (String, Boolean) -> Unit) {
     if (!state.sheetOpen) return
-    ModalBottomSheet(onDismissRequest = onDismiss, shape = LaraShapes.extraLarge) {
+    ModalBottomSheet(onDismissRequest = onDismiss, shape = LaraShapes.extraLarge,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = LaraColors.Surface, contentColor = LaraColors.TextPrimary,
+        scrimColor = LaraColors.TextPrimary.copy(alpha = 0.5f)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-            Text(stringResource(R.string.approval_title), style = MaterialTheme.typography.headlineSmall)
-            if (state.offline) DiscoveryBanner(R.string.approval_offline, warning = true, success = false)
-            else if (state.error != null) DiscoveryBanner(when (state.error) {
-                ApprovalError.FORBIDDEN -> R.string.approval_forbidden
-                ApprovalError.SESSION_EXPIRED -> R.string.enrollment_session_expired
-                else -> R.string.approval_failed
-            }, warning = true, success = false)
             LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                if (state.roster == Cached.Loading) item { Text(stringResource(R.string.approval_loading)) }
+                item { Text(stringResource(R.string.approval_title), style = MaterialTheme.typography.headlineSmall) }
+                item {
+                    if (state.offline) DiscoveryBanner(R.string.approval_offline, warning = true, success = false)
+                    else if (state.error != null) DiscoveryBanner(when (state.error) {
+                        ApprovalError.FORBIDDEN -> R.string.approval_forbidden
+                        ApprovalError.SESSION_EXPIRED -> R.string.enrollment_session_expired
+                        else -> R.string.approval_failed
+                    }, warning = true, success = false)
+                }
+                if (state.roster == Cached.Loading) item { ApprovalLoadingSkeleton() }
                 else if (state.pending.isEmpty()) item { Text(stringResource(R.string.approval_empty)) }
                 items(state.pending.take(1), key = { it.enrollment.id }) { member ->
                     Column(Modifier.fillMaxWidth().padding(vertical = LaraSpacing.S2),
@@ -48,17 +56,21 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                         val enabled = !state.offline && member.enrollment.studentId !in state.busy && member.user != null
                         // Vertical actions keep both languages usable with large font sizes.
                         Button(onClick = { onDecision(member.enrollment.studentId, true) }, enabled = enabled,
+                            colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark,
+                                contentColor = LaraColors.Surface),
                             modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                             Text(stringResource(R.string.approval_accept))
                         }
                         OutlinedButton(onClick = { onDecision(member.enrollment.studentId, false) }, enabled = enabled,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
                             modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
                             Text(stringResource(R.string.approval_decline))
                         }
                     }
                 }
             }
-            TextButton(onDismiss, Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
+            TextButton(onDismiss, Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+                colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark)) {
                 Text(stringResource(R.string.enrollment_cancel_action))
             }
         }

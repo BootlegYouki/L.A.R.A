@@ -29,7 +29,7 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, reachable: Boo
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { it.managedBy(userId) }
     Column(Modifier.fillMaxWidth().heightIn(max = LaraSpacing.S12 * 4).verticalScroll(rememberScrollState())
         .padding(horizontal = LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-        if (cached == Cached.Loading) Text(stringResource(R.string.approval_loading))
+        if (cached == Cached.Loading) ApprovalLoadingSkeleton()
         else if (classes.isEmpty()) Text(stringResource(R.string.approval_no_saved_classes))
         classes.forEach { classroom ->
             key(classroom.id) {
