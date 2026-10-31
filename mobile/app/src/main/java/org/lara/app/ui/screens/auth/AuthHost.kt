@@ -62,6 +62,8 @@ fun AuthHost(container: AppContainer) {
             role = if(user.role == "TEACHER") ShellRole.TEACHER else ShellRole.STUDENT,
             isHubReachable = reachable,
             hasInProgressAttempt = user.role == "STUDENT" && locked,
-        ), sessionKey = user.id)
+        ), sessionKey = user.id, teacherApprovalActions = {
+            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, reachable, model::requireSignIn)
+        })
     }
 }

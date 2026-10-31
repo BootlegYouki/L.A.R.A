@@ -28,6 +28,8 @@ class RosterViewModelTest {
     private var failure = false
     private val gate = CompletableDeferred<Unit>()
     private lateinit var model: RosterViewModel
+    private var refreshes = 0
+    private var refreshGate: CompletableDeferred<Unit>? = null
     @Before fun setup() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         val cache = object : EnrollmentRepository {
@@ -41,7 +43,7 @@ class RosterViewModelTest {
                 calls++; gate.await(); if (failure) throw HubFailure(403, "FORBIDDEN")
             }
         }
-        model = RosterViewModel("class", "K7M4QX", cache, remote, reachable, events, {}, {})
+        model = RosterViewModel("class", "K7M4QX", cache, remote, reachable, events, { refreshes++; refreshGate?.await(); Unit }, {})
     }
     @After fun close() { model.viewModelScope.cancel(); Dispatchers.resetMain() }
     @Test fun failedDecisionRollsBackOptimisticCountAndPreventsDuplicateRequests() {
@@ -78,5 +80,26 @@ class RosterViewModelTest {
         assertEquals("PENDING", (rows.value as Cached.Content).value.single().enrollment.status)
         rows.value = Cached.Content(listOf(row.copy(enrollment = row.enrollment.copy(status = "REJECTED"))))
         assertTrue(model.state.value.optimistic.isEmpty())
+    }
+    @Test fun joinDuringRefreshSchedulesAnotherPullRatherThanLosingTheRequest() {
+        refreshGate = CompletableDeferred()
+        model.start()
+        assertEquals(1, refreshes)
+        events.tryEmit(HubEvent.JoinRequest("K7M4QX", "new-learner", "Test", "private", 1))
+        assertEquals(1, refreshes)
+        refreshGate!!.complete(Unit)
+        assertEquals(2, refreshes)
+        assertTrue(model.state.value.sheetOpen)
+    }
+    @Test fun stoppingAndRestartingDoesNotDuplicateEventSubscriptions() {
+        model.start(); model.start()
+        val initial = refreshes
+        events.tryEmit(HubEvent.HelloAck("hub", 1, 1))
+        assertEquals(initial + 1, refreshes)
+        model.stop()
+        events.tryEmit(HubEvent.HelloAck("hub", 1, 2))
+        assertEquals(initial + 1, refreshes)
+        model.start()
+        assertEquals(initial + 2, refreshes)
     }
 }

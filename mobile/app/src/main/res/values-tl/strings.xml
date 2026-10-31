@@ -100,4 +100,5 @@
     <string name="approval_offline">Hindi maabot ang Hub: ipinapakita ang mga naka-save na kahilingan. Kumonekta upang tanggapin o tanggihan.</string>
     <string name="approval_pending_count">Mga nakabinbing kahilingan (%1$d)</string>
     <string name="approval_title">Suriin ang mga kahilingang sumali</string>
+    <string name="approval_no_saved_classes">Walang naka-save na klase. Kumonekta sa Hub upang ma-update ang listahan ng klase.</string>
 </resources>

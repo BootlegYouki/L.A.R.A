@@ -50,13 +50,14 @@ fun LaraNavigation(
     discovery: HubDiscovery,
     state: ShellState? = null,
     sessionKey: String = "",
+    teacherApprovalActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
 ) {
     if (state != null) {
         key(sessionKey, state.role) {
             when (state.role) {
                 ShellRole.STUDENT -> StudentNavGraph(state, content = content)
-                ShellRole.TEACHER -> TeacherNavGraph(state, content = content)
+                ShellRole.TEACHER -> TeacherNavGraph(state, content = content, approvalActions = teacherApprovalActions)
             }
         }
         return

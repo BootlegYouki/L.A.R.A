@@ -21,7 +21,7 @@ data class ApprovalState(
         .filter { (optimistic[it.enrollment.studentId] ?: it.enrollment.status) == "PENDING" }
 }
 
-/** Existing Room rows remain authoritative. refreshSavedRoster must invoke the sync-owned cache boundary. */
+/** Existing Room rows remain authoritative; the refresh owner must preserve server enrollment identities. */
 class RosterViewModel(
     private val classroomId: String,
     private val classCode: String,
@@ -38,6 +38,8 @@ class RosterViewModel(
     private var eventJob: Job? = null
     private var refreshJob: Job? = null
     private var openAfterRefresh = false
+    private var refreshRequested = false
+    private val canonicalClassCode = requireNotNull(ClassCode.canonicalOrNull(classCode))
     private val eventFlow = events
 
     init {
@@ -68,7 +70,7 @@ class RosterViewModel(
         eventJob = viewModelScope.launch {
             eventFlow.collect { event ->
                 when (event) {
-                    is HubEvent.JoinRequest -> if (ClassCode.canonicalOrNull(event.classCode) == ClassCode.canonicalOrNull(classCode)) {
+                    is HubEvent.JoinRequest -> if (ClassCode.canonicalOrNull(event.classCode) == canonicalClassCode) {
                         openAfterRefresh = true
                         refresh()
                     }
@@ -85,16 +87,22 @@ class RosterViewModel(
     fun dismiss() { mutable.update { it.copy(sheetOpen = false) } }
 
     fun refresh() {
-        if (mutable.value.offline || refreshJob?.isActive == true) return
+        if (mutable.value.offline) return
+        refreshRequested = true
+        if (refreshJob?.isActive == true) return
         refreshJob = viewModelScope.launch {
-            try {
-                refreshSavedRoster(classroomId)
-                // A refresh can complete without a new Room emission (unchanged data).
-                if (openAfterRefresh && mutable.value.pending.isNotEmpty()) {
-                    mutable.update { it.copy(sheetOpen = true) }; openAfterRefresh = false
-                }
-            } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { failure(e) }
+            while (refreshRequested && !mutable.value.offline) {
+                refreshRequested = false
+                try {
+                    refreshSavedRoster(classroomId)
+                    mutable.update { it.copy(error = null) }
+                    // A refresh can complete without a new Room emission (unchanged data).
+                    if (openAfterRefresh && mutable.value.pending.isNotEmpty()) {
+                        mutable.update { it.copy(sheetOpen = true) }; openAfterRefresh = false
+                    }
+                } catch (e: CancellationException) { throw e }
+                catch (e: Exception) { failure(e) }
+            }
         }
     }
     fun decide(studentId: String, accept: Boolean) {

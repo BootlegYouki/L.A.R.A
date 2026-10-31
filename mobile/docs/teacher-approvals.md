@@ -1,26 +1,35 @@
 # Teacher approvals - MOBILE 2.4 (#51)
 
-## Branch ancestry
+## Branch ancestry and scope
 
-`codex/51-mobile-2.4-teacher-approvals` starts at Mobile 2.3 commit `3471861`, preserving Mobile 2.2 and all earlier mobile work. The incomplete 2.3 integration is inherited; this branch does not mark it complete.
+`codex/51-mobile-2.4-teacher-approvals` includes Mobile 2.3 commit `3471861`, Mobile 2.2 and earlier mobile work. The incomplete 2.3 integration remains incomplete. Mobile 2.5 is deliberately separate, as requested.
 
-## Components
+## Runtime wiring
 
-- `ApprovalSheet`: bilingual pending-request sheet showing one learner at a time, learner name and LRN, Accept/Decline, visible Cancel, loading/empty/offline/error states. Primary actions are 56dp; secondary actions are at least 52dp.
-- `PendingApprovalButton`: pending count and badge derived from saved Room roster rows with transient optimistic decisions.
-- `RosterViewModel`: foreground event subscription, class-code filtering, automatic sheet opening after a matching join request and saved roster refresh, duplicate-action guard, optimistic removal and rollback on failed decisions. Offline actions are disabled. A successful server decision remains optimistic until Room confirms it; a refresh failure does not pretend the server decision failed.
-- `ClassManagementRepository`: authenticated fixed roster/approve/reject routes using the existing session validation and no-redirect Hub transport. Teacher authorization is enforced by the Hub. Sensitive roster/event objects redact their default string representations.
-- `RealtimeClient`: extends the 2.3 HELLO/reconnect transport with validated `EVENT_JOIN_REQUEST` decoding and delivery after acknowledgement.
+`AuthHost` now supplies the teacher approval panel through the teacher-only navigation action slot. Learners do not compose that panel. `TeacherApprovalPanel` reads saved classrooms from Room and limits controls to unarchived classes owned or co-taught by the signed-in teacher.
 
-## Remaining integration
+Each class mounts `TeacherApprovalHost`, which connects the pending badge and bottom sheet to its `RosterViewModel`. It starts event collection on foreground entry and stops on background/disposal. One session-owned WebSocket is shared across all class controls; it stops when there are no foreground subscribers or Hub reachability is lost. Expired credentials return to sign-in without clearing saved or queued work.
 
-This is component work, not a completed issue or phone-visible feature. The teacher shell must mount the sheet and count, supply the session-owned foreground event stream and reachability state, and connect the required saved-roster refresh callback. The existing Room roster repository remains the source of displayed identities and enrollment status.
+The bilingual bottom sheet shows one saved pending learner at a time, name and LRN, Accept/Decline and visible Cancel. Primary actions are 56dp and secondary controls at least 52dp. Offline/loading/empty/error states are provided. Optimistic decisions remove a pending row immediately and roll back on a failed request; successful server decisions are not rolled back merely because a later refresh failed. Concurrent join events request another refresh instead of disappearing during an in-progress request.
 
-The roster contract provides student IDs but no enrollment IDs. Authoritative enrollment insertion stays with Mobile 2.5 sync, as for 2.3. No fake enrollment IDs, new cache schema or sync scheduler are added. The roster transport is available for the integration owner; it must not be used to overwrite canonical enrollment rows with invented identities.
+`SavedRosterRefresher` fetches the teacher roster through the authenticated, no-redirect transport. In a Room transaction it updates status and teacher-visible identity fields for existing enrollment/user rows only. Existing enrollment IDs, joined/updated timestamps and sync cursors are preserved. It never inserts an enrollment ID or treats the roster response as a delta-sync pull. Unknown enrollments are reported as a partial refresh; known rows remain readable.
 
-Before marking #51 complete, verify against the mock Hub that a new learner request opens the mounted sheet, Accept unlocks the learner, Decline updates status, failed actions restore the pending row, reconnect catches missed requests, and saved pending requests remain visible with the Hub stopped. Final phone screenshots and end-to-end evidence remain outstanding.
+## Dependency still outstanding
 
+The roster and join contracts omit enrollment IDs. A newly joined learner therefore cannot become a new saved roster entry through these responses. Mobile 2.5 must populate authoritative classroom/user/enrollment rows, including the first class list on a fresh installation. No new sync scheduler, schema, cursor handling or invented enrollment identities are included here.
 
-## Validation
+This finishes 2.4 wiring against existing saved data. It does not complete the full #51 acceptance flow on a fresh installation. After 2.5, replace the saved-row refresh boundary with the sync-owned refresh and verify new pending rows appear immediately and remain after an offline relaunch. The actual learner app unlock still needs 2.3 integration as well.
 
-Final mobile test, lint and debug APK assembly passed (1m 32s): 67 debug unit tests and the release suite. All 66 repository tests passed. Logs are in evidence/51/. No mounted-screen or physical-phone verification is claimed.
+## How to test
+
+1. Run the mock Hub. Sign in as the seed teacher (`T-0001`, development PIN `1234`). Use saved classroom and pending-enrollment fixtures from a test database, or authoritative data once 2.5 is integrated. A fresh install currently shows the honest no-saved-classes state.
+2. In the teacher shell, open the pending-count button for a saved class. Accept or Decline a learner. Confirm the pending count falls and the roster refresh reflects the Hub decision.
+3. Trigger a join request for that class. A foreground matching event refreshes the saved roster and opens the sheet when a saved pending row exists. Events for other classes do not open it.
+4. Stop the Hub. Saved requests stay readable, actions disable, and an offline message appears. Restore the Hub and confirm refresh/reconnect.
+5. Force an approval failure and confirm the learner returns to the pending list. Background the app and confirm event collection stops.
+
+Automated protocol verification is opt-in: start a fresh `scripts/mock_hub.py` server instance on REST 18080 / WebSocket 18081, set `LARA_APPROVAL_MOCK=1`, then run `testDebugUnitTest --tests org.lara.app.data.remote.MockTeacherApprovalFlowTest`. It creates a synthetic learner, verifies HELLO, join request, approval and rejection events, and verifies the learner classroom response. It does not modify an installed session or prove phone UI behavior.
+
+## Evidence
+
+Final validation results are recorded in `evidence/51/`. Physical-phone UI evidence remains outstanding because no Android device was connected during this wiring session. Full new-enrollment/offline-relaunch acceptance remains blocked on 2.5 and 2.3 integration; no completion claim or closing PR is made.

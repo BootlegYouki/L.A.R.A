@@ -100,4 +100,5 @@
     <string name="approval_offline">Hub unavailable: saved requests are shown. Connect to accept or decline.</string>
     <string name="approval_pending_count">Pending requests (%1$d)</string>
     <string name="approval_title">Review join requests</string>
+    <string name="approval_no_saved_classes">No saved classes. Connect to the Hub to update your class list.</string>
 </resources>

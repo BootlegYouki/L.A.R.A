@@ -16,6 +16,12 @@ data class LearnerClassRow(
 
 @Dao
 interface RosterDao {
+    @Query("UPDATE enrollments SET status = :status WHERE classroom_id = :classroomId AND student_id = :studentId")
+    suspend fun updateSavedStatus(classroomId: String, studentId: String, status: String): Int
+
+    @Query("UPDATE users SET full_name = :name, lrn_or_id = :lrn WHERE id = :studentId AND role = 'STUDENT'")
+    suspend fun updateSavedLearner(studentId: String, name: String, lrn: String)
+
     @Transaction
     @Query("SELECT * FROM enrollments WHERE student_id = :studentId ORDER BY joined_at, id")
     fun observeForStudent(studentId: String): Flow<List<LearnerClassRow>>
