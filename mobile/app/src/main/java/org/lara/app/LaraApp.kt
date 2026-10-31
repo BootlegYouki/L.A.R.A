@@ -33,6 +33,7 @@ class AppContainer(context: Context) {
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote)
+    val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }
     val classrooms: ClassroomRepository by lazy { RoomClassroomRepository(database.classroomDao()) }
     val stream: StreamRepository by lazy { RoomStreamRepository(database.streamDao()) }
     val classwork: ClassworkRepository by lazy {

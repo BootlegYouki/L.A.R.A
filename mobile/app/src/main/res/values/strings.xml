@@ -101,4 +101,5 @@
     <string name="approval_pending_count">Pending requests (%1$d)</string>
     <string name="approval_title">Review join requests</string>
     <string name="approval_no_saved_classes">No saved classes. Connect to the Hub to update your class list.</string>
+    <string name="enrollment_all_classes">All classes</string>
 </resources>

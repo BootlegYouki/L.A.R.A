@@ -6,10 +6,16 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-/** Session owner constructs the ViewModel with the future sync refresh callback. */
 @Composable
 fun EnrollmentHost(model: EnrollmentViewModel, onOpenClass: (String) -> Unit) {
+    EnrollmentSession(model)
     val state by model.state.collectAsStateWithLifecycle()
+    EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit, onOpenClass, model::onInputChanged)
+}
+
+/** Keep approval/revocation handling alive while the learner is inside an opened class as well. */
+@Composable
+fun EnrollmentSession(model: EnrollmentViewModel) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(model, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -20,5 +26,4 @@ fun EnrollmentHost(model: EnrollmentViewModel, onOpenClass: (String) -> Unit) {
         if(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) model.start()
         onDispose { lifecycle.removeObserver(observer); model.stop() }
     }
-    EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit, onOpenClass)
 }
