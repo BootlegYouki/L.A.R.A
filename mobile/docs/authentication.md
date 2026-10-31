@@ -22,7 +22,7 @@ PIN values exist only during the form/request and are cleared on submission. The
 
 The session host collects Sprint 1.3 `QuizRepository.hasInProgressAttempt(userId)`, starting locked until Room emits. Learner AI stays unavailable during any cached active attempt. The role shell reads its offline state independently of auth; a public portal probe supplies only reachability, never authentication or authorization.
 
-Cross-account/Hub switching is refused while another cache/session is present; the settings/sync issues own safe queued-work handling for account changes. This issue does not implement sign-out, clearing classroom work, delta sync, enrollment, classroom screens, or remote tunnel configuration.
+When the selected Hub address differs from the encrypted session address, restoration returns to sign-in. A successful login for the same saved user and matching Room current-user ID accepts the new address and renews the encrypted token/address binding without deleting cached or queued work. A different user is still refused while another cache/session is present; the settings/sync issues own safe queued-work handling for account changes. This issue does not implement sign-out, clearing classroom work, delta sync, enrollment, classroom screens, or remote tunnel configuration.
 
 ## Validation
 

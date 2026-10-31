@@ -2,8 +2,8 @@
 
 ## Automated
 
-- Android `test lint assembleDebug assembleDebugAndroidTest`: BUILD SUCCESSFUL (1m, final audited source); `android-checks.txt`.
-- 42 debug unit tests passed, including six auth/Room/HTTP integration tests. Both build variants run the unit suite.
+- Android `test lint assembleDebug assembleDebugAndroidTest`: BUILD SUCCESSFUL (4m 33s, address-change review fix); `android-checks.txt`.
+- 43 debug unit tests passed, including seven auth/Room/HTTP integration tests. Both build variants run the unit suite.
 - Root contract/mock-Hub suite: 66 passed (`repository-tests.txt`, synthetic media tokens redacted).
 - Opt-in Android device test: passed (`device-auth-test.txt`); seeded teacher and learner authentication plus new synthetic learner registration against the repository mock Hub. It does not overwrite the installed learner session.
 - Room exported schema remains unchanged: AuthDao adds queries only.
@@ -39,6 +39,15 @@ The initial injected-only 2.1 boundary is now wired to actual authentication. No
 | Loading, error, empty and offline states | Restoration skeleton, busy primary action, friendly error banner, blank registration/login forms and existing empty shell, amber offline shell banner |
 | Documentation | authentication.md, navigation.md, evidence/49/ |
 
-The final audit also refreshes the rate-limit countdown clock, keeps labels above fields, and returns from Discovery with Android Back. No contract/schema changes or dependencies were added. The branch includes merged Mobile 1.1, 1.2, 1.3 and 2.1 through current staging. Cross-account/Hub switching and sign-out remain owned by settings/sync; queued classroom work is not erased.
+The final audit also refreshes the rate-limit countdown clock, keeps labels above fields, and returns from Discovery with Android Back. No contract/schema changes or dependencies were added. The branch includes merged Mobile 1.1, 1.2, 1.3 and 2.1 through current staging. Different-user switching and sign-out remain owned by settings/sync; verified same-user reauthentication may renew a changed Hub address without erasing queued classroom work.
 
-The final audit build reran all mobile tests, lint and both APK builds. Root tests (66 passed) and the opt-in device API test remain valid: the audit changes affect only form presentation, countdown timing, back handling and the restore skeleton. The phone screenshot predates these presentation-only adjustments.
+The original audit built both APKs and ran the opt-in device API test. The address-change review fix reran mobile tests, lint, the app build and all 66 root tests.
+
+## Lead review: Hub address changes
+
+- `AuthRepository.restore` still requires sign-in when the selected address differs from the saved address.
+- A verified login with the same saved user ID and matching Room current-user ID renews the encrypted session at the new REST base; it does not clear classroom or queued work.
+- Different-user logins remain rejected with 409, preserving the stored token, profile and current-user ID.
+- Regression test: sign in on local endpoint A, restore on B returns null, sign in as the same user on B, restore on B succeeds, and another user on B is refused without being cached.
+- `test lint assembleDebug`: BUILD SUCCESSFUL. All seven auth integration tests pass; debug suite now totals 43 tests. Root suite: 66 passed.
+- Installed the final review build on the connected phone and recaptured `learner-offline.png` after the cached offline shell had finished rendering. The screenshot is now current.

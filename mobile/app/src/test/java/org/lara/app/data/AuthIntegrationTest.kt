@@ -5,7 +5,6 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.net.ServerSocket
 import kotlin.concurrent.thread
-import java.net.InetSocketAddress
 import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
@@ -24,17 +23,22 @@ class AuthIntegrationTest {
     private lateinit var db: LaraDatabase
     private lateinit var endpoint: HubEndpoint
     private val tokens = MemoryTokens()
-    private var status = 200
-    private var role = "STUDENT"
+    @Volatile private var status = 200
+    @Volatile private var role = "STUDENT"
+    @Volatile private var userId = "test-user"
     private var requestPath = ""
     private var requestBody = ""
     private var redirects = 0
     @Before fun setup() {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), LaraDatabase::class.java).build()
-        server = ServerSocket(0, 16, java.net.InetAddress.getByName("127.0.0.1"))
+        server = startServer()
+        endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", server.localPort))
+    }
+    private fun startServer(): ServerSocket {
+        val listening = ServerSocket(0, 16, java.net.InetAddress.getByName("127.0.0.1"))
         thread(isDaemon = true) {
-            while(!server.isClosed) {
-                val socket = try { server.accept() } catch (_: java.io.IOException) { break }
+            while(!listening.isClosed) {
+                val socket = try { listening.accept() } catch (_: java.io.IOException) { break }
                 socket.use {
                     val input = it.getInputStream().buffered()
                     val header = StringBuilder()
@@ -54,13 +58,13 @@ class AuthIntegrationTest {
                     }
                     requestBody = bodyBytes.toString(Charsets.UTF_8)
                     if(requestPath == "/redirected") redirects++
-                    val body = """{"token":"synthetic-test-token","expires_at":1,"user":{"id":"test-user","lrn_or_id":"123456789012","full_name":"Synthetic learner","role":"$role"}}""".toByteArray()
+                    val body = """{"token":"synthetic-test-token","expires_at":1,"user":{"id":"$userId","lrn_or_id":"123456789012","full_name":"Synthetic learner","role":"$role"}}""".toByteArray()
                     val response = "HTTP/1.1 $status Response\r\nContent-Type: application/json\r\nContent-Length: ${body.size}\r\nRetry-After: 37\r\nLocation: /redirected\r\nConnection: close\r\n\r\n"
                     it.getOutputStream().apply { write(response.toByteArray()); write(body); flush() }
                 }
             }
         }
-        endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", server.localPort))
+        return listening
     }
     @After fun close() { server.close(); db.close() }
     @Test fun loginPersistsProfileAndRestoresAfterHubStopsEvenWhenTokenExpired() = runBlocking {
@@ -72,6 +76,30 @@ class AuthIntegrationTest {
         server.close()
         assertEquals("test-user", AuthRepository(AuthApi(), tokens, db.authDao()).restore(endpoint)?.id)
         assertNull(repo.restore(requireNotNull(HubEndpoint.lan("127.0.0.2"))))
+    }
+    @Test fun sameUserCanReauthenticateAfterHubAddressChangesButDifferentUserCannot() = runBlocking {
+        val repo = AuthRepository(AuthApi(), tokens, db.authDao())
+        repo.authenticate(endpoint, "123456789012", "1234", null)
+        val second = startServer()
+        try {
+            val hubB = requireNotNull(HubEndpoint.lan("127.0.0.1", second.localPort))
+            assertNotEquals(endpoint.restBase, hubB.restBase)
+            assertNull(repo.restore(hubB))
+            assertEquals("test-user", repo.authenticate(hubB, "123456789012", "1234", null).id)
+            assertEquals(hubB.restBase, tokens.value?.hub)
+            assertEquals("test-user", db.authDao().currentUserId())
+            assertEquals("test-user", repo.restore(hubB)?.id)
+            assertNull(repo.restore(endpoint))
+
+            val saved = tokens.value
+            userId = "different-user"
+            try { repo.authenticate(hubB, "123456789013", "1234", null); fail("Different user must remain blocked") }
+            catch (e: AuthFailure) { assertEquals(409, e.status) }
+            assertEquals(saved, tokens.value)
+            assertEquals("test-user", db.authDao().currentUserId())
+            assertNull(db.authDao().user("different-user"))
+            assertEquals("test-user", repo.restore(hubB)?.id)
+        } finally { second.close() }
     }
     @Test fun registrationSendsName() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())

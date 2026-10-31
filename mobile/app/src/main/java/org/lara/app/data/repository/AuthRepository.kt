@@ -30,8 +30,9 @@ class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenS
         val old = try { tokens.load() } catch (_: Exception) { null }
         val cachedUser = dao.currentUserId()
         if (cachedUser != null && cachedUser != session.user.id) throw AuthFailure(409)
-        // Account/cache switching needs the queued-work policy from the settings/sync issues.
-        if (old != null && (old.userId != session.user.id || old.hub != endpoint.restBase)) throw AuthFailure(409)
+        // A verified same-user login can renew a DHCP-changed address without clearing cached work.
+        // Switching users still needs the queued-work policy from the settings/sync issues.
+        if (old != null && old.userId != session.user.id) throw AuthFailure(409)
         val previous = dao.user(session.user.id)
         val now = System.currentTimeMillis()
         val profile = UserEntity(session.user.id, session.user.lrnOrId, session.user.fullName, session.user.role,

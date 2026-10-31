@@ -89,8 +89,8 @@ C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: Resou
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/aaa096ea-55a9-44b6-aa79-686cf7ff9a73/start HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/aaa096ea-55a9-44b6-aa79-686cf7ff9a73/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/220983c2-be4e-43d0-b0da-1f38175b76f3/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/220983c2-be4e-43d0-b0da-1f38175b76f3/begin HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -103,23 +103,23 @@ C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: Resou
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 .C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\case.py:615: ResourceWarning: unclosed
-<socket.socket fd=572, family=2, type=1, proto=0, laddr=('127.0.0.1', 59961), raddr=('127.0.0.1', 8099)>
+<socket.socket fd=516, family=2, type=1, proto=0, laddr=('127.0.0.1', 64022), raddr=('127.0.0.1', 8099)>
   result = method()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/32e1baa9-b890-4238-ad5b-549468a89918/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e02a48af-d207-467b-9e8c-8282ae8cc758/start HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/download HTTP/1.1" 403 -
 [HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 403 -
-[HTTP] 127.0.0.1 - "GET /api/quizzes/32e1baa9-b890-4238-ad5b-549468a89918 HTTP/1.1" 403 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/32e1baa9-b890-4238-ad5b-549468a89918/begin HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/e02a48af-d207-467b-9e8c-8282ae8cc758 HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e02a48af-d207-467b-9e8c-8282ae8cc758/begin HTTP/1.1" 403 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/assignments/78557601-ea95-4ff2-9071-4176d072a2c0/submissions HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/77569693-9320-44b2-96b5-893788b9ed81/submissions HTTP/1.1" 403 -
 [HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -141,11 +141,11 @@ ResourceWarning: Enable tracemalloc to get the object allocation traceback
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/3662189e-3150-4640-ac12-c08dbf64636c/start HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/3662189e-3150-4640-ac12-c08dbf64636c/begin HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/3662189e-3150-4640-ac12-c08dbf64636c/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/756ce2ec-c19f-4509-b47a-7c65d3644901/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/756ce2ec-c19f-4509-b47a-7c65d3644901/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/756ce2ec-c19f-4509-b47a-7c65d3644901/submit HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/3662189e-3150-4640-ac12-c08dbf64636c/close HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/756ce2ec-c19f-4509-b47a-7c65d3644901/close HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -157,9 +157,9 @@ ResourceWarning: Enable tracemalloc to get the object allocation traceback
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/materials HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/materials/69cd5a51-fd24-4144-b667-a534f37a1c9a HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/materials/8f5ab55f-76d1-4a26-81a9-de29681a1a7d HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "DELETE /api/materials/69cd5a51-fd24-4144-b667-a534f37a1c9a HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/materials/8f5ab55f-76d1-4a26-81a9-de29681a1a7d HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -182,14 +182,14 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/assignments/d8396e70-2906-4278-9509-0aeeb76edd60/private-comments HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/91a39be1-bcbc-4af7-befd-97e3ff3ed2f7/private-comments HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/assignments/d8396e70-2906-4278-9509-0aeeb76edd60/private-comments HTTP/1.1" 400 -
-[HTTP] 127.0.0.1 - "GET /api/assignments/d8396e70-2906-4278-9509-0aeeb76edd60/private-comments?student_id=624be6b4-ad10-4d28-9f29-44946e17f14d HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/assignments/d8396e70-2906-4278-9509-0aeeb76edd60/private-comments HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/91a39be1-bcbc-4af7-befd-97e3ff3ed2f7/private-comments HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/91a39be1-bcbc-4af7-befd-97e3ff3ed2f7/private-comments?student_id=0c1e2b07-3bbe-426f-8a58-b1f635cf321c HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/91a39be1-bcbc-4af7-befd-97e3ff3ed2f7/private-comments HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/assignments/d8396e70-2906-4278-9509-0aeeb76edd60/private-comments HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/91a39be1-bcbc-4af7-befd-97e3ff3ed2f7/private-comments HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
@@ -214,16 +214,16 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/quizzes/24e03aee-29a4-4f1d-99e8-b5a6ffd9a3a0 HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/24e03aee-29a4-4f1d-99e8-b5a6ffd9a3a0/start HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/quizzes/24e03aee-29a4-4f1d-99e8-b5a6ffd9a3a0 HTTP/1.1" 409 -
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/559d179b-2c2e-4950-a053-e5d39928e712 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/559d179b-2c2e-4950-a053-e5d39928e712/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/559d179b-2c2e-4950-a053-e5d39928e712 HTTP/1.1" 409 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/24e85b7b-5c85-4362-846f-ef7af215f461/start HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/quizzes/24e85b7b-5c85-4362-846f-ef7af215f461 HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/24e85b7b-5c85-4362-846f-ef7af215f461/begin HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/24e85b7b-5c85-4362-846f-ef7af215f461/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/820affeb-25a5-468e-9051-293c8fd0d764/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/820affeb-25a5-468e-9051-293c8fd0d764 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/820affeb-25a5-468e-9051-293c8fd0d764/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/820affeb-25a5-468e-9051-293c8fd0d764/submit HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -251,17 +251,17 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/announcements/1a6dae5f-ded3-46e5-8bab-293199efcc5a/comments HTTP/1.1" 403 -
-[HTTP] 127.0.0.1 - "POST /api/announcements/1a6dae5f-ded3-46e5-8bab-293199efcc5a/comments HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/announcements/2510e60e-60d7-4574-9f5a-0b041f3149e0/comments HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/announcements/2510e60e-60d7-4574-9f5a-0b041f3149e0/comments HTTP/1.1" 403 -
 [HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/14c97be0-7f55-46f1-bf6d-67f1892714dd/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/1f052aba-2976-4c51-a361-40561f72ebb1/start HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "GET /api/quizzes/active HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/quizzes/14c97be0-7f55-46f1-bf6d-67f1892714dd HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "GET /api/quizzes/14c97be0-7f55-46f1-bf6d-67f1892714dd HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/1f052aba-2976-4c51-a361-40561f72ebb1 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/1f052aba-2976-4c51-a361-40561f72ebb1 HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -269,7 +269,7 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/assignments/f675da82-6f38-41bd-ae59-d6e9c75ea3f6/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/ed27e4ff-bcdb-4088-baf7-b6d7729837fb/submit HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
@@ -277,34 +277,34 @@ cleaning up <HTTPError 416: 'Range Not Satisfiable'>
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/b0acc971-f621-45dd-b2d0-929546a25ea1/start HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/b0acc971-f621-45dd-b2d0-929546a25ea1/begin HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "POST /api/quizzes/b0acc971-f621-45dd-b2d0-929546a25ea1/submit HTTP/1.1" 422 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/5c0beb81-21b6-4cc0-99ef-84aabd0b4cb5/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/5c0beb81-21b6-4cc0-99ef-84aabd0b4cb5/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/5c0beb81-21b6-4cc0-99ef-84aabd0b4cb5/submit HTTP/1.1" 422 -
 .............C:\Users\moen\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly
 cleaning up <HTTPError 422: 'Unprocessable Content'>
   _warnings.warn(self.warn_message, ResourceWarning)
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/assignments/c38d3bf1-72cf-45eb-ba73-64c3018a0408 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/bee7c5c3-b803-4dcb-a2bc-0cdff730c5bd HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "DELETE /api/assignments/c38d3bf1-72cf-45eb-ba73-64c3018a0408 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/assignments/bee7c5c3-b803-4dcb-a2bc-0cdff730c5bd HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/assignments/c38d3bf1-72cf-45eb-ba73-64c3018a0408 HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/bee7c5c3-b803-4dcb-a2bc-0cdff730c5bd HTTP/1.1" 403 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "DELETE /api/announcements/ea4a804a-cb7f-4889-9ae9-ef3e582dde26 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/announcements/4b4b2840-bceb-4cb5-864b-04f882ccbf19 HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/topics HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "PATCH /api/assignments/e55771c6-dc2f-436a-8174-93612f9e99cb HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/6bd0789a-9119-4459-bd11-03ecfa89cf49 HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
-[HTTP] 127.0.0.1 - "DELETE /api/topics/2ff615f6-accd-4316-8108-16c598b7a772 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/topics/b64cce20-01fe-4557-8217-3bcb08cebe5f HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
 [HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
@@ -314,6 +314,6 @@ cleaning up <HTTPError 422: 'Unprocessable Content'>
 [HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
 .......
 ----------------------------------------------------------------------
-Ran 66 tests in 28.559s
+Ran 66 tests in 28.530s
 
 OK
