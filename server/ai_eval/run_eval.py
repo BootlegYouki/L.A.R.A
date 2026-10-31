@@ -20,7 +20,7 @@ From the repo root:
       --model gemma-2-2b=D:/models/gemma-2-2b-it-Q4_K_M.gguf --merge-system gemma-2-2b \
       --model minicpm5-2b=D:/models/MiniCPM5-2B-Q4_K_M.gguf --no-think minicpm5-2b \
       --out server/ai_eval/results/hub-pc
-  py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/hub-pc --scorers scorer_a scorer_b
+  py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/hub-pc --scorers scorer_a scorer_b \n      [--models qwen2.5-1.5b minicpm5-2b]   # only these models on the sheets
   py server/ai_eval/run_eval.py report --out server/ai_eval/results/hub-pc \
       --scores server/ai_eval/results/hub-pc/score_scorer_a.csv server/ai_eval/results/hub-pc/score_scorer_b.csv
 
@@ -505,10 +505,15 @@ def cmd_sheets(args):
     if existing and not args.force:
         sys.exit(f"{existing} already exist and may hold scores; pass --force to overwrite")
 
+    replies = [row for row in _read_replies(out) if not row["error"]]
+    if args.models:
+        unknown = sorted(set(args.models) - {row["model"] for row in replies})
+        if unknown:
+            sys.exit(f"--models: {unknown} have no replies in {out / 'replies.jsonl'}")
+        replies = [row for row in replies if row["model"] in args.models]
+
     unique = {}
-    for row in _read_replies(out):
-        if row["error"]:
-            continue
+    for row in replies:
         key = (row["model"], row["prompt_id"], row["reply"].strip())
         unique.setdefault(key, []).append(row["slots"])
     keys = sorted(unique)
@@ -621,12 +626,18 @@ def cmd_report(args):
           f"* Scorers: {names[0]}, {names[1]}; agreement rate "
           + _pct(sum(agree.values()), sum(compared.values())) + " of criterion cells ("
           + ", ".join(f"{c} {_pct(agree[c], compared[c])}" for c in CRITERIA) + ")", ""]
+    scored = {e["model"] for e in blind.values()}
+    not_scored = sorted({m for m, _ in run_rows} - scored)
+    if not_scored:
+        L += [f"* Not on the score sheets (replies kept in `replies.jsonl`): {', '.join(not_scored)}", ""]
 
     L += ["## Pass rate per criterion", "",
           "| Model | Slots | Replies | No direct answer | Grounded | Socratic shape | Language | All four | Answer pre-flags |",
           "|---|---|---|---|---|---|---|---|---|"]
     by_model = {}
     for (model, slots), rows in sorted(run_rows.items()):
+        if model not in scored:
+            continue
         counts = {c: [0, 0] for c in (*CRITERIA, "all")}
         flags = 0
         for row in rows:
@@ -717,6 +728,9 @@ def main(argv=None):
     sheets.add_argument("--scorers", nargs=2, required=True, metavar="NAME")
     sheets.add_argument("--seed", type=int, default=73)
     sheets.add_argument("--force", action="store_true", help="overwrite existing sheets")
+    sheets.add_argument("--models", nargs="+", metavar="NAME",
+                        help="put only these models' replies on the sheets (default: every model that ran); "
+                             "the others stay in replies.jsonl and can be scored later")
 
     report = sub.add_parser("report", help="merge two score sheets into report.md")
     report.add_argument("--out", required=True)
