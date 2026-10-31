@@ -18,7 +18,7 @@
 
 **Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
-**Status:** The initial desktop scaffold is implemented under #29. Run and verification notes are in [`docs/scaffold.md`](./docs/scaffold.md). Authentication, discovery and synchronization remain later steps.
+**Status:** The initial desktop scaffold is implemented under #29. Run and verification notes are in [`docs/scaffold.md`](./docs/scaffold.md). Discovery #5 is implemented on this feature branch; its [verification and remaining integration gates](docs/discovery.md) are recorded separately. Connection verification, authentication and synchronization remain later steps.
 
 ---
 

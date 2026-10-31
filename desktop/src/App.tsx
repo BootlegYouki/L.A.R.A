@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import { dictionaries } from './i18n';
 import { useAppStore } from './store/app';
+import HubDiscovery from './components/HubDiscovery';
+import { observeDiscovery, type HubInfo } from './services/discovery';
 
 export default function App() {
   const { language, status, classrooms, toggleLanguage, loadSavedClasses } = useAppStore();
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [hubs, setHubs] = useState<HubInfo[]>([]);
+  const [discoveryFailed, setDiscoveryFailed] = useState(false);
+  const [searching, setSearching] = useState(true);
+  useEffect(() => { const timer = setTimeout(() => setSearching(false), 3000); return () => clearTimeout(timer); }, []);
   const t = dictionaries[language];
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => { void loadSavedClasses(); }, [loadSavedClasses]);
+  useEffect(() => observeDiscovery((found, failed) => { setHubs(found); setDiscoveryFailed(failed); }), []);
   return (
     <div className={`app-shell ${drawerOpen ? '' : 'drawer-rail'}`}>
       <a href="#content" className="skip-link">{t.skip_content}</a>
@@ -29,7 +36,8 @@ export default function App() {
           <a href="#content" className="drawer-item selected" aria-current="page" aria-label={t.home}>
             <i className="ph-fill ph-house" aria-hidden="true" /><span className="drawer-label">{t.home}</span></a>
           <div className="drawer-section" aria-label={t.enrolled}><i className="ph ph-graduation-cap" aria-hidden="true" />
-            <span className="drawer-label">{t.enrolled}</span></div>
+            <span className="drawer-label">{t.enrolled}</span><i className="ph ph-caret-down drawer-label" aria-hidden="true" /></div>
+          <button type="button" className="drawer-item" aria-label={t.todo} disabled><i className="ph ph-check-square" aria-hidden="true" /><span className="drawer-label">{t.todo}</span></button>
           <div className="drawer-rule" />
           <button type="button" className="drawer-item" aria-label={t.archived_classes} disabled>
             <i className="ph ph-archive" aria-hidden="true" /><span className="drawer-label">{t.archived_classes}</span></button>
@@ -40,6 +48,7 @@ export default function App() {
           <div className="content-wrap">
             <div id="offline-notice" role="status" className="offline-banner">
               <i className="ph ph-wifi-slash" aria-hidden="true" /><p>{t.offline_body}</p></div>
+            <HubDiscovery t={t} hubs={hubs} failed={discoveryFailed} searching={searching} />
             <div className="classes-heading"><h1>{t.classes_title}</h1>
               <button type="button" className="control text-button" disabled aria-describedby="offline-notice">
                 <i className="ph ph-plus" aria-hidden="true" />{t.join_class}</button></div>

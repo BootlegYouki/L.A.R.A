@@ -1,7 +1,14 @@
+mod discovery;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn run() {
     tauri::Builder::default()
+        .manage(discovery::Discovery::default())
+        .setup(|app| {
+            discovery::start(app.handle().clone());
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![discovery::get_discovered_hubs])
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
@@ -15,6 +22,11 @@ pub fn run() {
                 )
                 .build(),
         )
-        .run(tauri::generate_context!())
-        .expect("could not run the L.A.R.A desktop window");
+        .build(tauri::generate_context!())
+        .expect("could not build the L.A.R.A desktop window")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                discovery::stop(app);
+            }
+        });
 }
