@@ -128,3 +128,9 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml --lib real_hub_mdns_wit
 ```
 
 Default Rust suite after restoring production code: 4 passed, 2 integration tests ignored. The explicit real-Hub test above failed and must not be represented as passing by the default suite. Product scanner behavior was not changed. WAN connectivity remained available throughout; this was not a WAN-isolation test. Real-Hub mDNS reliability remains unresolved.
+
+## Review handoff (October 31)
+
+Scope remains Desktop only. The server team owns any responder change. A scratch diagnostic copy of libmdns reproduced the local failure; selecting its outgoing IPv4 multicast LAN interface passed, reverting that one change failed, and restoring it passed again. No server repository source or cached dependency was changed. This isolates an outbound-interface issue in that same-PC reproduction; it does not establish that the second-PC failure has the identical cause or that a server fix has shipped. The server team should validate independently. No workaround was added to Desktop.
+
+Final review-preparation checks on this branch: lint passed, 20 Desktop tests passed, production build passed (44 modules, 1.31 seconds), shared suite 66 tests passed in 12.286 seconds, invariant check passed. Default Rust suite most recently passed 4 tests with 2 explicit integration tests ignored. The explicit real-Hub mDNS-only test failed as recorded above; default tests do not waive that failure. Diff scope and whitespace checked. Keep #5 open and submit as draft with these limitations.
