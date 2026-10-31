@@ -18,13 +18,11 @@ import org.lara.app.domain.Cached
 import org.lara.app.ui.theme.LaraSpacing
 
 @Composable
-fun TeacherApprovalPanel(container: AppContainer, userId: String, reachable: Boolean, onSessionExpired: () -> Unit) {
+fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: org.lara.app.data.sync.SyncSessionViewModel, onSessionExpired: () -> Unit) {
     val session: TeacherApprovalSession = viewModel(key = "teacher-approvals-$userId", factory = viewModelFactory {
         initializer { TeacherApprovalSession(container, userId) }
     })
     val latestExpired by rememberUpdatedState(onSessionExpired)
-    LaunchedEffect(session, reachable) { session.setReachable(reachable) }
-    DisposableEffect(session) { onDispose { session.setReachable(false) } }
     val cached by session.classrooms.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { it.managedBy(userId) }
     Column(Modifier.fillMaxWidth().heightIn(max = LaraSpacing.S12 * 4).verticalScroll(rememberScrollState())
@@ -35,7 +33,10 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, reachable: Boo
             key(classroom.id) {
                 val model: RosterViewModel = viewModel(key = "approval-$userId-${classroom.id}", factory = viewModelFactory {
                     initializer { RosterViewModel(classroom.id, classroom.classCode, container.enrollments,
-                        session.remote, session.reachable, session.events, session.refresher::refresh, { latestExpired() }) }
+                        session.remote, syncSession.reachable, syncSession.events, { id ->
+                            container.sync.pull(userId)
+                            session.refresher.refresh(id)
+                        }, { latestExpired() }) }
                 })
                 Text(classroom.name, style = MaterialTheme.typography.titleMedium)
                 TeacherApprovalHost(model)

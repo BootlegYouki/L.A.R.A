@@ -38,6 +38,7 @@ abstract class LaraDatabase : RoomDatabase() {
     abstract fun quizDao(): QuizDao
     abstract fun cacheDao(): CacheDao
     abstract fun syncStateDao(): SyncStateDao
+    abstract fun syncDao(): SyncDao
 
     companion object {
         fun create(context: Context): LaraDatabase = Room.databaseBuilder(

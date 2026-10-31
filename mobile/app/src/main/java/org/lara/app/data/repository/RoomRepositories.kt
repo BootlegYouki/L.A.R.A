@@ -26,6 +26,7 @@ class RoomStreamRepository(
     private val dao: StreamDao,
     private val now: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() },
+    private val onQueued: () -> Unit = {},
 ) : StreamRepository {
     override fun stream(classroomId: String, scope: CoroutineScope) =
         dao.observeByClassroom(classroomId).map { rows -> rows.map { it.toDomain() } }.cached(scope)
@@ -41,6 +42,7 @@ class RoomStreamRepository(
             id = id, announcementId = announcementId, authorId = authorId, content = content,
             createdAt = timestamp, updatedAt = timestamp, syncStatus = "QUEUED_FOR_SYNC",
         ))
+        onQueued()
         return id
     }
 }

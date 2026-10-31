@@ -18,6 +18,7 @@ import org.lara.app.domain.StreamRepository
 
 class LaraApp : Application() {
     val container: AppContainer by lazy { AppContainer(this) }
+    override fun onCreate() { super.onCreate(); container.syncScheduler.start() }
 }
 
 class AppContainer(context: Context) {
@@ -28,13 +29,16 @@ class AppContainer(context: Context) {
     private val database by lazy { LaraDatabase.create(context.applicationContext) }
     private val sessionTokens by lazy { org.lara.app.data.remote.TokenStore(context) }
     private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
+    val syncScheduler by lazy { org.lara.app.data.sync.SyncScheduler(context) }
+    val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) }
+    suspend fun syncUserId() = database.authDao().currentUserId()
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
     fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote)
     val classrooms: ClassroomRepository by lazy { RoomClassroomRepository(database.classroomDao()) }
-    val stream: StreamRepository by lazy { RoomStreamRepository(database.streamDao()) }
+    val stream: StreamRepository by lazy { RoomStreamRepository(database.streamDao(), onQueued = syncScheduler::enqueueNow) }
     val classwork: ClassworkRepository by lazy {
         RoomClassworkRepository(database.classworkDao(), database.quizDao())
     }

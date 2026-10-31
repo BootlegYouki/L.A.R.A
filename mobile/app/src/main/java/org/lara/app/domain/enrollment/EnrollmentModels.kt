@@ -18,6 +18,7 @@ sealed interface HubEvent {
         val lrn: String, val timestamp: Long) : HubEvent {
         override fun toString() = "JoinRequest([redacted])"
     }
+    data class Announcement(val classroomId: String, val announcementId: String, val title: String, val timestamp: Long) : HubEvent
     data object SessionExpired : HubEvent
 }
 

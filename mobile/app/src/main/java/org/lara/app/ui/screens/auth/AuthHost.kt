@@ -58,12 +58,13 @@ fun AuthHost(container: AppContainer) {
         val endpoint = remember(user.id) { container.endpoints.load() }
         val reachability = remember(endpoint) { container.auth.reachability(endpoint) }
         val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
+        val syncSession = rememberSyncSession(container, user.id, reachable, model::requireSignIn)
         LaraNavigation(container.discovery, ShellState(
             role = if(user.role == "TEACHER") ShellRole.TEACHER else ShellRole.STUDENT,
             isHubReachable = reachable,
             hasInProgressAttempt = user.role == "STUDENT" && locked,
         ), sessionKey = user.id, teacherApprovalActions = {
-            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, reachable, model::requireSignIn)
+            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, syncSession, model::requireSignIn)
         })
     }
 }

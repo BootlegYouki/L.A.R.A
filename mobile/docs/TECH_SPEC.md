@@ -146,7 +146,7 @@ Source of truth: `contracts/schema/client_offline.sql` and `rules/database-and-s
 * **`sync_status`:** a row is created `QUEUED_FOR_SYNC` on the client with a UUID v4 generated on the device. It becomes `SYNCED` only from a push receipt (or submit response). `REJECTED` (with reason) stays visible and is never deleted; the UI shows a kind explanation. Rows are never deleted by sign-out; sign-out warns with the queued count.
 * **Cursor:** integer `next_cursor` from `SyncRepository.pull`, stored in `sync_state` in the same `@Transaction` as the applied rows, tombstones and `users`. On any exception the transaction rolls back and the old cursor stays. Loop while `has_more`. `server_time` only feeds the clock offset.
 * **Reset:** if the pull response has `reset: true` (hub_id or sync_epoch differs, also reported by `EVENT_HELLO_ACK`), the same transaction first deletes every mirrored table row except rows with `sync_status = 'QUEUED_FOR_SYNC'`, then applies the response and stores new `hub_id`, `sync_epoch`, cursor.
-* **Triggers:** unique periodic work (15 min, network connected, not low battery), one-time work on `NetworkCallback` available, on `EVENT_ANNOUNCEMENT_PUSH`, after login, after any outbox write.
+* **Triggers:** unique periodic work (15 min, NetworkType.NOT_REQUIRED for LAN-only Wi-Fi, not low battery), one-time work on `NetworkCallback` available, on `EVENT_ANNOUNCEMENT_PUSH`, after login, after any outbox write.
 * **Remote/Suspension Mode** (`AGENTS.md` 3.5, `rules/networking-and-lan.md` section 5): the client tries LAN discovery first; only when it fails and a remote URL is saved does `HubEndpointStore` return the `https` host. Same token, same contract, same cursor. Discovery is never attempted over the tunnel. Over the tunnel `QuizSessionManager` does not rely on `EVENT_QUIZ_START`: it anchors to `started_at` from `POST /api/quizzes/{id}/begin` or `GET /api/quizzes/active` and counts down on `elapsedRealtime()`.
 
 | Screen group | No Hub behavior |
@@ -332,3 +332,7 @@ Still open (answer before the step named):
 - [x] Touch targets at least 52dp (56dp primary and quiz options)
 - [x] `correct_answer` never stored on a client (Room mirror never has it; the teacher builder holds it in memory only, section 14 question 3)
 - [x] AI unavailable during an active quiz (`QuizLockout`, section 8)
+
+### MOBILE 2.5 implementation notes
+
+The sync implementation begins from Mobile 2.4 commit 6b174a6. See [sync_worker.md](sync_worker.md) for atomic pages, membership rescans, queue-preserving resets and the existing sync_state metadata keys for durable rejection receipts, cross-Hub queue binding, deferred tombstones and incoming grade receipts. SyncSessionViewModel now owns the shared foreground socket for both roles; the teacher approval session no longer opens a second socket. The current mock push route rejects teacher sessions; teacher-authored queue upload remains an explicitly documented contract/mock alignment gap.

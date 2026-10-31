@@ -35,7 +35,13 @@ class HubClient {
             if (action == null) "GET" else "POST", payload, c.session.token)
     }
 
-    private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?): String {
+    internal fun sync(c: EnrollmentConnection, action: String, payload: String): String {
+        require(action in setOf("pull", "push"))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        return exchange(c.endpoint, "/api/sync/$action", "POST", payload, c.session.token, 8 * 1024 * 1024)
+    }
+    private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?, maxBytes: Int = 65_536): String {
         val url = endpoint.restBase + path
         require(isAllowedHubUrl(url))
         val connection = URL(url).openConnection() as HttpURLConnection
@@ -52,24 +58,24 @@ class HubClient {
             }
             val status = connection.responseCode
             if (status != 200) {
-                val body = connection.errorStream?.use(::readBounded).orEmpty()
+                val body = connection.errorStream?.use { readBounded(it, 65_536) }.orEmpty()
                 val code = runCatching {
                     Json.parseToJsonElement(body).jsonObject["error"]?.jsonObject?.get("code")?.jsonPrimitive?.content
                 }.getOrNull() ?: "UNKNOWN"
                 throw HubFailure(status, code,
                     connection.getHeaderField("Retry-After")?.toLongOrNull()?.coerceIn(1, 3600) ?: 60)
             }
-            return connection.inputStream.use(::readBounded)
+            return connection.inputStream.use { readBounded(it, maxBytes) }
         } finally { connection.disconnect() }
     }
 
-    private fun readBounded(input: java.io.InputStream): String {
+    private fun readBounded(input: java.io.InputStream, maxBytes: Int): String {
         val output = java.io.ByteArrayOutputStream()
         val buffer = ByteArray(4096)
         while (true) {
             val count = input.read(buffer)
             if (count < 0) break
-            require(output.size() + count <= 65_536)
+            require(output.size() + count <= maxBytes)
             output.write(buffer, 0, count)
         }
         return output.toString("UTF-8")
