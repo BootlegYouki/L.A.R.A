@@ -39,7 +39,7 @@ The React snapshot poll removes stale cards within another second. The three-sec
 
 **Real-Hub mDNS remains unresolved on this Windows host.** The actual Hub logs incoming `_lara._tcp.local` questions, but the client does not receive a resolved Hub service. A scoped wire check observes the queries without corresponding L.A.R.A response packets. The same native scanner resolves the mDNS-only fixture. This narrows the discrepancy to the real responder/Windows network path, but does not establish its root cause. No firewall, other-team code or third-party dependency source was modified to make the test pass. Keep this limitation visible for the Lead/server team and repeat on separate LAN devices.
 
-Not verified: physical Wi-Fi disable/reconnect, WAN-unplugged router, another machine, Linux/macOS, production installer, release CSP/HTTP/WS/media permissions (owned by later issues), or a normal window-close lifecycle trace. The test processes were stopped explicitly; process exit releasing sockets is distinct from observing graceful scanner cancellation. Manual entry here only validates/selects an address; #40 must check and save a responding endpoint before calling it connected.
+As of October 31, two Windows machines and Hub-side physical Wi-Fi disable/reconnect have been exercised (see below). Not verified: WAN-unplugged router, Desktop-side interface reconnection, Linux/macOS, production installer, release CSP/HTTP/WS/media permissions (owned by later issues), or a normal window-close lifecycle trace. The test processes were stopped explicitly; process exit releasing sockets is distinct from observing graceful scanner cancellation. Manual entry here only validates/selects an address; #40 must check and save a responding endpoint before calling it connected.
 ## Initial native-window check results (before history migration)
 
 ```text
@@ -88,4 +88,26 @@ python scripts/verify_invariants.py: PASSED
 
 A second scratch executable directly included the actual Hub `server/backend/src/discovery/mdns.rs` and used its unchanged `start` function with libmdns 0.10.1; a plain mdns-sd 0.21.6 browser did not resolve that service during a twelve-second observation on this Windows host. The failure reproduces outside our scanner's lease/restart logic and outside the full Hub's HTTP/database runtime. The independent mdns-sd publisher succeeds. This narrows the responder/querier interoperability or local Windows network-path discrepancy; it does not prove the exact cause or justify silently changing server code or firewall settings.
 
-**Submission status: held.** Real-Hub mDNS and physical Wi-Fi reconnect/WAN-unplugged checks remain required. The old native-window screenshots still document the unchanged UI; the new core cancellation result does not replace a normal-window-close or fresh native-window check. No #5 PR has been published and #5 must remain open.
+**Submission status: prepared for review with incomplete integration checks.** See the October 31 evidence below. Real-Hub mDNS-only and WAN-disconnected operation remain unverified. No #5 PR has been published and #5 remains open; the Lead decides whether the disclosed gaps block review or merge.
+
+
+## Two-PC integration evidence (October 31, 2026)
+
+The local feature branch was rebased onto rewritten staging `e829179`; its two implementation commits are now `67238cf` and `6717c4c`. The intervening upstream changes affect Mobile only.
+
+A fresh native Desktop build ran on the primary Windows PC (Ethernet, 192.168.100.2). The unchanged real headless Hub was built from that staging source and copied to a second Windows PC (Wi-Fi, 192.168.100.6), using an isolated synthetic test-data directory and the name `Desktop Integration Test Hub`. This was a development executable, not an installer or signed release. No server source was changed.
+
+Observed evidence, with its provenance:
+
+- User-supplied Hub terminal photos show HTTP listening on wildcard :8080, WebSocket :8081, UDP beacon startup and mDNS registration startup. Startup logging alone does not prove receipt of mDNS responses.
+- Initial cross-PC TCP :8080 probes timed out and the Desktop list was empty. The user allowed the Hub through its Windows firewall prompt and changed the second PC's trusted network profile to Private. This session does not isolate the exact cause of the initial timeout or establish a later successful TCP probe.
+- A user-supplied Desktop screenshot subsequently shows the real second-PC candidate `Desktop Integration Test Hub`, `192.168.100.6:8080`. This establishes real-Hub auto-discovery across two machines, but does not distinguish UDP from mDNS or establish an authenticated connection.
+- After the user disabled the Hub PC's Wi-Fi, their screenshot shows the candidate removed while Home, the empty state and manual entry remain visible.
+- The user first recovered discovery after a Hub restart. In a separate follow-up, they confirmed the candidate returned after toggling the Hub PC's Wi-Fi off/on with both applications left running. This is user-reported Hub-side network recovery; it does not establish Desktop-side interface recovery or an instrumented recovery latency.
+- The native header remains `Not connected to Hub`: address discovery/selection does not perform #40 connection verification.
+
+Refreshed checks: `npm run lint` exit 0, 20 tests in 6 files passed, `npm run build` passed (44 modules, 1.38 seconds), and `cargo build --locked` passed. Earlier Rust/shared-suite results above remain historical; they were not rerun for this documentation-only update. The same-PC real-Hub mDNS compatibility reproduction still exited 2 (`actual_hub_responder_resolved=false`).
+
+WAN-only test: NOT PERFORMED. The user's fiber modem/router has fiber, power and a LAN Ethernet connection, with no separate Ethernet WAN uplink to unplug. No fiber cable was disconnected and no router setting was changed. Turning off the Hub PC's Wi-Fi is loss of the local network, not loss of the WAN. Repeat using a suitable isolated test router before claiming WAN-disconnected operation.
+
+Remaining review limitations: real-Hub mDNS-only discovery on separate devices; WAN-only isolation; Desktop-side network-adapter recovery; normal native window-close lifecycle; Linux/macOS and release packaging. The independent mDNS fixture and scanner cancellation tests remain useful evidence but do not replace these checks. No completion or merge claim is made.
