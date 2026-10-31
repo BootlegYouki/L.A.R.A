@@ -27,6 +27,9 @@ internal fun decodeHubEvent(text: String): HubEvent? = runCatching {
             string("student_id") ?: return null, EnrollmentStatus.valueOf(string("status") ?: return null).also {
                 if (it == EnrollmentStatus.PENDING) return null
             }, number("timestamp") ?: return null)
+        "EVENT_JOIN_REQUEST" -> HubEvent.JoinRequest(string("class_code") ?: return null,
+            string("student_id") ?: return null, string("full_name") ?: return null,
+            string("lrn") ?: return null, number("timestamp") ?: return null)
         else -> null
     }
 }.getOrNull()
@@ -78,6 +81,7 @@ class RealtimeClient : Closeable {
                     when (val event = decodeHubEvent(text)) {
                         is HubEvent.HelloAck -> { acknowledged.set(true); trySend(event) }
                         is HubEvent.JoinApproval -> if (acknowledged.get() && event.studentId == connection.session.userId) trySend(event)
+                        is HubEvent.JoinRequest -> if (acknowledged.get()) trySend(event)
                         else -> Unit
                     }
                 }

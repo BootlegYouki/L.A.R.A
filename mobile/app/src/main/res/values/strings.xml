@@ -89,4 +89,15 @@
     <string name="enrollment_open">Open class</string>
     <string name="enrollment_refresh_failed">Could not update class status: Your saved classes remain available. Try connecting to the Hub again.</string>
     <string name="enrollment_session_expired">Please sign in again to connect to the Hub. Your saved work stays on this device.</string>
+    <string name="approval_accept">Accept</string>
+    <string name="approval_decline">Decline</string>
+    <string name="approval_empty">No pending join requests.</string>
+    <string name="approval_failed">Could not update requests: reconnect to the Hub and try again.</string>
+    <string name="approval_forbidden">Access unavailable: you cannot manage this class.</string>
+    <string name="approval_learner">Learner details are not saved yet</string>
+    <string name="approval_loading">Loading saved requests…</string>
+    <string name="approval_lrn">LRN: %1$s</string>
+    <string name="approval_offline">Hub unavailable: saved requests are shown. Connect to accept or decline.</string>
+    <string name="approval_pending_count">Pending requests (%1$d)</string>
+    <string name="approval_title">Review join requests</string>
 </resources>

@@ -89,4 +89,15 @@
     <string name="enrollment_open">Buksan ang klase</string>
     <string name="enrollment_refresh_failed">Hindi ma-update ang katayuan ng klase: Magagamit pa rin ang naka-save na mga klase. Kumonekta muli sa Hub.</string>
     <string name="enrollment_session_expired">Mag-sign in muli para makakonekta sa Hub. Nananatili sa device ang naka-save na gawain.</string>
+    <string name="approval_accept">Tanggapin</string>
+    <string name="approval_decline">Tanggihan</string>
+    <string name="approval_empty">Walang nakabinbing kahilingang sumali.</string>
+    <string name="approval_failed">Hindi ma-update ang mga kahilingan: kumonekta muli sa Hub at subukan ulit.</string>
+    <string name="approval_forbidden">Walang access: hindi mo maaaring pamahalaan ang klaseng ito.</string>
+    <string name="approval_learner">Hindi pa naka-save ang detalye ng mag-aaral</string>
+    <string name="approval_loading">Nilo-load ang mga naka-save na kahilingan…</string>
+    <string name="approval_lrn">LRN: %1$s</string>
+    <string name="approval_offline">Hindi maabot ang Hub: ipinapakita ang mga naka-save na kahilingan. Kumonekta upang tanggapin o tanggihan.</string>
+    <string name="approval_pending_count">Mga nakabinbing kahilingan (%1$d)</string>
+    <string name="approval_title">Suriin ang mga kahilingang sumali</string>
 </resources>

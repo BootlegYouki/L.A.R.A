@@ -14,6 +14,10 @@ sealed interface HubEvent {
     data class HelloAck(val hubId: String, val syncEpoch: Long, val serverTime: Long) : HubEvent
     data class JoinApproval(val classroomId: String, val studentId: String,
         val status: EnrollmentStatus, val timestamp: Long) : HubEvent
+    data class JoinRequest(val classCode: String, val studentId: String, val fullName: String,
+        val lrn: String, val timestamp: Long) : HubEvent {
+        override fun toString() = "JoinRequest([redacted])"
+    }
     data object SessionExpired : HubEvent
 }
 
