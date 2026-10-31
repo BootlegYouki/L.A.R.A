@@ -21,6 +21,9 @@ class LaraApp : Application() {
 }
 
 class AppContainer(context: Context) {
+    val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
+    val auth by lazy { org.lara.app.data.repository.AuthRepository(
+        org.lara.app.data.remote.AuthApi(), org.lara.app.data.remote.TokenStore(context), database.authDao()) }
     val discovery: HubDiscovery = AndroidHubDiscovery(context)
     private val database by lazy { LaraDatabase.create(context.applicationContext) }
     val classrooms: ClassroomRepository by lazy { RoomClassroomRepository(database.classroomDao()) }

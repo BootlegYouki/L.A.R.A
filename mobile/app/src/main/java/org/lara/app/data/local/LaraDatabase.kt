@@ -30,6 +30,7 @@ import org.lara.app.data.local.entities.*
     exportSchema = true,
 )
 abstract class LaraDatabase : RoomDatabase() {
+    abstract fun authDao(): AuthDao
     abstract fun classroomDao(): ClassroomDao
     abstract fun streamDao(): StreamDao
     abstract fun classworkDao(): ClassworkDao
