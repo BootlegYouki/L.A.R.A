@@ -35,6 +35,10 @@ interface ClassworkRepository {
 }
 
 interface EnrollmentRepository {
+    /** Cached-only builds return false; MOBILE 2.5 injects the canonical producer. */
+    suspend fun refresh(userId: String): Boolean = false
+    fun learnerClasses(studentId: String, scope: CoroutineScope): StateFlow<Cached<List<org.lara.app.domain.enrollment.LearnerClass>>>
+
     fun roster(classroomId: String, scope: CoroutineScope): StateFlow<Cached<List<RosterMember>>>
 }
 
