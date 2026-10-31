@@ -1,25 +1,25 @@
-# Class enrollment preparation - MOBILE 2.3 (#50)
+# Class enrollment - MOBILE 2.3 (#50)
 
-## Current scope
+## Implemented components
 
-This branch starts from Mobile 2.2 commit `90a4c1f`, including Mobile 1.1, 1.2, 1.3 and 2.1. Mobile 2.2 implementation and its address-change review fix pass CI; PR #188 still awaits Lead approval/merge.
+This branch builds on Mobile 2.2 (`90a4c1f`), including the earlier mobile milestones. It deliberately leaves Mobile 2.5 sync implementation to that issue.
 
-The independent preparation consists of:
+- Grouped XXX-XXX class-code dialog, normalization, bilingual invalid-code and offline feedback, and 56dp primary action.
+- Bearer-authenticated join and classroom-list requests, with session/user/address validation, bounded responses and redirects disabled.
+- Foreground WebSocket lifecycle: HELLO first, approval filtering by signed-in learner, handshake timeout, 1/2/4/8/10-second reconnect backoff, and expired-session handling.
+- Enrollment screen, lifecycle host and view model for pending/approved/rejected/removed notices. Existing canonical Room enrollment rows supply saved classes; only ACTIVE rows enable opening. Restrictive approval notices immediately disable stale access.
+- Explicit required refresh callback for a future sync owner. Approval notices never create enrollment records or grant access by themselves.
 
-- `domain/enrollment/ClassCode.kt`: six-character validation, uppercase normalization, removal of the display hyphen before submission, and XXX-XXX presentation. O, I, 0 and 1 are rejected.
-- `ui/screens/enrollment/JoinClassDialog.kt`: bilingual Material 3 dialog with a grouped code field, invalid-code feedback, nonblocking offline warning, busy state, and 56dp primary action. Its owner supplies request/reachability state and the submit callback.
-- `ClassCodeTest.kt`: request normalization, partial-code presentation and malformed-code coverage.
+OkHttp 4.12 supplies the Android WebSocket transport; MockWebServer is test-only. No sync scheduler, cursor or schema changes are included.
 
-The dialog is not wired into AuthHost or the learner shell yet. No pretend enrollment, fabricated ID, WebSocket connection, sync cursor, or network write is created by this preparation.
+## Remaining integration
 
-## Dependency and next steps
+These components are not mounted in AuthHost or the learner shell yet. Full issue #50 is not complete and no end-to-end phone behavior is claimed.
 
-The technical spec section 10 orders Mobile 2.5 before 2.3. POST /api/classrooms/join returns status and classroom_id; GET /api/classrooms and EVENT_JOIN_APPROVAL likewise do not provide the authoritative enrollment ID required by Room. The sync pull supplies that enrollment row, and its cursor/data transaction belongs to SyncRepository.
+The join response, classroom list and approval event omit the authoritative enrollment ID required by Room. Mobile 2.5 must supply authoritative enrollment rows through its sync transaction. No temporary enrollment IDs or substitute sync implementation are introduced here.
 
-Recommended delivery sequence: merge 2.2, implement/test/merge 2.5, then finish 2.3 against the merged sync layer. Do not open a 2.3 feature PR claiming live enrollment is complete from these presentation components.
+When that layer is available, connect the required refresh callback and session/reachability owners, mount the screen, and verify teacher approval unlocks the saved class and survives offline relaunch. Mock-Hub and final physical-device evidence remain required. Future sprint work stays with its own issue, as requested.
 
-Remaining #50 work: bearer-authenticated join transport, pending/active class list read from Room, EVENT_HELLO and approval events with reconnect/backoff, sync refresh after event/reconnect, and mock-Hub/physical-device verification that teacher approval unlocks a class immediately and remains available offline.
+## Validation
 
-## Preparation validation
-
-`gradlew.bat test lint` passed on the preparation source (6m 2s in this fresh workspace). The three new class-code tests pass; full debug/release unit suites and lint pass. Output: `evidence/50/preparation-checks.txt`. No live joining, pending enrollment persistence, WebSocket approval, or physical-phone enrollment behavior is claimed by this check.
+`gradlew.bat test lint assembleDebug` passed (2m 10s). All 59 debug unit tests and the release suite pass, including existing authentication tests and new transport, WebSocket, Room-reader and view-model coverage. Lint and APK assembly pass. See `evidence/50/implementation-checks.txt`. Earlier presentation-only validation remains in `preparation-checks.txt`.

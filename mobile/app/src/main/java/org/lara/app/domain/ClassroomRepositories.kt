@@ -35,6 +35,8 @@ interface ClassworkRepository {
 }
 
 interface EnrollmentRepository {
+    fun learnerClasses(studentId: String, scope: CoroutineScope): StateFlow<Cached<List<org.lara.app.domain.enrollment.LearnerClass>>>
+
     fun roster(classroomId: String, scope: CoroutineScope): StateFlow<Cached<List<RosterMember>>>
 }
 

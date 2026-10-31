@@ -76,4 +76,17 @@
     <string name="enrollment_join_sending">Sending your join request...</string>
     <string name="enrollment_join_action">Request to join</string>
     <string name="enrollment_cancel_action">Cancel</string>
+    <string name="enrollment_loading">Loading saved classes</string>
+    <string name="enrollment_classes">My classes</string>
+    <string name="enrollment_empty">No classes yet</string>
+    <string name="enrollment_empty_help">Ask your teacher for a class code to get started.</string>
+    <string name="enrollment_request_title">Class request</string>
+    <string name="enrollment_pending">Waiting for your teacher to approve</string>
+    <string name="enrollment_active">Ready to open</string>
+    <string name="enrollment_approval_received">Approved. Waiting for your saved class to update.</string>
+    <string name="enrollment_rejected">Not approved. Ask your teacher for help.</string>
+    <string name="enrollment_removed">Access removed. Ask your teacher for help.</string>
+    <string name="enrollment_open">Open class</string>
+    <string name="enrollment_refresh_failed">Could not update class status: Your saved classes remain available. Try connecting to the Hub again.</string>
+    <string name="enrollment_session_expired">Please sign in again to connect to the Hub. Your saved work stays on this device.</string>
 </resources>

@@ -76,4 +76,17 @@
     <string name="enrollment_join_sending">Ipinapadala ang hiling na sumali...</string>
     <string name="enrollment_join_action">Humiling na sumali</string>
     <string name="enrollment_cancel_action">Kanselahin</string>
+    <string name="enrollment_loading">Nilo-load ang naka-save na mga klase</string>
+    <string name="enrollment_classes">Aking mga klase</string>
+    <string name="enrollment_empty">Wala pang mga klase</string>
+    <string name="enrollment_empty_help">Hingin sa guro ang code ng klase para makapagsimula.</string>
+    <string name="enrollment_request_title">Hiling na sumali sa klase</string>
+    <string name="enrollment_pending">Hinihintay ang pag-apruba ng guro</string>
+    <string name="enrollment_active">Maaari nang buksan</string>
+    <string name="enrollment_approval_received">Naaprubahan. Hinihintay ang pag-update ng naka-save na klase.</string>
+    <string name="enrollment_rejected">Hindi naaprubahan. Magpatulong sa guro.</string>
+    <string name="enrollment_removed">Inalis ang access. Magpatulong sa guro.</string>
+    <string name="enrollment_open">Buksan ang klase</string>
+    <string name="enrollment_refresh_failed">Hindi ma-update ang katayuan ng klase: Magagamit pa rin ang naka-save na mga klase. Kumonekta muli sa Hub.</string>
+    <string name="enrollment_session_expired">Mag-sign in muli para makakonekta sa Hub. Nananatili sa device ang naka-save na gawain.</string>
 </resources>

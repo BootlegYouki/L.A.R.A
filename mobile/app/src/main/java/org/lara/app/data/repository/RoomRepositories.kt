@@ -62,6 +62,11 @@ class RoomClassworkRepository(
 }
 
 class RoomEnrollmentRepository(private val dao: RosterDao) : EnrollmentRepository {
+    override fun learnerClasses(studentId: String, scope: CoroutineScope) =
+        dao.observeForStudent(studentId).map { rows -> rows.map {
+            org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain())
+        } }.cached(scope)
+
     override fun roster(classroomId: String, scope: CoroutineScope) =
         dao.observeByClassroom(classroomId).map { rows ->
             rows.map { RosterMember(it.enrollment.toDomain(), it.user?.toDomain()) }

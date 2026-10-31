@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -14,7 +16,7 @@ import org.lara.app.domain.enrollment.ClassCode
 import org.lara.app.ui.components.DiscoveryBanner
 import org.lara.app.ui.theme.*
 
-enum class JoinClassError { INVALID_CODE, HUB_UNREACHABLE, REQUEST_FAILED }
+enum class JoinClassError { INVALID_CODE, HUB_UNREACHABLE, REQUEST_FAILED, REFRESH_FAILED, SESSION_EXPIRED }
 
 /** Presentation only; the enrollment owner supplies reachability, request state, and persistence. */
 @Composable
@@ -43,13 +45,12 @@ fun JoinClassDialog(
                     onValueChange = { draft = ClassCode.draft(it); invalid = false },
                     enabled = !busy, singleLine = true, isError = invalidCode,
                     shape = LaraShapes.medium,
-                    label = { Text(label) },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Characters,
                         keyboardType = KeyboardType.Ascii,
                         autoCorrectEnabled = false,
                     ),
-                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).semantics { contentDescription = label },
                 )
                 if (invalidCode) {
                     Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -62,6 +63,10 @@ fun JoinClassDialog(
                         DiscoveryBanner(R.string.enrollment_join_offline, warning = true, success = false)
                     error == JoinClassError.REQUEST_FAILED ->
                         DiscoveryBanner(R.string.enrollment_join_failed, warning = true, success = false)
+                    error == JoinClassError.REFRESH_FAILED ->
+                        DiscoveryBanner(R.string.enrollment_refresh_failed, warning = true, success = false)
+                    error == JoinClassError.SESSION_EXPIRED ->
+                        DiscoveryBanner(R.string.enrollment_session_expired, warning = true, success = false)
                 }
                 if (busy) Text(stringResource(R.string.enrollment_join_sending))
             }
