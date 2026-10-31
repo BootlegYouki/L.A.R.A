@@ -1,0 +1,132 @@
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set DIRNAME=C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if "C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\" == "" set DIRNAME=.
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set APP_BASE_NAME=gradlew
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set APP_HOME=C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>for %i in ("C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\") do set APP_HOME=%~fi
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set APP_HOME=C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if defined JAVA_HOME goto findJavaFromJavaHome
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set JAVA_HOME=C:\Users\moen\AppData\Local\Temp\lara-mobile-validation\jdk-17.0.18+8
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set JAVA_EXE=C:\Users\moen\AppData\Local\Temp\lara-mobile-validation\jdk-17.0.18+8/bin/java.exe
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if exist "C:\Users\moen\AppData\Local\Temp\lara-mobile-validation\jdk-17.0.18+8/bin/java.exe" goto execute
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>set CLASSPATH=C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>"C:\Users\moen\AppData\Local\Temp\lara-mobile-validation\jdk-17.0.18+8/bin/java.exe" -Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\moen\Desktop\LARA\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain test lint
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :app:mergeReleaseShaders UP-TO-DATE
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:packageReleaseUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateReleaseUnitTestConfig UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+
+> Task :app:kaptGenerateStubsDebugKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptGenerateStubsReleaseKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptDebugKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:kaptReleaseKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:compileReleaseKotlin
+> Task :app:compileDebugKotlin
+> Task :app:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:bundleReleaseClassesToCompileJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleReleaseClassesToRuntimeJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:kaptGenerateStubsReleaseUnitTestKotlin
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+> Task :app:kaptReleaseUnitTestKotlin
+> Task :app:processReleaseJavaRes
+> Task :app:kaptDebugUnitTestKotlin
+> Task :app:compileReleaseUnitTestKotlin
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processReleaseUnitTestJavaRes UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:testReleaseUnitTest
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest
+> Task :app:test
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintReportDebug UP-TO-DATE
+> Task :app:lintDebug
+> Task :app:lint
+
+BUILD SUCCESSFUL in 3m 2s
+73 actionable tasks: 27 executed, 46 up-to-date
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if 0 EQU 0 goto mainEnd
+
+C:\Users\moen\Desktop\LARA\L.A.R.A\mobile>if "Windows_NT" == "Windows_NT" endlocal

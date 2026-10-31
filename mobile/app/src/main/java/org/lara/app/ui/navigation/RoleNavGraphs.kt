@@ -7,7 +7,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -16,6 +15,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.NavDestination.Companion.hasRoute
 import kotlinx.serialization.Serializable
 import org.lara.app.R
+import org.lara.app.ui.components.DiscoveryBanner
 import org.lara.app.ui.components.BottomNavBar
 import org.lara.app.ui.components.label
 import org.lara.app.ui.theme.*
@@ -117,9 +117,8 @@ private fun RoleNavGraph(
     ) { insets ->
         Column(Modifier.fillMaxSize().padding(insets)) {
             if (!state.isHubReachable) {
-                Row(Modifier.fillMaxWidth().padding(LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_info), contentDescription = null)
-                    Text(stringResource(R.string.shell_offline), style = MaterialTheme.typography.bodyMedium)
+                Box(Modifier.fillMaxWidth().padding(LaraSpacing.S4)) {
+                    DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
                 }
             }
             if (teacher) {

@@ -1,4 +1,4 @@
-﻿# Role navigation shell — MOBILE 2.1 (#24)
+# Role navigation shell — MOBILE 2.1 (#24)
 
 `LaraNavigation(discovery, state, sessionKey, content)` keeps the Sprint 1.2 Hub discovery graph as the unauthenticated entry. When authentication supplies a non-null `ShellState`, it selects `StudentNavGraph` or `TeacherNavGraph` from the authenticated role. MOBILE 2.2 must map `AuthSession.user.role` to `ShellRole`; `ADMIN` must never enter either graph. Pass the authenticated user ID as `sessionKey` so an account change discards the previous navigation stack.
 
@@ -17,7 +17,7 @@ The shell content slot receives the selected classroom destination and can compo
 
 `hasInProgressAttempt` reflects any cached `IN_PROGRESS` learner attempt. An active attempt disables the tutor tab, exposes its explanation visually and through accessibility semantics, and guards the content slot before composition. An AI route open or restored when lockout begins is replaced with Quizzes. Unlocking does not automatically reopen AI.
 
-The offline banner is nonblocking and leaves selected content mounted. Loading uses solid skeleton blocks. Tab switching preserves navigation state. All text comes from matching English and Filipino resources.
+Discovery and the shell share `ui/components/DiscoveryBanner.kt`; the shell selects its amber warning state with a warning icon and polite accessibility announcement. The offline banner is nonblocking and leaves selected content mounted. Loading uses solid skeleton blocks. Tab switching preserves navigation state. All text comes from matching English and Filipino resources.
 
 ## Verification
 
