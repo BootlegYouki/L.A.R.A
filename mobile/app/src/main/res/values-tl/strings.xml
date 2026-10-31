@@ -67,4 +67,13 @@
     <string name="auth_storage_error">Hindi mabuksan ang naka-save na session: Mag-sign in muli para mabuksan ang klase.</string>
     <string name="auth_pin_digit">Numero %1$d ng PIN</string>
     <string name="auth_retry_seconds">Subukan muli pagkalipas ng %1$d segundo.</string>
+    <string name="enrollment_join_title">Sumali sa klase</string>
+    <string name="enrollment_code_label">Code ng klase</string>
+    <string name="enrollment_code_help">Hingin sa guro ang anim na karakter na code ng klase, na ipinapakitang XXX-XXX.</string>
+    <string name="enrollment_code_invalid">Itanong muli ang code sa guro. Gumamit ng anim na titik o numero, walang O, I, 0 o 1.</string>
+    <string name="enrollment_join_offline">Hindi maabot ang Hub: Kumonekta sa network ng klase bago humiling na sumali. Magagamit pa rin ang naka-save na klase.</string>
+    <string name="enrollment_join_failed">Hindi maipadala ang hiling: Subukan muli o magpatulong sa guro.</string>
+    <string name="enrollment_join_sending">Ipinapadala ang hiling na sumali...</string>
+    <string name="enrollment_join_action">Humiling na sumali</string>
+    <string name="enrollment_cancel_action">Kanselahin</string>
 </resources>

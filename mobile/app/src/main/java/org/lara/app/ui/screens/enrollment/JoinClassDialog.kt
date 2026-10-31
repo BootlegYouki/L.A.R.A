@@ -1,0 +1,86 @@
+package org.lara.app.ui.screens.enrollment
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import org.lara.app.R
+import org.lara.app.domain.enrollment.ClassCode
+import org.lara.app.ui.components.DiscoveryBanner
+import org.lara.app.ui.theme.*
+
+enum class JoinClassError { INVALID_CODE, HUB_UNREACHABLE, REQUEST_FAILED }
+
+/** Presentation only; the enrollment owner supplies reachability, request state, and persistence. */
+@Composable
+fun JoinClassDialog(
+    isHubReachable: Boolean,
+    busy: Boolean,
+    error: JoinClassError?,
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit,
+) {
+    var draft by remember { mutableStateOf("") }
+    var invalid by remember { mutableStateOf(false) }
+    val invalidCode = invalid || error == JoinClassError.INVALID_CODE
+    val label = stringResource(R.string.enrollment_code_label)
+    AlertDialog(
+        onDismissRequest = { if (!busy) onDismiss() },
+        containerColor = LaraColors.Surface,
+        shape = LaraShapes.large,
+        title = { Text(stringResource(R.string.enrollment_join_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                Text(stringResource(R.string.enrollment_code_help))
+                Text(label, style = MaterialTheme.typography.labelLarge)
+                OutlinedTextField(
+                    value = ClassCode.display(draft),
+                    onValueChange = { draft = ClassCode.draft(it); invalid = false },
+                    enabled = !busy, singleLine = true, isError = invalidCode,
+                    shape = LaraShapes.medium,
+                    label = { Text(label) },
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Ascii,
+                        autoCorrectEnabled = false,
+                    ),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+                )
+                if (invalidCode) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                        Icon(painterResource(R.drawable.ic_warning_circle), null, tint = LaraColors.DangerDark)
+                        Text(stringResource(R.string.enrollment_code_invalid), color = LaraColors.DangerDark)
+                    }
+                }
+                when {
+                    !isHubReachable || error == JoinClassError.HUB_UNREACHABLE ->
+                        DiscoveryBanner(R.string.enrollment_join_offline, warning = true, success = false)
+                    error == JoinClassError.REQUEST_FAILED ->
+                        DiscoveryBanner(R.string.enrollment_join_failed, warning = true, success = false)
+                }
+                if (busy) Text(stringResource(R.string.enrollment_join_sending))
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val code = ClassCode.canonicalOrNull(draft)
+                    if (code == null) invalid = true else onSubmit(code)
+                },
+                enabled = !busy && isHubReachable,
+                modifier = Modifier.heightIn(min = PrimaryTouchTarget),
+            ) { Text(stringResource(R.string.enrollment_join_action)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !busy,
+                modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                Text(stringResource(R.string.enrollment_cancel_action))
+            }
+        },
+    )
+}

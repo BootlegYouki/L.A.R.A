@@ -67,4 +67,13 @@
     <string name="auth_storage_error">Saved session unavailable: Sign in again to reopen your classroom.</string>
     <string name="auth_pin_digit">PIN digit %1$d</string>
     <string name="auth_retry_seconds">Try again in %1$d seconds.</string>
+    <string name="enrollment_join_title">Join a class</string>
+    <string name="enrollment_code_label">Class code</string>
+    <string name="enrollment_code_help">Ask your teacher for the six-character class code, shown as XXX-XXX.</string>
+    <string name="enrollment_code_invalid">Check the code with your teacher. Use six letters or numbers without O, I, 0 or 1.</string>
+    <string name="enrollment_join_offline">Hub unreachable: Connect to the classroom network before requesting to join. Saved classes remain available.</string>
+    <string name="enrollment_join_failed">Could not send the request: Please try again or ask your teacher for help.</string>
+    <string name="enrollment_join_sending">Sending your join request...</string>
+    <string name="enrollment_join_action">Request to join</string>
+    <string name="enrollment_cancel_action">Cancel</string>
 </resources>
