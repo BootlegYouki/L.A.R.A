@@ -111,3 +111,20 @@ Refreshed checks: `npm run lint` exit 0, 20 tests in 6 files passed, `npm run bu
 WAN-only test: NOT PERFORMED. The user's fiber modem/router has fiber, power and a LAN Ethernet connection, with no separate Ethernet WAN uplink to unplug. No fiber cable was disconnected and no router setting was changed. Turning off the Hub PC's Wi-Fi is loss of the local network, not loss of the WAN. Repeat using a suitable isolated test router before claiming WAN-disconnected operation.
 
 Remaining review limitations: real-Hub mDNS-only discovery on separate devices; WAN-only isolation; Desktop-side network-adapter recovery; normal native window-close lifecycle; Linux/macOS and release packaging. The independent mDNS fixture and scanner cancellation tests remain useful evidence but do not replace these checks. No completion or merge claim is made.
+
+## Real-Hub mDNS-only attempt (October 31)
+
+With the second-PC Hub running at 192.168.100.6 and Wi-Fi connected, a standalone mdns-sd 0.21.6 browser (no UDP beacon listener) resolved `Desktop Integration Test Hub._lara._tcp.local.`, host `DESKTOP-1MA0V9G.local.`, HTTP 8080, address 192.168.100.6. This proves the available network can carry real-Hub mDNS responses.
+
+The actual Desktop scanner was then exercised by the opt-in `real_hub_mdns_without_udp` test. A separate socket holds UDP 8888 for the entire test, so the scanner cannot receive beacon datagrams. It waits up to 25 seconds for the expected Hub, then would require 20 seconds of stable visibility and cancel/join the scanner. This run FAILED: the candidate did not resolve within 25 seconds.
+
+A one-variable experiment temporarily disabled periodic mDNS daemon restarts. It failed with the same 25-second resolution timeout; that production-code experiment was reverted. A subsequent standalone browser also timed out without resolving the service. The user confirmed the second-PC Hub and Wi-Fi remained running and no new firewall prompt appeared. No firewall/security changes were made during these attempts. These mixed results do not establish root cause or a reliable integration pass.
+
+The opt-in test is retained for reproducible investigation, ignored by default because it requires another real LAN device. Close Desktop and all other UDP 8888 listeners, keep the second-PC Hub running, and run from desktop/:
+
+```powershell
+$env:LARA_TEST_REAL_HUB_IP = '<real-second-PC-Hub-IPv4>'
+cargo test --locked --manifest-path src-tauri/Cargo.toml --lib real_hub_mdns_without_udp -- --ignored --nocapture
+```
+
+Default Rust suite after restoring production code: 4 passed, 2 integration tests ignored. The explicit real-Hub test above failed and must not be represented as passing by the default suite. Product scanner behavior was not changed. WAN connectivity remained available throughout; this was not a WAN-isolation test. Real-Hub mDNS reliability remains unresolved.

@@ -366,4 +366,61 @@ mod tests {
         drop(blocker);
         assert!(UdpSocket::bind("0.0.0.0:8888").await.is_ok());
     }
+
+    #[tokio::test]
+    #[ignore = "requires a real Hub on another LAN device; close Desktop and set LARA_TEST_REAL_HUB_IP"]
+    async fn real_hub_mdns_without_udp() {
+        let expected: Ipv4Addr = std::env::var("LARA_TEST_REAL_HUB_IP")
+            .expect("set the second device's real Hub IPv4")
+            .parse()
+            .unwrap();
+        assert!(allowed_ip(expected));
+        // Occupying the beacon port forces the actual scanner to use mDNS only.
+        let _blocker = UdpSocket::bind("0.0.0.0:8888")
+            .await
+            .expect("close Desktop and other UDP 8888 listeners first");
+        let registry = Arc::new(Mutex::new(Registry::default()));
+        let (stop, receiver) = watch::channel(false);
+        let task = tokio::spawn(scan(registry.clone(), receiver, |_| {}));
+        let deadline = Instant::now() + Duration::from_secs(25);
+        let mut resolved = false;
+        while Instant::now() < deadline {
+            if registry
+                .lock()
+                .unwrap()
+                .snapshot(Instant::now())
+                .iter()
+                .any(|hub| hub.ip == expected && hub.http_port == 8080)
+            {
+                resolved = true;
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        let mut stable = resolved;
+        if resolved {
+            for _ in 0..20 {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                stable &= registry
+                    .lock()
+                    .unwrap()
+                    .snapshot(Instant::now())
+                    .iter()
+                    .any(|hub| hub.ip == expected && hub.http_port == 8080);
+            }
+        }
+        stop.send(true).unwrap();
+        tokio::time::timeout(Duration::from_secs(3), task)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(resolved, "real Hub did not resolve with UDP unavailable");
+        assert!(
+            stable,
+            "real Hub mDNS candidate disappeared during observation"
+        );
+        println!(
+            "Real Hub {expected}:8080 resolved and stayed visible for 20 seconds with UDP blocked"
+        );
+    }
 }
