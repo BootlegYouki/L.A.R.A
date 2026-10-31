@@ -1,6 +1,9 @@
 package org.lara.app.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.ui.unit.dp
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -23,12 +26,19 @@ fun AuthHost(container: AppContainer) {
     })
     val state by model.state.collectAsStateWithLifecycle()
     var discovery by remember { mutableStateOf(false) }
+    BackHandler(enabled = discovery) { discovery = false }
     Scaffold(containerColor = LaraColors.Canvas) { insets ->
         if(state.user == null) Box(Modifier.fillMaxSize().padding(insets)) {
             when {
-                state.restoring -> Column(Modifier.padding(LaraSpacing.S4)) {
+                state.restoring -> Column(
+                    Modifier.padding(LaraSpacing.S4),
+                    verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
+                ) {
                     Text(stringResource(R.string.auth_restoring))
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    repeat(3) {
+                        Spacer(Modifier.fillMaxWidth().height(56.dp)
+                            .background(LaraColors.SurfaceSubtle, LaraShapes.medium))
+                    }
                 }
                 discovery -> {
                     val scan: DiscoveryViewModel = viewModel(factory = viewModelFactory {

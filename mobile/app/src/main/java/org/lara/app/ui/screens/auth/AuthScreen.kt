@@ -26,25 +26,35 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
     var pin by remember { mutableStateOf("") }
     var now by remember { mutableStateOf(android.os.SystemClock.elapsedRealtime()) }
     LaunchedEffect(state.retryAt) {
+        now = android.os.SystemClock.elapsedRealtime()
         while (now < state.retryAt) {
             kotlinx.coroutines.delay(1000)
             now = android.os.SystemClock.elapsedRealtime()
         }
     }
     val retrying = now < state.retryAt
+    val idLabel = stringResource(R.string.auth_id)
+    val nameLabel = stringResource(R.string.auth_name)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, color = LaraColors.PrimaryDark)
         Text(stringResource(if(registering) R.string.auth_register else R.string.auth_login), style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(R.string.auth_teacher_help), style = MaterialTheme.typography.bodyLarge)
         state.error?.let { DiscoveryBanner(it, warning = true, success = false) }
+        Text(idLabel, style = MaterialTheme.typography.labelLarge)
         OutlinedTextField(value = id, onValueChange = { id = it.take(32) }, enabled = !state.busy,
-            label = { Text(stringResource(R.string.auth_id)) }, singleLine = true,
+            singleLine = true, shape = LaraShapes.medium,
+            isError = state.error == R.string.auth_invalid || state.error == R.string.auth_wrong_pin,
             keyboardOptions = KeyboardOptions(keyboardType = if(registering) KeyboardType.Number else KeyboardType.Ascii),
-            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget))
-        if(registering) OutlinedTextField(value = name, onValueChange = { name = it.take(120) }, enabled = !state.busy,
-            label = { Text(stringResource(R.string.auth_name)) }, singleLine = true,
-            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget))
+            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+                .semantics { contentDescription = idLabel })
+        if(registering) {
+            Text(nameLabel, style = MaterialTheme.typography.labelLarge)
+            OutlinedTextField(value = name, onValueChange = { name = it.take(120) }, enabled = !state.busy,
+                singleLine = true, shape = LaraShapes.medium,
+                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+                    .semantics { contentDescription = nameLabel })
+        }
         if (retrying) Text(stringResource(R.string.auth_retry_seconds, ((state.retryAt - now + 999) / 1000).toInt()))
         Text(stringResource(R.string.auth_pin), style = MaterialTheme.typography.labelLarge)
         // Four individually masked boxes match the PIN component without opening a second keypad.
@@ -52,7 +62,8 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
             repeat(4) { index ->
                 val description = stringResource(R.string.auth_pin_digit, index + 1)
                 OutlinedTextField(value = if(index < pin.length) "*" else "", onValueChange = {}, readOnly = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = PasswordVisualTransformation(), shape = LaraShapes.medium,
+                    isError = state.error == R.string.auth_invalid || state.error == R.string.auth_wrong_pin,
                     modifier = Modifier.width(52.dp).heightIn(min = 60.dp).semantics { contentDescription = description })
             }
         }
