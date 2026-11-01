@@ -59,6 +59,7 @@ class HubState:
 
     def __init__(self):
         self.lock = threading.RLock()
+        self.login_failures = {}  # lrn_or_id -> monotonic times of wrong PINs in the last 60 s
         self.users = {}
         self.sessions = {}
         self.classrooms = {}
@@ -247,8 +248,8 @@ def parse_multipart(content_type, body):
 
 # ----------------------------------------------------------------- HTTP
 class ApiError(Exception):
-    def __init__(self, status, code, message=""):
-        self.status, self.code, self.message = status, code, message or code
+    def __init__(self, status, code, message="", headers=None):
+        self.status, self.code, self.message, self.headers = status, code, message or code, headers or {}
 
 
 ROUTES = []
@@ -273,11 +274,13 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, PUT, DELETE")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization")
 
-    def send_json(self, status, obj):
+    def send_json(self, status, obj, extra=None):
         data = json.dumps(strip_private(obj)).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
         self._cors()
         self.end_headers()
         self.wfile.write(data)
@@ -346,7 +349,7 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
                 return
             raise ApiError(404, "ROUTE_NOT_FOUND", f"{method} {path}")
         except ApiError as e:
-            self.send_json(e.status, {"error": {"code": e.code, "message": e.message}})
+            self.send_json(e.status, {"error": {"code": e.code, "message": e.message}}, e.headers)
         except (BrokenPipeError, ConnectionResetError):
             pass
         except Exception as e:  # keep the mock alive for client developers
@@ -422,6 +425,9 @@ def portal_file(req):
 def register(req):
     b = req.json()
     need(b, "lrn_or_id", "full_name", "pin")
+    b["lrn_or_id"], b["full_name"] = str(b["lrn_or_id"]).strip(), str(b["full_name"]).strip()
+    if not (0 < len(b["lrn_or_id"]) <= 32 and 0 < len(b["full_name"]) <= 100):
+        raise ApiError(400, "BAD_REQUEST", "LRN and name must be 1-32 and 1-100 characters")
     if not re.fullmatch(r"\d{4}", str(b["pin"])):
         raise ApiError(400, "BAD_REQUEST", "PIN must be 4 digits")
     if any(u["lrn_or_id"] == b["lrn_or_id"] for u in STATE.users.values()):
@@ -434,10 +440,25 @@ def register(req):
 def login(req):
     b = req.json()
     need(b, "lrn_or_id", "pin")
-    for u in STATE.users.values():
-        if u["lrn_or_id"] == b["lrn_or_id"] and u["pin_hash"] == hash_pin(str(b["pin"])):
-            return STATE.open_session(u)
+    lrn, now = b["lrn_or_id"], time.monotonic()
+    fails = [t for t in STATE.login_failures.get(lrn, []) if now - t < 60]
+    if len(fails) >= 5:
+        wait = max(1, int(60 - (now - fails[0])) + 1)
+        raise ApiError(429, "TOO_MANY_ATTEMPTS", "Too many wrong PINs, try again later", {"Retry-After": str(wait)})
+    user = next((u for u in STATE.users.values() if u["lrn_or_id"] == lrn), None)
+    if user and user["role"] == "ADMIN" and not is_hub_pc(req):
+        raise ApiError(403, "ADMIN_LOCAL_ONLY", "The admin signs in on the Hub PC only")
+    if user and user["pin_hash"] == hash_pin(str(b["pin"])):
+        STATE.login_failures.pop(lrn, None)
+        return STATE.open_session(user)
+    STATE.login_failures[lrn] = fails + [now]
     raise ApiError(401, "UNAUTHORIZED", "Wrong LRN or PIN")
+
+
+def is_hub_pc(req):
+    # cloudflared also connects from loopback, so a tunnel-relayed request carries Cf-Connecting-IP.
+    h = req.handler
+    return h.client_address[0] in ("127.0.0.1", "::1") and not h.headers.get("Cf-Connecting-IP")
 
 
 @route("POST", r"/api/auth/logout")

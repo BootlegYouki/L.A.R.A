@@ -61,6 +61,23 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(status, 401)
         self.assertEqual(body["error"]["code"], "UNAUTHORIZED")
 
+    def test_login_rate_limit_and_register_checks(self):
+        wrong = {"lrn_or_id": "123456789013", "pin": "9999"}
+        for _ in range(5):
+            self.assertEqual(call(BASE, "POST", "/api/auth/login", wrong)[0], 401)
+        status, body, headers = call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "123456789013", "pin": "1234"})
+        self.assertEqual((status, body["error"]["code"]), (429, "TOO_MANY_ATTEMPTS"))
+        self.assertGreater(int(headers["Retry-After"]), 0)
+        self.assertEqual(call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "T-0001", "pin": "1234"})[0], 200)
+        for bad in ({"lrn_or_id": " ", "full_name": "A", "pin": "1234"}, {"lrn_or_id": "999", "full_name": "", "pin": "1234"}):
+            self.assertEqual(call(BASE, "POST", "/api/auth/register", bad)[0], 400)
+
+    def test_admin_login_is_hub_pc_only(self):
+        body = {"lrn_or_id": "ADMIN-0001", "pin": "1234"}
+        status, err, _ = call(BASE, "POST", "/api/auth/login", body, headers={"Cf-Connecting-IP": "203.0.113.7"})
+        self.assertEqual((status, err["error"]["code"]), (403, "ADMIN_LOCAL_ONLY"))
+        self.assertEqual(call(BASE, "POST", "/api/auth/login", body)[0], 200)
+
     def test_classrooms_for_teacher_and_pupil(self):
         _, rooms, _ = call(BASE, "GET", "/api/classrooms", token=self.teacher)
         self.assertEqual(rooms[0]["class_code"], "K7M4QX")
