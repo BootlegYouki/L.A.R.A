@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS announcement_comments (
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC', 'REJECTED')),
+    sync_reject_reason TEXT, -- Hub receipt reason when sync_status = 'REJECTED' (e.g. TIME_LIMIT_EXCEEDED); NULL otherwise
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
 );
 
@@ -127,7 +128,8 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     score INTEGER,                             -- graded score received from the Hub
     teacher_feedback TEXT,
     updated_at INTEGER NOT NULL,
-    sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC', 'REJECTED')),
+    sync_reject_reason TEXT, -- Hub receipt reason when sync_status = 'REJECTED' (e.g. TIME_LIMIT_EXCEEDED); NULL otherwise
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     UNIQUE(assignment_id, student_id)
 );
@@ -177,7 +179,8 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     total_points INTEGER,
     answers_json TEXT NOT NULL DEFAULT '[]',
     updated_at INTEGER NOT NULL,
-    sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC', 'REJECTED')),
+    sync_reject_reason TEXT, -- Hub receipt reason when sync_status = 'REJECTED' (e.g. TIME_LIMIT_EXCEEDED); NULL otherwise
     CHECK(status = 'IN_PROGRESS' OR submitted_at IS NOT NULL),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     UNIQUE(quiz_id, student_id)
@@ -217,13 +220,15 @@ CREATE TABLE IF NOT EXISTS private_comments (
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC')),
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC', 'REJECTED')),
+    sync_reject_reason TEXT, -- Hub receipt reason when sync_status = 'REJECTED' (e.g. TIME_LIMIT_EXCEEDED); NULL otherwise
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
 );
 
 -- 14. Sync state (CLIENT ONLY key/value). Keys: 'hub_id', 'sync_epoch', 'cursor' (last next_cursor), 'current_user_id'.
 -- Write 'cursor' in the same transaction that applies the pulled records. If the Hub reports reset=true,
--- wipe the mirrored tables (never rows still QUEUED_FOR_SYNC) and pull again from cursor 0.
+-- wipe the mirrored tables (never rows still QUEUED_FOR_SYNC or REJECTED) and pull again from cursor 0.
+-- Other keys are client-local bookkeeping only: prefixed with a namespace and ':', never a cursor, never sent to the Hub.
 CREATE TABLE IF NOT EXISTS sync_state (
     key TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL,

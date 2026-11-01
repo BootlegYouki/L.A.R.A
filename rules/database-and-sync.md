@@ -42,9 +42,9 @@ A learner can open their own phone's SQLite file, so the client schema is public
 Clients get other people's names through `PublicUser` (`id`, `full_name`, `role`) in the pull response.
 
 ### Client-specific columns
-* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'`) on `assignment_submissions`, `quiz_attempts`, `announcement_comments` and `private_comments`: work created offline waiting to upload.
+* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'` | `'REJECTED'`) and `sync_reject_reason` on `assignment_submissions`, `quiz_attempts`, `announcement_comments` and `private_comments`: work created offline waiting to upload, and the Hub's reason when it refused it.
 * `materials.local_file_path`: absolute path of the cached PDF or MP4.
-* `sync_state` (key/value): `hub_id`, `sync_epoch`, `cursor`, `current_user_id`.
+* `sync_state` (key/value): `hub_id`, `sync_epoch`, `cursor`, `current_user_id`. A client may add its own bookkeeping keys under a `namespace:` prefix (for example upload receipts); they are never a cursor and never sent to the Hub. Upload outcomes belong in `sync_status` / `sync_reject_reason`, not in `sync_state`.
 
 ---
 
@@ -64,13 +64,13 @@ Each revision has `classroom_id` (NULL for global records) and `student_id` (NUL
 
 ### 3.3 Reset (new Hub, restore, pruning)
 * `hub_id` is generated once per Hub. `sync_epoch` is incremented when a backup is restored or when old tombstones are pruned.
-* If the client's `hub_id` or `sync_epoch` differs from the Hub's, the response has `reset: true`. The client wipes its mirrored tables, **keeping rows still `QUEUED_FOR_SYNC`**, and applies the response (which starts from cursor 0).
+* If the client's `hub_id` or `sync_epoch` differs from the Hub's, the response has `reset: true`. The client wipes its mirrored tables, **keeping rows still `QUEUED_FOR_SYNC` or `REJECTED`**, and applies the response (which starts from cursor 0).
 * The same applies if a client was offline longer than the tombstone retention window (the Hub bumps the epoch when it prunes).
 
 ### 3.4 Push (`POST /api/sync/push`)
 * Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts, stream comments and private comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
 * Hub validates and grades server-side, writes `sync_revisions` in the same transaction, and returns one receipt per item (`SYNCED` or `REJECTED` + reason such as `TIME_LIMIT_EXCEEDED`).
-* Client marks `SYNCED` only from a receipt. A `REJECTED` row stays visible to the learner with a kind explanation and is never silently deleted.
+* Client marks `SYNCED` only from a receipt. On `REJECTED` it sets `sync_status = 'REJECTED'` and `sync_reject_reason` from the receipt; the row stays visible to the learner with a kind explanation, is never retried automatically and is never silently deleted.
 
 ### 3.5 Conflict policy
 Server is authoritative for classroom metadata, rosters and grades. The client is authoritative for its own drafts, queued answers and homework photos until the Hub acknowledges them.
