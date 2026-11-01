@@ -103,4 +103,24 @@
     <string name="approval_no_saved_classes">No saved classes. Connect to the Hub to update your class list.</string>
     <string name="enrollment_all_classes">All classes</string>
     <string name="approval_no_classes">No classes yet. Classes you teach will appear here.</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_english">English</string>
+    <string name="settings_filipino">Filipino</string>
+    <string name="settings_hub">Classroom Hub</string>
+    <string name="settings_hub_name">Saved classroom Hub</string>
+    <string name="settings_no_hub">No Hub saved</string>
+    <string name="settings_connected">Connected to Hub</string>
+    <string name="settings_disconnected">Hub unreachable</string>
+    <string name="settings_change_hub">Change Hub</string>
+    <string name="settings_change_hub_help">Changing the Hub signs you out. Your saved work stays on this phone.</string>
+    <string name="settings_about">About L.A.R.A.</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_about_text">Your classroom, lessons and learning activities, available on the classroom network and saved for offline study.</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_cancel">Stay signed in</string>
+    <string name="settings_queued_warning">Items waiting to sync: %1$d. They will stay saved on this phone. Sign in again with this account to send them when the Hub is reachable. Sign out now?</string>
+    <string name="settings_offline">Hub unreachable: language settings and sign out still work. Saved work stays on this phone.</string>
+    <string name="settings_failed">Settings could not be saved. Please try again.</string>
 </resources>

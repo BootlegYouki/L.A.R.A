@@ -94,12 +94,15 @@ private fun RoleNavGraph(
         containerColor = LaraColors.Canvas,
         topBar = {
             Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
+                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S4),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     stringResource(if (teacher) R.string.teacher_classroom else R.string.learner_classroom),
-                    modifier = Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 64.dp)
-                        .padding(LaraSpacing.S4),
+                    modifier = Modifier.weight(1f).heightIn(min = 64.dp).padding(vertical = LaraSpacing.S4),
                     style = MaterialTheme.typography.titleLarge,
                 )
+                org.lara.app.ui.screens.settings.SettingsAction()
+                }
             }
         },
         bottomBar = {

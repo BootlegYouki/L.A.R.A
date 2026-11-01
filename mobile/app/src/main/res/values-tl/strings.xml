@@ -103,4 +103,24 @@
     <string name="approval_no_saved_classes">Walang naka-save na klase. Kumonekta sa Hub upang ma-update ang listahan ng klase.</string>
     <string name="enrollment_all_classes">Lahat ng klase</string>
     <string name="approval_no_classes">Wala pang klase. Lalabas dito ang mga klaseng itinuturo mo.</string>
+    <string name="settings_title">Mga Setting</string>
+    <string name="settings_back">Bumalik</string>
+    <string name="settings_language">Wika ng app</string>
+    <string name="settings_english">English</string>
+    <string name="settings_filipino">Filipino</string>
+    <string name="settings_hub">Hub ng silid-aralan</string>
+    <string name="settings_hub_name">Naka-save na Hub ng silid-aralan</string>
+    <string name="settings_no_hub">Walang naka-save na Hub</string>
+    <string name="settings_connected">Nakakonekta sa Hub</string>
+    <string name="settings_disconnected">Hindi maabot ang Hub</string>
+    <string name="settings_change_hub">Palitan ang Hub</string>
+    <string name="settings_change_hub_help">Magsa-sign out kapag pinalitan ang Hub. Mananatili sa telepono ang iyong naka-save na gawain.</string>
+    <string name="settings_about">Tungkol sa L.A.R.A.</string>
+    <string name="settings_version">Bersyon %1$s</string>
+    <string name="settings_about_text">Ang iyong silid-aralan, mga aralin at gawain sa classroom network, na naka-save rin para sa pag-aaral offline.</string>
+    <string name="settings_sign_out">Mag-sign out</string>
+    <string name="settings_cancel">Manatiling naka-sign in</string>
+    <string name="settings_queued_warning">Mga item na naghihintay ma-sync: %1$d. Mananatili ang mga ito sa teleponong ito. Mag-sign in muli sa account na ito para maipadala kapag naaabot na ang Hub. Mag-sign out na?</string>
+    <string name="settings_offline">Hindi maabot ang Hub: magagamit pa rin ang pagpili ng wika at pag-sign out. Mananatili sa telepono ang naka-save na gawain.</string>
+    <string name="settings_failed">Hindi na-save ang mga setting. Pakisubukan muli.</string>
 </resources>

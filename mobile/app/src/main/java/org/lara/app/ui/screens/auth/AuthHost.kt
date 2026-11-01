@@ -18,6 +18,11 @@ import org.lara.app.domain.discovery.ConnectionResult
 import org.lara.app.ui.navigation.*
 import org.lara.app.ui.screens.discovery.*
 import org.lara.app.ui.theme.*
+import org.lara.app.ui.screens.settings.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 
 @Composable
 fun AuthHost(container: AppContainer) {
@@ -26,6 +31,7 @@ fun AuthHost(container: AppContainer) {
     })
     val state by model.state.collectAsStateWithLifecycle()
     var discovery by remember { mutableStateOf(false) }
+    var settings by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = discovery) { discovery = false }
     Scaffold(containerColor = LaraColors.Canvas) { insets ->
         if(state.user == null) Box(Modifier.fillMaxSize().padding(insets)) {
@@ -48,26 +54,62 @@ fun AuthHost(container: AppContainer) {
                     LaunchedEffect(result) { if(result == ConnectionResult.RESPONDING) discovery = false }
                     DiscoveryScreen(scan, onBack = { discovery = false })
                 }
-                else -> AuthScreen(state, model::submit, onDiscovery = { discovery = true })
+                settings && state.previousUser != null -> {
+                    val userId = requireNotNull(state.previousUser).id
+                    val expectedSession = state.sessionVersion
+                    val endpoint = remember(userId) { container.endpoints.load() }
+                    val reachability = remember(endpoint) { container.auth.reachability(endpoint, container.syncScheduler.networkChanges) }
+                    val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
+                    SettingsHost(container.forUser(userId), userId, reachable,
+                        onSignedOut = { settings = false; model.signedOut(expectedSession) },
+                        onChangeHub = { settings = false; discovery = true; model.signedOut(expectedSession) },
+                        onBack = { settings = false })
+                }
+                else -> AuthScreen(state, model::submit, onDiscovery = { discovery = true },
+                    onSettings = if (state.previousUser != null) { { settings = true } } else null)
             }
         }
     }
     state.user?.let { user ->
-        val attempts = remember(user.id) { container.quizzes.hasInProgressAttempt(user.id) }
-        val locked by attempts.collectAsStateWithLifecycle(initialValue = true)
-        val endpoint = remember(user.id) { container.endpoints.load() }
-        val reachability = remember(endpoint) { container.auth.reachability(endpoint, container.syncScheduler.networkChanges) }
-        val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
-        val syncSession = rememberSyncSession(container, user.id, reachable, model::requireSignIn)
-        val shell = ShellState(
-            role = if(user.role == "TEACHER") ShellRole.TEACHER else ShellRole.STUDENT,
-            isHubReachable = reachable,
-            hasInProgressAttempt = user.role == "STUDENT" && locked,
-        )
-        if (user.role == "STUDENT") org.lara.app.ui.screens.enrollment.LearnerEnrollmentNavigation(
-            container, user.id, shell, model::requireSignIn, sharedSession = syncSession)
-        else LaraNavigation(container.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
-            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, syncSession, model::requireSignIn)
-        })
+        key(user.id, state.sessionVersion) {
+            val active = remember { container.forUser(user.id) }
+            val store = remember { ViewModelStore() }
+            val owner = remember { object : ViewModelStoreOwner { override val viewModelStore = store } }
+            DisposableEffect(store) { onDispose { store.clear() } }
+            val sessionVersion = state.sessionVersion
+            val expired = { model.requireSignIn(sessionVersion) }
+            CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
+                val attempts = remember(user.id) { active.quizzes.hasInProgressAttempt(user.id) }
+                val locked by attempts.collectAsStateWithLifecycle(initialValue = true)
+                val endpoint = remember(user.id) { active.endpoints.load() }
+                val reachability = remember(endpoint) { active.auth.reachability(endpoint, active.syncScheduler.networkChanges) }
+                val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
+                val syncSession = rememberSyncSession(active, user.id, reachable, expired)
+                val shell = ShellState(
+                    role = if(user.role == "TEACHER") ShellRole.TEACHER else ShellRole.STUDENT,
+                    isHubReachable = reachable,
+                    hasInProgressAttempt = user.role == "STUDENT" && locked,
+                )
+                if (discovery) {
+                    val scan: DiscoveryViewModel = viewModel(key = "settings-discovery", factory = viewModelFactory {
+                        initializer { DiscoveryViewModel(active.discovery) }
+                    })
+                    val result by scan.result.collectAsStateWithLifecycle()
+                    LaunchedEffect(result) { if (result == ConnectionResult.RESPONDING) {
+                        discovery = false; settings = false; model.signedOut(sessionVersion)
+                    } }
+                    DiscoveryScreen(scan, onBack = { discovery = false })
+                } else if (settings) {
+                    SettingsHost(active, user.id, reachable, onSignedOut = { settings = false; model.signedOut(sessionVersion) },
+                        onChangeHub = { settings = false; discovery = true; model.signedOut(sessionVersion) }, onBack = { settings = false })
+                } else CompositionLocalProvider(LocalOpenSettings provides { settings = true }) {
+                    if (user.role == "STUDENT") org.lara.app.ui.screens.enrollment.LearnerEnrollmentNavigation(
+                        active, user.id, shell, expired, sharedSession = syncSession)
+                    else LaraNavigation(active.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
+                        org.lara.app.ui.screens.teacher.TeacherApprovalPanel(active, user.id, syncSession, expired)
+                    })
+                }
+            }
+        }
     }
 }

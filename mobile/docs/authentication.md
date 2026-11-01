@@ -22,7 +22,11 @@ PIN values exist only during the form/request and are cleared on submission. The
 
 The session host collects Sprint 1.3 `QuizRepository.hasInProgressAttempt(userId)`, starting locked until Room emits. Learner AI stays unavailable during any cached active attempt. The role shell reads its offline state independently of auth; a public portal probe supplies only reachability, never authentication or authorization.
 
-When the selected Hub address differs from the encrypted session address, restoration returns to sign-in. A successful login for the same saved user and matching Room current-user ID accepts the new address and renews the encrypted token/address binding without deleting cached or queued work. A different user is still refused while another cache/session is present; the settings/sync issues own safe queued-work handling for account changes. This issue does not implement sign-out, clearing classroom work, delta sync, enrollment, classroom screens, or remote tunnel configuration.
+When the selected Hub address differs from the encrypted session address, restoration returns to sign-in. A successful login for the same saved user and matching Room current-user ID accepts the new address and renews the encrypted token/address binding without deleting cached or queued work.
+
+Mobile 2.6 now supplies explicit safe sign-out and account-specific Room caches. A different user is refused while another token is active; after sign-out, it authenticates into its own private mirror/cursor. The original lara.db remains assigned to its owner and other accounts use hashed file names. Returning to an account restores its retained work, including queued/rejected rows. No cache is erased or shared to enable account switching. The sign-in screen offers Settings for a saved session that needs reauthentication, so its owner can sign out without first renewing that session. See settings.md.
+
+Each login owns a separate ViewModelStore; disposal cancels its subscriptions/jobs, and stale session-generation callbacks cannot reset a later login. The registration screen matches #197's trimmed input bounds and name limit; Retry-After prevents automatic/early manual retries.
 
 ## Validation
 

@@ -13,6 +13,14 @@ abstract class AuthDao {
     abstract suspend fun user(id: String): UserEntity?
     @Query("SELECT value FROM sync_state WHERE `key` = 'current_user_id'")
     abstract suspend fun currentUserId(): String?
+    @Query("SELECT NOT EXISTS(SELECT 1 FROM users) AND NOT EXISTS(SELECT 1 FROM classrooms) AND NOT EXISTS(SELECT 1 FROM sync_state)")
+    abstract suspend fun emptyForClaim(): Boolean
+    @Query("""SELECT
+        (SELECT COUNT(*) FROM announcement_comments WHERE author_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
+        (SELECT COUNT(*) FROM private_comments WHERE author_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
+        (SELECT COUNT(*) FROM assignment_submissions WHERE student_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
+        (SELECT COUNT(*) FROM quiz_attempts WHERE student_id=:userId AND sync_status='QUEUED_FOR_SYNC')""")
+    abstract suspend fun queuedCount(userId: String): Int
     @Upsert
     protected abstract suspend fun putUser(user: UserEntity)
     @Upsert

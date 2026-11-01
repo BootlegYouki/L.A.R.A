@@ -49,8 +49,8 @@ abstract class LaraDatabase : RoomDatabase() {
                 db.execSQL("DELETE FROM sync_state WHERE substr(`key`,1,18)='rest_class_access:'")
             }
         }
-        fun create(context: Context): LaraDatabase = Room.databaseBuilder(
-            context.applicationContext, LaraDatabase::class.java, "lara.db",
+        fun create(context: Context, name: String = "lara.db"): LaraDatabase = Room.databaseBuilder(
+            context.applicationContext, LaraDatabase::class.java, name,
         ).addMigrations(RejectedUploadMigration).addCallback(classAccessCleanup).setJournalMode(JournalMode.WRITE_AHEAD_LOGGING).build()
     }
 }

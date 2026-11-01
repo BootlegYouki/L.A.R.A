@@ -22,6 +22,10 @@ class AuthFailure(val status: Int, val retryAfterSeconds: Long = 0) : Exception(
 
 /** Fixed auth paths and no redirects: credentials never leave the selected LAN Hub. */
 class AuthApi {
+    suspend fun logout(endpoint: HubEndpoint, session: StoredToken) = withContext(Dispatchers.IO) {
+        HubClient().logout(endpoint, session)
+        Unit
+    }
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
     suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String, name: String?): AuthSession =
         withContext(Dispatchers.IO) {
