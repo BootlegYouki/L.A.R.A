@@ -50,9 +50,15 @@ paths:
               properties:
                 lrn_or_id:
                   type: string
+                  minLength: 1
+                  maxLength: 32
+                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
                   example: "123456789012"
                 full_name:
                   type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
                   example: "Juan dela Cruz"
                 pin:
                   type: string
@@ -64,12 +70,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
 
   /api/auth/login:
     post:
       summary: Log in with LRN/ID and 4-digit PIN
+      description: |
+        Rate limit per lrn_or_id: after 5 wrong PINs within 60 seconds, every further attempt for that
+        lrn_or_id (even with the right PIN) answers 429 TOO_MANY_ATTEMPTS with a Retry-After header (whole
+        seconds) until 60 seconds have passed since the oldest of those failures. A successful login clears
+        the count. The ADMIN account signs in only from the Hub PC itself (loopback, and not a request relayed
+        by the Remote/Suspension Mode tunnel, which also arrives on loopback); from anywhere else it answers
+        403 ADMIN_LOCAL_ONLY, checked before the PIN.
       security: []
       tags: [auth]
       requestBody:
@@ -94,6 +109,19 @@ paths:
                 $ref: "#/components/schemas/AuthSession"
         "401":
           $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          description: Too many wrong PINs for this lrn_or_id. Error code TOO_MANY_ATTEMPTS.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the next attempt is accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/auth/logout:
     post:
@@ -1324,7 +1352,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:
