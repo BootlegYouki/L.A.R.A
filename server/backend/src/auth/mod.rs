@@ -3,6 +3,8 @@ pub mod pin;
 pub mod sessions;
 pub mod token;
 
+use std::net::SocketAddr;
+
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
@@ -62,6 +64,15 @@ pub fn require_role(user: &AuthUser, role: Role) -> Result<(), ApiError> {
     }))
 }
 
+/// A request from the Hub PC itself: a loopback peer that did not come through the
+/// Remote/Suspension Mode tunnel. `cloudflared` connects from loopback too, but adds
+/// `Cf-Connecting-IP` (contract PR #197). Admin setup and admin login accept only these.
+pub fn is_hub_pc(peer: SocketAddr, headers: &HeaderMap) -> bool {
+    peer.ip().to_canonical().is_loopback() && !headers.contains_key(CF_CONNECTING_IP)
+}
+
+const CF_CONNECTING_IP: &str = "cf-connecting-ip";
+
 /// The token after `Bearer `, as the mock reads it.
 pub(crate) fn bearer_token(headers: &HeaderMap) -> Option<&str> {
     let token = headers.get(AUTHORIZATION)?.to_str().ok()?.strip_prefix("Bearer ")?;
@@ -94,6 +105,18 @@ mod tests {
         assert_eq!(bearer_token(&headers("Bearer ")), None);
         assert_eq!(bearer_token(&headers("Basic abc")), None);
         assert_eq!(bearer_token(&HeaderMap::new()), None);
+    }
+
+    #[test]
+    fn hub_pc_is_loopback_without_the_tunnel_header() {
+        let local: SocketAddr = "127.0.0.1:50000".parse().unwrap();
+        let mut tunnel = HeaderMap::new();
+        tunnel.insert("cf-connecting-ip", HeaderValue::from_static("203.0.113.7"));
+        assert!(is_hub_pc(local, &HeaderMap::new()));
+        assert!(is_hub_pc("[::1]:50000".parse().unwrap(), &HeaderMap::new()));
+        assert!(is_hub_pc("[::ffff:127.0.0.1]:50000".parse().unwrap(), &HeaderMap::new()), "IPv4 loopback seen on an IPv6 socket");
+        assert!(!is_hub_pc(local, &tunnel), "cloudflared relays from loopback");
+        assert!(!is_hub_pc("192.168.1.20:50000".parse().unwrap(), &HeaderMap::new()));
     }
 
     #[test]

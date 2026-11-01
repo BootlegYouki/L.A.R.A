@@ -1,5 +1,6 @@
-//! `POST /api/admin/setup` (PRD FR-1.0): the single Hub admin, created once, only from the Hub
-//! PC itself. Ported from the mock's `test_admin_is_its_own_account_and_setup_runs_once`.
+//! The single Hub admin (PRD FR-1.0): `POST /api/admin/setup` creates it once, and it signs in,
+//! only from the Hub PC itself. Ported from the mock's
+//! `test_admin_is_its_own_account_and_setup_runs_once` and `test_admin_login_is_hub_pc_only`.
 
 mod common;
 
@@ -12,6 +13,86 @@ fn code(body: &Value) -> Option<&str> {
 
 async fn setup(hub: &TestHub, pin: &str) -> (u16, Value) {
     hub.post_json("/api/admin/setup", &json!({"full_name": "ICT Coordinator", "pin": pin}), None).await
+}
+
+/// `cloudflared` relays Remote/Suspension Mode requests from loopback and adds this header.
+const TUNNEL: [(&str, &str); 1] = [("Cf-Connecting-IP", "203.0.113.7")];
+
+fn admin_login(pin: &str) -> Value {
+    json!({"lrn_or_id": "ADMIN-0001", "pin": pin})
+}
+
+async fn admin_count(hub: &TestHub) -> i64 {
+    sqlx::query_scalar("SELECT COUNT(*) FROM users WHERE role = 'ADMIN'").fetch_one(&hub.state().db).await.unwrap()
+}
+
+/// Contract PR #197, as the mock's `test_admin_login_is_hub_pc_only`.
+#[tokio::test]
+async fn admin_login_is_hub_pc_only() {
+    let hub = TestHub::start().await;
+    setup(&hub, "4321").await;
+    let (status, body) = hub.post_json_sending("/api/auth/login", &admin_login("4321"), &TUNNEL).await;
+    let expected = (403, Some("ADMIN_LOCAL_ONLY"), Some("The admin signs in on the Hub PC only"));
+    assert_eq!((status, code(&body), body["error"]["message"].as_str()), expected);
+    assert_eq!(hub.post_json("/api/auth/login", &admin_login("4321"), None).await.0, 200);
+    let (status, body) = hub.post_json_sending("/api/auth/login", &json!({"lrn_or_id": "T-0001", "pin": "1234"}), &TUNNEL).await;
+    assert_eq!(status, 200, "a teacher still signs in through the tunnel: {body}");
+    hub.stop().await;
+}
+
+/// The same answer for the right and a wrong PIN: from the network there is nothing to guess.
+#[tokio::test]
+async fn admin_login_from_the_network_is_403_whatever_the_pin() {
+    let hub = TestHub::start().await;
+    setup(&hub, "4321").await;
+    let Some(ip) = lara_hub::discovery::lan_ip() else {
+        eprintln!("skipped: this machine has no LAN address to call the Hub from");
+        return hub.stop().await;
+    };
+    let url = format!("http://{ip}:{}/api/auth/login", hub.http_port());
+    for pin in ["4321", "0000"] {
+        let res = reqwest::Client::new().post(&url).json(&admin_login(pin)).send().await.unwrap();
+        let status = res.status().as_u16();
+        let body: Value = res.json().await.unwrap();
+        assert_eq!((status, code(&body)), (403, Some("ADMIN_LOCAL_ONLY")), "PIN {pin}");
+    }
+    hub.stop().await;
+}
+
+/// Refused remote attempts are not PIN guesses, so the network cannot lock the admin out.
+#[tokio::test]
+async fn remote_admin_logins_never_lock_the_admin_out() {
+    let hub = TestHub::start().await;
+    setup(&hub, "4321").await;
+    for i in 0..10 {
+        assert_eq!(hub.post_json_sending("/api/auth/login", &admin_login("0000"), &TUNNEL).await.0, 403, "attempt {i}");
+    }
+    assert_eq!(hub.post_json("/api/auth/login", &admin_login("4321"), None).await.0, 200);
+    hub.stop().await;
+}
+
+/// The contract's limit still wins: once locked, every attempt for the ID is 429, from anywhere.
+#[tokio::test]
+async fn a_locked_out_admin_is_429_through_the_tunnel_too() {
+    let hub = TestHub::start().await;
+    setup(&hub, "4321").await;
+    for i in 0..5 {
+        assert_eq!(hub.post_json("/api/auth/login", &admin_login("0000"), None).await.0, 401, "attempt {i}");
+    }
+    let (status, body) = hub.post_json_sending("/api/auth/login", &admin_login("4321"), &TUNNEL).await;
+    assert_eq!((status, code(&body)), (429, Some("TOO_MANY_ATTEMPTS")));
+    hub.stop().await;
+}
+
+/// Before setup, a tunnelled request must not claim the admin account the school has not set up.
+#[tokio::test]
+async fn setup_through_the_tunnel_is_403() {
+    let hub = TestHub::start().await;
+    let (status, body) = hub.post_json_sending("/api/admin/setup", &json!({"full_name": "X", "pin": "4321"}), &TUNNEL).await;
+    assert_eq!((status, code(&body), body["error"]["message"].as_str()), (403, Some("FORBIDDEN"), Some("Only on the Hub PC")));
+    assert_eq!(admin_count(&hub).await, 0);
+    assert_eq!(setup(&hub, "4321").await.0, 200, "the Hub PC can still set up");
+    hub.stop().await;
 }
 
 #[tokio::test]

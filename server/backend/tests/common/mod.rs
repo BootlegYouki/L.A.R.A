@@ -79,6 +79,18 @@ impl TestHub {
         (status, body)
     }
 
+    /// A JSON POST with extra request headers, such as the `Cf-Connecting-IP` that `cloudflared` adds.
+    pub async fn post_json_sending(&self, path: &str, body: &Value, headers: &[(&str, &str)]) -> (u16, Value) {
+        let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
+        let mut req = self.client.post(url).json(body);
+        for (name, value) in headers {
+            req = req.header(*name, *value);
+        }
+        let res = req.send().await.unwrap();
+        let status = res.status().as_u16();
+        (status, res.json().await.unwrap_or(Value::Null))
+    }
+
     pub async fn post_json_with_headers(&self, path: &str, body: &Value, token: Option<&str>) -> (u16, HeaderMap, Value) {
         let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
         let mut req = self.client.post(url).json(body);

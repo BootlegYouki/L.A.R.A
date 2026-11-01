@@ -1,7 +1,9 @@
 //! `/api/auth/*`, answering as `scripts/mock_hub.py` does. PINs, tokens and LRNs never reach a
 //! log: the request span carries only the method and path (`routes/mod.rs`).
 
-use axum::extract::State;
+use std::net::SocketAddr;
+
+use axum::extract::{ConnectInfo, State};
 use axum::http::HeaderMap;
 use axum::routing::post;
 use axum::{Json, Router};
@@ -10,7 +12,7 @@ use serde_json::{json, Value};
 use super::body::JsonBody;
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
-use crate::auth::{bearer_token, AuthUser, Role, ADMIN_ID};
+use crate::auth::{bearer_token, is_hub_pc, AuthUser, Role, ADMIN_ID};
 use crate::db::{begin_immediate, users};
 use crate::error::ApiError;
 use crate::models::user::AuthSession;
@@ -53,12 +55,25 @@ async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<Au
 
 /// Unknown LRN, deactivated account and wrong PIN all answer 401 "Wrong LRN or PIN". Each
 /// attempt counts toward the limit until one succeeds (`auth::limiter`).
-async fn login(State(app): State<AppState>, body: JsonBody) -> Result<Json<AuthSession>, ApiError> {
+async fn login(
+    State(app): State<AppState>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    body: JsonBody,
+) -> Result<Json<AuthSession>, ApiError> {
     body.need(&["lrn_or_id", "pin"])?;
     // A value that is not text cannot match an account, like the mock's string compare.
     let lrn_or_id = body.text("lrn_or_id").unwrap_or_default();
     let pin = body.text("pin").unwrap_or_default();
-    app.login_limiter.try_attempt(&lrn_or_id, app.clock.now_ms()).map_err(ApiError::too_many_attempts)?;
+    let now = app.clock.now_ms();
+    // Contract PR #197: the admin signs in on the Hub PC only, checked before the PIN. Matched on
+    // the ID, the only ADMIN account (setup creates it, register refuses it), so no lookup runs
+    // first. Not counted: no one on the network can guess the PIN or lock the admin out.
+    if lrn_or_id == ADMIN_ID && !is_hub_pc(peer, &headers) {
+        app.login_limiter.check(&lrn_or_id, now).map_err(ApiError::too_many_attempts)?;
+        return Err(ApiError::admin_local_only());
+    }
+    app.login_limiter.try_attempt(&lrn_or_id, now).map_err(ApiError::too_many_attempts)?;
 
     let account = users::find_by_lrn(&app.db, &lrn_or_id).await?.filter(|a| a.is_active);
     let Some(account) = account else {

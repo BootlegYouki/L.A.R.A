@@ -7,7 +7,7 @@
 //! not get by waiting a minute.
 
 use std::collections::HashMap;
-use std::sync::{Mutex, PoisonError};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 pub const MAX_ATTEMPTS: usize = 5;
 pub const WINDOW_MS: i64 = 60_000;
@@ -29,25 +29,43 @@ fn key(lrn_or_id: &str) -> String {
     lrn_or_id.chars().take(MAX_KEY_CHARS).collect()
 }
 
+/// The seconds until another attempt is allowed (1 to 60), if `times` has reached the limit.
+fn refuse(times: &mut [i64], now_ms: i64) -> Result<(), u64> {
+    if times.len() < MAX_ATTEMPTS {
+        return Ok(());
+    }
+    times.sort_unstable();
+    // Allowed again once enough attempts leave the window to drop below the limit.
+    let opens_at = times[times.len() - MAX_ATTEMPTS] + WINDOW_MS;
+    let wait_ms = (opens_at - now_ms).max(0) as u64;
+    Err(wait_ms.div_ceil(1000).clamp(1, 60))
+}
+
 impl LoginLimiter {
     /// Records the attempt, or refuses it with the seconds until one is allowed (1 to 60).
     /// A refused attempt is not recorded, so retrying while locked never extends the wait.
     pub fn try_attempt(&self, lrn_or_id: &str, now_ms: i64) -> Result<(), u64> {
+        let mut attempts = self.pruned(now_ms);
+        let times = attempts.entry(key(lrn_or_id)).or_default();
+        refuse(times, now_ms)?;
+        times.push(now_ms);
+        Ok(())
+    }
+
+    /// The same answer as `try_attempt` without recording anything, for a request that never
+    /// reaches the PIN check (the admin from off the Hub PC).
+    pub fn check(&self, lrn_or_id: &str, now_ms: i64) -> Result<(), u64> {
+        self.pruned(now_ms).get_mut(&key(lrn_or_id)).map_or(Ok(()), |times| refuse(times, now_ms))
+    }
+
+    /// The map with only the last minute's attempts left in it.
+    fn pruned(&self, now_ms: i64) -> MutexGuard<'_, HashMap<String, Vec<i64>>> {
         let mut attempts = self.attempts.lock().unwrap_or_else(PoisonError::into_inner);
         attempts.retain(|_, times| {
             times.retain(|&t| recent(t, now_ms));
             !times.is_empty()
         });
-        let times = attempts.entry(key(lrn_or_id)).or_default();
-        if times.len() >= MAX_ATTEMPTS {
-            times.sort_unstable();
-            // Allowed again once enough attempts leave the window to drop below the limit.
-            let opens_at = times[times.len() - MAX_ATTEMPTS] + WINDOW_MS;
-            let wait_ms = (opens_at - now_ms).max(0) as u64;
-            return Err(wait_ms.div_ceil(1000).clamp(1, 60));
-        }
-        times.push(now_ms);
-        Ok(())
+        attempts
     }
 
     /// A successful login clears the LRN's attempts.
@@ -82,6 +100,17 @@ mod tests {
             assert!(limiter.try_attempt("123456789012", 5000).is_err());
         }
         assert_eq!(limiter.try_attempt("123456789012", 5000), Err(55));
+    }
+
+    #[test]
+    fn check_answers_like_try_attempt_but_records_nothing() {
+        let limiter = LoginLimiter::default();
+        for _ in 0..10 {
+            assert_eq!(limiter.check("123456789012", 0), Ok(()));
+        }
+        five_attempts(&limiter, "123456789012", 0);
+        assert_eq!(limiter.check("123456789012", 5000), Err(55));
+        assert_eq!(limiter.check("123456789013", 5000), Ok(()));
     }
 
     #[test]

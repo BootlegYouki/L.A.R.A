@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum::extract::{ConnectInfo, State};
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 
@@ -9,7 +9,7 @@ use super::body::JsonBody;
 use super::not_implemented_admin as admin;
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
-use crate::auth::{Role, ADMIN_ID};
+use crate::auth::{is_hub_pc, Role, ADMIN_ID};
 use crate::db::begin_immediate;
 use crate::db::users::{self, admin_exists};
 use crate::error::{ApiError, ErrorCode};
@@ -23,18 +23,16 @@ pub fn router() -> Router<AppState> {
         .route("/api/admin/users/{id}/reset-pin", post(admin))
 }
 
-/// First run only (PRD FR-1.0): the person at the Hub PC sets the admin PIN. Loopback only, so
-/// no device on the classroom network can claim the admin account before the school does.
-///
-/// Remote/Suspension Mode: `cloudflared` reaches the Hub from 127.0.0.1, so a tunnelled request
-/// also looks local. That is safe only because the tunnel is switched on by an existing admin,
-/// after which this answers 409. Do not let anything start the tunnel before setup.
+/// First run only (PRD FR-1.0): the person at the Hub PC sets the admin PIN. Only from the Hub
+/// PC itself (`is_hub_pc`: loopback, not relayed by the tunnel), so no device on the classroom
+/// network or the internet can claim the admin account before the school does.
 async fn setup(
     State(app): State<AppState>,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     body: JsonBody,
 ) -> Result<Json<AuthSession>, ApiError> {
-    if !peer.ip().is_loopback() {
+    if !is_hub_pc(peer, &headers) {
         return Err(ApiError::forbidden("Only on the Hub PC"));
     }
     body.need(&["full_name", "pin"])?;

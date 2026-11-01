@@ -13,9 +13,10 @@ pub enum ErrorCode {
     /// Mock code, not yet in the contract (TECH_SPEC section 14, Q8).
     AlreadyExists,
     AdminExists,
-    /// TECH_SPEC section 14, Q7: 429 with `Retry-After`. The `contract-change` that adds it is
-    /// requested; until it merges no client knows this code and shows its generic error.
+    /// 429 with `Retry-After` (contract PR #197, TECH_SPEC section 14, Q7).
     TooManyAttempts,
+    /// 403: the admin signs in only on the Hub PC (contract PR #197).
+    AdminLocalOnly,
     /// Mock code, not yet in the contract (TECH_SPEC section 14, Q8).
     RouteNotFound,
     /// Area stubs until their step lands; no client depends on it.
@@ -33,6 +34,7 @@ impl ErrorCode {
             Self::AlreadyExists => "ALREADY_EXISTS",
             Self::AdminExists => "ADMIN_EXISTS",
             Self::TooManyAttempts => "TOO_MANY_ATTEMPTS",
+            Self::AdminLocalOnly => "ADMIN_LOCAL_ONLY",
             Self::RouteNotFound => "ROUTE_NOT_FOUND",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
@@ -87,6 +89,10 @@ impl ApiError {
         );
         error.retry_after_secs = Some(retry_after_secs);
         error
+    }
+
+    pub fn admin_local_only() -> Self {
+        Self::new(StatusCode::FORBIDDEN, ErrorCode::AdminLocalOnly, "The admin signs in on the Hub PC only")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {
@@ -162,6 +168,7 @@ mod tests {
             (ErrorCode::AlreadyExists, "ALREADY_EXISTS"),
             (ErrorCode::AdminExists, "ADMIN_EXISTS"),
             (ErrorCode::TooManyAttempts, "TOO_MANY_ATTEMPTS"),
+            (ErrorCode::AdminLocalOnly, "ADMIN_LOCAL_ONLY"),
             (ErrorCode::Internal, "INTERNAL_ERROR"),
         ];
         for (code, text) in codes {
