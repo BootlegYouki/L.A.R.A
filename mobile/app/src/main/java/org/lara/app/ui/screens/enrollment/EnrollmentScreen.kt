@@ -21,16 +21,22 @@ import org.lara.app.domain.enrollment.*
 import org.lara.app.ui.components.DiscoveryBanner
 import org.lara.app.ui.theme.*
 
-data class JoinRequestNotice(val classroomId: String, val title: String?, val status: EnrollmentStatus)
-
 data class EnrollmentScreenState(
     val classes: Cached<List<LearnerClass>> = Cached.Loading,
-    val requests: List<JoinRequestNotice> = emptyList(),
+    val requests: List<EnrollmentNotice> = emptyList(),
+    val noticesLoaded: Boolean = false,
     val offline: Boolean = true,
     val busy: Boolean = false,
     val showJoinDialog: Boolean = false,
     val error: JoinClassError? = null,
-)
+) {
+    fun openableClass(classroomId: String?): LearnerClass? =
+        (classes as? Cached.Content)?.value?.firstOrNull { row ->
+            noticesLoaded &&
+            row.classroom.id == classroomId && row.canOpen &&
+                requests.none { it.classroomId == classroomId && it.status != EnrollmentStatus.ACTIVE }
+        }
+}
 
 /** Transient request notices do not grant access. Only an ACTIVE Room enrollment opens a class. */
 @Composable
@@ -40,6 +46,7 @@ fun EnrollmentScreen(
     onDismissJoin: () -> Unit,
     onSubmit: (String) -> Unit,
     onOpenClass: (String) -> Unit,
+    onCodeChanged: () -> Unit = {},
 ) {
     val classes = (state.classes as? Cached.Content)?.value.orEmpty()
     val cachedIds = classes.map { it.classroom.id }.toSet()
@@ -51,7 +58,7 @@ fun EnrollmentScreen(
         if (state.offline) item {
             DiscoveryBanner(R.string.enrollment_join_offline, warning = true, success = false)
         }
-        if (!state.showJoinDialog && state.error != null) item {
+        if (!state.offline && !state.showJoinDialog && state.error != null) item {
             val message = when(state.error) {
                 JoinClassError.SESSION_EXPIRED -> R.string.enrollment_session_expired
                 JoinClassError.REFRESH_FAILED -> R.string.enrollment_refresh_failed
@@ -63,6 +70,7 @@ fun EnrollmentScreen(
         }
         item {
             Button(onClick = onJoin, enabled = !state.offline && !state.busy,
+                colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Text(stringResource(R.string.enrollment_join_title))
             }
@@ -87,7 +95,7 @@ fun EnrollmentScreen(
             val denied = notice != null && notice.status != EnrollmentStatus.ACTIVE
             EnrollmentCard(item.classroom.name, item.classroom.section,
                 if (denied) requireNotNull(notice).status else EnrollmentStatus.valueOf(item.enrollment.status),
-                item.canOpen && !denied,
+                state.openableClass(item.classroom.id) != null,
                 onOpen = { onOpenClass(item.classroom.id) })
         }
         items(requests, key = { "request:" + it.classroomId }) { item ->
@@ -95,7 +103,7 @@ fun EnrollmentScreen(
                 item.status, canOpen = false, onOpen = {})
         }
     }
-    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit)
+    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged)
 }
 
 @Composable

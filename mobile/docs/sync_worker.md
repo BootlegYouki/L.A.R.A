@@ -2,7 +2,7 @@
 
 ## Base and implementation
 
-Branch `codex/52-mobile-2.5-delta-sync` starts exactly at Mobile 2.4 commit `6b174a6`. It includes the earlier mobile work, including incomplete 2.3. No shared contracts, server code or schema columns are changed.
+Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a6` and now includes its final `dda7585` fixes, including Mobile 2.3 `adade1a`. No shared contracts, server code or schema columns are changed.
 
 - `SyncTransport`: fixed authenticated pull/push routes, session/address validation, no redirects, 5-second timeouts and an 8 MiB pull-response bound. Initial requests omit absent optional Hub identity fields.
 - `SyncRepository`: serializes foreground/background sync, follows `has_more`, pushes bounded batches of the current user’s submitted quiz attempts and comments, then pulls authoritative changes. An unfinished quiz or another author’s work is never uploaded.
@@ -17,7 +17,7 @@ A learner can have an advanced cursor before joining a class. Approval makes old
 
 The teacher panel now refreshes through canonical sync before its authorized roster lookup. Enrollment IDs come from sync. The mock pull omits PENDING learner profiles; the roster supplies their actual student ID/name/LRN and populates the user profile for an already saved enrollment. No enrollment ID is generated locally.
 
-This provides 2.3’s sync dependency, but does not mount its learner join screen or declare #50 complete. That remaining integration and phone verification stay with 2.3.
+The learner My classes / Join / Open screen from final 2.3 is mounted. `RoomEnrollmentRepository` now invokes `sync.pull` at its refresh boundary, and both learner and teacher controls share `SyncSessionViewModel` through `EnrollmentSessionSource`. This avoids duplicate sockets and supplies canonical data after joining/approval. The 2.4 loading, contrast and large-text fixes are retained.
 
 ## Reset, deletion and queued work
 
@@ -52,4 +52,10 @@ The shared `SyncBehaviorTests` run under Robolectric and have an AndroidJUnit4 w
 
 The opt-in `MockSyncIntegrationTest` uses the actual local mock on REST 18080/WebSocket 18081. Set `LARA_SYNC_MOCK=1` and run it against a fresh isolated instance. It verifies canonical enrollment IDs, pending profile enrichment, approval, the learner’s full class snapshot, queued comment receipts and a live announcement event reaching Room in under one second. It changes only synthetic mock accounts and in-memory test databases.
 
-Final command outputs and counts are in `evidence/52/`. No Android device was connected, so instrumentation execution, physical LAN-without-WAN scheduling, phone heap and cold/offline relaunch are not claimed. Test APK assembly only proves the device suite builds.
+Original command outputs and counts are in `evidence/52/`; the subsequent phone audit is in `evidence/phone-audit-2026-10-31/`. The latest 2.4 integration review is recorded separately under `evidence/52/latest-24-review/`. Earlier phone results do not certify the updated branch or a physical WAN-disconnected classroom network.
+
+## Review after final Mobile 2.4
+
+The branch now references 2.4 `dda7585`, including 2.3 `adade1a`, and wires the learner refresh/session boundaries to sync. Review details and reproducible evidence are in `evidence/52/latest-24-review/`.
+
+The review reproduced identifier loss when a valid public-user update omits its optional LRN/ID, and reconfirmed the mock's teacher sync-push 403 blocker. These remain unresolved; passing existing tests is not a claim that #52 is complete. The 96 ms announcement result is for an already-connected session, and actual reconnect latency and the final navigation's end-to-end phone flow still require verification.

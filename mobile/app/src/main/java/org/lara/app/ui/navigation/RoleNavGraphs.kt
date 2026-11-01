@@ -46,10 +46,11 @@ private data object Grades
 @Composable
 fun StudentNavGraph(
     state: ShellState,
+    classActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
 ) {
     require(state.role == ShellRole.STUDENT)
-    RoleNavGraph(state, teacher = false, content = content)
+    RoleNavGraph(state, teacher = false, content, learnerClassActions = classActions)
 }
 
 @Composable
@@ -68,6 +69,7 @@ private fun RoleNavGraph(
     teacher: Boolean,
     content: @Composable (ShellDestination) -> Unit,
     approvalActions: @Composable () -> Unit = {},
+    learnerClassActions: @Composable () -> Unit = {},
 ) {
     val controller = rememberNavController()
     val entry by controller.currentBackStackEntryAsState()
@@ -123,6 +125,7 @@ private fun RoleNavGraph(
                     DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
                 }
             }
+            if (!teacher) learnerClassActions()
             if (teacher) {
                 approvalActions()
                 Row(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {

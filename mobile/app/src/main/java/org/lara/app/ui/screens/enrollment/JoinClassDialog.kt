@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
@@ -11,6 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import org.lara.app.R
 import org.lara.app.domain.enrollment.ClassCode
 import org.lara.app.ui.components.DiscoveryBanner
@@ -26,23 +28,25 @@ fun JoinClassDialog(
     error: JoinClassError?,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
+    onInputChanged: () -> Unit = {},
 ) {
-    var draft by remember { mutableStateOf("") }
-    var invalid by remember { mutableStateOf(false) }
+    var draft by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    var invalid by rememberSaveable { mutableStateOf(false) }
     val invalidCode = invalid || error == JoinClassError.INVALID_CODE
     val label = stringResource(R.string.enrollment_code_label)
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         containerColor = LaraColors.Surface,
-        shape = LaraShapes.large,
+        shape = LaraShapes.extraLarge,
         title = { Text(stringResource(R.string.enrollment_join_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                 Text(stringResource(R.string.enrollment_code_help))
                 Text(label, style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
-                    value = ClassCode.display(draft),
-                    onValueChange = { draft = ClassCode.draft(it); invalid = false },
+                    value = draft,
+                    onValueChange = { if (it.text.length <= 32) { draft = it; invalid = false; onInputChanged() } },
+                    visualTransformation = GroupedClassCode,
                     enabled = !busy, singleLine = true, isError = invalidCode,
                     shape = LaraShapes.medium,
                     keyboardOptions = KeyboardOptions(
@@ -73,8 +77,9 @@ fun JoinClassDialog(
         },
         confirmButton = {
             Button(
+                colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
                 onClick = {
-                    val code = ClassCode.canonicalOrNull(draft)
+                    val code = ClassCode.canonicalOrNull(draft.text)
                     if (code == null) invalid = true else onSubmit(code)
                 },
                 enabled = !busy && isHubReachable,
@@ -83,6 +88,7 @@ fun JoinClassDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !busy,
+                colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark),
                 modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.enrollment_cancel_action))
             }
