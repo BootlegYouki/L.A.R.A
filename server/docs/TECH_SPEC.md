@@ -299,7 +299,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 | Tauri hosting the Axum runtime on Windows and Linux (#39) | Jv Bialen | During 1.0 | Tauri spawns `lara-hub` as a sidecar; same library |
 | mDNS with several network adapters (#1) | John Rey Calipes | During 1.1 | UDP beacon and manual IP |
 | Zero-CLI installer with firewall rules (#20) | John Rey Calipes | During 1.4 | Window's auto-fix runs the rules elevated |
-| argon2 cost under 40 simultaneous logins (#42) | Jv Bialen | During 2.0, measured on the Hub PC. Laptop upper bound (2026-11-01, 12 hashes at once): 40 logins at once 414 ms wall, p95 402 ms; peak 245 MB, idle 18 MB ([`auth_sessions.md`](./auth_sessions.md)). Still to measure on the 4-core Hub PC (4 at once) | Lower memory cost within OWASP minimums |
+| argon2 cost under 40 simultaneous logins (#42) | Jv Bialen | During 2.0, measured on the Hub PC. Laptop upper bound (2026-11-01, 12 hashes at once): 40 logins at once 414 ms wall, p95 402 ms; peak 245 MB, idle 18 MB ([`auth_sessions.md`](./auth_sessions.md)). Still to measure on the 4-core Hub PC (one hash per logical CPU) | Lower memory cost within OWASP minimums |
 | Pull page size 500 on real data (#7) | Jv Bialen | During 2.2, confirmed in 6.1 | Tune the constant |
 | Pure-Rust PDF/DOCX text extraction (#10) | John Rey Calipes | During 3.1 | PDF and TXT only; DOCX gets no chunks |
 | Token bucket accuracy at 2.0 MB/s with 40 streams (#8) | Jv Bialen | During 3.2 | Coarser chunks; measure on the router |

@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 use super::body::JsonBody;
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
-use crate::auth::{bearer_token, AuthUser, Role};
+use crate::auth::{bearer_token, AuthUser, Role, ADMIN_ID};
 use crate::db::{begin_immediate, users};
 use crate::error::ApiError;
 use crate::models::user::AuthSession;
@@ -29,6 +29,10 @@ async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<Au
     let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
     let lrn_or_id = text_field(&body, "lrn_or_id")?;
     let full_name = text_field(&body, "full_name")?;
+    // Taken before setup too, as in the mock (which is seeded with the admin), so setup always works.
+    if lrn_or_id == ADMIN_ID {
+        return Err(users::InsertError::Exists.into());
+    }
 
     // Hashed before the write lock is taken, so 40 registrations never queue behind argon2.
     let pin_hash = app.pins.hash(&pin).await?;

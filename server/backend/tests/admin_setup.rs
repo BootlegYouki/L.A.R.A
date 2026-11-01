@@ -30,6 +30,19 @@ async fn setup_creates_the_admin_once() {
     hub.stop().await;
 }
 
+/// Before the school runs setup, a learner on the network must not be able to take the admin's
+/// fixed ID: setup could then never succeed.
+#[tokio::test]
+async fn a_learner_cannot_take_the_admin_id_before_setup() {
+    let hub = TestHub::start().await;
+    let (status, body) = hub
+        .post_json("/api/auth/register", &json!({"lrn_or_id": "ADMIN-0001", "full_name": "Not Admin", "pin": "1234"}), None)
+        .await;
+    assert_eq!((status, code(&body)), (409, Some("ALREADY_EXISTS")));
+    assert_eq!(setup(&hub, "4321").await.0, 200, "setup still works");
+    hub.stop().await;
+}
+
 #[tokio::test]
 async fn admin_exists_wins_over_a_bad_pin() {
     let hub = TestHub::start().await;

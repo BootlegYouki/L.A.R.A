@@ -128,13 +128,22 @@ async fn every_scaffolded_contract_route_is_registered() {
     assert!(scaffolded.len() >= 40, "parsed only {} operations", scaffolded.len());
 
     let hub = TestHub::start().await;
+    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "1234").await;
+    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let tokens = [
+        (Role::Teacher, hub.teacher_token().to_owned()),
+        (Role::Student, hub.open_session(learner).await),
+        (Role::Admin, hub.open_session(admin).await),
+    ];
+    let roles = mock_role_routes();
     for (method, template) in scaffolded {
-        let path = template.replace("{id}", "x").replace("{teacher_id}", "y");
-        let (status, body) = hub.request(method.clone(), &path, Some(hub.teacher_token())).await;
-        assert!(
-            matches!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")) | (403, Some("FORBIDDEN"))),
-            "{method} {template}: {status} {body}"
-        );
+        // The mock writes every path parameter as `([^/]+)`, which `mock_role_routes` turns into `x`.
+        let path = template.replace("{id}", "x").replace("{teacher_id}", "x");
+        // The route's role in the mock, or the teacher for a route any signed-in user may call.
+        let role = roles.iter().find(|(m, p, _)| *m == method && *p == path).map_or(Role::Teacher, |(_, _, r)| *r);
+        let token = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
+        let (status, body) = hub.request(method.clone(), &path, Some(token)).await;
+        assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")), "{method} {template} as {role:?}");
     }
     hub.stop().await;
 }

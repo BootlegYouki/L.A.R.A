@@ -9,15 +9,12 @@ use super::body::JsonBody;
 use super::not_implemented_admin as admin;
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
-use crate::auth::Role;
+use crate::auth::{Role, ADMIN_ID};
 use crate::db::begin_immediate;
 use crate::db::users::{self, admin_exists};
 use crate::error::{ApiError, ErrorCode};
 use crate::models::user::AuthSession;
 use crate::AppState;
-
-/// The admin's fixed `lrn_or_id` (contract `/api/admin/setup`).
-pub const ADMIN_ID: &str = "ADMIN-0001";
 
 pub fn router() -> Router<AppState> {
     Router::new()

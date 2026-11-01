@@ -4,6 +4,7 @@
 //! 40 × 19 MiB on a 4 GB Hub PC that also holds the AI model.
 
 use std::num::NonZero;
+use std::sync::Arc;
 
 use argon2::password_hash::phc::PasswordHash;
 use argon2::password_hash::{PasswordHasher, PasswordVerifier};
@@ -19,7 +20,7 @@ pub fn is_valid_pin(pin: &str) -> bool {
 }
 
 pub struct PinHasher {
-    permits: Semaphore,
+    permits: Arc<Semaphore>,
 }
 
 impl Default for PinHasher {
@@ -31,7 +32,7 @@ impl Default for PinHasher {
 
 impl PinHasher {
     pub fn with_permits(permits: usize) -> Self {
-        Self { permits: Semaphore::new(permits.max(1)) }
+        Self { permits: Arc::new(Semaphore::new(permits.max(1))) }
     }
 
     /// The PHC string stored in `users.pin_hash` (`$argon2id$v=19$...`, salt included).
@@ -57,8 +58,15 @@ impl PinHasher {
 
     async fn run<T: Send + 'static>(&self, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ApiError> {
         // The semaphore is never closed, so acquire cannot fail.
-        let _permit = self.permits.acquire().await.map_err(|_| internal("PIN hashing stopped"))?;
-        tokio::task::spawn_blocking(work).await.map_err(|_| internal("PIN hashing failed"))
+        let permit = self.permits.clone().acquire_owned().await.map_err(|_| internal("PIN hashing stopped"))?;
+        // The permit moves into the blocking task: if the client disconnects, this future is
+        // dropped but the hash keeps running, and it must keep counting against the cap.
+        tokio::task::spawn_blocking(move || {
+            let _permit = permit;
+            work()
+        })
+        .await
+        .map_err(|_| internal("PIN hashing failed"))
     }
 }
 
@@ -101,6 +109,23 @@ mod tests {
         for stored in ["", "1234", "$argon2id$broken"] {
             assert!(!pins.verify("1234", stored).await.unwrap(), "{stored:?}");
         }
+    }
+
+    /// A dropped request (the client disconnected) cannot cancel a blocking hash, so the hash
+    /// must keep its permit until it really ends, or the cap on hashing memory leaks.
+    #[tokio::test]
+    async fn a_cancelled_hash_keeps_its_permit_until_the_work_ends() {
+        let pins = PinHasher::with_permits(1);
+        let cancelled = tokio::time::timeout(std::time::Duration::from_millis(1), pins.hash("1234")).await;
+        assert!(cancelled.is_err(), "the hash should still be running after 1 ms");
+        assert_eq!(pins.permits.available_permits(), 0, "the running hash still holds the permit");
+        for _ in 0..200 {
+            if pins.permits.available_permits() == 1 {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        panic!("the permit never came back after the hash ended");
     }
 
     #[tokio::test]

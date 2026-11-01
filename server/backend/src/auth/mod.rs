@@ -12,6 +12,10 @@ use serde::Serialize;
 use crate::error::ApiError;
 use crate::AppState;
 
+/// The single Hub admin's fixed `lrn_or_id` (contract `/api/admin/setup`). Reserved: no one
+/// can register it, so setup always stays possible.
+pub const ADMIN_ID: &str = "ADMIN-0001";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Role {
     Teacher,

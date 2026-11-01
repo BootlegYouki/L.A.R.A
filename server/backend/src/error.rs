@@ -68,8 +68,9 @@ impl ApiError {
         Self::new(StatusCode::UNAUTHORIZED, ErrorCode::Unauthorized, "Missing or expired token")
     }
 
-    /// Unknown LRN, wrong PIN and deactivated account all answer the same, so a caller cannot
-    /// tell which LRNs exist.
+    /// Unknown LRN, wrong PIN and deactivated account all answer the same, so the message never
+    /// says which part was wrong. (It does not hide which LRNs exist: register's 409 tells, and
+    /// a real account takes one PIN hash longer to answer.)
     pub fn wrong_credentials() -> Self {
         Self::new(StatusCode::UNAUTHORIZED, ErrorCode::Unauthorized, "Wrong LRN or PIN")
     }
