@@ -2,7 +2,8 @@
 #![allow(dead_code)]
 
 use lara_hub::auth::{sessions, Role};
-use lara_hub::models::user::{self, User};
+use lara_hub::db::users;
+use lara_hub::models::user::User;
 use lara_hub::{db, AppState, HubConfig, HubHandle};
 use reqwest::header::HeaderMap;
 use reqwest::Method;
@@ -45,7 +46,7 @@ impl TestHub {
         let state = self.state();
         let pin_hash = state.pins.hash(pin).await.unwrap();
         let mut tx = db::begin_immediate(&state.db).await.unwrap();
-        let user = user::insert(&mut tx, lrn, name, role, &pin_hash, state.clock.now_ms()).await.unwrap();
+        let user = users::insert(&mut tx, lrn, name, role, &pin_hash, state.clock.now_ms()).await.unwrap();
         tx.commit().await.unwrap();
         user
     }

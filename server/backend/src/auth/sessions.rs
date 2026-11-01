@@ -2,21 +2,12 @@
 //! extractor and the WebSocket `EVENT_HELLO` both use [`user_for_token`], so a token that stops
 //! working stops on both at once.
 
-use serde::Serialize;
 use sqlx::{SqliteConnection, SqlitePool};
 
 use super::token::{new_token, token_hash, SESSION_TTL_MS};
 use super::{AuthUser, Role};
 use crate::db::begin_immediate;
-use crate::models::user::User;
-
-/// The contract's `AuthSession`.
-#[derive(Serialize, Debug)]
-pub struct AuthSession {
-    pub token: String,
-    pub expires_at: i64,
-    pub user: User,
-}
+use crate::models::user::{AuthSession, User};
 
 /// Opens a session inside the caller's write transaction, and clears expired ones while it holds
 /// the lock (nothing ever reads them again).

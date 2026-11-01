@@ -9,11 +9,11 @@ use serde_json::{json, Value};
 
 use super::body::JsonBody;
 use crate::auth::pin::is_valid_pin;
-use crate::auth::sessions::{self, AuthSession};
+use crate::auth::sessions;
 use crate::auth::{bearer_token, AuthUser, Role};
-use crate::db::begin_immediate;
+use crate::db::{begin_immediate, users};
 use crate::error::ApiError;
-use crate::models::user;
+use crate::models::user::AuthSession;
 use crate::AppState;
 
 pub fn router() -> Router<AppState> {
@@ -34,7 +34,7 @@ async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<Au
     let pin_hash = app.pins.hash(&pin).await?;
     let now = app.clock.now_ms();
     let mut tx = begin_immediate(&app.db).await?;
-    let new_user = user::insert(&mut tx, &lrn_or_id, &full_name, Role::Student, &pin_hash, now).await?;
+    let new_user = users::insert(&mut tx, &lrn_or_id, &full_name, Role::Student, &pin_hash, now).await?;
     let session = sessions::open(&mut tx, new_user, now).await?;
     tx.commit().await?;
     Ok(Json(session))
@@ -49,7 +49,7 @@ async fn login(State(app): State<AppState>, body: JsonBody) -> Result<Json<AuthS
     let pin = body.text("pin").unwrap_or_default();
     app.login_limiter.try_attempt(&lrn_or_id, app.clock.now_ms()).map_err(ApiError::too_many_attempts)?;
 
-    let account = user::find_by_lrn(&app.db, &lrn_or_id).await?.filter(|a| a.is_active);
+    let account = users::find_by_lrn(&app.db, &lrn_or_id).await?.filter(|a| a.is_active);
     let Some(account) = account else {
         return Err(ApiError::wrong_credentials());
     };

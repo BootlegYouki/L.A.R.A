@@ -86,7 +86,7 @@ async fn sessions_survive_a_hub_restart() {
     let pin_hash = state.pins.hash("1234").await.unwrap();
     let mut tx = lara_hub::db::begin_immediate(&state.db).await.unwrap();
     let teacher =
-        lara_hub::models::user::insert(&mut tx, "T-0001", "Teacher", lara_hub::auth::Role::Teacher, &pin_hash, state.clock.now_ms())
+        lara_hub::db::users::insert(&mut tx, "T-0001", "Teacher", lara_hub::auth::Role::Teacher, &pin_hash, state.clock.now_ms())
             .await
             .unwrap();
     let token = lara_hub::auth::sessions::open(&mut tx, teacher, state.clock.now_ms()).await.unwrap().token;

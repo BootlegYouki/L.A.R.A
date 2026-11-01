@@ -8,11 +8,12 @@ use axum::{Json, Router};
 use super::body::JsonBody;
 use super::not_implemented_admin as admin;
 use crate::auth::pin::is_valid_pin;
-use crate::auth::sessions::{self, AuthSession};
+use crate::auth::sessions;
 use crate::auth::Role;
 use crate::db::begin_immediate;
+use crate::db::users::{self, admin_exists};
 use crate::error::{ApiError, ErrorCode};
-use crate::models::user::{self, admin_exists};
+use crate::models::user::AuthSession;
 use crate::AppState;
 
 /// The admin's fixed `lrn_or_id` (contract `/api/admin/setup`).
@@ -54,7 +55,7 @@ async fn setup(
     if admin_exists(&mut tx).await? {
         return Err(admin_already_set_up());
     }
-    let new_admin = user::insert(&mut tx, ADMIN_ID, &full_name, Role::Admin, &pin_hash, now).await?;
+    let new_admin = users::insert(&mut tx, ADMIN_ID, &full_name, Role::Admin, &pin_hash, now).await?;
     let session = sessions::open(&mut tx, new_admin, now).await?;
     tx.commit().await?;
     Ok(Json(session))
