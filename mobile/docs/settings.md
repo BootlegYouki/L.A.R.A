@@ -18,4 +18,6 @@ Final full-suite validation, actual Settings phone UI, offline relaunch and the 
 
 ## Discussion #194 handoff
 
-The Lead requests a separate mobile PR based on contract/sync-reject-reason (#196): Room version/migration and REJECTED/reason columns must land with the shared contract. That work must stay out of this Settings feature PR. New staging 902c660 also contains auth-contract #197; incorporate and check it before finishing Settings. The older roster enrollment_id requirement is already implemented.
+The Lead requests a separate mobile PR based on contract/sync-reject-reason (#196): Room version/migration and REJECTED/reason columns must land with the shared contract. That work must stay out of this Settings feature PR. Auth-contract #197 from staging 902c660 has been merged into this branch; its client regression checks remain part of final Settings validation. The older roster enrollment_id requirement is already implemented.
+
+The migration implementation is now included in this branch from c4ed6fc. Its focused review is PR #198, dependent on contract PR #196. Do not open the Settings feature PR until those reviews/merges finish. Settings phone UI and final combined checks are still pending; migration-specific verification is recorded separately under evidence/196/.
