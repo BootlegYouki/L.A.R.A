@@ -4,6 +4,7 @@
 mod admin;
 mod assignments;
 mod auth;
+mod body;
 mod classrooms;
 mod export;
 mod materials;
