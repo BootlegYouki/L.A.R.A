@@ -128,6 +128,22 @@ mod tests {
         assert_eq!(value["ws_port"], 8081);
     }
 
+    /// #167: the beacon's `name` is plain JSON, so the dots in "L.A.R.A Hub" arrive untouched (only
+    /// the mDNS name needed a fix).
+    #[test]
+    fn beacon_keeps_a_hub_name_with_dots_whole() {
+        let beacon = Beacon {
+            app: "lara",
+            version: "9.9.9",
+            name: "L.A.R.A Hub",
+            ip: "192.168.1.50".to_string(),
+            http_port: 8080,
+            ws_port: 8081,
+        };
+        let value: Value = serde_json::from_slice(&serde_json::to_vec(&beacon).unwrap()).unwrap();
+        assert_eq!(value["name"], "L.A.R.A Hub");
+    }
+
     #[test]
     fn beacon_port_and_interval_match_the_rules_file() {
         assert_eq!(BEACON_PORT, 8888);
