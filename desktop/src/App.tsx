@@ -36,8 +36,7 @@ export default function App() {
           <a href="#content" className="drawer-item selected" aria-current="page" aria-label={t.home}>
             <i className="ph-fill ph-house" aria-hidden="true" /><span className="drawer-label">{t.home}</span></a>
           <div className="drawer-section" aria-label={t.enrolled}><i className="ph ph-graduation-cap" aria-hidden="true" />
-            <span className="drawer-label">{t.enrolled}</span><i className="ph ph-caret-down drawer-label" aria-hidden="true" /></div>
-          <button type="button" className="drawer-item" aria-label={t.todo} disabled><i className="ph ph-check-square" aria-hidden="true" /><span className="drawer-label">{t.todo}</span></button>
+            <span className="drawer-label">{t.enrolled}</span></div>
           <div className="drawer-rule" />
           <button type="button" className="drawer-item" aria-label={t.archived_classes} disabled>
             <i className="ph ph-archive" aria-hidden="true" /><span className="drawer-label">{t.archived_classes}</span></button>

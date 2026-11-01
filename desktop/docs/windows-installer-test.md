@@ -53,7 +53,7 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml --lib real_hub_mdns_wit
 ✅ Hub discovered automatically: "Grade 4 - Science (Mock Hub)"  
 ✅ Hub IP: 10.172.136.226:8080  
 ✅ No manual configuration required  
-✅ Works on Bluetooth tethering network  
+✅ Works on mobile phone Wi-Fi hotspot network  
 ✅ Works on Public network profile
 
 #### Network Interruption Test
