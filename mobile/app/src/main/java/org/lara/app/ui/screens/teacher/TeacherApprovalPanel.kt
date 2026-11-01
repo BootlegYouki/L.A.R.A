@@ -25,11 +25,12 @@ import org.lara.app.domain.enrollment.HubEvent
 import org.lara.app.ui.components.DiscoveryBanner
 
 @Composable
-fun TeacherApprovalPanel(container: AppContainer, userId: String, reachable: Boolean, onSessionExpired: () -> Unit) {
+fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: org.lara.app.data.sync.SyncSessionViewModel, onSessionExpired: () -> Unit) {
     val session: TeacherApprovalSession = viewModel(key = "teacher-approvals-$userId", factory = viewModelFactory {
-        initializer { TeacherApprovalSession(container, userId) }
+        initializer { TeacherApprovalSession(container, userId, syncSession) }
     })
     val latestExpired by rememberUpdatedState(onSessionExpired)
+    val reachable by syncSession.reachable.collectAsStateWithLifecycle()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(session, reachable, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -53,7 +54,8 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, reachable: Boo
             key(classroom.id) {
                 val model: RosterViewModel = viewModel(key = "approval-$userId-${classroom.id}", factory = viewModelFactory {
                     initializer { RosterViewModel(classroom.id, classroom.classCode, container.enrollments,
-                        session.remote, session.reachable, session.events.filterNot { it is HubEvent.JoinRequest }, session.refresher::refresh, { latestExpired() }) }
+                        session.remote, session.reachable, session.events.filterNot { it is HubEvent.JoinRequest },
+                        { id -> container.sync.refreshRoster(userId) { session.refresher.refresh(id) } }, { latestExpired() }) }
                 })
                 val code = ClassCode.canonicalOrNull(classroom.classCode)
                 LaunchedEffect(model, code, pendingCodes) {

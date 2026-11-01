@@ -2,6 +2,9 @@ package org.lara.app.data.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import org.lara.app.data.local.dao.AuthDao
 import org.lara.app.data.local.entities.UserEntity
 import org.lara.app.domain.model.User
@@ -9,14 +12,12 @@ import org.lara.app.data.remote.*
 import org.lara.app.data.remote.discovery.HubEndpoint
 
 class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenStore, private val dao: AuthDao) {
-    fun reachability(endpoint: HubEndpoint?) = kotlinx.coroutines.flow.flow {
-        while (true) {
-            emit(endpoint?.let { org.lara.app.data.remote.discovery.HubProbe().responds(it) { url ->
+    fun reachability(endpoint: HubEndpoint?, networkChanges: Flow<Unit> = emptyFlow()) =
+        observeHubReachability(networkChanges) {
+            endpoint?.let { org.lara.app.data.remote.discovery.HubProbe().responds(it) { url ->
                 url.openConnection() as java.net.HttpURLConnection
-            } } ?: false)
-            kotlinx.coroutines.delay(10_000)
+            } } ?: false
         }
-    }
     suspend fun restore(endpoint: HubEndpoint?): User? = withContext(Dispatchers.IO) {
         val token = try { tokens.load() } catch (_: Exception) { return@withContext null }
             ?: return@withContext null
@@ -42,3 +43,9 @@ class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenS
         profile.toDomain()
     }
 }
+
+@OptIn(ExperimentalCoroutinesApi::class)
+internal fun observeHubReachability(networkChanges: Flow<Unit>, probe: suspend () -> Boolean): Flow<Boolean> =
+    merge(flow {
+        while (true) { emit(Unit); delay(10_000) }
+    }, networkChanges).conflate().map { probe() }.distinctUntilChanged()

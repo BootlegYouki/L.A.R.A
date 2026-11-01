@@ -1,0 +1,23 @@
+package org.lara.app.sync
+
+import android.app.Application
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import org.junit.Assert.assertEquals
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.lara.app.data.remote.dto.*
+import org.lara.app.data.sync.SyncStore
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], application = Application::class)
+class SyncReviewProbeTest : SyncBehaviorTests() {
+    @Test fun nameOnlyPullPreservesPreviouslyAuthenticatedIdentifier(): Unit = runBlocking {
+        val store = SyncStore(db)
+        store.apply("learner", store.request("learner"),
+            SyncPullResponseDto(100, "hub", 1, 1, false, false,
+                users = listOf(PublicUserDto("learner", "Updated display name", "STUDENT"))))
+        assertEquals("synthetic", db.syncDao().user("learner")?.lrnOrId)
+    }
+}

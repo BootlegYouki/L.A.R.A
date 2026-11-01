@@ -3,10 +3,9 @@ package org.lara.app.domain.enrollment
 import org.lara.app.domain.model.Classroom
 import org.lara.app.domain.model.Enrollment
 
-/** A learner's REST membership status can authorize access without fabricating an enrollment ID. */
-data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment? = null,
-    val restStatus: EnrollmentStatus? = null) {
-    val status: EnrollmentStatus get() = restStatus ?: enrollment?.status?.let(EnrollmentStatus::valueOf) ?: EnrollmentStatus.PENDING
+/** Class access requires a canonical saved enrollment supplied by sync. */
+data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment) {
+    val status: EnrollmentStatus get() = EnrollmentStatus.valueOf(enrollment.status)
     val canOpen: Boolean get() = status == EnrollmentStatus.ACTIVE
 }
 
@@ -33,6 +32,7 @@ sealed interface HubEvent {
         val lrn: String, val timestamp: Long) : HubEvent {
         override fun toString() = "JoinRequest([redacted])"
     }
+    data class Announcement(val classroomId: String, val announcementId: String, val title: String, val timestamp: Long) : HubEvent
     data object SessionExpired : HubEvent
 }
 

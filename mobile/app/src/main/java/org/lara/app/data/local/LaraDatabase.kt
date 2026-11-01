@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.lara.app.data.local.dao.*
 import org.lara.app.data.local.entities.*
 
@@ -38,10 +39,18 @@ abstract class LaraDatabase : RoomDatabase() {
     abstract fun quizDao(): QuizDao
     abstract fun cacheDao(): CacheDao
     abstract fun syncStateDao(): SyncStateDao
+    abstract fun syncDao(): SyncDao
 
     companion object {
+        internal val classAccessCleanup = object : Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                // 2.4 used this stopgap before learner enrollments were filled by sync.
+                db.execSQL("DELETE FROM sync_state WHERE substr(`key`,1,18)='rest_class_access:'")
+            }
+        }
         fun create(context: Context): LaraDatabase = Room.databaseBuilder(
             context.applicationContext, LaraDatabase::class.java, "lara.db",
-        ).setJournalMode(JournalMode.WRITE_AHEAD_LOGGING).build()
+        ).addCallback(classAccessCleanup).setJournalMode(JournalMode.WRITE_AHEAD_LOGGING).build()
     }
 }

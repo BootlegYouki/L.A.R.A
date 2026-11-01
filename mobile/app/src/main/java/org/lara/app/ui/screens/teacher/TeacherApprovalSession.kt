@@ -15,10 +15,10 @@ internal fun Classroom.managedBy(teacherId: String): Boolean = archivedAt == nul
         Json.decodeFromString<List<String>>(coTeacherIdsJson ?: "[]").contains(teacherId)
     }.getOrDefault(false))
 
-/** One foreground socket shared by all saved class approval controls in this signed-in session. */
+/** The shared sync session owns the socket; this model retains independent REST class/roster loading. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class TeacherApprovalSession(val container: AppContainer, private val userId: String) : ViewModel() {
-    private val realtime = RealtimeClient()
+class TeacherApprovalSession(val container: AppContainer, private val userId: String,
+    private val connection: org.lara.app.domain.enrollment.EnrollmentSessionSource) : ViewModel() {
     private val online = MutableStateFlow(false)
     val reachable: StateFlow<Boolean> = online
     val classrooms = container.classrooms.classrooms(viewModelScope)
@@ -41,7 +41,7 @@ class TeacherApprovalSession(val container: AppContainer, private val userId: St
             try {
             while (refreshRequested && online.value) {
                 refreshRequested = false
-                try { refresher.refreshClasses(); classFailure.value = null }
+                try { container.sync.refreshRoster(userId) { refresher.refreshClasses() }; classFailure.value = null }
                 catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     classFailure.value = if (e is HubFailure && e.status == 401) ApprovalError.SESSION_EXPIRED else ApprovalError.REQUEST_FAILED
@@ -53,15 +53,7 @@ class TeacherApprovalSession(val container: AppContainer, private val userId: St
     }
     fun consumeJoinRequest(code: String) { pending.value = pending.value - code }
 
-    val events: SharedFlow<HubEvent> = merge(failures, online.flatMapLatest { connected ->
-        if (!connected) emptyFlow() else flow {
-            val connection = container.enrollmentApi.connection(userId)
-            emitAll(realtime.observe(connection))
-        }.catch { e ->
-            if (e is CancellationException) throw e
-            if (e is HubFailure && e.status == 401) emit(HubEvent.SessionExpired)
-        }
-    }.onEach { event ->
+    val events: SharedFlow<HubEvent> = merge(failures, connection.events.onEach { event ->
         if (event is HubEvent.JoinRequest) {
             org.lara.app.domain.enrollment.ClassCode.canonicalOrNull(event.classCode)?.let { pending.value = pending.value + it }
             refreshClasses()
@@ -71,5 +63,4 @@ class TeacherApprovalSession(val container: AppContainer, private val userId: St
         online.value = value
         if (value) refreshClasses() else { classJob?.cancel(); classJob = null }
     }
-    override fun onCleared() { realtime.close() }
 }

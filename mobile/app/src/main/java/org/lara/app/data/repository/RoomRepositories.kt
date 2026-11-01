@@ -26,6 +26,7 @@ class RoomStreamRepository(
     private val dao: StreamDao,
     private val now: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() },
+    private val onQueued: () -> Unit = {},
 ) : StreamRepository {
     override fun stream(classroomId: String, scope: CoroutineScope) =
         dao.observeByClassroom(classroomId).map { rows -> rows.map { it.toDomain() } }.cached(scope)
@@ -41,6 +42,7 @@ class RoomStreamRepository(
             id = id, announcementId = announcementId, authorId = authorId, content = content,
             createdAt = timestamp, updatedAt = timestamp, syncStatus = "QUEUED_FOR_SYNC",
         ))
+        onQueued()
         return id
     }
 }
@@ -62,17 +64,15 @@ class RoomClassworkRepository(
 }
 
 class RoomEnrollmentRepository(private val dao: RosterDao,
-    private val onRefresh: (suspend (String) -> Unit)? = null,
-    private val restAccess: RoomLearnerClassAccess? = null) : EnrollmentRepository {
+    private val onRefresh: (suspend (String) -> Unit)? = null) : EnrollmentRepository {
     override suspend fun refresh(userId: String): Boolean {
         val refresh = onRefresh ?: return false
         refresh(userId)
         return true
     }
     override fun learnerClasses(studentId: String, scope: CoroutineScope) =
-        combine(dao.observeForStudent(studentId), restAccess?.classes(studentId) ?: kotlinx.coroutines.flow.flowOf(null)) { rows, rest ->
-            val canonical = rows.map { org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain()) }
-            rest ?: canonical
+        dao.observeForStudent(studentId).map { rows ->
+            rows.map { org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain()) }
         }.cached(scope)
 
     override fun roster(classroomId: String, scope: CoroutineScope) =

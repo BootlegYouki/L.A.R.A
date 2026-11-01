@@ -15,11 +15,13 @@ import org.lara.app.data.remote.*
 import org.lara.app.data.remote.discovery.HubEndpoint
 import org.lara.app.data.repository.*
 import org.lara.app.domain.enrollment.*
+import org.lara.app.domain.Cached
+import org.lara.app.data.sync.*
 import java.util.UUID
 
 abstract class RestApprovalFlowTests {
     protected abstract fun mockEnabled(): Boolean
-    @Test fun freshRestCachesApproveAndSurviveReopenWithoutAnySync(): Unit = runBlocking {
+    @Test fun freshTeacherRestAndCanonicalLearnerSyncApproveAndSurviveReopen(): Unit = runBlocking {
         assumeTrue("Requires isolated mock on 28080/28081", mockEnabled())
         val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", 28080, 28081))
         val teacher = AuthApi().authenticate(endpoint, "T-0001", "1234", null)
@@ -40,6 +42,18 @@ abstract class RestApprovalFlowTests {
         var learnerDb = open(learnerName)
         val teacherApi = api(teacher)
         val learnerApi = api(learner)
+        suspend fun refreshLearner() {
+            val sync = SyncRepository(learnerDb, HubSyncTransport(learnerApi, HubClient()))
+            sync.refreshClassrooms(learner.user.id) { learnerApi.classroomSnapshot(learner.user.id) }
+            sync.pull(learner.user.id)
+        }
+        suspend fun savedLearnerClasses(): List<LearnerClass> {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            return try {
+                (RoomEnrollmentRepository(learnerDb.rosterDao()).learnerClasses(learner.user.id, scope)
+                    .first { it is Cached.Content } as Cached.Content).value
+            } finally { scope.cancel() }
+        }
         val remote = HubClassManagementRepository(teacher.user.id, teacherApi, HubClient())
         val realtime = RealtimeClient()
         val teacherEvents = Channel<HubEvent>(Channel.UNLIMITED)
@@ -69,29 +83,25 @@ abstract class RestApprovalFlowTests {
             val savedId = teacherDb.rosterDao().observeByClassroom(classroom.id).first()
                 .single { it.enrollment.studentId == learner.user.id }.enrollment.id
             assertEquals(roster.enrollmentId, savedId)
-            val pendingSnapshot = learnerApi.classroomSnapshot(learner.user.id)
-            RoomLearnerClassAccess(learnerDb) { endpoint }.save(learner.user.id, pendingSnapshot.rows, pendingSnapshot.hub)
+            refreshLearner()
             teacherDb.close(); teacherDb = open(teacherName)
             learnerDb.close(); learnerDb = open(learnerName)
             assertEquals("PENDING", teacherDb.rosterDao().observeByClassroom(classroom.id).first()
                 .single { it.enrollment.studentId == learner.user.id }.enrollment.status)
-            assertFalse(requireNotNull(RoomLearnerClassAccess(learnerDb) { endpoint }.classes(learner.user.id).first()).single().canOpen)
+            assertTrue(savedLearnerClasses().isEmpty())
+            assertEquals(EnrollmentStatus.PENDING, RoomEnrollmentNoticeRepository(learnerDb)
+                .notices(learner.user.id).first().single().status)
             remote.decide(classroom.id, learner.user.id, true)
             next(learnerEvents) { it is HubEvent.JoinApproval && it.status == EnrollmentStatus.ACTIVE }
-            val active = learnerApi.classroomSnapshot(learner.user.id)
-            RoomLearnerClassAccess(learnerDb) { endpoint }.save(learner.user.id, active.rows, active.hub)
+            refreshLearner()
             SavedRosterRefresher(teacherDb, remote, teacher.user.id).refresh(classroom.id)
             assertEquals(savedId, teacherDb.rosterDao().observeByClassroom(classroom.id).first()
                 .single { it.enrollment.studentId == learner.user.id }.enrollment.id)
             learnerDb.close(); learnerDb = open(learnerName)
-            assertTrue(requireNotNull(RoomLearnerClassAccess(learnerDb) { endpoint }.classes(learner.user.id).first()).single().canOpen)
-            assertTrue(learnerDb.rosterDao().observeForStudent(learner.user.id).first().isEmpty())
-            assertNull(teacherDb.syncStateDao().get("cursor")); assertNull(learnerDb.syncStateDao().get("cursor"))
-            remote.decide(classroom.id, learner.user.id, false)
-            next(learnerEvents) { it is HubEvent.JoinApproval && it.status == EnrollmentStatus.REJECTED }
-            val rejected = learnerApi.classroomSnapshot(learner.user.id)
-            RoomLearnerClassAccess(learnerDb) { endpoint }.save(learner.user.id, rejected.rows, rejected.hub)
-            assertTrue(requireNotNull(RoomLearnerClassAccess(learnerDb) { endpoint }.classes(learner.user.id).first()).isEmpty())
+            assertTrue(savedLearnerClasses().single().canOpen)
+            assertEquals(savedId, savedLearnerClasses().single().enrollment.id)
+            assertNull(learnerDb.syncStateDao().get("rest_class_access:${learner.user.id}"))
+            assertNull(teacherDb.syncStateDao().get("cursor")); assertNotNull(learnerDb.syncStateDao().get("cursor"))
         } finally {
             teacherJob?.cancelAndJoin(); learnerJob?.cancelAndJoin(); realtime.close()
             teacherDb.close(); learnerDb.close()
