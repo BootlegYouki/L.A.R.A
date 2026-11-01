@@ -7,6 +7,7 @@ pub mod config;
 pub mod db;
 pub mod discovery;
 pub mod error;
+pub mod models;
 pub mod network;
 pub mod routes;
 pub mod websocket;
@@ -21,7 +22,7 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
-use auth::Sessions;
+use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
 pub use config::HubConfig;
 use websocket::broker::Broker;
@@ -30,7 +31,8 @@ use websocket::broker::Broker;
 pub struct AppState {
     pub db: SqlitePool,
     pub broker: Arc<Broker>,
-    pub sessions: Arc<Sessions>,
+    /// argon2id with a cap on concurrent hashes (`auth::pin`).
+    pub pins: Arc<PinHasher>,
     pub clock: Arc<dyn Clock>,
     /// From `hub_meta`, created on first run (`db::load_hub_meta`).
     pub hub_id: Arc<str>,
@@ -98,7 +100,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let state = AppState {
         db,
         broker: Arc::default(),
-        sessions: Arc::default(),
+        pins: Arc::default(),
         clock: Arc::new(SystemClock),
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,

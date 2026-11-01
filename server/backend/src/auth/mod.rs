@@ -1,13 +1,12 @@
 pub mod pin;
+pub mod sessions;
 pub mod token;
-
-use std::collections::HashMap;
-use std::sync::{PoisonError, RwLock};
 
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
 use axum::http::HeaderMap;
+use serde::Serialize;
 
 use crate::error::ApiError;
 use crate::AppState;
@@ -19,31 +18,34 @@ pub enum Role {
     Admin,
 }
 
+impl Role {
+    /// The `users.role` and `User.role` value.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Teacher => "TEACHER",
+            Self::Student => "STUDENT",
+            Self::Admin => "ADMIN",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        [Self::Teacher, Self::Student, Self::Admin].into_iter().find(|role| role.as_str() == value)
+    }
+}
+
+impl Serialize for Role {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(self.as_str())
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AuthUser {
     pub id: String,
     pub role: Role,
 }
 
-/// Token to user lookup shared by the REST extractor and the WebSocket handshake.
-///
-/// Nothing issues tokens until SERVER 2.0 (login), so outside tests this is empty and
-/// every token is rejected. 2.0 replaces the map with the `sessions` table (SHA-256 only).
-#[derive(Default)]
-pub struct Sessions {
-    users: RwLock<HashMap<String, AuthUser>>,
-}
-
-impl Sessions {
-    pub fn insert(&self, token: &str, user: AuthUser) {
-        self.users.write().unwrap_or_else(PoisonError::into_inner).insert(token.to_owned(), user);
-    }
-
-    pub fn user_for_token(&self, token: &str) -> Option<AuthUser> {
-        self.users.read().unwrap_or_else(PoisonError::into_inner).get(token).cloned()
-    }
-}
-
+/// The token after `Bearer `, as the mock reads it.
 fn bearer_token(headers: &HeaderMap) -> Option<&str> {
     let token = headers.get(AUTHORIZATION)?.to_str().ok()?.strip_prefix("Bearer ")?;
     (!token.is_empty()).then_some(token)
@@ -54,7 +56,7 @@ impl FromRequestParts<AppState> for AuthUser {
 
     async fn from_request_parts(parts: &mut Parts, app: &AppState) -> Result<Self, Self::Rejection> {
         let token = bearer_token(&parts.headers).ok_or_else(ApiError::unauthorized)?;
-        app.sessions.user_for_token(token).ok_or_else(ApiError::unauthorized)
+        sessions::user_for_token(&app.db, token, app.clock.now_ms()).await?.ok_or_else(ApiError::unauthorized)
     }
 }
 
@@ -78,11 +80,11 @@ mod tests {
     }
 
     #[test]
-    fn sessions_start_empty() {
-        let sessions = Sessions::default();
-        assert_eq!(sessions.user_for_token("anything"), None);
-        let user = AuthUser { id: "T-0001".into(), role: Role::Teacher };
-        sessions.insert("t", user.clone());
-        assert_eq!(sessions.user_for_token("t"), Some(user));
+    fn roles_round_trip_through_the_contract_strings() {
+        for role in [Role::Teacher, Role::Student, Role::Admin] {
+            assert_eq!(Role::parse(role.as_str()), Some(role));
+            assert_eq!(serde_json::to_value(role).unwrap(), role.as_str());
+        }
+        assert_eq!(Role::parse("teacher"), None);
     }
 }

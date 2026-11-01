@@ -2,7 +2,7 @@ mod common;
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use common::{TestHub, TEACHER_TOKEN};
+use common::TestHub;
 use futures_util::{SinkExt, StreamExt};
 use reqwest::Method;
 use serde_json::{json, Value};
@@ -24,7 +24,7 @@ async fn unknown_route_is_route_not_found() {
 #[tokio::test]
 async fn wrong_method_is_route_not_found_like_the_mock() {
     let hub = TestHub::start().await;
-    let (status, body) = hub.get("/api/sync/pull", Some(TEACHER_TOKEN)).await;
+    let (status, body) = hub.get("/api/sync/pull", Some(hub.teacher_token())).await;
     assert_eq!((status, code(&body)), (404, Some("ROUTE_NOT_FOUND")));
     hub.stop().await;
 }
@@ -36,7 +36,7 @@ async fn stubs_check_the_token_first() {
         let (status, body) = hub.request(Method::POST, "/api/sync/pull", token).await;
         assert_eq!((status, code(&body)), (401, Some("UNAUTHORIZED")), "token {token:?}");
     }
-    let (status, body) = hub.request(Method::POST, "/api/sync/pull", Some(TEACHER_TOKEN)).await;
+    let (status, body) = hub.request(Method::POST, "/api/sync/pull", Some(hub.teacher_token())).await;
     assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")));
     hub.stop().await;
 }
@@ -81,7 +81,7 @@ async fn every_scaffolded_contract_route_is_registered() {
     let hub = TestHub::start().await;
     for (method, template) in scaffolded {
         let path = template.replace("{id}", "x").replace("{teacher_id}", "y");
-        let (status, body) = hub.request(method.clone(), &path, Some(TEACHER_TOKEN)).await;
+        let (status, body) = hub.request(method.clone(), &path, Some(hub.teacher_token())).await;
         assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")), "{method} {template}");
     }
     hub.stop().await;
@@ -112,7 +112,7 @@ fn hello(token: &str) -> Message {
 async fn hello_gets_hello_ack_and_registers_the_connection() {
     let hub = TestHub::start().await;
     let (mut ws, _) = tokio_tungstenite::connect_async(hub.ws_url()).await.unwrap();
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
 
     let ack = next_json(&mut ws).await;
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
@@ -158,7 +158,7 @@ async fn frames_before_hello_get_event_error() {
     let err = next_json(&mut ws).await;
     assert_eq!(err["code"], "BAD_REQUEST");
 
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
     assert_eq!(next_json(&mut ws).await["event"], "EVENT_HELLO_ACK");
 
     ws.send(Message::text("still not json")).await.unwrap();
@@ -170,7 +170,7 @@ async fn frames_before_hello_get_event_error() {
 async fn shutdown_closes_open_sockets() {
     let hub = TestHub::start().await;
     let (mut ws, _) = tokio_tungstenite::connect_async(hub.ws_url()).await.unwrap();
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
     next_json(&mut ws).await;
 
     tokio::time::timeout(Duration::from_secs(5), hub.stop()).await.unwrap();
