@@ -23,7 +23,7 @@ The reconnect measurement injects a network-change signal; it is not evidence fo
 
 The shared mock's `POST /api/sync/push` still restricts callers to STUDENT even though the contract permits teacher-authored comments. Teacher queued uploads receive 403 and remain saved. This mobile integration does not modify Lead-owned mock or contracts; #52 is not declared fully complete while that mismatch remains. Homework multipart uploads remain with their later sprint.
 
-Only the 2.5 branch is being prepared. No new PR is opened while Mobile 2.4 PR #191 awaits review/merge.
+Mobile 2.4 PR #191 is merged. Mobile 2.5 PR #195 targets staging and explicitly records the deferred cross-team integration and hardware checks.
 
 ## Final phone build
 
