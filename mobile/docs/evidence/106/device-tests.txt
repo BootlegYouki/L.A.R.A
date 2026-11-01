@@ -34,5 +34,3 @@ org.lara.app.approval.RestApprovalDeviceTest:.
 Time: 0.594
 
 OK (1 test)
-
-
