@@ -25,10 +25,12 @@ data class AssignmentSubmissionEntity(
     @ColumnInfo(name = "teacher_feedback") val teacherFeedback: String? = null,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_status", defaultValue = "'QUEUED_FOR_SYNC'") val syncStatus: String = "QUEUED_FOR_SYNC",
+    @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
 )
  {
     init {
         require(fileType in setOf("IMAGE", "DOCUMENT"))
-        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC"))
+        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC", "REJECTED"))
+        require(syncStatus == "REJECTED" || syncRejectReason == null)
     }
 }

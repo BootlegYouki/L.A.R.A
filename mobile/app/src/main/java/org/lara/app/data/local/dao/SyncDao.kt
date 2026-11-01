@@ -22,11 +22,19 @@ interface SyncDao {
     suspend fun queuedPrivateComments(userId: String, offset: Int = 0): List<PrivateCommentEntity>
     @Query("SELECT * FROM quiz_attempts WHERE student_id=:userId AND status='SUBMITTED' AND sync_status='QUEUED_FOR_SYNC' ORDER BY submitted_at, id LIMIT 50 OFFSET :offset")
     suspend fun queuedAttempts(userId: String, offset: Int = 0): List<QuizAttemptEntity>
-    @Query("UPDATE announcement_comments SET sync_status='SYNCED' WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    @Query("SELECT * FROM announcement_comments WHERE id=:id") suspend fun comment(id: String): AnnouncementCommentEntity?
+    @Query("SELECT * FROM private_comments WHERE id=:id") suspend fun privateComment(id: String): PrivateCommentEntity?
+    @Query("UPDATE announcement_comments SET sync_status='REJECTED', sync_reject_reason=:reason WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    suspend fun rejectComment(id: String, content: String, version: Long, reason: String?)
+    @Query("UPDATE private_comments SET sync_status='REJECTED', sync_reject_reason=:reason WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    suspend fun rejectPrivateComment(id: String, content: String, version: Long, reason: String?)
+    @Query("UPDATE quiz_attempts SET sync_status='REJECTED', sync_reject_reason=:reason WHERE id=:id AND answers_json=:answers AND submitted_at=:submittedAt AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    suspend fun rejectAttempt(id: String, answers: String, submittedAt: Long, version: Long, reason: String?)
+    @Query("UPDATE announcement_comments SET sync_status='SYNCED', sync_reject_reason=NULL WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
     suspend fun acknowledgeComment(id: String, content: String, version: Long)
-    @Query("UPDATE private_comments SET sync_status='SYNCED' WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    @Query("UPDATE private_comments SET sync_status='SYNCED', sync_reject_reason=NULL WHERE id=:id AND content=:content AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
     suspend fun acknowledgePrivateComment(id: String, content: String, version: Long)
-    @Query("UPDATE quiz_attempts SET sync_status='SYNCED' WHERE id=:id AND answers_json=:answers AND submitted_at=:submittedAt AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
+    @Query("UPDATE quiz_attempts SET sync_status='SYNCED', sync_reject_reason=NULL WHERE id=:id AND answers_json=:answers AND submitted_at=:submittedAt AND updated_at=:version AND sync_status='QUEUED_FOR_SYNC'")
     suspend fun acknowledgeAttempt(id: String, answers: String, submittedAt: Long, version: Long)
     @Query("UPDATE quiz_attempts SET score=:score,total_points=:total WHERE id=:id")
     suspend fun applyGrade(id: String, score: Long?, total: Long)

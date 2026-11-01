@@ -116,7 +116,7 @@ abstract class CacheDao {
         }
         upsertTopic(batch.topics)
         upsertAnnouncement(batch.announcements)
-        upsertAnnouncementComment(batch.announcementComments.filter { findAnnouncementComment(it.id)?.syncStatus != "QUEUED_FOR_SYNC" })
+        upsertAnnouncementComment(batch.announcementComments.filter { findAnnouncementComment(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") })
         upsertMaterial(batch.materials.map { it.copy(localFilePath = findMaterial(it.id)?.localFilePath ?: it.localFilePath) })
         for (row in batch.materialChunks) {
             val existingId = materialChunksKey(row.materialId, row.orderIndex)
@@ -124,7 +124,7 @@ abstract class CacheDao {
             upsertMaterialChunk(listOf(row))
         }
         upsertAssignment(batch.assignments)
-        for (row in batch.assignmentSubmissions.filter { findAssignmentSubmission(it.id)?.syncStatus != "QUEUED_FOR_SYNC" }) {
+        for (row in batch.assignmentSubmissions.filter { findAssignmentSubmission(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") }) {
             val existingId = assignmentSubmissionsKey(row.assignmentId, row.studentId)
             require(existingId == null || existingId == row.id) { "Conflicting assignment_submissions unique key" }
             upsertAssignmentSubmission(listOf(row))
@@ -135,13 +135,13 @@ abstract class CacheDao {
             require(existingId == null || existingId == row.id) { "Conflicting quiz_questions unique key" }
             upsertQuizQuestion(listOf(row))
         }
-        for (row in batch.quizAttempts.filter { findQuizAttempt(it.id)?.syncStatus != "QUEUED_FOR_SYNC" }) {
+        for (row in batch.quizAttempts.filter { findQuizAttempt(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") }) {
             val existingId = quizAttemptsKey(row.quizId, row.studentId)
             require(existingId == null || existingId == row.id) { "Conflicting quiz_attempts unique key" }
             upsertQuizAttempt(listOf(row))
         }
         upsertAiChatMessage(batch.aiChatMessages)
-        upsertPrivateComment(batch.privateComments.filter { findPrivateComment(it.id)?.syncStatus != "QUEUED_FOR_SYNC" })
+        upsertPrivateComment(batch.privateComments.filter { findPrivateComment(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") })
         upsertSyncState(batch.syncState)
     }
 
@@ -154,7 +154,7 @@ abstract class CacheDao {
     @Query("DELETE FROM topics WHERE id IN (:ids)")
     protected abstract suspend fun deleteTopics(ids: List<String>)
 
-    @Query("DELETE FROM announcements WHERE id IN (:ids) AND NOT EXISTS (SELECT 1 FROM announcement_comments WHERE announcement_id = announcements.id AND sync_status = 'QUEUED_FOR_SYNC')")
+    @Query("DELETE FROM announcements WHERE id IN (:ids) AND NOT EXISTS (SELECT 1 FROM announcement_comments WHERE announcement_id = announcements.id AND sync_status IN ('QUEUED_FOR_SYNC', 'REJECTED'))")
     protected abstract suspend fun deleteAnnouncements(ids: List<String>)
 
     @Query("DELETE FROM announcement_comments WHERE id IN (:ids) AND sync_status = 'SYNCED'")

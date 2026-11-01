@@ -1,13 +1,10 @@
 package org.lara.app.data.sync
 
 import androidx.room.withTransaction
-import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.local.entities.*
@@ -17,9 +14,7 @@ import org.lara.app.data.repository.RoomEnrollmentNoticeRepository
 import org.lara.app.domain.enrollment.EnrollmentNotice
 import org.lara.app.domain.enrollment.EnrollmentStatus
 
-@Serializable
-data class UploadReceipt(val status: String, val reason: String?, val fingerprint: String, val hubId: String)
-internal data class PendingUpload(val table: String, val id: String, val fingerprint: String,
+internal data class PendingUpload(val table: String, val id: String,
     val comment: AnnouncementCommentEntity? = null, val privateComment: PrivateCommentEntity? = null,
     val attempt: QuizAttemptEntity? = null)
 
@@ -69,16 +64,10 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
             store.apply(userId, request, page, expectedState = expected)
         } while (page.hasMore)
     }
-    private fun fingerprint(value: String): String = MessageDigest.getInstance("SHA-256")
-        .digest(value.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
-    private fun receiptKey(row: PendingUpload) = "upload_receipt:${row.table}:${row.id}"
     private suspend fun eligible(row: PendingUpload, hubId: String): Boolean {
         val bound = db.syncStateDao().get("queued_hub:${row.table}:${row.id}")?.value
         if (bound != null && bound != hubId) return false
-        val stored = db.syncStateDao().get(receiptKey(row))?.value?.let {
-            runCatching { json.decodeFromString<UploadReceipt>(it) }.getOrNull()
-        }
-        return stored?.let { it.hubId != hubId || it.fingerprint != row.fingerprint || it.status != "REJECTED" } ?: true
+        return true
     }
     private suspend fun snapshot(userId: String, hubId: String): List<PendingUpload> = withContext(Dispatchers.IO) {
         db.withTransaction {
@@ -98,13 +87,13 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
                 } while (page.size == 50)
             }
             collect({ dao.queuedComments(userId, it) }) {
-                PendingUpload("announcement_comments", it.id, fingerprint(json.encodeToString(it.toPushDto()) + it.updatedAt), comment = it)
+                PendingUpload("announcement_comments", it.id, comment = it)
             }
             if (result.size < 50) collect({ dao.queuedPrivateComments(userId, it) }) {
-                PendingUpload("private_comments", it.id, fingerprint(json.encodeToString(it.toPushDto()) + it.updatedAt), privateComment = it)
+                PendingUpload("private_comments", it.id, privateComment = it)
             }
             if (result.size < 50) collect({ dao.queuedAttempts(userId, it) }) {
-                PendingUpload("quiz_attempts", it.id, fingerprint(json.encodeToString(QuizAttemptPushDto(it.id, it.quizId, it.startedAt, requireNotNull(it.submittedAt), json.decodeFromString<List<AnswerDto>>(it.answersJson))) + "|" + it.updatedAt), attempt = it)
+                PendingUpload("quiz_attempts", it.id, attempt = it)
             }
             check(result.map { it.id }.distinct().size == result.size)
             result
@@ -132,14 +121,15 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
                 check(db.syncStateDao().get("hub_id")?.value == hubId)
                 for (receipt in response.receipts) {
                     val row = rows.single { it.id == receipt.id }
-                    val reason = receipt.reason?.takeIf { it.matches(Regex("[A-Z0-9_]{1,80}")) }
-                    db.syncStateDao().put(SyncStateEntity(receiptKey(row),
-                        json.encodeToString(UploadReceipt(receipt.status, reason, row.fingerprint, hubId)), System.currentTimeMillis()))
                     if (receipt.status == "SYNCED") {
                         row.comment?.let { db.syncDao().acknowledgeComment(it.id, it.content, it.updatedAt) }
                         row.privateComment?.let { db.syncDao().acknowledgePrivateComment(it.id, it.content, it.updatedAt) }
                         row.attempt?.let { db.syncDao().acknowledgeAttempt(it.id, it.answersJson, requireNotNull(it.submittedAt), it.updatedAt) }
                         acknowledged++
+                    } else {
+                        row.comment?.let { db.syncDao().rejectComment(it.id, it.content, it.updatedAt, receipt.reason) }
+                        row.privateComment?.let { db.syncDao().rejectPrivateComment(it.id, it.content, it.updatedAt, receipt.reason) }
+                        row.attempt?.let { db.syncDao().rejectAttempt(it.id, it.answersJson, requireNotNull(it.submittedAt), it.updatedAt, receipt.reason) }
                     }
                 }
             }
@@ -147,8 +137,5 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
             if (response.receipts.size < rows.size) throw java.io.IOException("Incomplete sync receipts")
         }
         acknowledged
-    }
-    suspend fun receipt(table: String, id: String): UploadReceipt? = withContext(Dispatchers.IO) {
-        db.syncStateDao().get("upload_receipt:$table:$id")?.value?.let { json.decodeFromString<UploadReceipt>(it) }
     }
 }
