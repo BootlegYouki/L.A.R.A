@@ -23,12 +23,19 @@ pub fn router() -> Router<AppState> {
         .route("/api/auth/logout", post(logout))
 }
 
+/// Contract limits on `lrn_or_id` and `full_name` after trimming, in characters (PR #197).
+const MAX_LRN_CHARS: usize = 32;
+const MAX_NAME_CHARS: usize = 100;
+
 /// Learners only: teachers are created by the Hub admin (PRD FR-1.0, FR-1.1).
 async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<AuthSession>, ApiError> {
     body.need(&["lrn_or_id", "full_name", "pin"])?;
+    let lrn_or_id = text_field(&body, "lrn_or_id")?.trim().to_owned();
+    let full_name = text_field(&body, "full_name")?.trim().to_owned();
+    if !(1..=MAX_LRN_CHARS).contains(&lrn_or_id.chars().count()) || !(1..=MAX_NAME_CHARS).contains(&full_name.chars().count()) {
+        return Err(ApiError::bad_request("LRN and name must be 1-32 and 1-100 characters"));
+    }
     let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
-    let lrn_or_id = text_field(&body, "lrn_or_id")?;
-    let full_name = text_field(&body, "full_name")?;
     // Taken before setup too, as in the mock (which is seeded with the admin), so setup always works.
     if lrn_or_id == ADMIN_ID {
         return Err(users::InsertError::Exists.into());

@@ -98,6 +98,32 @@ async fn register_rejects_bad_pins() {
     hub.stop().await;
 }
 
+/// Contract PR #197: both are trimmed, then 1-32 and 1-100 characters, as in the mock.
+#[tokio::test]
+async fn register_trims_and_limits_the_lrn_and_name() {
+    let hub = TestHub::start().await;
+    let bad = [
+        json!({"lrn_or_id": " ", "full_name": "A", "pin": "1234"}),
+        json!({"lrn_or_id": "999", "full_name": "", "pin": "1234"}),
+        json!({"lrn_or_id": "9".repeat(33), "full_name": "A", "pin": "1234"}),
+        json!({"lrn_or_id": "999", "full_name": "A".repeat(101), "pin": "1234"}),
+    ];
+    for body in bad {
+        let (status, err) = hub.post_json("/api/auth/register", &body, None).await;
+        let expected = (400, Some("BAD_REQUEST"), Some("LRN and name must be 1-32 and 1-100 characters"));
+        assert_eq!((status, code(&err), message(&err)), expected, "{body}");
+    }
+    // Characters, not bytes: a 100-letter name with ñ is 200 bytes.
+    let longest = json!({"lrn_or_id": format!(" {} ", "9".repeat(32)), "full_name": format!("  {}  ", "ñ".repeat(100)), "pin": "1234"});
+    let (status, session) = hub.post_json("/api/auth/register", &longest, None).await;
+    assert_eq!(status, 200, "{session}");
+    assert_eq!((session["user"]["lrn_or_id"].as_str(), session["user"]["full_name"].as_str()), (Some(&*"9".repeat(32)), Some(&*"ñ".repeat(100))));
+    assert_eq!(login(&hub, &"9".repeat(32), "1234").await.0, 200, "stored trimmed");
+    let (status, err) = hub.post_json("/api/auth/register", &learner(" ADMIN-0001 ", json!("1234")), None).await;
+    assert_eq!((status, code(&err)), (409, Some("ALREADY_EXISTS")), "the admin ID stays reserved");
+    hub.stop().await;
+}
+
 #[tokio::test]
 async fn register_accepts_a_numeric_pin() {
     let hub = TestHub::start().await;
