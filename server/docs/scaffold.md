@@ -7,7 +7,7 @@ The skeleton every later server step adds to: one process that opens the databas
 | File | What it does |
 |---|---|
 | `backend/src/lib.rs` | `serve(HubConfig) -> HubHandle`: data dir, `db::connect`, `db::migrate`, both listeners. `AppState`, `StartError` |
-| `backend/src/main.rs` | Headless `lara-hub`: `LARA_DATA_DIR` (default `./lara-data`), Ctrl+C to stop |
+| `backend/src/main.rs` | Headless `lara-hub`: `LARA_DATA_DIR` (default `./lara-data`), `LARA_TEST_SEED=1` (test only, see [`auth_sessions.md`](./auth_sessions.md)), Ctrl+C to stop |
 | `backend/src/config.rs` | `HubConfig`: `data_dir`, ports (8080/8081; tests set 0) |
 | `backend/src/db/mod.rs` | `connect` (WAL, `synchronous = NORMAL`, `foreign_keys`, `busy_timeout = 5000` on the connect options), `migrate` (`sqlx::migrate!` over `db/migrations/`) |
 | `backend/src/error.rs` | `ApiError`, `ErrorCode`: the `{"error":{"code","message"}}` envelope |

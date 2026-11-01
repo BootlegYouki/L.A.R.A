@@ -102,7 +102,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | Name | Kind | Responsibility |
 |---|---|---|
 | `lara_hub` / `lara-hub` | crate / binary | Backend library / headless runner |
-| `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name |
+| `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name, `test_seed` (`LARA_TEST_SEED=1`, CI only) |
 | `AppState` / `HubHandle` | struct | Shared state (`SqlitePool`, `Broker`, `AiQueue`, `Storage`, `Clock`, limiters) / running Hub with `shutdown()` |
 | `ApiError`, `ErrorCode` | struct, enum | Error envelope with the contract's code strings |
 | `AuthUser`, `Role`, `require_role` | extractor, enum, fn | Bearer (or `?token=` on media routes only) → `{ id, role }`; 403 on wrong role |
@@ -312,6 +312,8 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 # server/backend/ (what CI runs)
 cargo check --all-targets && cargo test
 cargo run --bin lara-hub                  # headless Hub, data in $LARA_DATA_DIR
+LARA_TEST_SEED=1 cargo run --bin lara-hub # test only: the mock's accounts (PIN 1234), for the line below
+LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub   # repo root: mock tests against this Hub
 # server/ui/
 npm run build
 # repo root (this team's PCs: `py` and PYTHONUTF8=1)

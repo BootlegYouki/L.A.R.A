@@ -55,6 +55,8 @@ pub enum StartError {
     Migrate(#[from] MigrateError),
     #[error("could not listen on port {port}: {source}")]
     Bind { port: u16, source: std::io::Error },
+    #[error("could not create the test accounts: {0}")]
+    TestSeed(String),
 }
 
 /// A running Hub. Dropping it leaves the listeners running; call [`HubHandle::shutdown`].
@@ -110,6 +112,10 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         sync_epoch: meta.sync_epoch,
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
     };
+    // Before the listeners open, so no request finds the accounts missing.
+    if config.test_seed {
+        db::seed::mock_accounts(&state.db, &state.pins, state.clock.now_ms()).await?;
+    }
 
     let (http, http_addr) = bind(config.http_port).await?;
     let (ws, ws_addr) = bind(config.ws_port).await?;
@@ -118,7 +124,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let router = routes::router(state.clone());
     let mut http_stop = stop.clone();
     let http_task = tokio::spawn(async move {
-        // Connect info lets the admin setup route (step 2.0) accept only loopback callers.
+        // Connect info lets admin setup and admin login (step 2.0) tell the Hub PC from the network.
         let served = axum::serve(http, router.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async move {
                 let _ = http_stop.changed().await;

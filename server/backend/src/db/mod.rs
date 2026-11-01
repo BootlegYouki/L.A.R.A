@@ -1,3 +1,4 @@
+pub mod seed;
 pub mod sync_revisions;
 pub mod users;
 
