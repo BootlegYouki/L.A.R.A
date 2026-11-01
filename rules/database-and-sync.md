@@ -45,6 +45,7 @@ Clients get other people's names through `PublicUser` (`id`, `full_name`, `role`
 * `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'` | `'REJECTED'`) and `sync_reject_reason` on `assignment_submissions`, `quiz_attempts`, `announcement_comments` and `private_comments`: work created offline waiting to upload, and the Hub's reason when it refused it.
 * `materials.local_file_path`: absolute path of the cached PDF or MP4.
 * `sync_state` (key/value): `hub_id`, `sync_epoch`, `cursor`, `current_user_id`. A client may add its own bookkeeping keys under a `namespace:` prefix (for example upload receipts); they are never a cursor and never sent to the Hub. Upload outcomes belong in `sync_status` / `sync_reject_reason`, not in `sync_state`.
+* **One device, several accounts:** each account that signs in on a device gets its own local database (its own mirror, `sync_state` and cursor). Signing in as someone else never reads, overwrites or deletes another account's rows, so queued work survives until its owner signs in again. A signed-out account's data is never shown to another account, and its database file is named by a hash of the user id, never the LRN.
 
 ---
 
