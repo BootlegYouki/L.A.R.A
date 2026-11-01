@@ -26,10 +26,16 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "icon": [
       "icons/icon.png",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/hooks.nsh",
+        "installMode": "perMachine"
+      }
+    }
   }
 }
