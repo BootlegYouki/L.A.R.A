@@ -27,4 +27,8 @@ Only the 2.5 branch is being prepared. No new PR is opened while Mobile 2.4 PR #
 
 ## Final phone build
 
-The final isolated package org.lara.app.sprint25integrated and its test APK build successfully. ADB lost the phone before installation, so this final canonical-access/upgrade build is not yet device-verified. Earlier phone evidence remains historical and is not represented as validation of these latest changes. The original installed app and its data were not modified.
+The final isolated package `org.lara.app.sprint25integrated` was installed on the connected Xiaomi 2311DRK48G. All 28 device cases passed: 24 shared sync/transaction/upgrade behaviors, the actual-mock sync flow, the teacher REST/canonical learner approval flow across database reopen, and two approval UI tests (English and Filipino at 200% text). Full instrumentation output is in `device-tests.txt`.
+
+Through normal app entry, the enrolled mock learner signed in, received its canonical class and opened Science 4. After removing only the test Hub's USB reverse routes and cold-launching, My classes still offered Open class; the class shell opened with its offline banner and no blocking dialog. The routes were restored afterward. `learner-opened.png` and `learner-opened-offline.png` show the final build. The shell's Stream content wiring belongs to its later feature; this verifies class access, not that later screen.
+
+The smoke-test memory snapshot showed 147,175 KiB total PSS and 41,857 KiB combined allocated native/Dalvik heap. This is one debug-build snapshot on this phone, not budget-device or long-running certification. The USB route interruption is not a physical classroom WAN/router test. The original installed app and its data were not modified.
