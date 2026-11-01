@@ -7,6 +7,7 @@ pub mod config;
 pub mod db;
 pub mod discovery;
 pub mod error;
+pub mod models;
 pub mod network;
 pub mod routes;
 pub mod websocket;
@@ -21,7 +22,8 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
-use auth::Sessions;
+use auth::limiter::LoginLimiter;
+use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
 pub use config::HubConfig;
 use websocket::broker::Broker;
@@ -30,7 +32,10 @@ use websocket::broker::Broker;
 pub struct AppState {
     pub db: SqlitePool,
     pub broker: Arc<Broker>,
-    pub sessions: Arc<Sessions>,
+    /// argon2id with a cap on concurrent hashes (`auth::pin`).
+    pub pins: Arc<PinHasher>,
+    /// Five login attempts a minute per `lrn_or_id` (`auth::limiter`).
+    pub login_limiter: Arc<LoginLimiter>,
     pub clock: Arc<dyn Clock>,
     /// From `hub_meta`, created on first run (`db::load_hub_meta`).
     pub hub_id: Arc<str>,
@@ -50,6 +55,8 @@ pub enum StartError {
     Migrate(#[from] MigrateError),
     #[error("could not listen on port {port}: {source}")]
     Bind { port: u16, source: std::io::Error },
+    #[error("could not create the test accounts: {0}")]
+    TestSeed(String),
 }
 
 /// A running Hub. Dropping it leaves the listeners running; call [`HubHandle::shutdown`].
@@ -98,12 +105,17 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let state = AppState {
         db,
         broker: Arc::default(),
-        sessions: Arc::default(),
+        pins: Arc::default(),
+        login_limiter: Arc::default(),
         clock: Arc::new(SystemClock),
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
     };
+    // Before the listeners open, so no request finds the accounts missing.
+    if config.test_seed {
+        db::seed::mock_accounts(&state.db, &state.pins, state.clock.now_ms()).await?;
+    }
 
     let (http, http_addr) = bind(config.http_port).await?;
     let (ws, ws_addr) = bind(config.ws_port).await?;
@@ -112,7 +124,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let router = routes::router(state.clone());
     let mut http_stop = stop.clone();
     let http_task = tokio::spawn(async move {
-        // Connect info lets the admin setup route (step 2.3) accept only loopback callers.
+        // Connect info lets admin setup and admin login (step 2.0) tell the Hub PC from the network.
         let served = axum::serve(http, router.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async move {
                 let _ = http_stop.changed().await;

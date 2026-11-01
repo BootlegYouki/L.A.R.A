@@ -56,7 +56,7 @@ One process on the Hub PC. The Tauri window starts the backend library on its ow
 | Pull paging | 500 `sync_revisions` rows per page; `has_more`; `next_cursor` = last `seq` scanned | Bounds responses for 3 GB phones; `has_more` is in the contract | One unbounded response (the mock) |
 | Wire types | Structs named exactly as `openapi.yaml` schemas, in `models/*` | One name per thing; a student type without `correct_answer` cannot leak it | One struct with `skip_serializing_if` |
 | Errors | `ApiError { status, code: ErrorCode, message }` → envelope | Contract envelope everywhere; exact code strings in one enum | Ad-hoc tuples |
-| Auth | argon2id PINs; 32-byte random hex token, SHA-256 stored; 12 h expiry; `LoginLimiter` 5 per minute per `lrn_or_id` | `server/AGENTS.md`, `lara-hub-rust` skill; mock sessions last 12 h | bcrypt; JWT (no revocation) |
+| Auth | argon2id PINs (crate defaults: 19 MiB, t=2), at most one hash per core at a time; 32-byte random hex token, SHA-256 stored; 12 h expiry; `LoginLimiter` 5 attempts per minute per `lrn_or_id`, counted when they start and cleared by a success (step 2.0, [`auth_sessions.md`](./auth_sessions.md)) | `server/AGENTS.md`, `lara-hub-rust` skill; mock sessions last 12 h; 40 hashes at once would need 760 MB | bcrypt; JWT (no revocation) |
 | Clock | All time from `AppState.clock` (`SystemClock`, `FakeClock` in tests) | Time-limit and expiry rules testable | `SystemTime::now()` scattered |
 | Broker | Bounded `mpsc::channel(64)` per connection, `try_send`, drop when full | A slow phone never blocks others | Unbounded channels |
 | Files | `<data_dir>/storage/{materials,submissions,tmp}/<uuid>`; stream to `tmp/`, then rename | Paths never from client names; partial uploads never visible | Blobs in SQLite |
@@ -102,7 +102,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | Name | Kind | Responsibility |
 |---|---|---|
 | `lara_hub` / `lara-hub` | crate / binary | Backend library / headless runner |
-| `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name |
+| `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name, `test_seed` (`LARA_TEST_SEED=1`, CI only) |
 | `AppState` / `HubHandle` | struct | Shared state (`SqlitePool`, `Broker`, `AiQueue`, `Storage`, `Clock`, limiters) / running Hub with `shutdown()` |
 | `ApiError`, `ErrorCode` | struct, enum | Error envelope with the contract's code strings |
 | `AuthUser`, `Role`, `require_role` | extractor, enum, fn | Bearer (or `?token=` on media routes only) → `{ id, role }`; 403 on wrong role |
@@ -120,7 +120,8 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `guardrails::check_quiz_lockout` | fn | `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt |
 | `PortHealth`, `TestHub` | struct | Port bind/reachability; integration-test server |
 | `StartError` | enum | Why `serve` could not start (data dir, database, migrations, port bind) |
-| `Sessions` (`auth`) | struct | `user_for_token` for the extractor and the WebSocket handshake; in memory and test-seeded until 2.0 moves it to the `sessions` table |
+| `auth::sessions` | module | `open`, `user_for_token` (the extractor and the WebSocket handshake), `close`, on the `sessions` table (2.0; was the in-memory `Sessions` struct) |
+| `PinHasher` | struct | argon2id `hash` / `verify` on the blocking pool, one at a time per core |
 | `discovery::lan_ip`, `lan_address` | fn, Tauri command | IPv4 of the default-route adapter; the window's address display |
 | Wire types | structs | Exactly the `openapi.yaml` schema names (`AuthSession`, `PublicUser`, `Classroom`, `StudentQuizResponse`, `TeacherQuiz`, `GradeReceipt`, `SyncPullResponse`, ...) |
 | `<Entity>Input` | structs | Inline request bodies, following `TeacherQuizInput` (`AnnouncementInput`, `AssignmentInput`, ...) |
@@ -131,8 +132,8 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | Contract route or event | Our module | On error codes (beyond the common ones) | On timeout or Hub unreachable (peer gone) |
 |---|---|---|---|
 | `GET /download` | `routes/portal.rs` | 404 missing installer | Range resume |
-| `/api/auth/register`, `/login`, `/logout` | `routes/auth.rs` | 409 `ALREADY_EXISTS` (Q8); 401 wrong LRN or PIN; limit (Q7) | Client logs in again |
-| `/api/admin/setup`, `/api/admin/users`, `.../reset-pin` | `routes/admin.rs` | 409 `ADMIN_EXISTS`; setup 403 if not loopback; 409 `ALREADY_EXISTS`; 404 | Same |
+| `/api/auth/register`, `/login`, `/logout` | `routes/auth.rs` | 409 `ALREADY_EXISTS` (Q8); 400 empty or too long LRN or name; 401 wrong LRN or PIN; 429 `TOO_MANY_ATTEMPTS` (Q7); admin off the Hub PC 403 `ADMIN_LOCAL_ONLY` | Client logs in again |
+| `/api/admin/setup`, `/api/admin/users`, `.../reset-pin` | `routes/admin.rs` | 409 `ADMIN_EXISTS`; setup 403 off the Hub PC (not loopback, or relayed by the tunnel); 409 `ALREADY_EXISTS`; 404 | Same |
 | `/api/classrooms` (GET, POST), `/join` | `routes/classrooms.rs` | 404 `CLASS_CODE_INVALID` | Join returns the existing enrollment |
 | `/api/classrooms/{id}` PATCH, `/remove`, `/teachers`, `/teachers/{teacher_id}`, `/roster`, `/approve`, `/reject` | `routes/classrooms.rs`, `services/class_access.rs` | 403 not owner; 404 enrollment or teacher; archived class (Q9) | Events after commit; pull recovers |
 | `/api/sync/pull` | `routes/sync.rs`, `db/sync_revisions.rs` | `reset: true` on `hub_id`/`sync_epoch` mismatch | Read only; client keeps its cursor |
@@ -241,7 +242,7 @@ async fn unknown_route_is_route_not_found() {
 * **`SQLITE_BUSY` despite `busy_timeout`:** a deferred transaction that reads then writes. Always `BEGIN IMMEDIATE`.
 * **Write lock across I/O** (upload body, WebSocket send, `llama-server`) stalls every learner. Slow work first, then the transaction, then emit.
 * **Axum's 2 MB body limit** rejects uploads silently. Raise `DefaultBodyLimit` on upload routes only; never `field.bytes()` a video.
-* **Loopback check** for `/api/admin/setup` needs `into_make_service_with_connect_info::<SocketAddr>()`, then `ip.is_loopback()`.
+* **Hub PC check** for admin setup and admin login (`auth::is_hub_pc`) needs `into_make_service_with_connect_info::<SocketAddr>()`, then a loopback peer **and** no `Cf-Connecting-IP` header: `cloudflared` also connects from loopback.
 * **`?token=` in logs:** log the path only. Accept `?token=` only on `/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file`, `/api/model/file`.
 * **Blocking the runtime:** argon2 (40 logins at once), PDF extraction and spreadsheet writing run in `spawn_blocking`.
 * **Wrong beacon IP:** virtual adapters (VirtualBox, Hyper-V, VPN). Pick the interface with the default route, show it in the window, let the admin choose if several.
@@ -262,11 +263,11 @@ Four issues' `Depends on` lines disagree with their step numbers (2.1 needs 2.4;
 | 1.3 | #3 | `routes/portal.rs`, `static/portal/index.html` (bilingual guide) | 1.0 |
 | 1.4 | #20 | `tauri.conf.json`, `build.rs`, installer firewall hooks, `network/firewall_check.rs` | 1.0 |
 | 1.5 | #73 | `ai_eval/*`, `docs/benchmarks/ai_model_evaluation.md`, `server/docs/hub_hardware.md` | 0.1 |
-| 2.0 | #42 | `auth/*`, `routes/auth.rs`, `models/user.rs` | 1.0, 1.2 |
+| 2.0 | #42 | `auth/*`, `routes/auth.rs`, `models/user.rs`, `db/users.rs`, `/api/admin/setup` in `routes/admin.rs` (moved from 2.3 by the Lead's #42 comment), the mock's role guards on every stub, `routes/backup.rs` admin-only stubs | 1.0, 1.2 |
 | 2.4 | #44 | `websocket/broker.rs`, `events.rs`, `presence.rs`, full handshake | 1.0, 2.0 |
 | 2.1 | #6 | `routes/classrooms.rs` (create, list, join, roster, approve, reject), `models/classroom.rs`, **`services/class_access.rs`** (Q5) | 2.0, 2.4 |
 | 2.2 | #7 | `routes/sync.rs`, `pull_page`, `models/sync.rs`, push handler (later steps add item kinds to it) | 2.0, 2.1 |
-| 2.3 | #43 | `routes/admin.rs`, `src-tauri/src/admin/*`, `ui/src/pages/AdminUsers.tsx`, Setup, Login | 2.0 |
+| 2.3 | #43 | `routes/admin.rs` users and reset-pin, `src-tauri/src/admin/*`, `ui/src/pages/AdminUsers.tsx`, the window's Setup and Login screens | 2.0 |
 | 2.5 | #121 | Rename, archive, remove, co-teachers in `classrooms.rs` and `class_access` | 2.1 |
 | 3.3 | #53 | `storage/*`, upload and download in `materials.rs`, submit and file in `assignments.rs` | 1.0, 2.0 |
 | 3.1 | #10 | `services/document_parser.rs`, chunks route | 3.3 |
@@ -298,7 +299,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 | Tauri hosting the Axum runtime on Windows and Linux (#39) | Jv Bialen | During 1.0 | Tauri spawns `lara-hub` as a sidecar; same library |
 | mDNS with several network adapters (#1) | John Rey Calipes | During 1.1 | UDP beacon and manual IP |
 | Zero-CLI installer with firewall rules (#20) | John Rey Calipes | During 1.4 | Window's auto-fix runs the rules elevated |
-| argon2 cost under 40 simultaneous logins (#42) | Jv Bialen | During 2.0, measured on the Hub PC | Lower memory cost within OWASP minimums |
+| argon2 cost under 40 simultaneous logins (#42) | Jv Bialen | During 2.0, measured on the Hub PC. Laptop upper bound (2026-11-01, 12 hashes at once): 40 logins at once 414 ms wall, p95 402 ms; peak 245 MB, idle 18 MB ([`auth_sessions.md`](./auth_sessions.md)). Still to measure on the 4-core Hub PC (one hash per logical CPU) | Lower memory cost within OWASP minimums |
 | Pull page size 500 on real data (#7) | Jv Bialen | During 2.2, confirmed in 6.1 | Tune the constant |
 | Pure-Rust PDF/DOCX text extraction (#10) | John Rey Calipes | During 3.1 | PDF and TXT only; DOCX gets no chunks |
 | Token bucket accuracy at 2.0 MB/s with 40 streams (#8) | Jv Bialen | During 3.2 | Coarser chunks; measure on the router |
@@ -311,6 +312,8 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 # server/backend/ (what CI runs)
 cargo check --all-targets && cargo test
 cargo run --bin lara-hub                  # headless Hub, data in $LARA_DATA_DIR
+LARA_TEST_SEED=1 cargo run --bin lara-hub # test only: the mock's accounts (PIN 1234), for the line below
+LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub   # repo root: mock tests against this Hub
 # server/ui/
 npm run build
 # repo root (this team's PCs: `py` and PYTHONUTF8=1)
@@ -329,11 +332,11 @@ python3 scripts/mock_hub.py               # reference behavior
 | 1.3 Portal | Phone on the router opens `/download` with WAN unplugged, in English and Filipino; test finds no external URL in the HTML |
 | 1.4 Installer | Fresh Windows VM installs in under 3 minutes; `netsh advfirewall firewall show rule name=all` lists the three rules; Linux `ufw status` |
 | 1.5 AI spike | `docs/benchmarks/ai_model_evaluation.md`: pass rates, TTFT, tokens/s at 1, 2, 4 slots on the Hub PC, labelled developer-scored |
-| 2.0 Auth | Register, duplicate 409, login, wrong PIN 401, logout kills the token, 6th attempt in a minute limited; DB holds only token hashes |
+| 2.0 Auth | Register, duplicate 409, login, wrong PIN 401, logout kills the token, 6th attempt in a minute limited; DB holds only token hashes; ported `test_admin_is_its_own_account_and_setup_runs_once` and `test_admin_routes_are_admin_only`; setup from the LAN or the tunnel → 403; admin login off the Hub PC → 403 `ADMIN_LOCAL_ONLY`, not counted toward the limit; register trims and limits LRN and name; every stub's role matches the mock |
 | 2.4 Broker | A client that stops reading is dropped while another receives within 300 ms; teacher gets `EVENT_PRESENCE` `ONLINE` then `OFFLINE` |
 | 2.1 Enrollment | Ported `test_join_approve_flow_pushes_websocket_events`, `test_bad_class_code` |
 | 2.2 Sync | Ported cursor, first-pull, reset and no-leak tests; 1,200 revisions pull in 3 pages with no gaps or duplicates |
-| 2.3 Admin console | Ported `test_admin_is_its_own_account_and_setup_runs_once`, `test_admin_routes_are_admin_only`; non-loopback setup → 403; screenshots in both languages |
+| 2.3 Admin console | Admin creates teachers and resets PINs as the mock; the window's Setup and Login screens; screenshots in both languages |
 | 2.5 Class management | Ported `test_removed_learner_loses_the_class_and_co_teacher_gains_it` |
 
 ## 14. Open Questions
@@ -344,10 +347,10 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 4. **Step numbers vs `Depends on`:** confirm section 10's order or renumber. **Call:** keep section 10's order and the step numbers as labels (renumbering breaks issue and PR links); correct the `Depends on` lines of #6, #10, #8, #11 and #12 to match.
 5. **Shared code in later issues:** `record_revision` (#7) is needed from 1.2, `class_access` (#121) from 2.1, `check_quiz_lockout` (#16) from 5.1. We create each in the earlier step. **Call:** confirmed. The earlier PR says "pulls forward X from #N"; the later issue extends it.
 6. **Who may export:** the mock allows teachers only; the contract says "teacher / Hub console" and FR-5.2 puts it in the Hub window (signed in as `ADMIN`). See design system 9.16 #3. **Call:** both. `TEACHER` for classes they teach, `ADMIN` for any class. `target_path` is required and must be a USB drive detected on the Hub PC, else 400: returning the file as the response body would put learner data on a client device, against section 1's non-goals. A `contract-change` makes `target_path` required, or the Lead drops the non-goal. Needed before 4.3.
-7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only? **Call:** failed attempts only, 5 per minute per `lrn_or_id`, reset by a successful login. Over the limit: 429 `TOO_MANY_ATTEMPTS` with `Retry-After`, so clients show "wait a minute" instead of "wrong PIN". A `contract-change` adds both; needed before 2.0.
+7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only? **Call:** failed attempts only, 5 per minute per `lrn_or_id`, reset by a successful login. Over the limit: 429 `TOO_MANY_ATTEMPTS` with `Retry-After`, so clients show "wait a minute" instead of "wrong PIN". A `contract-change` adds both; needed before 2.0. **Status (2026-11-01):** built as called in 2.0 (attempts are counted when they start, so parallel guesses cannot slip past). The `contract-change` merged as #197; it also added register limits (trimmed LRN 1-32, name 1-100 characters) and Hub-PC-only admin login (`403 ADMIN_LOCAL_ONLY`), both built in 2.0.
 8. **Mock codes missing from the contract:** `ALREADY_EXISTS`, `QUIZ_CLOSED`, `ROUTE_NOT_FOUND`. We use them as the mock does. The 1.0 scaffold adds `501 NOT_IMPLEMENTED` for area stubs; it disappears as each step replaces its stubs, so no client relies on it.
 9. **Archived class writes:** "read-only for everyone" has no error code.
-10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`).
+10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`). Since 2.0 a database error answers 500 `INTERNAL_ERROR` "Hub database error" until the contract names one.
 11. **Tombstone retention window** is undefined, so pruning is not scheduled.
 12. **#17 targets `tests/stress/`** (Lead-owned). Move it to `server/`?
 13. **Hub window layout:** no section 9 anatomy or showcase entry covers its screens, and staging's `rules/ui-and-accessibility.md` §1 says layout is not free design.

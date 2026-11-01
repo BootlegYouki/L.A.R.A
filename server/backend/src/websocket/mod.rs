@@ -16,7 +16,7 @@ use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
-use crate::auth::AuthUser;
+use crate::auth::{sessions, AuthUser};
 use crate::error::ErrorCode;
 use crate::AppState;
 use broker::Frame;
@@ -101,7 +101,8 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
 }
 
 /// Answers frames sent before `EVENT_HELLO` like the mock does, and closes with 4401 when the
-/// token is missing or unknown. `None` once the socket is closed.
+/// token is missing, unknown, expired or belongs to a deactivated account. `None` once the
+/// socket is closed.
 async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> Option<AuthUser> {
     while let Some(Ok(message)) = ws.next().await {
         let text = match message {
@@ -113,10 +114,21 @@ async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> 
             None => ServerEvent::error(ErrorCode::BadRequest, "Invalid JSON"),
             Some(ClientEvent::Other) => ServerEvent::error(ErrorCode::Unauthorized, "Send EVENT_HELLO first"),
             Some(ClientEvent::Hello { token }) => {
-                if let Some(user) = token.as_deref().and_then(|t| app.sessions.user_for_token(t)) {
-                    return Some(user);
-                }
-                let _ = ws.close(Some(close_frame(CloseCode::from(CLOSE_INVALID_TOKEN), "Invalid token"))).await;
+                let lookup = match token.as_deref() {
+                    Some(token) => sessions::user_for_token(&app.db, token, app.clock.now_ms()).await,
+                    None => Ok(None),
+                };
+                let frame = match lookup {
+                    Ok(Some(user)) => return Some(user),
+                    Ok(None) => close_frame(CloseCode::from(CLOSE_INVALID_TOKEN), "Invalid token"),
+                    // Not 4401: that tells the client to drop its token. A failed lookup is the
+                    // Hub's fault, so the client should just reconnect.
+                    Err(e) => {
+                        tracing::error!(error = %e, "session lookup failed");
+                        close_frame(CloseCode::Error, "Hub database error")
+                    }
+                };
+                let _ = ws.close(Some(frame)).await;
                 return None;
             }
         };

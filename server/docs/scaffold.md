@@ -7,24 +7,24 @@ The skeleton every later server step adds to: one process that opens the databas
 | File | What it does |
 |---|---|
 | `backend/src/lib.rs` | `serve(HubConfig) -> HubHandle`: data dir, `db::connect`, `db::migrate`, both listeners. `AppState`, `StartError` |
-| `backend/src/main.rs` | Headless `lara-hub`: `LARA_DATA_DIR` (default `./lara-data`), Ctrl+C to stop |
+| `backend/src/main.rs` | Headless `lara-hub`: `LARA_DATA_DIR` (default `./lara-data`), `LARA_TEST_SEED=1` (test only, see [`auth_sessions.md`](./auth_sessions.md)), Ctrl+C to stop |
 | `backend/src/config.rs` | `HubConfig`: `data_dir`, ports (8080/8081; tests set 0) |
 | `backend/src/db/mod.rs` | `connect` (WAL, `synchronous = NORMAL`, `foreign_keys`, `busy_timeout = 5000` on the connect options), `migrate` (`sqlx::migrate!` over `db/migrations/`) |
 | `backend/src/error.rs` | `ApiError`, `ErrorCode`: the `{"error":{"code","message"}}` envelope |
-| `backend/src/auth/mod.rs` | `AuthUser` bearer extractor, `Role`, `Sessions` (token lookup shared with the WebSocket) |
+| `backend/src/auth/mod.rs` | `AuthUser` bearer extractor, `Role`, `require_role`; sessions, PINs and the login limit since step 2.0 ([`auth_sessions.md`](./auth_sessions.md)) |
 | `backend/src/routes/mod.rs` | Router: one module per area, `ROUTE_NOT_FOUND` fallback, path-only request log |
 | `backend/src/websocket/` | `mod.rs` listener and handshake, `broker.rs` connection registry, `events.rs` `ServerEvent` / `ClientEvent` |
 | `backend/src/discovery/mod.rs` | `lan_ip()`: the IPv4 of the adapter with the default route |
-| `backend/tests/common/mod.rs` | `TestHub`: real Hub on a temp dir and free ports, with a seeded teacher session |
+| `backend/tests/common/mod.rs` | `TestHub`: real Hub on a temp dir and free ports, with teacher `T-0001` (PIN `1234`) and a session for it in the database; `seed_user`, `open_session`, `login`, `post_json` |
 | `src-tauri/src/main.rs` | Window: starts the backend on its own Tokio runtime, `lan_address` command, shuts the Hub down on exit |
 | `ui/` | React + Vite + Tailwind 4 page for the window; tokens from `design-system/desktop/theme.css`, Nunito and Phosphor from `design-system/assets/`, strings in `ui/src/i18n/{en,fil}.json` |
 
 ## Data flow and state
 * **Start:** create `data_dir`, open `<data_dir>/lara.db`, apply pending migrations, bind `0.0.0.0:8080` and `0.0.0.0:8081`. Any failure returns `StartError`; the window then shows "The Hub did not start" instead of closing.
 * **Migrations:** step 1.2 added `001_initial_schema.sql` (see [`database_sync.md`](./database_sync.md)). `backend/build.rs` makes Cargo rebuild when a file is added there, otherwise `sqlx::migrate!` would keep the old embedded list.
-* **REST stubs:** register, login and admin setup answer `501 NOT_IMPLEMENTED`. Every other stub runs `AuthUser` first, so without a valid token it answers `401 UNAUTHORIZED` like the mock, and `501` after. Unknown paths and wrong methods answer `404 ROUTE_NOT_FOUND` (the mock matches method and path together). `/api/assignments/{id}/private-comments`, topics, announcements, model and backup are not registered yet (their own steps). `/download` is served by the captive portal added in step 1.3 ([`portal.md`](./portal.md)).
-* **Tokens:** `Sessions` is an in-memory map that only `TestHub` fills. Nothing issues tokens before step 2.0 (login), so the real Hub rejects every token: REST `401`, WebSocket close `4401`. Step 2.0 replaces the map with the `sessions` table (SHA-256 only).
-* **WebSocket:** the first frame must be `EVENT_HELLO` within 10 s. Earlier frames get `EVENT_ERROR` `UNAUTHORIZED` (not JSON: `BAD_REQUEST`); a missing or unknown token closes with `4401`. On success the Hub queues `EVENT_HELLO_ACK` (`server_time`, `hub_id`, `sync_epoch`) and registers the connection in `Broker` under the user id. Each connection has one writer draining a bounded queue of 64 frames; a full queue drops that connection only. Other events are ignored until their steps (AI 5.1, quiz submit 4.1).
+* **REST stubs:** every stub runs `AuthUser` first, so without a valid token it answers `401 UNAUTHORIZED` like the mock. A stub whose route has a role in `scripts/mock_hub.py` then answers the mock's `403 FORBIDDEN` to other roles (step 2.0; `tests/scaffold.rs` reads the mock to check), and `501 NOT_IMPLEMENTED` after. Unknown paths and wrong methods answer `404 ROUTE_NOT_FOUND` (the mock matches method and path together). `/api/assignments/{id}/private-comments`, topics, announcements and model are not registered yet (their own steps); backup and restore are admin-only stubs until step 4.4. `/download` is served by the captive portal added in step 1.3 ([`portal.md`](./portal.md)). Register, login, logout and admin setup are real since step 2.0.
+* **Tokens:** since step 2.0 a token is checked against the `sessions` table by its SHA-256, for REST and WebSocket alike ([`auth_sessions.md`](./auth_sessions.md)).
+* **WebSocket:** the first frame must be `EVENT_HELLO` within 10 s. Earlier frames get `EVENT_ERROR` `UNAUTHORIZED` (not JSON: `BAD_REQUEST`); a missing, unknown, expired or logged-out token, or a deactivated account, closes with `4401` (a database error during the lookup closes with `1011` instead, so the client reconnects rather than signing out). On success the Hub queues `EVENT_HELLO_ACK` (`server_time`, `hub_id`, `sync_epoch`) and registers the connection in `Broker` under the user id. Each connection has one writer draining a bounded queue of 64 frames; a full queue drops that connection only. Other events are ignored until their steps (AI 5.1, quiz submit 4.1).
 * **Hub identity:** `hub_id` and `sync_epoch` come from `hub_meta`, created on first run (step 1.2, [`database_sync.md`](./database_sync.md)).
 * **Window:** `ui` calls `lan_address` every 5 s (DHCP can change the address) and shows the IP in large text with a beacon pill: green "Hub is running", muted "No classroom network" or "Hub stopped". While stopped it keeps the address (useful for troubleshooting) but hides "learners can type this address". The window never opens the database.
 

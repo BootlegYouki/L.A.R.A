@@ -19,6 +19,9 @@ pub struct HubConfig {
     /// The friendly room or school name broadcast in the UDP beacon (`name`). The window sets this;
     /// headless runs may override it with `LARA_HUB_NAME`.
     pub hub_name: String,
+    /// Test only (`LARA_TEST_SEED=1` on the headless Hub): create the mock Hub's accounts on start
+    /// (`db::seed`), so CI can run `tests/test_mock_hub.py` against this Hub. Never on a school Hub.
+    pub test_seed: bool,
 }
 
 impl HubConfig {
@@ -28,6 +31,7 @@ impl HubConfig {
             http_port: HTTP_PORT,
             ws_port: WS_PORT,
             hub_name: DEFAULT_HUB_NAME.to_string(),
+            test_seed: false,
         }
     }
 }

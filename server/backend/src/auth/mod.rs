@@ -1,13 +1,22 @@
-use std::collections::HashMap;
-use std::sync::{PoisonError, RwLock};
+pub mod limiter;
+pub mod pin;
+pub mod sessions;
+pub mod token;
+
+use std::net::SocketAddr;
 
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
 use axum::http::HeaderMap;
+use serde::Serialize;
 
 use crate::error::ApiError;
 use crate::AppState;
+
+/// The single Hub admin's fixed `lrn_or_id` (contract `/api/admin/setup`). Reserved: no one
+/// can register it, so setup always stays possible.
+pub const ADMIN_ID: &str = "ADMIN-0001";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Role {
@@ -16,32 +25,56 @@ pub enum Role {
     Admin,
 }
 
+impl Role {
+    /// The `users.role` and `User.role` value.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Teacher => "TEACHER",
+            Self::Student => "STUDENT",
+            Self::Admin => "ADMIN",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        [Self::Teacher, Self::Student, Self::Admin].into_iter().find(|role| role.as_str() == value)
+    }
+}
+
+impl Serialize for Role {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(self.as_str())
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AuthUser {
     pub id: String,
     pub role: Role,
 }
 
-/// Token to user lookup shared by the REST extractor and the WebSocket handshake.
-///
-/// Nothing issues tokens until SERVER 2.0 (login), so outside tests this is empty and
-/// every token is rejected. 2.0 replaces the map with the `sessions` table (SHA-256 only).
-#[derive(Default)]
-pub struct Sessions {
-    users: RwLock<HashMap<String, AuthUser>>,
+/// 403 `FORBIDDEN` with the mock's message when the caller has another role.
+pub fn require_role(user: &AuthUser, role: Role) -> Result<(), ApiError> {
+    if user.role == role {
+        return Ok(());
+    }
+    Err(ApiError::forbidden(match role {
+        Role::Teacher => "Teacher only",
+        Role::Student => "Learners only",
+        Role::Admin => "Hub admin only",
+    }))
 }
 
-impl Sessions {
-    pub fn insert(&self, token: &str, user: AuthUser) {
-        self.users.write().unwrap_or_else(PoisonError::into_inner).insert(token.to_owned(), user);
-    }
-
-    pub fn user_for_token(&self, token: &str) -> Option<AuthUser> {
-        self.users.read().unwrap_or_else(PoisonError::into_inner).get(token).cloned()
-    }
+/// A request from the Hub PC itself: a loopback peer that did not come through the
+/// Remote/Suspension Mode tunnel. `cloudflared` connects from loopback too, but adds
+/// `Cf-Connecting-IP` (contract PR #197). Admin setup and admin login accept only these.
+pub fn is_hub_pc(peer: SocketAddr, headers: &HeaderMap) -> bool {
+    peer.ip().to_canonical().is_loopback() && !headers.contains_key(CF_CONNECTING_IP)
 }
 
-fn bearer_token(headers: &HeaderMap) -> Option<&str> {
+const CF_CONNECTING_IP: &str = "cf-connecting-ip";
+
+/// The token after `Bearer `, as the mock reads it.
+pub(crate) fn bearer_token(headers: &HeaderMap) -> Option<&str> {
     let token = headers.get(AUTHORIZATION)?.to_str().ok()?.strip_prefix("Bearer ")?;
     (!token.is_empty()).then_some(token)
 }
@@ -51,7 +84,7 @@ impl FromRequestParts<AppState> for AuthUser {
 
     async fn from_request_parts(parts: &mut Parts, app: &AppState) -> Result<Self, Self::Rejection> {
         let token = bearer_token(&parts.headers).ok_or_else(ApiError::unauthorized)?;
-        app.sessions.user_for_token(token).ok_or_else(ApiError::unauthorized)
+        sessions::user_for_token(&app.db, token, app.clock.now_ms()).await?.ok_or_else(ApiError::unauthorized)
     }
 }
 
@@ -75,11 +108,40 @@ mod tests {
     }
 
     #[test]
-    fn sessions_start_empty() {
-        let sessions = Sessions::default();
-        assert_eq!(sessions.user_for_token("anything"), None);
-        let user = AuthUser { id: "T-0001".into(), role: Role::Teacher };
-        sessions.insert("t", user.clone());
-        assert_eq!(sessions.user_for_token("t"), Some(user));
+    fn hub_pc_is_loopback_without_the_tunnel_header() {
+        let local: SocketAddr = "127.0.0.1:50000".parse().unwrap();
+        let mut tunnel = HeaderMap::new();
+        tunnel.insert("cf-connecting-ip", HeaderValue::from_static("203.0.113.7"));
+        assert!(is_hub_pc(local, &HeaderMap::new()));
+        assert!(is_hub_pc("[::1]:50000".parse().unwrap(), &HeaderMap::new()));
+        assert!(is_hub_pc("[::ffff:127.0.0.1]:50000".parse().unwrap(), &HeaderMap::new()), "IPv4 loopback seen on an IPv6 socket");
+        assert!(!is_hub_pc(local, &tunnel), "cloudflared relays from loopback");
+        assert!(!is_hub_pc("192.168.1.20:50000".parse().unwrap(), &HeaderMap::new()));
+    }
+
+    #[test]
+    fn require_role_answers_the_mocks_403s() {
+        let roles = [(Role::Teacher, "Teacher only"), (Role::Student, "Learners only"), (Role::Admin, "Hub admin only")];
+        for (needed, text) in roles {
+            for (has, _) in roles {
+                let user = AuthUser { id: "u".into(), role: has };
+                match require_role(&user, needed) {
+                    Ok(()) => assert_eq!(has, needed),
+                    Err(e) => {
+                        assert_ne!(has, needed);
+                        assert_eq!((e.status.as_u16(), e.code.as_str(), e.message.as_str()), (403, "FORBIDDEN", text));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn roles_round_trip_through_the_contract_strings() {
+        for role in [Role::Teacher, Role::Student, Role::Admin] {
+            assert_eq!(Role::parse(role.as_str()), Some(role));
+            assert_eq!(serde_json::to_value(role).unwrap(), role.as_str());
+        }
+        assert_eq!(Role::parse("teacher"), None);
     }
 }

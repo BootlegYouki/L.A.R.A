@@ -20,6 +20,8 @@ async fn main() -> ExitCode {
             config.hub_name = name;
         }
     }
+    // CI runs `tests/test_mock_hub.py` against this Hub; the tests sign in as the mock's accounts.
+    config.test_seed = std::env::var("LARA_TEST_SEED").is_ok_and(|v| v == "1");
     let hub = match lara_hub::serve(config).await {
         Ok(hub) => hub,
         Err(e) => {

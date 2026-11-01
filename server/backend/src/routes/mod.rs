@@ -1,9 +1,12 @@
 //! One module per area. Each registers the contract paths it owns; until the area's step
-//! lands they answer 501 `NOT_IMPLEMENTED`, after the same token check the real route will do.
+//! lands they answer 501 `NOT_IMPLEMENTED`, after the same token and role checks the real route
+//! will do.
 
 mod admin;
 mod assignments;
 mod auth;
+mod backup;
+mod body;
 mod classrooms;
 mod export;
 mod materials;
@@ -16,7 +19,7 @@ use axum::http::{Method, Uri};
 use axum::Router;
 use tower_http::trace::TraceLayer;
 
-use crate::auth::AuthUser;
+use crate::auth::{require_role, AuthUser, Role};
 use crate::error::ApiError;
 use crate::AppState;
 
@@ -25,6 +28,7 @@ pub fn router(app: AppState) -> Router {
         .merge(admin::router())
         .merge(assignments::router())
         .merge(auth::router())
+        .merge(backup::router())
         .merge(classrooms::router())
         .merge(export::router())
         .merge(materials::router())
@@ -45,12 +49,25 @@ async fn route_not_found(method: Method, uri: Uri) -> ApiError {
     ApiError::route_not_found(&method, uri.path())
 }
 
-/// Stub for the routes the contract leaves open (register, login, admin setup).
-async fn not_implemented(method: Method, uri: Uri) -> ApiError {
+/// Stub for a route any signed-in user may call: 401 without a valid token, as the real route
+/// will answer.
+async fn not_implemented_signed_in(_user: AuthUser, method: Method, uri: Uri) -> ApiError {
     ApiError::not_implemented(&method, uri.path())
 }
 
-/// Stub for every other route: 401 without a valid token, as the real route will answer.
-async fn not_implemented_signed_in(_user: AuthUser, method: Method, uri: Uri) -> ApiError {
-    ApiError::not_implemented(&method, uri.path())
+/// Stubs for routes with a role in the mock (`@route(..., role=...)`): 401, then the mock's 403.
+async fn not_implemented_teacher(user: AuthUser, method: Method, uri: Uri) -> ApiError {
+    stub_for(&user, Role::Teacher, &method, &uri)
+}
+
+async fn not_implemented_student(user: AuthUser, method: Method, uri: Uri) -> ApiError {
+    stub_for(&user, Role::Student, &method, &uri)
+}
+
+async fn not_implemented_admin(user: AuthUser, method: Method, uri: Uri) -> ApiError {
+    stub_for(&user, Role::Admin, &method, &uri)
+}
+
+fn stub_for(user: &AuthUser, role: Role, method: &Method, uri: &Uri) -> ApiError {
+    require_role(user, role).err().unwrap_or_else(|| ApiError::not_implemented(method, uri.path()))
 }
