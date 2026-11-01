@@ -135,7 +135,7 @@ class SyncStore(private val db: LaraDatabase) {
     private fun resetMirror(userId: String) {
         // Delete children first. Keep queued rows AND all required ancestors to prevent FK cascades losing work.
         for (table in listOf("announcement_comments", "private_comments", "assignment_submissions", "quiz_attempts"))
-            execute("DELETE FROM $table WHERE sync_status != 'QUEUED_FOR_SYNC'")
+            execute("DELETE FROM $table WHERE sync_status NOT IN ('QUEUED_FOR_SYNC', 'REJECTED')")
         execute("DELETE FROM quiz_questions WHERE quiz_id NOT IN (SELECT quiz_id FROM quiz_attempts)")
         execute("DELETE FROM quizzes WHERE id NOT IN (SELECT quiz_id FROM quiz_attempts)")
         execute("DELETE FROM assignments WHERE id NOT IN (SELECT assignment_id FROM assignment_submissions UNION SELECT assignment_id FROM private_comments)")
@@ -152,7 +152,7 @@ class SyncStore(private val db: LaraDatabase) {
     private fun bindUnboundQueued(hubId: String) {
         // An old Hub's queued work is retained on reset but never uploaded into a different school Hub.
         for (table in listOf("announcement_comments", "private_comments", "assignment_submissions", "quiz_attempts"))
-            execute("INSERT OR IGNORE INTO sync_state (`key`,value,updated_at) SELECT 'queued_hub:$table:' || id, ?, updated_at FROM $table WHERE sync_status='QUEUED_FOR_SYNC'", hubId)
+            execute("INSERT OR IGNORE INTO sync_state (`key`,value,updated_at) SELECT 'queued_hub:$table:' || id, ?, updated_at FROM $table WHERE sync_status IN ('QUEUED_FOR_SYNC', 'REJECTED')", hubId)
     }
     private fun deferredTombstones(): List<DeletedRecordDto> = db.openHelper.writableDatabase.query("SELECT value FROM sync_state WHERE `key` LIKE 'deferred_tombstone:%'").use { cursor ->
         buildList { while (cursor.moveToNext()) add(json.decodeFromString<DeletedRecordDto>(cursor.getString(0))) }
@@ -161,8 +161,8 @@ class SyncStore(private val db: LaraDatabase) {
         when (row.entityTable) {
             "materials", "material_chunks", "topics" -> execute("DELETE FROM ${row.entityTable} WHERE id=?", row.entityId)
             "announcement_comments", "private_comments" -> execute("DELETE FROM ${row.entityTable} WHERE id=? AND sync_status='SYNCED'", row.entityId)
-            "announcements" -> execute("DELETE FROM announcements WHERE id=? AND NOT EXISTS (SELECT 1 FROM announcement_comments WHERE announcement_id=announcements.id AND sync_status='QUEUED_FOR_SYNC')", row.entityId)
-            "assignments" -> execute("DELETE FROM assignments WHERE id=? AND NOT EXISTS (SELECT 1 FROM assignment_submissions WHERE assignment_id=assignments.id AND sync_status='QUEUED_FOR_SYNC') AND NOT EXISTS (SELECT 1 FROM private_comments WHERE assignment_id=assignments.id AND sync_status='QUEUED_FOR_SYNC')", row.entityId)
+            "announcements" -> execute("DELETE FROM announcements WHERE id=? AND NOT EXISTS (SELECT 1 FROM announcement_comments WHERE announcement_id=announcements.id AND sync_status IN ('QUEUED_FOR_SYNC', 'REJECTED'))", row.entityId)
+            "assignments" -> execute("DELETE FROM assignments WHERE id=? AND NOT EXISTS (SELECT 1 FROM assignment_submissions WHERE assignment_id=assignments.id AND sync_status IN ('QUEUED_FOR_SYNC', 'REJECTED')) AND NOT EXISTS (SELECT 1 FROM private_comments WHERE assignment_id=assignments.id AND sync_status IN ('QUEUED_FOR_SYNC', 'REJECTED'))", row.entityId)
             else -> error("Unsupported tombstone entity")
         }
         val remains = db.openHelper.writableDatabase.query("SELECT 1 FROM ${row.entityTable} WHERE id=?", arrayOf(row.entityId)).use { it.moveToFirst() }

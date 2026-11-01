@@ -29,6 +29,7 @@ android {
     sourceSets.getByName("test").resources.srcDir(rootProject.file("../contracts/schema"))
     sourceSets.getByName("test").java.srcDir("src/sharedTest/java")
     sourceSets.getByName("androidTest").java.srcDir("src/sharedTest/java")
+    sourceSets.getByName("androidTest").assets.srcDir("schemas")
 }
 
 kapt {

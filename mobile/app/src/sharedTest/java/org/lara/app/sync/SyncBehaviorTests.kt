@@ -245,8 +245,10 @@ abstract class SyncBehaviorTests {
             SyncPushResponseDto(true, listOf(SyncReceiptDto("accepted", "SYNCED"), SyncReceiptDto("rejected", "REJECTED", "COMMENTS_DISABLED")))
         }))
         assertEquals(1, repo.pushQueued("learner"))
-        assertEquals(listOf("rejected"), db.syncDao().queuedComments("learner").map { it.id })
-        assertEquals("COMMENTS_DISABLED", repo.receipt("announcement_comments", "rejected")?.reason)
+        assertTrue(db.syncDao().queuedComments("learner").isEmpty())
+        assertEquals("REJECTED", db.syncDao().comment("rejected")?.syncStatus)
+        assertEquals("COMMENTS_DISABLED", db.syncDao().comment("rejected")?.syncRejectReason)
+        assertNull(db.syncStateDao().get("upload_receipt:announcement_comments:rejected"))
         assertEquals(0, repo.pushQueued("learner")); assertEquals(1, calls)
     }
     @Test fun unacknowledgedAndUnknownReceiptsNeverMarkWorkSynced(): Unit = runBlocking {
@@ -257,6 +259,72 @@ abstract class SyncBehaviorTests {
             try { repo.pushQueued("learner"); fail() } catch (_: Exception) { }
             assertEquals(1, db.syncDao().queuedComments("learner").size)
         }
+    }
+    @Test fun rejectedWorkAndAllItsParentsSurvivePullResetAndTombstonesWithoutRetry(): Unit = runBlocking {
+        val assignment = AssignmentEntity("assignment", "class", "Work", dueDate=10, createdAt=1, updatedAt=1)
+        val quiz = QuizEntity("quiz", "class", "Quiz", timeLimitMinutes=5, createdAt=1, updatedAt=1)
+        val comment = AnnouncementCommentEntity("rejected", "post", "learner", "Saved question", 1, 2, "REJECTED", "COMMENTS_DISABLED")
+        val private = PrivateCommentEntity("private", "assignment", "learner", "learner", "Saved private", 1, 2, "REJECTED", "FORBIDDEN")
+        val photo = AssignmentSubmissionEntity("photo", "assignment", "learner", "/local/keep.jpg", submittedAt=2, updatedAt=2,
+            syncStatus="REJECTED", syncRejectReason="LATE_SUBMISSION")
+        val attempt = QuizAttemptEntity("attempt", "quiz", "learner", "SUBMITTED", 1, 2, updatedAt=2,
+            syncStatus="REJECTED", syncRejectReason="TIME_LIMIT_EXCEEDED")
+        db.cacheDao().upsertBatch(CacheBatch(assignments=listOf(assignment), quizzes=listOf(quiz),
+            announcementComments=listOf(comment), privateComments=listOf(private), assignmentSubmissions=listOf(photo), quizAttempts=listOf(attempt)))
+        db.cacheDao().upsertBatch(CacheBatch(
+            announcementComments=listOf(comment.copy(content="Remote copy", syncStatus="SYNCED", syncRejectReason=null)),
+            privateComments=listOf(private.copy(content="Remote copy", syncStatus="SYNCED", syncRejectReason=null)),
+            assignmentSubmissions=listOf(photo.copy(filePath="", syncStatus="SYNCED", syncRejectReason=null)),
+            quizAttempts=listOf(attempt.copy(answersJson="[]", syncStatus="SYNCED", syncRejectReason=null))))
+        val store = SyncStore(db)
+        store.apply("learner", store.request("learner"), page().copy(reset=true, hubId="new-hub",
+            deleted=listOf(DeletedRecordDto("announcements", "post"), DeletedRecordDto("assignments", "assignment"))))
+        assertEquals(comment, db.syncDao().comment("rejected"))
+        assertEquals(private, db.syncDao().privateComment("private"))
+        assertEquals(photo, db.syncDao().submission("photo"))
+        assertEquals(attempt, db.syncDao().attempt("attempt"))
+        assertNotNull(db.syncDao().classroom("class")); assertNotNull(db.syncDao().announcement("post"))
+        assertNotNull(db.syncDao().assignment("assignment")); assertNotNull(db.syncDao().quiz("quiz"))
+        assertEquals("hub", db.syncStateDao().get("queued_hub:announcement_comments:rejected")?.value)
+        assertNotNull(db.syncStateDao().get("deferred_tombstone:announcements:post"))
+        assertEquals(0, SyncRepository(db, transport(push={ error("Rejected work must never retry") })).pushQueued("learner"))
+    }
+    @Test fun privateCommentAndQuizRejectionsPersistOnTheirRowsAndNeverRetry(): Unit = runBlocking {
+        db.cacheDao().upsertBatch(CacheBatch(
+            assignments=listOf(AssignmentEntity("assignment", "class", "Work", dueDate=10, createdAt=1, updatedAt=1)),
+            quizzes=listOf(QuizEntity("quiz", "class", "Quiz", timeLimitMinutes=5, createdAt=1, updatedAt=1)),
+            privateComments=listOf(PrivateCommentEntity("private", "assignment", "learner", "learner", "Question", 1, 2, "QUEUED_FOR_SYNC")),
+            quizAttempts=listOf(QuizAttemptEntity("attempt", "quiz", "learner", "SUBMITTED", 1, 2, updatedAt=2))))
+        var calls = 0
+        val repo = SyncRepository(db, transport(push={ request ->
+            calls++
+            assertEquals(listOf("private"), request.privateComments.map { it.id })
+            assertEquals(listOf("attempt"), request.quizAttempts.map { it.id })
+            SyncPushResponseDto(true, listOf(SyncReceiptDto("private", "REJECTED", "FORBIDDEN"),
+                SyncReceiptDto("attempt", "REJECTED", "TIME_LIMIT_EXCEEDED")))
+        }))
+        assertEquals(0, repo.pushQueued("learner"))
+        assertEquals("REJECTED", db.syncDao().privateComment("private")?.syncStatus)
+        assertEquals("FORBIDDEN", db.syncDao().privateComment("private")?.syncRejectReason)
+        assertEquals("REJECTED", db.syncDao().attempt("attempt")?.syncStatus)
+        assertEquals("TIME_LIMIT_EXCEEDED", db.syncDao().attempt("attempt")?.syncRejectReason)
+        assertEquals(0, repo.pushQueued("learner")); assertEquals(1, calls)
+        assertTrue(db.syncStateDao().observePrefix("upload_receipt:").first().isEmpty())
+    }
+    @Test fun lateRejectionCannotRejectANewerEdit(): Unit = runBlocking {
+        queue()
+        var calls = 0
+        val repo = SyncRepository(db, transport(push={
+            calls++
+            if (calls > 1) throw java.io.IOException("Dropped")
+            db.withTransaction { db.openHelper.writableDatabase.execSQL("UPDATE announcement_comments SET content='Edited', updated_at=3 WHERE id='comment'") }
+            SyncPushResponseDto(true, listOf(SyncReceiptDto("comment", "REJECTED", "COMMENTS_DISABLED")))
+        }))
+        try { repo.pushQueued("learner"); fail() } catch (_: java.io.IOException) { }
+        val saved = requireNotNull(db.syncDao().comment("comment"))
+        assertEquals("Edited", saved.content)
+        assertEquals("QUEUED_FOR_SYNC", saved.syncStatus)
+        assertNull(saved.syncRejectReason)
     }
     @Test fun oldReceiptCannotAcknowledgeAnEditMadeWhileUploading(): Unit = runBlocking {
         queue()
@@ -278,7 +346,8 @@ abstract class SyncBehaviorTests {
             SyncPushResponseDto(true, request.comments.map { SyncReceiptDto(it.id, if(it.id.endsWith("050")) "SYNCED" else "REJECTED", "FORBIDDEN") })
         }))
         assertEquals(1, repo.pushQueued("learner")); assertEquals(2, calls)
-        assertEquals(50, db.syncDao().queuedComments("learner").size)
+        assertTrue(db.syncDao().queuedComments("learner").isEmpty())
+        assertEquals(50, db.streamDao().observeComments("post").first().count { it.syncStatus == "REJECTED" })
     }
     @Test fun foreignOwnersAndUnfinishedQuizAttemptsAreNeverUploaded(): Unit = runBlocking {
         db.cacheDao().upsertBatch(CacheBatch(announcementComments=listOf(

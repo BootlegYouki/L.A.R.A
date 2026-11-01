@@ -26,11 +26,13 @@ data class QuizAttemptEntity(
     @ColumnInfo(name = "answers_json", defaultValue = "'[]'") val answersJson: String = "[]",
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_status", defaultValue = "'QUEUED_FOR_SYNC'") val syncStatus: String = "QUEUED_FOR_SYNC",
+    @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
 )
  {
     init {
         require(status in setOf("IN_PROGRESS", "SUBMITTED"))
-        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC"))
+        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC", "REJECTED"))
+        require(syncStatus == "REJECTED" || syncRejectReason == null)
         require(status == "IN_PROGRESS" || submittedAt != null)
     }
 }

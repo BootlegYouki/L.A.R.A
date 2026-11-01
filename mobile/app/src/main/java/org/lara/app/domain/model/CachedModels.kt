@@ -48,6 +48,7 @@ data class AnnouncementComment(
     val createdAt: Long,
     val updatedAt: Long,
     val syncStatus: String,
+    val syncRejectReason: String? = null,
 )
 
 data class Material(
@@ -100,6 +101,7 @@ data class AssignmentSubmission(
     val teacherFeedback: String?,
     val updatedAt: Long,
     val syncStatus: String,
+    val syncRejectReason: String? = null,
 )
 
 data class Quiz(
@@ -141,6 +143,7 @@ data class QuizAttempt(
     val answersJson: String,
     val updatedAt: Long,
     val syncStatus: String,
+    val syncRejectReason: String? = null,
 )
 
 data class AiChatMessage(
@@ -173,6 +176,7 @@ data class PrivateComment(
     val createdAt: Long,
     val updatedAt: Long,
     val syncStatus: String,
+    val syncRejectReason: String? = null,
 )
 
 data class SyncState(
