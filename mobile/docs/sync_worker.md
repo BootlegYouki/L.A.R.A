@@ -8,8 +8,8 @@ Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a
 - `SyncRepository`: serializes foreground/background sync, follows `has_more`, pushes bounded batches of the current user’s submitted quiz attempts and comments, then pulls authoritative changes. An unfinished quiz or another author’s work is never uploaded.
 - `SyncStore`: applies a fully decoded page, public users, upserts, tombstones and `hub_id`/`sync_epoch`/integer `cursor` in one Room transaction. Fetch/decode failure changes no database state; apply failure rolls the page back. Stale concurrent responses cannot advance the cursor.
 - `DeltaSyncWorker`: success when no account/endpoint exists; retries transport errors, 429 and server failures; reports authorization/permanent payload failures without clearing saved work.
-- `SyncScheduler`: unique 15-minute periodic work, unique immediate chains, battery-not-low and exponential retry. Connectivity callbacks, session startup and offline comment writes enqueue work. `NetworkType.NOT_REQUIRED` permits classroom Wi-Fi without internet validation; the transport must still reach and authenticate with the selected Hub.
-- `SyncSessionViewModel`: one foreground socket shared with teacher controls. HELLO/reconnect and announcement events trigger a direct pull and queued worker retry. Lifecycle disposal/background stops socket subscriptions. No UI reads remote responses directly.
+- `SyncScheduler`: unique 15-minute periodic work, unique immediate chains, battery-not-low and exponential retry. Connectivity callbacks enqueue a separate replaceable reconnect job so an older offline retry chain cannot delay it. Session startup and offline comment writes enqueue ordinary immediate work. `NetworkType.NOT_REQUIRED` permits classroom Wi-Fi without internet validation; the transport must still reach and authenticate with the selected Hub.
+- `SyncSessionViewModel`: one foreground socket shared with learner and teacher controls. HELLO/reconnect and announcement events trigger a direct pull and queued worker retry. Lifecycle disposal/background stops socket subscriptions. No UI reads remote responses directly.
 
 ## Enrollment visibility and 2.4 integration
 
@@ -58,4 +58,18 @@ Original command outputs and counts are in `evidence/52/`; the subsequent phone 
 
 The branch now references 2.4 `dda7585`, including 2.3 `adade1a`, and wires the learner refresh/session boundaries to sync. Review details and reproducible evidence are in `evidence/52/latest-24-review/`.
 
-The review reproduced identifier loss when a valid public-user update omits its optional LRN/ID, and reconfirmed the mock's teacher sync-push 403 blocker. These remain unresolved; passing existing tests is not a claim that #52 is complete. The 96 ms announcement result is for an already-connected session, and actual reconnect latency and the final navigation's end-to-end phone flow still require verification.
+The review reproduced identifier loss when a valid public-user update omits its optional LRN/ID, and reconfirmed the mock's teacher sync-push 403 blocker. These were unresolved at review time. The identifier bug is fixed in the follow-up below; the teacher-upload blocker remains, so #52 is not declared complete. The 96 ms announcement result is for an already-connected session, and actual reconnect latency and the final navigation's end-to-end phone flow still require verification.
+
+
+## Follow-up fixes after the 2.4 review
+
+Name-only PublicUser updates preserve an already saved identifier for the signed-in user and previously authorized teacher-roster profiles. A supplied replacement remains authoritative. Learner devices still remove foreign learners' identifiers, including a previously cached value. Shared Room regression tests cover all three cases.
+
+SyncScheduler exposes conflated network-change hints. Auth reachability checks immediately on a hint as well as on the existing periodic fallback; the foreground shared socket restarts on the hint even when reachability remains true. Reconnect work has its own unique replaceable WorkManager chain, so it does not append behind an outbox retry's backoff. A real WorkManager test holds the normal job in retry and verifies the reconnect job starts independently.
+
+The live mock test is shared between Robolectric (`LARA_SYNC_MOCK=1`) and Android (`MockSyncDeviceTest`, instrumentation argument `mockHub=127.0.0.1:18080`). USB device tests require reverse forwarding for 18080/18081. It tests a missed announcement with an injected unavailable/available signal, the actual Hub probe, authenticated pull and Room persistence; it does not simulate a physical router failure. Hub-only recovery without an Android network-change callback still relies on periodic probing/socket backoff, so no universal sub-second recovery guarantee is made.
+
+The teacher-upload 403 remains an external blocker, not fixed by these mobile changes. Physical Wi-Fi/WAN-disconnected and long-running vendor/battery tests remain separate acceptance limits. Updated results are recorded under `evidence/52/fixes/`.
+
+
+Final follow-up validation: 108 tests passed per JVM variant with both live mock tests enabled, plus lint and both APK builds. On the connected phone, 23 tests passed (20 shared Room sync behaviors, one actual-mock flow and two production approval UI regressions). Through normal app entry points, the learner join request survived an offline cold launch; the teacher received a newly registered synthetic learner's join event and opened the real saved-roster sheet automatically; the teacher's Accept unlocked the pending seed learner, who could open the class shell after another offline cold launch. The teacher's two pending rows also survived an offline cold launch. The real class shell is verified here, not the later Stream feature's content UI.

@@ -65,7 +65,8 @@ class SyncStore(private val db: LaraDatabase) {
             val batch = CacheBatch(
                 users = page.users.map { row ->
                     val old = dao.user(row.id)
-                    val lrn = row.lrnOrId.takeIf { row.id == userId || own.role == "TEACHER" }
+                    val lrn = if (row.id == userId || own.role == "TEACHER")
+                        row.lrnOrId ?: old?.lrnOrId else null
                     row.copy(lrnOrId = lrn).toEntity(old?.createdAt ?: snapshot, snapshot)
                 },
                 classrooms = page.classrooms.map { row ->

@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import org.lara.app.AppContainer
 import org.lara.app.data.sync.SyncSessionViewModel
 import org.lara.app.domain.enrollment.HubEvent
+import kotlinx.coroutines.launch
 
 @Composable
 fun rememberSyncSession(container: AppContainer, userId: String, reachable: Boolean, onSessionExpired: () -> Unit): SyncSessionViewModel {
@@ -32,7 +33,8 @@ fun rememberSyncSession(container: AppContainer, userId: String, reachable: Bool
     LaunchedEffect(model) { container.syncScheduler.enqueueNow() }
     LaunchedEffect(model, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            model.events.collect { if (it == HubEvent.SessionExpired) expired() }
+            launch { model.events.collect { if (it == HubEvent.SessionExpired) expired() } }
+            launch { container.syncScheduler.networkChanges.collect { model.onNetworkChanged() } }
         }
     }
     return model

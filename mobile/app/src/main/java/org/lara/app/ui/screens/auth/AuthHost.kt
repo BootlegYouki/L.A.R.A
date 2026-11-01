@@ -56,7 +56,7 @@ fun AuthHost(container: AppContainer) {
         val attempts = remember(user.id) { container.quizzes.hasInProgressAttempt(user.id) }
         val locked by attempts.collectAsStateWithLifecycle(initialValue = true)
         val endpoint = remember(user.id) { container.endpoints.load() }
-        val reachability = remember(endpoint) { container.auth.reachability(endpoint) }
+        val reachability = remember(endpoint) { container.auth.reachability(endpoint, container.syncScheduler.networkChanges) }
         val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
         val syncSession = rememberSyncSession(container, user.id, reachable, model::requireSignIn)
         val shell = ShellState(

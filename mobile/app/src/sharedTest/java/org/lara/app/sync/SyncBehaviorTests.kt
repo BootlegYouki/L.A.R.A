@@ -35,6 +35,7 @@ abstract class SyncBehaviorTests {
         override suspend fun push(userId: String, request: SyncPushRequestDto) = push(request)
     }
     @Test fun pageUsersRecordsAndCursorCommitAtomicallyAndLearnerLrnsAreStripped(): Unit = runBlocking {
+        db.cacheDao().upsertBatch(CacheBatch(users = listOf(UserEntity("peer", "old-private", "Peer", "STUDENT", 1, 1))))
         val store = SyncStore(db)
         store.apply("learner", store.request("learner"), page().copy(
             users=listOf(PublicUserDto("peer", "Peer", "STUDENT", "private-not-allowed")),
@@ -44,6 +45,27 @@ abstract class SyncBehaviorTests {
         assertNull(db.syncDao().user("peer")?.lrnOrId)
         assertEquals("server-enrollment", db.rosterDao().observeByClassroom("class").first().single().enrollment.id)
         assertEquals(2, db.streamDao().observeByClassroom("class").first().size)
+    }
+    @Test fun nameOnlyPullPreservesAuthenticatedIdentifierAndUpdatesName(): Unit = runBlocking {
+        val store = SyncStore(db)
+        store.apply("learner", store.request("learner"), page().copy(
+            users = listOf(PublicUserDto("learner", "Updated name", "STUDENT"))))
+        val saved = requireNotNull(db.syncDao().user("learner"))
+        assertEquals("synthetic", saved.lrnOrId)
+        assertEquals("Updated name", saved.fullName)
+        store.apply("learner", store.request("learner"), page(2).copy(
+            users = listOf(PublicUserDto("learner", "Updated name", "STUDENT", "corrected-identifier"))))
+        assertEquals("corrected-identifier", db.syncDao().user("learner")?.lrnOrId)
+    }
+    @Test fun nameOnlyPullPreservesPreviouslySavedTeacherRosterIdentifier(): Unit = runBlocking {
+        db.authDao().saveProfile(UserEntity("teacher", "synthetic-teacher", "Teacher", "TEACHER", 1, 1))
+        db.cacheDao().upsertBatch(CacheBatch(enrollments = listOf(
+            EnrollmentEntity("enrollment", "class", "learner", "PENDING", 1, 1))))
+        val store = SyncStore(db)
+        store.apply("teacher", store.request("teacher"), page().copy(
+            users = listOf(PublicUserDto("learner", "Updated learner name", "STUDENT"))))
+        assertEquals("synthetic", db.syncDao().user("learner")?.lrnOrId)
+        assertEquals("Updated learner name", db.syncDao().user("learner")?.fullName)
     }
     @Test fun invalidChildRollsBackEarlierUpsertsAndCursor(): Unit = runBlocking {
         val store = SyncStore(db)

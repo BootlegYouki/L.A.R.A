@@ -13,8 +13,10 @@ import org.lara.app.domain.enrollment.HubEvent
 class SyncSessionViewModel(private val container: AppContainer, private val userId: String) : ViewModel(), org.lara.app.domain.enrollment.EnrollmentSessionSource {
     private val realtime = RealtimeClient()
     private val online = MutableStateFlow(false)
+    private val networkGeneration = MutableStateFlow(0L)
     override val reachable: StateFlow<Boolean> = online
-    override val events: SharedFlow<HubEvent> = online.flatMapLatest { connected ->
+    override val events: SharedFlow<HubEvent> = combine(online, networkGeneration) { connected, generation -> connected to generation }
+        .flatMapLatest { (connected, _) ->
         if (!connected) emptyFlow() else flow {
             emitAll(realtime.observe(container.enrollmentApi.connection(userId)))
         }.catch { e ->
@@ -32,5 +34,6 @@ class SyncSessionViewModel(private val container: AppContainer, private val user
         }
     }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(0), replay = 0)
     fun setReachable(value: Boolean) { online.value = value }
+    fun onNetworkChanged() { networkGeneration.value += 1 }
     override fun onCleared() { realtime.close() }
 }
