@@ -12,6 +12,10 @@ import kotlinx.serialization.json.Json
 import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.local.entities.*
 import org.lara.app.data.remote.dto.*
+import org.lara.app.data.remote.ClassroomSnapshot
+import org.lara.app.data.repository.RoomEnrollmentNoticeRepository
+import org.lara.app.domain.enrollment.EnrollmentNotice
+import org.lara.app.domain.enrollment.EnrollmentStatus
 
 @Serializable
 data class UploadReceipt(val status: String, val reason: String?, val fingerprint: String, val hubId: String)
@@ -23,6 +27,24 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
     private val mutex = Mutex()
     private val store = SyncStore(db)
     private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
+
+    internal suspend fun refreshRoster(userId: String, refresh: suspend () -> Unit) = mutex.withLock {
+        store.checkOwner(userId)
+        refresh()
+    }
+
+    suspend fun refreshClassrooms(userId: String,
+        fetch: suspend () -> ClassroomSnapshot): ClassroomSnapshot = mutex.withLock {
+        store.checkOwner(userId)
+        val snapshot = fetch()
+        db.withTransaction {
+            store.checkOwner(userId)
+            val notices = RoomEnrollmentNoticeRepository(db)
+            for (row in snapshot.rows) notices.save(userId, EnrollmentNotice(row.id, row.name,
+                EnrollmentStatus.valueOf(requireNotNull(row.enrollmentStatus))))
+        }
+        snapshot
+    }
 
     suspend fun pull(userId: String) = mutex.withLock { pullPages(userId) }
     suspend fun pushQueued(userId: String): Int = mutex.withLock { pushBatches(userId) }

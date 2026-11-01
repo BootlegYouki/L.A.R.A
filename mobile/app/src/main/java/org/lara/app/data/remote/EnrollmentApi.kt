@@ -15,6 +15,7 @@ import org.lara.app.domain.enrollment.EnrollmentStatus
 data class JoinReceipt(@SerialName("classroom_id") val classroomId: String, val status: EnrollmentStatus)
 @Serializable
 private data class JoinRequest(@SerialName("class_code") val code: String)
+data class ClassroomSnapshot(val hub: String, val rows: List<ClassroomDto>)
 
 data class EnrollmentConnection(val endpoint: HubEndpoint, val session: StoredToken) {
     override fun toString() = "EnrollmentConnection([redacted])"
@@ -45,8 +46,11 @@ class EnrollmentApi(
         }
     }
 
-    suspend fun classrooms(userId: String): List<ClassroomDto> = withContext(Dispatchers.IO) {
+    suspend fun classrooms(userId: String): List<ClassroomDto> = classroomSnapshot(userId).rows
+
+    suspend fun classroomSnapshot(userId: String): ClassroomSnapshot = withContext(Dispatchers.IO) {
         val c = connection(userId)
-        json.decodeFromString(ListSerializer(ClassroomDto.serializer()), client.enrollment(c.endpoint, c.session, "GET"))
+        ClassroomSnapshot(c.endpoint.restBase,
+            json.decodeFromString(ListSerializer(ClassroomDto.serializer()), client.enrollment(c.endpoint, c.session, "GET")))
     }
 }

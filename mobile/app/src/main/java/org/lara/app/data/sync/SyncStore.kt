@@ -9,6 +9,9 @@ import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.local.dao.CacheBatch
 import org.lara.app.data.local.entities.*
 import org.lara.app.data.remote.dto.*
+import org.lara.app.data.repository.RoomEnrollmentNoticeRepository
+import org.lara.app.domain.enrollment.EnrollmentNotice
+import org.lara.app.domain.enrollment.EnrollmentStatus
 
 /** A decoded page, its deletions and its sequence cursor commit together, or not at all. */
 class SyncStore(private val db: LaraDatabase) {
@@ -118,6 +121,12 @@ class SyncStore(private val db: LaraDatabase) {
             deferredTombstones().plus(page.deleted).distinctBy { it.entityTable to it.entityId }.forEach { tombstone(it) }
             for ((key, value) in listOf("hub_id" to page.hubId, "sync_epoch" to page.syncEpoch.toString(),
                 "cursor" to page.nextCursor.toString())) db.syncStateDao().put(SyncStateEntity(key, value, snapshot))
+            if (own.role == "STUDENT") {
+                val memberships = batch.enrollments.filter { it.studentId == userId }
+                val notices = RoomEnrollmentNoticeRepository(db)
+                for (row in memberships) notices.save(userId, EnrollmentNotice(row.classroomId,
+                    dao.classroom(row.classroomId)?.name, EnrollmentStatus.valueOf(row.status)))
+            }
         }
     }
 

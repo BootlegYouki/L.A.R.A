@@ -32,7 +32,10 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
     val expired by rememberUpdatedState(onSessionExpired)
     val model: EnrollmentViewModel = viewModel(key = "enrollment-$userId", factory = viewModelFactory {
         initializer { EnrollmentViewModel(userId, container.enrollments, container.enrollmentApi,
-            session.events, session.reachable, container.enrollmentNotices, { container.enrollments.refresh(userId); Unit }, { expired() }) }
+            session.events, session.reachable, container.enrollmentNotices, { container.enrollments.refresh(userId); Unit }, { expired() },
+            loadClassrooms = { container.sync.refreshClassrooms(userId) {
+                container.enrollmentApi.classroomSnapshot(userId)
+            } }) }
     })
     val state by model.state.collectAsStateWithLifecycle()
     var selectedId by rememberSaveable(userId) { mutableStateOf<String?>(null) }

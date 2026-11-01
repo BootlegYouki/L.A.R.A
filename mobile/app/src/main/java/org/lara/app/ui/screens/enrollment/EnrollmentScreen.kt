@@ -38,7 +38,7 @@ data class EnrollmentScreenState(
         }
 }
 
-/** Transient request notices do not grant access. Only an ACTIVE Room enrollment opens a class. */
+/** Request notices alone do not grant access; verified membership is read from Room. */
 @Composable
 fun EnrollmentScreen(
     state: EnrollmentScreenState,
@@ -90,11 +90,11 @@ fun EnrollmentScreen(
                 }
             }
         }
-        items(classes, key = { "saved:" + it.enrollment.id }) { item ->
+        items(classes, key = { "saved:" + it.classroom.id }) { item ->
             val notice = state.requests.firstOrNull { it.classroomId == item.classroom.id }
             val denied = notice != null && notice.status != EnrollmentStatus.ACTIVE
             EnrollmentCard(item.classroom.name, item.classroom.section,
-                if (denied) requireNotNull(notice).status else EnrollmentStatus.valueOf(item.enrollment.status),
+                if (denied) requireNotNull(notice).status else item.status,
                 state.openableClass(item.classroom.id) != null,
                 onOpen = { onOpenClass(item.classroom.id) })
         }

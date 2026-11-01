@@ -22,9 +22,24 @@ class ClassManagementRepositoryTest {
         repository = HubClassManagementRepository("teacher", EnrollmentApi(HubClient(), tokens, { endpoint }), HubClient())
     }
     @After fun close() { server.shutdown() }
-    @Test fun rosterAndBothDecisionsFollowContractWithBearerAndOnlyStudentReference() = runBlocking {
+    @Test fun teacherClassesUseAuthenticatedRestGet() = runBlocking {
+        server.enqueue(MockResponse().setBody("""[{"id":"class","name":"Science","section":"A","class_code":"K7M4QX","teacher_id":"teacher"}]"""))
+        assertEquals("class", repository.classrooms().single().id)
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/api/classrooms", request.path)
+        assertEquals("Bearer synthetic", request.getHeader("Authorization"))
+    }
+    @Test fun rosterWithoutEnrollmentIdIsRejected() = runBlocking {
         server.enqueue(MockResponse().setBody("""[{"student_id":"learner","full_name":"Test","lrn":"synthetic","status":"PENDING"}]"""))
-        assertEquals("learner", repository.roster("class").single().studentId)
+        try { repository.roster("class"); fail() }
+        catch (_: kotlinx.serialization.SerializationException) { }
+    }
+    @Test fun rosterAndBothDecisionsFollowContractWithBearerAndOnlyStudentReference() = runBlocking {
+        server.enqueue(MockResponse().setBody("""[{"enrollment_id":"server-enrollment","student_id":"learner","full_name":"Test","lrn":"synthetic","status":"PENDING"}]"""))
+        val saved = repository.roster("class").single()
+        assertEquals("learner", saved.studentId)
+        assertEquals("server-enrollment", saved.enrollmentId)
         assertEquals("/api/classrooms/class/roster", server.takeRequest().path)
         for (accept in listOf(true, false)) {
             server.enqueue(MockResponse().setBody("""{"ok":true}"""))

@@ -44,7 +44,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
-* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open PR at a time (`rules/team-workflow-and-prs.md` section 1.1).
+* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open feature PR at a time; an evaluation PR may run alongside (`rules/team-workflow-and-prs.md` section 1.1).
 * **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
 * Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 

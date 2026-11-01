@@ -3,9 +3,10 @@ package org.lara.app.domain.enrollment
 import org.lara.app.domain.model.Classroom
 import org.lara.app.domain.model.Enrollment
 
-/** Membership comes from the authoritative enrollment row, never a locally generated ID. */
+/** Class access requires a canonical saved enrollment supplied by sync. */
 data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment) {
-    val canOpen: Boolean get() = enrollment.status == "ACTIVE"
+    val status: EnrollmentStatus get() = EnrollmentStatus.valueOf(enrollment.status)
+    val canOpen: Boolean get() = status == EnrollmentStatus.ACTIVE
 }
 
 enum class EnrollmentStatus { PENDING, ACTIVE, REJECTED, REMOVED }

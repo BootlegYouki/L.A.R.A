@@ -12,6 +12,12 @@ import org.lara.app.data.local.dao.CacheBatch
 import org.lara.app.data.local.entities.*
 import org.lara.app.data.remote.dto.*
 import org.lara.app.data.sync.*
+import org.lara.app.data.remote.ClassroomSnapshot
+import org.lara.app.data.remote.discovery.HubEndpoint
+import org.lara.app.data.repository.RoomEnrollmentRepository
+import org.lara.app.data.repository.RoomEnrollmentNoticeRepository
+import org.lara.app.domain.Cached
+import org.lara.app.domain.enrollment.*
 
 /** Same transaction/queue suite runs under Robolectric and Android instrumentation. */
 abstract class SyncBehaviorTests {
@@ -33,6 +39,86 @@ abstract class SyncBehaviorTests {
         push: suspend (SyncPushRequestDto) -> SyncPushResponseDto = { SyncPushResponseDto(true, emptyList()) }) = object : SyncTransport {
         override suspend fun pull(userId: String, request: SyncPullRequestDto) = pull(request)
         override suspend fun push(userId: String, request: SyncPushRequestDto) = push(request)
+    }
+    private suspend fun savedClasses(): List<LearnerClass> {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        return try {
+            (RoomEnrollmentRepository(db.rosterDao()).learnerClasses("learner", scope)
+                .first { it is Cached.Content } as Cached.Content).value
+        } finally { scope.cancel() }
+    }
+    @Test fun syncApprovalSuppliesCanonicalAccessAndReconcilesPendingNoticeWithoutLosingQueuedWork(): Unit = runBlocking {
+        val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1"))
+        val notices = RoomEnrollmentNoticeRepository(db)
+        val repo = SyncRepository(db, transport(pull = { page().copy(enrollments = listOf(
+            EnrollmentDto("server-enrollment", "class", "learner", "ACTIVE", 2, 1))) }))
+        repo.refreshClassrooms("learner") { ClassroomSnapshot(endpoint.restBase, listOf(
+            ClassroomDto("class", "Science", "A", "K7M4QX", "teacher", enrollmentStatus = "PENDING"))) }
+        queue()
+        assertTrue(savedClasses().isEmpty())
+        repo.pull("learner")
+        assertTrue(savedClasses().single().canOpen)
+        assertEquals(EnrollmentStatus.ACTIVE, notices.notices("learner").first().single().status)
+        assertEquals("server-enrollment", db.syncDao().enrollment("class", "learner")?.id)
+        assertEquals(1, db.syncDao().queuedComments("learner").size)
+        val store = SyncStore(db)
+        store.apply("learner", store.request("learner"), page(2).copy(reset = true))
+        assertTrue(savedClasses().isEmpty())
+        assertEquals(1, db.syncDao().queuedComments("learner").size)
+    }
+    @Test fun slowRestSnapshotCannotOverwriteNewerSyncMembership(): Unit = runBlocking {
+        val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1"))
+        val fetching = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val pulled = CompletableDeferred<Unit>()
+        val repo = SyncRepository(db, transport(pull = {
+            pulled.complete(Unit)
+            page().copy(enrollments = listOf(EnrollmentDto("server-enrollment", "class", "learner", "ACTIVE", 2, 1)))
+        }))
+        val rest = async { repo.refreshClassrooms("learner") {
+            fetching.complete(Unit)
+            release.await()
+            ClassroomSnapshot(endpoint.restBase, listOf(ClassroomDto("class", "Science", "A", "K7M4QX", "teacher", enrollmentStatus = "PENDING")))
+        } }
+        fetching.await()
+        val sync = async(start = CoroutineStart.UNDISPATCHED) { repo.pull("learner") }
+        assertFalse(pulled.isCompleted)
+        release.complete(Unit)
+        rest.await(); sync.await()
+        assertTrue(savedClasses().single().canOpen)
+        assertEquals(EnrollmentStatus.ACTIVE, RoomEnrollmentNoticeRepository(db).notices("learner").first().single().status)
+    }
+    @Test fun restActiveNoticeAndLegacyMetadataCannotGrantClassAccessWithoutSyncedEnrollment(): Unit = runBlocking {
+        db.syncStateDao().put(SyncStateEntity("rest_class_access:learner",
+            """{"hub":"http://127.0.0.1:8080","rows":[{"classroomId":"class","status":"ACTIVE"}]}""", 1))
+        val repo = SyncRepository(db, transport())
+        repo.refreshClassrooms("learner") { ClassroomSnapshot("http://127.0.0.1:8080", listOf(
+            ClassroomDto("class", "Science", "A", "K7M4QX", "teacher", enrollmentStatus = "ACTIVE"))) }
+        assertEquals(EnrollmentStatus.ACTIVE, RoomEnrollmentNoticeRepository(db).notices("learner").first().single().status)
+        assertTrue(savedClasses().isEmpty())
+        assertNull(db.syncDao().enrollment("class", "learner"))
+    }
+    @Test fun openingAnUpgradedDatabaseClearsOnlyLegacyRestAccessAndPreservesQueuedWork(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val name = "upgrade-${java.util.UUID.randomUUID()}.db"
+        fun open() = Room.databaseBuilder(context, LaraDatabase::class.java, name)
+            .addCallback(LaraDatabase.classAccessCleanup).build()
+        var upgraded = open()
+        try {
+            upgraded.authDao().saveProfile(UserEntity("learner", "synthetic", "Test", "STUDENT", 1, 1))
+            upgraded.cacheDao().upsertBatch(CacheBatch(classrooms = listOf(classroom), announcements = listOf(post),
+                announcementComments = listOf(AnnouncementCommentEntity("comment", "post", "learner", "Local work", 2, 2, "QUEUED_FOR_SYNC")),
+                enrollments = listOf(EnrollmentEntity("server-enrollment", "class", "learner", "ACTIVE", 1, 1)),
+                syncState = listOf(SyncStateEntity("rest_class_access:learner", "legacy", 1),
+                    SyncStateEntity("rest_class_access:another-user", "legacy", 1), SyncStateEntity("cursor", "42", 1))))
+            upgraded.close(); upgraded = open()
+            assertNull(upgraded.syncStateDao().get("rest_class_access:learner"))
+            assertNull(upgraded.syncStateDao().get("rest_class_access:another-user"))
+            assertEquals("42", upgraded.syncStateDao().get("cursor")?.value)
+            assertEquals("server-enrollment", upgraded.syncDao().enrollment("class", "learner")?.id)
+            assertEquals(1, upgraded.syncDao().queuedComments("learner").size)
+            assertEquals("learner", upgraded.authDao().currentUserId())
+        } finally { upgraded.close(); context.deleteDatabase(name) }
     }
     @Test fun pageUsersRecordsAndCursorCommitAtomicallyAndLearnerLrnsAreStripped(): Unit = runBlocking {
         db.cacheDao().upsertBatch(CacheBatch(users = listOf(UserEntity("peer", "old-private", "Peer", "STUDENT", 1, 1))))

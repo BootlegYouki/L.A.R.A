@@ -2,7 +2,7 @@
 
 ## Base and implementation
 
-Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a6` and now includes its final `dda7585` fixes, including Mobile 2.3 `adade1a`. No shared contracts, server code or schema columns are changed.
+Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a6` and now includes `d140e77`, the independent REST approval fixes, including Mobile 2.3 `adade1a` and the Lead's roster `enrollment_id` contract update. The integration adds no shared API or schema changes.
 
 - `SyncTransport`: fixed authenticated pull/push routes, session/address validation, no redirects, 5-second timeouts and an 8 MiB pull-response bound. Initial requests omit absent optional Hub identity fields.
 - `SyncRepository`: serializes foreground/background sync, follows `has_more`, pushes bounded batches of the current user’s submitted quiz attempts and comments, then pulls authoritative changes. An unfinished quiz or another author’s work is never uploaded.
@@ -15,9 +15,13 @@ Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a
 
 A learner can have an advanced cursor before joining a class. Approval makes older classroom records visible without rewriting their revisions. If a delta contains a newly ACTIVE own enrollment or missing parent records, sync rescans from cursor zero without wiping existing data. Each rescan page still commits atomically. The rescan is performed once per pull sequence to avoid paging loops.
 
-The teacher panel now refreshes through canonical sync before its authorized roster lookup. Enrollment IDs come from sync. The mock pull omits PENDING learner profiles; the roster supplies their actual student ID/name/LRN and populates the user profile for an already saved enrollment. No enrollment ID is generated locally.
+The teacher panel retains 2.4's independent authenticated REST bootstrap for classes and rosters, including loading/errors, actor checks and pending join hints before the first class arrives. Roster enrollment IDs come from the required server `enrollment_id`; no local identity is generated and sync is not a prerequisite. Both REST and sync populate the same Room mirror. The panel uses 2.5's shared socket rather than opening another connection.
 
 The learner My classes / Join / Open screen from final 2.3 is mounted. `RoomEnrollmentRepository` now invokes `sync.pull` at its refresh boundary, and both learner and teacher controls share `SyncSessionViewModel` through `EnrollmentSessionSource`. This avoids duplicate sockets and supplies canonical data after joining/approval. The 2.4 loading, contrast and large-text fixes are retained.
+
+Following the [Lead's #52 carry-over instruction](https://github.com/BootlegYouki/L.A.R.A/issues/52#issuecomment-6555538621), learner access now reads only canonical `enrollments` supplied by sync. `RoomLearnerClassAccess` and the optional REST access override are removed. Room's on-open callback deletes only the legacy `rest_class_access:<user>` keys when upgrading, preserving enrollments, cursors, notices and all queued work without a schema change.
+
+REST class responses now supply request notices only. Their fetch/save runs under the sync mutex so a slow response cannot overwrite a newer sync notice. A canonical own membership updates its request notice in the page/cursor transaction; an old PENDING receipt cannot keep an approved learner locked out after background sync. Neither REST notices nor socket hints create an enrollment or grant ACTIVE access. Shared tests cover canonical-only access, pending-notice reconciliation, concurrent refresh and persistent-database upgrade cleanup.
 
 ## Reset, deletion and queued work
 

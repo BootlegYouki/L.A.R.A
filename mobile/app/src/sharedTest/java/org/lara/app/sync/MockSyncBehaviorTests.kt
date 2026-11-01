@@ -67,7 +67,7 @@ abstract class MockSyncBehaviorTests {
             val joined = learnerApi.join(learner.user.id, "K7M-4QX")
             teacherSync.pull(teacher.user.id)
             // Pending learner identities are obtained from the authorized roster response; enrollment IDs come from sync.
-            SavedRosterRefresher(teacherDb, remote).refresh(joined.classroomId)
+            SavedRosterRefresher(teacherDb, remote, teacher.user.id).refresh(joined.classroomId)
             val pending = teacherDb.rosterDao().observeByClassroom(joined.classroomId).first().single { it.enrollment.studentId == learner.user.id }
             assertEquals("PENDING", pending.enrollment.status)
             assertEquals("Synthetic sync learner", pending.user?.fullName)
