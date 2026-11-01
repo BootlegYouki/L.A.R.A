@@ -18,7 +18,7 @@ multicast (`rules/networking-and-lan.md` §4.2).
 | :--- | :--- |
 | `backend/src/discovery/mod.rs` | `lan_ip() -> Option<IpAddr>`: the one reachable LAN address (skips loopback/unspecified). Declares the two submodules. |
 | `backend/src/discovery/udp.rs` | `run(BeaconInfo, watch::Receiver<bool>)`: the beacon loop. `BeaconInfo { name, http_port, ws_port }`. Consts `BEACON_PORT = 8888`, `BEACON_INTERVAL = 3 s`. |
-| `backend/src/discovery/mdns.rs` | `start(name, http_port, lan_ip) -> Option<MdnsResponder>`: registers `_lara._tcp` via `libmdns`. The returned guard unregisters on drop. |
+| `backend/src/discovery/mdns.rs` | `start(name, http_port, lan_ip) -> Option<MdnsResponder>`: registers `_lara._tcp` via `libmdns` under `announced_name(name)` (see section 4). The returned guard unregisters on drop. |
 | `backend/src/lib.rs` | `serve()` spawns the beacon as a task and holds the mDNS guard in `HubHandle`; both stop on `shutdown()`. |
 | `backend/src/config.rs` | `HubConfig.hub_name` (the beacon `name`), default `DEFAULT_HUB_NAME`. |
 | `backend/src/main.rs` | Headless runs may override the name with the `LARA_HUB_NAME` env var. |
@@ -48,6 +48,18 @@ No database, no files, no events on the Broker. Discovery is read-only network o
 * **`libmdns` runs its own OS thread** with a current-thread runtime; it does not borrow the Hub's
   Tokio runtime. The `MdnsResponder` guard owns the `Service` and `Responder`; field order drops the
   registration before its host so no stale record lingers after a restart.
+* **The mDNS name has no dots (#167).** Phones show the mDNS instance name in their Hub list.
+  `libmdns` starts a new DNS label at every dot, so "L.A.R.A Hub" went out as `L` / `A` / `R` /
+  `A Hub` and phones listed the Hub as "L". `announced_name` drops the dots ("LARA Hub"); the
+  beacon, the window and everything else keep the full name. It also trims spaces, and a name left
+  empty (only dots or spaces, such as "...") falls back to "LARA Hub".
+* **The mDNS name is at most 62 bytes.** `libmdns` asserts that each label is under 63 bytes while
+  it registers the name, so a longer room name (no dots to split it) panicked inside `serve()` and
+  the Hub never started. `announced_name` cuts it on a character boundary instead.
+* **Why not `mdns-sd`:** tried for #167 and dropped. 0.21.6 does not match queries for a name with
+  dots, and its known-answer suppression made an Android 13 phone drop the Hub every 2 minutes
+  (the phone sends an impossible known-answer TTL). `libmdns` answers every query, so it has
+  neither problem.
 * **Dropped packets are normal** (AP isolation, transient routing). A send error is logged at
   `debug` only, never at warn, so a flaky adapter does not spam the console every 3 seconds.
 * **Android clients** must hold a `WifiManager.MulticastLock` to receive these UDP packets at all
@@ -56,8 +68,11 @@ No database, no files, no events on the Broker. Discovery is read-only network o
   (step 1.4); without it Windows "Public" profile blocks the beacon. See `network/firewall_check.rs`.
 
 ## 5. Tests
-* `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, and
-  the port and interval match the rules file.
+* `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, a
+  name with dots arrives whole, and the port and interval match the rules file.
+* `discovery/mdns.rs` unit tests: the announced name drops the dots, a name of only dots or spaces
+  falls back to "LARA Hub", and a long name is cut below the label limit without splitting a
+  character.
 * `tests/scaffold.rs::hub_with_discovery_starts_and_stops_cleanly`: `serve()` with the beacon task
   and mDNS responder still serves HTTP and shuts down cleanly.
 
