@@ -26,6 +26,10 @@ class AppContainer(context: Context) {
         org.lara.app.data.remote.AuthApi(), org.lara.app.data.remote.TokenStore(context), database.authDao()) }
     val discovery: HubDiscovery = AndroidHubDiscovery(context)
     private val database by lazy { LaraDatabase.create(context.applicationContext) }
+    private val sessionTokens by lazy { org.lara.app.data.remote.TokenStore(context) }
+    private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
+    val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
+    val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }
     val classrooms: ClassroomRepository by lazy { RoomClassroomRepository(database.classroomDao()) }
     val stream: StreamRepository by lazy { RoomStreamRepository(database.streamDao()) }
     val classwork: ClassworkRepository by lazy {
