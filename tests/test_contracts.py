@@ -109,6 +109,12 @@ class TestContracts(unittest.TestCase):
         sub_cols = [r[1] for r in cur_client.fetchall()]
         self.assertIn("sync_status", sub_cols)
 
+        for table in ("assignment_submissions", "quiz_attempts", "announcement_comments", "private_comments"):
+            cur_client.execute(f"PRAGMA table_info({table});")
+            self.assertIn("sync_reject_reason", [r[1] for r in cur_client.fetchall()], f"{table} must keep the Hub's reject reason")
+            sql = cur_client.execute("SELECT sql FROM sqlite_master WHERE name = ?", (table,)).fetchone()[0]
+            self.assertIn("'REJECTED'", sql, f"{table}.sync_status must allow REJECTED")
+
         cur_client.execute("PRAGMA table_info(materials);")
         mat_cols = [r[1] for r in cur_client.fetchall()]
         self.assertIn("local_file_path", mat_cols)
