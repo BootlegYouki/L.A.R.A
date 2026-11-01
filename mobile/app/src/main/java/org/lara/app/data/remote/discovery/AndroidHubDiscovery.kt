@@ -75,15 +75,15 @@ class AndroidHubDiscovery(context: Context) : HubDiscovery {
     }
     override suspend fun connect(hub: DiscoveredHub): ConnectionResult {
         val endpoint = HubEndpoint.lan(hub.ip, hub.httpPort, hub.wsPort) ?: return ConnectionResult.INVALID_ADDRESS
-        return probe(endpoint)
+        return probe(endpoint, hub.name)
     }
-    private suspend fun probe(endpoint: HubEndpoint): ConnectionResult {
+    private suspend fun probe(endpoint: HubEndpoint, name: String? = null): ConnectionResult {
         val network = wifi
         val responds = HubProbe().responds(endpoint) { url ->
             (network?.openConnection(url) ?: url.openConnection()) as HttpURLConnection
         }
         return if (responds && network == wifi) {
-            store.save(endpoint)
+            store.save(endpoint, name)
             ConnectionResult.RESPONDING
         } else ConnectionResult.UNREACHABLE
     }

@@ -22,6 +22,7 @@ class LaraApp : Application() {
 }
 
 class AppContainer(context: Context) {
+    val language = org.lara.app.data.repository.AppLanguageStore(context)
     val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
     val auth by lazy { org.lara.app.data.repository.AuthRepository(
         org.lara.app.data.remote.AuthApi(), org.lara.app.data.remote.TokenStore(context), database.authDao()) }
@@ -31,7 +32,11 @@ class AppContainer(context: Context) {
     private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
     val syncScheduler by lazy { org.lara.app.data.sync.SyncScheduler(context) }
     val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) }
-    suspend fun syncUserId() = database.authDao().currentUserId()
+    suspend fun syncUserId(): String? {
+        val token = sessionTokens.load() ?: return null
+        return database.authDao().currentUserId()?.takeIf { it == token.userId }
+    }
+    val settings by lazy { org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load) }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
     fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)

@@ -48,8 +48,12 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
     if (selected == null) {
         Scaffold(containerColor = LaraColors.Canvas, topBar = {
             Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-                Text(stringResource(R.string.learner_classroom), Modifier.fillMaxWidth().statusBarsPadding()
-                    .padding(LaraSpacing.S4), style = MaterialTheme.typography.titleLarge)
+                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S4),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(stringResource(R.string.learner_classroom), Modifier.weight(1f).padding(vertical = LaraSpacing.S4),
+                        style = MaterialTheme.typography.titleLarge)
+                    org.lara.app.ui.screens.settings.SettingsAction()
+                }
             }
         }) { insets ->
             Box(Modifier.fillMaxSize().padding(insets)) {

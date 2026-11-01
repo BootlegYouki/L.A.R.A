@@ -9,6 +9,11 @@ class HubFailure(val status: Int, val code: String, val retryAfterSeconds: Long 
 
 /** Fixed route groups and no redirects: credentials remain on the selected LAN Hub. */
 class HubClient {
+    internal fun logout(endpoint: HubEndpoint, session: StoredToken): String {
+        require(session.hub == endpoint.restBase)
+        require(session.token.isNotBlank() && session.token.none(Char::isWhitespace))
+        return exchange(endpoint, "/api/auth/logout", "POST", "{}", session.token)
+    }
     internal fun postAuth(endpoint: HubEndpoint, path: String, payload: String): String {
         require(path in setOf("/api/auth/login", "/api/auth/register"))
         return try { exchange(endpoint, path, "POST", payload, null) }

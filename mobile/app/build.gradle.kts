@@ -25,6 +25,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+    bundle { language { enableSplit = false } }
     testOptions { unitTests.isIncludeAndroidResources = true }
     sourceSets.getByName("test").resources.srcDir(rootProject.file("../contracts/schema"))
     sourceSets.getByName("test").java.srcDir("src/sharedTest/java")

@@ -29,6 +29,7 @@ class AuthViewModel(private val repository: AuthRepository, private val endpoint
     fun requireSignIn() {
         mutable.value = AuthState(restoring = false, error = R.string.enrollment_session_expired)
     }
+    fun signedOut() { mutable.value = AuthState(restoring = false) }
     fun submit(id: String, pin: String, name: String?) {
         if (mutable.value.busy || SystemClock.elapsedRealtime() < mutable.value.retryAt) return
         if (id.isBlank() || !pin.matches(Regex("[0-9]{4}")) || (name != null && (name.isBlank() || !id.matches(Regex("[0-9]{12}"))))) {

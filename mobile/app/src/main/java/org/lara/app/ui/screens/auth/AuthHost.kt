@@ -18,6 +18,8 @@ import org.lara.app.domain.discovery.ConnectionResult
 import org.lara.app.ui.navigation.*
 import org.lara.app.ui.screens.discovery.*
 import org.lara.app.ui.theme.*
+import org.lara.app.ui.screens.settings.*
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @Composable
 fun AuthHost(container: AppContainer) {
@@ -26,6 +28,7 @@ fun AuthHost(container: AppContainer) {
     })
     val state by model.state.collectAsStateWithLifecycle()
     var discovery by remember { mutableStateOf(false) }
+    var settings by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = discovery) { discovery = false }
     Scaffold(containerColor = LaraColors.Canvas) { insets ->
         if(state.user == null) Box(Modifier.fillMaxSize().padding(insets)) {
@@ -64,10 +67,24 @@ fun AuthHost(container: AppContainer) {
             isHubReachable = reachable,
             hasInProgressAttempt = user.role == "STUDENT" && locked,
         )
-        if (user.role == "STUDENT") org.lara.app.ui.screens.enrollment.LearnerEnrollmentNavigation(
-            container, user.id, shell, model::requireSignIn, sharedSession = syncSession)
-        else LaraNavigation(container.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
-            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, syncSession, model::requireSignIn)
-        })
+        if (discovery) {
+            val scan: DiscoveryViewModel = viewModel(key = "settings-discovery", factory = viewModelFactory {
+                initializer { DiscoveryViewModel(container.discovery) }
+            })
+            val result by scan.result.collectAsStateWithLifecycle()
+            LaunchedEffect(result) { if (result == ConnectionResult.RESPONDING) {
+                discovery = false; settings = false; model.signedOut()
+            } }
+            DiscoveryScreen(scan, onBack = { discovery = false })
+        } else if (settings) {
+            SettingsHost(container, user.id, reachable, onSignedOut = { settings = false; model.signedOut() },
+                onChangeHub = { discovery = true }, onBack = { settings = false })
+        } else CompositionLocalProvider(LocalOpenSettings provides { settings = true }) {
+            if (user.role == "STUDENT") org.lara.app.ui.screens.enrollment.LearnerEnrollmentNavigation(
+                container, user.id, shell, model::requireSignIn, sharedSession = syncSession)
+            else LaraNavigation(container.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
+                org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, syncSession, model::requireSignIn)
+            })
+        }
     }
 }
