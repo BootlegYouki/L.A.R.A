@@ -18,10 +18,16 @@ const MAX_LABEL_BYTES: usize = 62;
 
 /// The name announced over mDNS, which phones show in their Hub list (#167). `libmdns` starts a new
 /// DNS label at every dot, so "L.A.R.A Hub" reached phones as "L"; the dots are dropped instead
-/// ("LARA Hub"). The beacon and everything else keep the full name. The result is also cut to one
-/// label's length on a character boundary, because a longer label panics `libmdns`.
+/// ("LARA Hub"). The beacon and everything else keep the full name. Leading and trailing spaces are
+/// trimmed, and a name left empty (only dots or spaces) falls back to the default Hub name without
+/// its dots. The result is also cut to one label's length on a character boundary, because a longer
+/// label panics `libmdns`.
 fn announced_name(name: &str) -> String {
-    let mut announced: String = name.chars().filter(|&c| c != '.').collect();
+    let without_dots: String = name.chars().filter(|&c| c != '.').collect();
+    let mut announced = match without_dots.trim() {
+        "" => crate::config::DEFAULT_HUB_NAME.replace('.', ""),
+        trimmed => trimmed.to_string(),
+    };
     if announced.len() > MAX_LABEL_BYTES {
         let mut end = MAX_LABEL_BYTES;
         while !announced.is_char_boundary(end) {
@@ -78,6 +84,16 @@ mod tests {
     fn the_announced_name_has_no_dots() {
         assert_eq!(announced_name("L.A.R.A Hub"), "LARA Hub");
         assert_eq!(announced_name("Grade 4 - Science"), "Grade 4 - Science");
+    }
+
+    /// A name of only dots or spaces would leave an empty label, so the announced name falls back to
+    /// the default Hub name without its dots (review on #199).
+    #[test]
+    fn a_name_of_only_dots_or_spaces_falls_back_to_lara_hub() {
+        assert_eq!(announced_name("..."), "LARA Hub");
+        assert_eq!(announced_name("   "), "LARA Hub");
+        assert_eq!(announced_name(" . . "), "LARA Hub");
+        assert_eq!(announced_name("  Room 12  "), "Room 12");
     }
 
     /// `libmdns` asserts that each label is under 63 bytes while it registers the name, so a longer

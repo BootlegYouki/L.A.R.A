@@ -51,7 +51,8 @@ No database, no files, no events on the Broker. Discovery is read-only network o
 * **The mDNS name has no dots (#167).** Phones show the mDNS instance name in their Hub list.
   `libmdns` starts a new DNS label at every dot, so "L.A.R.A Hub" went out as `L` / `A` / `R` /
   `A Hub` and phones listed the Hub as "L". `announced_name` drops the dots ("LARA Hub"); the
-  beacon, the window and everything else keep the full name.
+  beacon, the window and everything else keep the full name. It also trims spaces, and a name left
+  empty (only dots or spaces, such as "...") falls back to "LARA Hub".
 * **The mDNS name is at most 62 bytes.** `libmdns` asserts that each label is under 63 bytes while
   it registers the name, so a longer room name (no dots to split it) panicked inside `serve()` and
   the Hub never started. `announced_name` cuts it on a character boundary instead.
@@ -69,8 +70,9 @@ No database, no files, no events on the Broker. Discovery is read-only network o
 ## 5. Tests
 * `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, a
   name with dots arrives whole, and the port and interval match the rules file.
-* `discovery/mdns.rs` unit tests: the announced name drops the dots, and a long name is cut below
-  the label limit without splitting a character.
+* `discovery/mdns.rs` unit tests: the announced name drops the dots, a name of only dots or spaces
+  falls back to "LARA Hub", and a long name is cut below the label limit without splitting a
+  character.
 * `tests/scaffold.rs::hub_with_discovery_starts_and_stops_cleanly`: `serve()` with the beacon task
   and mDNS responder still serves HTTP and shuts down cleanly.
 
