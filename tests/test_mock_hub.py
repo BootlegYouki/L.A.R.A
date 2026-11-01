@@ -124,7 +124,11 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual((status, receipt["status"]), (200, "PENDING"))
         self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["lrn"], "123456789013")
         _, roster, _ = call(BASE, "GET", f"/api/classrooms/{CLASSROOM}/roster", token=self.teacher)
-        sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
+        row = next(r for r in roster if r["lrn"] == "123456789013")
+        sid = row["student_id"]
+        _, pulled, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.teacher)
+        synced = {(e["classroom_id"], e["student_id"]): e["id"] for e in pulled["enrollments"]}
+        self.assertEqual(row["enrollment_id"], synced[(CLASSROOM, sid)])
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "ACTIVE")
         teacher_ws.close()
