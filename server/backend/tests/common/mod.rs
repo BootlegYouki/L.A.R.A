@@ -54,6 +54,21 @@ impl TestHub {
         session.token
     }
 
+    /// Signs in through `POST /api/auth/login` and returns the token.
+    pub async fn login(&self, lrn: &str, pin: &str) -> String {
+        let (status, body) = self.post_json("/api/auth/login", &serde_json::json!({"lrn_or_id": lrn, "pin": pin}), None).await;
+        assert_eq!(status, 200, "login {lrn}: {body}");
+        body["token"].as_str().unwrap().to_owned()
+    }
+
+    /// A body sent as is, with no `Content-Type` (the mock ignores it).
+    pub async fn post_raw(&self, path: &str, body: &str) -> (u16, Value) {
+        let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
+        let res = self.client.post(url).body(body.to_owned()).send().await.unwrap();
+        let status = res.status().as_u16();
+        (status, res.json().await.unwrap_or(Value::Null))
+    }
+
     pub async fn post_json(&self, path: &str, body: &Value, token: Option<&str>) -> (u16, Value) {
         let (status, _, body) = self.post_json_with_headers(path, body, token).await;
         (status, body)

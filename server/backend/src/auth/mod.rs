@@ -46,8 +46,20 @@ pub struct AuthUser {
     pub role: Role,
 }
 
+/// 403 `FORBIDDEN` with the mock's message when the caller has another role.
+pub fn require_role(user: &AuthUser, role: Role) -> Result<(), ApiError> {
+    if user.role == role {
+        return Ok(());
+    }
+    Err(ApiError::forbidden(match role {
+        Role::Teacher => "Teacher only",
+        Role::Student => "Learners only",
+        Role::Admin => "Hub admin only",
+    }))
+}
+
 /// The token after `Bearer `, as the mock reads it.
-fn bearer_token(headers: &HeaderMap) -> Option<&str> {
+pub(crate) fn bearer_token(headers: &HeaderMap) -> Option<&str> {
     let token = headers.get(AUTHORIZATION)?.to_str().ok()?.strip_prefix("Bearer ")?;
     (!token.is_empty()).then_some(token)
 }
@@ -78,6 +90,23 @@ mod tests {
         assert_eq!(bearer_token(&headers("Bearer ")), None);
         assert_eq!(bearer_token(&headers("Basic abc")), None);
         assert_eq!(bearer_token(&HeaderMap::new()), None);
+    }
+
+    #[test]
+    fn require_role_answers_the_mocks_403s() {
+        let roles = [(Role::Teacher, "Teacher only"), (Role::Student, "Learners only"), (Role::Admin, "Hub admin only")];
+        for (needed, text) in roles {
+            for (has, _) in roles {
+                let user = AuthUser { id: "u".into(), role: has };
+                match require_role(&user, needed) {
+                    Ok(()) => assert_eq!(has, needed),
+                    Err(e) => {
+                        assert_ne!(has, needed);
+                        assert_eq!((e.status.as_u16(), e.code.as_str(), e.message.as_str()), (403, "FORBIDDEN", text));
+                    }
+                }
+            }
+        }
     }
 
     #[test]
