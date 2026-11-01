@@ -25,24 +25,26 @@ REST class responses now supply request notices only. Their fetch/save runs unde
 
 ## Reset, deletion and queued work
 
-A reset deletes mirrored rows in dependency order while retaining every `QUEUED_FOR_SYNC` row and all required announcement/assignment/quiz/classroom ancestors. Local AI history and its class parent are retained. The signed-in profile is preserved. Queued rows are bound to the previous Hub ID before reset; work belonging to a different Hub is retained but not uploaded to the new Hub.
+A reset deletes mirrored rows in dependency order while retaining every `QUEUED_FOR_SYNC` or `REJECTED` row and all required announcement/assignment/quiz/classroom ancestors. Local AI history and its class parent are retained. The signed-in profile is preserved. Retained upload rows are bound to the previous Hub ID before reset; work belonging to a different Hub is retained but not uploaded to the new Hub.
 
-A tombstone cannot cascade through queued work. Blocked deletions are stored and retried on later pulls, so a deletion is not forgotten after its cursor advances. Once the queued child is acknowledged, the deferred parent deletion can finish. Unknown/unsafe tombstone tables fail the page instead of executing arbitrary SQL.
+A tombstone cannot cascade through queued or rejected work. Blocked deletions are stored and retried on later pulls, so a deletion is not forgotten after its cursor advances. Once a queued child is acknowledged, its deferred parent deletion can finish; a rejected child remains protected. Unknown/unsafe tombstone tables fail the page instead of executing arbitrary SQL.
 
 Downloaded material paths are preserved during ordinary upserts. A pulled submission without a cached local file has an empty local path, meaning no downloaded attachment. Official grade/feedback fields can update without overwriting queued photos, answers or their local paths.
 
 ## Receipts and existing key/value storage
 
-The schema permits only `SYNCED` and `QUEUED_FOR_SYNC`. A rejected row therefore remains queued and intact; durable receipt metadata carries its `REJECTED` status, reason code, sent-version fingerprint and Hub binding. Identical rejected versions are not uploaded repeatedly; an edited version can retry. A successful receipt acknowledges only the exact sent version, so an edit made during upload remains queued.
+Under contract #196, upload outcomes live on the four uploadable tables: `sync_status` is `SYNCED`, `QUEUED_FOR_SYNC` or `REJECTED`, and nullable `sync_reject_reason` carries the Hub's refusal reason. Rejected rows remain observable through Room/domain flows and are never retried automatically. Both successful and rejected receipts apply only to the sent row version, so a newer edit remains queued. An ordinary pull cannot overwrite local queued/rejected content or reason; grade fields remain authoritative from the Hub.
 
 The existing `sync_state` key/value table also holds:
 
-- `upload_receipt:<table>:<id>`: status/reason/fingerprint/Hub identity, read through `SyncRepository.receipt`.
+- Legacy `upload_receipt:<table>:<id>` keys are converted/removed by `RejectedUploadMigration`; there is no new writer or outcome reader for them.
 - `queued_hub:<table>:<id>`: protects work retained across a Hub reset.
 - `deferred_tombstone:<table>:<id>`: deletion blocked by queued children.
 - `grade_receipt:<attempt_id>`: durable incoming grade receipt, including when the attempt is not cached yet.
 
 These are metadata keys, not new schema fields or cursor substitutes. GradeReceipt omits quiz/student/start identity; sync updates known attempt scores and retains unknown receipts without inventing attempt identities. The later quiz/grades integration must resolve or display those receipts.
+
+Room schema version 2 adds only the four nullable reason columns. The 1-to-2 migration preserves all rows, IDs, files, indices and cursors. Matching v1 comment/private-comment/quiz rejection receipts move into the columns; stale receipts for edited rows cannot reject the edit. V1 never produced multipart homework receipts, so its new photo reason column starts null. See `rejected-uploads.md` for upgrade tests and handoff details.
 
 ## Contract limitation to resolve with the Lead
 

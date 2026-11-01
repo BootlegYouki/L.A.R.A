@@ -27,7 +27,7 @@ import org.lara.app.data.local.entities.*
         PrivateCommentEntity::class,
         SyncStateEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class LaraDatabase : RoomDatabase() {
@@ -51,6 +51,6 @@ abstract class LaraDatabase : RoomDatabase() {
         }
         fun create(context: Context): LaraDatabase = Room.databaseBuilder(
             context.applicationContext, LaraDatabase::class.java, "lara.db",
-        ).addCallback(classAccessCleanup).setJournalMode(JournalMode.WRITE_AHEAD_LOGGING).build()
+        ).addMigrations(RejectedUploadMigration).addCallback(classAccessCleanup).setJournalMode(JournalMode.WRITE_AHEAD_LOGGING).build()
     }
 }

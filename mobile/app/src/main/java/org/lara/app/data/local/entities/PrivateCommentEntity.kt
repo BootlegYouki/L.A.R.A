@@ -19,9 +19,11 @@ data class PrivateCommentEntity(
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_status", defaultValue = "'SYNCED'") val syncStatus: String = "SYNCED",
+    @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
 )
  {
     init {
-        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC"))
+        require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC", "REJECTED"))
+        require(syncStatus == "REJECTED" || syncRejectReason == null)
     }
 }

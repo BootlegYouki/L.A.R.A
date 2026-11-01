@@ -51,6 +51,7 @@ fun AnnouncementCommentEntity.toDomain() = AnnouncementComment(
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
+    syncRejectReason = syncRejectReason,
 )
 
 fun MaterialEntity.toDomain() = Material(
@@ -103,6 +104,7 @@ fun AssignmentSubmissionEntity.toDomain() = AssignmentSubmission(
     teacherFeedback = teacherFeedback,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
+    syncRejectReason = syncRejectReason,
 )
 
 fun QuizEntity.toDomain() = Quiz(
@@ -144,6 +146,7 @@ fun QuizAttemptEntity.toDomain() = QuizAttempt(
     answersJson = answersJson,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
+    syncRejectReason = syncRejectReason,
 )
 
 fun AiChatMessageEntity.toDomain() = AiChatMessage(
@@ -176,6 +179,7 @@ fun PrivateCommentEntity.toDomain() = PrivateComment(
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
+    syncRejectReason = syncRejectReason,
 )
 
 fun SyncStateEntity.toDomain() = SyncState(
