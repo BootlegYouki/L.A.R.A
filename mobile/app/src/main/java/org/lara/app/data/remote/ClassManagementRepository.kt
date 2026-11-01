@@ -15,6 +15,7 @@ data class TeacherRosterEntry(
     val lrn: String,
     val status: EnrollmentStatus,
     @SerialName("joined_at") val joinedAt: Long? = null,
+    @SerialName("enrollment_id") val enrollmentId: String,
 ) {
     override fun toString() = "TeacherRosterEntry([redacted])"
 }
@@ -22,6 +23,7 @@ data class TeacherRosterEntry(
 private data class StudentRef(@SerialName("student_id") val studentId: String)
 
 interface ClassManagementRepository {
+    suspend fun classrooms(): List<org.lara.app.data.remote.dto.ClassroomDto> = emptyList()
     suspend fun roster(classroomId: String): List<TeacherRosterEntry>
     suspend fun decide(classroomId: String, studentId: String, accept: Boolean)
 }
@@ -33,6 +35,7 @@ class HubClassManagementRepository(
     private val client: HubClient,
 ) : ClassManagementRepository {
     private val json = Json { ignoreUnknownKeys = true }
+    override suspend fun classrooms() = sessions.classrooms(userId)
     override suspend fun roster(classroomId: String): List<TeacherRosterEntry> = withContext(Dispatchers.IO) {
         val c = sessions.connection(userId)
         json.decodeFromString(ListSerializer(TeacherRosterEntry.serializer()),

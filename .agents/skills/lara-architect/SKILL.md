@@ -9,7 +9,7 @@ L.A.R.A is an offline, LAN-only Google Classroom with self-grading timed quizzes
 
 ## 1. Before you write code
 
-Three teams (`server/`, `desktop/`, `mobile/`) work in parallel. Inside a team there is one issue in progress, taken in step order, with one open PR.
+Three teams (`server/`, `desktop/`, `mobile/`) work in parallel. Inside a team there is one issue in progress, taken in step order, with one open feature PR (an evaluation PR may run alongside).
 
 1. **Read the issue.** Its `PRD`, `Contract` and `Design system` lines name exactly what to open. The issue is the scope: its sub-tasks, its Target Files, its acceptance criteria.
 2. **Open what it names,** in this order. Higher wins when two disagree.

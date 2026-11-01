@@ -102,4 +102,5 @@
     <string name="approval_title">Suriin ang mga kahilingang sumali</string>
     <string name="approval_no_saved_classes">Walang naka-save na klase. Kumonekta sa Hub upang ma-update ang listahan ng klase.</string>
     <string name="enrollment_all_classes">Lahat ng klase</string>
+    <string name="approval_no_classes">Wala pang klase. Lalabas dito ang mga klaseng itinuturo mo.</string>
 </resources>

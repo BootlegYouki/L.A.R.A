@@ -16,6 +16,11 @@ data class LearnerClassRow(
 
 @Dao
 interface RosterDao {
+    @Query("SELECT * FROM classrooms WHERE id = :classroomId")
+    suspend fun savedClassroom(classroomId: String): ClassroomEntity?
+
+    @Query("SELECT * FROM enrollments WHERE classroom_id = :classroomId AND student_id = :studentId")
+    suspend fun savedEnrollment(classroomId: String, studentId: String): EnrollmentEntity?
     @Query("UPDATE enrollments SET status = :status WHERE classroom_id = :classroomId AND student_id = :studentId")
     suspend fun updateSavedStatus(classroomId: String, studentId: String, status: String): Int
 

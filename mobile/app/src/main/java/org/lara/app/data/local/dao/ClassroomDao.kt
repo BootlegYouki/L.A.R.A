@@ -6,6 +6,8 @@ import org.lara.app.data.local.entities.*
 
 @Dao
 interface ClassroomDao {
+    @Query("SELECT * FROM classrooms ORDER BY name, id")
+    fun observeStored(): Flow<List<ClassroomEntity>>
     @Query("SELECT * FROM classrooms WHERE archived_at IS NULL ORDER BY name, id")
     fun observeAll(): Flow<List<ClassroomEntity>>
 }

@@ -3,9 +3,11 @@ package org.lara.app.domain.enrollment
 import org.lara.app.domain.model.Classroom
 import org.lara.app.domain.model.Enrollment
 
-/** Membership comes from the authoritative enrollment row, never a locally generated ID. */
-data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment) {
-    val canOpen: Boolean get() = enrollment.status == "ACTIVE"
+/** A learner's REST membership status can authorize access without fabricating an enrollment ID. */
+data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment? = null,
+    val restStatus: EnrollmentStatus? = null) {
+    val status: EnrollmentStatus get() = restStatus ?: enrollment?.status?.let(EnrollmentStatus::valueOf) ?: EnrollmentStatus.PENDING
+    val canOpen: Boolean get() = status == EnrollmentStatus.ACTIVE
 }
 
 enum class EnrollmentStatus { PENDING, ACTIVE, REJECTED, REMOVED }

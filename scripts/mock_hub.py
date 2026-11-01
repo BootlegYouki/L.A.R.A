@@ -545,7 +545,7 @@ def classroom_join(req):
 @route("GET", r"/api/classrooms/([^/]+)/roster", role="TEACHER")
 def roster(req):
     owned_classroom(req, req.groups[0])
-    return [{"student_id": e["student_id"], "full_name": STATE.users[e["student_id"]]["full_name"],
+    return [{"enrollment_id": e["id"], "student_id": e["student_id"], "full_name": STATE.users[e["student_id"]]["full_name"],
              "lrn": STATE.users[e["student_id"]]["lrn_or_id"], "status": e["status"], "joined_at": e["joined_at"]}
             for e in STATE.enrollments.values() if e["classroom_id"] == req.groups[0]]
 

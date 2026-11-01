@@ -84,6 +84,7 @@ class RosterViewModel(
     }
     fun stop() { foreground = false; eventJob?.cancel(); eventJob = null; refreshJob?.cancel(); refreshJob = null }
     fun show() { mutable.update { it.copy(sheetOpen = true, error = null) } }
+    fun onJoinRequested() { openAfterRefresh = true; refresh() }
     fun dismiss() { mutable.update { it.copy(sheetOpen = false) } }
 
     fun refresh() {
