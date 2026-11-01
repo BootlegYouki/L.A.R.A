@@ -1,3 +1,6 @@
+pub mod pin;
+pub mod token;
+
 use std::collections::HashMap;
 use std::sync::{PoisonError, RwLock};
 
