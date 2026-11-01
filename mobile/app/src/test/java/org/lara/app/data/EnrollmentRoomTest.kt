@@ -35,7 +35,7 @@ class EnrollmentRoomTest {
         assertFalse(pending.value.single().canOpen)
         db.cacheDao().upsertBatch(CacheBatch(enrollments = listOf(enrollment.copy(status = "ACTIVE", updatedAt = 2))))
         val active = withTimeout(10_000) { rows.first { it is Cached.Content && it.value.singleOrNull()?.canOpen == true } } as Cached.Content
-        assertEquals("server-enrollment-id", active.value.single().enrollment.id)
+        assertEquals("server-enrollment-id", requireNotNull(active.value.single().enrollment).id)
         val restored = RoomEnrollmentRepository(db.rosterDao()).learnerClasses("learner", scope)
         val saved = withTimeout(10_000) { restored.first { it is Cached.Content && it.value.isNotEmpty() } } as Cached.Content
         assertTrue(saved.value.single().canOpen)
@@ -47,7 +47,7 @@ class EnrollmentRoomTest {
             EnrollmentEntity("foreign", "class", "other", "ACTIVE", 1, 1))))
         val rows = RoomEnrollmentRepository(db.rosterDao()).learnerClasses("learner", scope)
         val state = withTimeout(10_000) { rows.first { it is Cached.Content && it.value.isNotEmpty() } } as Cached.Content
-        assertEquals(listOf("mine"), state.value.map { it.enrollment.id })
+        assertEquals(listOf("mine"), state.value.map { requireNotNull(it.enrollment).id })
         assertFalse(state.value.single().canOpen)
     }
 }

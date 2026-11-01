@@ -62,16 +62,18 @@ class RoomClassworkRepository(
 }
 
 class RoomEnrollmentRepository(private val dao: RosterDao,
-    private val onRefresh: (suspend (String) -> Unit)? = null) : EnrollmentRepository {
+    private val onRefresh: (suspend (String) -> Unit)? = null,
+    private val restAccess: RoomLearnerClassAccess? = null) : EnrollmentRepository {
     override suspend fun refresh(userId: String): Boolean {
         val refresh = onRefresh ?: return false
         refresh(userId)
         return true
     }
     override fun learnerClasses(studentId: String, scope: CoroutineScope) =
-        dao.observeForStudent(studentId).map { rows -> rows.map {
-            org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain())
-        } }.cached(scope)
+        combine(dao.observeForStudent(studentId), restAccess?.classes(studentId) ?: kotlinx.coroutines.flow.flowOf(null)) { rows, rest ->
+            val canonical = rows.map { org.lara.app.domain.enrollment.LearnerClass(it.classroom.toDomain(), it.enrollment.toDomain()) }
+            rest ?: canonical
+        }.cached(scope)
 
     override fun roster(classroomId: String, scope: CoroutineScope) =
         dao.observeByClassroom(classroomId).map { rows ->

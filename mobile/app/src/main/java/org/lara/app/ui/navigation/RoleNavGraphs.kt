@@ -56,10 +56,11 @@ fun StudentNavGraph(
 @Composable
 fun TeacherNavGraph(
     state: ShellState,
+    approvalActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
 ) {
     require(state.role == ShellRole.TEACHER)
-    RoleNavGraph(state, teacher = true, content)
+    RoleNavGraph(state, teacher = true, content = content, approvalActions = approvalActions)
 }
 
 @Composable
@@ -67,6 +68,7 @@ private fun RoleNavGraph(
     state: ShellState,
     teacher: Boolean,
     content: @Composable (ShellDestination) -> Unit,
+    approvalActions: @Composable () -> Unit = {},
     learnerClassActions: @Composable () -> Unit = {},
 ) {
     val controller = rememberNavController()
@@ -125,6 +127,7 @@ private fun RoleNavGraph(
             }
             if (!teacher) learnerClassActions()
             if (teacher) {
+                approvalActions()
                 Row(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                     TextButton(onClick = { controller.navigate(People) { launchSingleTop = true } }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                         Text(stringResource(R.string.nav_people))

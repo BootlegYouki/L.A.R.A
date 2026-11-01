@@ -26,6 +26,15 @@ class HubClient {
         return exchange(endpoint, path, method, payload, session.token)
     }
 
+    internal fun teacherRoster(c: EnrollmentConnection, classroomId: String, action: String?, payload: String?): String {
+        require(classroomId.matches(Regex("[A-Za-z0-9-]{1,128}")))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        require(action == null || action in setOf("approve", "reject"))
+        return exchange(c.endpoint, "/api/classrooms/$classroomId/${action ?: "roster"}",
+            if (action == null) "GET" else "POST", payload, c.session.token)
+    }
+
     private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?): String {
         val url = endpoint.restBase + path
         require(isAllowedHubUrl(url))

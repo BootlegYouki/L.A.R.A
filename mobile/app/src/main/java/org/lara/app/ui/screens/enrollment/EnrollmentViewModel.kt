@@ -20,6 +20,7 @@ class EnrollmentViewModel(
     private val notices: EnrollmentNoticeRepository,
     private val onMembershipHint: suspend (EnrollmentRefreshHint) -> Unit,
     private val onSessionExpired: () -> Unit,
+    private val onClassrooms: suspend (ClassroomSnapshot) -> Unit = {},
 ) : ViewModel() {
     private val mutable = MutableStateFlow(EnrollmentScreenState())
     val state = mutable.asStateFlow()
@@ -98,7 +99,9 @@ class EnrollmentViewModel(
     private suspend fun refresh(hint: EnrollmentRefreshHint) = refreshLock.withLock {
         if (mutable.value.offline) return@withLock
         try {
-            api.classrooms(userId).forEach { row ->
+            val snapshot = api.classroomSnapshot(userId)
+            onClassrooms(snapshot)
+            snapshot.rows.forEach { row ->
                 val status = row.enrollmentStatus?.let { runCatching { EnrollmentStatus.valueOf(it) }.getOrNull() }
                 if (status != null) notices.save(userId, EnrollmentNotice(row.id, row.name, status))
             }

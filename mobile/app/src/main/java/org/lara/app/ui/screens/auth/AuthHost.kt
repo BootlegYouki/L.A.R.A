@@ -65,6 +65,8 @@ fun AuthHost(container: AppContainer) {
         )
         if (user.role == "STUDENT") org.lara.app.ui.screens.enrollment.LearnerEnrollmentNavigation(
             container, user.id, shell, model::requireSignIn)
-        else LaraNavigation(container.discovery, shell, sessionKey = user.id)
+        else LaraNavigation(container.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
+            org.lara.app.ui.screens.teacher.TeacherApprovalPanel(container, user.id, reachable, model::requireSignIn)
+        })
     }
 }

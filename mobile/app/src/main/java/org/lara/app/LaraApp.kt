@@ -29,12 +29,17 @@ class AppContainer(context: Context) {
     private val sessionTokens by lazy { org.lara.app.data.remote.TokenStore(context) }
     private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
+    fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
+        org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
+    fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =
+        org.lara.app.data.repository.SavedRosterRefresher(database, remote, userId)
+    val learnerClassAccess by lazy { org.lara.app.data.repository.RoomLearnerClassAccess(database, endpoints::load) }
     val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }
     val classrooms: ClassroomRepository by lazy { RoomClassroomRepository(database.classroomDao()) }
     val stream: StreamRepository by lazy { RoomStreamRepository(database.streamDao()) }
     val classwork: ClassworkRepository by lazy {
         RoomClassworkRepository(database.classworkDao(), database.quizDao())
     }
-    val enrollments: EnrollmentRepository by lazy { RoomEnrollmentRepository(database.rosterDao()) }
+    val enrollments: EnrollmentRepository by lazy { RoomEnrollmentRepository(database.rosterDao(), restAccess = learnerClassAccess) }
     val quizzes: QuizRepository by lazy { RoomQuizRepository(database.quizDao()) }
 }
