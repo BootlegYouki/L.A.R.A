@@ -22,6 +22,7 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
+use auth::limiter::LoginLimiter;
 use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
 pub use config::HubConfig;
@@ -33,6 +34,8 @@ pub struct AppState {
     pub broker: Arc<Broker>,
     /// argon2id with a cap on concurrent hashes (`auth::pin`).
     pub pins: Arc<PinHasher>,
+    /// Five login attempts a minute per `lrn_or_id` (`auth::limiter`).
+    pub login_limiter: Arc<LoginLimiter>,
     pub clock: Arc<dyn Clock>,
     /// From `hub_meta`, created on first run (`db::load_hub_meta`).
     pub hub_id: Arc<str>,
@@ -101,6 +104,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         db,
         broker: Arc::default(),
         pins: Arc::default(),
+        login_limiter: Arc::default(),
         clock: Arc::new(SystemClock),
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,
