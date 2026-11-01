@@ -30,8 +30,10 @@ fun SettingsAction() {
 fun SettingsHost(container: AppContainer, userId: String, reachable: Boolean,
     onSignedOut: () -> Unit, onChangeHub: () -> Unit, onBack: () -> Unit) {
     val signedOut by rememberUpdatedState(onSignedOut)
+    val changeHub by rememberUpdatedState(onChangeHub)
     val model: SettingsViewModel = viewModel(key = "settings-$userId", factory = viewModelFactory {
-        initializer { SettingsViewModel(userId, container.settings, container.language, container.endpoints) { signedOut() } }
+        initializer { SettingsViewModel(userId, container.settings, container.language, container.endpoints,
+            onChangeHub = { changeHub() }) { signedOut() } }
     })
     val state by model.state.collectAsStateWithLifecycle()
     val language by model.language.collectAsStateWithLifecycle()
@@ -40,5 +42,5 @@ fun SettingsHost(container: AppContainer, userId: String, reachable: Boolean,
     LaunchedEffect(model) { model.refresh() }
     BackHandler { if (!state.busy) onBack() }
     SettingsScreen(state, language, reachable, version, model::language, { model.signOut() },
-        { model.signOut(true) }, model::cancelSignOut, onChangeHub, onBack)
+        { model.signOut(true) }, model::cancelSignOut, { model.signOut(changeHub = true) }, onBack)
 }

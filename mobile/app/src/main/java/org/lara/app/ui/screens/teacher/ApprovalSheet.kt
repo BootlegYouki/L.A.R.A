@@ -32,7 +32,7 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
     ModalBottomSheet(onDismissRequest = onDismiss, shape = LaraShapes.extraLarge,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = LaraColors.Surface, contentColor = LaraColors.TextPrimary,
-        scrimColor = LaraColors.TextPrimary.copy(alpha = 0.5f)) {
+        scrimColor = LaraColors.TextPrimary.copy(alpha = 0.5f)) { PopupLanguage {
         Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
@@ -74,6 +74,6 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                 Text(stringResource(R.string.enrollment_cancel_action))
             }
         }
-    }
+    } }
 }
 

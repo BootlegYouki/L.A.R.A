@@ -38,8 +38,8 @@ fun JoinClassDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         containerColor = LaraColors.Surface,
         shape = LaraShapes.extraLarge,
-        title = { Text(stringResource(R.string.enrollment_join_title)) },
-        text = {
+        title = { PopupLanguage { Text(stringResource(R.string.enrollment_join_title)) } },
+        text = { PopupLanguage {
             Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                 Text(stringResource(R.string.enrollment_code_help))
                 Text(label, style = MaterialTheme.typography.labelLarge)
@@ -74,8 +74,8 @@ fun JoinClassDialog(
                 }
                 if (busy) Text(stringResource(R.string.enrollment_join_sending))
             }
-        },
-        confirmButton = {
+        } },
+        confirmButton = { PopupLanguage {
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
                 onClick = {
@@ -85,13 +85,13 @@ fun JoinClassDialog(
                 enabled = !busy && isHubReachable,
                 modifier = Modifier.heightIn(min = PrimaryTouchTarget),
             ) { Text(stringResource(R.string.enrollment_join_action)) }
-        },
-        dismissButton = {
+        } },
+        dismissButton = { PopupLanguage {
             TextButton(onClick = onDismiss, enabled = !busy,
                 colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark),
                 modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.enrollment_cancel_action))
             }
-        },
+        } },
     )
 }

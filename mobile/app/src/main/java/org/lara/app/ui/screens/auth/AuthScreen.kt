@@ -18,7 +18,8 @@ import org.lara.app.ui.components.DiscoveryBanner
 import org.lara.app.ui.theme.*
 
 @Composable
-fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, onDiscovery: () -> Unit) {
+fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, onDiscovery: () -> Unit,
+    onSettings: (() -> Unit)? = null) {
     var registering by remember { mutableStateOf(false) }
     // Credentials deliberately do not use rememberSaveable or a SavedStateHandle.
     var id by remember { mutableStateOf("") }
@@ -50,7 +51,7 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
                 .semantics { contentDescription = idLabel })
         if(registering) {
             Text(nameLabel, style = MaterialTheme.typography.labelLarge)
-            OutlinedTextField(value = name, onValueChange = { name = it.take(120) }, enabled = !state.busy,
+            OutlinedTextField(value = name, onValueChange = { name = it.take(100) }, enabled = !state.busy,
                 singleLine = true, shape = LaraShapes.medium,
                 modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
                     .semantics { contentDescription = nameLabel })
@@ -92,5 +93,10 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
         }
         OutlinedButton(onClick = onDiscovery, enabled = !state.busy,
             modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.discovery_open)) }
+        onSettings?.let { open ->
+            TextButton(onClick = open, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
+                Text(stringResource(R.string.settings_title))
+            }
+        }
     }
 }

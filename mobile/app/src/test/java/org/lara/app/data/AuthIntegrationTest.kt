@@ -113,10 +113,13 @@ class AuthIntegrationTest {
     }
     @Test fun rejectedAdminNeverReachesRoomOrTokenStorage() = runBlocking {
         role = "ADMIN"
-        try { AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "ADMIN-0001", "1234", null); fail() }
-        catch(e: AuthFailure) { assertEquals(403, e.status) }
-        assertNull(tokens.value)
-        assertNull(db.authDao().currentUserId())
+        for (response in listOf(200, 403)) {
+            status = response
+            try { AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "ADMIN-0001", "1234", null); fail() }
+            catch(e: AuthFailure) { assertEquals(403, e.status) }
+            assertNull(tokens.value)
+            assertNull(db.authDao().currentUserId())
+        }
     }
     @Test fun wrongPinAndRateLimitPreserveExistingCache() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())

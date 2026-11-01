@@ -114,6 +114,7 @@
     <string name="settings_connected">Nakakonekta sa Hub</string>
     <string name="settings_disconnected">Hindi maabot ang Hub</string>
     <string name="settings_change_hub">Palitan ang Hub</string>
+    <string name="settings_change_hub_help">Magsa-sign out kapag pinalitan ang Hub. Mananatili sa telepono ang iyong naka-save na gawain.</string>
     <string name="settings_about">Tungkol sa L.A.R.A.</string>
     <string name="settings_version">Bersyon %1$s</string>
     <string name="settings_about_text">Ang iyong silid-aralan, mga aralin at gawain sa classroom network, na naka-save rin para sa pag-aaral offline.</string>

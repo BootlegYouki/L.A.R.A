@@ -49,8 +49,7 @@ Room warns about three unindexed foreign keys already present in the contract
 `data/local/LaraDatabase.kt` registers all entities at version 2, exports the
 schema, uses private `lara.db` storage and WAL, and also exposes the later auth/sync DAOs. It has no
 main-thread queries or destructive migration fallback. The existing manual
-`LaraApp.AppContainer` owns one lazy database and the repository instances; no
-second singleton or dependency injection framework is introduced.
+`LaraApp.AppContainer` scopes repositories to the selected account's database; shared services remain application-owned. `AccountDatabases` retains the original lara.db for its owner and uses private hashed filenames for other accounts, preserving separate mirrors/cursors rather than clearing work on sign-out. No dependency injection framework is introduced. See settings.md for the 2.6 account-switch policy.
 
 Contract #196 adds nullable `sync_reject_reason` to the four uploadable tables and permits `REJECTED` status. `RejectedUploadMigration` upgrades version 1 in place, converts matching legacy rejection receipts and removes their old keys. Queued/rejected rows, saved file paths and cursor metadata survive. Both schema exports are retained; current parity uses version 2. See `rejected-uploads.md` for the migration evidence.
 

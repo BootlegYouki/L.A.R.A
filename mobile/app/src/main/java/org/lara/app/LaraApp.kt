@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import org.lara.app.data.remote.discovery.AndroidHubDiscovery
 import org.lara.app.domain.discovery.HubDiscovery
-import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.repository.RoomClassroomRepository
 import org.lara.app.data.repository.RoomClassworkRepository
 import org.lara.app.data.repository.RoomEnrollmentRepository
@@ -21,20 +20,38 @@ class LaraApp : Application() {
     override fun onCreate() { super.onCreate(); container.syncScheduler.start() }
 }
 
-class AppContainer(context: Context) {
+private class AppServices(context: Context) {
+    val accountContainers = java.util.concurrent.ConcurrentHashMap<String, AppContainer>()
     val language = org.lara.app.data.repository.AppLanguageStore(context)
     val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
-    val auth by lazy { org.lara.app.data.repository.AuthRepository(
-        org.lara.app.data.remote.AuthApi(), org.lara.app.data.remote.TokenStore(context), database.authDao()) }
+    val tokens = org.lara.app.data.remote.TokenStore(context)
+    val accounts = org.lara.app.data.local.AccountDatabases(context)
     val discovery: HubDiscovery = AndroidHubDiscovery(context)
-    private val database by lazy { LaraDatabase.create(context.applicationContext) }
-    private val sessionTokens by lazy { org.lara.app.data.remote.TokenStore(context) }
+    val scheduler = org.lara.app.data.sync.SyncScheduler(context)
+    val auth = org.lara.app.data.repository.AuthRepository(org.lara.app.data.remote.AuthApi(), tokens) {
+        userId -> accounts.prepare(userId).authDao()
+    }
+}
+
+class AppContainer private constructor(private val services: AppServices, private val accountId: String?) {
+    constructor(context: Context) : this(AppServices(context.applicationContext), null)
+    val language get() = services.language
+    val endpoints get() = services.endpoints
+    val auth get() = services.auth
+    val discovery get() = services.discovery
+    val syncScheduler get() = services.scheduler
+    private val database get() = services.accounts.prepared(requireNotNull(accountId))
+    private val sessionTokens get() = services.tokens
     private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
-    val syncScheduler by lazy { org.lara.app.data.sync.SyncScheduler(context) }
+    fun forUser(userId: String): AppContainer {
+        services.accounts.prepared(userId)
+        // Foreground actions and WorkManager must use the same account sync mutex.
+        return services.accountContainers.computeIfAbsent(userId) { AppContainer(services, it) }
+    }
     val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) }
     suspend fun syncUserId(): String? {
-        val token = sessionTokens.load() ?: return null
-        return database.authDao().currentUserId()?.takeIf { it == token.userId }
+        val token = try { sessionTokens.load() } catch (_: Exception) { null } ?: return null
+        return services.accounts.prepare(token.userId).authDao().currentUserId()?.takeIf { it == token.userId }
     }
     val settings by lazy { org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load) }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }

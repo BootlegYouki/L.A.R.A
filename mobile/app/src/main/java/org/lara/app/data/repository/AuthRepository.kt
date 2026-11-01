@@ -11,7 +11,9 @@ import org.lara.app.domain.model.User
 import org.lara.app.data.remote.*
 import org.lara.app.data.remote.discovery.HubEndpoint
 
-class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenStore, private val dao: AuthDao) {
+class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenStore,
+    private val accountDao: suspend (String) -> AuthDao) {
+    constructor(api: AuthApi, tokens: SessionTokenStore, dao: AuthDao) : this(api, tokens, { dao })
     fun reachability(endpoint: HubEndpoint?, networkChanges: Flow<Unit> = emptyFlow()) =
         observeHubReachability(networkChanges) {
             endpoint?.let { org.lara.app.data.remote.discovery.HubProbe().responds(it) { url ->
@@ -21,19 +23,28 @@ class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenS
     suspend fun restore(endpoint: HubEndpoint?): User? = withContext(Dispatchers.IO) {
         val token = try { tokens.load() } catch (_: Exception) { return@withContext null }
             ?: return@withContext null
+        val dao = accountDao(token.userId)
         if (dao.currentUserId() != token.userId) return@withContext null
         if (endpoint?.restBase != token.hub) return@withContext null
         // Expiry limits Hub requests, not access to already downloaded classroom resources.
         dao.user(token.userId)?.takeIf { it.role in setOf("STUDENT", "TEACHER") }?.toDomain()
     }
+    /** Saved identity for sign-out controls only; it does not authorize a different Hub. */
+    suspend fun cachedUser(): User? = withContext(Dispatchers.IO) {
+        val token = try { tokens.load() } catch (_: Exception) { null } ?: return@withContext null
+        val dao = accountDao(token.userId)
+        if (dao.currentUserId() != token.userId) return@withContext null
+        dao.user(token.userId)?.takeIf { it.role in setOf("STUDENT", "TEACHER") }?.toDomain()
+    }
     suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String, name: String?): User = withContext(Dispatchers.IO) {
         val session = api.authenticate(endpoint, id, pin, name)
         val old = try { tokens.load() } catch (_: Exception) { null }
+        if (old != null && old.userId != session.user.id) throw AuthFailure(409)
+        val dao = accountDao(session.user.id)
         val cachedUser = dao.currentUserId()
         if (cachedUser != null && cachedUser != session.user.id) throw AuthFailure(409)
         // A verified same-user login can renew a DHCP-changed address without clearing cached work.
-        // Switching users still needs the queued-work policy from the settings/sync issues.
-        if (old != null && old.userId != session.user.id) throw AuthFailure(409)
+        // A different account requires explicit sign-out first and its own offline mirror.
         val previous = dao.user(session.user.id)
         val now = System.currentTimeMillis()
         val profile = UserEntity(session.user.id, session.user.lrnOrId, session.user.fullName, session.user.role,

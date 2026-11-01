@@ -8,7 +8,7 @@ import org.lara.app.ui.screens.auth.AuthHost
 import org.lara.app.ui.theme.LaraTheme
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.lara.app.ui.screens.settings.AppLanguage
+import org.lara.app.ui.theme.AppLanguage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -114,6 +114,7 @@
     <string name="settings_connected">Connected to Hub</string>
     <string name="settings_disconnected">Hub unreachable</string>
     <string name="settings_change_hub">Change Hub</string>
+    <string name="settings_change_hub_help">Changing the Hub signs you out. Your saved work stays on this phone.</string>
     <string name="settings_about">About L.A.R.A.</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_about_text">Your classroom, lessons and learning activities, available on the classroom network and saved for offline study.</string>

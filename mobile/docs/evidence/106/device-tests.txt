@@ -1,0 +1,38 @@
+MOBILE 2.6 final isolated phone regression
+
+org.lara.app.sync.RejectedUploadMigrationDeviceTest:.
+org.lara.app.sync.SyncDeviceTest:...........................
+org.lara.app.sync.MockSyncDeviceTest:.
+
+Time: 2.983
+
+OK (29 tests)
+
+
+
+org.lara.app.settings.SettingsDeviceTest:.....
+org.lara.app.settings.AccountCacheDeviceTest:...
+org.lara.app.settings.SettingsMockDeviceTest:.
+
+Time: 0.84
+
+OK (9 tests)
+
+
+
+org.lara.app.settings.SettingsLanguageDeviceTest:..
+org.lara.app.teacher.TeacherApprovalDeviceTest:..
+
+Time: 18.116
+
+OK (4 tests)
+
+
+
+org.lara.app.approval.RestApprovalDeviceTest:.
+
+Time: 0.594
+
+OK (1 test)
+
+
