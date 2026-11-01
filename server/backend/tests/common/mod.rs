@@ -32,6 +32,10 @@ impl TestHub {
         self.hub.state()
     }
 
+    pub fn http_port(&self) -> u16 {
+        self.hub.http_addr().port()
+    }
+
     pub fn teacher_token(&self) -> &str {
         &self.teacher_token
     }

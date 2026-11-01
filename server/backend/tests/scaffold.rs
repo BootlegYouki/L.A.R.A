@@ -46,12 +46,10 @@ async fn stubs_check_the_token_first() {
 async fn open_routes_need_no_token() {
     let hub = TestHub::start().await;
     // An empty body reaches the handler, which asks for its fields: no 401 first.
-    for path in ["/api/auth/register", "/api/auth/login"] {
+    for path in ["/api/auth/register", "/api/auth/login", "/api/admin/setup"] {
         let (status, body) = hub.request(Method::POST, path, None).await;
         assert_eq!((status, code(&body)), (400, Some("BAD_REQUEST")), "{path}");
     }
-    let (status, body) = hub.request(Method::POST, "/api/admin/setup", None).await;
-    assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")));
     hub.stop().await;
 }
 
@@ -125,6 +123,7 @@ async fn every_scaffolded_contract_route_is_registered() {
     let scaffolded: Vec<_> = operations
         .into_iter()
         .filter(|(_, p)| AREAS.iter().any(|a| p.starts_with(a)) && !p.ends_with("/private-comments"))
+        .filter(|(_, p)| p != "/api/admin/setup") // built in 2.0 (tests/admin_setup.rs)
         .collect();
     assert!(scaffolded.len() >= 40, "parsed only {} operations", scaffolded.len());
 

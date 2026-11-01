@@ -118,7 +118,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let router = routes::router(state.clone());
     let mut http_stop = stop.clone();
     let http_task = tokio::spawn(async move {
-        // Connect info lets the admin setup route (step 2.3) accept only loopback callers.
+        // Connect info lets the admin setup route (step 2.0) accept only loopback callers.
         let served = axum::serve(http, router.into_make_service_with_connect_info::<SocketAddr>())
             .with_graceful_shutdown(async move {
                 let _ = http_stop.changed().await;

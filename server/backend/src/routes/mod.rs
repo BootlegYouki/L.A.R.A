@@ -1,5 +1,6 @@
 //! One module per area. Each registers the contract paths it owns; until the area's step
-//! lands they answer 501 `NOT_IMPLEMENTED`, after the same token check the real route will do.
+//! lands they answer 501 `NOT_IMPLEMENTED`, after the same token and role checks the real route
+//! will do.
 
 mod admin;
 mod assignments;
@@ -46,11 +47,6 @@ pub fn router(app: AppState) -> Router {
 
 async fn route_not_found(method: Method, uri: Uri) -> ApiError {
     ApiError::route_not_found(&method, uri.path())
-}
-
-/// Stub for the routes the contract leaves open (admin setup).
-async fn not_implemented(method: Method, uri: Uri) -> ApiError {
-    ApiError::not_implemented(&method, uri.path())
 }
 
 /// Stub for a route any signed-in user may call: 401 without a valid token, as the real route
