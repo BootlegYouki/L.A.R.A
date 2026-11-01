@@ -9,7 +9,7 @@
 ## Test Environment
 
 - **OS:** Windows 11
-- **Network:** bluetootootooh 7 (Bluetooth tethering from mobile phone)
+- **Network:** bluetootootooh 7 (mobile phone Wi-Fi hotspot)
 - **Network Profile:** Public ✅
 - **Installer:** L.A.R.A._0.1.0_x64-setup.exe
 - **Test Setup:** Mock Hub and Desktop app on same laptop
@@ -83,7 +83,7 @@ Cannot perform true Wi-Fi toggle test when both Mock Hub and Desktop run on the 
 ![Network Profile](screenshots/network-profile-public.png)
 
 Shows:
-- Network: bluetootootooh 7 (Bluetooth tethering)
+- Network: bluetootootooh 7 (mobile phone Wi-Fi hotspot)
 - NetworkCategory: Public ✅
 - Proves test performed on Public network as required
 
@@ -105,6 +105,7 @@ Shows:
 - Desktop app with Hub in "Nearby classroom Hubs"
 - Hub name: "Grade 4 - Science (Mock Hub)"
 - Hub IP: 10.172.136.226:8080
+- Network: bluetootootooh 7 (mobile phone Wi-Fi hotspot name)
 - Status: "Not connected to Hub" (correct - authentication not implemented in #5)
 - Discovery does not require user input
 
@@ -114,7 +115,7 @@ Shows:
 
 ### Networks Tested
 ✅ Home Wi-Fi (Hirang 5GHz 5) - Public profile  
-✅ Mobile phone Bluetooth tethering (bluetootootooh 7) - Public profile
+✅ Mobile phone Wi-Fi hotspot (bluetootootooh 7) - Public profile
 
 Discovery worked correctly on both networks.
 
@@ -163,7 +164,7 @@ The Windows installer successfully:
 - Enables discovery on Public network profile
 - Hub discovery, expiry, and rediscovery work correctly
 - Handles network interruption gracefully
-- Works on multiple network types (Wi-Fi, Bluetooth tethering)
+- Works on multiple network types (home Wi-Fi, mobile phone hotspot)
 
 **Known issues documented:**
 - mDNS-only mode not functional on Windows (documented limitation)
