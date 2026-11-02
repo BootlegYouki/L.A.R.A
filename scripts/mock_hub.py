@@ -1375,8 +1375,8 @@ def handle_ai_request(client, msg):
     client.send_text(json.dumps({"event": "EVENT_QUEUE_STATUS", "position": 2, "estimated_wait_seconds": 1,
                                  "message": "Pangalawa ka sa pila - est. 1s"}))
     time.sleep(0.3)
-    reply = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
-             "Balikan natin ang binasa mo. Ano ang unang hakbang?").split(" ")
+    reply = ("I can't give you the answer itself, but I will help you find it! "
+             "Let's go back to what you read. What is the first step?").split(" ")
     for i, word in enumerate(reply):
         ev = {"event": "EVENT_AI_TOKEN_STREAM", "request_id": rid, "token": word + " ",
               "is_finished": i == len(reply) - 1}

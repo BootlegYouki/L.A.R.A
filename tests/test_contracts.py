@@ -17,11 +17,11 @@ class TestContracts(unittest.TestCase):
             prompt = f.read()
         for placeholder in ("{reply_language}", "{lesson_chunks}"):
             self.assertEqual(prompt.count(placeholder), 1, f"prompt needs exactly one {placeholder}")
-        decline = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
-                   "Balikan natin ang binasa mo. Ano ang unang hakbang?")
+        decline = ("I can't give you the answer itself, but I will help you find it! "
+                   "Let's go back to what you read. What is the first step?")
         self.assertIn(decline, prompt)
         with open("scripts/mock_hub.py", "r", encoding="utf-8") as f:
-            self.assertIn("Ano ang unang hakbang?", f.read())
+            self.assertIn("What is the first step?", f.read())
         with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
             self.assertIn(decline, f.read())
 
