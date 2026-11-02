@@ -212,6 +212,24 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test
 
+      # The real Hub must answer like the contract, not only the mock. Add a test here when the step
+      # that builds its routes merges; a Hub change that drifts from the contract then fails.
+      - name: Contract Tests Against the Real Hub
+        if: steps.check_server.outputs.has_server == 'true'
+        run: |
+          cargo build --manifest-path server/backend/Cargo.toml --bin lara-hub
+          export LARA_DATA_DIR="$(mktemp -d)"
+          LARA_TEST_SEED=1 server/backend/target/debug/lara-hub > "$LARA_DATA_DIR/hub.log" 2>&1 &
+          for i in $(seq 30); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
+          T=tests.test_mock_hub.TestMockHub
+          LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest -v \
+            $T.test_requires_bearer_token \
+            $T.test_login_rate_limit_and_register_checks \
+            $T.test_admin_login_is_hub_pc_only \
+            $T.test_unknown_route_is_route_not_found \
+            $T.test_bad_websocket_token_closes_with_4401 \
+            || { cat "$LARA_DATA_DIR/hub.log"; exit 1; }
+
       - name: Set up Node.js
         if: steps.check_server.outputs.has_ui == 'true'
         uses: actions/setup-node@v4
