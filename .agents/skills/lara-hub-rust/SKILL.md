@@ -40,7 +40,7 @@ Read `AGENTS.md` and `server/AGENTS.md` first, then the contract you implement. 
 * Do not hand-write Range parsing. `tower_http::services::ServeFile` and `ServeDir` handle a single `Range` request with `206 Partial Content` and `Content-Range`, and answer `416` for multi-range requests, which players do not send.
 * The cap is **per client** (per token), not per connection. Wrap the response body in a stream that sleeps between chunks to hold the client at 2.0 MB/s, with one shared bucket per token. Test two streams from one learner and 20 learners at once.
 * Media routes accept `?token=` because HTML5 video cannot send headers. Only media routes do.
-* Downloads of handouts and the AI model file must also honor Range so an interrupted transfer resumes.
+* Downloads of handouts must also honor Range so an interrupted transfer resumes.
 
 ## 4. Auth
 

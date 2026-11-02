@@ -23,8 +23,8 @@ All AI agents and contributors must follow these rules.
 
 * **HTTP REST & File Engine (Port 8080):**
   * Serves the Captive Download Portal at `http://<hub-ip>:8080/download`.
-  * Handles binary downloads (APKs, desktop installers, GGUF models, PDFs).
-  * Handles homework photo uploads (`POST /api/assignments/{id}/submit`) and the opt-in AI model download (`GET /api/model/file`, resumable with HTTP Range).
+  * Handles binary downloads (APKs, desktop installers, PDFs).
+  * Handles homework photo uploads (`POST /api/assignments/{id}/submit`).
 * **Realtime Event Broker (Port 8081):**
   * WebSocket channel for low-latency state synchronization.
   * Handles live quiz starts, countdowns, enrollment notifications, stream pushes, and Hub-assisted AI token streaming.

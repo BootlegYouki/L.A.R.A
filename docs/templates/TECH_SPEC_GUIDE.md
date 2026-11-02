@@ -26,7 +26,7 @@ A good spec for humans and a good spec for agents are the same thing, taken a li
 6. **Offline and sync are explicit.** What is stored locally, the `sync_status` lifecycle, the cursor and transaction rule from `rules/database-and-sync.md`, and what each screen or service does with no Hub. "Handled gracefully" is not an answer.
 7. **The build order is written.** The team works one issue at a time in step order, so the spec lists the order, what each step creates, and which earlier step it reuses. A later step never re-creates something an earlier step owns (a shared interface, a DB entity); it imports it by the name in check 4.
 8. **Every sprint item is testable.** Each deliverable has a command or a manual check that proves it, against the mock hub first. If you cannot say how you would prove it, it is not specified yet.
-9. **Risks have an owner and a date.** Spikes (weak-phone memory, Tauri sidecar, Rust SSE) are scheduled, not "to be investigated".
+9. **Risks have an owner and a date.** Spikes (weak-phone memory, Hub AI streaming, Rust SSE) are scheduled, not "to be investigated".
 10. **Non-goals are written.** What this team is deliberately not building, so an agent does not helpfully add it.
 
 ## Writing it so an AI can use it

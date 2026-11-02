@@ -13,10 +13,10 @@
 | 2 | FR-1.0 to FR-1.4, §6.2 sync, §3.1 (3) WebSocket | #42, #44, #6, #7, #43, #121 |
 | 3 | FR-2.1 to FR-2.4, FR-3.1 to FR-3.8 | #53, #10, #8, #54, #122 |
 | 4 | FR-4.1 to FR-4.8, FR-5.2, §10 disaster recovery | #61, #12, #11, #13, #21 |
-| 5 | §5.0, §5.4, FR-4.3 (Hub side), §1.1 admin console | #14, #16, #66, #101 |
+| 5 | §5.0, §5.4, FR-4.3 (Hub side), §1.1 admin console | #14, #16, #66 |
 | 6 | §8, §10 load | #17 |
 
-**Non-goals (must not be built):** client screens; a Node backend, Prisma or any ORM; cloud sync, telemetry, crash reporting or update checks; a second admin account; per-grade AI prompts; grade categories, weights, rubrics or quarters; AI grading of photos; learners posting to the stream; deleting users, classrooms or graded rows; exporting learner data anywhere but a USB drive on the Hub PC; on-device inference (the Hub only serves the model file); seed accounts outside tests.
+**Non-goals (must not be built):** client screens; a Node backend, Prisma or any ORM; cloud sync, telemetry, crash reporting or update checks; a second admin account; per-grade AI prompts; grade categories, weights, rubrics or quarters; AI grading of photos; learners posting to the stream; deleting users, classrooms or graded rows; exporting learner data anywhere but a USB drive on the Hub PC; client inference or model downloads; seed accounts outside tests.
 
 ## 2. Architecture
 One process on the Hub PC. The Tauri window starts the backend library on its own Tokio runtime; the `lara-hub` binary runs the same library headless (development, CI, tests).
@@ -79,9 +79,9 @@ server/backend/
   src/models/         wire types per area (quiz.rs, classroom.rs, sync.rs, ...). No SQL
   src/routes/         one file per area: auth, admin, classrooms, sync, topics, announcements, materials,
                       video_stream, assignments, private_comments, quizzes, quiz_control, quiz_submit,
-                      export, backup, model, portal. Guards and calls only
+                      export, backup, portal. Guards and calls only
   src/websocket/      mod.rs (listener, handshake), broker, events, presence, quiz_hub, ai_stream
-  src/services/       class_access, grading_engine, document_parser, gradebook_exporter, backup_manager, model_file
+  src/services/       class_access, grading_engine, document_parser, gradebook_exporter, backup_manager
   src/db/             mod.rs (connect, migrate, hub_meta), sync_revisions.rs, one repository file per area
   src/db/migrations/  001_initial_schema.sql, then 00N_*.sql. Never edit an applied file
   src/storage/        file layout, streamed uploads. No DB access
@@ -143,7 +143,6 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `POST /api/materials` | `routes/materials.rs`, `storage/*`, `document_parser` | 413 `FILE_TOO_LARGE` over 250 MB | Temp file deleted; nothing committed |
 | `/api/materials/{id}` PATCH/DELETE, `/download`, `/chunks` | `routes/materials.rs` | 404 | Range resume |
 | `/api/materials/{id}/stream` | `routes/video_stream.rs`, `BandwidthLimiter` | 404; 416 | Bucket released |
-| `/api/model`, `/api/model/file` | `routes/model.rs` | `available: false`; 404 no model; 416 | Range resume; client checks `sha256` |
 | `/api/assignments`, `/{id}`, `/{id}/submissions` | `routes/assignments.rs` | 404 (archived counts as missing) | Delete archives |
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
 | `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10) | Old file kept until the new one commits |
@@ -169,7 +168,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 * **Pull:** `pull_page` in one read transaction: `seq > cursor`, `classroom_id` in the caller's visible classes (teacher: teaches; learner: `ACTIVE`), and `student_id` null, the caller, or a class the caller teaches. Latest revision per entity, rows loaded as `models` types, `users` as `PublicUser` (own LRN; teachers also their roster's). `reset` on `hub_id`/`sync_epoch` mismatch, then cursor 0. Learners never get `DRAFT` quizzes or held scores. Visibility changes: Q3.
 * **`sync_status` lifecycle:** the Hub never stores it; it decides it. Client `QUEUED_FOR_SYNC` → push or multipart submit → receipt `SYNCED` (stored, or already stored by the same author) or `REJECTED` + reason. An id that exists with another author is `REJECTED` `FORBIDDEN`.
 * **Epoch:** restore and tombstone pruning bump `sync_epoch` in the same transaction. Pruning is not scheduled (Q11).
-* **When a Hub dependency fails:** model missing or `llama-server` crashed → `available: false`, `AI_NOT_AVAILABLE`, dashboard warning, restart with backoff, all else keeps serving. USB removed → export or backup error, no partial file. Port bind failure → `PortHealth` shows it; other listeners still run. DB busy past 5 s → error envelope (code Q10), never a panic. Stuck socket → dropped by `Broker`.
+* **When a Hub dependency fails:** model missing or `llama-server` crashed → `AI_NOT_AVAILABLE`, dashboard warning, restart with backoff, all else keeps serving. USB removed → export or backup error, no partial file. Port bind failure → `PortHealth` shows it; other listeners still run. DB busy past 5 s → error envelope (code Q10), never a panic. Stuck socket → dropped by `Broker`.
 
 ## 8. Code Patterns
 **Handler: guard, short transaction with revision, emit after commit.**
@@ -243,7 +242,7 @@ async fn unknown_route_is_route_not_found() {
 * **Write lock across I/O** (upload body, WebSocket send, `llama-server`) stalls every learner. Slow work first, then the transaction, then emit.
 * **Axum's 2 MB body limit** rejects uploads silently. Raise `DefaultBodyLimit` on upload routes only; never `field.bytes()` a video.
 * **Hub PC check** for admin setup and admin login (`auth::is_hub_pc`) needs `into_make_service_with_connect_info::<SocketAddr>()`, then a loopback peer **and** no `Cf-Connecting-IP` header: `cloudflared` also connects from loopback.
-* **`?token=` in logs:** log the path only. Accept `?token=` only on `/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file`, `/api/model/file`.
+* **`?token=` in logs:** log the path only. Accept `?token=` only on `/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file`.
 * **Blocking the runtime:** argon2 (40 logins at once), PDF extraction and spreadsheet writing run in `spawn_blocking`.
 * **Wrong beacon IP:** virtual adapters (VirtualBox, Hyper-V, VPN). Pick the interface with the default route, show it in the window, let the admin choose if several.
 * **Windows Public profile** blocks 8080/8081/8888. Installer adds the rules; `PortHealth` detects and offers the fix.
@@ -282,12 +281,11 @@ Four issues' `Depends on` lines disagree with their step numbers (2.1 needs 2.4;
 | 5.1 | #14 | `ai/llama_server_manager.rs`, `ai/queue.rs`, `websocket/ai_stream.rs`, **`ai/guardrails.rs` `check_quiz_lockout`** so AI is never open during a quiz (Q5) | 2.4, 1.5 |
 | 5.2 | #16 | `ai/prompt.rs`, the rest of `ai/guardrails.rs` | 5.1, 3.1 |
 | 5.3 | #66 | `network/health.rs`, `ui/src/pages/Dashboard.tsx` | 2.4, 5.1 |
-| 5.4 | #101 | `routes/model.rs`, `services/model_file.rs` | 1.5, 3.2, model-file contract change |
 | 6.1 | #17 | 40-device load test and report | Sprint 5 (Q12) |
 
 ## 11. Dependencies on Other Teams
 * **Clients** use `scripts/mock_hub.py` until each step merges to `staging`; nothing we build waits for them. Integration day: their apps against the real Hub; differences become bugs.
-* **Lead:** answers before the steps that need them (Q3, Q4, Q5, Q7 before 1.2 to 2.2; Q13 before 2.3; Q1 and Q17 before 4.1); the model-file `contract-change` before 5.4.
+* **Lead:** answers before the steps that need them (Q3, Q4, Q5, Q7 before 1.2 to 2.2; Q13 before 2.3; Q1 and Q17 before 4.1)..
 * **Desktop:** none; we reuse `design-system/desktop/tailwind.theme.ts`, not their code. **Mobile:** a budget phone on integration day for the Range and 2 MB/s checks (3.2).
 
 ## 12. Risks and Unknowns

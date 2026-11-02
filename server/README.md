@@ -83,7 +83,6 @@
 * Serves:
   * `LARA-Student.apk` (the Android client, for learners and teachers)
   * `LARA-Desktop-Setup.exe` and `.deb` (Desktop client)
-  * Active candidate `.gguf` model weights for laptops and ≥6GB RAM phones.
 
 ### 2.3 Delta-Sync Protocol & Class Enrollment Gate
 * Unique 6-character Class Code generator (e.g. `K7M4QX`, no 0/O/1/I).
@@ -98,7 +97,7 @@
 * Hard Quiz Lockout: Rejects any AI inference calls originating from students with active quiz attempts (`HTTP 403 / QUIZ_IN_PROGRESS`).
 
 ### 2.5 Central SLM Multi-Slot Queue Manager
-* Buffers concurrent hint requests from budget phones (< 6GB RAM).
+* Buffers concurrent hint requests from all phones, laptops and lab PCs.
 * Spawns `llama-server` with `--cont-batching -np 4 -c 2048`.
 * Emits real-time queue position updates (`"Pangalawa ka sa pila - est. 4s"`) over WebSockets.
 

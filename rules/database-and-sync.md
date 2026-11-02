@@ -108,6 +108,4 @@ The client applications are offline-first by default:
 * **Zero blocking screens:** launched without Wi-Fi or away from the Hub, the app never shows a blocking "No Connection" dialog.
 * **Full local read access:** browse enrolled classrooms, read announcements and lesson text chunks, view cached PDFs and play downloaded videos.
 * **Offline homework capture:** photos taken at home are stored with `sync_status = 'QUEUED_FOR_SYNC'` and upload when the Hub is reachable.
-* **Graceful AI layering:**
-  * Capable devices (mobile with at least 6 GB RAM, laptops with at least 4 GB RAM) with the model installed: the tutor works 100% offline.
-  * Low-RAM devices or no model: everything else works, and the AI sheet says *"L.A.R.A AI is available when connected to the classroom Hub."*
+* **Tutor offline state:** when the Hub is unreachable, show *"The AI tutor needs the classroom Hub"*. Past chats remain readable locally, and everything else works offline. Remote/Suspension Mode carries the tutor stream through the Hub tunnel.

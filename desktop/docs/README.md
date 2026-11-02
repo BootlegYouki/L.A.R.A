@@ -12,7 +12,7 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 | `realtime.md` | WebSocket client, handshake, reconnect, event handling | Sprint 2 |
 | `video_player.md` | Range streaming with `?token=`, disk download, local playback | Sprint 3 |
 | `quiz_runner.md` | Countdown with server offset, auto-submit, offline finish | Sprint 4 |
-| `sidecar_llama.md` | Sidecar permissions, RAM check, Hub fallback, prompt building | Sprint 5 |
+| `ai_chat.md` | Hub chat client, token stream, quiz lockout | Sprint 5 |
 | `ux_audit.md` | Section 8 checklist results and fixes | Sprint 6 |
 
 ## What every document must include
