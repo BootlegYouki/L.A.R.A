@@ -380,6 +380,12 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(room["name"], "Science 4A")
         self.assertIsNotNone(room["archived_at"])
 
+        jose_id = room["co_teacher_ids"][0]
+        call(BASE, "DELETE", f"/api/classrooms/{CLASSROOM}/teachers/{jose_id}", None, self.teacher)
+        rows = [c for c in self.pull(jose)["classrooms"] if c["id"] == CLASSROOM]
+        self.assertEqual([c["co_teacher_ids"] for c in rows], [[]], "the removed co-teacher learns they left the class")
+        self.assertEqual(self.pull(jose)["announcements"], [], "and gets nothing else of it")
+
     @needs_mock
     def test_admin_is_its_own_account_and_setup_runs_once(self):
         status, body, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "X", "pin": "9999"})
