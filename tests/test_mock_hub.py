@@ -361,7 +361,10 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "REMOVED")
         ana_ws.close()
         self.assertEqual(call(BASE, "GET", "/api/classrooms", token=ana)[1], [])
-        self.assertEqual(self.pull(ana)["announcements"], [])
+        pulled = self.pull(ana)
+        self.assertEqual(pulled["announcements"], [])
+        self.assertEqual([e["status"] for e in pulled["enrollments"] if e["student_id"] == sid], ["REMOVED"],
+                         "the removed learner still receives their own REMOVED enrollment")
 
         admin = login(BASE, "ADMIN-0001")
         call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)

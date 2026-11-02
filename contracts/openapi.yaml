@@ -426,6 +426,8 @@ paths:
         If they do not match the Hub (different school Hub, restored backup), the response has `reset: true`: wipe the
         mirrored tables (keep rows still QUEUED_FOR_SYNC) and apply the response, which then starts from cursor 0.
         Commit the whole response and the new cursor in ONE local transaction.
+        The response also carries the caller's own enrollment rows for classes they no longer see, so a learner who was
+        removed receives their `REMOVED` enrollment on the next pull and stops showing that class.
       tags: [sync]
       requestBody:
         required: true

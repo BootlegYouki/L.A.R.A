@@ -648,7 +648,9 @@ def sync_pull(req):
 
     latest = {}
     for e in STATE.ledger:
-        if e["seq"] <= cursor or e["table"] == "users" or e["classroom_id"] not in ids:
+        own_enrollment = e["table"] == "enrollments" and e["student_id"] == req.user["id"]
+        # A removed learner can no longer see the class but must still receive their REMOVED enrollment.
+        if e["seq"] <= cursor or e["table"] == "users" or (e["classroom_id"] not in ids and not own_enrollment):
             continue
         if e["student_id"] and e["student_id"] != req.user["id"] and not teacher:
             continue
