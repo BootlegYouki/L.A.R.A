@@ -143,17 +143,17 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 
 ### 5.2 Behavior (every model, every path)
 0. **One prompt for every path:** `contracts/ai/socratic_system_prompt.txt`. The Hub, mobile and desktop load that file byte for byte and never write their own; changing it is a `contract-change` PR followed by a re-run of the evaluation.
-1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
+1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
-4. **Reply in the learner's chosen language** (English or natural Filipino/Taglish).
+4. **Reply in English** for the pilot, even to Filipino or Taglish messages. Filipino replies are deferred until a model passes the evaluation in Filipino (decided 2026-11-01, #73). The app interface stays English and Filipino.
 5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
 MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. There may be two choices: a smarter model on the Hub and a smaller one for devices that can run it. Each must pass the same evaluation; if the small one does not, devices use the Hub.
 
 ### 5.4 Evaluation requirement
-Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, Filipino and Taglish, run on the actual Hub machine. Do not claim "good enough" without those numbers.
+Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, run on the actual Hub machine. Do not claim "good enough" without those numbers.
 
 ---
 

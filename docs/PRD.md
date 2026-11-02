@@ -271,7 +271,7 @@ flowchart TD
 ### 5.3 Bilingual Localization & Persona Design
 * **Interface Language:** Toggle between **English** and **Filipino** in Settings.
 * **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide adapted for Filipino learners (Grades 1 to 12).
-* **Language Agility:** L.A.R.A. AI understands and responds in the student's selected language (English or natural conversational Filipino / Taglish standard in DepEd classrooms).
+* **Reply Language:** For the pilot, L.A.R.A. AI replies in English, even when the learner writes in Filipino or Taglish. Filipino replies return once a model passes the evaluation in Filipino (the small models tested could not do it without leaking answers). The app interface stays English and Filipino.
 * **Interaction Trigger:** Located inside the Material Viewer as a floating button: **"Magtanong kay L.A.R.A. AI" / "Ask L.A.R.A. AI"**.
 * **Grounding:** The prompt binds the pre-extracted text of the active lesson document.
 
