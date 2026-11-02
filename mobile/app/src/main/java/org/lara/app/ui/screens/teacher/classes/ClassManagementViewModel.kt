@@ -21,7 +21,8 @@ data class ClassManagementState(val busy: Boolean = false, val error: Int? = nul
 
 class ClassManagementViewModel(private val container: AppContainer, private val userId: String,
     private val reachable: StateFlow<Boolean>, private val expired: () -> Unit) : ViewModel() {
-    val classrooms = container.classrooms.classrooms(viewModelScope)
+    val classrooms = container.managedClasses.classrooms(viewModelScope)
+    val teacherNames = container.teacherNames.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val mutable = MutableStateFlow(ClassManagementState())
     val state = mutable.asStateFlow()
     private val api = container.teacherClasses(userId)
@@ -72,6 +73,8 @@ class ClassManagementViewModel(private val container: AppContainer, private val 
                     val id = state.value.selected
                     if (id != null) refresher.refreshIfActive(id)
                 }
+                // Classroom receipts contain teacher IDs; sync supplies their public display names.
+                container.sync.pull(userId)
                 val id = state.value.selected
                 if (id != null && rosterJob == null) {
                     rosterJob = viewModelScope.launch { container.enrollments.roster(id, viewModelScope).collect { rows ->

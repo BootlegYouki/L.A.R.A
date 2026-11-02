@@ -27,8 +27,8 @@
 > Task :app:generateDebugLintReportModel
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
 > Task :app:generateDebugUnitTestLintModel
-> Task :app:lintAnalyzeDebugAndroidTest
 > Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
 > Task :app:lintAnalyzeDebugUnitTest
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:mergeDebugShaders UP-TO-DATE
@@ -38,15 +38,12 @@
 > Task :app:compressDebugAssets UP-TO-DATE
 > Task :app:desugarDebugFileDependencies UP-TO-DATE
 > Task :app:dexBuilderDebug
-
-> Task :app:lintReportDebug
-Wrote HTML report to file:///C:/Users/moen/Documents/ChatGPT/LARA/mobile/app/build/reports/lint-results-debug.html
-
-> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
-> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:lintReportDebug UP-TO-DATE
 > Task :app:lintDebug
 > Task :app:lint
-> Task :app:mergeDebugJavaResource
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
 > Task :app:checkDebugDuplicateClasses UP-TO-DATE
 > Task :app:mergeExtDexDebug UP-TO-DATE
 > Task :app:mergeLibDexDebug UP-TO-DATE
@@ -61,5 +58,5 @@ Wrote HTML report to file:///C:/Users/moen/Documents/ChatGPT/LARA/mobile/app/bui
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 1m 33s
-49 actionable tasks: 12 executed, 37 up-to-date
+BUILD SUCCESSFUL in 1m 40s
+49 actionable tasks: 10 executed, 39 up-to-date

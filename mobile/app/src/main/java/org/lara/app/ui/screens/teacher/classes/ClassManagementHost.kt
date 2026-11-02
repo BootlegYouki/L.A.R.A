@@ -49,6 +49,7 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
 @Composable
 private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit) {
     val cached by model.classrooms.collectAsStateWithLifecycle()
+    val teacherNames by model.teacherNames.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
     val selected = classes.find { it.id == state.selected }
@@ -129,7 +130,8 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                 if (!settingsTab || !row.canManage(userId, true)) {
                 item { Text(stringResource(R.string.classes_teachers), style = MaterialTheme.typography.titleLarge) }
                 items(row.teacherIds().distinct(), key = { "teacher:$it" }) { id ->
-                    ClassPersonCard(id, stringResource(if (id == row.teacherId) R.string.classes_owner_role else R.string.classes_co_role)) {
+                    ClassPersonCard(teacherNames.find { it.id == id }?.full_name ?: id,
+                        stringResource(if (id == row.teacherId) R.string.classes_owner_role else R.string.classes_co_role)) {
                     if (id != row.teacherId && row.canManage(userId, true)) OutlinedButton(enabled = enabled,
                         onClick = { target = id; form = "removeTeacher" }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                         Text(stringResource(R.string.classes_remove_teacher))
@@ -157,7 +159,9 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
     }
     form?.let { action ->
         val editing = action in setOf("create", "rename", "add")
-        AlertDialog(onDismissRequest = { form = null }, title = { PopupLanguage { Text(stringResource(when(action) {
+        AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
+            titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
+            shape = LaraShapes.extraLarge, title = { PopupLanguage { Text(stringResource(when(action) {
             "create" -> R.string.classes_create; "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
             "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
         })) } }, text = { PopupLanguage { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {

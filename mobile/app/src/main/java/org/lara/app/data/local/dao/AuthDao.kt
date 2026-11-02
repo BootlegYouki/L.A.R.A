@@ -7,8 +7,12 @@ import androidx.room.Upsert
 import org.lara.app.data.local.entities.UserEntity
 import org.lara.app.data.local.entities.SyncStateEntity
 
+data class CachedTeacherName(val id: String, val full_name: String)
+
 @Dao
 abstract class AuthDao {
+    @Query("SELECT id, full_name FROM users WHERE role = 'TEACHER'")
+    abstract fun observeTeacherNames(): kotlinx.coroutines.flow.Flow<List<CachedTeacherName>>
     @Query("SELECT * FROM users WHERE id = :id")
     abstract suspend fun user(id: String): UserEntity?
     @Query("SELECT value FROM sync_state WHERE `key` = 'current_user_id'")

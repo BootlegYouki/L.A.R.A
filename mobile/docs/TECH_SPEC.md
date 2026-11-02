@@ -294,7 +294,7 @@ Default: build against `python3 scripts/mock_hub.py`; switch on integration day.
 | [MOBILE 2.3] | `123456789013` joins with `K7M-4QX`, teacher approves, class unlocks without refresh |
 | [MOBILE 2.4] | Join request opens the sheet on the teacher phone; Accept unlocks the learner |
 | [MOBILE 2.6] | Language switch applies without restart and survives relaunch; sign out with a queued row warns first |
-| [MOBILE 2.7] | Class created on phone is joinable by code; removed learner loses the class after sync |
+| [MOBILE 2.7] | Class created on phone is joinable by code; removed learner loses the class after sync (shared mock visibility regression currently deferred; see `class-management.md`) |
 
 ## 14. Open Questions
 Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
