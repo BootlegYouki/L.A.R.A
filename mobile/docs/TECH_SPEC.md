@@ -13,7 +13,7 @@
 | 2 | 2.1 nav shell, 2.2 auth, 2.3 join, 2.4 approvals, 2.5 sync, 2.6 settings, 2.7 class management | FR-1.1 to FR-1.4, PRD 6.2 |
 | 3 | 3.1 stream and PDF, 3.2 camera, 3.3 video, 3.4 announce, 3.5 authoring, 3.6 review, 3.7 private comments and To-do | FR-2.x, FR-3.x |
 | 4 | 4.1 quiz, 4.2 controller, 4.3 offline queue, 4.4 My Work, 4.5 quiz builder, 4.6 gradebook | FR-4.x, FR-5.1 |
-| 5 | 5.1 router, 5.2 tutor sheet, 5.3 prompt and lockout, 5.4 JNI, 5.5 model download | PRD 5.x |
+| 5 | 5.1 Hub chat client, 5.2 tutor sheet, 5.3 quiz lockout | PRD 5.x |
 | 6 | 6.1 profiling, 6.2 UX audit, 6.3 remote Hub screen | PRD 3.2, 8 |
 
 **Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); a gradebook export on the phone (the Hub never sends learner data files to a client, server spec Q6); admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
@@ -34,7 +34,7 @@ Clean Architecture with MVVM and unidirectional state. Single Gradle module `app
 
 **Entry points:** `MainActivity` (single activity, `LaraTheme`, root `NavHost`), `LaraApp : Application` (builds `AppContainer`, schedules sync), `DeltaSyncWorker`, `HomeworkUploadWorker`, `QuizPushWorker`.
 
-**Import rules (must):** `ui/*` imports `domain/*` only (plus `ui/*`); it must not import `data/local`, DAOs, entities, `data/remote` or OkHttp. ViewModels talk to repository interfaces. Only `data/repository` and `data/sync` touch DAOs. Only `data/remote` touches OkHttp, `NsdManager`, sockets. Only `ai/` touches `cpp/` through `LlamaJniBridge`. No `!!`, no `Color(0xFF...)` in screens.
+**Import rules (must):** `ui/*` imports `domain/*` only (plus `ui/*`); it must not import `data/local`, DAOs, entities, `data/remote` or OkHttp. ViewModels talk to repository interfaces. Only `data/repository` and `data/sync` touch DAOs. Only `data/remote` touches OkHttp, `NsdManager`, sockets. Only the Hub builds prompts; `ai/` handles the Hub chat client and quiz lockout. No `!!`, no `Color(0xFF...)` in screens.
 
 ## 3. Key Decisions
 | Decision | Choice | Why | Rejected alternative |
@@ -68,8 +68,7 @@ data/remote/           HubClient, AuthApi and other *Api, RealtimeClient, dto/, 
 data/sync/             SyncRepository, DeltaSyncWorker, HomeworkUploadWorker, QuizPushWorker
 data/quiz/             QuizAttemptRepository (path named by [MOBILE 4.3])
 data/media/            DownloadManager (Save for Home)
-ai/                    HardwareChecker, InferenceRouter, SocraticPromptBuilder, QuizLockout, LlamaJniBridge, ModelDownloader
-cpp/                   llama-jni.cpp, CMakeLists.txt (arm64-v8a only)
+ai/                    HubChatClient, QuizLockout
 res/values, res/values-tl   strings in parity; res/font Nunito; Phosphor drawables bundled
 mobile/docs/           one doc per module (see mobile/docs/README.md)
 ```
@@ -90,7 +89,7 @@ mobile/docs/           one doc per module (see mobile/docs/README.md)
 | `QuizAttemptRepository` | class | Attempt rows, answers saved per change, `hasInProgressAttempt(): Flow<Boolean>`, queue and finish |
 | `QuizSessionManager` | class | Countdown from `started_at` and clock offset; emits remaining time and expiry |
 | `QuizLockout` | class | Exposes `Flow<Boolean>` from `hasInProgressAttempt()`; gate for any AI UI or call |
-| `InferenceRouter`, `HardwareChecker` | classes | RAM gate and Hub or local choice |
+| `HubChatClient` | class | Sends learner messages and renders the Hub queue and token stream |
 | `SyncScheduler` | class | Enqueues unique one-time and periodic WorkManager work; the only caller of `WorkManager` for sync |
 | `ClassroomRepository`, `EnrollmentRepository`, `ClassManagementRepository`, `StreamRepository`, `PrivateCommentRepository`, `GradingRepository`, `GradebookRepository`, `QuizRepository`, `QuizControllerRepository`, `QuizAuthoringRepository`, `ClassworkAuthoringRepository` | repository interfaces in `domain/`, impls in `data/repository/` | One per feature area named in section 6; created in the step that first needs it (section 10) |
 | `UiState` | sealed interface per screen | `Loading`, `Content`, `Empty`, `Offline` as needed |
@@ -117,7 +116,6 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `GET /api/materials/{id}/download` | `DownloadManager` | 404 mark file gone | Use `local_file_path` copy |
 | `GET /api/materials/{id}/chunks` | via pull (`material_chunks`) | 404 no text: say tutor unavailable for the file | Room |
 | `GET /api/materials/{id}/stream` | Media3 `OkHttpDataSource` | 401 relogin; 416 restart range | Player offline state; downloaded copy plays |
-| `GET /api/model`, `GET /api/model/file` | `ModelDownloader` | 404 hide card; 416 restart from 0; sha256 mismatch retry once | Resume with `Range` from `.part` length |
 | `POST /api/assignments`, `PATCH/DELETE .../{id}` | `ClassworkAuthoringRepository` | 403 | Needs Hub |
 | `POST /api/assignments/{id}/submit` | `HomeworkUploadWorker` | 413 `FILE_TOO_LARGE` recompress; 403 | Row stays `QUEUED_FOR_SYNC`, same `submission_id` on every retry |
 | `GET/POST /api/assignments/{id}/private-comments` | `PrivateCommentRepository` | 403 | POST is outbox via sync push; GET from Room |
@@ -137,7 +135,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `EVENT_GRADE_CONFIRMED` | `QuizAttemptRepository` | n/a | Next pull carries score (null while held) |
 | `EVENT_PRESENCE` (teacher) | `QuizControllerRepository` | n/a | Polling `GET /api/quizzes/{id}/results` |
 | `EVENT_QUIZ_SUBMIT` | not used (REST submit only) | n/a | n/a |
-| `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `InferenceRouter` (Hub path) | `EVENT_ERROR` `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL` keep typed text, `AI_NOT_AVAILABLE` show unavailable state | Socket drop: offline state, keep conversation so far |
+| `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `HubChatClient` | `EVENT_ERROR` `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL` keep typed text, `AI_NOT_AVAILABLE` show unavailable state | Socket drop: offline state, keep conversation so far |
 
 ## 7. Data and Offline Behavior
 Source of truth: `contracts/schema/client_offline.sql` and `rules/database-and-sync.md`. Details in `mobile/docs/room_schema.md` and `sync_worker.md`.
@@ -158,7 +156,7 @@ Source of truth: `contracts/schema/client_offline.sql` and `rules/database-and-s
 | Join class, class management, post announcement, authoring, grading, quiz start/close | Action disabled with helper line (not queued) |
 | Comments, private comments, homework photo | Saved `QUEUED_FOR_SYNC` with queued badge |
 | Quiz (learner) | Continues from local timer and Room answers; finish queues |
-| Tutor | Hub unreachable and no local model: "L.A.R.A AI is available when connected to the classroom Hub"; local model works fully offline |
+| Tutor | Hub unreachable: "The AI tutor needs the classroom Hub"; past chats remain readable offline |
 | Gradebook, results | Cached from Room |
 
 ## 8. Code Patterns
@@ -195,7 +193,7 @@ fun TutorEntry(lockout: QuizLockout) {
     if (locked) DisabledTutorTab(reason = R.string.tutor_locked_quiz) else SocraticBottomSheetHost()
 }
 ```
-`InferenceRouter` also checks `lockout.active.first()` before any request and handles `QUIZ_IN_PROGRESS`.
+`HubChatClient` also checks `lockout.active.first()` before any request and handles `QUIZ_IN_PROGRESS`.
 
 **Screen UiState:**
 ```kotlin
@@ -221,10 +219,9 @@ sealed interface StreamUiState {
 | WebSocket reconnect storm or blocking error | Backoff 1, 2, 4, max 10 s; surface only a status pill |
 | Android kills app mid-quiz | Save answers to Room on every change; rebuild timer from stored `started_at` |
 | Room cannot express CHECK or partial indexes | Enforce in repository (for example one attempt per quiz) |
-| `totalMem` reads below printed RAM | Measure real phones and record the gate in `mobile/docs/ai_routing.md` ([MOBILE 5.1]) |
 | Camera EXIF rotation | Apply EXIF orientation before compress; delete full-size original after the compressed copy exists |
 | Tokens and answer keys in logs | No logging of tokens, PINs, LRNs, bodies; teacher quiz draft never logged |
-| Heap while downloading models, videos | Stream with fixed buffer; verify SHA-256 by streaming |
+| Heap while downloading videos | Stream with fixed buffer |
 
 ## 10. Build Order
 One open PR at a time. A later step imports the named piece; it never re-creates it.
@@ -254,14 +251,12 @@ One open PR at a time. A later step imports the named piece; it never re-creates
 | 21 | [MOBILE 4.4] | My Work screens | 3.2, 4.1 |
 | 22 | [MOBILE 4.5] | quiz builder (drafts live on the Hub as `DRAFT` quizzes) | 4.2 |
 | 23 | [MOBILE 4.6] | grades screens | 4.2, 3.6 |
-| 24 | [MOBILE 5.1] | `HardwareChecker`, `InferenceRouter` | 2.5 |
-| 25 | [MOBILE 5.3] | `SocraticPromptBuilder`, `QuizLockout` | 5.1, 4.1 |
-| 26 | [MOBILE 5.4] | `LlamaJniBridge`, `cpp/*` | 5.1 |
-| 27 | [MOBILE 5.5] | `ModelDownloader`, `ModelDownloadCard` | 5.1 |
-| 28 | [MOBILE 5.2] | `SocraticBottomSheet` | 5.1, 5.3 |
-| 29 | [MOBILE 6.1] | profiling report | Sprint 5 |
-| 30 | [MOBILE 6.2] | UX audit fixes | Sprint 5 |
-| 31 | [MOBILE 6.3] | remote Hub screen in discovery module | 1.2, 2.2 |
+| 24 | [MOBILE 5.1] | `HubChatClient` | 2.5 |
+| 25 | [MOBILE 5.3] | `QuizLockout` | 5.1, 4.1 |
+| 26 | [MOBILE 5.2] | `SocraticBottomSheet` | 5.1, 5.3 |
+| 27 | [MOBILE 6.1] | profiling report | Sprint 5 |
+| 28 | [MOBILE 6.2] | UX audit fixes | Sprint 5 |
+| 29 | [MOBILE 6.3] | remote Hub screen in discovery module | 1.2, 2.2 |
 
 Order deviates from numbers in three places (2.2 before 2.1, 4.3 before 4.2, 5.3 before 5.2); see section 14. Sprints 3 to 6 are rougher: open decisions are in sections 12 and 14.
 
@@ -270,8 +265,7 @@ Default: build against `python3 scripts/mock_hub.py`; switch on integration day.
 | Need | From | When |
 |---|---|---|
 | Teacher routes (classwork, quizzes, grading) real behavior | [SERVER 2.5], [SERVER 3.4], [SERVER 3.5], [SERVER 4.5] | Sprints 2 to 4; mock hub until merged |
-| AI evaluation results (model, device model) | [SERVER 1.5] | Before [MOBILE 5.2] (Dec 2026) |
-| Model file endpoint | [SERVER 5.4] | Before [MOBILE 5.5] |
+| Hub AI evaluation results | [SERVER 1.5] | Before [MOBILE 5.2] (Dec 2026) |
 | Tunnel hostname and WS exposure | [SERVER 6.2] | Before [MOBILE 6.3] |
 | Lead decisions in section 14 | Lead Developer | Before the step that needs each |
 
@@ -281,15 +275,13 @@ Default: build against `python3 scripts/mock_hub.py`; switch on integration day.
 | Heap under 250 MB on 3 to 4 GB phones (PDF, video, upload) | Mobile team | 2026-11-20 spike with [MOBILE 3.1] on a real phone | Smaller sampling, page lists, drop Coil for manual decode |
 | Transsion and realme kill WorkManager | Mobile team | 2026-11-27 on Infinix and realme with [MOBILE 2.5] | Expedited work plus visible "Sync now"; vendor auto-start guide |
 | NSD and UDP discovery reliability | Mobile team | 2026-11-13 (end of [MOBILE 1.2]) | Manual IP prominent; remembered Hub |
-| 6 GB RAM gate value from `totalMem` | Mobile team | 2026-12-04 with [MOBILE 5.1] | Hub-only for all phones |
-| llama.cpp JNI size and speed | Mobile team | 2026-12-18 | Ship Hub-only AI; JNI behind a flag |
 | Token storage via Keystore on old Android 8 devices | Mobile team | 2026-11-13 | Fall back to app-private prefs without wrapping (flag to Lead) |
 
 ## 13. Commands and Verification
 **Run (from `mobile/`):** `./gradlew test lint`, `./gradlew assembleDebug`. **From repo root:** `python3 scripts/mock_hub.py` (emulator host `10.0.2.2`, else PC LAN IP), `python3 scripts/verify_invariants.py`, `python3 -m unittest discover tests`. Seed accounts (PIN `1234`): `T-0001` (class code `K7M4QX`), `123456789012`, `123456789013`, `ADMIN-0001`. Quick check that the mock hub is up:
 `curl -s -X POST localhost:8080/api/auth/login -H 'content-type: application/json' -d '{"lrn_or_id":"T-0001","pin":"1234"}'` must return a token.
 
-**Unit tests:** DTO round trip, schema test, `applyPull` rollback, reset keeps queued rows, countdown math, lockout gate, prompt builder. **Instrumented against mock hub:** sync, discovery, upload, quiz offline. **Integration day:** same flows on the real Hub with WAN unplugged.
+**Unit tests:** DTO round trip, schema test, `applyPull` rollback, reset keeps queued rows, countdown math, lockout gate, Hub stream handling. **Instrumented against mock hub:** sync, discovery, upload, quiz offline. **Integration day:** same flows on the real Hub with WAN unplugged.
 
 | Item | Proof |
 |---|---|
@@ -311,7 +303,7 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 3. **No client-side draft store.** `POST /api/quizzes` already creates a `DRAFT` quiz on the Hub and `PATCH /api/quizzes/{id}` edits it while it is `DRAFT`, so the draft lives on the Hub. The builder keeps unsaved edits only in ViewModel memory, never in Room, files or prefs, and saving needs the Hub. `correct_answer` from `GET /api/quizzes/{id}` (owning teacher) is held in memory only and never logged.
 4. **Yes.** `hasInProgressAttempt()` lands in [MOBILE 1.3]; build [MOBILE 5.3] before [MOBILE 5.2].
 5. **Yes.** `QuizPushWorker` is thin expedited work calling `SyncRepository.pushQueued()`; [MOBILE 4.1] creates `QuizAttemptRepository`.
-6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; `ModelDownloader` stays in `ai/`. [MOBILE 6.1] writes its report to `docs/benchmarks/mobile_battery_memory_report.md` as the issue says (allowed by `rules/team-workflow-and-prs.md` 1.1.9).
+6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; the Hub chat client and quiz lockout stay in `ai/`. [MOBILE 6.1] writes its report to `docs/benchmarks/mobile_battery_memory_report.md` as the issue says (allowed by `rules/team-workflow-and-prs.md` 1.1.9).
 7. **Yes.** Keystore-wrapped `TokenStore`, not `EncryptedSharedPreferences`.
 8. **16 tables.** The contract wins over the issue text.
 12. **Accepted.** No `last_event_id`; the client relies on pull.
@@ -323,7 +315,7 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 11. **Error codes follow the server spec's calls** (`server/docs/TECH_SPEC.md` section 14: Q1 start codes, Q7 login limit, Q8 `ALREADY_EXISTS`, `QUIZ_CLOSED`). The client maps by HTTP status plus these codes and shows a kind generic message for anything else, until the `contract-change` PRs those calls name are merged.
 
 Still open (answer before the step named):
-14. [MOBILE 5.2] waits for [SERVER 1.5] results; the 6 GB gate is measured in [MOBILE 5.1].
+14. [MOBILE 5.2] waits for [SERVER 1.5] results; [MOBILE 5.1] provides the Hub chat client.
 
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons bundled; the only off-LAN path is the Hub's tunnel URL)

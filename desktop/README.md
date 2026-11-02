@@ -47,7 +47,7 @@
    python3 ../scripts/verify_invariants.py
    ```
 8. **Mandatory Documentation:** Every major feature PR must include updated architectural notes in [`desktop/docs/`](./docs/).
-9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error on launch. When disconnected from the school server, students must always be able to browse enrolled classes, read announcements, study lesson text chunks, and play downloaded videos completely offline. If the laptop has a downloaded GGUF model file, local Socratic AI via sidecar works 100% offline at home too; otherwise, AI queries indicate they unlock when connected to the classroom Hub.
+9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error on launch. When disconnected from the school server, students must always be able to browse enrolled classes, read announcements, study lesson text chunks, and play downloaded videos completely offline. When the Hub is unreachable, the tutor shows "The AI tutor needs the classroom Hub". Past chats remain readable offline. Remote/Suspension Mode carries the tutor stream through the Hub tunnel.
 
 
 ---
@@ -64,7 +64,7 @@
   * WebSockets: Native browser `WebSocket` connecting to Local Hub port 8081.
   * Discovery: Rust background thread for mDNS browsing (`_lara._tcp.local`) and UDP subnet broadcast listening on port 8888.
 * **Media Player:** HTML5 `<video>` element styled with design-system controls, supporting HTTP 206 Byte-Range streaming and offline local disk caching.
-* **Pluggable Desktop SLM:** Bundled `llama.cpp` sidecar (`llama-server` by default, so the stream has the same format as the Hub path; the Tech Spec records the final choice) run as a Tauri sidecar process for 100% offline on-device inference (MiniCPM5-2B, Qwen2.5, Llama 3.2) on laptops with **≥ 4GB RAM**.
+* **Hub AI Client:** Sends learner messages and renders queue status and streamed hints over WebSocket.
 * **Target Platforms:** Windows 10/11 (64-bit), Ubuntu/Debian Linux (DepEd lab PCs), and macOS.
 
 ---
@@ -91,10 +91,10 @@
   * **Live Quiz Submission Matrix:** real-time grid showing which learners are answering and their auto-graded scores.
   * **Gradebook:** matrix of learners by assignment and quiz, with points only.
 
-### 2.3 On-Device Socratic AI Sidecar
-* On student laptops and lab PCs with ≥ 4GB RAM, the desktop client executes candidate GGUF models locally via a spawned `llama.cpp` sidecar process.
-* Operates at high speeds (10 to 25 tokens/s) with zero network traffic.
-* If laptop RAM is < 4GB or model file is missing, automatically falls back to streaming tokens from the Local Hub over WebSockets.
+### 2.3 Hub Socratic AI Client
+* Every laptop and lab PC sends the learner's message over `EVENT_AI_CHAT_REQUEST` and renders `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`.
+* Only the Hub builds prompts and runs inference. Quiz lockout removes the chat UI during an active attempt.
+* When the Hub is unreachable, show "The AI tutor needs the classroom Hub".
 
 ---
 
@@ -116,12 +116,11 @@
 desktop/
 ├── src-tauri/
 │   ├── Cargo.toml                    # Rust dependencies (tauri, tokio, mdns, sql)
-│   ├── tauri.conf.json               # Window settings, permissions, sidecars
+│   ├── tauri.conf.json               # Window settings, permissions
 │   ├── build.rs
 │   └── src/
 │       ├── main.rs                   # Tauri application entrypoint
 │       ├── discovery.rs              # Rust mDNS & UDP broadcast scanner
-│       ├── sidecar_llama.rs          # llama.cpp sidecar process manager & IPC
 │       └── db.rs                     # Local SQLite migration scripts
 ├── src/
 │   ├── main.tsx                      # React root

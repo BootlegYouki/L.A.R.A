@@ -25,7 +25,7 @@ verification output under [evidence/41/](./evidence/41/).
 | `camerax.md` | Capture, orientation, JPEG under 800 KB, upload retry | Sprint 3 |
 | `video_player.md` | Media3 Range streaming, Save for Home | Sprint 3 |
 | `quiz_runner.md` | Countdown, auto-submit, offline finish, AI unmount | Sprint 4 |
-| `ai_routing.md` | RAM router, JNI bridge, prompt builder, lockout | Sprint 5 |
+| `ai_routing.md` | Hub chat client, token stream, quiz lockout | Sprint 5 |
 | `budget_device_benchmarks.md` | Heap and battery results on Infinix and realme | Sprint 6 |
 
 ## What every document must include

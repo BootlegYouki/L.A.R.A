@@ -3,7 +3,7 @@
 > **How to use this PRD:** it is the single source of *product behavior*. API shapes, events and the database live in [`../contracts/`](../contracts/) and win if they differ; visual rules live in [`design-system.md`](../design-system/design-system.md). Team Tech Specs describe *how* to build and must not redefine behavior here. Documentation map: [`README.md`](./README.md).
 
 
-**Project Title:** Offline LAN-Based Classroom Management System with Hybrid Socratic SLM Tutor and Paperless Assessment Engine 
+**Project Title:** Offline LAN-Based Classroom Management System with Hub Socratic SLM Tutor and Paperless Assessment Engine
 **Working Codename:** L.A.R.A. 
 **Document Version:** 1.4.0 
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
@@ -14,17 +14,17 @@
 ## 1. Executive Summary & Context
 
 ### 1.1 Project Overview
-L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an embedded, local Small Language Model (SLM). The model is chosen from the AI evaluation in `rules/socratic-ai-guardrails.md` section 5; **MiniCPM5-2B** is the baseline candidate.
+L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an Hub-hosted Small Language Model (SLM). The model is chosen from the AI evaluation in `rules/socratic-ai-guardrails.md` section 5; **MiniCPM5-2B** is the baseline candidate.
 
 The system operates across three interconnected applications:
 1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
-2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, bilingual localization, and optional on-device SLM execution.
+2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, bilingual localization, and Hub AI streaming.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It has the same learner and teacher features as the mobile app, laid out for a large screen.
 
 ### 1.2 The Philippine Context & Research Motivation
 * **High Smartphone Penetration vs. Absent Connectivity:** IDC and Canalys (2024) market reports demonstrate that Transsion Holdings (Infinix, TECNO, itel) dominates the Philippine smartphone market with a 37.3% share, followed by realme (13.3%) and Xiaomi. More than 50% of shipped phones are entry-level devices under $100 (~₱3,500–₱5,500). Filipino learners commonly have physical access to these household smartphones. However, persistent mobile data costs, lack of campus broadband, and rural network dead-zones render cloud-based LMS solutions (Google Classroom, MS Teams, Canvas) unusable.
 * **Teacher Financial & Logistical Burden:** Public school teachers routinely shoulder out-of-pocket expenses for paper and printing to produce daily worksheets, weekly formative tests, and quarterly summative assessments. A paperless, offline LAN assessment engine removes recurring reproduction expenses.
-* **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. Running an unoptimized 2B model on-device triggers out-of-memory (LMK/OOM) crashes. L.A.R.A. solves this via an adaptive hybrid architecture: the Local Hub executes the model for low-spec phones, while capable devices (≥6GB RAM) run 100% on-device.
+* **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. The Hub runs inference for every client, keeping model memory off phones and laptops.
 * **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s embedded SLM is engineered with strict Socratic system prompts, guiding learners step-by-step using teacher-provided materials without divulging final answers.
 
 ---
@@ -38,8 +38,8 @@ The system operates across three interconnected applications:
  * Creates class sections, distributes digitized modules and educational videos, conducts paperless quizzes, reviews homework photo submissions, and exports gradebook sheets directly to a USB flash drive.
 * **Learner Juan (Grade 4 Learner):**
  * Uses a family-owned budget Android phone (e.g., realme Note 50 or Infinix Smart 8 with 3GB/4GB RAM).
- * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets bilingual Socratic guidance from the AI tutor.
- * Takes his phone home where the app remains completely functional in disconnected mode.
+ * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets English Socratic guidance from the AI tutor.
+ * Takes his phone home where classroom content remains available offline and the tutor requires a reachable Hub.
 * **School Admin (ICT coordinator or principal's designee):**
  * Installs and runs the Hub on the school PC, creates teacher accounts, resets forgotten PINs, checks port health, and keeps the USB backup.
 
@@ -68,14 +68,14 @@ flowchart TD
  DroidRoom[("Room SQLite DB<br/>(Offline Cache)")]
  DroidCam["CameraX Module<br/>(Homework Photos)"]
  DroidMedia["Jetpack Media3<br/>(Hardware Video Player)"]
- DroidAI["Optional Local SLM<br/>(llama.cpp JNI - RAM ≥ 6GB)"]
+ DroidAI["Hub AI WebSocket Client"]
  end
 
  subgraph DesktopClient["Desktop Client (Tauri + React + TS + Tailwind)"]
  DeskUI["React + Tailwind UI<br/>(Bilingual: EN / FIL)"]
  DeskSQLite[("Local SQLite DB")]
  DeskVideo["HTML5 Video Player"]
- DeskAI["Local SLM (llama.cpp) or Hub Stream"]
+ DeskAI["Hub AI WebSocket Client"]
  end
  end
 
@@ -101,7 +101,6 @@ flowchart TD
  * Hosts:
  * `L.A.R.A.-Student.apk` (Android client)
  * `L.A.R.A.-Desktop-Setup.exe` / `.deb` (Desktop client)
- * Quantized model weight bundle (the GGUF chosen by the AI evaluation) for optional on-device AI. Clients fetch it from the Hub with HTTP Range (`GET /api/model` for its name, size and SHA-256, `GET /api/model/file` for the bytes) so a dropped connection resumes, then verify the checksum.
  * **3-Step Visual Installation Guide on Web Portal:**
  * *Step 1:* Tap the large **"Download L.A.R.A. (Android)"** button.
  * *Step 2:* When prompted by Android browser, tap **Settings** Toggle on **"Allow from this source"**.
@@ -219,53 +218,32 @@ sequenceDiagram
 ## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
 
 ### 5.0 The Hub Always Has the AI; Using It Is Optional
-The Hub is installed with the AI model, so a learner on any phone or laptop can use the tutor without downloading anything. Using it is optional for everyone: a learner or teacher can ignore it, and nothing else in L.A.R.A depends on it. There are two ways to use it, and the user chooses:
-1. **On the Hub (the default),** shared by everyone through a first-in-first-out queue, so a few learners at a time are served and the rest see their place in line.
-2. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user may download the model from the Hub once to run it offline, for example at home. It is never downloaded automatically.
+The Hub is installed with the AI model. Every phone, laptop and lab PC uses it through the Hub WebSocket stream, shared through a first-in-first-out queue. Using the tutor is optional; nothing else in L.A.R.A depends on it.
 
-The model the Hub runs and the model a device runs may be different: a smarter model on the Hub PC, and a smaller one for devices that can use it. Each is chosen by the AI evaluation and must pass the same Socratic checks (no direct answers, grounded, one clue and one question, right language). If the small model does not pass on the weakest device it would run on, devices simply use the Hub.
+The small models tested in #73 leaked answers or refused everything. The passing candidate needs about 11 GB RAM on a 16 GB Hub, so the pilot runs inference only on the Hub.
 
-If the Hub's model file is missing or fails to load, the Hub reports it (`AI_NOT_AVAILABLE`), the tutor says "AI is not available right now", and every other feature keeps working. The quiz lockout (no AI during a quiz) applies on every path.
+When the Hub is unreachable, clients show "The AI tutor needs the classroom Hub" and may display past chats from local `ai_chat_messages`. Every other feature keeps working offline. With Remote/Suspension Mode, the tutor works through the Hub tunnel.
 
-### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
-The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
+If the Hub's model file is missing or fails to load, it reports `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working. During a quiz, clients never show the chat and the Hub rejects requests with 403 / `QUIZ_IN_PROGRESS`.
 
-To identify the optimal Small Language Model for Philippine classrooms (Grades 1 to 12), the project experimentally benchmarks candidate sub-3B models:
-* **Primary Baseline Candidate:** **MiniCPM5-2B (Int4 / Q4_K_M GGUF, ~1.55GB)** — High multimodal and bilingual capability.
-* **Alternative Experimental Candidates:**
-  * **Qwen2.5-1.5B / 3B (Instruct GGUF)** — Exceptional reasoning density and multilingual instruction following.
-  * **Llama-3.2-1B / 3B (Instruct GGUF)** — Ultra-lightweight edge execution and high CPU throughput.
-  * **SmolLM2-1.7B (Instruct GGUF)** — Minimal memory overhead designed for constrained devices.
-  * **Gemma-2-2B (IT GGUF)** — Factual grounding and textbook reasoning.
+### 5.1 Pluggable Hub SLM Architecture & Candidate Model Benchmarking
+The Hub inference engine uses **GGUF models with `llama-server` from `llama.cpp`**. Candidates and model selection follow `rules/socratic-ai-guardrails.md` section 5. Only the Hub loads `contracts/ai/socratic_system_prompt.txt` unchanged, selects lesson chunks per section 3.1 and includes history per section 3.2. Clients send the learner's message and render the stream.
 
-All models operate within a standardized **2,048 token context window** to maintain predictable RAM and latency bounds.
-
-
-### 5.2 Adaptive Hybrid Execution Logic
+### 5.2 Hub-Only Execution Logic
 
 ```mermaid
 flowchart TD
- Start["Student Launches App on Mobile or Laptop"] --> DeviceType{"Device Platform"}
- 
- DeviceType -->|"Student Laptop / Lab PC"| DeskCheck{"Check Local Storage:<br/>Model GGUF exists?"}
- DeskCheck -->|Yes| DeskLocal["100% On-Device Mode (llama.cpp CPU/GPU)<br/>• Zero network usage<br/>• Works completely offline at home"]
- DeskCheck -->|No| DeskPrompt["Prompt Download or Stream from Hub"]
- DeskPrompt --> DeskLocal
- DeskPrompt --> HubMode
-
- DeviceType -->|"Android Mobile Phone"| HardwareCheck{"Check Physical RAM<br/>(ActivityManager)"}
- HardwareCheck -->|"RAM < 6GB"| HubMode["Hub-Assisted Mode (WebSocket)<br/>• Zero phone RAM burden<br/>• Lightweight token streaming"]
- HardwareCheck -->|"RAM >= 6GB"| MobCheck{"Model GGUF exists?"}
- MobCheck -->|Yes| MobLocal["100% On-Device Mode (llama.cpp JNI)<br/>• Works offline anywhere"]
- MobCheck -->|No| MobPrompt["Prompt Model Download (1.55 GB)"]
- MobPrompt --> MobLocal
- MobPrompt --> HubMode
-
- HubMode --> HubQueue["Local Hub Inference Slots"]
- HubQueue -->|"Slot Available (1-4)"| Infer["Execute the chosen model on the Hub PC"]
- HubQueue -->|"Slots Busy"| QueueWait["FIFO Queue: Pangalawa ka sa pila - est. 4s"]
- QueueWait --> Infer
- Infer --> StreamTokens["Stream Socratic Hints over WebSocket"]
+ Start["Learner opens tutor on any client"] --> Quiz{"Quiz in progress?"}
+ Quiz -->|Yes| Locked["Chat not shown; Hub rejects QUIZ_IN_PROGRESS"]
+ Quiz -->|No| Reachable{"Hub reachable over LAN or remote tunnel?"}
+ Reachable -->|No| Offline["The AI tutor needs the classroom Hub"]
+ Reachable -->|Yes| Request["EVENT_AI_CHAT_REQUEST: learner message"]
+ Request --> Available{"Hub AI available?"}
+ Available -->|No| Unavailable["AI_NOT_AVAILABLE: other features keep working"]
+ Available -->|Yes| Queue["Hub FIFO queue: EVENT_QUEUE_STATUS"]
+ Queue --> Prompt["Hub builds prompt with chunks and history"]
+ Prompt --> Infer["Hub llama-server inference"]
+ Infer --> Stream["EVENT_AI_TOKEN_STREAM: client renders hints"]
 ```
 
 ### 5.3 Bilingual Localization & Persona Design
@@ -275,7 +253,7 @@ flowchart TD
 * **Interaction Trigger:** Located inside the Material Viewer as a floating button: **"Magtanong kay L.A.R.A. AI" / "Ask L.A.R.A. AI"**.
 * **Grounding:** The prompt binds the pre-extracted text of the active lesson document.
 
-* **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), used unchanged by the Hub, mobile and desktop. It is not copied here so it cannot drift.
+* **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), loaded unchanged only by the Hub. It is not copied here so it cannot drift.
 
 ### 5.4 Hub Inference Queue
 To prevent the Hub PC from overloading when multiple low-RAM devices request hints simultaneously:
@@ -350,7 +328,7 @@ sequenceDiagram
 
 | Layer | Technology | Rationale |
 | :--- | :--- | :--- |
-| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | Compose Material 3 components themed with the L.A.R.A tokens; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; native C++/JNI binding to `llama.cpp`. |
+| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | Compose Material 3 components themed with the L.A.R.A tokens; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; Hub AI token streaming. |
 | **Mobile Local DB** | **Android Room (SQLite)** | Compile-time SQL validation, robust migrations, native coroutine/Flow support. |
 | **Desktop Client** | **Tauri + React + TypeScript + Tailwind CSS** | Ultra-lightweight binary (~15MB installer vs ~120MB Electron), low memory overhead on student laptops & lab PCs; styled with the L.A.R.A design tokens; runs the chosen model via bundled llama.cpp or Hub streaming. |
 | **Local Hub (Server)** | **Tauri + Rust Backend (Axum, Tokio, SQLx)** | Native admin console window for the school admin (accounts, port health, USB export and backup); high-concurrency async I/O; low idle CPU/RAM usage; direct USB flash drive export. |
@@ -364,7 +342,7 @@ sequenceDiagram
 ## 8. Non-Functional Requirements & Guardrails
 
 1. **Zero Internet Dependency:** The system must function 100% locally across an isolated Wi-Fi router or peer hotspot with no uplink to the global internet, except through the one sanctioned Remote/Suspension Mode tunnel (section 3.2), which an admin must explicitly enable per Hub.
-2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. On-device SLM execution is strictly gated behind a 6GB physical RAM hardware check.
+2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. Tutor inference runs only on the Hub.
 3. **Low-Latency Quiz Sync:** Submissions and timer events must register with the Hub within <300ms across 40 concurrent connected devices.
 4. **Resumable Transfers:** Any interrupted file transfer (PDF, video, photo submission, or model bundle) must resume from the last received byte via HTTP Range headers.
 5. **Gradebook Export:** Hub must export learner rosters, quiz scores, and homework grades to `.xlsx` / `.csv` with one click.
@@ -385,7 +363,7 @@ sequenceDiagram
 * Stream announcements with teacher comment controls.
 * Downloadable materials (PDF/images) and streaming/offline educational video (MP4).
 * Timed paperless quizzes with instant auto-grading for objective questions.
-* Hybrid Socratic AI tutor with a model chosen by the AI evaluation (MiniCPM5-2B is the baseline candidate): Hub-assisted for low RAM, on-device for ≥6GB RAM.
+* Hub-only Socratic AI tutor with a model chosen by the AI evaluation.
 * Strict AI tutor lockout during active quizzes.
 * One-click gradebook export to USB flash drives.
 * Delta synchronization and offline-first persistence.

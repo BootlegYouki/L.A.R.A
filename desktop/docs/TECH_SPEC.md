@@ -9,7 +9,7 @@ Desktop owns the learner and teacher client described in [PRD sections 3–6](..
 
 Sources, in order: [contracts](../../contracts/), [root guide](../../AGENTS.md) and [rules](../../rules/), [design system](../../design-system/design-system.md), PRD, then this document. Paths below are relative to `desktop/` unless prefixed otherwise. Proposed modules are created only in their issue.
 
-Non-goals: Hub administration, Android code, new endpoints/schema columns, cloud backends, grade categories, automatic model downloads, Electron/Prisma, or a model choice before the AI evaluation. Classroom and assessment features must work without AI. No feature development is authorized by an unresolved question here.
+Non-goals: Hub administration, Android code, new endpoints/schema columns, cloud backends, grade categories, model downloads, Electron/Prisma, or a model choice before the AI evaluation. Classroom and assessment features must work without AI. No feature development is authorized by an unresolved question here.
 
 Existing scaffold [PR #161](https://github.com/BootlegYouki/L.A.R.A/pull/161) stays draft while Sprint 0 is reviewed. This spec adopts its `src/`, `store/`, `i18n/`, `services/db.ts`, `tests/` and `src-tauri/migrations/` names; it does not merge that PR. Only the spec is changed by this docs branch. Resume one desktop implementation issue at a time after approval; do not open another feature PR alongside the scaffold.
 
@@ -42,7 +42,7 @@ main.tsx → App.tsx → pages/ + components/
 | Token | Rust `secure_token.rs` using OS credential storage via `keyring`; expose narrowly scoped commands | Windows Credential Manager, macOS Keychain, Linux Secret Service; no plaintext token file | `localStorage`, SQLite, unprotected Tauri store |
 | Preferences | `services/settings.ts` owns nonsecret language/Hub preferences; retain scaffold localStorage language | No extra schema/table; shared accessor for Settings and Connection | Inventing a `settings` SQL table |
 | UI | Bundled Nunito/Phosphor, canonical theme import, Radix Dialog when needed | Required accessible visual vocabulary | CDN assets, copied prototype runtime/demo data |
-| Tutor later | Opt-in `llama-server` sidecar, shared prompt byte for byte, Hub fallback | Same grounded behavior; no model fixed before evaluation | Separate local prompt or unconditional RAM/model load |
+| Tutor later | Hub WebSocket chat client; only the Hub builds prompts | Grounded hints from the Hub; quiz lockout on client and Hub | Client prompt building or inference |
 
 Network permissions must be added with the first network issue, not the scaffold. The HTTP plugin scope and WebSocket/media CSP must permit only Hub transport and required loopback development. Because LAN IPs are dynamic, broad LAN-capable scope is not itself an authorization boundary: `api.ts` must restrict requests to the selected validated Hub and fixed contract paths, reject redirects to other origins, and never forward a token to a newly discovered address automatically. Remote URLs must be explicitly saved HTTPS Hub addresses; use WSS, never a TLS bypass. Confirm exact production capability/CSP patterns in the #40 spike before merging network code.
 
@@ -65,7 +65,6 @@ src/index.css              Shared theme/tokens, focus and reduced-motion rules
 src-tauri/src/             main.rs, lib.rs; discovery.rs, secure_token.rs, sync.rs as needed
 src-tauri/migrations/      001_client_offline.sql; later additive migrations only
 src-tauri/capabilities/    Main-window least-privilege permissions
-src-tauri/binaries/        Approved sidecar binaries only in Sprint 5
 tests/                     Vitest service/store/schema tests (directory is desktop/tests/)
 docs/                      This spec and feature verification/spike evidence
 ```
@@ -109,7 +108,6 @@ Common handling **R**: 10-second metadata-request deadline; transport loss shows
 | `POST /quizzes`; `GET /quizzes/active`; `GET`, `PATCH /quizzes/{id}` | Later `quizzes.ts` | `QUIZ_NOT_DRAFT` opens read-only; teacher authoring is online; answer keys must not enter client persistence |
 | `POST /quizzes/{id}/start`, `/begin`, `/close`, `/submit`; `GET /quizzes/{id}/results` | Later `quizzes.ts` | Hub begins/starts; existing attempt can finish offline. Reject late work visibly; null held scores remain null |
 | `POST /export/class-record` | Later `gradebook.ts` | Follow contracted response/download behavior; no invented USB/admin parameter; unavailable offline |
-| `GET /model`, `/model/file` | Later `sidecar_ai.ts` / download service | Missing offer leaves Hub AI path; resume ranges, verify checksum and space before install; opt-in only |
 
 Excluded desktop routes: `GET /download` is distribution, and `/api/admin/*`, `/api/backup`, `/api/restore` belong to Hub admin. No desktop admin login flow.
 
@@ -146,7 +144,7 @@ Pull is single-flight: validate complete response, open native transaction, appl
 | Homework/comments | Save locally and show queued state; attachments kept until receipt |
 | PDF/video | Open downloaded files; uncached content explains it needs the Hub; no endless spinner |
 | Existing quiz attempt | Continue monotonic countdown; lock/queue at zero or close; never fabricate a new offline attempt |
-| Tutor | Local only if evaluated model installed and RAM permits; otherwise explanatory offline state; never mounted during active attempt |
+| Tutor | Hub unreachable: "The AI tutor needs the classroom Hub"; past chats remain readable offline; never mounted during active attempt |
 | Settings | Change language and local Hub preferences; warn/count queued rows before logout; preserve them |
 
 ## 8. Code Patterns
@@ -210,7 +208,7 @@ Both developers work each issue together, one issue at a time. “Creates” ass
 
 Until #48, #45–47 persist only their explicitly fetched, validated snapshots through `db.ts`; they must not impersonate the delta engine or advance its cursor. #48 becomes the one refresh/queue owner. Remove the scaffold `foundation_note` when sign-in lands.
 
-Later order: Sprint 3 #30, #55–58, #124–125; Sprint 4 #31, #62–63, #104, #108; Sprint 5 #32, #67–68, #103; Sprint 6 #71, #150 (remote Hub screen, after [SERVER 6.2]). Reuse the same transport, SQL, context, realtime and dictionaries. AI UI waits for server evaluation evidence; sidecar packaging/model selection/performance remain explicit later gates.
+Later order: Sprint 3 #30, #55–58, #124–125; Sprint 4 #31, #62–63, #104, #108; Sprint 5 #32, #67–68, #103; Sprint 6 #71, #150 (remote Hub screen, after [SERVER 6.2]). Reuse the same transport, SQL, context, realtime and dictionaries. AI UI waits for server evaluation evidence; Hub model selection and performance remain evaluation gates.
 
 ## 11. Dependencies on Other Teams
 
@@ -227,7 +225,7 @@ Owners below are proposed team responsibilities; no personal commitment by Kierv
 | OS token persistence across Windows/Linux/macOS | Desktop team | Before #45 merge | Session-only token, cached local access; never plaintext |
 | Single transaction, reset parent retention, receipts/revoked access | Desktop team + Lead/server for wire gaps | Before #48 implementation | Keep earlier read-only snapshots; block unsafe sync |
 | Question bank answer-key conflict | Lead + desktop team | Before #31 implementation | No persisted answer-key bank |
-| AI RAM, quality, sidecar lifecycle and package sizes | Desktop + server AI evaluation owner | Before #32/#67 implementation | Hub-only tutor, or unavailable state if Hub missing |
+| Hub AI quality and stream handling | Desktop + server AI evaluation owner | Before #32/#67 implementation | Tutor unavailable state if Hub unreachable |
 
 ## 13. Commands and Verification
 

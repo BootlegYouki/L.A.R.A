@@ -19,12 +19,12 @@ A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, 
 * **Never store** a PIN hash, another person's LRN, or any answer key. Keep the auth token in the Tauri secure store.
 * **Quiz screen:** the AI drawer and buttons are removed from the React tree (not hidden with CSS) while a quiz is open. Countdown uses the server offset from `EVENT_HELLO_ACK` plus `performance.now()`; auto-submit at 00:00 and on `EVENT_QUIZ_CLOSED`.
 * **Video:** `<video>` cannot set headers, so stream with `?token=`. Downloaded videos set `materials.local_file_path` and play from disk.
-* **AI:** local `llama.cpp` sidecar only with at least 4 GB RAM and the model present, otherwise stream from the Hub. Prompt building and lockout apply on both paths.
+* **AI:** always stream from the Hub. Only the Hub builds prompts; clients send messages and render tokens. When the Hub is unreachable, show "The AI tutor needs the classroom Hub". Quiz lockout still applies.
 * **UI:** tokens from `design-system/` only, Nunito and Phosphor from `design-system/assets/`, 40px buttons and icon buttons and 48px tabs and drawer items, as in Google Classroom, English and Filipino dictionaries with a runtime toggle, Radix Dialog for dialogs.
-* **Tauri:** least-privilege capabilities; only the commands and sidecars you need.
+* **Tauri:** least-privilege capabilities; only the commands you need.
 
 ## Layout
-`src/{pages,components,services,i18n}`, `src-tauri/` (discovery, sidecar). Document components, state flow and sidecar behavior in `desktop/docs/`.
+`src/{pages,components,services,i18n}`, `src-tauri/` (discovery). Document components, state flow and Hub chat behavior in `desktop/docs/`.
 
 ## Never
 Load fonts or scripts from a CDN, edit `contracts/`, `rules/`, `design-system/` or other teams' folders, or call the Hub without the bearer token.

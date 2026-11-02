@@ -59,6 +59,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Remote/Suspension Mode is the one sanctioned exception to LAN-only** (decided 2026-10-26): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it from outside the school network while classes are suspended (e.g. bad weather). Same accounts, same bearer tokens, same contract, same sync cursor — nothing about in-school behavior changes, and the tunnel is the only sanctioned path off the LAN (section 3.5).
 * **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
+* **The AI tutor runs only on the Hub** (decided 2026-11-02): no model download and no on-device inference on phones or laptops; every client uses the Hub WebSocket stream. The small models tested in #73 leaked answers or refused everything; the passing candidate needs about 11 GB RAM on a 16 GB Hub.
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
@@ -69,8 +70,8 @@ Say so, in an issue, with evidence. Every developer and agent may propose a bett
 
 ## 2. Team Organization
 
-1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
-2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
+1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
+2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`.
 3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, gradebook export, backup.
 4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
@@ -94,7 +95,7 @@ Rule documents (read the ones for your task):
 
 ### 3.2 Offline-first persistence
 * Both clients keep an offline mirror of enrolled classes, announcements, handouts, videos and quiz history in local SQLite.
-* A learner can launch the app at home with no Wi-Fi and read, watch and (when capable) use the local AI without errors or blocking loaders.
+* A learner can launch the app at home with no Wi-Fi and read and watch without errors or blocking loaders. The tutor shows "The AI tutor needs the classroom Hub" when the Hub is unreachable.
 * Offline actions (finished quizzes, homework photos, comments) are saved with `sync_status = 'QUEUED_FOR_SYNC'` and flush automatically when the Hub is reachable. Never describe the connection as "internet"; say "Hub" or "classroom network".
 
 ### 3.3 Network protocol and ports
@@ -133,16 +134,15 @@ Rule documents (read the ones for your task):
 
 ## 5. Socratic AI Tutor (L.A.R.A AI)
 
-A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. Inference is pluggable GGUF via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on the Hub). Full rules: `rules/socratic-ai-guardrails.md`.
+A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. Inference runs only on the Hub with pluggable GGUF models via `llama-server`. Full rules: `rules/socratic-ai-guardrails.md`.
 
 ### 5.1 Routing
-* **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
-* **Phones with 6 GB or more, and laptops with 4 GB or more:** may run a downloaded GGUF fully offline.
+* **Every client uses the Hub over WebSocket:** `EVENT_AI_CHAT_REQUEST` → `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. No RAM check. When the Hub is unreachable, show "The AI tutor needs the classroom Hub"; Remote/Suspension Mode carries the same stream through the tunnel.
 * The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
-* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. Downloading the model to run on your own device is opt-in, never automatic. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
+* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
-0. **One prompt for every path:** `contracts/ai/socratic_system_prompt.txt`. The Hub, mobile and desktop load that file byte for byte and never write their own; changing it is a `contract-change` PR followed by a re-run of the evaluation.
+0. **Only the Hub builds the prompt:** `contracts/ai/socratic_system_prompt.txt`. The Hub loads that file byte for byte, selects chunks per `rules/socratic-ai-guardrails.md` section 3.1 and history per section 3.2; clients send the learner's message and render the stream. The Hub never writes its own prompt; changing it is a `contract-change` PR followed by a re-run of the evaluation.
 1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
@@ -150,7 +150,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
-MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. There may be two choices: a smarter model on the Hub and a smaller one for devices that can run it. Each must pass the same evaluation; if the small one does not, devices use the Hub.
+MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. The Hub model must pass the evaluation.
 
 ### 5.4 Evaluation requirement
 Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, run on the actual Hub machine. Do not claim "good enough" without those numbers.
@@ -160,7 +160,7 @@ Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-gu
 ## 6. Subsystem Conventions
 
 ### 6.1 Mobile
-Kotlin 2.x, Compose Material 3, Clean Architecture with MVI/MVVM, Coroutines and StateFlow, Room, Media3, JNI for `arm64-v8a`. Teacher and Student nav graphs. Verify: `./gradlew test lint`.
+Kotlin 2.x, Compose Material 3, Clean Architecture with MVI/MVVM, Coroutines and StateFlow, Room, Media3. Teacher and Student nav graphs. Verify: `./gradlew test lint`.
 
 ### 6.2 Desktop
 Tauri 2.x, React 19, TypeScript 5 with `strict: true` and no `any`, Tailwind 4 with design-system tokens, `@tauri-apps/plugin-sql`. Verify: `npm run build`.

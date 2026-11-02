@@ -14,7 +14,7 @@ A native Android app (package `org.lara.app`) with a **Student** graph and a **T
 * Switch to the real Hub only on integration day.
 
 ## Rules that are easy to get wrong
-* **Memory:** never decode full-size bitmaps, never load whole files into memory, page lists, stream downloads. Below 6 GB physical RAM (`ActivityManager.getMemoryInfo().totalMem`) never load a model; use the Hub.
+* **Memory:** never decode full-size bitmaps, never load whole files into memory, page lists, stream downloads. The tutor always uses the Hub stream; clients never build prompts.
 * **Offline first.** Screens read from Room. No blocking dialogs when the Hub is unreachable.
 * **Sync:** apply a pull response and `next_cursor` in one `@Transaction`; the cursor is an integer, never a time; on `reset: true` wipe mirrored tables but keep `QUEUED_FOR_SYNC` rows. See `rules/database-and-sync.md`.
 * **Never store** a PIN hash, another person's LRN or any answer key. Store the token in encrypted storage.
@@ -25,7 +25,7 @@ A native Android app (package `org.lara.app`) with a **Student** graph and a **T
 * **UI:** `LaraTheme` and tokens from `design-system/mobile/` only (no `Color(0xFF...)` in screens), Phosphor icons, 52dp targets (56dp primary), `values/strings.xml` and `values-tl/strings.xml` in parity (CI checks it).
 
 ## Layout
-`ui/{screens,navigation,components,theme}`, `data/{local,remote,sync,repository}`, `ai/`, `cpp/` for the JNI bridge. Document navigation, Room and CameraX gotchas in `mobile/docs/`.
+`ui/{screens,navigation,components,theme}`, `data/{local,remote,sync,repository}`, `ai/` for the Hub chat client and quiz lockout. Document navigation, Room and CameraX gotchas in `mobile/docs/`.
 
 ## Never
 Add Firebase, Google Play Services or a CDN font, edit `contracts/`, `rules/`, `design-system/` or other teams' folders, or ship `!!` and unhandled nulls in production paths.

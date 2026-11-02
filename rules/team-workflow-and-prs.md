@@ -10,7 +10,7 @@ All AI agents and contributors must follow these rules.
 
 The engineering group operates across three independent streams overseen by the Lead Developer:
 
-1. **Mobile Project Team (`mobile/`):** Android Native (Kotlin 2.x, Jetpack Compose M3, Room DB, CameraX, JNI `llama.cpp`).
+1. **Mobile Project Team (`mobile/`):** Android Native (Kotlin 2.x, Jetpack Compose M3, Room DB, CameraX).
 2. **Desktop Project Team (`desktop/`):** Tauri Desktop Client (Tauri 2.x, React 19, TypeScript, Tailwind M3, bundled `llama.cpp`).
 3. **Server Project Team (`server/`):** Local Hub Host (mDNS, UDP `:8888`, SQLite, WebSockets `:8081`, video streaming, `llama-server` queue).
 4. **Lead Developer:** Reviews and gatekeeps all pull requests before merging into `staging`.
@@ -67,7 +67,7 @@ Before opening a PR targeting `staging`:
 To ensure the Lead Developer and teammates always have immediate architectural context without digging through commit histories, **all developers must maintain documentation inside their assigned folder**:
 
 * **Mobile Developers (`mobile/`):** Maintain module documentation and architecture notes in `mobile/docs/` (e.g. `navigation.md`, `room_schema.md`, `camerax.md`, `budget_device_benchmarks.md`) or update `mobile/README.md`.
-* **Desktop Developers (`desktop/`):** Maintain component and service notes in `desktop/docs/` (e.g. `components.md`, `database.md`, `video_player.md`, `sidecar_llama.md`) or update `desktop/README.md`.
+* **Desktop Developers (`desktop/`):** Maintain component and service notes in `desktop/docs/` (e.g. `components.md`, `database.md`, `video_player.md`, `ai_chat.md`) or update `desktop/README.md`.
 * **Server Developers (`server/`):** Maintain endpoint, WebSocket, and background worker notes in `server/docs/` (e.g. `discovery_mdns_udp.md`, `database_sync.md`, `streaming_rate_limit.md`, `slm_inference_queue.md`) or update `server/README.md`.
 
 ### What Every Subsystem Document Must Include:
@@ -88,7 +88,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Check for: Firebase, Google Play Services, external CDNs, Google Fonts URLs, remote analytics, third-party tracking, or external API endpoints.
    * Rule: All networking must operate exclusively over local LAN (ports 8080, 8081, 8888, or mDNS).
 2. **RAM Bloat & Hardware Crashes (Budget Phone Invariant):**
-   * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM, or initiating on-device SLM inference without checking `RAM >= 6GB`.
+   * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM.
    * Rule: Target devices are 3GB/4GB RAM phones (Infinix, TECNO, realme). Mobile heap must remain < 250MB during Hub-assisted mode.
 3. **Pedagogical AI Leaks (Socratic Invariant):**
    * Check for: Prompts or endpoints that provide direct answers, complete formulas, or write out homework solutions for students.
