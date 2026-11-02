@@ -9,6 +9,30 @@ class HubFailure(val status: Int, val code: String, val retryAfterSeconds: Long 
 
 /** Fixed route groups and no redirects: credentials remain on the selected LAN Hub. */
 class HubClient {
+    internal fun manageClass(c: EnrollmentConnection, classroomId: String?, action: String?,
+        teacherId: String?, method: String, payload: String?): String {
+        fun valid(value: String) = value.matches(Regex("[A-Za-z0-9-]{1,128}"))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        val path = if (classroomId == null) {
+            require(method == "POST" && action == null && teacherId == null)
+            "/api/classrooms"
+        } else {
+            require(valid(classroomId))
+            val suffix = when (action) {
+                null -> { require(method == "PATCH" && teacherId == null); "" }
+                "remove" -> { require(method == "POST" && teacherId == null); "/remove" }
+                "teachers" -> if (teacherId == null) {
+                    require(method == "POST"); "/teachers"
+                } else {
+                    require(method == "DELETE" && valid(teacherId)); "/teachers/$teacherId"
+                }
+                else -> error("Unsupported class action")
+            }
+            "/api/classrooms/$classroomId$suffix"
+        }
+        return exchange(c.endpoint, path, method, payload, c.session.token)
+    }
     internal fun logout(endpoint: HubEndpoint, session: StoredToken): String {
         require(session.hub == endpoint.restBase)
         require(session.token.isNotBlank() && session.token.none(Char::isWhitespace))
