@@ -57,6 +57,7 @@ class AppContainer private constructor(private val services: AppServices, privat
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
     fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
+    fun teacherClasses(userId: String) = org.lara.app.data.remote.TeacherClassApi(userId, enrollmentApi, hubClient)
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote, userId)
     val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }
