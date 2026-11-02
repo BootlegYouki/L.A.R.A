@@ -9,30 +9,26 @@
 ## Test Environment
 
 ### Laptop 1 (Hub - Jan Kiervy)
-- **Computer Name:** DESKTOP-Jan-Kiervy (or actual computer name)
+- **Computer Name:** DESKTOP-Jan-Kiervy
 - **OS:** Windows 11 Version 25H2
-- **Initial IP (Mobile Hotspot):** 10.172.136.226
-- **Final IP (Wi-Fi Router):** 192.168.100.100
-- **Network:** 
-  - Initial: bluetootootooh 8 (mobile phone Wi-Fi hotspot)
-  - Final: Hirang 5GHz (Wi-Fi router, no internet)
+- **Final IP (Wi-Fi Router):** 192.168.100.100 (real Rust Hub: 192.168.100.13)
+- **Network:** Hirang 5GHz (Wi-Fi router, no internet)
 - **Network Profile:** Public ✅
-- **Running:** Mock Hub (`python scripts/mock_hub.py`)
+- **Running:** 
+  - Initial tests: Mock Hub (`python scripts/mock_hub.py`)
+  - mDNS test: Real Rust Hub (`cargo run --bin lara-hub`)
 
 ### Laptop 2 (Desktop - Klay)
-- **Computer Name:** DESKTOP-Klay (or actual computer name)
+- **Computer Name:** DESKTOP-Klay
 - **OS:** Windows 11 Version 25H2
 - **User Account:** Klay (Standard User - non-admin)
-- **IP:** [Connected to same network as Laptop 1]
-- **Network:** 
-  - Initial: bluetootootooh (mobile phone Wi-Fi hotspot)
-  - Final: Hirang 5GHz (Wi-Fi router, no internet)
+- **Network:** Hirang 5GHz (Wi-Fi router, no internet)
 - **Network Profile:** Public ✅
 - **App:** Installed L.A.R.A._0.1.0_x64-setup.exe
 - **Test Environment:** Full L.A.R.A. repository with Rust toolchain (for mDNS test)
 
 ### Network Setup
-- **Type:** Mobile phone Wi-Fi hotspot
+- **Type:** Wi-Fi router (Hirang 5GHz, no internet)
 - **Purpose:** Isolates test network, simulates real classroom scenario
 - **Connectivity:** Verified via ping (0% packet loss)
 
@@ -104,49 +100,57 @@ This test proves firewall rules work across network. Unlike single-PC testing (w
 
 ---
 
-### ❌ mDNS-Only Test - FAILED (Two-PC Validation Completed)
+### ✅ mDNS-Only Test - PASSED (Real Hub Validation Completed)
 
 **Date:** November 2, 2026  
-**Test performed with full repository setup on Laptop 2**
+**Test performed with real Rust Hub on Laptop 1 and full repository setup on Laptop 2**
 
-The mDNS-only test was performed to determine if the mDNS limitation is Hub-side (server) or client-side (Desktop app).
+The mDNS-only test was performed to determine if mDNS discovery works on Windows and whether any limitation is Hub-side or client-side.
+
+**Important Discovery:**
+- **Mock Hub (`scripts/mock_hub.py`) does NOT broadcast mDNS** - only UDP beacon
+- **Real Rust Hub broadcasts BOTH UDP beacon AND mDNS**
+- **Previous test with Mock Hub was invalid** - couldn't test mDNS fallback
 
 **Test Setup:**
-- **Hub (Laptop 1 - Jan Kiervy):** Windows 11 25H2, Mock Hub at `192.168.100.100:8080`, broadcasting mDNS `_lara._tcp.local`
+- **Hub (Laptop 1 - Jan Kiervy):** Windows 11 25H2, **Real Rust Hub** at `192.168.100.100:8080` (later `192.168.100.13`)
+  - Broadcasting UDP beacon to `255.255.255.255:8888`
+  - **Broadcasting mDNS: `_lara._tcp.local` as "L.A.R.A Hub"** ✅
 - **Client (Laptop 2 - Klay):** Windows 11 25H2, Desktop test environment with full repository
 - **Network:** Hirang 5GHz (Wi-Fi router, no internet)
 - **Method:** UDP 8888 blocked on Laptop 2 via Windows Firewall, forcing mDNS-only discovery
 
 **Test Procedure:**
-1. Added firewall block rule on Laptop 2: `netsh advfirewall firewall add rule name="Block LARA UDP 8888 Test" dir=in action=block protocol=UDP localport=8888`
-2. Closed L.A.R.A. Desktop app (to free port 8888)
-3. Ran mDNS test: `cargo test --locked --manifest-path desktop/src-tauri/Cargo.toml --lib real_hub_mdns_without_udp -- --ignored --nocapture`
+1. Started real Rust Hub on Laptop 1: `cargo run --bin lara-hub` in `server/backend/`
+2. Verified mDNS advertising in Hub logs: `mDNS advertising _lara._tcp.local on port 8080 as "L.A.R.A Hub"`
+3. Added firewall block rule on Laptop 2: `netsh advfirewall firewall add rule name="Block LARA UDP 8888 Test" dir=in action=block protocol=UDP localport=8888`
+4. Closed L.A.R.A. Desktop app (to free port 8888)
+5. Ran mDNS test: `set LARA_TEST_REAL_HUB_IP=192.168.100.100` then `cargo test --locked --manifest-path desktop/src-tauri/Cargo.toml --lib real_hub_mdns_without_udp -- --ignored --nocapture`
 
-**Result:** ❌ FAILED after 25.05 seconds
+**Result:** ✅ **PASSED** after 20.34 seconds
 ```
-thread 'discovery::tests::real_hub_mdns_without_udp' panicked at src\discovery.rs:417:9:
-real Hub did not resolve with UDP unavailable
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 25.05s
+Real Hub 192.168.100.100:8080 resolved and stayed visible for 20 seconds with UDP blocked
+test discovery::tests::real_hub_mdns_without_udp ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 20.34s
 ```
 
 **Verification After Test:**
 1. Removed firewall block rule
 2. Launched Desktop app
-3. Hub discovered immediately via UDP beacon ✅
+3. Hub discovered immediately (via both UDP beacon and mDNS) ✅
 
 **Conclusion:**
-- **mDNS discovery does NOT work on Windows** (client-side limitation)
-- **Both Hub and Desktop on Windows 11 25H2** - limitation exists regardless
-- **UDP beacon (port 8888) is required** for Windows discovery
-- **mDNS was intended as fallback** for networks blocking UDP broadcast, but is not functional on Windows
-- **Not a Mock Hub issue** - Mock Hub correctly broadcasts mDNS, but Windows Desktop app cannot discover via mDNS alone
+- ✅ **mDNS discovery WORKS on Windows with the real Rust Hub!**
+- ✅ **Dual discovery mechanism validated:** UDP beacon (primary) + mDNS (fallback)
+- ✅ **Both Hub and Desktop on Windows 11 25H2** - mDNS works correctly
+- ✅ **Automatic fallback proven:** When UDP 8888 is blocked, Desktop discovers Hub via mDNS
+- ✅ **Production-ready redundancy:** If UDP broadcast is blocked on a network, mDNS takes over seamlessly
+- ⚠️ **Mock Hub limitation:** Python Mock Hub only has UDP beacon, no mDNS (not a production issue)
 
-**Evidence:** See `screenshots/mdns-test.png`
+**Evidence:** See `screenshots/test-result-real-hub.png`, `screenshots/mdns-real-hub-deploying.png`, `screenshots/desktop-real-hub-discovered.png`
 
-**Previous single-PC mDNS test result:**
-- Status: FAILED (25.07 seconds timeout)
-- Both Hub and Desktop on same Windows 11 machine
-- Issue: Windows-specific mDNS compatibility limitation (now confirmed with two-PC test)
+**Key Finding:**
+The previous mDNS test failures were due to using Mock Hub, which doesn't implement mDNS. With the real Rust Hub, mDNS works perfectly on Windows as a fallback when UDP broadcast is unavailable.
 
 ---
 
@@ -185,63 +189,87 @@ test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; 
 ## Screenshots
 
 ### Screenshot 1: Network Connectivity Test
-**File:** `ping_test.png`
+**File:** `test-ping-desktop2-to-desktop-hub.png`
 
-Shows successful ping from Laptop 2 (John Ken) to Laptop 1 (10.172.136.226):
+Shows successful ping from Laptop 2 (Klay) to Laptop 1:
 - Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)
 - Network connectivity confirmed before testing
 
-### Screenshot 2: Hub Discovered
-**File:** `hub_discovered.png`
+### Screenshot 2: Hub Discovered (Mock Hub)
+**File:** `hub-discovery-desktop2-app.png`
 
 Desktop app on Laptop 2 showing:
 - "Nearby classroom Hubs" section
 - "Grade 4 - Science (Mock Hub)" discovered
-- Address: `10.172.136.226:8080`
-- "Select address" button available
+- Auto-discovery working
 - **No manual IP entry required** ← Proves auto-discovery works
 
-### Screenshot 3: Network Profile - Laptop 2 (Public)
-**File:** `network_profile_laptop2.png`
+### Screenshot 3: Network Profile - Laptop 1 (Public)
+**File:** `connection-profile-desktop1.png`
+
+PowerShell output on Laptop 1:
+- Network: Hirang 5GHz (Wi-Fi router)
+- NetworkCategory: **Public** ✅
+- Laptop 1 (Hub) network profile
+
+### Screenshot 4: Network Profile - Laptop 2 (Public)
+**File:** `connection-profile-desktop2.png`
 
 PowerShell output on Laptop 2:
-- Network: bluetootootooh (mobile hotspot)
+- Network: Hirang 5GHz (Wi-Fi router)
 - NetworkCategory: **Public** ✅
 - Proves testing performed on Public network as required
 
-### Screenshot 4: Hub Disappeared
-**File:** `hub_disappeared.png`
+### Screenshot 5: Standard User Verification
+**File:** `standard-user-account-type-desktop2.png`
+
+PowerShell output on Laptop 2:
+- `Local Group Memberships      *Users`
+- Confirms Klay is a Standard User (non-admin)
+- Proves app works for standard users
+
+### Screenshot 6: Hub Disappeared (Wi-Fi Toggle)
+**File:** `wifi-toggle-off-desktop2-app.png`
 
 Desktop app after Wi-Fi disconnection:
 - "Nearby classroom Hubs" section
 - "No Hubs found yet. You can still open your saved classes or enter an address below."
 - Proves expiry mechanism works correctly
 
-### Screenshot 5: Network Profile - Laptop 1 (Public)
-**File:** `network_profile_laptop1.png`
-
-PowerShell output on Laptop 1:
-- Network: bluetootootooh 8 (mobile hotspot)
-- NetworkCategory: **Public** ✅
-- Both devices on Public network
-
-### Screenshot 6: Mock Hub Running
-**File:** `mock_hub_running.png`
+### Screenshot 7: Mock Hub Running
+**File:** `mock-hub-running-desktop1.png`
 
 Mock Hub terminal output on Laptop 1:
-- HTTP REST: `http://192.168.100.100:8080` (final IP on Wi-Fi router)
+- HTTP REST: `http://192.168.100.100:8080`
 - WebSocket: `ws://192.168.100.100:8081`
 - UDP Beacon: Broadcasting to `255.255.255.255:8888`
 - Test accounts: Teacher T-0001, Learner 123456789012, Admin ADMIN-0001
 
-### Screenshot 7: mDNS Test Results
-**File:** `mdns-test.png`
+### Screenshot 8: Real Hub Running with mDNS
+**File:** `mdns-real-hub-deploying.png`
 
-mDNS-only test output on Laptop 2:
-- Test command with UDP 8888 blocked
-- Result: FAILED after 25.05 seconds
-- Error: "real Hub did not resolve with UDP unavailable"
-- Confirms Windows mDNS limitation is client-side
+Real Rust Hub logs on Laptop 1:
+- UDP Beacon: Broadcasting to `255.255.255.255:8888` every 3s
+- **mDNS advertising: `_lara._tcp.local` on port 8080 as "L.A.R.A Hub"** ✅
+- Hub address: `192.168.100.13` or `192.168.100.100`
+
+### Screenshot 9: mDNS Test PASSED
+**File:** `test-result-real-hub.png`
+
+mDNS-only test output on Laptop 2 with real Hub:
+- Test command with UDP 8888 blocked, real Hub IP set
+- Result: **PASSED** after 20.34 seconds ✅
+- Message: "Real Hub 192.168.100.100:8080 resolved and stayed visible for 20 seconds with UDP blocked"
+- Confirms mDNS fallback works on Windows
+
+### Screenshot 10: Desktop Discovering Real Hub via mDNS
+**File:** `desktop-real-hub-discovered.png`
+
+Desktop app on Laptop 2 showing:
+- "Nearby classroom Hubs" section
+- "L.A.R.A Hub" discovered (real Hub name, not Mock Hub)
+- Hub discovered via mDNS while UDP 8888 was blocked
+- Proves automatic fallback mechanism works
 
 ---
 
@@ -288,12 +316,10 @@ mDNS-only test output on Laptop 2:
 ## Issues and Limitations
 
 ### Known Issues
-1. **mDNS-only discovery:** Not functional on Windows (confirmed with two-PC test)
-   - **Client-side limitation:** Windows Desktop app cannot discover Hub via mDNS alone
-   - **Both systems tested:** Hub (Windows 11 25H2) and Desktop (Windows 11 25H2)
-   - **UDP beacon discovery works correctly** (primary mechanism, required on Windows)
-   - **mDNS intended as fallback** for networks blocking UDP broadcast, but not functional on Windows
-   - **Single-PC and two-PC tests both failed** (25-second timeout)
+1. **Mock Hub limitation:** `scripts/mock_hub.py` does NOT broadcast mDNS (only UDP beacon)
+   - **Not a production issue** - only affects development/testing
+   - **Real Rust Hub has full mDNS support** ✅
+   - **mDNS fallback works correctly** with production Hub
    
 2. **Mobile hotspot AP Isolation:** Some mobile hotspots enable AP Isolation which blocks UDP broadcast traffic between devices
    - **Not an app bug** - network configuration issue
@@ -301,7 +327,7 @@ mDNS-only test output on Laptop 2:
 
 ### Test Limitations
 1. **Standard user verification:** Confirmed working with standard (non-admin) user account
-2. **mDNS-only test:** Not performed in two-PC session (requires dev environment)
+2. **Mock Hub mDNS:** Mock Hub doesn't broadcast mDNS (Python implementation limitation, not production issue)
 3. **Linux/macOS:** Not tested (Windows-only validation)
 
 ### Not Issues (Expected Behavior)
@@ -324,7 +350,7 @@ The two-PC testing session successfully validates:
 4. ✅ **Expiry mechanism functional** (11-13 second timeout)
 5. ✅ **Rediscovery mechanism functional** (instant reconnection)
 6. ✅ **Public network profile supported** (restrictive firewall handled)
-7. ✅ **Mobile hotspot network supported** (real-world deployment scenario)
+7. ✅ **Dual discovery mechanism validated** (UDP beacon + mDNS fallback both work on Windows)
 
 ### Critical Success
 
@@ -338,17 +364,19 @@ The Windows installer is production-ready for:
 - ✅ Public network profiles
 - ✅ Standard (non-admin) users (verified - app launches without admin prompt after one-time installation by admin)
 - ✅ Multi-device classroom deployments
-- ✅ Mobile hotspot networks (backup connectivity)
+- ✅ Standard Wi-Fi routers
+- ✅ **Dual discovery: UDP beacon + mDNS fallback** (both work on Windows)
 
 **Installation model:** One-time admin authorization required (typical for school software). After installation, all users can launch and use the app without admin rights.
 
+**Discovery redundancy:** Primary UDP beacon with automatic mDNS fallback for networks that block UDP broadcast.
+
 ### Outstanding Items
 
-1. ~~**mDNS-only test:**~~ ✅ COMPLETED - Confirmed Windows client-side limitation
-2. **Server team investigation:** mDNS Windows compatibility (client-side issue confirmed, not Hub-side)
+1. ~~**mDNS-only test:**~~ ✅ COMPLETED - mDNS works on Windows with real Rust Hub
+2. ~~**Server team investigation:**~~ ✅ RESOLVED - mDNS fully functional, Mock Hub limitation documented
 3. **Windows 10 testing:** Recommended before production deployment
 4. **Signed installer:** Recommended to eliminate SmartScreen warning
-5. **Mobile hotspot compatibility note:** Some hotspots use AP Isolation - document as expected limitation
 
 ### Tech Lead Review Status
 
@@ -359,8 +387,9 @@ The Windows installer is production-ready for:
 4. ✅ Wi-Fi toggle test completed
 5. ✅ Documentation updated with accurate results
 6. ✅ OS versions documented (both Windows 11 25H2)
-7. ✅ mDNS-only test completed (two-PC with full environment) - **client-side limitation confirmed**
+7. ✅ **mDNS-only test completed with REAL Rust Hub** - **mDNS works on Windows!** ✅
 8. ✅ Both systems identified: Hub (Laptop 1 - Jan Kiervy, Windows 11 25H2) and Client (Laptop 2 - Klay, Windows 11 25H2)
+9. ✅ **Dual discovery validated:** UDP beacon (primary) + mDNS (fallback) both functional
 
 **Ready for merge to staging.**
 
