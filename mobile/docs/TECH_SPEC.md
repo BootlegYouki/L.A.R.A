@@ -104,7 +104,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `POST /api/auth/logout` | `AuthApi` (Settings) | any: still clear local token after queued-row check | Clear locally, ignore failure |
 | `GET/POST /api/classrooms` | `ClassroomRepository` | 403 | Room data; create is needs Hub |
 | `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` bilingual message | Disabled with helper line |
-| `PATCH /api/classrooms/{id}`, `.../remove`, `.../teachers`, `DELETE .../teachers/{teacher_id}` | `ClassManagementRepository` | 403 (co-teacher owner-only) | Needs Hub |
+| `POST /api/classrooms`, `PATCH /api/classrooms/{id}`, `.../remove`, `.../teachers`, `DELETE .../teachers/{teacher_id}` | `TeacherClassApi` via `ClassManagementViewModel`; existing `ClassManagementRepository` retains roster/approval reads | 403 (co-teacher owner-only) | Needs Hub; never queued |
 | `GET .../roster`, `POST .../approve`, `.../reject` | `RosterViewModel` via `ClassManagementRepository` | 403; optimistic update rolled back | Cached roster; actions need Hub |
 | `POST /api/sync/pull` | `SyncRepository.pull` | 401 relogin; other: roll back, keep cursor, retry by WorkManager backoff | Keep cursor, schedule retry on connectivity |
 | `POST /api/sync/push` | `SyncRepository.pushQueued` | per-item receipt `SYNCED` or `REJECTED(reason)`; request error: rows stay queued | Rows stay `QUEUED_FOR_SYNC` |

@@ -65,6 +65,13 @@ class SyncStore(private val db: LaraDatabase) {
             }
             val dao = db.syncDao()
             val snapshot = page.serverTime
+            val suppliedClasses = page.classrooms.map { it.id }.toSet()
+            val enrollments = page.enrollments.filter { row ->
+                // Own non-active membership can arrive without access to its parent classroom.
+                // Preserve its status as a notice until an authoritative classroom row is available.
+                own.role != "STUDENT" || row.studentId != userId || row.status == "ACTIVE" ||
+                    row.classroomId in suppliedClasses || dao.classroom(row.classroomId) != null
+            }
             val batch = CacheBatch(
                 users = page.users.map { row ->
                     val old = dao.user(row.id)
@@ -77,7 +84,7 @@ class SyncStore(private val db: LaraDatabase) {
                     ClassroomEntity(row.id, row.name, row.section, row.classCode, row.teacherId,
                         row.coTeacherIds?.let { json.encodeToString(it) }, row.archivedAt, old?.createdAt ?: snapshot, snapshot)
                 },
-                enrollments = page.enrollments.map { EnrollmentEntity(it.id, it.classroomId, it.studentId,
+                enrollments = enrollments.map { EnrollmentEntity(it.id, it.classroomId, it.studentId,
                     it.status, it.joinedAt ?: it.updatedAt, it.updatedAt) },
                 announcements = page.announcements.map { it.toEntity() },
                 announcementComments = page.comments.map { AnnouncementCommentEntity(it.id, it.announcementId,
@@ -122,7 +129,7 @@ class SyncStore(private val db: LaraDatabase) {
             for ((key, value) in listOf("hub_id" to page.hubId, "sync_epoch" to page.syncEpoch.toString(),
                 "cursor" to page.nextCursor.toString())) db.syncStateDao().put(SyncStateEntity(key, value, snapshot))
             if (own.role == "STUDENT") {
-                val memberships = batch.enrollments.filter { it.studentId == userId }
+                val memberships = page.enrollments.filter { it.studentId == userId }
                 val notices = RoomEnrollmentNoticeRepository(db)
                 for (row in memberships) notices.save(userId, EnrollmentNotice(row.classroomId,
                     dao.classroom(row.classroomId)?.name, EnrollmentStatus.valueOf(row.status)))

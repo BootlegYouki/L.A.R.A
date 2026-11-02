@@ -17,9 +17,9 @@ private fun <T> Flow<T>.cached(scope: CoroutineScope): StateFlow<Cached<T>> =
     map<T, Cached<T>> { Cached.Content(it) }
         .stateIn(scope, SharingStarted.WhileSubscribed(5_000), Cached.Loading)
 
-class RoomClassroomRepository(private val dao: ClassroomDao) : ClassroomRepository {
+class RoomClassroomRepository(private val dao: ClassroomDao, private val includeArchived: Boolean = false) : ClassroomRepository {
     override fun classrooms(scope: CoroutineScope) =
-        dao.observeAll().map { rows -> rows.map { it.toDomain() } }.cached(scope)
+        (if (includeArchived) dao.observeStored() else dao.observeAll()).map { rows -> rows.map { it.toDomain() } }.cached(scope)
 }
 
 class RoomStreamRepository(

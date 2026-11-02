@@ -45,6 +45,7 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: o
     val error by session.error.collectAsStateWithLifecycle()
     val refreshing by session.refreshingClasses.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { it.managedBy(userId) }
+    org.lara.app.ui.screens.teacher.classes.ClassManagementEntry(container, userId, session.reachable) { latestExpired() }
     Column(Modifier.fillMaxWidth().heightIn(max = LaraSpacing.S12 * 4).verticalScroll(rememberScrollState())
         .padding(horizontal = LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
         if (error != null && reachable) DiscoveryBanner(R.string.approval_failed, warning = true, success = false)

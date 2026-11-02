@@ -52,6 +52,10 @@ class SavedRosterRefresher(private val database: LaraDatabase, private val remot
             database.cacheDao().upsertBatch(CacheBatch(users = users, enrollments = enrollments))
         }
     }
+    suspend fun refreshIfActive(classroomId: String) {
+        val row = database.rosterDao().savedClassroom(classroomId) ?: return
+        if (row.archivedAt == null) refresh(classroomId)
+    }
 }
 
 internal fun ClassroomDto.savedEntity(old: ClassroomEntity?, now: Long) = ClassroomEntity(

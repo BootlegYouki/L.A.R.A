@@ -1,0 +1,76 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 510031953 Realtime: 721188477
+
+** MEMINFO in pid 7161 [org.lara.app.sprint27classes] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    20297    20148       88    13024    21320    52292    45489     2358
+  Dalvik Heap    15922    10340     5288      284    16992    16957     8479     8478
+ Dalvik Other    18596     6132       56      141    31220
+        Stack     2640     2640        0      352     2652
+       Ashmem      463        0        0        0     1292
+    Other dev       64       48        8        0      668
+     .so mmap    13823      236     7176      115    58980
+    .jar mmap    10322        0     4088        0    49312
+    .apk mmap      646        0      332        0     2016
+    .ttf mmap     1681        0      160        0     3428
+    .dex mmap    18738    18436      284     7812    19508
+    .oat mmap      183        0        4        0     1512
+    .art mmap     8878     5308     2816     3170    17640
+   Other mmap     1036       20      384        0     3936
+   EGL mtrack    29376    29376        0        0    29376
+    GL mtrack    27620    27620        0        0    27620
+      Unknown      916      440      408      238     1344
+        TOTAL   196337   120744    21092    25136   288816    69249    53968    10836
+
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    18464                          34632
+         Native Heap:    20148                          21320
+                Code:    30816                         159656
+               Stack:     2640                           2652
+            Graphics:    56996                          56996
+       Private Other:    12772
+              System:    54501
+             Unknown:                                   13560
+
+           TOTAL PSS:   196337            TOTAL RSS:   288816       TOTAL SWAP PSS:    25136
+
+ Objects
+               Views:       41         ViewRootImpl:        4
+         AppContexts:        8           Activities:        1
+              Assets:       57        AssetManagers:        0
+       Local Binders:       43        Proxy Binders:      100
+       Parcel memory:       18         Parcel count:       72
+    Death Recipients:        1             WebViews:        0
+
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+   Bitmap (malloced):       89                           4755
+    Other (malloced):     1654                            156
+ Other (nonmalloced):      208                            141
+
+ SQL
+         MEMORY_USED:     1140
+  PAGECACHE_OVERFLOW:      426          MALLOC_SIZE:       46
+
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4      208            122   613   435    24  /data/user/0/org.lara.app.sprint27classes/databases/account-9310518814485a9670b9ed38999d56bae9f1c92e7d7a0ed5883f81476457cffe.db
+         4        8                    0     0     0    (attached) temp
+         4      112            116   579   411    25  /data/user/0/org.lara.app.sprint27classes/no_backup/androidx.work.workdb
+         4        8                    0     0     0    (attached) temp
+         4      112             41    60    18     3  /data/user/0/org.lara.app.sprint27classes/no_backup/androidx.work.workdb (3)
+         4      208            117   601   367    24  /data/user/0/org.lara.app.sprint27classes/databases/lara.db
+         4        8                    0     0     0    (attached) temp
+         4      208             95    77    22     6  /data/user/0/org.lara.app.sprint27classes/databases/lara.db (5)
+         4      208             50    12    34     3  /data/user/0/org.lara.app.sprint27classes/databases/lara.db (6)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+            678           609          1287  /data/user/0/org.lara.app.sprint27classes/databases/account-9310518814485a9670b9ed38999d56bae9f1c92e7d7a0ed5883f81476457cffe.db
+            639           470          1109  /data/user/0/org.lara.app.sprint27classes/no_backup/androidx.work.workdb
+            670           470          1140  /data/user/0/org.lara.app.sprint27classes/databases/lara.db
