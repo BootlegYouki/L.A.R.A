@@ -56,11 +56,24 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
 1. **Zero Direct Answers:** Under no circumstances should the model output the final solution, answer key, or complete homework answers.
 2. **Polite Refusal Template:** If asked "What is the answer to #3?" or "Ano ang sagot sa tanong na ito?", respond warmly:
    *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"* (This exact text is the canonical template; the mock hub and tests use it.)
-3. **Document Anchoring:** The prompt must bind the pre-extracted text chunks (`material_chunks`) of the active lesson, within the 2,048-token window. All hints must reference concepts directly from the teacher's handout, and every reply carries the `grounded_chunk_id` it used.
+3. **Document Anchoring:** The prompt must bind the pre-extracted text chunks (`material_chunks`) of the active lesson, within the 2,048-token window, picked by the rule in section 3.1. All hints must reference concepts directly from the teacher's handout, and every reply carries the `grounded_chunk_id` it used.
    * **Not covered by the lesson:** say you cannot help with that from this lesson and point the learner back to the lesson. Do not answer from general knowledge. Optionally suggest asking the teacher.
    * **Empty or unreadable lesson text** (for example a scanned PDF with no extractable text): do not improvise; tell the learner the lesson text is not available yet.
 4. **Step-by-Step Questioning:** Give only ONE small clue at a time, followed by a leading question prompting the child to take the next step.
 5. **English replies for the pilot:** the tutor replies in English, even when the learner writes in Filipino or Taglish. The 1–3B models tested on #73 leaked answers or pasted the refusal line in Filipino, so Filipino replies are deferred until a model passes the evaluation in Filipino. The app interface stays bilingual.
+
+### 3.1 Choosing which lesson chunks go into the prompt (same on the Hub, phone and laptop)
+
+A lesson longer than the window cannot be pasted in whole, so every builder (the Hub, `SocraticPromptBuilder` on Android, the desktop sidecar path) picks chunks on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, and the same result on every device.
+
+1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus 300 reserved for the reply. Use `material_chunks.token_estimate` (when it is empty, count words × 1.4).
+2. **Short lesson:** if all of the lesson's chunks fit the budget, send all of them and skip steps 3 to 5.
+3. **Query words:** take the learner's message plus their previous message in this lesson's chat (so "I don't know" or "is it 5?" still finds the topic). Lowercase, split on anything that is not a letter or digit, drop words under 3 characters and these stopwords: `the and for are was what how why who when where which this that with from you your can does did not ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang lang din rin pa po`.
+4. **Score:** each chunk scores the number of distinct query words found in its `heading` + `text` (as whole words, lowercased).
+5. **Pick:** highest score first, ties by lower `order_index`, adding chunks while they fit the budget. If every chunk scores 0, reuse the chunks the previous tutor reply in this chat used; on the first message, take chunks from the start of the lesson (`order_index` order).
+6. **Order and grounding:** put the picked chunks into `{lesson_chunks}` in `order_index` order, each under its `heading`. The reply's `grounded_chunk_id` is the highest-scoring picked chunk (the first one when all scored 0).
+
+The evaluation (section 5.1) includes long lessons that do not fit the window, so this rule is scored together with the model.
 
 ---
 
@@ -80,7 +93,7 @@ To prevent the Hub PC from overloading when multiple low-RAM devices ask questio
 No model has been validated yet. Choose the model from data.
 
 ### 5.1 Test set
-A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
+A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. At least 10 prompts use a lesson longer than the 2,048-token window, so the chunk choice in section 3.1 is tested too; for these, criterion 2 also fails when the picked chunks miss the part of the lesson the question is about. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
 
 The development team writes the set. Any Filipino or Taglish learner messages are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
 
