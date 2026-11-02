@@ -631,6 +631,8 @@ def co_teacher_remove(req):
     STATE.co_teachers.get(c["id"], set()).discard(req.groups[1])
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
+    # A copy addressed to the removed teacher, who no longer sees the class but must learn they left it.
+    STATE.log("classrooms", c["id"], c["id"], student_id=req.groups[1])
     return {"success": True}
 
 
@@ -648,9 +650,9 @@ def sync_pull(req):
 
     latest = {}
     for e in STATE.ledger:
-        own_enrollment = e["table"] == "enrollments" and e["student_id"] == req.user["id"]
-        # A removed learner can no longer see the class but must still receive their REMOVED enrollment.
-        if e["seq"] <= cursor or e["table"] == "users" or (e["classroom_id"] not in ids and not own_enrollment):
+        own = e["table"] in ("enrollments", "classrooms") and e["student_id"] == req.user["id"]
+        # A removed learner or co-teacher no longer sees the class but must still receive the row that says so.
+        if e["seq"] <= cursor or e["table"] == "users" or (e["classroom_id"] not in ids and not own):
             continue
         if e["student_id"] and e["student_id"] != req.user["id"] and not teacher:
             continue
