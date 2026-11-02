@@ -1,18 +1,19 @@
-# MOBILE 2.7 checkpoint — 2026-11-02
+# MOBILE 2.7 validation — rebased for PR #209
 
-This is not a completion claim or a ready PR.
+Base: staging `30d19a4`, including merged shared fixes #210 and #211.
 
-- APK and lint: BUILD SUCCESSFUL; zero lint errors, 27 existing warnings (build-lint.txt).
-- Final full mock-enabled Debug suite: 141 tests, 140 passed, one failure, zero skips (tests-known-failure.txt). The archive visibility/read-only regression passes.
-- Shared source: 66 tests passed (shared-checks.txt).
-- Offline/localization guardrails passed (invariants.txt).
+- Targeted `TeacherClassMockTest`: passed (`removal-regression.txt`).
+- Full mock-enabled Debug and Release suites: 141 tests each, zero failures/skips (`full-tests.txt`). All three mock flags were set: `LARA_SYNC_MOCK=1`, `LARA_APPROVAL_MOCK=1`, `LARA_SETTINGS_MOCK=1`.
+- Shared suite: 66 tests passed (`shared-checks.txt`).
+- Offline/localization invariants passed (`invariants.txt`).
+- Build/lint output is included in `full-tests.txt`; existing warnings are disclosed in the PR.
 
-The failing TeacherClassMockTest reproduces a shared mock sync visibility defect: create a class, enroll/approve a synthetic learner, pull, remove the learner, pull again. The Hub's REST class list no longer includes the class, but the cached enrollment remains ACTIVE. scripts/mock_hub.py sync_pull filters ledger entries by currently visible class IDs, so the learner cannot receive their REMOVED enrollment after losing visibility. That Lead-owned file was not edited. The regression remains enabled.
+The previous removal failure is resolved and its regression remains enabled. The obsolete `tests-known-failure.txt` was removed. Own non-active enrollments without an accessible parent classroom are saved as notices until an authoritative classroom row is available; existing REST approval/reopen coverage passes.
 
-Physical-phone checks now passed in `org.lara.app.sprint27classes`: create/review, Android PATCH rename/archive, code clipboard round trip, add/remove co-teacher, co-teacher restrictions, learner removal cancel/confirm, English/Filipino, 200% review/offline layout and archived-class cold launch with Hub routes removed. See `phone-checks.md` and the screenshots. Text scale and USB routes were restored. Real Rust Hub, WAN-disconnected classroom router and budget hardware remain integration coverage. No real accounts/data or the normal installed phone app were changed.
+## Phone evidence and limits
+
+`phone-checks.md` and screenshots record the earlier physical Xiaomi normal-entry tests in separate package `org.lara.app.sprint27classes`. The installed production app/data were untouched, and temporary text-scale/USB settings were restored. A final phone pass on the rebased build is pending the Lead's review. Real Rust Hub, WAN-disconnected classroom-router testing and budget-device certification remain integration coverage. The memory sample is one foreground observation, not hardware certification.
 
 ## Supported Drive UI adaptation
 
-The class-management concepts were adapted into rounded class/People cards, initials avatars, a light-green code panel, grouped settings, rounded form fields and a create-class review step. Only supported fields and actions were used; repository design tokens and bundled Phosphor icons remain unchanged. No mockup image or remote artwork is rendered by the app.
-
-`ui-build-lint.txt` records the initial adapted APK/lint build. `ui-targeted-tests.txt` records the four initial passing permission/API/transport regressions. `build-lint.txt` and `phone-checks.md` record the final mobile fixes, including white dialogs, cached teacher names and readable archived classes. The existing full-suite removal-sync failure above remains unresolved; targeted tests and phone results do not replace it. The shared fix is deferred at the user's request and its regression remains enabled.
+Rounded class/People cards, initials avatars, a light-green code panel, grouped settings, rounded fields and create review use existing design tokens and bundled Phosphor icons. No remote artwork or unsupported class operations were added. Historical `ui-*.txt` outputs document initial UI work; the rebased outputs above supersede the earlier test status.

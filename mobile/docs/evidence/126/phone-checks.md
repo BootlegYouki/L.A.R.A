@@ -12,7 +12,7 @@ These are manual normal-entry checks, not a claim of an automated device-test su
 | Co-teacher add | Owner added a provisioned synthetic teacher; People showed the co-teacher. |
 | Co-teacher restrictions | Signing in as that teacher showed People and the saved class but no Class settings, archive or manage-teacher controls. |
 | Teacher display names | Final build showed seeded owner and synthetic co-teacher names from the local public-profile projection. |
-| Learner removal | As co-teacher, Filipino warning explained access loss and retained past scores. Cancel kept the ACTIVE learner; confirm updated the teacher's saved roster to Access removed. Learner-side revocation remains the shared failure below. |
+| Learner removal | As co-teacher, Filipino warning explained access loss and retained past scores. Cancel kept the ACTIVE learner; confirm updated the teacher's saved roster to Access removed. Learner-side revocation now passes the subsequent rebased regression; a fresh phone pass is pending. |
 | Co-teacher removal | Owner cancelled then confirmed the removal; the saved classroom's co-teacher row disappeared. |
 | Archive | Owner cancelled then confirmed archive. The class stayed stored and, after the management-list fix, remained readable on a cold offline launch with no editing controls. |
 | English/Filipino | Normal-entry forms, People, statuses and confirmations rendered in the selected app language. |
@@ -23,8 +23,8 @@ Screenshots: `create-review.png`, `co-teacher-people.png`, `remove-confirm-filip
 
 `memory-sample.txt` is one foreground sample (about 192 MiB total PSS) after these flows. It is not certification on a 3–4 GB phone or a full heap/battery profile.
 
-## Deferred integration
+## Subsequent rebase and integration coverage
 
-The enabled mock regression still fails when a removed learner pulls again: the shared Hub/mock filters out their removal revision after they lose class visibility. No client status inference or cache wipe was added. The final Debug suite has 140 passes and this one failure. Shared code, contracts and other teams' folders were left untouched, per the user's instruction to defer that fix.
+Shared fixes #210/#211 are now merged in staging. The rebased `TeacherClassMockTest` and full 141-test Debug/Release suites pass, including removal after sync. The former shared blocker is resolved; the regression remains enabled. A final phone pass on this rebased build is still pending Lead review; the manual observations above describe the earlier physical-phone run.
 
-Real Rust Hub, a physical WAN-disconnected classroom router, grade-history retention on that Hub, and budget-device battery/heap certification remain integration/field follow-ups. These results do not close the overall removal-sync acceptance criterion and no ready PR is claimed.
+Real Rust Hub, a physical WAN-disconnected classroom router, grade-history retention on that Hub, and budget-device battery/heap certification remain integration/field follow-ups.
