@@ -66,14 +66,24 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
 
 A lesson longer than the window cannot be pasted in whole, so every builder (the Hub, `SocraticPromptBuilder` on Android, the desktop sidecar path) picks chunks on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, and the same result on every device.
 
-1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus 300 reserved for the reply. Use `material_chunks.token_estimate` (when it is empty, count words × 1.4).
+1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus the chat history (section 3.2) minus 300 reserved for the reply. Use `material_chunks.token_estimate` (when it is empty, count words × 1.4).
 2. **Short lesson:** if all of the lesson's chunks fit the budget, send all of them and skip steps 3 to 5.
 3. **Query words:** take the learner's message plus their previous message in this lesson's chat (so "I don't know" or "is it 5?" still finds the topic). Lowercase, split on anything that is not a letter or digit, drop words under 3 characters and these stopwords: `the and for are was what how why who when where which this that with from you your can does did not ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang lang din rin pa po`.
 4. **Score:** each chunk scores the number of distinct query words found in its `heading` + `text` (as whole words, lowercased).
-5. **Pick:** highest score first, ties by lower `order_index`, adding chunks while they fit the budget. If every chunk scores 0, reuse the chunks the previous tutor reply in this chat used; on the first message, take chunks from the start of the lesson (`order_index` order).
+5. **Pick:** highest score first, ties by lower `order_index`, adding chunks while they fit the budget. If every chunk scores 0, start from the chunk the previous tutor reply in this chat was grounded in (its `chunk_id`, section 3.2) and fill the budget with the chunks after it in `order_index` order; on the first message, start from the beginning of the lesson.
 6. **Order and grounding:** put the picked chunks into `{lesson_chunks}` in `order_index` order, each under its `heading`. The reply's `grounded_chunk_id` is the highest-scoring picked chunk (the first one when all scored 0).
 
 The evaluation (section 5.1) includes long lessons that do not fit the window, so this rule is scored together with the model.
+
+### 3.2 Chat history (the tutor remembers its last clue)
+
+A Socratic tutor builds on its own last clue and the learner's last answer, so every builder sends recent turns with each request.
+
+1. **Which turns:** the last 3 exchanges (up to 6 messages, learner and tutor) of this learner's chat about this material (same `student_id` and `material_id` in `ai_chat_messages`), oldest first. A chat about another material starts fresh.
+2. **Where:** as normal chat turns after the system prompt (`user` for `USER`, `assistant` for `TUTOR`), then the new learner message. Never paste them into the system prompt file; it keeps only its two placeholders.
+3. **Budget:** at most 300 tokens (words × 1.4). Drop the oldest whole message until it fits, so a long early reply never pushes out the latest one.
+4. **Who reads it:** on the Hub path the Hub reads its own `ai_chat_messages`; clients send only the new message in `EVENT_AI_CHAT_REQUEST`, as now. On the local-model path the app reads its local `ai_chat_messages`.
+5. **Saving:** after each reply, the builder stores the learner message and the tutor reply in `ai_chat_messages`, with the reply's `chunk_id` set to its `grounded_chunk_id`, so section 3.1 step 5 can reuse it. A reply cut off by an error is not stored.
 
 ---
 
@@ -93,7 +103,7 @@ To prevent the Hub PC from overloading when multiple low-RAM devices ask questio
 No model has been validated yet. Choose the model from data.
 
 ### 5.1 Test set
-A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. At least 10 prompts use a lesson longer than the 2,048-token window, so the chunk choice in section 3.1 is tested too; for these, criterion 2 also fails when the picked chunks miss the part of the lesson the question is about. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
+A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. At least 10 prompts use a lesson longer than the 2,048-token window, so the chunk choice in section 3.1 is tested too; for these, criterion 2 also fails when the picked chunks miss the part of the lesson the question is about. At least 5 prompts are follow-ups that come with 2 earlier exchanges (section 3.2), such as the learner answering the tutor's last question wrongly or saying "I don't know"; for these, criterion 3 also fails when the reply ignores what the learner just said. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
 
 The development team writes the set. Any Filipino or Taglish learner messages are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
 
