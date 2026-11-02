@@ -1,6 +1,6 @@
 {
   "app_title": "L.A.R.A.",
-  "home": "Home",
+  "home": "Tahanan",
   "skip_content": "Lumaktaw sa nilalaman",
   "switch_language": "English",
   "switch_language_label": "Lumipat sa English",
@@ -20,5 +20,17 @@
   "saved_on_device": "Naka-save sa device na ito",
   "database_error_title": "Hindi mabuksan ang mga naka-save na klase",
   "database_error_body": "Hindi nabura ang naka-save mong gawain. Subukang buksan muli.",
-  "retry": "Subukang muli"
+  "retry": "Subukang muli",
+  "manual_invalid": "Maglagay ng lokal na IPv4 address at opsyonal na port mula 1 hanggang 65535.",
+  "discovery_error": "Hindi mabasa ang mga nahanap na Hub. Maaari mong buksan ang naka-save na mga klase o maglagay ng address sa ibaba.",
+  "discovery_empty": "Wala pang nahanap na Hub. Maaari mong buksan ang naka-save na mga klase o maglagay ng address sa ibaba.",
+  "discovery_loading": "Hinahanap ang mga Hub ng klase",
+  "manual_help": "Hingin sa guro ang address ng Hub, halimbawa 192.168.1.50:8080.",
+  "discovery_title": "Mga kalapit na Hub ng klase",
+  "discovery_help": "Sumali sa classroom network para mahanap ang Hub. Hindi ka awtomatikong masa-sign in.",
+  "todo": "Mga gawain",
+  "address_unverified": "Hindi pa nasusuri kung makakonekta sa address na ito.",
+  "select_address": "Piliin ang address",
+  "manual_address": "IP address ng Hub",
+  "address_selected": "Napiling address:"
 }
