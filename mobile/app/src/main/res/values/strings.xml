@@ -137,8 +137,6 @@
     <string name="classes_archive">Archive class</string>
     <string name="classes_add_teacher">Add co-teacher</string>
     <string name="classes_teachers">Teachers</string>
-    <string name="classes_owner">Owner: %1$s</string>
-    <string name="classes_teacher">Co-teacher: %1$s</string>
     <string name="classes_remove_teacher">Remove co-teacher</string>
     <string name="classes_learners">Learners</string>
     <string name="classes_no_learners">No saved learners in this class.</string>
@@ -156,4 +154,12 @@
     <string name="classes_teacher_warning">Remove this co-teacher from the class?</string>
     <string name="classes_confirm">Confirm</string>
     <string name="classes_people">People</string>
+    <string name="classes_manage_help">Create a class, share its code and manage your classroom people.</string>
+    <string name="classes_code">Class code</string>
+    <string name="classes_code_help">Share this code with learners. Their join requests still need your approval.</string>
+    <string name="classes_owner_role">Class owner</string>
+    <string name="classes_co_role">Co-teacher</string>
+    <string name="classes_review">Review class details</string>
+    <string name="classes_review_help">Check the name and section before creating your class.</string>
+    <string name="classes_edit">Edit details</string>
 </resources>

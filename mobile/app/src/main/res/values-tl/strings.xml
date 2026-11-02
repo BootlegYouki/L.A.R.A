@@ -137,8 +137,6 @@
     <string name="classes_archive">I-archive ang klase</string>
     <string name="classes_add_teacher">Magdagdag ng kasamang guro</string>
     <string name="classes_teachers">Mga guro</string>
-    <string name="classes_owner">May-ari: %1$s</string>
-    <string name="classes_teacher">Kasamang guro: %1$s</string>
     <string name="classes_remove_teacher">Alisin ang kasamang guro</string>
     <string name="classes_learners">Mga mag-aaral</string>
     <string name="classes_no_learners">Walang naka-save na mag-aaral sa klaseng ito.</string>
@@ -156,4 +154,12 @@
     <string name="classes_teacher_warning">Alisin ang kasamang gurong ito sa klase?</string>
     <string name="classes_confirm">Kumpirmahin</string>
     <string name="classes_people">Mga tao</string>
+    <string name="classes_manage_help">Gumawa ng klase, ibahagi ang code at pamahalaan ang mga tao sa klase.</string>
+    <string name="classes_code">Code ng klase</string>
+    <string name="classes_code_help">Ibahagi ang code sa mga mag-aaral. Kailangan pa rin ng iyong pag-apruba ang kanilang kahilingan.</string>
+    <string name="classes_owner_role">May-ari ng klase</string>
+    <string name="classes_co_role">Kasamang guro</string>
+    <string name="classes_review">Suriin ang detalye ng klase</string>
+    <string name="classes_review_help">Suriin ang pangalan at seksyon bago gawin ang klase.</string>
+    <string name="classes_edit">Baguhin ang detalye</string>
 </resources>

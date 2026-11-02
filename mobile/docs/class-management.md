@@ -16,6 +16,14 @@ Changes use the existing per-account sync mutex for authoritative REST cache ref
 
 All new strings are bundled in English and Filipino. Screen/dialog resources use `PopupLanguage`, dialog bodies scroll for large text, primary actions are at least 56dp and other actions at least 52dp. Loading uses the existing skeleton; empty and Hub-unreachable states keep the screen usable.
 
+## Drive mockup adaptation
+
+The teacher references in [VER 2. TEACHER SIDE](https://drive.google.com/drive/folders/1qiAbjnMx0KIoLf04xT0AyrDGuMxTnLlT), specifically **Pastel Education App Class Management Screens.png** and **Teacher Class Management Screens.png**, inform the management screen's presentation. Supported elements copied into Compose: rounded class cards, a highlighted class-code panel with copy action and approval guidance, grouped settings, initials avatars and People cards, rounded form fields, and a class-details review step before the create request. The review step does not contact the Hub until Create class is confirmed.
+
+`ClassManagementCards.kt` supplies the reusable white cards, green subject tile and saved-person rows. Existing `LaraColors`, shapes, Nunito typography and bundled Phosphor icons remain authoritative. No remote assets, gradients or full mockup screenshots are used as app UI. The owl/landscape composites are not bundled as stretched screen backgrounds. Unsupported code regeneration, grade/subject/description fields, enrollment modes, visibility switches and delete-class actions are omitted. Existing owner/Hub/archive guards still apply. This is a supported-layout adaptation, not a pixel-identical copy of the concept artwork.
+
+New UI build/lint and targeted regression output are saved in `evidence/126/ui-*.txt`; no device screenshot is claimed for this adaptation because no phone was connected. The existing full-suite removal-sync failure remains enabled and documented below.
+
 ## How to test
 
 1. Start the mock Hub and sign in as `T-0001`, PIN `1234`. Open **Manage classes** in the teacher header action area.
