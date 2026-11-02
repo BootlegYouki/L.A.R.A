@@ -1,8 +1,11 @@
 # Windows Installer Test Report
 
-**Date:** December 5, 2024  
+**Date:** October 2026 (Single-PC test)  
+**Updated:** November 2, 2026 (Two-PC test completed)  
 **Tester:** Jan Kiervy  
 **Issue:** [DESKTOP 1.2] #5 - Hub Discovery
+
+**Note:** This document contains original single-PC test results. See `two-pc-test-results.md` for complete two-PC validation that proves firewall rules work across network.
 
 ---
 
@@ -50,7 +53,7 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml --lib real_hub_mdns_wit
 ✅ Installation completed without errors
 
 #### Discovery Test
-✅ Hub discovered automatically: "Grade 4 - Science (Mock Hub)"  
+nonce (Mock Hub)"  
 ✅ Hub IP: 10.172.136.226:8080  
 ✅ No manual configuration required  
 ✅ Works on mobile phone Wi-Fi hotspot network  
@@ -156,21 +159,28 @@ Discovery worked correctly on both networks.
 
 ## Conclusion
 
-✅ **All Windows installer and discovery tests PASSED**
+⚠️ **Testing Status: Incomplete**
 
-The Windows installer successfully:
-- Installs without errors on Windows 11
-- Automatically adds firewall rules (no user prompt required)
-- Enables discovery on Public network profile
-- Hub discovery, expiry, and rediscovery work correctly
-- Handles network interruption gracefully
-- Works on multiple network types (home Wi-Fi, mobile phone hotspot)
+**Completed on single-PC setup:**
+- ✅ Installer runs without errors
+- ✅ Firewall rules added automatically
+- ✅ Discovery mechanisms functional
+- ✅ Expiry and rediscovery work correctly
 
-**Known issues documented:**
-- mDNS-only mode not functional on Windows (documented limitation)
-- Multi-device Wi-Fi toggle requires additional hardware
+**Critical limitation identified:**
+Single-PC testing cannot validate firewall rules because traffic stays within localhost and never traverses Windows Firewall.
 
-**Ready for Lead review and merge to staging.**
+**Required for completion:**
+1. Two-PC test: Hub on PC A, installed Desktop on PC B (Public network, non-admin user)
+2. Verify: Hub appears without firewall popup, Wi-Fi toggle works
+3. Document: OS versions on both PCs
+4. mDNS test: Clarify which PC runs which OS, open Server issue if Hub-side Windows causes failure
+
+**Known issues:**
+- ❌ mDNS-only discovery fails on Windows (requires two-PC test to determine if Hub-side or client-side)
+- ⚠️ Firewall rule effectiveness not yet proven (requires network traffic between devices)
+
+**Next steps:** Complete two-PC testing session to validate firewall rules work across network.
 
 ---
 
