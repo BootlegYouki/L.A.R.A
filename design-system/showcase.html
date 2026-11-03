@@ -942,7 +942,7 @@ function crSwitch(views, labelText, kind) {
 const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];
 
 /* ---------------------------- Remake slice: Home and Stream (desktop) ---------------------------- */
-const RM_DUE = ['Pagsusulit #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
+const RM_DUE = ['Quiz #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
 const RM_STATES = [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['offline', 'Offline']];
 
 function rmIcon(name, cls) { return '<i class="ph ' + (cls || '') + ' ph-' + name + '"></i>'; }
@@ -971,7 +971,7 @@ function rmCard(c, i) {
 function rmHome() {
   const item = (tile, icon, title, sub, end) => '<div class="cr-item"><span class="tile ' + tile + '">' + rmIcon(icon) + '</span><div class="main"><strong>' + title + '</strong><small>' + sub + '</small></div>' + end + '</div>';
   const due = '<section class="rm-panel rm-has" aria-label="Due soon"><div class="rm-head"><h3 class="rm-h"><span data-only="learner">Due soon</span><span data-only="teacher">Recently due</span></h3><span><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="To-do"><span data-only="learner">View To-do</span><span data-only="teacher">View work in progress</span></button>' + rmBtn('arrows-in-line-vertical', 'Collapse this section') + '</span></div>' +
-    '<div data-only="learner">' + item('quiz', 'timer', 'Pagsusulit #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
+    '<div data-only="learner">' + item('quiz', 'timer', 'Quiz #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
     '<div data-only="teacher">' + item('', 'clipboard-text', 'Handout #2: Parts of a Leaf', 'Science 4 - 5 turned in, 27 assigned', '<button class="btn btn-secondary" type="button" data-rm="go" data-screen="later" data-label="Student work">Review</button>') + '</div></section>';
   const classes = '<section class="rm-panel rm-has" aria-label="Classes"><div class="rm-head"><h3 class="rm-h">Classes</h3><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div><div class="rm-grid">' + CR_CLASSES.map(rmCard).join('') + '</div></section>';
   const empty = '<section class="rm-empty" aria-label="No classes yet"><span class="art">' + rmIcon('graduation-cap') + '</span><div><h4>Add a class to get started</h4><p data-only="learner">Ask your teacher for the 6-character class code, then type it here.</p><p data-only="teacher">Create a class and share its code. You approve each learner who asks to join.</p>' +
@@ -981,7 +981,7 @@ function rmHome() {
 }
 
 const RM_TIMES = [['600', '10:00'], ['290', '4:50'], ['100', '1:40']];
-const RM_QUIZ = { title: 'Pagsusulit #2: Parts of a Leaf', questions: [
+const RM_QUIZ = { title: 'Quiz #2: Parts of a Leaf', questions: [
   ['What gives a leaf its green color?', ['Stomata', 'Chlorophyll', 'Phloem', 'Veins']],
   ['Which part lets air move in and out of a leaf?', ['Stomata', 'Petiole', 'Xylem', 'Blade']],
   ['What do leaves make using sunlight?', ['Soil', 'Food (sugar)', 'Water', 'Rocks']],
@@ -1083,7 +1083,7 @@ function rmCardPreview() {
 }
 
 function rmPostPreview() {
-  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
+  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Quiz #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
 }
 
 function rmAnnouncement(init, who, when, body, tail) {
@@ -1096,13 +1096,13 @@ function rmStream() {
   const note = rmNote;
   const comments = rmComments();
   const feed = '<div class="rm-feed rm-has">' +
-    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
+    note('quiz', 'timer', 'quiz: Quiz #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
     note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
     '<div class="rm-posts">' + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', comments) + '</div></div>';
   const empty = '<section class="rm-empty rm-feed-empty" aria-label="Nothing posted yet"><span class="art">' + rmIcon('chat-circle-dots') + '</span><div><h4>This is where you can talk to your class</h4><p data-only="teacher">Use the stream to share announcements, post assignments and answer learners\' questions.</p><p data-only="learner">When your teacher posts something, you will see it here.</p></div></section>';
   const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:72px"></i><i style="height:72px"></i><i style="height:153px"></i></div>';
   const aside = '<div class="rm-aside"><div class="rm-sc" data-only="teacher"><h4>Class code ' + rmBtn('dots-three-vertical', 'More options for class code') + '</h4><span class="code">K7M-4QX</span><p>Learners type this to ask to join. You approve each one.</p></div>' +
-    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Pagsusulit #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
+    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Quiz #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
   const bar = '<div class="rm-bar" data-only="teacher"><button class="rm-tonal" type="button" data-rm="open-compose">' + rmIcon('pencil-simple') + 'New announcement</button><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Repost">' + rmIcon('repeat') + 'Repost</button></div>';
   const tabs = '<div data-s="stream later"><div class="rm-tabs" role="tablist" aria-label="Class sections">' +
     [['stream', 'Stream', ''], ['classwork', 'Classwork', ''], ['people', 'People', ''], ['grades', 'Grades', 'teacher']].map(t => '<button class="rm-tab" role="tab" type="button" data-rm="go" data-tab="' + t[0] + '" data-screen="' + (t[0] === 'stream' ? 'stream' : 'later') + '" data-label="' + t[1] + '"' + (t[2] ? ' data-only="teacher"' : '') + ' aria-selected="' + (t[0] === 'stream') + '">' + t[1] + '</button>').join('') +
@@ -1277,7 +1277,7 @@ private val LaraScheme = lightColorScheme(
     <div class="type-row"><div class="type-meta">Display | 40 / 48 | Black 900</div><div style="font-size:38px;font-weight:900;line-height:1.2;margin-top:4px">Learning grows with you.</div></div>
     <div class="type-row"><div class="type-meta">Heading 1 | 28 / 36 | ExtraBold 800</div><div style="font-size:28px;font-weight:800;margin-top:4px">Science 4: Ecosystems and Living Things</div></div>
     <div class="type-row"><div class="type-meta">Heading 2 | 22 / 30 | Bold 700</div><div style="font-size:22px;font-weight:700;margin-top:4px">Weekly Modules and Paperless Quizzes</div></div>
-    <div class="type-row"><div class="type-meta">Title | 18 / 26 | ExtraBold 800</div><div style="font-size:18px;font-weight:800;margin-top:4px">Pagsusulit #2: Parts of a Leaf</div></div>
+    <div class="type-row"><div class="type-meta">Title | 18 / 26 | ExtraBold 800</div><div style="font-size:18px;font-weight:800;margin-top:4px">Quiz #2: Parts of a Leaf</div></div>
     <div class="type-row"><div class="type-meta">Body | 16 / 24 | Medium 500</div><div style="font-size:16px;font-weight:500;line-height:1.6;margin-top:4px">Please review Handout #2 regarding Photosynthesis before taking Friday's quiz. All files are cached offline.</div></div>
     <div class="type-row"><div class="type-meta">Label | 14 / 20 | ExtraBold 800</div><div style="font-size:14px;font-weight:800;margin-top:4px">Student 4-Digit PIN or Class Code</div></div>
     <div class="type-row"><div class="type-meta">Caption | 12 / 16 | SemiBold 600</div><div style="font-size:12px;font-weight:600;color:var(--color-text-secondary);margin-top:4px">Yesterday, 2:15 PM | Classroom Wi-Fi Hub</div></div>
@@ -1976,9 +1976,6 @@ fun LaraSelect(label: String, options: List<String>, selected: String, onSelect:
     <div class="label-xs" style="margin-bottom:0">Checkbox</div>
     <div class="sel-row" data-kind="check" role="checkbox" aria-checked="true" tabindex="0"><div class="check on"><i class="ph-bold ph-check"></i></div>Download for offline use</div>
     <div class="sel-row" data-kind="check" role="checkbox" aria-checked="false" tabindex="0"><div class="check"><i class="ph-bold ph-check"></i></div>Notify me about new handouts</div>
-    <div class="label-xs" style="margin:10px 0 0">Radio</div>
-    <div class="sel-row" data-kind="radio" role="radio" aria-checked="true" tabindex="0"><div class="radio on"></div>English</div>
-    <div class="sel-row" data-kind="radio" role="radio" aria-checked="false" tabindex="0"><div class="radio"></div>Filipino</div>
     <div class="label-xs" style="margin:10px 0 0">Switch</div>
     <div class="sel-row" data-kind="switch" role="switch" aria-checked="true" tabindex="0">Auto-sync when Hub is found<div class="switch on"></div></div>
     <div class="sel-row" data-kind="switch" role="switch" aria-checked="false" tabindex="0">Reduce motion<div class="switch"></div></div>
@@ -2297,7 +2294,7 @@ fun GradeRow(name: String, lrn: String, points: Int, maxPoints: Int, sync: SyncS
   wide: true,
   preview: `<div class="card" style="overflow:hidden;max-width:520px;margin:0 auto">
     <div class="list-item"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-notebook"></i></div><div class="list-main"><h4>Handout #2: Parts of a Leaf</h4><p>Posted Oct 3 | 2 pages | Cached offline</p></div><i class="ph ph-caret-right list-end"></i></div>
-    <div class="list-item"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div class="list-main"><h4>Pagsusulit #2</h4><p>Due Fri, Oct 9 | 20 items | 15 minutes</p></div><span class="badge badge-queued">Due soon</span></div>
+    <div class="list-item"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div class="list-main"><h4>Quiz #2</h4><p>Due Fri, Oct 9 | 20 items | 15 minutes</p></div><span class="badge badge-queued">Due soon</span></div>
     <div class="list-item"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div class="list-main"><h4>Leaf drawing homework</h4><p>Submitted Oct 1 | Photo</p></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Graded</span></div>
   </div>`,
   react: `export function ListItem({ icon, tone, title, meta, trailing, onClick }: Props) {
@@ -2369,8 +2366,8 @@ fun LaraListItem(
   desc: 'A classwork item with due date, points, status and a clear primary action, shared by learners and teachers.',
   wide: true,
   preview: `<div class="rm rm-lite" data-role="learner" style="max-width:560px;margin:0 auto"><div class="stack">
-    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div><h4 style="font-weight:900;font-size:16px">Pagsusulit #2: Parts of a Leaf</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Due Fri, Oct 9, 11:59 PM | 20 points | 15 min</p></div></div><span class="badge badge-queued">Not started</span></div><div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-play"></i> Start quiz</button><button class="btn btn-secondary"><i class="ph ph-book-open"></i> Review lesson</button></div></div>
-    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div><h4 style="font-weight:900;font-size:16px">Leaf drawing homework</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Was due Mon, Oct 5 | 10 points</p></div></div><span class="badge badge-neutral"><i class="ph ph-clock"></i> Not turned in yet</span></div><div style="margin-top:16px"><button class="btn btn-primary"><i class="ph ph-camera"></i> Kunan ng litrato</button></div></div>
+    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-warning-light);color:var(--color-warning-dark)"><i class="ph ph-timer"></i></div><div><h4 style="font-weight:900;font-size:16px">Quiz #2: Parts of a Leaf</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Due Fri, Oct 9, 11:59 PM | 20 points | 15 min</p></div></div><span class="badge badge-queued">Not started</span></div><div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary"><i class="ph ph-play"></i> Start quiz</button><button class="btn btn-secondary"><i class="ph ph-book-open"></i> Review lesson</button></div></div>
+    <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-info-light);color:var(--color-info-dark)"><i class="ph ph-camera"></i></div><div><h4 style="font-weight:900;font-size:16px">Leaf drawing homework</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Was due Mon, Oct 5 | 10 points</p></div></div><span class="badge badge-neutral"><i class="ph ph-clock"></i> Not turned in yet</span></div><div style="margin-top:16px"><button class="btn btn-primary"><i class="ph ph-camera"></i> Take a photo</button></div></div>
     <div class="card card-pad"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:12px"><div class="list-ico" style="background:var(--color-light-green);color:var(--color-dark-green)"><i class="ph ph-check-circle"></i></div><div><h4 style="font-weight:900;font-size:16px">Quiz 1: Living Things</h4><p style="font-size:12px;color:var(--color-text-secondary);font-weight:600;margin-top:2px">Graded Sep 28 | 9 / 10</p></div></div><span class="badge badge-synced"><i class="ph ph-check-circle"></i> Graded</span></div></div>
   </div></div>`,
   react: `type State = 'todo' | 'notYet' | 'done';
@@ -2420,9 +2417,9 @@ fun AssignmentCard(a: Assignment, onPrimary: () -> Unit) {
         }
     }
 }`,
-  dos: ['Surface work that is not turned in yet first, with a text label and a kind tone.', 'Offer the offline-capable action first (Start quiz, Kunan ng litrato).'],
+  dos: ['Surface work that is not turned in yet first, with a text label and a kind tone.', 'Offer the offline-capable action first (Start quiz, Take a photo).'],
   donts: ['Do not show a Start button after the due date unless late work is allowed.', 'Do not call a learner\'s work Late or Missing. Teachers see those words; learners see Not turned in yet.', 'Do not use purple for the camera button. Purple is only for the AI tutor.'],
-  a11y: ['Announce status as part of the card name, such as "Pagsusulit 2, not started, due Friday".']
+  a11y: ['Announce status as part of the card name, such as "Quiz 2, not started, due Friday".']
 },
 {
   id: 'attendance', title: 'Attendance Row', icon: 'calendar-check', tag: 'NEW',
@@ -2533,7 +2530,7 @@ export function Drawer({ role, classes, activeId, onSelect }: Props) {
   id: 'quiz', title: 'Paperless Quiz', icon: 'timer', wide: true,
   desc: 'Synchronized timed assessment card with 56px option rows designed for high motor accuracy on entry-level Android devices, plus a progress indicator.',
   preview: `<div class="card" style="border:2px solid var(--color-border);padding:24px;box-shadow:var(--shadow-elevated);max-width:560px;margin:0 auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--color-border);padding-bottom:14px;margin-bottom:14px"><span class="badge badge-info">PAGSUSULIT #2</span><div class="timer-pill"><i class="ph ph-timer"></i> 04:32</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--color-border);padding-bottom:14px;margin-bottom:14px"><span class="badge badge-info">QUIZ #2</span><div class="timer-pill"><i class="ph ph-timer"></i> 04:32</div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:12px;font-weight:800;color:var(--color-text-secondary)">Question 3 of 5</span><div class="q-dots"><span class="q-dot done"></span><span class="q-dot done"></span><span class="q-dot now"></span><span class="q-dot"></span><span class="q-dot"></span></div></div>
     <p style="font-size:18px;font-weight:800;margin-bottom:18px">What is the green pigment in leaves that absorbs sunlight for photosynthesis?</p>
     <div class="quiz-card-option" role="radio" aria-checked="false"><i class="ph ph-circle"></i><span>Stomata</span></div>
@@ -2666,7 +2663,7 @@ fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -
   id: 'ai', title: 'Socratic AI Tutor', icon: 'sparkle', wide: true,
   desc: 'A pedagogical tutor styled in solid purple with a mandatory lesson-grounding badge. It guides with questions and never gives the direct answer.',
   preview: `<div class="card" style="border:2px solid #D6CCFC;overflow:hidden;box-shadow:var(--shadow-elevated);max-width:560px;margin:0 auto">
-    <div style="background:var(--color-primary-purple);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px"><i class="ph-fill ph-sparkle" style="font-size:20px"></i><span>L.A.R.A Socratic AI Tutor</span></div><span style="font-size:11px;font-weight:800;background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:4px">FILIPINO</span></div>
+    <div style="background:var(--color-primary-purple);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px"><i class="ph-fill ph-sparkle" style="font-size:20px"></i><span>L.A.R.A Socratic AI Tutor</span></div></div>
     <div style="padding:20px;background:#FAF9FE;display:flex;flex-direction:column;gap:12px">
       <div style="align-self:flex-end;max-width:80%;background:var(--color-primary-purple);color:#fff;border-radius:14px 14px 2px 14px;padding:12px 16px;font-size:14px;font-weight:700">What is the green thing in leaves?</div>
       <div style="align-self:flex-start;max-width:88%;background:var(--color-light-purple);border:1px solid #D6CCFC;border-radius:14px 14px 14px 2px;padding:14px 16px;font-size:14px;color:#2D237A">
@@ -2932,7 +2929,7 @@ function renderOverview() {
         '<div class="list-main"><h4>Parts of a Leaf</h4><p>Handout #2, saved for offline study</p></div>' +
         '<span class="badge badge-synced"><i class="ph ph-check-circle"></i> Synced</span></div></div>' +
       '<div class="ov-bubble"><div class="bot"><i class="ph ph-sparkle"></i></div>' +
-        '<p>Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?</p></div>' +
+        '<p>I cannot give you the answer itself, but I will help you find it! Let us go back to what you read. What is the first step?</p></div>' +
     '</div></div>' +
     '<h2 class="ov-section-title" id="ov-principles">Eight rules every screen follows</h2>' +
     '<p class="ov-section-sub">Google Classroom is the structural reference. These rules give it a Filipino school brand.</p>' +

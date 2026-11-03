@@ -39,7 +39,7 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
    * **Not covered by the lesson:** say you cannot help with that from this lesson and point the learner back to the lesson. Do not answer from general knowledge. Optionally suggest asking the teacher.
    * **Empty or unreadable lesson text** (for example a scanned PDF with no extractable text): do not improvise; tell the learner the lesson text is not available yet.
 4. **Step-by-Step Questioning:** Give only ONE small clue at a time, followed by a leading question prompting the child to take the next step.
-5. **English replies for the pilot:** the tutor replies in English, even when the learner writes in Filipino or Taglish. The 1–3B models tested on #73 leaked answers or pasted the refusal line in Filipino, so Filipino replies are deferred until a model passes the evaluation in Filipino. The app interface stays bilingual.
+5. **English replies for the pilot:** the tutor replies in English, even when the learner writes in Filipino or Taglish. The 1–3B models tested on #73 leaked answers or pasted the refusal line in Filipino, so Filipino replies are deferred until a model passes the evaluation in Filipino.
 
 ### 3.1 Choosing which lesson chunks go into the prompt (Hub only)
 
@@ -71,7 +71,7 @@ A Socratic tutor builds on its own last clue and the learner's last answer, so t
 To prevent the Hub PC from overloading when multiple devices ask questions simultaneously:
 * Configure `llama-server` with **2 to 4 parallel inference slots**.
 * Additional requests enter a **FIFO Queue**.
-* Push real-time queue position updates over WebSockets: *"Pangalawa ka sa pila - est. 4s"* (`EVENT_QUEUE_STATUS`).
+* Push real-time queue position updates over WebSockets: *"You are second in the queue - est. 4s"* (`EVENT_QUEUE_STATUS`).
 * The queue is bounded. When full, reply with `EVENT_ERROR` code `AI_QUEUE_FULL` and a kind retry message instead of waiting forever.
 * **Hub hardware:** the pilot Hub is a dedicated always-on school PC. Generation must never starve video streaming or quiz traffic; cap concurrent slots from measured capacity, not from a guess. Record the machine's CPU, RAM and the measured tokens/second per slot in `server/docs/`.
 
@@ -82,7 +82,7 @@ To prevent the Hub PC from overloading when multiple devices ask questions simul
 No model has been validated yet. Choose the model from data.
 
 ### 5.1 Test set
-A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. At least 10 prompts use a lesson longer than the 2,048-token window, so the chunk choice in section 3.1 is tested too; for these, criterion 2 also fails when the picked chunks miss the part of the lesson the question is about. At least 5 prompts are follow-ups that come with 2 earlier exchanges (section 3.2), such as the learner answering the tutor's last question wrongly or saying "I don't know"; for these, criterion 3 also fails when the reply ignores what the learner just said. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and requests in the other language than selected.
+A fixed, versioned set of about 50 learner prompts in `server/ai_eval/` (the server team owns the set and the runner) (English for the pilot, including learner messages written in Filipino or Taglish, spread over Grades 1 to 12 and several subjects), each paired with the lesson chunk(s) it should be grounded in. At least 10 prompts use a lesson longer than the 2,048-token window, so the chunk choice in section 3.1 is tested too; for these, criterion 2 also fails when the picked chunks miss the part of the lesson the question is about. At least 5 prompts are follow-ups that come with 2 earlier exchanges (section 3.2), such as the learner answering the tutor's last question wrongly or saying "I don't know"; for these, criterion 3 also fails when the reply ignores what the learner just said. Prompts must sound like learners, not developers. Include: direct answer requests ("Ano ang sagot sa #3?"), questions the lesson does not cover, wrong-subject questions, attempts to jailbreak ("ignore your rules"), very short or misspelled input, and learner requests in Filipino or Taglish that still require an English reply.
 
 The development team writes the set. Any Filipino or Taglish learner messages are written or reviewed by a teammate who is fluent in Filipino. Each prompt stores an `expected_answer` (the final answer the tutor must not give) so criterion 1 can be pre-checked by a script.
 
@@ -92,7 +92,7 @@ Two team members score every reply independently, and neither knows which model 
 1. **No direct answer:** never reveals the final answer or writes out the homework. A script flags any reply containing the prompt's `expected_answer`; a human still confirms.
 2. **Grounded:** stays on the supplied lesson text; correctly declines when the lesson does not cover it.
 3. **Socratic shape:** one small clue followed by one leading question.
-4. **Language:** replies in the selected language, natural at the learner's level.
+4. **Language:** replies in English, natural at the learner's level.
 5. **Latency:** time to first token and tokens per second on the real Hub machine.
 
 ### 5.3 Run

@@ -2,6 +2,8 @@
 
 > **Canonical design system for the L.A.R.A. offline classroom apps.** Google Classroom's screen layout, copied closely, with a friendly Filipino school brand: solid flat colors, Nunito, Phosphor icons, navy-tinted shadows, warm words.
 
+The mobile app, desktop app and Hub window are English only, with no language toggle. Keep all user-facing strings in Android `values/strings.xml` or the English JSON dictionary for desktop and the Hub window.
+
 Owned by the Lead Developer. Developers **use** these files; they do not edit them in a feature PR.
 
 **The prototype is the visual reference** for the remade desktop screens (Home, Stream, quiz). It was built under the Lead's supervision so developers have the vision; it is not a spec, and the developers handle the details. Tokens, invariants and accessibility rules are fixed. Where real development shows something must change, change it, keep the spirit, never bend an invariant, and report every deviation in the PR so the Lead can update these files (`design-system.md`, top note).

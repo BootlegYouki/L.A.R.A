@@ -5,9 +5,9 @@
 
 **Project Title:** Offline LAN-Based Classroom Management System with Hub Socratic SLM Tutor and Paperless Assessment Engine
 **Working Codename:** L.A.R.A. 
-**Document Version:** 1.5.0
-**Last Updated:** 2026-11-02
-**Change Summary:** Presentation refresh: contract-aligned classroom workflows, Hub administration and recovery, Hub-only English tutor evaluation, and open questions.
+**Document Version:** 1.6.0
+**Last Updated:** 2026-11-03
+**Change Summary:** Apps are English only (Filipino UI removed), 2026-11-03
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
 **Target Environment:** Philippine Public Schools (DepEd Grades 1–12: elementary, junior and senior high), Rural Campuses, and Zero-Internet Classrooms 
 
@@ -20,7 +20,7 @@ L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platf
 
 The system operates across three interconnected applications:
 1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
-2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, bilingual localization, and Hub AI streaming.
+2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, English interface strings in resources, and Hub AI streaming.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It has the same learner and teacher features as the mobile app, laid out for a large screen.
 
 ### 1.2 The Philippine Context & Research Motivation
@@ -66,7 +66,7 @@ flowchart TD
 
  subgraph ClientApps["Client Applications (Offline-First Architecture)"]
  subgraph AndroidClient["Android Mobile Client (Kotlin + Jetpack Compose M3)"]
- DroidUI["Compose Material 3 UI<br/>(Bilingual: EN / FIL)"]
+ DroidUI["Compose Material 3 UI<br/>(English only)"]
  DroidRoom[("Room SQLite DB<br/>(Offline Cache)")]
  DroidCam["CameraX Module<br/>(Homework Photos)"]
  DroidMedia["Jetpack Media3<br/>(Hardware Video Player)"]
@@ -74,7 +74,7 @@ flowchart TD
  end
 
  subgraph DesktopClient["Desktop Client (Tauri + React + TS + Tailwind)"]
- DeskUI["React + Tailwind UI<br/>(Bilingual: EN / FIL)"]
+ DeskUI["React + Tailwind UI<br/>(English only)"]
  DeskSQLite[("Local SQLite DB")]
  DeskVideo["HTML5 Video Player"]
  DeskAI["Hub AI WebSocket Client"]
@@ -262,10 +262,10 @@ flowchart TD
  Infer --> Stream["EVENT_AI_TOKEN_STREAM: client renders hints"]
 ```
 
-### 5.3 Bilingual Localization & Persona Design
-* **Interface Language:** Toggle between **English** and **Filipino** in Settings.
+### 5.3 English Interface & Persona Design
+* **Interface Language:** Mobile, desktop and the Hub window are English only, with no language toggle. All user-facing strings live in Android `values/strings.xml` or the English JSON dictionary for desktop and the Hub window; never hardcode them in UI components.
 * **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide for Grades 1 to 12. It uses the same Socratic behavior at every grade level, with no grade setting or grade-specific prompt. Each reply gives one small clue followed by one leading question, never the final answer.
-* **Reply Language:** For the pilot, L.A.R.A. AI replies in English, even when the learner writes in Filipino or Taglish. Filipino replies return once a model passes the evaluation in Filipino (the small models tested could not do it without leaking answers). The app interface stays English and Filipino.
+* **Reply Language:** For the pilot, L.A.R.A. AI replies in English, even when the learner writes in Filipino or Taglish. Filipino replies return once a model passes the evaluation in Filipino (the small models tested could not do it without leaking answers).
 * **Interaction Trigger:** The tutor entry point on phone and desktop, such as a tab or Material Viewer button, is an **(open decision)** (`design-system/design-system.md` section 9.16). Quiz lockout applies wherever it is placed.
 * **Grounding:** Hints use only selected text chunks from the active teacher-provided lesson and show their lesson grounding reference (`grounded_chunk_id`). When the lesson does not cover the question, the tutor says so and points the learner back to the lesson. If no text is extractable, it explains that the lesson text is unavailable; it never fills the gap from general knowledge.
 
@@ -275,7 +275,7 @@ flowchart TD
 To prevent the Hub PC from overloading when multiple low-RAM devices request hints simultaneously:
 * Hub configures `llama-server` with **2–4 parallel inference slots**.
 * Additional requests enter a **FIFO Queue**.
-* `EVENT_QUEUE_STATUS` supplies real-time queue position, estimated wait and a message, localized in the interface.
+* `EVENT_QUEUE_STATUS` supplies real-time queue position, estimated wait and a message, displayed in English in the interface.
 * The queue is bounded: when full, the Hub returns `EVENT_ERROR` / `AI_QUEUE_FULL` with a kind retry message. Slot capacity is based on measured Hub performance so inference does not starve quizzes or video streaming.
 
 ---
@@ -353,7 +353,7 @@ sequenceDiagram
 | **Server Local DB** | **SQLite (via SQLx)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
 | **Realtime Protocol** | **WebSockets (Rust Axum / Tokio)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
 | **SLM Runtime** | **`llama.cpp` / `llama-server`** | Highly optimized CPU/GPU GGUF inference; supports 4-bit quantization and multi-slot continuous batching. |
-| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large targets (52dp on phones, 56dp primary actions and quiz options, 40px buttons on desktop), a fixed brand palette (no dynamic color), bilingual strings. |
+| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large targets (52dp on phones, 56dp primary actions and quiz options, 40px buttons on desktop), a fixed brand palette (no dynamic color), English strings in resources. |
 
 ---
 
@@ -365,7 +365,7 @@ sequenceDiagram
 4. **Resumable Transfers:** Video downloads and playback use HTTP Range requests to continue from the last received byte. The contract does not promise byte-resumable handout or installer downloads or multipart homework uploads; homework retries use the same submission ID. Clients do not download models.
 5. **Gradebook Export:** Hub must export the class record of learners, quiz scores and homework grades to `.xlsx` / `.csv` (FR-5.2).
 6. **Privacy and Authorization:** The Hub checks roles and class membership on every protected operation, including through the tunnel. Learners receive only their own grades, submissions and private threads. PIN hashes and server file paths never reach clients; answer keys and synonyms never reach learner payloads; another learner's LRN is visible only to authorized class teachers through the roster. Never log PINs, tokens, LRNs or homework file contents. User deactivation and classroom/assignment archiving preserve graded records.
-7. **Accessible Offline UI:** Every screen provides an offline state, empty state and loading skeleton without blocking access to cached work. All interface strings are available in English and Filipino. Use bundled Nunito and Phosphor assets, design tokens, minimum 52dp phone targets (56dp primary actions and quiz options) and 40px desktop buttons; status uses text and icons as well as color.
+7. **Accessible Offline UI:** Every screen provides an offline state, empty state and loading skeleton without blocking access to cached work. All interface strings are English and stored in resources. Use bundled Nunito and Phosphor assets, design tokens, minimum 52dp phone targets (56dp primary actions and quiz options) and 40px desktop buttons; status uses text and icons as well as color.
 
 ---
 
@@ -376,7 +376,7 @@ sequenceDiagram
 * Local Hub standalone desktop application with captive download portal and 3-step sideloading guide.
 * Native Android client (Material 3) with CameraX homework photo capture.
 * Desktop client (Tauri + React).
-* Bilingual interface (English and Filipino); tutor replies in English for the pilot.
+* English-only interface with strings in resources; tutor replies in English for the pilot.
 * Offline Class Code enrollment with manual teacher approval gate.
 * Google Classroom's classwork features: topics, attachments, private comments, To-do, editing and deleting posts, co-teachers, archiving a class.
 * The same teacher features on desktop and on the phone.
