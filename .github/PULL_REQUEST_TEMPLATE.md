@@ -26,6 +26,9 @@ Describe the tests executed to verify these changes:
 - [ ] Verified bilingual text (English & Filipino)
 - [ ] Screen matches `design-system/design-system.md`; any deviation (and why) is listed under Not Verified or in the description
 
+## Screens (required if anything a teacher or learner sees changed; otherwise write "no screen changes")
+Screenshots of every changed screen, run by you against the mock hub or real Hub: normal, empty, offline (Hub unreachable), English and Filipino. Mobile: also one at 200% font size, and say whether it was a physical phone (model) or an emulator. PRs that change a screen without these are not reviewed (`rules/team-workflow-and-prs.md` section 3).
+
 ## Evidence
 Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.
 
