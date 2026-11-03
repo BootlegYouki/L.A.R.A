@@ -37,7 +37,7 @@
   "connect_to": "Kumonekta sa",
   "connecting": "Kumokonekta",
   "connecting_to_hub": "Kumokonekta sa Hub...",
-  "connected_to_hub": "Nakakonekta sa {name}",
+  "connected_to_hub": "Connected to Local Hub: {name}",
   "connection_failed": "Hindi maabot ang Hub. Suriin ang address at subukang muli.",
   "connection_error": "May error sa koneksyon. Pakisubukan muli.",
   "invalid_address": "Hindi wastong address ng Hub. Maglagay ng lokal na IPv4 address at opsyonal na port.",
@@ -47,5 +47,6 @@
   "status_success": "Tagumpay",
   "status_warning": "Babala",
   "status_error": "Error",
-  "status_info": "Impormasyon"
+  "status_info": "Impormasyon",
+  "preference_not_saved": "Connected for this session. This device could not save the Hub address."
 }

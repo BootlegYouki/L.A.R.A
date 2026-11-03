@@ -1,41 +1,13 @@
 import type { Dictionary } from '../i18n';
+import type { HubConnectionState } from '../services/connection';
 
-export type BannerVariant = 'success' | 'warning' | 'danger' | 'info';
-
-interface HubStatusBannerProps {
-  t: Dictionary;
-  variant: BannerVariant;
-  hubName?: string;
-  message?: string;
-}
-
-export default function HubStatusBanner({ t, variant, hubName, message }: HubStatusBannerProps) {
-  const icons: Record<BannerVariant, string> = {
-    success: 'ph-check-circle',
-    warning: 'ph-warning',
-    danger: 'ph-x-circle',
-    info: 'ph-info',
-  };
-
-  const ariaLabels: Record<BannerVariant, string> = {
-    success: t.status_success,
-    warning: t.status_warning,
-    danger: t.status_error,
-    info: t.status_info,
-  };
-
-  const displayMessage = message || (variant === 'success' && hubName
-    ? t.connected_to_hub.replace('{name}', hubName)
-    : t.hub_offline);
-
-  return (
-    <div
-      role="status"
-      aria-label={ariaLabels[variant]}
-      className={`hub-status-banner banner-${variant}`}
-    >
-      <i className={`ph ${icons[variant]}`} aria-hidden="true" />
-      <p>{displayMessage}</p>
-    </div>
-  );
+export default function HubStatusBanner({ t, connection }: { t: Dictionary; connection: HubConnectionState }) {
+  const connected = connection.status === 'connected';
+  const connecting = connection.status === 'connecting';
+  const message = connected ? t.connected_to_hub.replace('{name}', connection.hub?.name ?? '')
+    : connecting ? t.connecting_to_hub : connection.hub ? t.connection_failed : t.offline_body;
+  return <div id="offline-notice" role="status" className={`hub-status-banner banner-${connected ? 'success' : connecting ? 'info' : 'warning'}`}>
+    <i className={`ph ${connected ? 'ph-wifi-high' : connecting ? 'ph-broadcast' : 'ph-wifi-slash'}`} aria-hidden="true" />
+    <div><p>{message}</p>{connected && !connection.persisted && <p>{t.preference_not_saved}</p>}</div>
+  </div>;
 }

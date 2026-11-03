@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-local-database",
-  "description": "Local database and discovery event subscriptions for the main desktop window only.",
+  "description": "Local database, discovery events and the fixed LAN reachability probe for the main window.",
   "windows": [
     "main"
   ],
@@ -10,6 +10,23 @@
     "core:event:allow-unlisten",
     "sql:allow-load",
     "sql:allow-select",
-    "sql:allow-execute"
+    "sql:allow-execute",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://(10[.][0-9]+[.][0-9]+[.][0-9]+):*/api/classrooms"
+        },
+        {
+          "url": "http://(192[.]168[.][0-9]+[.][0-9]+):*/api/classrooms"
+        },
+        {
+          "url": "http://(127[.][0-9]+[.][0-9]+[.][0-9]+):*/api/classrooms"
+        },
+        {
+          "url": "http://(172[.](?:1[6-9]|2[0-9]|3[01])[.][0-9]+[.][0-9]+):*/api/classrooms"
+        }
+      ]
+    }
   ]
 }

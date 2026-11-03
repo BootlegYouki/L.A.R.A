@@ -1,200 +1,40 @@
-# Hub Connection Flow (Desktop Issue #40)
+# Desktop #40: Hub connection
 
-## Overview
-The Hub connection screen allows users to discover and connect to classroom Hubs via mDNS/UDP discovery or manual IP entry. Once connected, the app monitors the connection and shows a status banner.
+Issue #40 builds on merged discovery #5. It verifies a selected LAN Hub, remembers its nonsecret REST/WebSocket addresses and reconnects without hiding cached Home. Reachable does not mean signed in; accounts remain #45.
 
-## Components
+## Files and flow
+- `src/services/api.ts`: official Tauri HTTP plugin; GET `/api/classrooms` on a validated private/loopback IPv4 and port. A 200 or unauthenticated 401 proves reachability; 3xx, other errors and timeouts do not. No token, cookies or account data are supplied. Redirects are disabled; response streams/deadline/listeners are cleaned up.
+- `src/services/settings.ts`: nonsecret `lara-desktop-hub` preference, validated on read. Stores `rest_base` and `websocket_url` separately, preserving advertised WS port. No new SQL preference table. Storage failure leaves a usable session and visible warning.
+- `src/services/connection.ts`: initial saved-Hub reconnect, otherwise first discovery candidate. One probe at a time; connected checks every three seconds, failures retry after 1/2/4/8/10 seconds. Selecting another Hub cancels the old probe and ignores late results. Discovery disappearance alone never proves a saved/manual Hub is unreachable.
+- `src/pages/ConnectionPage.tsx`: discovered candidates and manual address form. It emits selections, performs no network/SQL work, and keeps the fallback visible during loading, empty and error states.
+- `src/components/HubStatusBanner.tsx`, `src/App.tsx`: truthful connecting/connected/offline status within the existing Home shell. Saved classes and DB retry stay accessible. This flow uses the English dictionary regardless of old language preferences; removal of legacy language infrastructure remains #225.
+- `src-tauri/src/lib.rs`, Cargo lock/config/capability: registers native HTTP. CSP stays IPC-only for REST; no unrestricted WebView HTTP/WS or global Tauri object is needed.
 
-### ConnectionPage (`src/pages/ConnectionPage.tsx`)
-The main connection screen shown when no Hub is connected.
+## Trust boundaries and permissions
+The HTTP capability permits only GET probe URLs under private/loopback IPv4 `/api/classrooms`; the service fixes method/path and never accepts arbitrary URLs. Host matching uses URLPattern regular expressions: partial numeric wildcard hosts do not match IPs as expected. A Rust test uses the plugin's URLPattern parser to allow private ranges/ports and reject public addresses, spoofed domain suffixes, other paths and HTTPS. No off-LAN/tunnel address or auth transport is introduced here. The probe is not server identity verification.
 
-**Features:**
-- Auto-discovery of Hubs via `observeDiscovery()`
-- Manual IP address entry with validation
-- Connection probe to verify Hub reachability
-- Auto-reconnect to last connected Hub on app start
-- Real-time status banner feedback
+## Current schema prerequisite
+Staging commit `0971ce3` added `REJECTED` plus nullable `sync_reject_reason` to four uploadable client tables. Migration 1 is unchanged. Migration 2 now adopts those exact contract changes by rebuilding leaf tables and retaining existing columns/queued payloads; indexes are restored. Tests compare the resulting columns/foreign keys with the current canonical schema and exercise preserved queued work/rejection storage. This adds no sync-engine behavior.
 
-**Props:**
-- `t: Dictionary` - Translations
-- `onConnected: (address: string, hubName: string) => void` - Callback when connection succeeds
+Kiervy's proposed `002_hub_connections.sql` was on this unmerged feature branch, not a released migration; it is replaced rather than shipping the unapproved settings table. Any developer who already installed that intermediate branch may have migration-2 history with a different checksum. Preserve/back up their data and use a separate disposable test profile; do not delete an existing DB to hide that mismatch. Production migration 1 and user data are not erased.
 
-**State Flow:**
-1. On mount: attempts auto-reconnect to `getLastHubConnection()`
-2. Observes discovery for available Hubs
-3. User selects Hub or enters manual address
-4. Probes Hub via `/download` endpoint (HEAD request, 5s timeout)
-5. If reachable: saves connection, notifies parent via `onConnected`
+## Design
+Existing prototype Home/nav preserved. The prototype has no connection screen; the connection controls remain an inline Home panel (rather than a blocking dialog), retaining manual access and saved classes together. Existing bundled Nunito/Phosphor and design tokens; 40px buttons, 52px input. The connected success surface uses canonical primary-light/dark, not nonexistent success-light/dark tokens. All new UI wording is English and dictionary-based.
 
-### HubStatusBanner (`src/components/HubStatusBanner.tsx`)
-Status banner component showing Hub connection state.
+## Test commands
+In desktop/: `npm run lint`, `npm test`, `npm run build`, `cargo test --locked --manifest-path src-tauri/Cargo.toml --lib`, `cargo check --locked --manifest-path src-tauri/Cargo.toml --all-targets`.
+From root: `python scripts/verify_invariants.py`, `python -m unittest discover tests`.
+Native: start `python scripts/mock_hub.py` then `npm run tauri dev`. Confirm automatic connection, stop/restart Hub, invalid/manual entry with discovery unavailable, saved endpoint on restart and offline cached Home.
 
-**Variants:**
-- `success` (green) - Connected to Hub
-- `warning` (amber) - Searching or no Hubs found
-- `danger` (red) - Connection failed or error
-- `info` (gray) - General information
+## Evidence (2026-11-04, Windows)
+- 31 Desktop tests pass, lint and strict production build pass (49 modules, 1.38 seconds).
+- Five default Rust tests pass, including permission-pattern regression; two #5 physical-network tests ignored by default. All-target check and native dev build pass.
+- Actual Tauri window used native HTTP against the mock: unauthenticated 401 requests observed, connected status shown, invalid manual address rejected, loopback manual selection verified. Real localStorage preference contains separate REST/WS bases. No renderer page errors in the checked flow.
+- Stopping the mock switches to offline and retains Home, empty classes and enabled manual input; restarting resumes probes automatically. Four 720/1200px and 100/200% font combinations show no document horizontal overflow.
+- Screenshots: `screenshots/connection-native-online.png`, `screenshots/connection-native-offline.png`.
+- Cold startup exposed an environment restriction: the existing AppData database returned SQLite code 8 (readonly) while running migration 2. Retry then read the prior schema because plugin-sql consumes its pending migrations on that first attempt. The old DB was preserved; do not interpret retry success as a completed upgrade. Unit tests prove the upgrade on writable SQLite databases; native upgrade of this protected existing profile remains unverified. WebView2 test data was explicitly directed to `G:/Codex/LARA/work/webview2-connection-tests` for a stable test browser profile. A normal Close/relaunch was exercised and the preference was present afterward, but automatic discovery was still available, so this does not independently prove saved-only startup recovery. The first attempted saved-only restart failed with the environment-limited profile and remains disclosed.
 
-**Props:**
-- `t: Dictionary` - Translations
-- `variant: BannerVariant` - Visual style
-- `hubName?: string` - Hub name for connected state
-- `message?: string` - Override default message
+Not yet verified for this #40 change: production installer/native production CSP, physical two-device LAN/WAN-disconnected run, Linux/macOS, browser WS/media (later issues), and signed-in classroom fetch (accounts #45). #189's previous discovery evidence does not automatically establish these new connection behaviors. No PR published by this local review task yet.
 
-## Services
 
-### Database (`src/services/db.ts`)
-**New functions:**
-- `saveHubConnection(address: string)` - Records connection in `hub_connections` table
-- `getLastHubConnection()` - Retrieves most recently connected Hub
-- `updateHubConnectionSeen(address: string)` - Updates `last_seen_at` timestamp
-
-**Schema (`migrations/002_hub_connections.sql`):**
-```sql
-CREATE TABLE hub_connections (
-    hub_address TEXT PRIMARY KEY,
-    connected_at TEXT NOT NULL,
-    last_seen_at TEXT NOT NULL
-);
-```
-
-### Discovery (`src/services/discovery.ts`)
-**New function:**
-- `probeHub(address: string)` - Validates Hub reachability
-  - GET request to `/download` endpoint (HEAD not supported by mock Hub)
-  - 5-second timeout via AbortController
-  - Returns `{ reachable: boolean; name?: string }`
-  - Fetches Hub name from discovery if available
-
-## App Integration (`src/App.tsx`)
-
-**Changes:**
-1. **Removed language toggle** (per English-only architectural rule)
-2. **Conditional rendering:**
-   - No connection: show simplified shell + `ConnectionPage`
-   - Connected: show full app with `HubStatusBanner`
-3. **Connection monitoring:**
-   - Observes discovery to detect if connected Hub disappears
-   - Updates `last_seen_at` while Hub is reachable
-   - Returns to `ConnectionPage` if Hub goes offline
-
-**State:**
-```typescript
-const [connectedHub, setConnectedHub] = useState<{
-  address: string;
-  name: string;
-} | null>(null);
-```
-
-## UI States
-
-### Not Connected
-- Simplified top bar with offline pill
-- ConnectionPage showing:
-  - Discovery panel with auto-found Hubs
-  - Manual IP entry field
-  - Status banner (info/warning)
-
-### Connected
-- Full app shell with drawer navigation
-- Green "Connected" pill in top bar showing Hub name
-- Success banner in content area
-- Classes list (from local SQLite)
-
-### Connection States
-| State | Banner Variant | Message |
-|-------|---------------|---------|
-| Searching | info | "Searching for classroom Hubs..." |
-| Hubs Found | info | "Hubs found on your network" |
-| No Hubs | warning | "No Hubs found. You can enter an address manually." |
-| Connecting | info | "Connecting to Hub..." |
-| Connected | success | "Connected to {Hub Name}" |
-| Failed | danger | "Could not reach the Hub. Check the address and try again." |
-| Error | danger | "Connection error. Please try again." |
-
-## Acceptance Criteria (from Issue #40)
-
-✅ **Discovered Hubs appear within 3 seconds**
-- `observeDiscovery()` uses 1s polling + `hub-found` events
-- 3s timeout via `setTimeout(() => setSearching(false), 3000)`
-
-✅ **Manual IP entry with validation**
-- Regex: `^([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]{1,5})?$`
-- Private IP validation (10.x, 172.16-31.x, 192.168.x, 127.x)
-- Port range 1-65535
-
-✅ **Status banner shows connection state**
-- 4 variants (success, warning, danger, info)
-- Icon + text, accessible with `role="status"` and `aria-label`
-
-✅ **Against mock_hub.py, Hub appears and banner shows "Connected to Local Hub"**
-- `probeHub()` validates via HEAD `/download`
-- Hub name fetched from discovery beacon
-- Success banner shows hub name
-
-## Testing
-
-### Manual Test Steps
-1. **Start Mock Hub:**
-   ```bash
-   python3 scripts/mock_hub.py
-   ```
-
-2. **Launch Desktop App:**
-   ```bash
-   cd desktop
-   npm run tauri dev
-   ```
-
-3. **Verify Auto-Discovery:**
-   - Hub should appear in list within 3 seconds
-   - Shows Hub name and IP:port
-   - "Connect" button enabled
-
-4. **Test Manual Entry:**
-   - Enter valid IP (e.g., `192.168.1.50:8080`)
-   - Click "Connect"
-   - Banner should show success
-
-5. **Test Invalid IP:**
-   - Enter invalid IP (e.g., `999.999.999.999`)
-   - Should show error message
-
-6. **Test Connection:**
-   - Select discovered Hub or enter manual address
-   - Banner changes to "Connecting to Hub..."
-   - On success: shows "Connected to {name}"
-   - Hub pill in top bar turns green
-
-7. **Test Auto-Reconnect:**
-   - Close and reopen app
-   - Should automatically reconnect to last Hub
-
-8. **Test Disconnect:**
-   - Stop Mock Hub
-   - App should detect loss and return to ConnectionPage
-
-## Files Changed
-- ✅ `desktop/src/pages/ConnectionPage.tsx` (created)
-- ✅ `desktop/src/components/HubStatusBanner.tsx` (created)
-- ✅ `desktop/src/services/discovery.ts` (extended with `probeHub`)
-- ✅ `desktop/src/services/db.ts` (extended with connection tracking)
-- ✅ `desktop/src/App.tsx` (conditional rendering, removed language toggle)
-- ✅ `desktop/src/store/app.ts` (removed `toggleLanguage`)
-- ✅ `desktop/src/i18n/en.json` (added connection strings)
-- ✅ `desktop/src/index.css` (added banner and connection styles)
-- ✅ `desktop/src-tauri/migrations/002_hub_connections.sql` (created)
-- ✅ `desktop/docs/connection.md` (this file)
-
-## Language Note
-Per architectural decision (2026-11-03), the apps are **English-only**. Filipino strings were NOT added despite Issue #40 sub-task 5 requesting them. The language toggle was removed from the UI, though the i18n infrastructure remains for potential future use.
-
-## Design Tokens Used
-- Buttons: 40px min-height (per Google Classroom standard)
-- Hub pill: 10px dot, border-radius 9999px (full round)
-- Banner colors:
-  - Success: `--color-lara-success-*`
-  - Warning: `--color-lara-warning-*`
-  - Danger: `--color-lara-danger-*`
-  - Info: `--color-lara-subtle` / `--color-lara-border`
-- Icons: Phosphor (`ph-broadcast`, `ph-wifi-high`, `ph-wifi-slash`, `ph-check-circle`, `ph-warning`, `ph-x-circle`, `ph-info`)
+Final repo checks: 66 shared tests passed in 13.676 seconds; offline invariants passed. No shared/server/mobile files were edited. The feature must still be checked outside the managed test process for native database upgrade, saved-only cold launch, production bundle permissions and two-PC network behavior before calling every #40 acceptance criterion verified. No test result here overrides that limit.

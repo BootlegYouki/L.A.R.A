@@ -8,6 +8,7 @@ vi.mock('@tauri-apps/plugin-sql', () => ({ default: { load: vi.fn() } }));
 import { savedClassesQuery } from '../src/services/db';
 
 const migration = readFileSync(new URL('../src-tauri/migrations/001_client_offline.sql', import.meta.url), 'utf8');
+const upgrade = readFileSync(new URL('../src-tauri/migrations/002_sync_rejections.sql', import.meta.url), 'utf8');
 const contract = readFileSync(new URL('../../contracts/schema/client_offline.sql', import.meta.url), 'utf8');
 
 describe('client database', () => {
@@ -26,12 +27,24 @@ describe('client database', () => {
   function open(path = ':memory:') {
     db = new DatabaseSync(path);
     db.exec('PRAGMA foreign_keys = ON');
-    db.exec(migration);
+    if (db.prepare('PRAGMA user_version').get()?.user_version === 0) {
+      db.exec(migration);
+      db.exec(upgrade);
+      db.exec('PRAGMA user_version = 2');
+    }
     return db;
   }
 
   it('reproduces the canonical client schema and keeps queued work after reopening', () => {
-    expect(migration.replace(/\r\n/g, '\n')).toBe(contract.replace(/\r\n/g, '\n'));
+    const expected = new DatabaseSync(':memory:');
+    expected.exec(contract);
+    const actual = open();
+    const tables = expected.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all();
+    for (const { name } of tables) {
+      expect(actual.prepare(`PRAGMA table_info(${name})`).all()).toEqual(expected.prepare(`PRAGMA table_info(${name})`).all());
+      expect(actual.prepare(`PRAGMA foreign_key_list(${name})`).all()).toEqual(expected.prepare(`PRAGMA foreign_key_list(${name})`).all());
+    }
+    expected.close(); actual.close(); db = undefined;
     directory = mkdtempSync(join(tmpdir(), 'lara-desktop-'));
     const path = join(directory, 'lara_client.db');
     const first = open(path);
@@ -39,7 +52,7 @@ describe('client database', () => {
       INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
       VALUES ('class-1', 'Science', 'A', 'K7M4QX', 'teacher-1', 1, 1);
       INSERT INTO announcements VALUES ('post-1', 'class-1', 'Lesson', 'Read', 1, 1, 1);
-      INSERT INTO announcement_comments VALUES ('comment-1', 'post-1', 'learner-1', 'Question', 1, 1, 'QUEUED_FOR_SYNC');
+      INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at, sync_status) VALUES ('comment-1', 'post-1', 'learner-1', 'Question', 1, 1, 'QUEUED_FOR_SYNC');
     `);
     first.close();
     db = undefined;
@@ -74,4 +87,34 @@ describe('client database', () => {
     `);
     expect(local.prepare(savedClassesQuery).all().map((row) => row.id)).toEqual(['shared', 'owned']);
   });
+});
+
+it('upgrades queued rows without clearing them and stores contracted rejection reasons', () => {
+  const local = new DatabaseSync(':memory:');
+  try {
+    local.exec('PRAGMA foreign_keys = ON');
+    local.exec(migration);
+    local.exec("INSERT INTO classrooms (id,name,section,class_code,teacher_id,created_at,updated_at) VALUES ('c','Class','A','ABC234','t',1,1)");
+    local.exec("INSERT INTO announcements VALUES ('p','c','Title','Body',1,1,1)");
+    local.exec("INSERT INTO announcement_comments VALUES ('q','p','u','Keep this',1,1,'QUEUED_FOR_SYNC')");
+    local.exec("INSERT INTO assignments (id,classroom_id,title,due_date,created_at,updated_at) VALUES ('a','c','Work',2,1,1)");
+    local.exec("INSERT INTO assignment_submissions (id,assignment_id,student_id,file_path,submitted_at,updated_at) VALUES ('s','a','u','photo.jpg',1,1)");
+    local.exec("INSERT INTO quizzes (id,classroom_id,title,time_limit_minutes,created_at,updated_at) VALUES ('quiz','c','Quiz',10,1,1)");
+    local.exec("INSERT INTO quiz_attempts (id,quiz_id,student_id,started_at,updated_at,answers_json) VALUES ('attempt','quiz','u',1,1,'[1]')");
+    local.exec("INSERT INTO private_comments (id,assignment_id,student_id,author_id,content,created_at,updated_at,sync_status) VALUES ('private','a','u','u','Private queued',1,1,'QUEUED_FOR_SYNC')");
+    local.exec('BEGIN');
+    local.exec(upgrade);
+    local.exec('COMMIT');
+    expect(local.prepare("SELECT file_path,sync_status FROM assignment_submissions WHERE id='s'").get()).toMatchObject({file_path:'photo.jpg',sync_status:'QUEUED_FOR_SYNC'});
+    expect(local.prepare("SELECT answers_json,sync_status FROM quiz_attempts WHERE id='attempt'").get()).toMatchObject({answers_json:'[1]',sync_status:'QUEUED_FOR_SYNC'});
+    expect(local.prepare("SELECT content,sync_status FROM private_comments WHERE id='private'").get()).toMatchObject({content:'Private queued',sync_status:'QUEUED_FOR_SYNC'});
+    expect(local.prepare("SELECT content,sync_status,sync_reject_reason FROM announcement_comments WHERE id='q'").get())
+      .toMatchObject({content:'Keep this',sync_status:'QUEUED_FOR_SYNC',sync_reject_reason:null});
+    local.exec("UPDATE announcement_comments SET sync_status='REJECTED',sync_reject_reason='FORBIDDEN' WHERE id='q'");
+    expect(local.prepare("SELECT sync_reject_reason FROM announcement_comments WHERE id='q'").get()).toMatchObject({sync_reject_reason:'FORBIDDEN'});
+    for (const table of ['announcement_comments','assignment_submissions','quiz_attempts','private_comments']) {
+      expect(local.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(table)?.sql).toContain("'REJECTED'");
+    }
+    expect(local.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+  } finally { local.close(); }
 });

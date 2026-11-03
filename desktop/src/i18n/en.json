@@ -37,7 +37,7 @@
   "connect_to": "Connect to",
   "connecting": "Connecting",
   "connecting_to_hub": "Connecting to Hub...",
-  "connected_to_hub": "Connected to {name}",
+  "connected_to_hub": "Connected to Local Hub: {name}",
   "connection_failed": "Could not reach the Hub. Check the address and try again.",
   "connection_error": "Connection error. Please try again.",
   "invalid_address": "Invalid Hub address. Enter a local IPv4 address with an optional port.",
@@ -47,5 +47,6 @@
   "status_success": "Success",
   "status_warning": "Warning",
   "status_error": "Error",
-  "status_info": "Information"
+  "status_info": "Information",
+  "preference_not_saved": "Connected for this session. This device could not save the Hub address."
 }

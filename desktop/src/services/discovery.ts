@@ -48,35 +48,3 @@ export function observeDiscovery(update: (hubs: HubInfo[], failed: boolean) => v
   const timer = setInterval(() => { void refresh(); }, 1000);
   return () => { stopped = true; clearInterval(timer); unlisten?.(); };
 }
-
-export async function probeHub(address: string): Promise<{ reachable: boolean; name?: string }> {
-  const endpoint = manualEndpoint(address);
-  if (!endpoint) return { reachable: false };
-  
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    
-    const response = await fetch(`http://${endpoint.ip}:${endpoint.http_port}/download`, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeout);
-    
-    if (response.ok) {
-      // Try to get hub info from discovery for the name
-      const hubs: unknown = await invoke('get_discovered_hubs');
-      if (Array.isArray(hubs)) {
-        const found = hubs.find((h): h is HubInfo => 
-          isHubInfo(h) && h.ip === endpoint.ip && h.http_port === endpoint.http_port
-        );
-        return { reachable: true, name: found?.name };
-      }
-      return { reachable: true };
-    }
-    return { reachable: false };
-  } catch {
-    return { reachable: false };
-  }
-}
