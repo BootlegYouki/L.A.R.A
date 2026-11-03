@@ -18,10 +18,10 @@ fn code(body: &Value) -> Option<&str> {
 }
 
 #[tokio::test]
-async fn seeded_teacher_token_reaches_a_stub() {
+async fn seeded_teacher_token_reaches_sync() {
     let hub = TestHub::start().await;
-    let (status, body) = hub.request(Method::POST, "/api/sync/pull", Some(hub.teacher_token())).await;
-    assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")));
+    let (status, body) = hub.post_json("/api/sync/pull", &json!({"cursor":0}), Some(hub.teacher_token())).await;
+    assert_eq!((status, code(&body)), (200, None));
     hub.stop().await;
 }
 
@@ -95,7 +95,7 @@ async fn sessions_survive_a_hub_restart() {
 
     let hub = lara_hub::serve(config()).await.unwrap();
     let url = format!("http://127.0.0.1:{}/api/sync/pull", hub.http_addr().port());
-    let res = reqwest::Client::new().post(url).bearer_auth(&token).send().await.unwrap();
-    assert_eq!(res.status().as_u16(), 501, "the token still works after a restart");
+    let res = reqwest::Client::new().post(url).bearer_auth(&token).json(&json!({"cursor":0})).send().await.unwrap();
+    assert_eq!(res.status().as_u16(), 200, "the token still works after a restart");
     hub.shutdown().await;
 }

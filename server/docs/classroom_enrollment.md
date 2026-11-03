@@ -30,7 +30,7 @@ This issue adds no screen or UI strings; clients translate contract status/error
 
 Rename, archive, remove and co-teacher management remain guarded stubs for #121. Tests seed archived, removed and co-teacher states directly to verify #6 without implementing those later routes. The shared WebSocket broker already supports bounded, targeted delivery and event-schema validation.
 
-`POST /api/sync/pull` remains a stub for #7. The shared Python `test_join_approve_flow_pushes_websocket_events` also calls sync pull, so that exact test cannot yet pass against the Rust Hub. Its enrollment and WebSocket steps are ported in `backend/tests/classrooms.rs`; the roster ID is checked directly against the committed enrollment and scoped revisions. The unmodified shared suite still runs against the mock.
+`POST /api/sync/pull` is implemented in #7; see [`delta_sync.md`](./delta_sync.md). It returns the same enrollment IDs as the roster and recovers missed approvals after reconnecting, including older class records for newly approved learners.
 
 ## Acceptance evidence
 

@@ -48,8 +48,8 @@ async fn register_opens_a_learner_session() {
     assert_eq!(session["user"]["lrn_or_id"], "123456789012");
     assert_eq!(session["user"]["full_name"], "Ana Reyes");
     assert!(!session.to_string().contains("pin_hash"));
-    let (status, _) = hub.request(Method::POST, "/api/sync/pull", Some(token)).await;
-    assert_eq!(status, 501, "the new token is signed in");
+    let (status, _) = hub.post_json("/api/sync/pull", &json!({"cursor":0}), Some(token)).await;
+    assert_eq!(status, 200, "the new token is signed in");
     hub.stop().await;
 }
 
@@ -193,8 +193,8 @@ async fn logout_kills_the_token() {
         Some(Ok(Message::Close(Some(frame)))) => assert_eq!(u16::from(frame.code), 4401),
         other => panic!("expected a 4401 close, got {other:?}"),
     }
-    let (status, _) = hub.request(Method::POST, "/api/sync/pull", Some(hub.teacher_token())).await;
-    assert_eq!(status, 501, "other sessions of the same user stay signed in");
+    let (status, _) = hub.post_json("/api/sync/pull", &json!({"cursor":0}), Some(hub.teacher_token())).await;
+    assert_eq!(status, 200, "other sessions of the same user stay signed in");
     hub.stop().await;
 }
 
