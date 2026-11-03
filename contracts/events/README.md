@@ -4,7 +4,7 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 
 ## Handshake
 1. Client opens `ws://<hub-ip>:8081`.
-2. Client sends `EVENT_HELLO` with the bearer token from `POST /api/auth/login` (and `last_event_id` after a reconnect).
+2. Client sends `EVENT_HELLO` with the bearer token from `POST /api/auth/login`.
 3. Hub replies `{"event":"EVENT_HELLO_ACK","server_time":<epoch ms>,"hub_id":"<id>","sync_epoch":<int>}`. Invalid token: Hub closes with code `4401`. A client whose stored `hub_id` or `sync_epoch` differs must run a full sync (see `POST /api/sync/pull`, `reset`).
 4. Clients reconnect with exponential backoff (1s, 2s, 4s, max 10s) and must never show a blocking error; offline-first rules apply.
 
@@ -28,4 +28,5 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 ## Rules
 - `EVENT_QUIZ_START` carries `start_epoch_ms` (server clock). Clients compute the offset from `server_time` in `EVENT_HELLO_ACK` and then count down on a monotonic clock (`SystemClock.elapsedRealtime()`, `performance.now()`).
 - REST remains the source of truth. Events are hints; a client that misses one recovers with `POST /api/sync/pull`.
+- The Hub does not replay events. After every reconnect, clients run `POST /api/sync/pull` and `GET /api/quizzes/active`. Presence, queue status and AI tokens are not recovered; the learner asks the tutor again.
 - Changing any file here is a `contract-change` PR (see `rules/team-workflow-and-prs.md`).
