@@ -58,7 +58,8 @@ Before opening a PR targeting `staging`:
 2. **PR Template:** Complete all sections in `.github/PULL_REQUEST_TEMPLATE.md`. CI (contracts, guardrails and the team job) must be green.
 3. **Subsystem Documentation Updated:** Must include documentation of changes within the assigned subsystem folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`).
 4. **Attach Verification Evidence:** Attach a log snippet, terminal output, or screenshot proving your code works on local LAN with zero internet.
-5. **Lead Review:** Wait for the Lead Developer's review against the checklist in section 5 before merging.
+5. **Screens Are Tested Before Review:** if the PR adds or changes anything a teacher or learner sees, the author runs it and attaches screenshots of every changed screen, against the mock hub or real Hub: the normal state, the empty state, the offline (Hub unreachable) state, and English and Filipino. Mobile also shows one screenshot at 200% font size; mobile changes are run on a physical Android phone when the team has one, otherwise an emulator, and the PR says which. A PR that changes a screen without these screenshots is not reviewed.
+6. **Lead Review:** Wait for the Lead Developer's review against the checklist in section 5 before merging.
 
 ---
 
@@ -108,6 +109,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 8. **Sync Correctness:** a timestamp used as the sync cursor; a pull response applied without storing `next_cursor` in the same transaction; no handling of `reset: true`; a revision row not written in the same transaction as the change; `SYNCED` set without a server receipt.
 9. **Scope Violation:** a PR that touches more than one team's folder, edits Lead-owned paths (`contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, `AGENTS.md`) inside a feature PR, or does not match the linked issue.
 10. **Destructive Data Handling:** deleting users, classrooms or graded rows instead of deactivating or archiving.
+11. **Untested Screen:** a PR that adds or changes a screen without the screenshots required by section 3 item 5.
 
 ### Also checked (usually a comment, not a blocker)
 * Design tokens only (no invented hex, gradients, non-Phosphor icons, non-Nunito fonts); purple used only for the AI tutor.
