@@ -4,6 +4,7 @@
 
 pub mod broker;
 pub mod events;
+pub mod presence;
 
 use std::time::Duration;
 
@@ -20,7 +21,8 @@ use crate::auth::{sessions, AuthUser};
 use crate::error::ErrorCode;
 use crate::AppState;
 use broker::Frame;
-use events::{ClientEvent, ServerEvent};
+use events::{ClientEvent, PresenceState, ServerEvent};
+use presence::Presence;
 
 const HELLO_TIMEOUT: Duration = Duration::from_secs(10);
 const CLOSE_INVALID_TOKEN: u16 = 4401;
@@ -66,12 +68,15 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
     if !queue(&tx, &ack) {
         return;
     }
-    let connection_id = app.broker.register(&user.id, tx.clone());
+    let (connection_id, mut stopped) = app.broker.register_with_stop(&user.id, tx.clone());
+    if let Err(e) = Presence::emit(&app, &user, PresenceState::Online).await {
+        tracing::warn!(error = %e, "presence update failed");
+    }
 
     let (mut sink, mut source) = ws.split();
     let writer = async {
         while let Some(frame) = rx.recv().await {
-            if sink.send(Message::text(frame.as_ref())).await.is_err() {
+            if !matches!(timeout(Duration::from_secs(10), sink.send(Message::text(frame.as_ref()))).await, Ok(Ok(()))) {
                 break;
             }
         }
@@ -95,8 +100,15 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
     tokio::select! {
         _ = writer => {}
         _ = reader => {}
+        _ = stopped.changed() => {}
     }
     app.broker.unregister(&user.id, connection_id);
+    // Closing a phone must not mark the learner offline while their laptop is still connected.
+    if !app.broker.is_online(&user.id) {
+        if let Err(e) = Presence::emit(&app, &user, PresenceState::Offline).await {
+            tracing::warn!(error = %e, "presence update failed");
+        }
+    }
     let _ = timeout(Duration::from_secs(1), sink.close()).await;
 }
 

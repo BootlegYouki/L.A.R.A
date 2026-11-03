@@ -182,7 +182,10 @@ pub async fn create_announcement(State(app): State<AppState>, user: AuthUser,
     let ann = db::announcements::insert(&mut tx, &body, now).await?;
     record_revision(&mut tx, Scope::class(&ann.classroom_id), "announcements", &ann.id, Action::Upsert, now).await?;
     tx.commit().await?;                                   // nothing after this may fail the write
-    app.broker.send_to_classroom_students(&ann.classroom_id, &ServerEvent::announcement_push(&ann, now));
+    if let Err(e) = app.broker.send_to_classroom_students(&app.db, &ann.classroom_id,
+        &ServerEvent::announcement_push(&ann, now)).await {
+        tracing::warn!(error = %e, "announcement push failed"); // committed data is recovered by pull
+    }
     Ok(Json(ann))
 }
 ```
@@ -353,7 +356,7 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 12. **#17 targets `tests/stress/`** (Lead-owned). Move it to `server/`?
 13. **Hub window layout:** no section 9 anatomy or showcase entry covers its screens, and staging's `rules/ui-and-accessibility.md` §1 says layout is not free design.
 14. **Python suite against the real Hub:** `tests/test_mock_hub.py` starts the mock itself. A `LARA_HUB_URL` switch in `tests/hub_client.py` would prove parity.
-15. **`EVENT_HELLO.last_event_id`:** no event has an id. We plan to ignore it and rely on pull.
+15. **WebSocket replay (decided in #213):** the Hub does not replay events; `last_event_id` was removed from the contract. After every reconnect clients run `POST /api/sync/pull` and `GET /api/quizzes/active`. Presence, queue status and AI tokens are not recovered; the learner asks the tutor again.
 16. **`quizzes.scores_released_at`** says "teacher releases"; the rules make closing the only release. We plan to set it at close when scores were held.
 17. **Time-limit start:** the mock trusts the client's `started_at`. We plan to use the Hub's `quiz_attempts.started_at` (from `begin`), else `quizzes.started_at`.
 
