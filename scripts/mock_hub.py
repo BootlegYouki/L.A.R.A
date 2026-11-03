@@ -545,13 +545,17 @@ def classroom_join(req):
     c = next((c for c in STATE.classrooms.values() if c["class_code"] == code), None)
     if not c:
         raise ApiError(404, "CLASS_CODE_INVALID", "Hindi nahanap ang Class Code")
+    if c.get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     t = now_ms()
     enr = next((e for e in STATE.enrollments.values()
                 if e["classroom_id"] == c["id"] and e["student_id"] == req.user["id"]), None)
-    if not enr:
-        enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"],
-               "status": "PENDING", "joined_at": t, "updated_at": t}
-        STATE.enrollments[enr["id"]] = enr
+    if not enr or enr["status"] in ("REJECTED", "REMOVED"):
+        # A rejected or removed learner may ask again; the teacher decides again.
+        if not enr:
+            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"], "joined_at": t}
+            STATE.enrollments[enr["id"]] = enr
+        enr["status"], enr["updated_at"] = "PENDING", t
         STATE.log("enrollments", enr["id"], c["id"], req.user["id"])
         STATE.broadcast({"event": "EVENT_JOIN_REQUEST", "class_code": c["class_code"],
                          "student_id": req.user["id"], "full_name": req.user["full_name"],
@@ -567,13 +571,21 @@ def roster(req):
             for e in STATE.enrollments.values() if e["classroom_id"] == req.groups[0]]
 
 
+# Allowed transitions: approve and reject act on PENDING, remove on ACTIVE.
+DECIDE_FROM = {"ACTIVE": "PENDING", "REJECTED": "PENDING", "REMOVED": "ACTIVE"}
+
+
 def decide(req, status):
-    owned_classroom(req, req.groups[0])
+    c = owned_classroom(req, req.groups[0])
+    if c.get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     sid = req.json().get("student_id")
     enr = next((e for e in STATE.enrollments.values()
                 if e["classroom_id"] == req.groups[0] and e["student_id"] == sid), None)
-    if not enr:
-        raise ApiError(404, "NOT_FOUND", "Enrollment not found")
+    if enr and enr["status"] == status:
+        return {"success": True}  # retry of a done request: no change, no event
+    if not enr or enr["status"] != DECIDE_FROM[status]:
+        raise ApiError(404, "NOT_FOUND", "No pending request" if status != "REMOVED" else "Learner is not active")
     enr["status"], enr["updated_at"] = status, now_ms()
     STATE.log("enrollments", enr["id"], req.groups[0], sid)
     STATE.broadcast({"event": "EVENT_JOIN_APPROVAL", "classroom_id": req.groups[0], "student_id": sid,
