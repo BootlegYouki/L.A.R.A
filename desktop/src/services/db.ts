@@ -48,3 +48,42 @@ export async function readSavedClasses(): Promise<SavedClassroom[]> {
   const db = await openDatabase();
   return withDatabaseTimeout(db.select<SavedClassroom[]>(savedClassesQuery));
 }
+
+export interface HubConnection {
+  hub_address: string;
+  connected_at: string;
+  last_seen_at: string;
+}
+
+export async function saveHubConnection(address: string): Promise<void> {
+  const db = await openDatabase();
+  const now = new Date().toISOString();
+  await withDatabaseTimeout(
+    db.execute(
+      `INSERT INTO hub_connections (hub_address, connected_at, last_seen_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(hub_address) DO UPDATE SET last_seen_at = excluded.last_seen_at`,
+      [address, now, now]
+    )
+  );
+}
+
+export async function getLastHubConnection(): Promise<string | null> {
+  const db = await openDatabase();
+  const rows = await withDatabaseTimeout(
+    db.select<{ hub_address: string }[]>(
+      'SELECT hub_address FROM hub_connections ORDER BY last_seen_at DESC LIMIT 1'
+    )
+  );
+  return rows.length > 0 ? rows[0].hub_address : null;
+}
+
+export async function updateHubConnectionSeen(address: string): Promise<void> {
+  const db = await openDatabase();
+  await withDatabaseTimeout(
+    db.execute(
+      'UPDATE hub_connections SET last_seen_at = ? WHERE hub_address = ?',
+      [new Date().toISOString(), address]
+    )
+  );
+}

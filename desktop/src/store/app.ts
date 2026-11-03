@@ -7,17 +7,15 @@ interface AppState {
   language: Language;
   status: 'loading' | 'ready' | 'error';
   classrooms: SavedClassroom[];
-  toggleLanguage: () => void;
   loadSavedClasses: () => Promise<void>;
 }
 
 let loading: Promise<void> | undefined;
 
-export const useAppStore = create<AppState>()(persist((set, get) => ({
+export const useAppStore = create<AppState>()(persist((set) => ({
   language: 'en',
   status: 'loading',
   classrooms: [],
-  toggleLanguage: () => set({ language: get().language === 'en' ? 'fil' : 'en' }),
   loadSavedClasses: () => {
     if (loading) return loading;
     set({ status: 'loading' });

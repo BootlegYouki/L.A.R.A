@@ -45,11 +45,9 @@ describe('offline application state', () => {
     expect(useAppStore.getState().status).toBe('ready');
   });
 
-  it('switches language even when preference storage is unavailable', () => {
+  it('enforces English-only language (architectural rule 2026-11-03)', () => {
+    // Both dictionaries must have matching keys for TypeScript, but only 'en' is used in UI
     expect(Object.keys(dictionaries.en).sort()).toEqual(Object.keys(dictionaries.fil).sort());
-    useAppStore.getState().toggleLanguage();
-    expect(useAppStore.getState().language).toBe('fil');
-    useAppStore.getState().toggleLanguage();
     expect(useAppStore.getState().language).toBe('en');
   });
 });

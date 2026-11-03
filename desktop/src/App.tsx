@@ -1,20 +1,71 @@
 import { useEffect, useState } from 'react';
 import { dictionaries } from './i18n';
 import { useAppStore } from './store/app';
-import HubDiscovery from './components/HubDiscovery';
-import { observeDiscovery, type HubInfo } from './services/discovery';
+import ConnectionPage from './pages/ConnectionPage';
+import { observeDiscovery } from './services/discovery';
+import { updateHubConnectionSeen } from './services/db';
+import HubStatusBanner from './components/HubStatusBanner';
 
 export default function App() {
-  const { language, status, classrooms, toggleLanguage, loadSavedClasses } = useAppStore();
+  const { language, status, classrooms, loadSavedClasses } = useAppStore();
   const [drawerOpen, setDrawerOpen] = useState(true);
-  const [hubs, setHubs] = useState<HubInfo[]>([]);
-  const [discoveryFailed, setDiscoveryFailed] = useState(false);
-  const [searching, setSearching] = useState(true);
-  useEffect(() => { const timer = setTimeout(() => setSearching(false), 3000); return () => clearTimeout(timer); }, []);
+  const [connectedHub, setConnectedHub] = useState<{ address: string; name: string } | null>(null);
   const t = dictionaries[language];
+
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => { void loadSavedClasses(); }, [loadSavedClasses]);
-  useEffect(() => observeDiscovery((found, failed) => { setHubs(found); setDiscoveryFailed(failed); }), []);
+  
+  // Monitor hub connection
+  useEffect(() => {
+    if (!connectedHub) return;
+    
+    let missedCount = 0;
+    const maxMissed = 3; // Disconnect after 3 consecutive misses (3 seconds)
+    
+    const monitorConnection = observeDiscovery((found) => {
+      const stillThere = found.some(
+        (hub) => `${hub.ip}:${hub.http_port}` === connectedHub.address
+      );
+      
+      if (stillThere) {
+        missedCount = 0; // Reset counter when Hub is seen
+        void updateHubConnectionSeen(connectedHub.address);
+      } else {
+        missedCount++;
+        
+        if (missedCount >= maxMissed) {
+          setConnectedHub(null);
+        }
+      }
+    });
+    
+    return monitorConnection;
+  }, [connectedHub]);
+
+  const handleConnected = (address: string, name: string) => {
+    setConnectedHub({ address, name });
+  };
+
+  // Show connection page if not connected
+  if (!connectedHub) {
+    return (
+      <div className="app-shell">
+        <header className="top-bar">
+          <span className="brand">{t.app_title}</span>
+          <div className="top-actions">
+            <span className="hub-pill hub-offline">
+              <i className="ph ph-wifi-slash" aria-hidden="true" />
+              <span>{t.hub_offline}</span>
+            </span>
+          </div>
+        </header>
+        <main className="content-sheet">
+          <ConnectionPage t={t} onConnected={handleConnected} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={`app-shell ${drawerOpen ? '' : 'drawer-rail'}`}>
       <a href="#content" className="skip-link">{t.skip_content}</a>
@@ -23,9 +74,10 @@ export default function App() {
           aria-controls="navigation" onClick={() => setDrawerOpen(!drawerOpen)}><i className="ph ph-list" aria-hidden="true" /></button>
         <span className="brand">{t.app_title}</span>
         <div className="top-actions">
-          <span className="hub-pill"><i className="ph ph-wifi-slash" aria-hidden="true" /><span>{t.hub_offline}</span></span>
-          <button type="button" onClick={toggleLanguage} aria-label={t.switch_language_label} className="control language-button">
-            <i className="ph ph-translate" aria-hidden="true" />{t.switch_language}</button>
+          <span className="hub-pill hub-connected">
+            <i className="ph ph-wifi-high" aria-hidden="true" />
+            <span>{connectedHub.name}</span>
+          </span>
           <button type="button" className="icon-button" aria-label={t.join_class} disabled aria-describedby="offline-notice">
             <i className="ph ph-plus" aria-hidden="true" /></button>
           <span className="avatar-placeholder" role="img" aria-label={t.account_placeholder}><i className="ph ph-user" aria-hidden="true" /></span>
@@ -45,9 +97,7 @@ export default function App() {
         </nav>
         <main id="content" className="content-sheet" tabIndex={-1}>
           <div className="content-wrap">
-            <div id="offline-notice" role="status" className="offline-banner">
-              <i className="ph ph-wifi-slash" aria-hidden="true" /><p>{t.offline_body}</p></div>
-            <HubDiscovery t={t} hubs={hubs} failed={discoveryFailed} searching={searching} />
+            <HubStatusBanner t={t} variant="success" hubName={connectedHub.name} />
             <div className="classes-heading"><h1>{t.classes_title}</h1>
               <button type="button" className="control text-button" disabled aria-describedby="offline-notice">
                 <i className="ph ph-plus" aria-hidden="true" />{t.join_class}</button></div>

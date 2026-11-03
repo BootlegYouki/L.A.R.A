@@ -32,5 +32,20 @@
   "address_unverified": "Hindi pa nasusuri kung makakonekta sa address na ito.",
   "select_address": "Piliin ang address",
   "manual_address": "IP address ng Hub",
-  "address_selected": "Napiling address:"
+  "address_selected": "Napiling address:",
+  "connect": "Kumonekta",
+  "connect_to": "Kumonekta sa",
+  "connecting": "Kumokonekta",
+  "connecting_to_hub": "Kumokonekta sa Hub...",
+  "connected_to_hub": "Nakakonekta sa {name}",
+  "connection_failed": "Hindi maabot ang Hub. Suriin ang address at subukang muli.",
+  "connection_error": "May error sa koneksyon. Pakisubukan muli.",
+  "invalid_address": "Hindi wastong address ng Hub. Maglagay ng lokal na IPv4 address at opsyonal na port.",
+  "searching_for_hubs": "Hinahanap ang mga Hub ng klase...",
+  "hubs_found": "May nahanap na mga Hub sa network",
+  "no_hubs_found": "Walang nahanap na Hub. Maaari kang maglagay ng address nang manu-mano.",
+  "status_success": "Tagumpay",
+  "status_warning": "Babala",
+  "status_error": "Error",
+  "status_info": "Impormasyon"
 }
