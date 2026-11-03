@@ -10,6 +10,8 @@ pub enum ErrorCode {
     BadRequest,
     Unauthorized,
     Forbidden,
+    NotFound,
+    ClassCodeInvalid,
     /// Mock code, not yet in the contract (TECH_SPEC section 14, Q8).
     AlreadyExists,
     AdminExists,
@@ -31,6 +33,8 @@ impl ErrorCode {
             Self::BadRequest => "BAD_REQUEST",
             Self::Unauthorized => "UNAUTHORIZED",
             Self::Forbidden => "FORBIDDEN",
+            Self::NotFound => "NOT_FOUND",
+            Self::ClassCodeInvalid => "CLASS_CODE_INVALID",
             Self::AlreadyExists => "ALREADY_EXISTS",
             Self::AdminExists => "ADMIN_EXISTS",
             Self::TooManyAttempts => "TOO_MANY_ATTEMPTS",
@@ -79,6 +83,18 @@ impl ApiError {
 
     pub fn forbidden(message: impl Into<String>) -> Self {
         Self::new(StatusCode::FORBIDDEN, ErrorCode::Forbidden, message)
+    }
+
+    pub fn not_found(message: impl Into<String>) -> Self {
+        Self::new(StatusCode::NOT_FOUND, ErrorCode::NotFound, message)
+    }
+
+    pub fn class_code_invalid() -> Self {
+        Self::new(StatusCode::NOT_FOUND, ErrorCode::ClassCodeInvalid, "Hindi nahanap ang Class Code")
+    }
+
+    pub fn internal(message: impl Into<String>) -> Self {
+        Self::new(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::Internal, message)
     }
 
     pub fn too_many_attempts(retry_after_secs: u64) -> Self {

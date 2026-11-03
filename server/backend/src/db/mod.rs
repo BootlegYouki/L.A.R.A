@@ -1,6 +1,7 @@
 pub mod seed;
 pub mod sync_revisions;
 pub mod users;
+pub mod classrooms;
 
 use std::path::Path;
 use std::time::Duration;

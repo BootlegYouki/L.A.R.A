@@ -12,6 +12,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`database_sync.md`](./database_sync.md) | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |
 | [`auth_sessions.md`](./auth_sessions.md) | PIN hashing, session tokens, role guards, the login limit, first-run admin setup; ownership guards from 2.1 | Sprint 2 (#42) |
 | [`websocket_broker.md`](./websocket_broker.md) | Registry, handshake, presence, targeted delivery and reconnect recovery | Sprint 2 (#44) |
+| [`classroom_enrollment.md`](./classroom_enrollment.md) | Class codes, roster privacy, teacher approval, retries and rejoin rules; acceptance evidence and manual test steps | Sprint 2 (#6) |
 | `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |

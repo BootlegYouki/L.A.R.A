@@ -10,6 +10,7 @@ pub mod error;
 pub mod models;
 pub mod network;
 pub mod routes;
+pub mod services;
 pub mod websocket;
 
 use std::net::{Ipv4Addr, SocketAddr};
