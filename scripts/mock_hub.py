@@ -634,6 +634,8 @@ def co_teacher_add(req):
         STATE.co_teachers.setdefault(c["id"], set()).add(t["id"])
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
+    # Marks the class as newly visible to the added teacher, so their next pull includes its older rows.
+    STATE.log("classrooms", c["id"], c["id"], student_id=t["id"])
     return public_classroom(c, req.user)
 
 
@@ -660,11 +662,15 @@ def sync_pull(req):
     ids = STATE.visible_classroom_ids(req.user)
     teacher = req.user["role"] == "TEACHER"
 
+    # Classes that became visible after the cursor (learner approved, co-teacher added): send their older rows too.
+    fresh = {e["classroom_id"] for e in STATE.ledger if e["seq"] > cursor and e["student_id"] == req.user["id"]
+             and e["table"] in ("enrollments", "classrooms") and e["classroom_id"] in ids}
     latest = {}
     for e in STATE.ledger:
         own = e["table"] in ("enrollments", "classrooms") and e["student_id"] == req.user["id"]
         # A removed learner or co-teacher no longer sees the class but must still receive the row that says so.
-        if e["seq"] <= cursor or e["table"] == "users" or (e["classroom_id"] not in ids and not own):
+        if (e["seq"] <= cursor and e["classroom_id"] not in fresh) or e["table"] == "users" \
+                or (e["classroom_id"] not in ids and not own):
             continue
         if e["student_id"] and e["student_id"] != req.user["id"] and not teacher:
             continue
@@ -1219,7 +1225,8 @@ def quiz_submit(req):
 def grade_receipt(quiz, att, for_learner):
     # Held scores stay hidden from the learner until the teacher closes the quiz (PRD FR-4.6, FR-4.7).
     held = for_learner and not quiz["release_scores_immediately"] and quiz["status"] != "CLOSED"
-    return {"attempt_id": att["id"], "score": None if held else att["score"],
+    return {"attempt_id": att["id"], "quiz_id": quiz["id"], "student_id": att["student_id"],
+            "score": None if held else att["score"],
             "total_points": att["total_points"], "submitted_at": att["submitted_at"]}
 
 
