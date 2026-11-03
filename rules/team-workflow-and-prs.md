@@ -59,7 +59,7 @@ Before opening a PR targeting `staging`:
 3. **Subsystem Documentation Updated:** Must include documentation of changes within the assigned subsystem folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`).
 4. **Attach Verification Evidence:** Attach a log snippet, terminal output, or screenshot proving your code works on local LAN with zero internet.
 5. **Tested Before Review, On The Right Device:** the author runs the change and attaches the proof; a PR without it is not reviewed.
-   * **Screens:** if the PR adds or changes anything a teacher or learner sees, screenshots of every changed screen against the mock hub or real Hub: normal, empty, offline (Hub unreachable), English and Filipino. Mobile adds one at 200% font size.
+   * **Screens:** if the PR adds or changes anything a teacher or learner sees, screenshots of every changed screen against the mock hub or real Hub: normal, empty, offline (Hub unreachable). Mobile adds one at 200% font size.
    * **Features an emulator or one PC cannot prove:** real Wi-Fi and LAN (Hub discovery, mDNS/UDP, two or more devices talking to one Hub, WebSocket pushes between devices), camera, file picking and storage permissions, notifications, background sync, the phone sleeping or the app being killed, low memory on a 3 to 4 GB phone, and the Windows installer. These are run on real hardware (a physical Android phone, a second PC on the same Wi-Fi, the router with the WAN cable unplugged) and proved with a screenshot, short video or log that names the device model.
    * If the team has no device for a case, say so under **Not Verified**; the PR is not merged until someone on the team has run it.
 6. **Lead Review:** Wait for the Lead Developer's review against the checklist in section 5 before merging.
@@ -101,7 +101,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
    * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the backend must reject AI requests (`HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`).
 5. **Accessibility & Touch Degradation (Grades 1 to 12 Invariant):**
-   * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+   * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded user-facing strings in UI files instead of English resources, or tiny, unreadable fonts.
 
 ---
 
@@ -116,7 +116,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 
 ### Also checked (usually a comment, not a blocker)
 * Design tokens only (no invented hex, gradients, non-Phosphor icons, non-Nunito fonts); purple used only for the AI tutor.
-* Offline state, empty state and loading skeleton exist for every new screen; English and Filipino strings present.
+* Offline state, empty state and loading skeleton exist for every new screen; English strings in resources.
 * Server authorisation by role and class ownership, not only in the UI.
 * Evidence is real: build or test output, a log or screenshot against the mock hub, and a plain statement of anything not verified.
 * Docs updated in the team folder (and `TECH_SPEC.md` if the design changed).

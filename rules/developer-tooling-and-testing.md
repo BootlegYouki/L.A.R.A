@@ -45,7 +45,7 @@ Any change to `contracts/` must be mirrored in the mock hub in the same PR. `tes
 
 ## 3. Pre-Push Invariant Scanner (`scripts/verify_invariants.py`)
 
-Before pushing code or opening a Pull Request targeting `staging`, developers must verify that their changes do not violate the core offline or localization policies.
+Before pushing code or opening a Pull Request targeting `staging`, developers must verify that their changes do not violate the core offline or string-resource policies.
 
 ### Usage
 Run from the repository root:
@@ -58,8 +58,7 @@ python3 scripts/verify_invariants.py
    * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, the Amplitude SDK (`com.amplitude`, `@amplitude/`, `amplitude-js`; the plain word is fine), `posthog`, Google Analytics and Tag Manager.
    * Google Play Services (`play-services`, `com.google.android.gms`, `google-services`) and `googleapis.com` / `gstatic.com` (web fonts must be bundled locally).
    * External CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`).
-2. **String Parity:** Every key in `mobile/app/src/main/res/values/strings.xml` needs a key in `values-tl/strings.xml`, and every key in `desktop/src/i18n/en.json` and `server/ui/src/i18n/en.json` needs one in its `fil.json`. A language file without its pair fails.
-3. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
+2. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
 
 If any violation is detected, the script exits with code 1 and prints the exact offending lines.
 

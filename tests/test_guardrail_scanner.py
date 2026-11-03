@@ -1,4 +1,3 @@
-import json
 import subprocess
 import tempfile
 import unittest
@@ -8,11 +7,9 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 try:
-    from scripts.verify_invariants import check_forbidden_patterns, check_string_parity, check_json_parity
+    from scripts.verify_invariants import check_forbidden_patterns
 except ImportError:
     check_forbidden_patterns = None
-    check_string_parity = None
-    check_json_parity = None
 
 SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts", "verify_invariants.py"))
 
@@ -57,35 +54,6 @@ class TestGuardrailScanner(unittest.TestCase):
         self.assertIn("cdnjs", violation_text)
         self.assertIn("fonts.googleapis", violation_text)
 
-    def test_string_parity_flags_missing_tagalog_keys(self):
-        en_xml = """<resources>
-            <string name="app_name">LARA</string>
-            <string name="login_btn">Login</string>
-            <string name="quiz_timer">Time Remaining</string>
-        </resources>"""
-        
-        tl_xml = """<resources>
-            <string name="app_name">LARA</string>
-            <string name="login_btn">Mag-login</string>
-        </resources>"""
-        
-        missing = check_string_parity(en_xml, tl_xml)
-        self.assertIn("quiz_timer", missing)
-
-    def test_string_parity_passes_when_equal(self):
-        en_xml = """<resources>
-            <string name="app_name">LARA</string>
-            <string name="login_btn">Login</string>
-        </resources>"""
-        
-        tl_xml = """<resources>
-            <string name="app_name">LARA</string>
-            <string name="login_btn">Mag-login</string>
-        </resources>"""
-        
-        missing = check_string_parity(en_xml, tl_xml)
-        self.assertEqual(len(missing), 0)
-
     def test_scanner_flags_play_services_and_analytics(self):
         bad = """
         +    implementation("com.google.android.gms:play-services-location:21.0.1")
@@ -112,12 +80,6 @@ class TestGuardrailScanner(unittest.TestCase):
         +    implementation("androidx.media3:media3-exoplayer:1.2.0")
         """
         self.assertEqual(check_forbidden_patterns(ok), [])
-
-    def test_json_parity_flags_missing_filipino_keys_in_nested_dictionary(self):
-        en = json.dumps({"quiz": {"timer": "Time", "submit": "Submit"}, "login": "Login"})
-        fil = json.dumps({"quiz": {"timer": "Oras"}, "login": "Mag-login"})
-        self.assertEqual(check_json_parity(en, fil), ["quiz.submit"])
-        self.assertEqual(check_json_parity(en, en), [])
 
     def test_script_fails_when_it_cannot_diff_against_the_base(self):
         # The CI bug: a shallow checkout has no origin/staging, and the old script passed on an empty diff.

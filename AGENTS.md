@@ -13,7 +13,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 * **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
-**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
+**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -35,7 +35,7 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 |---|---|
 | Run the Hub simulator (clients build against it) | `python3 scripts/mock_hub.py` |
 | All contract, schema and mock hub tests | `python3 -m unittest discover tests` |
-| Offline and localization guardrail | `python3 scripts/verify_invariants.py` |
+| Offline invariant guardrail | `python3 scripts/verify_invariants.py` |
 | Mobile | `./gradlew test lint` (in `mobile/`) |
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
@@ -58,6 +58,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * **Remote/Suspension Mode is the one sanctioned exception to LAN-only** (decided 2026-10-26): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it from outside the school network while classes are suspended (e.g. bad weather). Same accounts, same bearer tokens, same contract, same sync cursor — nothing about in-school behavior changes, and the tunnel is the only sanctioned path off the LAN (section 3.5).
 * **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
+* **The apps are English only** (decided 2026-11-03): no Filipino strings and no language toggle on mobile, desktop or the Hub window. The tutor already replies in English (§5.2).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **The AI tutor runs only on the Hub** (decided 2026-11-02): no model download and no on-device inference on phones or laptops; every client uses the Hub WebSocket stream. The small models tested in #73 leaked answers or refused everything; the passing candidate needs about 11 GB RAM on a 16 GB Hub.
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
@@ -125,7 +126,7 @@ Rule documents (read the ones for your task):
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
-* **Bilingual:** all user-facing text in English and Filipino, no hardcoded strings (`values/strings.xml` + `values-tl/strings.xml`; a JSON dictionary on desktop with runtime toggle).
+* **English only, no hardcoded strings:** all user-facing text in `values/strings.xml` on Android and the English JSON dictionary on desktop and the Hub window, so wording stays in one place.
 * **Every screen** needs an offline state, an empty state and a loading skeleton.
 * **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
 * **Gradebook export:** `.xlsx` and `.csv` of learners by assignment and quiz with points, per class, direct to USB. Like Google Classroom, L.A.R.A records points only; each teacher applies their own grading system.
@@ -138,7 +139,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 
 ### 5.1 Routing
 * **Every client uses the Hub over WebSocket:** `EVENT_AI_CHAT_REQUEST` → `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. No RAM check. When the Hub is unreachable, show "The AI tutor needs the classroom Hub"; Remote/Suspension Mode carries the same stream through the tunnel.
-* The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
+* The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"You are second in the queue - est. 4s"`).
 * **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
@@ -146,7 +147,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
-4. **Reply in English** for the pilot, even to Filipino or Taglish messages. Filipino replies are deferred until a model passes the evaluation in Filipino (decided 2026-11-01, #73). The app interface stays English and Filipino.
+4. **Reply in English** for the pilot, even to Filipino or Taglish messages. Filipino replies are deferred until a model passes the evaluation in Filipino (decided 2026-11-01, #73).
 5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
@@ -189,7 +190,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 - [ ] Contract, mock hub and tests updated first if the API changed
 - [ ] Build, tests and `verify_invariants.py` pass, output attached
 - [ ] Works with the Hub unreachable (offline state defined)
-- [ ] English and Filipino strings, tokens only, targets at least 52dp on phones and 40px buttons on desktop
+- [ ] Strings in resources (English), tokens only, targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or foreign LRN reaches a client
 - [ ] AI unavailable during a quiz
 - [ ] Team docs updated

@@ -303,7 +303,7 @@ function crSwitch(views, labelText, kind) {
 
 const CR_VIEWS = [['learner', 'Learner'], ['teacher', 'Teacher']];
 /* ---------------------------- Remake slice: Home and Stream (desktop) ---------------------------- */
-const RM_DUE = ['Pagsusulit #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
+const RM_DUE = ['Quiz #2 is due Fri, Oct 9', 'Fractions drill is due Mon, Oct 12', '', ''];
 const RM_STATES = [['normal', 'Normal'], ['empty', 'Empty'], ['loading', 'Loading'], ['offline', 'Offline']];
 
 function rmIcon(name, cls) { return '<i class="ph ' + (cls || '') + ' ph-' + name + '"></i>'; }
@@ -332,7 +332,7 @@ function rmCard(c, i) {
 function rmHome() {
   const item = (tile, icon, title, sub, end) => '<div class="cr-item"><span class="tile ' + tile + '">' + rmIcon(icon) + '</span><div class="main"><strong>' + title + '</strong><small>' + sub + '</small></div>' + end + '</div>';
   const due = '<section class="rm-panel rm-has" aria-label="Due soon"><div class="rm-head"><h3 class="rm-h"><span data-only="learner">Due soon</span><span data-only="teacher">Recently due</span></h3><span><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="To-do"><span data-only="learner">View To-do</span><span data-only="teacher">View work in progress</span></button>' + rmBtn('arrows-in-line-vertical', 'Collapse this section') + '</span></div>' +
-    '<div data-only="learner">' + item('quiz', 'timer', 'Pagsusulit #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
+    '<div data-only="learner">' + item('quiz', 'timer', 'Quiz #2: Parts of a Leaf', 'Science 4', '<span class="badge badge-queued"><i class="ph ph-clock"></i> Fri, Oct 9</span>') + item('', 'notebook', 'Fractions drill', 'Math 4', '<span class="badge badge-neutral"><i class="ph ph-clock"></i> Mon, Oct 12</span>') + '</div>' +
     '<div data-only="teacher">' + item('', 'clipboard-text', 'Handout #2: Parts of a Leaf', 'Science 4 - 5 turned in, 27 assigned', '<button class="btn btn-secondary" type="button" data-rm="go" data-screen="later" data-label="Student work">Review</button>') + '</div></section>';
   const classes = '<section class="rm-panel rm-has" aria-label="Classes"><div class="rm-head"><h3 class="rm-h">Classes</h3><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Join or create a class">' + rmIcon('plus') + '<span data-only="learner">Join class</span><span data-only="teacher">Create class</span></button></div><div class="rm-grid">' + CR_CLASSES.map(rmCard).join('') + '</div></section>';
   const empty = '<section class="rm-empty" aria-label="No classes yet"><span class="art">' + rmIcon('graduation-cap') + '</span><div><h4>Add a class to get started</h4><p data-only="learner">Ask your teacher for the 6-character class code, then type it here.</p><p data-only="teacher">Create a class and share its code. You approve each learner who asks to join.</p>' +
@@ -342,7 +342,7 @@ function rmHome() {
 }
 
 const RM_TIMES = [['600', '10:00'], ['290', '4:50'], ['100', '1:40']];
-const RM_QUIZ = { title: 'Pagsusulit #2: Parts of a Leaf', questions: [
+const RM_QUIZ = { title: 'Quiz #2: Parts of a Leaf', questions: [
   ['What gives a leaf its green color?', ['Stomata', 'Chlorophyll', 'Phloem', 'Veins']],
   ['Which part lets air move in and out of a leaf?', ['Stomata', 'Petiole', 'Xylem', 'Blade']],
   ['What do leaves make using sunlight?', ['Soil', 'Food (sugar)', 'Water', 'Rocks']],
@@ -444,7 +444,7 @@ function rmCardPreview() {
 }
 
 function rmPostPreview() {
-  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
+  return '<div style="width:100%;max-width:760px;margin:0 auto">' + rmLite(rmNote('quiz', 'timer', 'quiz: Quiz #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'later') + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', rmComments()), 'learner') + '</div>';
 }
 
 function rmAnnouncement(init, who, when, body, tail) {
@@ -457,13 +457,13 @@ function rmStream() {
   const note = rmNote;
   const comments = rmComments();
   const feed = '<div class="rm-feed rm-has">' +
-    note('quiz', 'timer', 'quiz: Pagsusulit #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
+    note('quiz', 'timer', 'quiz: Quiz #2: Parts of a Leaf', 'Oct 6, 8:30 AM', 'quiz') +
     note('material', 'book-open', 'material: Handout #2: Parts of a Leaf', 'Oct 5, 2:20 PM') +
     '<div class="rm-posts">' + rmAnnouncement('MR', 'Ms. Reyes', 'Oct 5, 2:15 PM', 'Good morning, class! Please read Handout #2 about the parts of a leaf before Friday. We will have a short quiz. You can do it!', comments) + '</div></div>';
   const empty = '<section class="rm-empty rm-feed-empty" aria-label="Nothing posted yet"><span class="art">' + rmIcon('chat-circle-dots') + '</span><div><h4>This is where you can talk to your class</h4><p data-only="teacher">Use the stream to share announcements, post assignments and answer learners\' questions.</p><p data-only="learner">When your teacher posts something, you will see it here.</p></div></section>';
   const skel = '<div class="rm-skel" aria-hidden="true"><i style="height:72px"></i><i style="height:72px"></i><i style="height:153px"></i></div>';
   const aside = '<div class="rm-aside"><div class="rm-sc" data-only="teacher"><h4>Class code ' + rmBtn('dots-three-vertical', 'More options for class code') + '</h4><span class="code">K7M-4QX</span><p>Learners type this to ask to join. You approve each one.</p></div>' +
-    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Pagsusulit #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
+    '<div class="rm-sc"><h4>Upcoming</h4><p class="rm-has"><span data-only="learner">Quiz #2 is due Fri, Oct 9.</span><span data-only="teacher">No work due soon</span></p><p class="rm-empty-up" style="display:none">Woohoo, no work due soon!</p><button class="cr-link" type="button" style="padding-left:0" data-rm="go" data-screen="later" data-label="To-do">View all</button></div></div>';
   const bar = '<div class="rm-bar" data-only="teacher"><button class="rm-tonal" type="button" data-rm="open-compose">' + rmIcon('pencil-simple') + 'New announcement</button><button class="cr-link" type="button" data-rm="go" data-screen="later" data-label="Repost">' + rmIcon('repeat') + 'Repost</button></div>';
   const tabs = '<div data-s="stream later"><div class="rm-tabs" role="tablist" aria-label="Class sections">' +
     [['stream', 'Stream', ''], ['classwork', 'Classwork', ''], ['people', 'People', ''], ['grades', 'Grades', 'teacher']].map(t => '<button class="rm-tab" role="tab" type="button" data-rm="go" data-tab="' + t[0] + '" data-screen="' + (t[0] === 'stream' ? 'stream' : 'later') + '" data-label="' + t[1] + '"' + (t[2] ? ' data-only="teacher"' : '') + ' aria-selected="' + (t[0] === 'stream') + '">' + t[1] + '</button>').join('') +
