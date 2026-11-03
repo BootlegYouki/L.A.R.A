@@ -127,6 +127,34 @@ class TestMockHub(unittest.TestCase):
         teacher_ws.close()
         ana_ws.close()
 
+    @needs_mock
+    def test_enrollment_transitions_retries_and_rejoin(self):
+        ana, sid = self.enroll_ana()
+        post = lambda action: call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/{action}", {"student_id": sid}, self.teacher)
+        join = lambda: call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)[1]["status"]
+        self.assertEqual(post("approve")[0], 200)  # retry of a done approval
+        self.assertEqual(post("reject")[0], 404)  # ACTIVE is not pending
+        self.assertEqual(join(), "ACTIVE")
+        self.assertEqual(post("remove")[0], 200)
+        self.assertEqual(post("remove")[0], 200)
+        self.assertEqual(post("approve")[0], 404)  # REMOVED is not pending
+        teacher_ws = WsClient(WS_HOST, WS, self.teacher)
+        self.assertEqual(join(), "PENDING")  # a removed learner may ask again
+        self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["student_id"], sid)
+        teacher_ws.close()
+        self.assertEqual(post("reject")[0], 200)
+        self.assertEqual(post("remove")[0], 404)
+        self.assertEqual(join(), "PENDING")
+
+    @needs_mock
+    def test_archived_class_refuses_join_and_decisions(self):
+        ana, sid = self.enroll_ana()
+        call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
+        status, body, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, self.pupil)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+        status, body, _ = call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+
     def test_bad_class_code(self):
         status, body, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "ZZZZZZ"}, self.pupil)
         self.assertEqual((status, body["error"]["code"]), (404, "CLASS_CODE_INVALID"))

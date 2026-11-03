@@ -265,6 +265,7 @@ paths:
   /api/classrooms/join:
     post:
       summary: Request to enroll in a classroom using a 6-character Class Code
+      description: A new request, or one from a learner whose enrollment is REJECTED or REMOVED, becomes PENDING and emits EVENT_JOIN_REQUEST to the class's teachers. A PENDING or ACTIVE learner gets their current status back and nothing changes. An archived class answers 403 FORBIDDEN.
       tags: [classrooms]
       requestBody:
         required: true
@@ -327,6 +328,7 @@ paths:
   /api/classrooms/{id}/remove:
     post:
       summary: Remove an ACTIVE learner from the class (teacher). The enrollment becomes REMOVED, the learner gets EVENT_JOIN_APPROVAL with status REMOVED and loses access; their submissions and scores are kept on the Hub.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. ACTIVE becomes REMOVED. Repeating it on a REMOVED learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -395,6 +397,7 @@ paths:
   /api/classrooms/{id}/approve:
     post:
       summary: Approve a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL to the learner.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. PENDING becomes ACTIVE. Repeating it on an ACTIVE learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -407,6 +410,7 @@ paths:
   /api/classrooms/{id}/reject:
     post:
       summary: Reject a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL with status REJECTED.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. PENDING becomes REJECTED. Repeating it on a REJECTED learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
