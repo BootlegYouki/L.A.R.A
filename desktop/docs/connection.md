@@ -38,3 +38,12 @@ Not yet verified for this #40 change: production installer/native production CSP
 
 
 Final repo checks: 66 shared tests passed in 13.676 seconds; offline invariants passed. No shared/server/mobile files were edited. The feature must still be checked outside the managed test process for native database upgrade, saved-only cold launch, production bundle permissions and two-PC network behavior before calling every #40 acceptance criterion verified. No test result here overrides that limit.
+
+
+## Normal Windows-session follow-up (2026-11-04)
+
+The user launched the built Desktop executable from their own PowerShell, confirmed the Classes empty state without the database error, and reported automatic connection after closing/reopening. Discovery was available, so this verifies automatic connection after restart, not saved-only recovery with discovery blocked.
+
+The user then ran `work/check-desktop-migration.py` from normal PowerShell. Their supplied terminal screenshot reports the actual AppData database, migrations `(1, client_offline_schema, 1)` and `(2, sync_rejections, 1)`, and `Migration 2 complete: True`. The script opens SQLite read-only and additionally checks `sync_reject_reason` exists on all four contracted tables. This establishes that native migration 2 completed in the normal user session. The earlier managed-process readonly error/snapshot is an environment limitation and is superseded for this normal-session upgrade check; it is not evidence of a production migration failure.
+
+Still unverified for #40: saved-only cold launch with discovery unavailable, the production installer/CSP and physical two-PC/WAN-disconnected connection checks. Unit tests and the earlier #5 discovery run do not replace these checks.
