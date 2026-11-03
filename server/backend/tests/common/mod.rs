@@ -152,4 +152,12 @@ impl TestHub {
     pub async fn stop(self) {
         self.hub.shutdown().await;
     }
+
+    pub async fn restart(self) -> Self {
+        let Self { hub, client, teacher_token, _data_dir } = self;
+        hub.shutdown().await;
+        let config = HubConfig { http_port: 0, ws_port: 0, ..HubConfig::new(_data_dir.path()) };
+        let hub = lara_hub::serve(config).await.unwrap();
+        Self { hub, client, teacher_token, _data_dir }
+    }
 }

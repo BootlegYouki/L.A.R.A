@@ -2,3 +2,4 @@
 //! live in `db/` (TECH_SPEC section 4).
 
 pub mod user;
+pub mod classroom;
