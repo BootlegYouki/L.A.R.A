@@ -433,6 +433,9 @@ paths:
         The response also carries the caller's own enrollment rows for classes they no longer see, so a learner who was
         removed receives their `REMOVED` enrollment on the next pull and stops showing that class. Likewise a removed
         co-teacher receives that class's row once more, with `co_teacher_ids` no longer listing them.
+        When a class becomes visible to the caller after their cursor (their enrollment turned ACTIVE, or they were
+        added as a co-teacher), the response also carries that class's current rows from before the cursor, so the
+        class does not open empty. Apply them like any other rows (upsert by id).
       tags: [sync]
       requestBody:
         required: true
@@ -1797,6 +1800,14 @@ components:
         attempt_id:
           type: string
           format: uuid
+        quiz_id:
+          type: string
+          format: uuid
+          description: Optional. The quiz this attempt answers; lets a teacher's pull match scores to quizzes.
+        student_id:
+          type: string
+          format: uuid
+          description: Optional. The learner who made the attempt; lets a teacher's pull match scores to learners.
         score:
           type: [integer, "null"]
           description: Null for a learner while the teacher holds scores (release_scores_immediately false and the quiz is not CLOSED). Teachers always see it.

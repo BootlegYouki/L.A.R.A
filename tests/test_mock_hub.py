@@ -191,6 +191,10 @@ class TestMockHub(unittest.TestCase):
         _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": pull["next_cursor"]}, self.pupil)
         released = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
         self.assertEqual(released[0]["score"], 0)
+        _, tpull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.teacher)
+        seen = [a for a in tpull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
+        self.assertEqual(seen[0]["quiz_id"], quiz["id"], "a teacher's pull says which quiz each score belongs to")
+        self.assertTrue(seen[0]["student_id"], "and which learner")
 
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()
@@ -381,6 +385,29 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(self.server.state.private_comments["pc-1"]["content"], "Akin ito")
         _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [mine]}, self.pupil)
         self.assertEqual(res["receipts"][0]["status"], "SYNCED", "the owner's retry is still idempotent")
+
+    @needs_mock
+    def test_newly_visible_class_arrives_with_its_older_rows(self):
+        _, ann, _ = call(BASE, "POST", "/api/announcements", {
+            "classroom_id": CLASSROOM, "title": "Old post", "content": "Bago ka sumali."}, self.teacher)
+        ana = login(BASE, "123456789013")
+        before = self.pull(ana)
+        self.assertEqual(before["announcements"], [])
+        ana, _ = self.enroll_ana()
+        after = self.pull(ana, cursor=before["next_cursor"], hub_id=before["hub_id"], sync_epoch=before["sync_epoch"])
+        self.assertIn(ann["id"], [a["id"] for a in after["announcements"]],
+                      "an approved learner gets posts made before their cursor")
+        self.assertIn(CLASSROOM, [c["id"] for c in after["classrooms"]])
+        again = self.pull(ana, cursor=after["next_cursor"], hub_id=after["hub_id"], sync_epoch=after["sync_epoch"])
+        self.assertEqual(again["announcements"], [], "the snapshot is sent once, not on every pull")
+
+        admin = login(BASE, "ADMIN-0001")
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        jose = login(BASE, "T-0002")
+        first = self.pull(jose)
+        call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/teachers", {"lrn_or_id": "T-0002"}, self.teacher)
+        added = self.pull(jose, cursor=first["next_cursor"], hub_id=first["hub_id"], sync_epoch=first["sync_epoch"])
+        self.assertIn(ann["id"], [a["id"] for a in added["announcements"]], "an added co-teacher gets older posts too")
 
     def test_removed_learner_loses_the_class_and_co_teacher_gains_it(self):
         ana, sid = self.enroll_ana()
