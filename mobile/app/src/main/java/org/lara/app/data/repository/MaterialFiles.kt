@@ -65,7 +65,8 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
                 require(total > 0)
                 if (connection.contentLengthLong >= 0) require(total == connection.contentLengthLong)
             } }
-            check(api.connection(userId) == c)
+            val current = api.connection(userId)
+            check(current.session == c.session && current.endpoint.restBase == c.endpoint.restBase)
             val header = part.inputStream().use { input ->
                 val bytes = ByteArray(12)
                 var length = 0

@@ -39,7 +39,9 @@ class StreamReadingTest {
             override fun save(value: StoredToken) = Unit
             override fun clear() = Unit
         }
-        files = MaterialFiles(db, EnrollmentApi(HubClient(), tokens, endpoint = { endpoint }), root, "learner")
+        // SharedPreferences reloads a new HubEndpoint instance on every connection check.
+        files = MaterialFiles(db, EnrollmentApi(HubClient(), tokens,
+            endpoint = { requireNotNull(HubEndpoint.lan("127.0.0.1", server.port)) }), root, "learner")
         db.cacheDao().upsertBatch(CacheBatch(
             classrooms=listOf(ClassroomEntity("class", "Science", "A", "K7M4QX", "teacher", createdAt=1, updatedAt=1)),
             announcements=listOf(AnnouncementEntity("post", "class", "Lesson", "Read", createdAt=1, updatedAt=1)),

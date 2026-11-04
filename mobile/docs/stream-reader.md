@@ -26,4 +26,27 @@ Announcements, comments, public author names, topics, materials and extracted te
 
 Evidence and final acceptance status will be recorded under `mobile/docs/evidence/25/`. A passing initial build is not a completion claim; full regression and final screen/device verification are required.
 
-Current automated results: full mock-enabled Debug and Release suites each passed 145 tests with zero failures/skips. After adding interrupted-transfer coverage, all six file/comment regressions passed in both variants. Shared tests: 66 passed; lint: zero errors and 24 existing warnings; offline invariants passed. Initial native/UI fixture tests passed on the Xiaomi 2311DRK48G. Final screenshots and the additional pinch/live reconnect checks are pending the unlocked phone; see `evidence/25/` for exact output and final status.
+Final verification: complete mock-enabled suites passed **146 tests per Debug/Release**, zero failures/errors/skips; lint zero errors; 66 shared checks and invariants passed. Final phone scenarios passed on Xiaomi 2311DRK48G, including real pinch, 200% text and first-name privacy. The full app also passed offline comment/reconnect delivery exactly once, offline cold launch and both roles' reading entry points. A real download completion bug caused by endpoint object identity was fixed and regression-tested with newly constructed endpoints. See [evidence/25](evidence/25/README.md) for screenshots, exact commands, battery-constraint handling and remaining shared limits.
+
+## Reproduce isolated phone scenarios
+
+Create a temporary Gradle init script containing:
+
+```groovy
+allprojects { p ->
+    p.afterEvaluate {
+        def android = p.extensions.findByName('android')
+        if (android != null && p.name == 'app') {
+            android.defaultConfig.applicationId = 'org.lara.app.sprint31reading'
+        }
+    }
+}
+```
+
+Build `assembleDebug assembleDebugAndroidTest` with `-I <init-script>`, install both APKs, then run:
+
+```text
+adb shell am instrument -w -r -e class org.lara.app.reading.HandoutDeviceTest,org.lara.app.reading.ReadingScreenDeviceTest org.lara.app.sprint31reading.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+These synthetic fixture scenarios must use the isolated package: they write a test token/profile and leave fixture caches there. They do not require the mock Hub. Run JVM tests under the normal app ID to avoid this Windows machine's long test database paths. For the full app flow, start the unmodified mock, forward its REST/WS ports with ADB, connect through manual IP, and use the documented seed accounts. Remove forwarding to test Hub-unreachable behavior; restore it for reconnect. A low battery can legitimately hold background queued uploads until the worker's battery constraint is satisfied.
