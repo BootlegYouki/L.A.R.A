@@ -1,0 +1,3 @@
+Cold launch + Settings English: Android app locale fil, retired tl preference retained; connected Hub
+Cold launch + Settings English: Android app locale tl, retired tl preference retained; connected Hub
+Retired preference still present and ignored; account remained signed in

@@ -50,3 +50,5 @@ The mock Hub runs locally with USB forwarding; this does not certify a physical 
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+Final #224 phone verification: 8 tests passed on Xiaomi 2311DRK48G in the separate `org.lara.app.english224` package. Android app locales `fil`/`tl`, a retained old Filipino preference, offline cold launch, queued-work safety and 200% system text were checked. The global system language stayed unchanged; original text scale and USB routes were restored. See [evidence/224](evidence/224/README.md) for final screenshots and output.

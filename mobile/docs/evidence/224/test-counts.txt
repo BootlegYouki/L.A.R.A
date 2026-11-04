@@ -4,4 +4,4 @@ Mock REST/WS ports: 18080/18081, 28080/28081, 38080/38081
 Debug: {'tests': 140, 'failures': 0, 'errors': 0, 'skipped': 0}
 Release: {'tests': 140, 'failures': 0, 'errors': 0, 'skipped': 0}
 Lint: 0 errors, 24 warnings (existing).
-Both app and instrumentation APKs assembled. Device tests NOT run; phone/screenshot pending.
+Both app and instrumentation APKs assembled. Final wording-only fix: 2 Settings ViewModel tests passed per variant; lint/APK builds passed. Final device suite: 8 tests passed in 20.616s; screenshots reviewed.
