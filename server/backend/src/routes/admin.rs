@@ -1,26 +1,65 @@
 use std::net::SocketAddr;
 
-use axum::extract::{ConnectInfo, State};
+use axum::extract::{ConnectInfo, Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use serde_json::{json, Value};
 
 use super::body::JsonBody;
-use super::not_implemented_admin as admin;
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
-use crate::auth::{is_hub_pc, Role, ADMIN_ID};
+use crate::auth::{is_hub_pc, require_role, AuthUser, Role, ADMIN_ID};
 use crate::db::begin_immediate;
 use crate::db::users::{self, admin_exists};
 use crate::error::{ApiError, ErrorCode};
-use crate::models::user::AuthSession;
+use crate::models::user::{AuthSession, User};
 use crate::AppState;
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/admin/setup", post(setup))
-        .route("/api/admin/users", get(admin).post(admin))
-        .route("/api/admin/users/{id}/reset-pin", post(admin))
+        .route("/api/admin/users", get(list).post(create))
+        .route("/api/admin/users/{id}/reset-pin", post(reset_pin))
+}
+
+async fn list(State(app): State<AppState>, user: AuthUser) -> Result<Json<Vec<User>>, ApiError> {
+    require_role(&user, Role::Admin)?;
+    Ok(Json(users::list(&app.db).await?))
+}
+
+async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> Result<Json<User>, ApiError> {
+    require_role(&user, Role::Admin)?;
+    body.need(&["lrn_or_id", "full_name", "role", "pin"])?;
+    let role = body.text("role").and_then(|r| Role::parse(&r))
+        .filter(|r| *r != Role::Admin).ok_or_else(|| ApiError::bad_request("Invalid role"))?;
+    let lrn_or_id = body.text("lrn_or_id").filter(|s| !s.trim().is_empty())
+        .ok_or_else(|| ApiError::bad_request("lrn_or_id must be text"))?;
+    let full_name = body.text("full_name").filter(|s| !s.trim().is_empty())
+        .ok_or_else(|| ApiError::bad_request("full_name must be text"))?;
+    let pin = body.text("pin").filter(|p| is_valid_pin(p))
+        .ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+    let pin_hash = app.pins.hash(&pin).await?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let created = users::insert(&mut tx, &lrn_or_id, &full_name, role, &pin_hash, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(created))
+}
+
+async fn reset_pin(
+    State(app): State<AppState>, user: AuthUser, Path(id): Path<String>, body: JsonBody,
+) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Admin)?;
+    body.need(&["pin"])?;
+    let pin = body.text("pin").filter(|p| is_valid_pin(p))
+        .ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+    let pin_hash = app.pins.hash(&pin).await?;
+    let mut tx = begin_immediate(&app.db).await?;
+    if !users::reset_pin(&mut tx, &id, &pin_hash, app.clock.now_ms()).await? {
+        return Err(ApiError::not_found("User not found"));
+    }
+    tx.commit().await?;
+    Ok(Json(json!({"success": true})))
 }
 
 /// First run only (PRD FR-1.0): the person at the Hub PC sets the admin PIN. Only from the Hub

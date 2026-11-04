@@ -149,7 +149,8 @@ async fn admin_reaches_admin_routes_and_is_never_synced() {
     let (_, session) = setup(&hub, "4321").await;
     let token = session["token"].as_str().unwrap();
     let (status, body) = hub.get("/api/admin/users", Some(token)).await;
-    assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")));
+    assert_eq!(status, 200, "{body}");
+    assert!(body.as_array().unwrap().iter().any(|u| u["lrn_or_id"] == "ADMIN-0001"));
     let revisions: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sync_revisions WHERE entity_id = ?")
         .bind(session["user"]["id"].as_str().unwrap())
         .fetch_one(&hub.state().db)

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import { type Dictionary, useStrings } from './i18n';
+import AdminUsers from './pages/AdminUsers';
 
 /** Answer of the `lan_address` Tauri command (`server/src-tauri/src/main.rs`). */
 type HubStatus = { ip: string | null; running: boolean };
@@ -53,7 +54,7 @@ export default function App() {
         {status && <Beacon status={status} t={t} />}
       </header>
 
-      <main className="mx-auto flex max-w-2xl flex-col gap-4 px-6 pt-12">
+      <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 pt-6 pb-8">
         {status && !status.running && (
           <div
             role="alert"
@@ -66,7 +67,7 @@ export default function App() {
           </div>
         )}
 
-        <section className="flex flex-col gap-4 rounded-lg border border-lara-border bg-white p-8 shadow-card">
+        <section className="flex flex-col gap-3 rounded-lg border border-lara-border bg-white p-4 shadow-card">
           <h1 className="flex items-center gap-2 text-sm leading-5 font-extrabold text-lara-ink-2">
             <i className="ph ph-broadcast text-xl" aria-hidden="true" />
             {t.address_label}
@@ -78,7 +79,7 @@ export default function App() {
             </div>
           ) : status.ip ? (
             <>
-              <p className="text-[40px] leading-[48px] font-black tracking-wide select-all">{status.ip}</p>
+              <p className="text-2xl font-black tracking-wide select-all">{status.ip}</p>
               {/* While stopped, nothing answers at this address, so do not send learners to it. */}
               {status.running && <p className="text-sm leading-5 font-medium text-lara-ink-2">{t.address_help}</p>}
             </>
@@ -89,6 +90,7 @@ export default function App() {
             </p>
           )}
         </section>
+        <AdminUsers />
       </main>
     </div>
   );

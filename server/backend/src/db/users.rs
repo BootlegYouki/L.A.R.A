@@ -82,3 +82,26 @@ pub async fn insert(
 pub async fn admin_exists(conn: &mut SqliteConnection) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM users WHERE role = 'ADMIN')").fetch_one(conn).await
 }
+
+pub async fn list(db: &SqlitePool) -> Result<Vec<User>, sqlx::Error> {
+    let rows: Vec<(String, String, String, String)> =
+        sqlx::query_as("SELECT id, lrn_or_id, full_name, role FROM users ORDER BY created_at, id")
+            .fetch_all(db).await?;
+    rows.into_iter().map(|(id, lrn_or_id, full_name, role)| {
+        let role = Role::parse(&role).ok_or_else(|| sqlx::Error::Decode("Invalid user role".into()))?;
+        Ok(User { id, lrn_or_id, full_name, role })
+    }).collect()
+}
+
+pub async fn reset_pin(tx: &mut SqliteConnection, id: &str, pin_hash: &str, now_ms: i64) -> Result<bool, sqlx::Error> {
+    let changed = sqlx::query("UPDATE users SET pin_hash = ?, updated_at = ? WHERE id = ?")
+        .bind(pin_hash).bind(now_ms).bind(id).execute(&mut *tx).await?.rows_affected();
+    if changed == 0 {
+        return Ok(false);
+    }
+    let role: String = sqlx::query_scalar("SELECT role FROM users WHERE id = ?").bind(id).fetch_one(&mut *tx).await?;
+    if role != Role::Admin.as_str() {
+        record_revision(tx, Scope::global(), "users", id, Action::Upsert, now_ms).await?;
+    }
+    Ok(true)
+}

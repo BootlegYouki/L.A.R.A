@@ -15,9 +15,10 @@ mod quizzes;
 mod sync;
 
 use axum::extract::Request;
-use axum::http::{Method, Uri};
+use axum::http::{header, HeaderValue, Method, Uri};
 use axum::Router;
 use tower_http::trace::TraceLayer;
+use tower_http::cors::CorsLayer;
 
 use crate::auth::{require_role, AuthUser, Role};
 use crate::error::ApiError;
@@ -42,6 +43,17 @@ pub fn router(app: AppState) -> Router {
         .layer(TraceLayer::new_for_http().make_span_with(|req: &Request| {
             tracing::info_span!("http", method = %req.method(), path = %req.uri().path())
         }))
+        // The bundled Hub window calls REST on loopback. Other web origins get no CORS access.
+        .layer(CorsLayer::new()
+            .allow_origin([
+                HeaderValue::from_static("tauri://localhost"),
+                HeaderValue::from_static("http://tauri.localhost"),
+                HeaderValue::from_static("https://tauri.localhost"),
+                HeaderValue::from_static("http://localhost:5173"),
+                HeaderValue::from_static("http://127.0.0.1:5173"),
+            ])
+            .allow_methods([Method::GET, Method::POST])
+            .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]))
         .with_state(app)
 }
 
