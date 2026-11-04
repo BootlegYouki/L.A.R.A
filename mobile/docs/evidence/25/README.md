@@ -16,7 +16,7 @@ The new Stream/Classwork layout follows the project’s Google Classroom referen
 
 Xiaomi 2311DRK48G, isolated `org.lara.app.sprint31reading`, original `org.lara.app` untouched. The first two phone fixture tests passed (13.731s): native PDF page rendering and image sampling, plus offline component flows for queued comments, PDF page navigation/button zoom, image zoom, DOCX chunks, empty and loading states. Initial screenshots were reviewed; the page controls were improved for 200% text afterward.
 
-Final pinch gesture, first-name privacy, extra large-text/empty cases, final-build screenshots and full app live mock/offline/reconnect checks are prepared but pending the phone being unlocked. The phone locked itself; an unlock request is pending. Its original USB stay-awake setting is recorded and must be restored after testing. Initial screenshots are not published as final-build evidence.
+Final pinch gesture, first-name privacy, extra large-text/empty cases, final-build screenshots and full app live mock/offline/reconnect checks are prepared but pending the phone being unlocked. The phone locked itself; an unlock request is pending. The temporary USB stay-awake setting and USB forwarding routes were restored while awaiting unlock. Initial screenshots are not published as final-build evidence.
 
 ## Limits to report to the Lead
 
