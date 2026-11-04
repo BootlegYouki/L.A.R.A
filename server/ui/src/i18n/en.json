@@ -1,7 +1,5 @@
 {
   "app_title": "L.A.R.A Hub",
-  "switch_language": "Filipino",
-  "switch_language_label": "Switch to Filipino",
   "beacon_running": "Hub is running",
   "beacon_no_network": "No classroom network",
   "beacon_stopped": "Hub stopped",

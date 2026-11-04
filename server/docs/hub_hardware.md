@@ -11,7 +11,7 @@ A school admin installs the Hub on a fresh Windows or Linux PC by double-clickin
 | `src-tauri/tauri.conf.json` (`bundle`) | Targets `nsis` (Windows `.exe`), `deb` and `appimage` (Linux). Per-machine install, offline WebView2, the hooks below, `Education` category |
 | `src-tauri/windows/hooks.nsh` | NSIS hooks: after install, adds the three named inbound rules with `netsh`; after a real uninstall (not an update), removes them |
 | `src-tauri/linux/postinst.sh` | `.deb` post-install: `ufw allow` or `firewall-cmd --add-port` for the three ports when that firewall is running; does nothing otherwise |
-| `src-tauri/linux/lara-hub.desktop` | Desktop entry template (launcher name, icon, English and Filipino comment) |
+| `src-tauri/linux/lara-hub.desktop` | Desktop entry template (launcher name, icon and comment) |
 | `src-tauri/.cargo/config.toml` | Links the Visual C++ runtime statically on Windows, so the `.exe` needs no redistributable |
 | `backend/src/network/firewall_check.rs` | `HUB_PORTS`, `check()` → `Vec<PortHealth>`: per port, is the Hub listening, and does the firewall allow it (`Allowed`, `Blocked`, `Off`, `Unknown`)? `reachable()` is true only when both are confirmed |
 | `backend/tests/firewall_check.rs` | Fails if the installer scripts and `HUB_PORTS` disagree on a rule name, port or protocol |
@@ -48,7 +48,7 @@ No database tables, events or contract routes are touched by this step.
 * **Visual C++ runtime:** Rust links it dynamically by default, and a fresh Windows PC may lack `VCRUNTIME140.dll`. `.cargo/config.toml` links it statically. The file applies when cargo runs inside `src-tauri/`, which is what `tauri build` does.
 * **`.deb` dependencies:** the `.deb` declares `libwebkit2gtk-4.1-0` and `libgtk-3-0`. Ubuntu 22.04+ desktop has both. On a PC without them, `apt` would need the internet, so use the AppImage there: it carries its own libraries. The AppImage has no post-install step, so open the ports with the dashboard's fix (5.3) or by hand.
 * **`postinst.sh` must stay LF.** `src-tauri/.gitattributes` pins `linux/*` to LF; the test checks for `\r`.
-* **Installer wizard language:** NSIS has no Filipino language file, so the wizard's own pages are in English. Everything the Hub itself shows stays bilingual.
+* **Installer wizard language:** the NSIS wizard and Hub window use English. The Hub window has no language toggle; its strings live in `ui/src/i18n/en.json` (#226).
 
 ## Pilot Hub hardware (1.5, #73)
 **No pilot school PC is available yet.** The AI spike runs on a developer laptop set up as a simulated school PC. Replace this section with the real machine's details when the pilot school is known, and re-run the evaluation there (the commands are in `docs/benchmarks/ai_model_evaluation.md`).

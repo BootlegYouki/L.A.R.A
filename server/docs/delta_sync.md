@@ -27,7 +27,7 @@ Pull reads `hub_meta` from the current transaction, so it observes an epoch chan
 
 `bump_sync_epoch` is the shared hook for restore and tombstone pruning: call it inside the same transaction as that operation. Restore remains owned by #21. Tombstone retention is still unspecified, so this issue adds no pruning schedule and deletes no ledger history.
 
-There are no outbound network calls. If a client loses the Hub, it retains its cursor and queued work. A lost push response is recovered by retrying the same IDs; a lost pull response is recovered by requesting the same cursor. No transaction spans network or file operations. This backend issue adds no user interface; clients translate status/error codes through their English and Filipino dictionaries.
+There are no outbound network calls. If a client loses the Hub, it retains its cursor and queued work. A lost push response is recovered by retrying the same IDs; a lost pull response is recovered by requesting the same cursor. No transaction spans network or file operations. This backend issue adds no user interface; clients translate status/error codes through their English dictionaries.
 
 ## How to test (no programming required)
 

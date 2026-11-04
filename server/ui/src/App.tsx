@@ -43,7 +43,7 @@ function Beacon({ status, t }: { status: HubStatus; t: Dictionary }) {
 }
 
 export default function App() {
-  const { t, toggle } = useStrings();
+  const { t } = useStrings();
   const status = useHubStatus();
 
   return (
@@ -51,15 +51,6 @@ export default function App() {
       <header className="flex h-16 items-center gap-4 px-6">
         <span className="text-sm leading-5 font-extrabold">{t.app_title}</span>
         {status && <Beacon status={status} t={t} />}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={t.switch_language_label}
-          className="ml-auto inline-flex min-h-control items-center gap-2 rounded-full border-2 border-lara-border bg-white px-6 text-sm leading-5 font-extrabold text-lara-primary-dark hover:bg-lara-subtle focus-visible:outline-2 focus-visible:outline-lara-primary"
-        >
-          <i className="ph ph-translate text-xl" aria-hidden="true" />
-          {t.switch_language}
-        </button>
       </header>
 
       <main className="mx-auto flex max-w-2xl flex-col gap-4 px-6 pt-12">
