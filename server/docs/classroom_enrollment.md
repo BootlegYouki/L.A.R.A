@@ -26,7 +26,7 @@ Teachers create classes and approve each learner before that learner becomes an 
 
 Nothing in this feature calls an external service or adds a dependency. A disconnected teacher can find the pending request in the roster after reconnecting. A disconnected learner can retrieve their approval with classroom listing. Both survive Hub restarts; existing sessions remain valid. A failed notification never reverses a committed enrollment.
 
-This issue adds no screen or UI strings; clients translate contract status/error codes using their own English and Filipino dictionaries. Class-code grouping belongs to those clients.
+This issue adds no screen or UI strings; clients translate contract status/error codes using their own English dictionaries. Class-code grouping belongs to those clients.
 
 Rename, archive, remove and co-teacher management remain guarded stubs for #121. Tests seed archived, removed and co-teacher states directly to verify #6 without implementing those later routes. The shared WebSocket broker already supports bounded, targeted delivery and event-schema validation.
 

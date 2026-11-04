@@ -1,6 +1,6 @@
 # Server Technical Spec
 
-> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-10-26
+> Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-11-04
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
 
@@ -63,7 +63,7 @@ One process on the Hub PC. The Tauri window starts the backend library on its ow
 | Bandwidth | `BandwidthLimiter`: 2.0 MB/s bucket per signed-in user, per client IP on the public portal | `rules/networking-and-lan.md` §3 (per client, all streams) | Per connection |
 | Hub name | `<data_dir>/hub_config.json`, set from the window | Beacon `name`; no column for it | New `hub_meta` key (contract change) |
 | Firewall | The three named rules in `rules/networking-and-lan.md` §4.1; `ufw`/`firewalld` on Linux | Rules file outranks `server/README.md` | README's combined rule |
-| Hub window UI | React + Vite + Tailwind with `design-system/desktop/tailwind.theme.ts`, Nunito and Phosphor from `design-system/assets/`, strings in `server/ui/src/i18n/{en,fil}.json` | Same tokens as desktop; bilingual rule applies | Separate UI kit; inline strings |
+| Hub window UI | React + Vite + Tailwind with `design-system/desktop/tailwind.theme.ts`, Nunito and Phosphor from `design-system/assets/`, English strings in `server/ui/src/i18n/en.json` through `useStrings()`; no language toggle | Same tokens as desktop; English-only rule applies (AGENTS.md section 1.4, #226) | Separate UI kit; inline strings |
 | Logging | `tracing`; `TraceLayer` logs method and path, never the query | Media routes carry `?token=` | Default URI logging |
 
 ## 4. File Map
@@ -94,7 +94,7 @@ server/backend/
   bin/                llama-server binaries per OS
 server/src-tauri/     window; Tauri commands admin/*, usb_detector.rs. Never opens the DB
                       windows/hooks.nsh, linux/postinst.sh: installer firewall rules (1.4)
-server/ui/            React pages: Setup, Login, AdminUsers, Dashboard, Export/Backup; i18n/en.json, fil.json
+server/ui/            React pages: Setup, Login, AdminUsers, Dashboard, Export/Backup; i18n/en.json
 server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 ```
 
@@ -321,7 +321,7 @@ npm run build
 python3 -m unittest discover tests && python3 scripts/verify_invariants.py
 python3 scripts/mock_hub.py               # reference behavior
 ```
-* **Unit tests:** `grading_engine`, `class_access`, `record_revision` scope, `pull_page` paging and visibility, token hashing, both limiters, every `ServerEvent` against `contracts/events/*.json`, `ui/src/i18n` key parity.
+* **Unit tests:** `grading_engine`, `class_access`, `record_revision` scope, `pull_page` paging and visibility, token hashing, both limiters, every `ServerEvent` against `contracts/events/*.json`. The UI build checks English dictionary lookups with TypeScript.
 * **Integration tests (`TestHub`):** each `tests/test_mock_hub.py` flow ported one-to-one, plus redaction scans. The Python suite runs only against the mock until Q14.
 * **Integration day:** clients on `staging` against the real Hub, router WAN unplugged.
 
@@ -337,7 +337,7 @@ python3 scripts/mock_hub.py               # reference behavior
 | 2.4 Broker | A client that stops reading is dropped while another receives within 300 ms; teacher gets `EVENT_PRESENCE` `ONLINE` then `OFFLINE` |
 | 2.1 Enrollment | Ported `test_join_approve_flow_pushes_websocket_events`, `test_bad_class_code` |
 | 2.2 Sync | Ported cursor, first-pull, reset and no-leak tests; 1,200 revisions pull in 3 pages with no gaps or duplicates |
-| 2.3 Admin console | Admin creates teachers and resets PINs as the mock; the window's Setup and Login screens; screenshots in both languages |
+| 2.3 Admin console | Admin creates teachers and resets PINs as the mock; the window's Setup and Login screens; screenshots in English |
 | 2.5 Class management | Ported `test_removed_learner_loses_the_class_and_co_teacher_gains_it` |
 
 ## 14. Open Questions
@@ -363,7 +363,7 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons come from `design-system/assets/`): sections 3, 4
 - [x] Offline state defined for every screen: the Hub window shows port and AI health (section 7); the Hub keeps every client retry idempotent
-- [x] English and Filipino strings for all UI text: portal and `server/ui/src/i18n/{en,fil}.json`, parity test
+- [x] Hub window text must use `server/ui/src/i18n/en.json` through `useStrings()`, with no language toggle (#226); UI build checks lookups
 - [x] Touch targets at least 52dp on phones (56dp primary and quiz options), 40px buttons on desktop: Hub window on desktop tokens; portal at 52dp with a 56dp download button
 - [x] `correct_answer` never stored on a client: separate student types, `tests/redaction.rs`
 - [x] AI unavailable during an active quiz: `check_quiz_lockout` from step 5.1
