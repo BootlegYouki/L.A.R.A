@@ -40,7 +40,7 @@
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young learners (Grades 1 to 3 have the least fine motor control).
    * Text contrast must meet **minimum 4.5:1**.
-   * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` and translated to Filipino in `values-tl/strings.xml`.
+   * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` (English only).
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
    ```bash
    python3 ../scripts/mock_hub.py
@@ -130,7 +130,7 @@ mobile/
 │   │   │   │       └── screens/         # Discovery, Classwork, Quiz, Tutor, Camera
 │   │   │   └── res/
 │   │   │       ├── values/strings.xml   # Canonical English strings
-│   │   │       └── values-tl/strings.xml# Filipino localization strings
+
 └── docs/                               # Mandatory subsystem architectural documentation
 ```
 

@@ -17,7 +17,7 @@ The shell content slot receives the selected classroom destination and can compo
 
 `hasInProgressAttempt` reflects any cached `IN_PROGRESS` learner attempt. An active attempt disables the tutor tab, exposes its explanation visually and through accessibility semantics, and guards the content slot before composition. An AI route open or restored when lockout begins is replaced with Quizzes. Unlocking does not automatically reopen AI.
 
-Discovery and the shell share `ui/components/DiscoveryBanner.kt`; the shell selects its amber warning state with a warning icon and polite accessibility announcement. The offline banner is nonblocking and leaves selected content mounted. Loading uses solid skeleton blocks. Tab switching preserves navigation state. All text comes from matching English and Filipino resources.
+Discovery and the shell share `ui/components/DiscoveryBanner.kt`; the shell selects its amber warning state with a warning icon and polite accessibility announcement. The offline banner is nonblocking and leaves selected content mounted. Loading uses solid skeleton blocks. Tab switching preserves navigation state. All text comes from matching English resources.
 
 ## Verification
 
@@ -28,3 +28,7 @@ Discovery and the shell share `ui/components/DiscoveryBanner.kt`; the shell sele
 5. Run `gradlew.bat test lint`, repository tests, and `verify_invariants.py`.
 
 MOBILE 2.2 wires this boundary from `AuthHost`; callers and tests can still inject a shell state. Normal app startup now restores the saved session or presents the sign-in screen with access to discovery.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

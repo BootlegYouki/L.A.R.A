@@ -40,7 +40,7 @@ class TeacherApprovalDeviceTest {
     private val automation get() = instrumentation.uiAutomation
 
     @Test fun englishApprovalRollbackOfflineAndSuccessfulDecision() = exercise("en", 1f)
-    @Test fun filipinoApprovalRollbackOfflineAndSuccessfulDecisionAtLargeFont() = exercise("fil", 2f)
+    @Test fun englishApprovalRollbackOfflineAndSuccessfulDecisionAtLargeFont() = exercise("en", 2f)
 
     @Suppress("DEPRECATION")
     private fun exercise(language: String, fontScale: Float) {

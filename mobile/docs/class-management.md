@@ -14,7 +14,7 @@ The owner sees a Class settings tab with rename, archive and add-co-teacher acti
 
 Changes use the existing per-account sync mutex for authoritative REST cache refresh, followed by a delta pull for public profile updates. Teacher names come from an account-scoped Room projection of IDs and display names; it exposes no PIN or LRN fields. `SavedRosterRefresher.refreshIfActive` skips roster fetching after archive while retaining its saved data. A command that succeeds but cannot refresh reports that separately and asks the user to refresh before repeating it. Failed or uncertain writes are not automatically retried. Hub errors and timeouts leave local data intact; an expired session returns to sign-in.
 
-All new strings are bundled in English and Filipino. Screen/dialog resources use `PopupLanguage`, dialog bodies scroll for large text, primary actions are at least 56dp and other actions at least 52dp. Dialogs explicitly use the white Surface token, avoiding Material's default purple container tint. Loading uses the existing skeleton; empty and Hub-unreachable states keep the screen usable.
+All new strings are bundled in English. Dialog bodies scroll for large text, primary actions are at least 56dp and other actions at least 52dp. Dialogs explicitly use the white Surface token, avoiding Material's default purple container tint. Loading uses the existing skeleton; empty and Hub-unreachable states keep the screen usable.
 
 ## Drive mockup adaptation
 
@@ -31,7 +31,7 @@ Initial UI build/lint and targeted regression output are saved in `evidence/126/
 3. Open People: teachers appear first, followed by saved learners and statuses. Remove an ACTIVE learner only after reading the confirmation. Their next sync must remove class access while the Hub retains previous scores.
 4. As owner, open Class settings, rename the class and add a provisioned teacher by teacher ID. Sign in as that co-teacher: People is available but no Class settings or manage-teacher controls appear. Removing an ACTIVE learner remains permitted.
 5. Confirm archive as owner: the class stays saved but all editing controls disappear. Grades and cached/queued work are retained.
-6. Stop the Hub and reopen management: saved classes/people remain readable and writes are disabled with an explanation. Repeat in Filipino and at 200% text size.
+6. Stop the Hub and reopen management: saved classes/people remain readable and writes are disabled with an explanation. Repeat at 200% text size.
 
 ## Validation status
 
@@ -40,3 +40,7 @@ Transport tests cover route/method restrictions, bearer authentication, redirect
 The rebased full mock-enabled Debug and Release suites each ran 141 tests: all passed, zero skips. `TeacherClassMockTest` also passed in a separate targeted run. `ManagedClassArchiveTest` verifies archived management visibility/read-only permissions while the active list remains filtered. Shared fixes #210/#211 deliver removal rows after access is lost. Mobile also preserves a learner's own non-active enrollment as a notice when its classroom row is not accessible yet; this avoids inventing a parent row or violating Room foreign keys. The existing REST approval/reopen integration test covers the fresh PENDING case.
 
 Shared source checks: 66 tests passed; offline/localization invariants passed. Current output is in `evidence/126/full-tests.txt`, `removal-regression.txt` and `shared-checks.txt`. Previous physical-phone checks remain documented in `phone-checks.md`; they covered create/review, Android PATCH rename/archive, clipboard, co-teacher controls, confirmations, EN/TL, 200% text and offline archived access in a separate package. A final phone pass on the rebased build is pending Lead review. Real Rust Hub, physical WAN-disconnected router and budget-device certification remain integration/field follow-ups. PR #209 is the review surface.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

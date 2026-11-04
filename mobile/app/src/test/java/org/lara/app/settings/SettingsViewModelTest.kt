@@ -52,7 +52,7 @@ class SettingsViewModelTest {
             override suspend fun push(userId: String, request: SyncPushRequestDto): SyncPushResponseDto = error("Unexpected sync")
         }
         val repository = SettingsRepository(db.authDao(), tokens, SyncRepository(db, transport), { hub }) { _, _ -> }
-        model = SettingsViewModel("learner", repository, AppLanguageStore(context), HubEndpointStore(context),
+        model = SettingsViewModel("learner", repository, HubEndpointStore(context),
             onChangeHub={ hubChanges++ }) { signOuts++ }
         model.refresh()
     }

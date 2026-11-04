@@ -38,7 +38,7 @@ container owns the Android implementation; ViewModel factories use manual DI.
 - `ui/screens/discovery/*`: lifecycle-aware StateFlows, scanning skeletons,
   empty/offline/warning feedback, retry, discovered rows, and always-visible manual
   field. Primary controls are 56dp; secondary controls at least 52dp. All copy is
-  in matching English/Filipino string resources; bundled Phosphor Info, Warning Circle,
+  in matching English string resources; bundled Phosphor Info, Warning Circle,
   and Check Circle icons use the documented design tokens.
 
 ## Protocol, identity, expiry, and network behavior
@@ -166,3 +166,7 @@ were not edited.
 No discovery, endpoint validation, security policy, storage, navigation or
 reconnection implementation changed. See [review-fix evidence](evidence/4/review-fixes/README.md)
 for screenshots, checks, remaining device coverage and the reviewer response.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

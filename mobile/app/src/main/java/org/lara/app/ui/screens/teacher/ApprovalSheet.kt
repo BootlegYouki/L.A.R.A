@@ -32,7 +32,7 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
     ModalBottomSheet(onDismissRequest = onDismiss, shape = LaraShapes.extraLarge,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = LaraColors.Surface, contentColor = LaraColors.TextPrimary,
-        scrimColor = LaraColors.TextPrimary.copy(alpha = 0.5f)) { PopupLanguage {
+        scrimColor = LaraColors.TextPrimary.copy(alpha = 0.5f)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
@@ -54,7 +54,7 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                             style = MaterialTheme.typography.titleMedium)
                         member.user?.lrnOrId?.let { Text(stringResource(R.string.approval_lrn, it)) }
                         val enabled = !state.offline && member.enrollment.studentId !in state.busy && member.user != null
-                        // Vertical actions keep both languages usable with large font sizes.
+                        // Vertical actions keep controls usable with large font sizes.
                         Button(onClick = { onDecision(member.enrollment.studentId, true) }, enabled = enabled,
                             colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark,
                                 contentColor = LaraColors.Surface),
@@ -74,6 +74,6 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                 Text(stringResource(R.string.enrollment_cancel_action))
             }
         }
-    } }
+     }
 }
 
