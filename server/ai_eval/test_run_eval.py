@@ -239,6 +239,51 @@ class Validation(unittest.TestCase):
         self.assertEqual(run_eval.validate(run_eval.load_prompt_set()), [])
 
 
+class PromptSetRules(unittest.TestCase):
+    def data(self, **prompt):
+        base = {"id": "P1", "lesson_id": "L", "language": "EN", "input_language": "en", "category": "on_lesson",
+                "covered_by_lesson": True, "grounded_chunk_ids": ["c0"], "message": "hello", "expected_answer": ["x"]}
+        return {"version": 2, "review": {"filipino_reviewer": "someone"},
+                "lessons": {"L": lesson(chunk("c0", 0, None, "text", 3000)), "S": lesson(chunk("s0", 0, None, "text", 100))},
+                "prompts": [{**base, **prompt}]}
+
+    def test_a_filipino_reply_language_is_rejected(self):
+        self.assertTrue(any("language" in p for p in run_eval.validate(self.data(language="FIL"))))
+
+    def test_a_learner_may_still_type_in_filipino(self):
+        self.assertEqual(run_eval.validate(self.data(input_language="fil")), [])
+
+    def test_check_my_answer_and_follow_up_are_categories(self):
+        self.assertEqual(run_eval.validate(self.data(category="check_my_answer")), [])
+        self.assertEqual(run_eval.validate(self.data(category="follow_up")), [])
+
+    def warnings(self, data):
+        return " ".join(run_eval.coverage(data)[1])
+
+    def test_too_few_long_lesson_prompts_are_warned_about(self):
+        short = self.data(lesson_id="S", grounded_chunk_ids=["s0"])
+        self.assertIn("long-lesson prompts: 0", self.warnings(short))
+        self.assertIn("long-lesson prompts: 1", self.warnings(self.data()))
+
+    def test_only_two_earlier_exchanges_count_as_a_follow_up(self):
+        one = [user("q"), tutor("a")]
+        self.assertIn("follow-up prompts: 0", self.warnings(self.data(history=one)))
+        self.assertIn("follow-up prompts: 1", self.warnings(self.data(history=one * 2)))
+
+    def test_the_committed_set_has_what_section_5_1_asks_for(self):
+        data = run_eval.load_prompt_set()
+        warnings = self.warnings(data)
+        self.assertNotIn("long-lesson prompts", warnings)
+        self.assertNotIn("follow-up prompts", warnings)
+        self.assertEqual({p["language"] for p in data["prompts"]}, {"EN"})
+
+    def test_every_committed_prompt_can_be_built_from_the_real_system_prompt(self):
+        data = run_eval.load_prompt_set()
+        template = run_eval.SYSTEM_PROMPT_FILE.read_bytes().decode("utf-8")
+        for p in data["prompts"]:
+            run_eval.build_conversation(template, data["lessons"][p["lesson_id"]], p, False)
+
+
 class FakeServer:
     asked = []
 
@@ -317,6 +362,52 @@ class RunAndSheets(unittest.TestCase):
 
     def test_the_sheet_shows_the_expected_lesson_part_that_was_not_sent(self):
         self.assertEqual(self.sheet()["lesson_part_not_sent"], "Fractions\nA fraction names part of a whole")
+
+
+class ReportSpeedSplit(unittest.TestCase):
+    """The Lead, #73, 2026-11-04: criterion 5 on the full set, plus short and long lessons shown separately."""
+
+    def report(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        folder = Path(tmp.name)
+        base = {"language": "EN", "input_language": "en", "category": "on_lesson", "covered_by_lesson": False,
+                "grounded_chunk_ids": [], "message": "m", "expected_answer": ["x"]}
+        data = {"version": 2, "review": {"filipino_reviewer": "someone"},
+                "lessons": {"S": lesson(chunk("s0", 0, None, "text", 100)), "L": lesson(chunk("l0", 0, None, "text", 3000))},
+                "prompts": [{**base, "id": pid, "lesson_id": lid}
+                            for pid, lid in (("A", "S"), ("B", "S"), ("C", "S"), ("D", "S"), ("E", "L"), ("F", "L"))]}
+        prompts = folder / "prompts.json"
+        prompts.write_text(json.dumps(data), encoding="utf-8")
+        (folder / "runs.json").write_text(json.dumps({
+            "prompt_set_version": 2, "llama_server_version": "test", "settings": {},
+            "hardware": {"cpu": "c", "logical_cpus": 1, "ram_bytes": 1, "os": "o"},
+            "models": {"m": {"file": "m.gguf"}},
+            "runs": {"m@2": {"model": "m", "slots": 2, "peak_ram_bytes": 1, "throughput_tps": 1, "errors": 1}}}), encoding="utf-8")
+        ttfts = [("A", 1000, None), ("B", 3000, None), ("C", 12000, None), ("D", 1, "HTTP 500"), ("E", 30000, None), ("F", 40000, None)]
+        with open(folder / "replies.jsonl", "w", encoding="utf-8") as f:
+            for pid, ttft, error in ttfts:
+                f.write(json.dumps({"model": "m", "slots": 2, "prompt_id": pid, "reply": "r", "error": error,
+                                    "ttft_ms": ttft, "tokens_per_second": 1.0}) + "\n")
+        (folder / "blind_key.json").write_text("{}", encoding="utf-8")
+        scores = [folder / "score_a.csv", folder / "score_b.csv"]
+        for path in scores:
+            path.write_text("reply_id\n", encoding="utf-8")
+        with mock.patch("builtins.print"):
+            run_eval.main(["--prompts", str(prompts), "report", "--out", str(folder), "--scores", *map(str, scores)])
+        return (folder / "report.md").read_text(encoding="utf-8")
+
+    def test_short_lessons_are_shown_on_their_own_without_error_replies(self):
+        self.assertIn("| m | 2 | short | 3 | 3000 | 12000 | 2/3 (67%) |", self.report())
+
+    def test_long_lessons_are_shown_on_their_own(self):
+        self.assertIn("| m | 2 | long | 2 | 35000 | 40000 | 0/2 (0%) |", self.report())
+
+    def test_the_full_set_row_is_what_criterion_5_is_judged_on(self):
+        self.assertIn("| m | 2 | all | 5 | 12000 | 40000 | 2/5 (40%) |", self.report())
+
+    def test_the_report_has_no_filipino_column_any_more(self):
+        self.assertNotIn("| FIL |", self.report())
 
 
 if __name__ == "__main__":
