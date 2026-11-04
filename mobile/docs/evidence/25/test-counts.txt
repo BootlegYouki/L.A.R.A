@@ -1,0 +1,6 @@
+Full mock-enabled test/lint/app/test-APK build: SUCCESS (4m32s).
+145 tests each in Debug/Release, zero failures/errors/skips.
+Final interrupted-transfer case added after the full run; all six file/comment regressions re-run in both variants:
+Debug: {'tests': '6', 'failures': '0', 'errors': '0', 'skipped': '0'}
+Release: {'tests': '6', 'failures': '0', 'errors': '0', 'skipped': '0'}
+Shared contract/mock tests: 66 passed. Offline invariants: passed.

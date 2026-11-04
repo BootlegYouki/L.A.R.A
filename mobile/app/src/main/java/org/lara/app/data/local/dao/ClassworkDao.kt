@@ -6,6 +6,14 @@ import org.lara.app.data.local.entities.*
 
 @Dao
 interface ClassworkDao {
+    @Query("SELECT local_file_path FROM materials WHERE local_file_path IS NOT NULL")
+    suspend fun savedFiles(): List<String>
+    @Query("SELECT * FROM materials WHERE id = :id")
+    suspend fun material(id: String): MaterialEntity?
+
+    @Query("UPDATE materials SET local_file_path = :path, mime_type = :mime WHERE id = :id AND updated_at = :version")
+    suspend fun saveFile(id: String, version: Long, path: String, mime: String): Int
+
     @Query("SELECT * FROM topics WHERE classroom_id = :classroomId ORDER BY order_index, id")
     fun observeTopics(classroomId: String): Flow<List<TopicEntity>>
 

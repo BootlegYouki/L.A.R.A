@@ -18,7 +18,8 @@ internal data class PendingUpload(val table: String, val id: String,
     val comment: AnnouncementCommentEntity? = null, val privateComment: PrivateCommentEntity? = null,
     val attempt: QuizAttemptEntity? = null)
 
-class SyncRepository(private val db: LaraDatabase, private val transport: SyncTransport) {
+class SyncRepository(private val db: LaraDatabase, private val transport: SyncTransport,
+    private val onPulled: suspend () -> Unit = {}) {
     private val mutex = Mutex()
     private val store = SyncStore(db)
     private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
@@ -63,6 +64,7 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
             }
             store.apply(userId, request, page, expectedState = expected)
         } while (page.hasMore)
+        onPulled()
     }
     private suspend fun eligible(row: PendingUpload, hubId: String): Boolean {
         val bound = db.syncStateDao().get("queued_hub:${row.table}:${row.id}")?.value

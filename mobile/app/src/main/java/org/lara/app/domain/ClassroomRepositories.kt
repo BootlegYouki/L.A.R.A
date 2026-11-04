@@ -18,6 +18,7 @@ data class Classwork(
 )
 
 data class RosterMember(val enrollment: Enrollment, val user: User?)
+data class CommentAuthor(val id: String, val name: String, val role: String)
 
 interface ClassroomRepository {
     fun classrooms(scope: CoroutineScope): StateFlow<Cached<List<Classroom>>>

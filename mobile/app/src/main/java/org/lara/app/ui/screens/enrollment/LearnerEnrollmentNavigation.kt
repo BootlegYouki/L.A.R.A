@@ -70,6 +70,8 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
                 }
                 Text(selected.classroom.name, style = MaterialTheme.typography.titleMedium)
             }
+        }, content = { destination ->
+            org.lara.app.ui.screens.stream.ClassroomLearningHost(container, userId, destination, selected.classroom.id)
         })
     }
 }

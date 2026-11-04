@@ -332,3 +332,7 @@ The sync implementation begins from Mobile 2.4 commit 6b174a6. See [sync_worker.
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+### MOBILE 3.1 implementation
+
+See [stream-reader.md](stream-reader.md) for staging prerequisites, Stream/Classwork Room flows, queued comments, account-private MaterialFiles and native bounded PDF/image rendering. The handout reader uses existing sync chunks for DOCX and unavailable binaries. Announcement author IDs and valid shared-mock binary fixtures are contract/fixture gaps documented there.
