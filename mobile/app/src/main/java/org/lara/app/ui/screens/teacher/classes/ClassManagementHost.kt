@@ -35,14 +35,12 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
         Text(stringResource(R.string.classes_manage))
     }
     if (open) Dialog(onDismissRequest = { open = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        PopupLanguage {
-            val latestExpired by rememberUpdatedState(expired)
-            val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
-                initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
-            })
-            val online by reachable.collectAsStateWithLifecycle()
-            ClassManagementScreen(model, userId, online) { open = false }
-        }
+        val latestExpired by rememberUpdatedState(expired)
+        val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
+            initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
+        })
+        val online by reachable.collectAsStateWithLifecycle()
+        ClassManagementScreen(model, userId, online) { open = false }
     }
 }
 
@@ -161,10 +159,10 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
         val editing = action in setOf("create", "rename", "add")
         AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
             titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
-            shape = LaraShapes.extraLarge, title = { PopupLanguage { Text(stringResource(when(action) {
+            shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
             "create" -> R.string.classes_create; "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
             "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
-        })) } }, text = { PopupLanguage { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+        })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             if (action == "create" && review) {
                 Text(stringResource(R.string.classes_review), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.classes_review_help), color = LaraColors.TextSecondary)
@@ -183,7 +181,7 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
             } else Text(stringResource(when (action) {
                 "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
             }))
-        } } }, confirmButton = { PopupLanguage { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
+        } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
             onClick = {
                 if (action == "create" && !review) review = true else {
                 when(action) {
@@ -192,9 +190,9 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
                 }; form = null
                 }
-            }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "create" && !review) R.string.classes_review else if (action == "create") R.string.classes_create else R.string.classes_confirm)) } } },
-            dismissButton = { PopupLanguage { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+            }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "create" && !review) R.string.classes_review else if (action == "create") R.string.classes_create else R.string.classes_confirm)) } },
+            dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.enrollment_cancel_action))
-            } } })
+            } })
     }
 }

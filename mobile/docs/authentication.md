@@ -18,7 +18,7 @@ New sessions use the saved Sprint 1.2 Hub endpoint. Find classroom Hub opens the
 
 ## Safety and boundaries
 
-PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English/Filipino resources. Password boxes are read-only masked views of keypad position.
+PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English resources. Password boxes are read-only masked views of keypad position.
 
 The session host collects Sprint 1.3 `QuizRepository.hasInProgressAttempt(userId)`, starting locked until Room emits. Learner AI stays unavailable during any cached active attempt. The role shell reads its offline state independently of auth; a public portal probe supplies only reachability, never authentication or authorization.
 
@@ -32,4 +32,8 @@ Each login owns a separate ViewModelStore; disposal cancels its subscriptions/jo
 
 Run `gradlew.bat test lint assembleDebug` and the root repository suite/invariant scanner. `AuthIntegrationTest` exercises the real HTTP transport and Room DAO using a synthetic loopback server: login, registration, teacher role, admin rejection, wrong-PIN/rate-limit errors, redirect rejection, and cached restoration with the server stopped. It uses an in-memory token-store fake. Real Keystore persistence and offline relaunch were verified on the connected phone; see `evidence/49/README.md`. The opt-in `MockAuthDeviceTest` exercises seeded roles and registration on that phone using the actual mock Hub.
 
-For manual mock-Hub testing, run `python scripts/mock_hub.py`. On a USB phone use ADB reverse for port 8080 and manual `127.0.0.1:8080`, or use the PC's LAN IP over classroom Wi-Fi. Sign in with the documented synthetic seeded accounts, force-stop, stop the Hub and relaunch. Verify the role shell opens with the amber banner. A newly registered learner goes to the learner shell; joining a class is a later issue. Check wrong PIN, admin rejection, Filipino and large fonts separately. Never attach unredacted hierarchy dumps containing entered IDs or auth request logs.
+For manual mock-Hub testing, run `python scripts/mock_hub.py`. On a USB phone use ADB reverse for port 8080 and manual `127.0.0.1:8080`, or use the PC's LAN IP over classroom Wi-Fi. Sign in with the documented synthetic seeded accounts, force-stop, stop the Hub and relaunch. Verify the role shell opens with the amber banner. A newly registered learner goes to the learner shell; joining a class is a later issue. Check wrong PIN, admin rejection, large fonts separately. Never attach unredacted hierarchy dumps containing entered IDs or auth request logs.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

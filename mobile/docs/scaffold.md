@@ -13,7 +13,7 @@ The four `ui/theme/*.kt` files and all six Nunito fonts are copied from
 licenses are bundled in `assets/licenses/`. The shell uses neutral information
 status with icon and text, and a 56dp minimum primary action. Its dark-green button
 uses existing tokens for readable white text. Content scrolls for large fonts.
-English and Filipino resources have identical keys.
+English resources are bundled locally.
 
 ## Build choices
 
@@ -39,10 +39,9 @@ classes are present; it never claims downloaded content exists. No skeleton is
 displayed because no data load occurs; loading states belong to later data screens.
 
 The lead explicitly approved this interpretation for MOBILE 1.1: launch without a
-Hub, including airplane mode, with a calm bilingual placeholder and no blocking
+Hub, including airplane mode, with a calm English placeholder and no blocking
 error. Room/local data belongs to MOBILE 1.3; cached home to MOBILE 2.2. Settings
-and a persistent language toggle belong to MOBILE 2.6; this scaffold follows device
-locale and supports `values-tl` resources.
+belong to MOBILE 2.6. The app now uses English resources on every device locale (#224).
 
 ## URL policy and security boundary
 
@@ -93,3 +92,7 @@ Build/test reports are in `app/build/reports/`; review evidence and device steps
 are recorded in `docs/evidence/23/README.md`. API/mock-Hub UI integration is not
 applicable yet: there are no routes or sockets in this issue. A physical phone
 reaches a later mock Hub via the PC's LAN IPv4 address, never emulator 10.0.2.2.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

@@ -105,9 +105,6 @@
     <string name="approval_no_classes">No classes yet. Classes you teach will appear here.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_back">Back</string>
-    <string name="settings_language">App language</string>
-    <string name="settings_english">English</string>
-    <string name="settings_filipino">Filipino</string>
     <string name="settings_hub">Classroom Hub</string>
     <string name="settings_hub_name">Saved classroom Hub</string>
     <string name="settings_no_hub">No Hub saved</string>

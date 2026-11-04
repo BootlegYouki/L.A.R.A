@@ -4,23 +4,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import org.lara.app.R
 import org.lara.app.ui.components.DiscoveryBanner
 import org.lara.app.ui.theme.*
 
 @Composable
-fun SettingsScreen(state: SettingsState, language: String, reachable: Boolean, version: String,
-    onLanguage: (String) -> Unit, onSignOut: () -> Unit, onConfirm: () -> Unit,
+fun SettingsScreen(state: SettingsState, reachable: Boolean, version: String,
+    onSignOut: () -> Unit, onConfirm: () -> Unit,
     onCancel: () -> Unit, onChangeHub: () -> Unit, onBack: () -> Unit) {
     Scaffold(containerColor = LaraColors.Canvas, topBar = {
         Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
@@ -38,18 +35,6 @@ fun SettingsScreen(state: SettingsState, language: String, reachable: Boolean, v
             .padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             if (state.error) DiscoveryBanner(R.string.settings_failed, warning = true, success = false)
             else if (!reachable) DiscoveryBanner(R.string.settings_offline, warning = true, success = false)
-            SettingsCard(R.string.settings_language) {
-                Column(Modifier.selectableGroup()) {
-                    listOf("en" to R.string.settings_english, "tl" to R.string.settings_filipino).forEach { (code, label) ->
-                        Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
-                            .selectable(language == code, enabled = !state.busy, role = Role.RadioButton, onClick = { onLanguage(code) })
-                            .padding(horizontal = LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = language == code, onClick = null)
-                            Text(stringResource(label), Modifier.padding(start = LaraSpacing.S3))
-                        }
-                    }
-                }
-            }
             SettingsCard(R.string.settings_hub) {
                 if (state.loading) repeat(2) {
                     Spacer(Modifier.fillMaxWidth().height(LaraSpacing.S6).background(LaraColors.SurfaceSubtle, LaraShapes.small))
@@ -78,12 +63,12 @@ fun SettingsScreen(state: SettingsState, language: String, reachable: Boolean, v
         }
     }
     state.queued?.let { count ->
-        AlertDialog(onDismissRequest = onCancel, title = { PopupLanguage { Text(stringResource(R.string.settings_sign_out)) } },
-            text = { PopupLanguage { Text(stringResource(R.string.settings_queued_warning, count), Modifier.verticalScroll(rememberScrollState())) } },
-            confirmButton = { PopupLanguage { TextButton(onClick = onConfirm, enabled = !state.busy,
-                modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.settings_sign_out)) } } },
-            dismissButton = { PopupLanguage { TextButton(onClick = onCancel, enabled = !state.busy,
-                modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.settings_cancel)) } } },
+        AlertDialog(onDismissRequest = onCancel, title = { Text(stringResource(R.string.settings_sign_out)) },
+            text = { Text(stringResource(R.string.settings_queued_warning, count), Modifier.verticalScroll(rememberScrollState())) },
+            confirmButton = { TextButton(onClick = onConfirm, enabled = !state.busy,
+                modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.settings_sign_out)) } },
+            dismissButton = { TextButton(onClick = onCancel, enabled = !state.busy,
+                modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.settings_cancel)) } },
             shape = LaraShapes.extraLarge)
     }
 }

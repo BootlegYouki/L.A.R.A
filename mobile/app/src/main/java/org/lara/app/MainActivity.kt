@@ -6,9 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import org.lara.app.ui.screens.auth.AuthHost
 import org.lara.app.ui.theme.LaraTheme
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.lara.app.ui.theme.AppLanguage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,8 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val container = (application as LaraApp).container
-            val language by container.language.language.collectAsStateWithLifecycle()
-            AppLanguage(language) { LaraTheme { AuthHost(container) } }
+            LaraTheme { AuthHost(container) }
         }
     }
 }

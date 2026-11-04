@@ -69,7 +69,7 @@ data/sync/             SyncRepository, DeltaSyncWorker, HomeworkUploadWorker, Qu
 data/quiz/             QuizAttemptRepository (path named by [MOBILE 4.3])
 data/media/            DownloadManager (Save for Home)
 ai/                    HubChatClient, QuizLockout
-res/values, res/values-tl   strings in parity; res/font Nunito; Phosphor drawables bundled
+res/values   English resources; res/font Nunito; Phosphor drawables bundled
 mobile/docs/           one doc per module (see mobile/docs/README.md)
 ```
 
@@ -103,7 +103,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `POST /api/auth/login`, `register` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); register 409 `ALREADY_EXISTS` | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
 | `POST /api/auth/logout` | `AuthApi` (Settings) | any: still clear local token after queued-row check | Clear locally, ignore failure |
 | `GET/POST /api/classrooms` | `ClassroomRepository` | 403 | Room data; create is needs Hub |
-| `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` bilingual message | Disabled with helper line |
+| `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` English message | Disabled with helper line |
 | `POST /api/classrooms`, `PATCH /api/classrooms/{id}`, `.../remove`, `.../teachers`, `DELETE .../teachers/{teacher_id}` | `TeacherClassApi` via `ClassManagementViewModel`; existing `ClassManagementRepository` retains roster/approval reads | 403 (co-teacher owner-only) | Needs Hub; never queued |
 | `GET .../roster`, `POST .../approve`, `.../reject` | `RosterViewModel` via `ClassManagementRepository` | 403; optimistic update rolled back | Cached roster; actions need Hub |
 | `POST /api/sync/pull` | `SyncRepository.pull` | 401 relogin; other: roll back, keep cursor, retry by WorkManager backoff | Keep cursor, schedule retry on connectivity |
@@ -288,7 +288,7 @@ Default: build against `python3 scripts/mock_hub.py`; switch on integration day.
 | [MOBILE 1.1] | `./gradlew assembleDebug lint` passes; app launches on emulator; theme has no `Color(0xFF` in `ui/screens` (grep) |
 | [MOBILE 1.2] | Mock hub running: Hub appears in under 3 s on the same Wi-Fi; manual `10.0.2.2:8080` connects; log shows lock acquired and released |
 | [MOBILE 1.3] | `./gradlew test` includes the schema test (fails when a column is removed); airplane mode repository reads work |
-| [MOBILE 2.2] | Log in as `123456789012` and `T-0001`; wrong PIN shows the bilingual message; relaunch in airplane mode opens cached home |
+| [MOBILE 2.2] | Log in as `123456789012` and `T-0001`; wrong PIN shows the English message; relaunch in airplane mode opens cached home |
 | [MOBILE 2.1] | Teacher and learner sessions show different graphs; AI tab disabled when an `IN_PROGRESS` attempt exists |
 | [MOBILE 2.5] | Instrumented test: kill the mock hub mid-pull, DB and cursor unchanged; restart, announcements sync in under 1 s |
 | [MOBILE 2.3] | `123456789013` joins with `K7M-4QX`, teacher approves, class unlocks without refresh |
@@ -320,7 +320,7 @@ Still open (answer before the step named):
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons bundled; the only off-LAN path is the Hub's tunnel URL)
 - [x] Offline state defined for every screen (section 7)
-- [x] English and Filipino strings for all UI text (`values/` and `values-tl/` parity)
+- [x] English strings for all UI text (`values/strings.xml`)
 - [x] Touch targets at least 52dp (56dp primary and quiz options)
 - [x] `correct_answer` never stored on a client (Room mirror never has it; the teacher builder holds it in memory only, section 14 question 3)
 - [x] AI unavailable during an active quiz (`QuizLockout`, section 8)
@@ -328,3 +328,7 @@ Still open (answer before the step named):
 ### MOBILE 2.5 implementation notes
 
 The sync implementation begins from Mobile 2.4 commit 6b174a6. See [sync_worker.md](sync_worker.md) for atomic pages, membership rescans, queue-preserving resets and the existing sync_state metadata keys for durable rejection receipts, cross-Hub queue binding, deferred tombstones and incoming grade receipts. SyncSessionViewModel now owns the shared foreground socket for both roles; the teacher approval session no longer opens a second socket. The current mock push route rejects teacher sessions; teacher-authored queue upload remains an explicitly documented contract/mock alignment gap.
+
+## English-only UI (#224)
+
+UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.

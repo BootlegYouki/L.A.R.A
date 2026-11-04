@@ -80,16 +80,4 @@ abstract class SettingsBehaviorTests {
         assertEquals(SignOutResult.SignedOut, repository(endpoint=requireNotNull(HubEndpoint.lan("127.0.0.2"))).signOut("learner"))
         assertNull(saved); assertEquals(0, calls)
     }
-    @Test fun languageChoicePersistsWithoutTheHub(): Unit = runBlocking {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val store = AppLanguageStore(context)
-        val old = store.language.value
-        try {
-            store.select("tl")
-            assertEquals("tl", store.language.value)
-            assertEquals("tl", AppLanguageStore(context).language.value)
-            try { store.select("invalid"); fail() } catch (_: IllegalArgumentException) { }
-            assertEquals("tl", AppLanguageStore(context).language.value)
-        } finally { store.select(old) }
-    }
 }

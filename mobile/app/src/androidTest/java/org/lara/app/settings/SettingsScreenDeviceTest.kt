@@ -7,11 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.lifecycle.lifecycleScope
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
@@ -28,15 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.lara.app.LaraApp
 import org.lara.app.MainActivity
-import org.lara.app.data.repository.AppLanguageStore
 import org.lara.app.ui.screens.settings.*
 import org.lara.app.ui.theme.LaraTheme
-import org.lara.app.ui.theme.AppLanguage
 
 @RunWith(AndroidJUnit4::class)
-class SettingsLanguageDeviceTest {
+class SettingsScreenDeviceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private fun matches(text: String): List<AccessibilityNodeInfo> {
         if (Build.VERSION.SDK_INT >= 33) instrumentation.uiAutomation.clearCache()
@@ -68,44 +63,42 @@ class SettingsLanguageDeviceTest {
         }
         throw AssertionError("No settings action: $text")
     }
-    @Test fun languageChangesImmediatelyAtLargeFontWithoutActivityRestartAndSurvivesStoreReopen() {
+    @Test fun settingsStaysEnglishOnFilipinoLocaleWithoutLanguageOption() {
         val context = instrumentation.targetContext
-        val store = (context.applicationContext as LaraApp).container.language
-        val original = store.language.value
-        runBlocking { store.select("en") }
-        try {
-            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-                var first: MainActivity? = null
-                scenario.onActivity { activity ->
-                    first = activity
-                    activity.setContent {
-                        val language by store.language.collectAsState()
-                        val density = LocalDensity.current
-                        CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
-                            AppLanguage(language) { LaraTheme {
-                                SettingsScreen(SettingsState(loading=false), language, false, "test",
-                                    onLanguage = { code -> activity.lifecycleScope.launch { store.select(code) } },
-                                    onSignOut={}, onConfirm={}, onCancel={}, onChangeHub={}, onBack={})
-                            } }
+        val config = android.content.res.Configuration(context.resources.configuration).apply {
+            setLocale(java.util.Locale.forLanguageTag("fil"))
+        }
+        val localized = context.createConfigurationContext(config)
+        assertEquals("Settings", localized.getString(org.lara.app.R.string.settings_title))
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                activity.setContent {
+                    CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalContext provides localized,
+                        androidx.compose.ui.platform.LocalConfiguration provides config
+                    ) {
+                        LaraTheme {
+                            SettingsScreen(SettingsState(loading=false), false, "test",
+                                {}, {}, {}, {}, {})
                         }
                     }
                 }
-                waitFor("Settings")
-                select("Filipino")
-                waitFor("Mga Setting")
-                waitFor("Wika ng app")
-                scenario.onActivity { assertSame(first, it) }
-                assertEquals("tl", AppLanguageStore(context).language.value)
-                select("English")
-                waitFor("Settings")
-                assertEquals("en", AppLanguageStore(context).language.value)
             }
-        } finally { runBlocking { store.select(original) } }
+            waitFor("Settings")
+            waitFor("Classroom Hub")
+            assertTrue(matches("Filipino").isEmpty())
+            assertTrue(matches("App language").isEmpty())
+            SystemClock.sleep(300)
+            val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+            try {
+                java.io.File(context.filesDir, "settings-english-fil-locale.png").outputStream().use {
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                }
+            } finally { bitmap.recycle() }
+        }
     }
     @Test fun queuedWarningCanCancelAndConfirmOfflineAtLargeFont() {
         val context = instrumentation.targetContext
-        val store = (context.applicationContext as LaraApp).container.language
-        val original = store.language.value
         val db = Room.inMemoryDatabaseBuilder(context, LaraDatabase::class.java).build()
         val hub = requireNotNull(HubEndpoint.lan("127.0.0.1", 9))
         var token: StoredToken? = StoredToken("synthetic", "learner", Long.MAX_VALUE, hub.restBase)
@@ -121,7 +114,6 @@ class SettingsLanguageDeviceTest {
         val signedOut = AtomicBoolean(false)
         var model: SettingsViewModel? = null
         runBlocking {
-            store.select("tl")
             db.authDao().saveProfile(UserEntity("learner", "synthetic", "Learner", "STUDENT", 1, 1))
             db.cacheDao().upsertBatch(CacheBatch(
                 classrooms=listOf(ClassroomEntity("class", "Science", "A", "K7M4QX", "teacher", createdAt=1, updatedAt=1)),
@@ -133,23 +125,22 @@ class SettingsLanguageDeviceTest {
                 scenario.onActivity { activity ->
                     val vm = SettingsViewModel("learner", SettingsRepository(db.authDao(), tokens, SyncRepository(db, transport), { hub }) {
                         _, _ -> throw java.io.IOException("Offline")
-                    }, store, HubEndpointStore(context)) { signedOut.set(true) }
+                    }, HubEndpointStore(context)) { signedOut.set(true) }
                     model = vm; vm.refresh()
                     activity.setContent {
                         val state by vm.state.collectAsState()
-                        val language by store.language.collectAsState()
                         val density = LocalDensity.current
                         CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
-                            AppLanguage(language) { LaraTheme {
-                                SettingsScreen(state, language, false, "test", vm::language, { vm.signOut() },
+                            LaraTheme {
+                                SettingsScreen(state, false, "test", { vm.signOut() },
                                     { vm.signOut(true) }, vm::cancelSignOut, {}, {})
-                            } }
+                            }
                         }
                     }
                 }
                 // The page scrolls at large text size; invoke the same ViewModel action as its button.
                 instrumentation.runOnMainSync { requireNotNull(model).signOut() }
-                val config = android.content.res.Configuration(context.resources.configuration).apply { setLocale(java.util.Locale.forLanguageTag("tl")) }
+                val config = android.content.res.Configuration(context.resources.configuration).apply { setLocale(java.util.Locale.forLanguageTag("fil")) }
                 val resources = context.createConfigurationContext(config).resources
                 val warning = resources.getString(org.lara.app.R.string.settings_queued_warning, 1)
                 waitFor(warning)
@@ -167,7 +158,7 @@ class SettingsLanguageDeviceTest {
             }
         } finally {
             instrumentation.runOnMainSync { model?.viewModelScope?.cancel() }
-            db.close(); runBlocking { store.select(original) }
+            db.close()
         }
     }
 }

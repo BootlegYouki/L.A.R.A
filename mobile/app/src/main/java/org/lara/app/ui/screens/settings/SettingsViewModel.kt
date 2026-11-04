@@ -11,12 +11,11 @@ data class SettingsState(val loading: Boolean = true, val busy: Boolean = false,
     val hubName: String? = null, val address: String? = null, val queued: Int? = null, val error: Boolean = false)
 
 class SettingsViewModel(private val userId: String, private val repository: SettingsRepository,
-    private val languages: AppLanguageStore, private val endpoints: HubEndpointStore,
+    private val endpoints: HubEndpointStore,
     private val onChangeHub: (() -> Unit)? = null,
     private val onSignedOut: () -> Unit) : ViewModel() {
     private val mutable = MutableStateFlow(SettingsState())
     val state = mutable.asStateFlow()
-    val language = languages.language
     private var pendingHubChange = false
     fun refresh() { viewModelScope.launch {
         try {
@@ -25,14 +24,6 @@ class SettingsViewModel(private val userId: String, private val repository: Sett
         } catch (e: CancellationException) { throw e }
         catch (_: Exception) { mutable.update { it.copy(loading = false, error = true) } }
     } }
-    fun language(value: String) {
-        if (mutable.value.busy) return
-        viewModelScope.launch {
-            try { languages.select(value); mutable.update { it.copy(error = false) } }
-            catch (e: CancellationException) { throw e }
-            catch (_: Exception) { mutable.update { it.copy(error = true) } }
-        }
-    }
     fun cancelSignOut() { if (!mutable.value.busy) { pendingHubChange = false; mutable.update { it.copy(queued = null) } } }
     fun signOut(confirmed: Boolean = false, changeHub: Boolean = false) {
         if (mutable.value.busy) return

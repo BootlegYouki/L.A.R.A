@@ -22,7 +22,6 @@ class LaraApp : Application() {
 
 private class AppServices(context: Context) {
     val accountContainers = java.util.concurrent.ConcurrentHashMap<String, AppContainer>()
-    val language = org.lara.app.data.repository.AppLanguageStore(context)
     val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
     val tokens = org.lara.app.data.remote.TokenStore(context)
     val accounts = org.lara.app.data.local.AccountDatabases(context)
@@ -35,7 +34,6 @@ private class AppServices(context: Context) {
 
 class AppContainer private constructor(private val services: AppServices, private val accountId: String?) {
     constructor(context: Context) : this(AppServices(context.applicationContext), null)
-    val language get() = services.language
     val endpoints get() = services.endpoints
     val auth get() = services.auth
     val discovery get() = services.discovery
