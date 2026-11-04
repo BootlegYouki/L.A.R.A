@@ -7,8 +7,9 @@ hub is not involved) and is never shipped with the Hub.
 
   validate  check prompts.json and print its coverage (no model needed)
   run       start llama-server for each candidate GGUF at 1, 2 and 4 slots and send every prompt
-            with contracts/ai/socratic_system_prompt.txt filled in unchanged; save replies, time
-            to first token, tokens per second and peak RAM
+            with contracts/ai/socratic_system_prompt.txt filled in unchanged, the lesson chunks picked
+            as in section 3.1 and any earlier exchanges sent as chat turns as in section 3.2; save
+            replies, the chunks each one was given, time to first token, tokens per second and peak RAM
   sheets    write one blind score sheet per scorer: unique replies shuffled, model names hidden
   report    merge two filled sheets: agreement rate, the disagreements to settle, pass rates per
             criterion, latency and RAM, as Markdown for docs/benchmarks/ai_model_evaluation.md
@@ -20,7 +21,8 @@ From the repo root:
       --model gemma-2-2b=D:/models/gemma-2-2b-it-Q4_K_M.gguf --merge-system gemma-2-2b \
       --model minicpm5-2b=D:/models/MiniCPM5-2B-Q4_K_M.gguf --no-think minicpm5-2b \
       --out server/ai_eval/results/hub-pc
-  py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/hub-pc --scorers scorer_a scorer_b
+  py server/ai_eval/run_eval.py sheets --out server/ai_eval/results/hub-pc --scorers scorer_a scorer_b \
+      [--models qwen2.5-1.5b minicpm5-2b]   # only these models on the sheets
   py server/ai_eval/run_eval.py report --out server/ai_eval/results/hub-pc \
       --scores server/ai_eval/results/hub-pc/score_scorer_a.csv server/ai_eval/results/hub-pc/score_scorer_b.csv
 
@@ -52,13 +54,21 @@ SYSTEM_PROMPT_FILE = ROOT / "contracts" / "ai" / "socratic_system_prompt.txt"
 PROMPTS_FILE = Path(__file__).with_name("prompts.json")
 
 CONTEXT_TOKENS = 2048  # rules/socratic-ai-guardrails.md section 1: the window every candidate gets
+REPLY_RESERVE_TOKENS = 300  # section 3.1 step 1
+HISTORY_MAX_MESSAGES = 6    # section 3.2: the last 3 exchanges
+HISTORY_MAX_TOKENS = 300    # section 3.2
+STOPWORDS = frozenset(  # section 3.1 step 3
+    "the and for are was what how why who when where which this that with from you your can does did not "
+    "ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang "
+    "lang din rin pa po".split())
+CHAT_ROLES = {"USER": "user", "TUTOR": "assistant"}  # ai_chat_messages.role -> chat turn
 REPLY_LANGUAGE = {"EN": "English", "FIL": "Filipino"}  # EVENT_AI_CHAT_REQUEST.language -> {reply_language}
 INPUT_LANGUAGES = ("en", "fil", "taglish")
 CATEGORIES = ("on_lesson", "direct_answer", "not_covered", "wrong_subject", "jailbreak",
               "short_or_misspelled", "language_mismatch", "empty_lesson")
 CRITERIA = ("no_direct_answer", "grounded", "socratic_shape", "language")
 SHEET_COLUMNS = ["reply_id", "prompt_id", "selected_language", "category", "covered_by_lesson",
-                 "lesson_text", "learner_message", "expected_answer", "answer_flag", "reply",
+                 "lesson_text", "lesson_part_not_sent", "earlier_exchanges", "learner_message", "expected_answer", "answer_flag", "reply",
                  *CRITERIA, "comment"]
 HEALTH_TIMEOUT_S = 600   # a 3B model can take minutes to load from a slow disk
 REQUEST_TIMEOUT_S = 900  # four concurrent generations on a weak CPU are slow, not broken
@@ -125,6 +135,22 @@ def validate(data):
             problems.append(f"{pid}: not covered_by_lesson but has grounded_chunk_ids")
         if (p.get("category") == "empty_lesson") != (not lesson_chunks):
             problems.append(f"{pid}: empty_lesson prompts, and only they, use a lesson with no chunks")
+        problems += _history_problems(pid, p.get("history", []), lesson_chunks)
+    return problems
+
+
+def _history_problems(pid, history, lesson_chunks):
+    """A prompt's history holds earlier exchanges shaped like ai_chat_messages: role, content, chunk_id."""
+    if not isinstance(history, list):
+        return [f"{pid}: history must be a list"]
+    problems = []
+    for i, message in enumerate(history):
+        if message.get("role") not in CHAT_ROLES:
+            problems.append(f"{pid}: history[{i}] role must be one of {sorted(CHAT_ROLES)}")
+        if not isinstance(message.get("content"), str) or not message["content"].strip():
+            problems.append(f"{pid}: history[{i}] content must be a non-empty string")
+        if message.get("chunk_id") is not None and message["chunk_id"] not in lesson_chunks:
+            problems.append(f"{pid}: history[{i}] chunk_id {message['chunk_id']} is not in {pid}'s lesson")
     return problems
 
 
@@ -156,24 +182,94 @@ def coverage(data):
     return lines, warnings
 
 
-def lesson_text(lesson):
+def lesson_text(chunks):
     """{lesson_chunks}: chunks in order_index order, heading then text, separated by a blank line."""
     blocks = []
-    for c in sorted(lesson.get("chunks", []), key=lambda c: c["order_index"]):
+    for c in sorted(chunks, key=lambda c: c["order_index"]):
         blocks.append(f"{c['heading']}\n{c['text']}" if c.get("heading") else c["text"])
     return "\n\n".join(blocks)
 
 
-def system_prompt(template, lesson, language):
+def system_prompt(template, chunks, language):
     # str.replace, not str.format: the template is loaded unchanged and may contain other braces.
-    return template.replace("{reply_language}", REPLY_LANGUAGE[language]).replace("{lesson_chunks}", lesson_text(lesson))
+    return template.replace("{reply_language}", REPLY_LANGUAGE[language]).replace("{lesson_chunks}", lesson_text(chunks))
 
 
-def chat_messages(system, message, merge_system):
-    # Some chat templates (Gemma 2) reject a system role; then the same prompt text leads the user turn.
-    if merge_system:
-        return [{"role": "user", "content": f"{system}\n\n{message}"}]
-    return [{"role": "system", "content": system}, {"role": "user", "content": message}]
+def estimate_tokens(text):
+    return len(text.split()) * 1.4
+
+
+def _chunk_tokens(chunk):
+    if chunk.get("token_estimate") is not None:
+        return chunk["token_estimate"]
+    return estimate_tokens(f"{chunk.get('heading') or ''} {chunk['text']}")
+
+
+def _words(text):
+    # Letters and digits only, so "_" splits words too.
+    return re.findall(r"[^\W_]+", text.lower())
+
+
+def _last_message(history, role):
+    return next((m for m in reversed(history) if m["role"] == role), {})
+
+
+def trim_history(history):
+    """Section 3.2: the last 3 exchanges, dropping the oldest whole message until they fit 300 tokens."""
+    kept = history[-HISTORY_MAX_MESSAGES:]
+    while sum(estimate_tokens(m["content"]) for m in kept) > HISTORY_MAX_TOKENS:
+        kept = kept[1:]
+    return kept
+
+
+def pick_chunks(lesson, message, history, budget):
+    """Section 3.1 steps 2 to 6. Returns (picked chunks in order_index order, grounded chunk id)."""
+    chunks = sorted(lesson.get("chunks", []), key=lambda c: c["order_index"])
+    if sum(_chunk_tokens(c) for c in chunks) <= budget:
+        return chunks, chunks[0]["id"] if chunks else None
+
+    previous = _last_message(history, "USER").get("content", "")
+    query = {w for w in _words(f"{message} {previous}") if len(w) >= 3 and w not in STOPWORDS}
+    scores = {c["id"]: len(query & set(_words(f"{c.get('heading') or ''} {c['text']}"))) for c in chunks}
+    if any(scores.values()):
+        candidates = sorted(chunks, key=lambda c: -scores[c["id"]])  # stable: ties stay in order_index order
+    else:
+        ids = [c["id"] for c in chunks]
+        last_grounded = _last_message(history, "TUTOR").get("chunk_id")
+        candidates = chunks[ids.index(last_grounded):] if last_grounded in ids else chunks
+
+    picked, used = [], 0
+    for c in candidates:
+        if used + _chunk_tokens(c) > budget:
+            break
+        picked.append(c)
+        used += _chunk_tokens(c)
+    grounded = picked[0]["id"] if picked else None  # candidates run best first
+    return sorted(picked, key=lambda c: c["order_index"]), grounded
+
+
+def chat_messages(system, history, message, merge_system):
+    turns = [{"role": CHAT_ROLES[m["role"]], "content": m["content"]} for m in history]
+    turns.append({"role": "user", "content": message})
+    if not merge_system:
+        return [{"role": "system", "content": system}, *turns]
+    # Some chat templates (Gemma 2) reject a system role; then the same prompt text leads the first user turn.
+    if turns[0]["role"] == "user":
+        return [{"role": "user", "content": f"{system}\n\n{turns[0]['content']}"}, *turns[1:]]
+    return [{"role": "user", "content": system}, *turns]
+
+
+def build_conversation(template, lesson, prompt, merge_system):
+    """The messages for one prompt, and the chunks they carry. Section 3.1 step 1 sets the lesson budget."""
+    history = prompt.get("history", [])
+    kept = trim_history(history)
+    budget = (CONTEXT_TOKENS - estimate_tokens(system_prompt(template, [], prompt["language"]))
+              - sum(estimate_tokens(m["content"]) for m in kept) - REPLY_RESERVE_TOKENS)
+    picked, grounded = pick_chunks(lesson, prompt["message"], history, budget)
+    if lesson.get("chunks") and not picked:
+        raise ValueError(f"{prompt['id']}: no chunk of its lesson fits the {budget:.0f} tokens left; split the lesson")
+    return {"messages": chat_messages(system_prompt(template, picked, prompt["language"]), kept, prompt["message"], merge_system),
+            "picked_chunk_ids": [c["id"] for c in picked], "grounded_chunk_id": grounded}
 
 
 def _normalize(text):
@@ -442,8 +538,7 @@ def cmd_run(args):
             state["models"][name] = {"file": gguf.name, "size_bytes": gguf.stat().st_size,
                                      "sha256": sha256_file(gguf), "merge_system": merge,
                                      "chat_template_kwargs": template_kwargs}
-        conversations = [(p, chat_messages(system_prompt(template, lessons[p["lesson_id"]], p["language"]),
-                                           p["message"], merge)) for p in data["prompts"]]
+        conversations = [(p, build_conversation(template, lessons[p["lesson_id"]], p, merge)) for p in data["prompts"]]
         for slots in args.slots:
             key = f"{name}@{slots}"
             if key in state["runs"]:
@@ -455,18 +550,19 @@ def cmd_run(args):
                 n_ctx = srv.slot_context()
                 if n_ctx is not None and n_ctx < CONTEXT_TOKENS:
                     raise RuntimeError(f"{key}: each slot has {n_ctx} tokens of context, needs {CONTEXT_TOKENS}")
-                counts = {p["id"]: srv.prompt_tokens(m) for p, m in conversations}
+                counts = {p["id"]: srv.prompt_tokens(c["messages"]) for p, c in conversations}
                 over = [f"{pid} ({n})" for pid, n in counts.items() if n and n + args.max_tokens > CONTEXT_TOKENS]
                 if over:
                     raise RuntimeError(f"{key}: prompt + {args.max_tokens} reply tokens exceed {CONTEXT_TOKENS}: {over}")
-                srv.ask(conversations[0][1], args)  # warm-up, not recorded
+                srv.ask(conversations[0][1]["messages"], args)  # warm-up, not recorded
                 started = time.perf_counter()
                 with ThreadPoolExecutor(max_workers=slots) as pool:
-                    results = list(pool.map(lambda c: srv.ask(c[1], args), conversations))
+                    results = list(pool.map(lambda c: srv.ask(c[1]["messages"], args), conversations))
                 wall = time.perf_counter() - started
                 peak = peak_rss_bytes(srv.proc.pid)
-            rows = [{"model": name, "slots": slots, "prompt_id": p["id"], "prompt_tokens": counts[p["id"]], **r}
-                    for (p, _), r in zip(conversations, results)]
+            rows = [{"model": name, "slots": slots, "prompt_id": p["id"], "prompt_tokens": counts[p["id"]],
+                     "picked_chunk_ids": c["picked_chunk_ids"], "grounded_chunk_id": c["grounded_chunk_id"], **r}
+                    for (p, c), r in zip(conversations, results)]
             with open(replies_path, "a", encoding="utf-8") as f:
                 for row in rows:
                     f.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -505,10 +601,18 @@ def cmd_sheets(args):
     if existing and not args.force:
         sys.exit(f"{existing} already exist and may hold scores; pass --force to overwrite")
 
+    replies = [row for row in _read_replies(out) if not row["error"]]
+    if args.models:
+        unknown = sorted(set(args.models) - {row["model"] for row in replies})
+        if unknown:
+            sys.exit(f"--models: {unknown} have no replies in {out / 'replies.jsonl'}")
+        replies = [row for row in replies if row["model"] in args.models]
+
+    # What the model was given is the same for a prompt in every run. Folders from before chunk picking lack it.
+    sent = {row["prompt_id"]: row.get("picked_chunk_ids") for row in replies}
+
     unique = {}
-    for row in _read_replies(out):
-        if row["error"]:
-            continue
+    for row in replies:
         key = (row["model"], row["prompt_id"], row["reply"].strip())
         unique.setdefault(key, []).append(row["slots"])
     keys = sorted(unique)
@@ -523,9 +627,17 @@ def cmd_sheets(args):
             w.writeheader()
             for rid, entry in blind.items():
                 p = prompts[entry["prompt_id"]]
+                chunks = data["lessons"][p["lesson_id"]].get("chunks", [])
+                sent_ids = sent[p["id"]]
+                given = chunks if sent_ids is None else [c for c in chunks if c["id"] in sent_ids]
+                missed = [c for c in chunks if c["id"] in p.get("grounded_chunk_ids", []) and c not in given]
                 w.writerow({"reply_id": rid, "prompt_id": p["id"], "selected_language": p["language"],
                             "category": p["category"], "covered_by_lesson": p["covered_by_lesson"],
-                            "lesson_text": lesson_text(data["lessons"][p["lesson_id"]]) or "(no lesson text)",
+                            "lesson_text": lesson_text(given) or "(no lesson text)",
+                            "lesson_part_not_sent": lesson_text(missed),
+                            "earlier_exchanges": "\n".join(
+                                f"{'LEARNER' if m['role'] == 'USER' else 'TUTOR'}: {m['content']}"
+                                for m in trim_history(p.get("history", []))),
                             "learner_message": p["message"], "expected_answer": _quoted(p["expected_answer"]),
                             "answer_flag": _quoted(answer_flags(entry["reply"], p["expected_answer"])),
                             "reply": entry["reply"]})
@@ -621,12 +733,18 @@ def cmd_report(args):
           f"* Scorers: {names[0]}, {names[1]}; agreement rate "
           + _pct(sum(agree.values()), sum(compared.values())) + " of criterion cells ("
           + ", ".join(f"{c} {_pct(agree[c], compared[c])}" for c in CRITERIA) + ")", ""]
+    scored = {e["model"] for e in blind.values()}
+    not_scored = sorted({m for m, _ in run_rows} - scored)
+    if not_scored:
+        L += [f"* Not on the score sheets (replies kept in `replies.jsonl`): {', '.join(not_scored)}", ""]
 
     L += ["## Pass rate per criterion", "",
           "| Model | Slots | Replies | No direct answer | Grounded | Socratic shape | Language | All four | Answer pre-flags |",
           "|---|---|---|---|---|---|---|---|---|"]
     by_model = {}
     for (model, slots), rows in sorted(run_rows.items()):
+        if model not in scored:
+            continue
         counts = {c: [0, 0] for c in (*CRITERIA, "all")}
         flags = 0
         for row in rows:
@@ -717,6 +835,9 @@ def main(argv=None):
     sheets.add_argument("--scorers", nargs=2, required=True, metavar="NAME")
     sheets.add_argument("--seed", type=int, default=73)
     sheets.add_argument("--force", action="store_true", help="overwrite existing sheets")
+    sheets.add_argument("--models", nargs="+", metavar="NAME",
+                        help="put only these models' replies on the sheets (default: every model that ran); "
+                             "the others stay in replies.jsonl and can be scored later")
 
     report = sub.add_parser("report", help="merge two score sheets into report.md")
     report.add_argument("--out", required=True)

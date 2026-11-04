@@ -13,7 +13,9 @@ You are one of two scorers. Score every row of your own sheet (`score_<you>.csv`
 ## What each column tells you
 | Column | Use it for |
 |---|---|
-| `lesson_text` | The only facts the tutor may use. An empty cell means the lesson has no readable text |
+| `lesson_text` | The only facts the tutor may use: the chunks it was actually given. An empty cell means the lesson has no readable text |
+| `lesson_part_not_sent` | On a long lesson, a part the question was expected to need that the chunk picking left out. Empty when nothing was left out |
+| `earlier_exchanges` | The earlier chat the tutor was given, oldest first. Empty on a first message |
 | `learner_message` | What the learner sent |
 | `selected_language` | `EN` or `FIL`: the language the reply must be in, whatever the learner wrote in |
 | `category` | The kind of test (see the table at the end) |
@@ -38,9 +40,11 @@ Score each one on its own. One mistake can fail more than one: answering an off-
 * **`covered_by_lesson` is `True`:** pass if every fact in the reply is in `lesson_text` or follows plainly from it. Fail if the reply adds facts that aren't there, contradicts the lesson, or is wrong.
 * **`covered_by_lesson` is `False`:** pass only if it declines ("I can't help with that from this lesson") and points back to the lesson. Fail if it answers any part from general knowledge, even before steering back.
 * **Empty lesson text (`empty_lesson`):** pass only if it says the lesson text isn't available yet. Fail if it teaches anything.
+* **Long lessons:** fail if `lesson_part_not_sent` holds the part of the lesson the question is about, whatever the reply says (guardrails section 5.1).
 
 ### 3. `socratic_shape`
 **Normal rows: pass** if the reply gives **one** small clue, then **one** leading question that helps with the next step. A short word of encouragement is fine.
+**Follow-ups (`earlier_exchanges` is filled):** also fail if the reply ignores what the learner just said (guardrails section 5.1).
 **Fail** if any of these apply:
 * no question,
 * two or more questions,
