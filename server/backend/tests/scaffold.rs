@@ -89,7 +89,7 @@ async fn stub_role_guards_match_the_mock() {
             continue; // an area this Hub has not scaffolded yet (announcements, topics)
         }
         if code(&body) != Some("NOT_IMPLEMENTED") {
-            assert!(path.starts_with("/api/classrooms") || path.starts_with("/api/sync/"), "unexpected implemented route: {method} {path}");
+            assert!(path.starts_with("/api/classrooms") || path.starts_with("/api/sync/") || path.starts_with("/api/admin/"), "unexpected implemented route: {method} {path}");
             assert_ne!(status, 403, "right role was rejected: {method} {path}");
         } else {
             assert_eq!(status, 501, "{method} {path}");
@@ -148,7 +148,7 @@ async fn every_scaffolded_contract_route_is_registered() {
         let role = roles.iter().find(|(m, p, _)| *m == method && *p == path).map_or(Role::Teacher, |(_, _, r)| *r);
         let token = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
         let (status, body) = hub.request(method.clone(), &path, Some(token)).await;
-        if (template.starts_with("/api/classrooms") || template.starts_with("/api/sync/")) && code(&body) != Some("NOT_IMPLEMENTED") {
+        if (template.starts_with("/api/classrooms") || template.starts_with("/api/sync/") || template.starts_with("/api/admin/")) && code(&body) != Some("NOT_IMPLEMENTED") {
             assert!(matches!(status, 200 | 400 | 404), "{method} {template}: {status} {body}");
             assert_ne!(code(&body), Some("ROUTE_NOT_FOUND"));
         } else {
