@@ -62,10 +62,13 @@ STOPWORDS = frozenset(  # section 3.1 step 3
     "ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang "
     "lang din rin pa po".split())
 CHAT_ROLES = {"USER": "user", "TUTOR": "assistant"}  # ai_chat_messages.role -> chat turn
-REPLY_LANGUAGE = {"EN": "English", "FIL": "Filipino"}  # EVENT_AI_CHAT_REQUEST.language -> {reply_language}
+REPLY_LANGUAGE = {"EN": "English"}  # English only for the pilot (section 3, directive 5) -> {reply_language}
+TTFT_LIMIT_MS = 10_000        # #73 pass mark, criterion 5
+MIN_LONG_LESSON_PROMPTS = 10  # section 5.1
+MIN_FOLLOW_UP_PROMPTS = 5     # section 5.1
 INPUT_LANGUAGES = ("en", "fil", "taglish")
 CATEGORIES = ("on_lesson", "direct_answer", "not_covered", "wrong_subject", "jailbreak",
-              "short_or_misspelled", "language_mismatch", "empty_lesson")
+              "short_or_misspelled", "language_mismatch", "empty_lesson", "check_my_answer", "follow_up")
 CRITERIA = ("no_direct_answer", "grounded", "socratic_shape", "language")
 SHEET_COLUMNS = ["reply_id", "prompt_id", "selected_language", "category", "covered_by_lesson",
                  "lesson_text", "lesson_part_not_sent", "earlier_exchanges", "learner_message", "expected_answer", "answer_flag", "reply",
@@ -179,7 +182,18 @@ def coverage(data):
         warnings.append(f"grades not covered: {sorted(set(range(1, 13)) - set(grades))}")
     if not data.get("review", {}).get("filipino_reviewer"):
         warnings.append("Filipino and Taglish prompts are not reviewed yet (review.filipino_reviewer is empty)")
+    long_lesson = sum(1 for p in prompts if is_long_lesson(lessons[p["lesson_id"]]))
+    follow_ups = sum(1 for p in prompts if sum(m["role"] == "TUTOR" for m in p.get("history", [])) >= 2)
+    lines.append(f"  long lessons: {long_lesson} prompts; follow-ups with 2+ earlier exchanges: {follow_ups} prompts")
+    if long_lesson < MIN_LONG_LESSON_PROMPTS:
+        warnings.append(f"long-lesson prompts: {long_lesson}, section 5.1 asks for at least {MIN_LONG_LESSON_PROMPTS}")
+    if follow_ups < MIN_FOLLOW_UP_PROMPTS:
+        warnings.append(f"follow-up prompts: {follow_ups}, section 5.1 asks for at least {MIN_FOLLOW_UP_PROMPTS}")
     return lines, warnings
+
+
+def is_long_lesson(lesson):
+    return sum(_chunk_tokens(c) for c in lesson.get("chunks", [])) > CONTEXT_TOKENS
 
 
 def lesson_text(chunks):
@@ -779,12 +793,27 @@ def cmd_report(args):
                  f"| {run['model']} | {state['models'][run['model']]['file']} | {run['slots']} | n/a | n/a | n/a | "
                  f"{run['throughput_tps']} | {peak} | {run['errors']} |")
 
-    L += ["", "## All four criteria by prompt category and selected language (all slot counts)", "",
-          "| Model | " + " | ".join(CATEGORIES) + " | EN | FIL |", "|---|" + "---|" * (len(CATEGORIES) + 2)]
+    L += ["", "## First token by lesson length", "",
+          "Criterion 5 is judged on the `all` rows: first token under 10 s for 95% of replies with 2 learners at once.", "",
+          "| Model | Slots | Lessons | Replies | TTFT median (ms) | TTFT p95 (ms) | Under 10 s |",
+          "|---|---|---|---|---|---|---|"]
+    for (model, slots), rows in sorted(run_rows.items()):
+        timed = [(prompts[r["prompt_id"]], r["ttft_ms"]) for r in rows if not r["error"] and r["ttft_ms"] is not None]
+        long_flags = [(is_long_lesson(data["lessons"][p["lesson_id"]]), ms) for p, ms in timed]
+        for label, values in (("short", [ms for is_long, ms in long_flags if not is_long]),
+                              ("long", [ms for is_long, ms in long_flags if is_long]),
+                              ("all", [ms for _, ms in long_flags])):
+            if values:
+                under = sum(ms < TTFT_LIMIT_MS for ms in values)
+                L.append(f"| {model} | {slots} | {label} | {len(values)} | {statistics.median(values):.0f} | "
+                         f"{_p95(values):.0f} | {_pct(under, len(values))} |")
+
+    L += ["", "## All four criteria by prompt category (all slot counts)", "",
+          "| Model | " + " | ".join(CATEGORIES) + " |", "|---|" + "---|" * len(CATEGORIES)]
     for model, items in sorted(by_model.items()):
         cells = []
-        for group in (*CATEGORIES, "EN", "FIL"):
-            hits = [ok for p, ok in items if group in (p["category"], p["language"])]
+        for group in CATEGORIES:
+            hits = [ok for p, ok in items if group == p["category"]]
             cells.append(_pct(sum(hits), len(hits)))
         L.append(f"| {model} | " + " | ".join(cells) + " |")
 
