@@ -301,6 +301,7 @@ paths:
   /api/classrooms/{id}:
     patch:
       summary: Rename a class or archive it (owning teacher only). An archived class is read-only for everyone and keeps all its grades.
+      description: While archived, a rename answers 403 FORBIDDEN unless the same request sets archived to false. Managing co-teachers stays allowed.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -485,7 +486,7 @@ paths:
                     $ref: "#/components/schemas/PrivateCommentPush"
       responses:
         "200":
-          description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit.
+          description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit. New or edited work for an archived class is REJECTED with reason FORBIDDEN; a retry of work the Hub saved before the archive is SYNCED.
           content:
             application/json:
               schema:
