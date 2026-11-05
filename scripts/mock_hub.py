@@ -612,6 +612,9 @@ def remove_learner(req):
 def classroom_patch(req):
     c = owned_classroom(req, req.groups[0], owner_only=True)
     b = req.json()
+    # Read-only while archived; the same request may unarchive it and rename it.
+    if c.get("archived_at") and b.get("archived") is not False and ("name" in b or "section" in b):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     for k in ("name", "section"):
         if k in b:
             c[k] = b[k]
@@ -745,6 +748,10 @@ def sync_push(req):
         if not ann or ann["classroom_id"] not in STATE.visible_classroom_ids(req.user) or (
                 existing and existing["author_id"] != req.user["id"]):
             receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
+        elif STATE.classrooms[ann["classroom_id"]].get("archived_at"):
+            # A retry of a comment saved before the archive is still SYNCED; new work is refused.
+            receipts.append({"id": c["id"], "status": "SYNCED"} if existing
+                            else {"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
         elif ann["allow_comments"]:
             STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
                                        "author_id": req.user["id"], "content": c["content"],
@@ -758,7 +765,11 @@ def sync_push(req):
         existing = STATE.private_comments.get(c["id"])
         # Same rule as the REST route: only a learner enrolled in the class, and a retry may only
         # re-send the caller's own comment, never overwrite someone else's row by guessing its id.
-        if (asg and not asg.get("archived_at")
+        if (asg and existing and existing["author_id"] == req.user["id"]
+                and STATE.classrooms[asg["classroom_id"]].get("archived_at")):
+            receipts.append({"id": c["id"], "status": "SYNCED"})
+        elif (asg and not asg.get("archived_at")
+                and not STATE.classrooms[asg["classroom_id"]].get("archived_at")
                 and asg["classroom_id"] in STATE.active_classroom_ids(req.user["id"])
                 and (existing is None or existing["author_id"] == req.user["id"])):
             add_private_comment(asg, req.user["id"], req.user["id"], c["content"], c["id"], c["created_at"])
@@ -1198,6 +1209,8 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
                 if a["quiz_id"] == quiz_id and a["student_id"] == user["id"]), None)
     if att and att["status"] == "SUBMITTED":
         return att
+    if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     score, total = grade(quiz, answers)
     t = now_ms()
     if not att:

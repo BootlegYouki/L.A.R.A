@@ -155,6 +155,20 @@ class TestMockHub(unittest.TestCase):
         status, body, _ = call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
         self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
 
+    def test_archived_class_is_read_only_until_unarchived(self):
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        saved = {"id": "c-saved", "announcement_id": ann, "content": "before", "created_at": 1}
+        call(BASE, "POST", "/api/sync/push", {"comments": [saved]}, self.pupil)
+        call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
+        status, body, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New"}, self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+        new = {"id": "c-new", "announcement_id": ann, "content": "after", "created_at": 2}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [saved, new]}, self.pupil)
+        self.assertEqual(res["receipts"], [{"id": "c-saved", "status": "SYNCED"},
+                                           {"id": "c-new", "status": "REJECTED", "reason": "FORBIDDEN"}])
+        status, room, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New", "archived": False}, self.teacher)
+        self.assertEqual((status, room["name"], room["archived_at"]), (200, "New", None))
+
     def test_bad_class_code(self):
         status, body, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "ZZZZZZ"}, self.pupil)
         self.assertEqual((status, body["error"]["code"]), (404, "CLASS_CODE_INVALID"))
