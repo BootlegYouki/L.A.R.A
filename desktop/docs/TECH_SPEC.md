@@ -1,6 +1,6 @@
 # Desktop Technical Spec
 
-> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Approved by the Lead 2026-10-26 (answers in section 14) | Last updated: 2026-10-26
+> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Approved by the Lead 2026-10-26 (answers in section 14) | Last updated: 2026-11-05
 > Sprint 0: [#37](https://github.com/BootlegYouki/L.A.R.A/issues/37). Kiervy may revise these implementation choices before approval. This draft does not claim his review or replace product requirements. Lead approval must precede a Sprint 1 merge.
 
 ## 1. Scope and Non-Goals
@@ -35,12 +35,12 @@ main.tsx → App.tsx → pages/ + components/
 | Decision | Choice | Why | Rejected alternative |
 |---|---|---|---|
 | Foundation | Tauri 2, React 19, strict TypeScript 5, Vite 6, Tailwind 4; lockfiles | Required stack, small native client | Electron, Prisma, new framework |
-| State and strings | Zustand `useAppStore`; `i18n/en.json` and `fil.json` | Matches scaffold; one runtime language toggle | Multiple competing stores/dictionaries |
+| State and strings | Zustand `useAppStore`; `i18n/en.json` and typed `t` lookup | English only per #223/#225 | Multiple competing stores/dictionaries |
 | Data | Official plugin-sql; `services/db.ts`; immutable numbered native migrations | Canonical client schema; reusable reads | Browser-only cache; modifying applied migrations |
 | Atomic writes | Rust `apply_sync_pull` command with one SQLx transaction on the same database file | JS plugin calls can use different pooled connections | Separate JS `BEGIN`/`execute`/`COMMIT` calls |
 | REST transport | Tauri HTTP plugin through `services/api.ts`; browser WebSocket in `realtime.ts` | Avoid platform CORS differences for REST; supported WS contract | Duplicated browser/native REST implementations |
 | Token | Rust `secure_token.rs` using OS credential storage via `keyring`; expose narrowly scoped commands | Windows Credential Manager, macOS Keychain, Linux Secret Service; no plaintext token file | `localStorage`, SQLite, unprotected Tauri store |
-| Preferences | `services/settings.ts` owns nonsecret language/Hub preferences; retain scaffold localStorage language | No extra schema/table; shared accessor for Settings and Connection | Inventing a `settings` SQL table |
+| Preferences | `services/settings.ts` owns nonsecret Hub preferences; no language preference | No extra schema/table; shared accessor for Settings and Connection | Inventing a `settings` SQL table |
 | UI | Bundled Nunito/Phosphor, canonical theme import, Radix Dialog when needed | Required accessible visual vocabulary | CDN assets, copied prototype runtime/demo data |
 | Tutor later | Hub WebSocket chat client; only the Hub builds prompts | Grounded hints from the Hub; quiz lockout on client and Hub | Client prompt building or inference |
 
@@ -55,11 +55,11 @@ src/main.tsx, App.tsx       React entry and role/layout routing; no transport lo
 src/pages/                 LoginPage, HomePage, ConnectionPage, RosterPage, SettingsPage
 src/pages/teacher/         ClassSettings; owner-only class management controls
 src/components/            Cards, banners, Sidebar, TopAppBar, Radix dialogs; no SQL
-src/store/app.ts           useAppStore; loading/ready/error, cached view and language
+src/store/app.ts           useAppStore; loading/ready/error and cached view
 src/services/              db.ts, api.ts, discovery.ts, auth.ts, classrooms.ts,
                            realtime.ts, sync.ts, settings.ts; feature services added later
 src/services/types.ts      Contract-matching public types and runtime guards; no answer keys
-src/i18n/                  en.json, fil.json, index.ts; equal keys including accessibility labels
+src/i18n/                  en.json, index.ts; single typed English dictionary including accessibility labels
 src/assets/design-system/  Bundled fonts/icons/licenses; no remote asset references
 src/index.css              Shared theme/tokens, focus and reduced-motion rules
 src-tauri/src/             main.rs, lib.rs; discovery.rs, secure_token.rs, sync.rs as needed
@@ -75,16 +75,16 @@ The schematic `src-tauri/src/db.rs` in the README is not a second migration owne
 
 | Name | Kind | Responsibility |
 |---|---|---|
-| `useAppStore` | Zustand store | UI state, cached classrooms, language and bounded initialization |
+| `useAppStore` | Zustand store | UI state, cached classrooms and bounded initialization |
 | `openDatabase`, `readSavedClasses`, `SavedClassroom` | Existing DB service API/type | Deduplicated open and account-scoped class reads |
-| `Language`, `Dictionary`, `dictionaries` | Existing i18n exports | `en`/`fil` and matching text keys |
+| `Dictionary`, `t` | i18n exports | Typed lookup from the single English dictionary |
 | `HubInfo`, `get_discovered_hubs`, `hub-found` | Native type/command/local event | Validated discovery list and incremental notification; not Hub WS events |
 | `api.ts`, `ApiError` | Transport module/error type | Selected-Hub requests, bearer attachment, validation and error mapping |
 | `realtime.ts` | WS module | One socket per active session; HELLO and reconnect backoff |
 | `SyncPullResponse`, `isSyncPullResponse` | Contract type/guard | Validated pull payload; no speculative fields |
 | `apply_sync_pull` | Native command in `sync.rs` | One atomic records/tombstones/cursor/reset operation |
 | `sync.ts` | Orchestrator | Single-flight push/pull, paging and refresh notifications |
-| `settings.ts` | Preferences service | Language and saved Hub settings; no credentials |
+| `settings.ts` | Preferences service | Saved Hub settings; no credentials or language preference |
 | `secure_token.rs` | Native credential module | Store/read/delete current account and Hub scoped token |
 
 ## 6. Contract Usage
@@ -145,7 +145,7 @@ Pull is single-flight: validate complete response, open native transaction, appl
 | PDF/video | Open downloaded files; uncached content explains it needs the Hub; no endless spinner |
 | Existing quiz attempt | Continue monotonic countdown; lock/queue at zero or close; never fabricate a new offline attempt |
 | Tutor | Hub unreachable: "The AI tutor needs the classroom Hub"; past chats remain readable offline; never mounted during active attempt |
-| Settings | Change language and local Hub preferences; warn/count queued rows before logout; preserve them |
+| Settings | Change local Hub preferences; warn/count queued rows before logout; preserve them |
 
 ## 8. Code Patterns
 
@@ -187,7 +187,7 @@ These are patterns, not implemented APIs. Reset helper must first satisfy the pr
 - Tauri store is not automatically encrypted. Credential-service failure must never silently persist plaintext.
 - TeacherQuizInput contains authoring answers: transient teacher editor state is distinct from redacted learner types. A local persistent question bank conflicts with the no-answer-keys rule; section 14 blocks that part until Lead resolves it.
 - Quiz time uses server offset plus `performance.now()`, not wall-clock countdown. Remote timing anchors to fetched Hub `started_at`; elapsed time survives transport loss. Resume after process restart requires Hub timing reconciliation, not assumed monotonic continuity.
-- Tailwind 4 must explicitly load canonical tokens/theme; copying a config filename alone does nothing. All labels, ARIA text, errors and skeleton descriptions need both dictionaries.
+- Tailwind 4 must explicitly load canonical tokens/theme; copying a config filename alone does nothing. All labels, ARIA text, errors and skeleton descriptions belong in the English dictionary.
 
 ## 10. Build Order
 
@@ -203,7 +203,7 @@ Both developers work each issue together, one issue at a time. “Creates” ass
 | 2.2 | #46 | `JoinClassModal.tsx`, `realtime.ts`; pending/approval state | #45; reuse API/classroom types |
 | 2.3 | #47 | `RosterPage.tsx`, `CreateClassroomDialog.tsx`, `TopAppBar.tsx`; extend `classrooms.ts` | #46; reuse realtime/auth |
 | 2.4 | #48 | `sync.ts`, native `sync.rs`, `apply_sync_pull`, transaction/crash tests | #47; reuse DB and contract types; reset spike |
-| 2.5 | #105 | `SettingsPage.tsx`; extend existing `settings.ts` and auth logout; no second language store | #48; reuse queued count and credentials |
+| 2.5 | #105 | `SettingsPage.tsx`; extend existing `settings.ts` and auth logout; no language control | #48; reuse queued count and credentials |
 | 2.6 | #123 | `pages/teacher/ClassSettings.tsx`; extend classroom service, archived Home filter | #105; mock owner/co-teacher routes |
 
 Until #48, #45–47 persist only their explicitly fetched, validated snapshots through `db.ts`; they must not impersonate the delta engine or advance its cursor. #48 becomes the one refresh/queue owner. Remove the scaffold `foundation_note` when sign-in lands.
@@ -253,7 +253,7 @@ Use the mock's documented seed accounts (`T-0001`, enrolled learner, joining lea
 
 | Deliverable | Required proof before its PR is complete |
 |---|---|
-| #29 shell | Native launch creates schema; Hub stopped gives cached/empty view; English/Filipino toggle; reopen DB and reject wrong-account rows |
+| #29 shell | Native launch creates schema; Hub stopped gives cached/empty view; English-only shell; reopen DB and reject wrong-account rows |
 | #5 discovery | Parse malformed/wrong-app beacons, deduplicate; UDP discovery around 3 seconds; mDNS on actual LAN; Wi-Fi reconnect and scanner shutdown |
 | #40 connection | Manual address works without broadcast; invalid octets/port rejected; 401 reachability separated from login; stop mock gives banner; production HTTP/WS scope smoke test |
 | #45 accounts | Teacher/learner mock login and registration; secure token absent from SQLite/localStorage/logs; relaunch with Hub stopped; switch accounts/Hubs with queued rows and prove no cross-context access |
@@ -271,7 +271,7 @@ Sprint 0 evidence (2026-10-26): `python scripts/verify_invariants.py` passed; `p
 
 Lead answers (2026-10-26). They match the approved server and mobile specs so both clients build the same behavior.
 
-1. **Settings table: no SQL table.** Accepted: nonsecret preferences (language, saved Hub address) live in `settings.ts`; #40's "settings table" means this. Keep the REST base and the WebSocket URL as two separate saved fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`). The remote address form is decided by [SERVER 6.2] in the contract; build LAN only until then (#150 waits for it).
+1. **Settings table: no SQL table.** Accepted: nonsecret preferences (saved Hub address; language removed by #225) live in `settings.ts`; #40's "settings table" means this. Keep the REST base and the WebSocket URL as two separate saved fields (LAN: `http://<ip>:8080` and `ws://<ip>:8081`). The remote address form is decided by [SERVER 6.2] in the contract; build LAN only until then (#150 waits for it).
 2. **Reset, new membership, revoked access:** answered by server spec Q3. When the caller's enrollment turns `ACTIVE` after their cursor, the Hub's next pull carries a snapshot of that class. A removed learner's pull carries the `REMOVED` enrollment; the client then deletes that class's mirrored rows, never `QUEUED_FOR_SYNC` rows, and keeps any parent row a queued row still needs until it syncs.
 3. **Rejected push items:** correct, the client schema has only `SYNCED` and `QUEUED_FOR_SYNC` and no reason column. This is a contract gap the Lead will close with a `contract-change` before #48; until then do not retry an item that came back `REJECTED`, and show the reason for the current session only.
 4. **Question bank (#31): no persisted answer keys.** The quiz builder keeps answers in memory only and saves through `POST /api/quizzes` / `PATCH /api/quizzes/{id}` (the draft lives on the Hub). The "reusable question bank saved locally" sub-task of #31 is dropped unless a later contract adds a Hub-side bank.
@@ -286,7 +286,7 @@ These checks describe the proposed design, not proof that all features are imple
 
 - [x] No internet or CDN dependency (fonts and icons come from `design-system/assets/`; only opt-in Hub tunnel transport is permitted)
 - [x] Offline state defined for every screen family
-- [x] English and Filipino strings required for all UI text
+- [x] English strings in resources; no language toggle (#223/#225)
 - [x] Touch targets at least 52dp on phones (56dp primary and quiz options), 40px buttons on desktop; desktop tabs/drawer 48px
 - [x] `correct_answer` never stored on a client; persistent question bank conflict explicitly blocked
 - [x] AI unavailable during an active quiz; drawer/buttons unmounted and local generation stopped
@@ -295,6 +295,6 @@ These checks describe the proposed design, not proof that all features are imple
 
 ## Desktop 1.3 implementation notes (2026-11-04)
 
-Issue #40 uses native HTTP through `services/api.ts` for the fixed `/api/classrooms` reachability probe. An unauthenticated 401 marks the endpoint reachable without creating a session. `settings.ts` stores validated nonsecret REST and WebSocket addresses separately; no Hub settings/history table is introduced. The connection controller owns single-flight polling, cancellation and capped reconnect backoff. ConnectionPage remains within the offline Home shell so loss of the Hub cannot hide cached classes. New UI uses English per root rules; the remaining legacy language infrastructure belongs to #225.
+Issue #40 uses native HTTP through `services/api.ts` for the fixed `/api/classrooms` reachability probe. An unauthenticated 401 marks the endpoint reachable without creating a session. `settings.ts` stores validated nonsecret REST and WebSocket addresses separately; no Hub settings/history table is introduced. The connection controller owns single-flight polling, cancellation and capped reconnect backoff. ConnectionPage remains within the offline Home shell so loss of the Hub cannot hide cached classes. New UI uses English per root rules; #225 removes the legacy dictionary and preference infrastructure.
 
 The canonical schema update in staging `0971ce3` supersedes Q3's former missing-rejection-column gap: `REJECTED` and nullable `sync_reject_reason` now exist on all four uploadable client tables. Migration 2 adopts those fields while retaining queued payloads; implementing sync receipt handling remains #48. No applied migration 1 is edited. See [connection verification](connection.md) for environment limits and checks.

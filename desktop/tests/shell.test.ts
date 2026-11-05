@@ -4,12 +4,12 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import App from '../src/App';
 
 const { state } = vi.hoisted(() => ({ state: {
-  language: 'en' as 'en' | 'fil', status: 'ready' as 'ready' | 'loading' | 'error',
+  status: 'ready' as 'ready' | 'loading' | 'error',
   classrooms: [] as { id: string; name: string; section: string }[],
-  toggleLanguage: vi.fn(), loadSavedClasses: vi.fn(),
+  loadSavedClasses: vi.fn(),
 } }));
 vi.mock('../src/store/app', () => ({ useAppStore: () => state }));
-beforeEach(() => { state.language = 'en'; state.status = 'ready'; state.classrooms = []; });
+beforeEach(() => { state.status = 'ready'; state.classrooms = []; });
 const render = () => renderToStaticMarkup(createElement(App));
 
 it('offers the prototype empty Home shell without fake classes or active join actions', () => {
@@ -23,11 +23,12 @@ it('offers the prototype empty Home shell without fake classes or active join ac
   expect(html).not.toContain('next desktop steps');
   expect(html).not.toContain('Science 4');
 });
-it('renders English even if an old Filipino preference is present', () => {
-  state.language = 'fil';
+it('renders English with no translation control', () => {
   const html = render();
   expect(html).toContain('Add a class to get started');
   expect(html).not.toContain('Switch to Filipino');
+  expect(html).not.toContain('language-button');
+  expect(html).not.toContain('ph-translate');
 });
 it('shows a retry rather than a false empty state when SQLite cannot open', () => {
   state.status = 'error';

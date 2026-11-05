@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { dictionaries } from './i18n';
+import { t } from './i18n';
 import { useAppStore } from './store/app';
 import ConnectionPage from './pages/ConnectionPage';
 import HubStatusBanner from './components/HubStatusBanner';
@@ -13,7 +13,6 @@ export default function App() {
   const [discoveryFailed, setDiscoveryFailed] = useState(false);
   const [searching, setSearching] = useState(true);
   useEffect(() => { const timer = setTimeout(() => setSearching(false), 3000); return () => clearTimeout(timer); }, []);
-  const t = dictionaries.en;
   const [connection, setConnection] = useState<HubConnectionState>({ status: 'offline', hub: null, persisted: true });
   const controller = useRef<ReturnType<typeof observeHubConnection> | null>(null);
   useEffect(() => { document.documentElement.lang = 'en'; }, []);

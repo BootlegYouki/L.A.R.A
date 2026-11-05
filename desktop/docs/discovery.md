@@ -1,5 +1,7 @@
 # Desktop 1.2: Hub discovery
 
+> The EN/FIL screenshots and earlier wording notes below are historical #5 evidence. #225 removes the Filipino dictionary and language preference; current checks are in [english-only.md](english-only.md).
+
 Issue: #5. Discovery identifies candidate addresses; it does not authenticate a Hub or user. Connection verification, saved addresses, HTTP transport permissions and the connection screen remain #40. No account, schema, credential or network contract changes are introduced.
 
 ## Files and flow
@@ -9,7 +11,7 @@ Issue: #5. Discovery identifies candidate addresses; it does not authenticate a 
 - `src/services/discovery.ts`: validates native payloads and canonical local manual addresses; polls snapshots every second to remove expired rows and listens for first-discovery events. Cleanup handles late listener/IPC completion and prevents overlapping reads.
 - `src/components/HubDiscovery.tsx`: nearby Hub cards and always-visible manual entry within Home. Selecting an address is session-only and explicitly unverified; it does not send a request or change the connection pill. This is the address-selection part of discovery, not the #40 connection flow.
 - `src/App.tsx`: subscribes once for the mounted Home; cached classes and database retry remain independent of discovery. Also applies the Lead's next-UI follow-ups from #165: To-do row, Enrolled caret, Filipino Home wording.
-- Paired dictionaries, token-based styles, parser/service/SSR tests and native screenshots accompany the feature.
+- Single English dictionary (#225), token-based styles, parser/service/SSR tests and native screenshots accompany the feature.
 
 The prototype does not define a discovery screen. The additional Home panel follows its existing content sheet, Nunito, Phosphor and design tokens. It preserves the existing shell and offline banner. Desktop buttons are at least 40px and the labelled address input is at least 52px. No new modal dependency is needed.
 

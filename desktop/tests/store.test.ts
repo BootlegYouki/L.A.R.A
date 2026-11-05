@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readSavedClasses } from '../src/services/db';
 import { useAppStore } from '../src/store/app';
-import { dictionaries } from '../src/i18n';
 
 vi.mock('../src/services/db', () => ({ readSavedClasses: vi.fn() }));
 const read = vi.mocked(readSavedClasses);
@@ -9,7 +8,7 @@ const read = vi.mocked(readSavedClasses);
 describe('offline application state', () => {
   beforeEach(() => {
     read.mockReset();
-    useAppStore.setState({ language: 'en', status: 'loading', classrooms: [] });
+    useAppStore.setState({ status: 'loading', classrooms: [] });
   });
 
   it('loads cached classes without making a network request', async () => {
@@ -45,9 +44,8 @@ describe('offline application state', () => {
     expect(useAppStore.getState().status).toBe('ready');
   });
 
-  it('enforces English-only language (architectural rule 2026-11-03)', () => {
-    // Both dictionaries must have matching keys for TypeScript, but only 'en' is used in UI
-    expect(Object.keys(dictionaries.en).sort()).toEqual(Object.keys(dictionaries.fil).sort());
-    expect(useAppStore.getState().language).toBe('en');
+  it('has no language state or browser-storage hydration', () => {
+    expect(useAppStore.getState()).not.toHaveProperty('language');
+    expect(useAppStore).not.toHaveProperty('persist');
   });
 });

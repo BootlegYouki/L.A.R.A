@@ -2,6 +2,8 @@
 
 Verified on Windows 2026-10-26, after restoring the reverted #161 code. Only desktop/ changes are included. The approved spec from #162 remains intact.
 
+> Historical #29 evidence below describes the 2026-10-26 build, including its former language switch. #223/#225 supersede that feature. Current English-only checks: [english-only.md](english-only.md). Historical screenshots are retained as evidence, not current UI instructions.
+
 ## Automated checks
 
 | Check | Result |
@@ -44,8 +46,8 @@ Both captures are 1200 x 800 CSS pixels in the same WebView2 rendering engine, e
 
 1. In desktop/: `npm ci`, `npm run lint`, `npm test`, `npm run build`, then `npm run tauri dev` with native Tauri prerequisites installed. No seed account is required for #29.
 2. Keep the Hub stopped. Confirm the amber pill/banner, Classes heading and empty state. Plus/Join, Archived and Settings must be inactive; there is no fake successful enrollment/navigation.
-3. Click the menu to fold/unfold the drawer. Use keyboard Tab/Enter for the menu, language button and skip link. Check visible focus.
-4. Choose Filipino, close the whole application, reopen it, confirm Filipino and the local empty state; switch back to English.
+3. Click the menu to fold/unfold the drawer. Use keyboard Tab/Enter for the menu and skip link. Check visible focus.
+4. Close/reopen the application; confirm English, no language control, and the local empty/cached state. Old language preferences are ignored.
 5. From design-system/, run `python -m http.server 1430 --bind 127.0.0.1`; open `/prototype.html`, choose Empty and compare at the same client dimensions. Do not delete an existing database to manufacture an empty screen.
 6. From repo root run `python scripts/verify_invariants.py` and `python -m unittest discover tests` (Python + PyYAML).
 
@@ -57,7 +59,7 @@ Both captures are 1200 x 800 CSS pixels in the same WebView2 rendering engine, e
 - Production release executable launch: native checks used a debug build with the dev webview. Production frontend build passed, but installers are outside #29.
 - Signed-in native cached-class cards: sign-in/sync are later issues. Query isolation and SQLite persistence are tested with synthetic temporary databases.
 - Discovery, accounts, enrollment, sync, materials, quizzes and AI are outside this scaffold. The static offline status intentionally does not claim a working connection.
-- Filipino wording awaits teammate review.
+- Historical Filipino wording is no longer shipped after #225.
 
 Source, dependencies, screenshots and build caches are on G:. Windows keeps the small runtime SQL database and WebView state in the app's standard C: data folders, with explicit access granted for testing.
 

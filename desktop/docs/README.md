@@ -6,7 +6,7 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 | File | Purpose | Written in |
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
-| `components.md` | Component structure, design-system token usage, i18n dictionaries | Sprint 1 |
+| `components.md` | Component structure, design-system token usage, English resource dictionary | Sprint 1 |
 | `database.md` | `plugin-sql` setup, migrations from `client_offline.sql`, `sync_state` | Sprint 1 and 2 |
 | `sync_engine.md` | Pull and push loops, cursor handling, `reset`, offline queue | Sprint 2 |
 | `realtime.md` | WebSocket client, handshake, reconnect, event handling | Sprint 2 |
@@ -22,4 +22,6 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 4. **Gotchas and edge cases:** Tauri capability limits, webview quirks, offline failure modes.
 
 ## Related
+[English-only cleanup and verification (#225)](english-only.md).
+
 [`../AGENTS.md`](../AGENTS.md) (agent and developer guide), [`../README.md`](../README.md), [`../../contracts/`](../../contracts/), [`../../design-system/design-system.md`](../../design-system/design-system.md).
