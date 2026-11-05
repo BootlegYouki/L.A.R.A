@@ -521,3 +521,375 @@ async fn disconnected_devices_recover_enrollment_after_hub_restart() {
     let response = reqwest::Client::new().get(url).bearer_auth(token).send().await;
     assert!(response.is_err(), "the stopped Hub must actually be unreachable");
 }
+
+// ---- #121: rename, archive, remove a learner, co-teachers ----
+
+async fn patch(hub: &TestHub, room: &Value, body: Value, token: &str) -> (u16, Value) {
+    hub.send_json(
+        reqwest::Method::PATCH,
+        &format!("/api/classrooms/{}", room["id"].as_str().unwrap()),
+        &body,
+        Some(token),
+    )
+    .await
+}
+
+async fn add_teacher(hub: &TestHub, room: &Value, lrn: &str, token: &str) -> (u16, Value) {
+    hub.post_json(
+        &format!("/api/classrooms/{}/teachers", room["id"].as_str().unwrap()),
+        &json!({"lrn_or_id": lrn}),
+        Some(token),
+    )
+    .await
+}
+
+async fn drop_teacher(hub: &TestHub, room: &Value, teacher_id: &str, token: &str) -> (u16, Value) {
+    hub.request(
+        reqwest::Method::DELETE,
+        &format!("/api/classrooms/{}/teachers/{teacher_id}", room["id"].as_str().unwrap()),
+        Some(token),
+    )
+    .await
+}
+
+async fn teacher(hub: &TestHub, id: &str) -> (User, String) {
+    let user = hub.seed_user(id, "Jose Rizal", Role::Teacher, "1234").await;
+    let token = hub.open_session(user.clone()).await;
+    (user, token)
+}
+
+async fn active_learner(hub: &TestHub, room: &Value, lrn: &str) -> (User, String) {
+    let (user, token) = learner(hub, lrn).await;
+    assert_eq!(join(hub, room, &token).await.0, 200);
+    assert_eq!(decide(hub, room, &user.id, "approve", hub.teacher_token()).await.0, 200);
+    (user, token)
+}
+
+async fn classroom_revisions(hub: &TestHub) -> Vec<(Option<String>, String)> {
+    sqlx::query_as("SELECT student_id, action FROM sync_revisions WHERE entity_table = 'classrooms' ORDER BY seq")
+        .fetch_all(&hub.state().db)
+        .await
+        .unwrap()
+}
+
+#[tokio::test]
+async fn owner_renames_a_class_and_each_change_writes_one_class_scoped_revision() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (status, updated) = patch(&hub, &room, json!({"name": "Science 4A"}), hub.teacher_token()).await;
+    assert_eq!(status, 200, "{updated}");
+    assert_eq!(updated["id"], room["id"]);
+    assert_eq!(updated["name"], "Science 4A");
+    assert_eq!(updated["section"], "Aguinaldo", "a field not sent stays as it was");
+    assert_eq!(updated["class_code"], room["class_code"]);
+    assert_eq!(updated["archived_at"], Value::Null);
+    assert_eq!(updated["co_teacher_ids"], json!([]));
+    let (_, updated) = patch(&hub, &room, json!({"section": "Bonifacio"}), hub.teacher_token()).await;
+    assert_eq!((updated["name"].as_str(), updated["section"].as_str()), (Some("Science 4A"), Some("Bonifacio")));
+    assert_eq!(classroom_revisions(&hub).await, vec![(None, "UPSERT".to_owned()); 3], "create and two renames");
+
+    let before = revisions(&hub).await;
+    for body in [json!({}), json!({"name": "Science 4A"}), json!({"archived": false})] {
+        assert_eq!(patch(&hub, &room, body, hub.teacher_token()).await.0, 200);
+    }
+    assert_eq!(revisions(&hub).await, before, "nothing changed, so nothing to sync");
+
+    let (_, listed) = hub.get("/api/classrooms", Some(hub.teacher_token())).await;
+    assert_eq!(listed[0]["name"], "Science 4A");
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn patch_refuses_wrong_types_without_changing_the_class() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let before = revisions(&hub).await;
+    for body in [json!({"name": null}), json!({"section": 4}), json!({"archived": "yes"}), json!({"name": "New", "archived": 1})] {
+        assert_eq!(patch(&hub, &room, body, hub.teacher_token()).await.0, 400);
+    }
+    assert_eq!(revisions(&hub).await, before);
+    let (_, listed) = hub.get("/api/classrooms", Some(hub.teacher_token())).await;
+    assert_eq!(listed[0]["name"], "Science 4");
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn an_archived_class_is_read_only_until_the_owner_clears_it() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (_, ana_token) = active_learner(&hub, &room, "123456789013").await;
+    let (ben, ben_token) = learner(&hub, "123456789014").await;
+    assert_eq!(join(&hub, &room, &ben_token).await.0, 200);
+
+    let (status, archived) = patch(&hub, &room, json!({"name": "Science 4A", "archived": true}), hub.teacher_token()).await;
+    assert_eq!(status, 200, "{archived}");
+    assert_eq!(archived["name"], "Science 4A", "rename and archive can go together");
+    let archived_at = archived["archived_at"].as_i64().expect("archived_at is set");
+
+    let before = revisions(&hub).await;
+    let (status, body) = patch(&hub, &room, json!({"name": "Other"}), hub.teacher_token()).await;
+    assert_eq!((status, body["error"]["code"].as_str()), (403, Some("FORBIDDEN")));
+    let (status, _) = patch(&hub, &room, json!({"name": "Other", "archived": true}), hub.teacher_token()).await;
+    assert_eq!(status, 403, "staying archived does not make a rename allowed");
+    assert_eq!(join(&hub, &room, &ben_token).await.0, 403);
+    assert_eq!(decide(&hub, &room, &ben.id, "approve", hub.teacher_token()).await.0, 403);
+    let (status, retry) = patch(&hub, &room, json!({"archived": true}), hub.teacher_token()).await;
+    assert_eq!((status, retry["archived_at"].as_i64()), (200, Some(archived_at)), "a retry keeps the first time");
+    assert_eq!(revisions(&hub).await, before);
+
+    let (_, listed) = hub.get("/api/classrooms", Some(&ana_token)).await;
+    assert_eq!(listed[0]["archived_at"].as_i64(), Some(archived_at), "reads still work, for learners too");
+    let roster = format!("/api/classrooms/{}/roster", room["id"].as_str().unwrap());
+    assert_eq!(hub.get(&roster, Some(hub.teacher_token())).await.0, 200);
+
+    let (status, cleared) = patch(&hub, &room, json!({"name": "Science 5", "archived": false}), hub.teacher_token()).await;
+    assert_eq!(status, 200, "{cleared}");
+    assert_eq!(cleared["archived_at"], Value::Null);
+    assert_eq!(cleared["name"], "Science 5");
+    assert_eq!(decide(&hub, &room, &ben.id, "approve", hub.teacher_token()).await.0, 200);
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn rename_archive_and_teacher_management_are_owner_only() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (co, co_token) = teacher(&hub, "T-0002").await;
+    let (other, other_token) = teacher(&hub, "T-0003").await;
+    let (_, ana_token) = active_learner(&hub, &room, "123456789013").await;
+    assert_eq!(add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await.0, 200);
+    let before = revisions(&hub).await;
+    for token in [co_token.as_str(), other_token.as_str(), ana_token.as_str()] {
+        for body in [json!({"name": "Mine"}), json!({"archived": true})] {
+            let (status, error) = patch(&hub, &room, body, token).await;
+            assert_eq!((status, error["error"]["code"].as_str()), (403, Some("FORBIDDEN")));
+        }
+        assert_eq!(add_teacher(&hub, &room, "T-0003", token).await.0, 403);
+        assert_eq!(drop_teacher(&hub, &room, &co.id, token).await.0, 403);
+    }
+    assert_eq!(revisions(&hub).await, before);
+    assert_eq!(other.role, Role::Teacher);
+    let missing = json!({"id": "missing"});
+    assert_eq!(patch(&hub, &missing, json!({"name": "x"}), hub.teacher_token()).await.0, 404);
+    assert_eq!(add_teacher(&hub, &missing, "T-0002", hub.teacher_token()).await.0, 404);
+    assert_eq!(drop_teacher(&hub, &missing, &co.id, hub.teacher_token()).await.0, 404);
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn removing_a_learner_keeps_their_work_and_sends_the_event_once() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let room_id = room["id"].as_str().unwrap();
+    let (ana, token) = active_learner(&hub, &room, "123456789013").await;
+    let mut ana_ws = connect(&hub, &token).await;
+    sqlx::query("INSERT INTO assignments (id, classroom_id, title, due_date, created_at, updated_at) VALUES ('hw', ?, 'Homework', 100, 1, 1)")
+        .bind(room_id)
+        .execute(&hub.state().db)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, score, updated_at) VALUES ('sub', 'hw', ?, 'x.jpg', 2, 9, 2)")
+        .bind(&ana.id)
+        .execute(&hub.state().db)
+        .await
+        .unwrap();
+    let original = enrollment(&hub, &ana.id).await;
+
+    assert_eq!(
+        decide(&hub, &room, &ana.id, "remove", hub.teacher_token()).await,
+        (200, json!({"success": true}))
+    );
+    let event = next(&mut ana_ws).await;
+    assert_eq!(event["event"], "EVENT_JOIN_APPROVAL");
+    assert_eq!(event["status"], "REMOVED");
+    assert_eq!(event["classroom_id"], room["id"]);
+    assert_eq!(event["student_id"], ana.id);
+    ana_ws.close(None).await.unwrap();
+
+    let removed = enrollment(&hub, &ana.id).await;
+    assert_eq!((&removed.0, removed.1.as_str(), removed.2), (&original.0, "REMOVED", original.2));
+    assert_eq!(hub.get("/api/classrooms", Some(&token)).await.1, json!([]));
+    let score: i64 = sqlx::query_scalar("SELECT score FROM assignment_submissions WHERE id = 'sub'")
+        .fetch_one(&hub.state().db)
+        .await
+        .unwrap();
+    assert_eq!(score, 9, "no row is deleted");
+    let (_, roster) = hub.get(&format!("/api/classrooms/{room_id}/roster"), Some(hub.teacher_token())).await;
+    assert_eq!(roster[0]["status"], "REMOVED");
+
+    let scope: (String, String) = sqlx::query_as(
+        "SELECT classroom_id, student_id FROM sync_revisions WHERE entity_table = 'enrollments' ORDER BY seq DESC LIMIT 1",
+    )
+    .fetch_one(&hub.state().db)
+    .await
+    .unwrap();
+    assert_eq!(scope, (room_id.to_owned(), ana.id.clone()));
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn remove_follows_the_contract_for_retries_other_states_and_archived_classes() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (ana, _) = active_learner(&hub, &room, "123456789013").await;
+    let (ben, ben_token) = learner(&hub, "123456789014").await;
+    assert_eq!(join(&hub, &room, &ben_token).await.0, 200);
+    let (tx, mut ana_rx) = broker::channel();
+    hub.state().broker.register(&ana.id, tx);
+    let (co, co_token) = teacher(&hub, "T-0002").await;
+    let (_, other_token) = teacher(&hub, "T-0003").await;
+    assert_eq!(co.role, Role::Teacher);
+    assert_eq!(add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await.0, 200);
+
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", &other_token).await.0, 403);
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", &ben_token).await.0, 403);
+    let (status, error) = decide(&hub, &room, &ben.id, "remove", hub.teacher_token()).await;
+    assert_eq!((status, error["error"]["code"].as_str()), (404, Some("NOT_FOUND")), "a PENDING learner is not removed");
+    assert_eq!(decide(&hub, &room, "missing", "remove", hub.teacher_token()).await.0, 404);
+    assert!(ana_rx.try_recv().is_err());
+
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", &co_token).await.0, 200, "a co-teacher can remove");
+    assert!(ana_rx.try_recv().is_ok());
+    let finished = enrollment(&hub, &ana.id).await;
+    let before = revisions(&hub).await;
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", hub.teacher_token()).await.0, 200);
+    assert_eq!(enrollment(&hub, &ana.id).await, finished);
+    assert_eq!(revisions(&hub).await, before);
+    assert!(ana_rx.try_recv().is_err(), "a retry sends nothing");
+    assert_eq!(decide(&hub, &room, &ana.id, "approve", hub.teacher_token()).await.0, 404, "approve acts on PENDING only");
+
+    assert_eq!(decide(&hub, &room, &ben.id, "approve", hub.teacher_token()).await.0, 200);
+    assert_eq!(patch(&hub, &room, json!({"archived": true}), hub.teacher_token()).await.0, 200);
+    let (status, error) = decide(&hub, &room, &ben.id, "remove", hub.teacher_token()).await;
+    assert_eq!((status, error["error"]["code"].as_str()), (403, Some("FORBIDDEN")));
+    assert_eq!(enrollment(&hub, &ben.id).await.1, "ACTIVE");
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_removed_learner_can_ask_to_join_again_on_the_same_enrollment() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (ana, token) = active_learner(&hub, &room, "123456789013").await;
+    let original = enrollment(&hub, &ana.id).await;
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", hub.teacher_token()).await.0, 200);
+    assert_eq!(join(&hub, &room, &token).await.1["status"], "PENDING");
+    let rejoined = enrollment(&hub, &ana.id).await;
+    assert_eq!((&rejoined.0, rejoined.2), (&original.0, original.2));
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn owner_adds_and_removes_co_teachers_by_id() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (co, co_token) = teacher(&hub, "T-0002").await;
+    let (ana, ana_token) = learner(&hub, "123456789013").await;
+    assert_eq!(hub.get("/api/classrooms", Some(&co_token)).await.1, json!([]));
+
+    let (status, updated) = add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await;
+    assert_eq!(status, 200, "{updated}");
+    assert_eq!(updated["id"], room["id"]);
+    assert_eq!(updated["co_teacher_ids"], json!([co.id]));
+    let (_, listed) = hub.get("/api/classrooms", Some(&co_token)).await;
+    assert_eq!(listed[0]["id"], room["id"]);
+
+    assert_eq!(join(&hub, &room, &ana_token).await.0, 200);
+    assert_eq!(decide(&hub, &room, &ana.id, "approve", &co_token).await.0, 200, "a co-teacher decides requests");
+
+    let scopes = classroom_revisions(&hub).await;
+    assert_eq!(
+        scopes[1..],
+        [(None, "UPSERT".to_owned()), (Some(co.id.clone()), "UPSERT".to_owned())],
+        "the class first, then the copy addressed to the added teacher"
+    );
+
+    let before = revisions(&hub).await;
+    let (status, again) = add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await;
+    assert_eq!((status, again["co_teacher_ids"].clone()), (200, json!([co.id])));
+    let (status, own) = add_teacher(&hub, &room, "T-0001", hub.teacher_token()).await;
+    assert_eq!((status, own["co_teacher_ids"].clone()), (200, json!([co.id])), "the owner is not their own co-teacher");
+    assert_eq!(revisions(&hub).await, before);
+
+    let (status, error) = add_teacher(&hub, &room, "T-9999", hub.teacher_token()).await;
+    assert_eq!((status, error["error"]["code"].as_str()), (404, Some("NOT_FOUND")));
+    assert_eq!(add_teacher(&hub, &room, "123456789013", hub.teacher_token()).await.0, 404, "a learner is not a teacher");
+    let path = format!("/api/classrooms/{}/teachers", room["id"].as_str().unwrap());
+    assert_eq!(hub.post_json(&path, &json!({}), Some(hub.teacher_token())).await.0, 400);
+
+    assert_eq!(
+        drop_teacher(&hub, &room, &co.id, hub.teacher_token()).await,
+        (200, json!({"success": true}))
+    );
+    assert_eq!(hub.get("/api/classrooms", Some(&co_token)).await.1, json!([]));
+    let roster = format!("/api/classrooms/{}/roster", room["id"].as_str().unwrap());
+    assert_eq!(hub.get(&roster, Some(&co_token)).await.0, 403);
+    let scopes = classroom_revisions(&hub).await;
+    assert_eq!(
+        scopes[3..],
+        [(None, "UPSERT".to_owned()), (Some(co.id.clone()), "UPSERT".to_owned())],
+        "the class first, then the copy for the teacher who left"
+    );
+
+    let before = revisions(&hub).await;
+    assert_eq!(drop_teacher(&hub, &room, &co.id, hub.teacher_token()).await.0, 200);
+    assert_eq!(revisions(&hub).await, before, "a retry changes nothing");
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_deactivated_teacher_cannot_be_added() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (co, _) = teacher(&hub, "T-0002").await;
+    sqlx::query("UPDATE users SET is_active = 0 WHERE id = ?")
+        .bind(&co.id)
+        .execute(&hub.state().db)
+        .await
+        .unwrap();
+    assert_eq!(add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await.0, 404);
+    hub.stop().await;
+}
+
+/// `tests/test_mock_hub.py` removes a co-teacher from a class it has just archived.
+#[tokio::test]
+async fn the_owner_can_still_manage_teachers_on_an_archived_class() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (co, _) = teacher(&hub, "T-0002").await;
+    teacher(&hub, "T-0003").await;
+    assert_eq!(add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await.0, 200);
+    assert_eq!(patch(&hub, &room, json!({"archived": true}), hub.teacher_token()).await.0, 200);
+    assert_eq!(drop_teacher(&hub, &room, &co.id, hub.teacher_token()).await.0, 200);
+    assert_eq!(add_teacher(&hub, &room, "T-0003", hub.teacher_token()).await.0, 200);
+    hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_failed_revision_rolls_back_every_management_change_without_events() {
+    let hub = TestHub::start().await;
+    let room = create(&hub).await;
+    let (co, _) = teacher(&hub, "T-0002").await;
+    teacher(&hub, "T-0003").await;
+    let (ana, _) = active_learner(&hub, &room, "123456789013").await;
+    assert_eq!(add_teacher(&hub, &room, "T-0002", hub.teacher_token()).await.0, 200);
+    let (tx, mut ana_rx) = broker::channel();
+    hub.state().broker.register(&ana.id, tx);
+    sqlx::query("CREATE TRIGGER fail_revision BEFORE INSERT ON sync_revisions BEGIN SELECT RAISE(ABORT, 'test'); END")
+        .execute(&hub.state().db)
+        .await
+        .unwrap();
+
+    assert_eq!(patch(&hub, &room, json!({"name": "New", "archived": true}), hub.teacher_token()).await.0, 500);
+    assert_eq!(decide(&hub, &room, &ana.id, "remove", hub.teacher_token()).await.0, 500);
+    assert_eq!(add_teacher(&hub, &room, "T-0003", hub.teacher_token()).await.0, 500);
+    assert_eq!(drop_teacher(&hub, &room, &co.id, hub.teacher_token()).await.0, 500);
+
+    let (_, listed) = hub.get("/api/classrooms", Some(hub.teacher_token())).await;
+    assert_eq!(listed[0]["name"], "Science 4");
+    assert_eq!(listed[0]["archived_at"], Value::Null);
+    assert_eq!(listed[0]["co_teacher_ids"], json!([co.id]));
+    assert_eq!(enrollment(&hub, &ana.id).await.1, "ACTIVE");
+    assert!(ana_rx.try_recv().is_err());
+    hub.stop().await;
+}
