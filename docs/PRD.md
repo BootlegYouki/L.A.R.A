@@ -5,9 +5,9 @@
 
 **Project Title:** Offline LAN-Based Classroom Management System with Hub Socratic SLM Tutor and Paperless Assessment Engine
 **Working Codename:** L.A.R.A. 
-**Document Version:** 1.6.0
-**Last Updated:** 2026-11-03
-**Change Summary:** Apps are English only (Filipino UI removed), 2026-11-03
+**Document Version:** 1.6.1
+**Last Updated:** 2026-11-05
+**Change Summary:** The tutor declines Filipino and Taglish messages in English, 2026-11-05
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
 **Target Environment:** Philippine Public Schools (DepEd Grades 1–12: elementary, junior and senior high), Rural Campuses, and Zero-Internet Classrooms 
 
@@ -265,7 +265,7 @@ flowchart TD
 ### 5.3 English Interface & Persona Design
 * **Interface Language:** Mobile, desktop and the Hub window are English only, with no language toggle. All user-facing strings live in Android `values/strings.xml` or the English JSON dictionary for desktop and the Hub window; never hardcode them in UI components.
 * **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide for Grades 1 to 12. It uses the same Socratic behavior at every grade level, with no grade setting or grade-specific prompt. Each reply gives one small clue followed by one leading question, never the final answer.
-* **Reply Language:** For the pilot, L.A.R.A. AI replies in English, even when the learner writes in Filipino or Taglish. Filipino replies return once a model passes the evaluation in Filipino (the small models tested could not do it without leaking answers).
+* **Reply Language:** L.A.R.A. AI works in English only. When the learner writes in Filipino or Taglish, it does not answer and replies with "I can only help in English. Please ask your question again in English." (the small models tested could not work in Filipino without leaking answers).
 * **Interaction Trigger:** The tutor entry point on phone and desktop, such as a tab or Material Viewer button, is an **(open decision)** (`design-system/design-system.md` section 9.16). Quiz lockout applies wherever it is placed.
 * **Grounding:** Hints use only selected text chunks from the active teacher-provided lesson and show their lesson grounding reference (`grounded_chunk_id`). When the lesson does not cover the question, the tutor says so and points the learner back to the lesson. If no text is extractable, it explains that the lesson text is unavailable; it never fills the gap from general knowledge.
 
@@ -408,7 +408,7 @@ sequenceDiagram
 | **Tutor Answer Safety** | Replies that never give the final answer | At least 95%. |
 | **Tutor Grounding** | Replies grounded in the lesson, including correct refusal and relevant long-lesson chunk selection | At least 90%. |
 | **Socratic Guidance** | One clue and one leading question, building on the learner's response in follow-ups | At least 80%. |
-| **Tutor Reply Language** | English replies at the learner's level, including Filipino/Taglish inputs | At least 90%. |
+| **Tutor Reply Language** | English replies at the learner's level; Filipino/Taglish inputs get the English-only decline line | At least 90%. |
 | **Inference Latency** | Time to first token on the proposed Hub with 2 learners at once | Under 10 seconds for 95% of requests. |
 | **Quiz Sync Accuracy** | Grade calculation and submission reliability | 100% accuracy in score recording across 40 simultaneous submissions. |
 | **Homework Photo Upload** | Upload success rate over local Wi-Fi | 100% across 40 concurrent submissions with offline queueing. |

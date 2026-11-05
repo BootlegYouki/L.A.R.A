@@ -147,7 +147,7 @@ A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so
 1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
-4. **Reply in English** for the pilot, even to Filipino or Taglish messages. Filipino replies are deferred until a model passes the evaluation in Filipino (decided 2026-11-01, #73).
+4. **English only:** the tutor replies in English, and it does not help with messages written in Filipino or Taglish. It declines in English with exactly "I can only help in English. Please ask your question again in English." (decided 2026-11-05, replacing the 2026-11-01 rule that answered them in English).
 5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
