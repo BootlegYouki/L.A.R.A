@@ -32,5 +32,21 @@
   "address_unverified": "This address has not been checked for a connection.",
   "select_address": "Select address",
   "manual_address": "Hub IP address",
-  "address_selected": "Selected address:"
+  "address_selected": "Selected address:",
+  "connect": "Connect",
+  "connect_to": "Connect to",
+  "connecting": "Connecting",
+  "connecting_to_hub": "Connecting to Hub...",
+  "connected_to_hub": "Connected to Local Hub: {name}",
+  "connection_failed": "Could not reach the Hub. Check the address and try again.",
+  "connection_error": "Connection error. Please try again.",
+  "invalid_address": "Invalid Hub address. Enter a local IPv4 address with an optional port.",
+  "searching_for_hubs": "Searching for classroom Hubs...",
+  "hubs_found": "Hubs found on your network",
+  "no_hubs_found": "No Hubs found. You can enter an address manually.",
+  "status_success": "Success",
+  "status_warning": "Warning",
+  "status_error": "Error",
+  "status_info": "Information",
+  "preference_not_saved": "Connected for this session. This device could not save the Hub address."
 }

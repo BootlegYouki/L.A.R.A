@@ -23,13 +23,11 @@ it('offers the prototype empty Home shell without fake classes or active join ac
   expect(html).not.toContain('next desktop steps');
   expect(html).not.toContain('Science 4');
 });
-it('renders Filipino labels and help in the same shell', () => {
+it('renders English even if an old Filipino preference is present', () => {
   state.language = 'fil';
   const html = render();
-  expect(html).toContain('Magdagdag ng klase para makapagsimula');
-  expect(html).toContain('Hindi maabot ang Hub.');
-  expect(html).toContain('Mga naka-archive na klase');
-  expect(html).not.toContain('Add a class to get started');
+  expect(html).toContain('Add a class to get started');
+  expect(html).not.toContain('Switch to Filipino');
 });
 it('shows a retry rather than a false empty state when SQLite cannot open', () => {
   state.status = 'error';

@@ -291,3 +291,10 @@ These checks describe the proposed design, not proof that all features are imple
 - [x] `correct_answer` never stored on a client; persistent question bank conflict explicitly blocked
 - [x] AI unavailable during an active quiz; drawer/buttons unmounted and local generation stopped
 - [x] Lead approval recorded (2026-10-26); open questions answered in section 14
+
+
+## Desktop 1.3 implementation notes (2026-11-04)
+
+Issue #40 uses native HTTP through `services/api.ts` for the fixed `/api/classrooms` reachability probe. An unauthenticated 401 marks the endpoint reachable without creating a session. `settings.ts` stores validated nonsecret REST and WebSocket addresses separately; no Hub settings/history table is introduced. The connection controller owns single-flight polling, cancellation and capped reconnect backoff. ConnectionPage remains within the offline Home shell so loss of the Hub cannot hide cached classes. New UI uses English per root rules; the remaining legacy language infrastructure belongs to #225.
+
+The canonical schema update in staging `0971ce3` supersedes Q3's former missing-rejection-column gap: `REJECTED` and nullable `sync_reject_reason` now exist on all four uploadable client tables. Migration 2 adopts those fields while retaining queued payloads; implementing sync receipt handling remains #48. No applied migration 1 is edited. See [connection verification](connection.md) for environment limits and checks.
