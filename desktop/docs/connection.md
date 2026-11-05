@@ -7,7 +7,7 @@ Issue #40 builds on merged discovery #5. It verifies a selected LAN Hub, remembe
 - `src/services/settings.ts`: nonsecret `lara-desktop-hub` preference, validated on read. Stores `rest_base` and `websocket_url` separately, preserving advertised WS port. No new SQL preference table. Storage failure leaves a usable session and visible warning.
 - `src/services/connection.ts`: initial saved-Hub reconnect, otherwise first discovery candidate. One probe at a time; connected checks every three seconds, failures retry after 1/2/4/8/10 seconds. Selecting another Hub cancels the old probe and ignores late results. Discovery disappearance alone never proves a saved/manual Hub is unreachable.
 - `src/pages/ConnectionPage.tsx`: discovered candidates and manual address form. It emits selections, performs no network/SQL work, and keeps the fallback visible during loading, empty and error states.
-- `src/components/HubStatusBanner.tsx`, `src/App.tsx`: truthful connecting/connected/offline status within the existing Home shell. Saved classes and DB retry stay accessible. This flow uses the English dictionary regardless of old language preferences; removal of legacy language infrastructure remains #225.
+- `src/components/HubStatusBanner.tsx`, `src/App.tsx`: truthful connecting/connected/offline status within the existing Home shell. Saved classes and DB retry stay accessible. This flow uses the English dictionary regardless of old language preferences; legacy language infrastructure is removed by #225; see [english-only.md](english-only.md).
 - `src-tauri/src/lib.rs`, Cargo lock/config/capability: registers native HTTP. CSP stays IPC-only for REST; no unrestricted WebView HTTP/WS or global Tauri object is needed.
 
 ## Trust boundaries and permissions

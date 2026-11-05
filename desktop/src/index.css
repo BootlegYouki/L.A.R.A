@@ -20,8 +20,6 @@ button:disabled { cursor: default; }
 .avatar-placeholder { width: 2.5rem; height: 2.5rem; min-width: 40px; min-height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); font-size: 1.375rem; }
 .control { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 9999px; padding: 0 20px; font-size: 0.875rem; line-height: 1.25rem; font-weight: 800; }
 .control i { font-size: 1.25rem; }
-.language-button { background: transparent; color: var(--color-lara-primary-dark); padding: 0 12px; }
-.language-button:hover { background: var(--color-lara-subtle); }
 .shell-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: calc(100vh - 64px); }
 .drawer { padding: 4px 12px 20px; min-width: 0; }
 .drawer-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 6px 16px; border: 0; border-radius: 9999px; background: transparent; color: var(--color-lara-ink-2); font-size: 0.875rem; font-weight: 800; text-align: left; text-decoration: none; }
