@@ -13,7 +13,7 @@ A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, 
 ## Build against the mock hub
 * Develop every network feature against `scripts/mock_hub.py` and `contracts/`. Seed accounts: `T-0001`, `123456789012`, `123456789013`, all PIN `1234`; class code `K7M4QX`.
 * Use interfaces matching `contracts/openapi.yaml` (snake_case keys, no `any`). Never invent a field; ask for a contract change.
-* Switch to the real Hub only on integration day.
+* Before opening a PR, also run its main flow against the real Hub (`rules/developer-tooling-and-testing.md` section 4, "Checking client PRs against the real Hub"). Routes the Hub answers with `501` stay mock-only; say so in the PR.
 
 ## Rules that are easy to get wrong
 * **Offline first.** Every screen reads from local SQLite. No blocking "no connection" dialogs; show the standard offline banner and cached data.

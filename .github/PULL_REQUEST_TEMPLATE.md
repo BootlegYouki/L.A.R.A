@@ -22,6 +22,7 @@ Describe the tests executed to verify these changes:
 - [ ] Tested on local LAN / Wi-Fi router with WAN cable unplugged
 - [ ] Verified on 3GB/4GB physical Android phone or low-spec emulator
 - [ ] Verified offline persistence in Room/SQLite DB
+- [ ] Main flow run against the real Hub on `staging` (mobile/desktop; routes it answers with `501` listed under Not Verified)
 - [ ] Verified Material Design 3 accessibility (phones minimum 52dp, 56dp primary actions; desktop buttons 40px)
 - [ ] Verified English text in resources
 - [ ] Screen matches `design-system/design-system.md`; any deviation (and why) is listed under Not Verified or in the description
