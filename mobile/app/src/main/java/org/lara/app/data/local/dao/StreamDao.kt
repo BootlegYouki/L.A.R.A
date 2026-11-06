@@ -14,4 +14,13 @@ interface StreamDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertComment(row: AnnouncementCommentEntity)
+
+    @Query("SELECT allow_comments FROM announcements WHERE id = :id")
+    suspend fun allowsComments(id: String): Boolean?
+
+    @Transaction
+    suspend fun enqueueComment(row: AnnouncementCommentEntity) {
+        check(allowsComments(row.announcementId) == true) { "Comments unavailable" }
+        insertComment(row)
+    }
 }

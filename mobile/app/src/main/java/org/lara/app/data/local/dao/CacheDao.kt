@@ -117,7 +117,11 @@ abstract class CacheDao {
         upsertTopic(batch.topics)
         upsertAnnouncement(batch.announcements)
         upsertAnnouncementComment(batch.announcementComments.filter { findAnnouncementComment(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") })
-        upsertMaterial(batch.materials.map { it.copy(localFilePath = findMaterial(it.id)?.localFilePath ?: it.localFilePath) })
+        upsertMaterial(batch.materials.map { row ->
+            val old = findMaterial(row.id)
+            // Material PATCH only renames/moves metadata; the file ID remains immutable.
+            row.copy(localFilePath = old?.localFilePath ?: row.localFilePath, mimeType = old?.mimeType ?: row.mimeType)
+        })
         for (row in batch.materialChunks) {
             val existingId = materialChunksKey(row.materialId, row.orderIndex)
             require(existingId == null || existingId == row.id) { "Conflicting material_chunks unique key" }

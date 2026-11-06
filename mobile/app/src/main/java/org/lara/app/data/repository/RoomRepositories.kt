@@ -38,7 +38,7 @@ class RoomStreamRepository(
         require(content.isNotBlank())
         val id = newId()
         val timestamp = now()
-        dao.insertComment(AnnouncementCommentEntity(
+        dao.enqueueComment(AnnouncementCommentEntity(
             id = id, announcementId = announcementId, authorId = authorId, content = content,
             createdAt = timestamp, updatedAt = timestamp, syncStatus = "QUEUED_FOR_SYNC",
         ))

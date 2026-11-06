@@ -2,6 +2,7 @@ package org.lara.app
 
 import android.app.Application
 import android.content.Context
+import kotlinx.coroutines.flow.map
 import org.lara.app.data.remote.discovery.AndroidHubDiscovery
 import org.lara.app.domain.discovery.HubDiscovery
 import org.lara.app.data.repository.RoomClassroomRepository
@@ -21,6 +22,7 @@ class LaraApp : Application() {
 }
 
 private class AppServices(context: Context) {
+    val handoutRoot = java.io.File(context.filesDir, "handouts")
     val accountContainers = java.util.concurrent.ConcurrentHashMap<String, AppContainer>()
     val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
     val tokens = org.lara.app.data.remote.TokenStore(context)
@@ -46,7 +48,9 @@ class AppContainer private constructor(private val services: AppServices, privat
         // Foreground actions and WorkManager must use the same account sync mutex.
         return services.accountContainers.computeIfAbsent(userId) { AppContainer(services, it) }
     }
-    val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) }
+    val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) {
+        materialFiles.prune()
+    } }
     suspend fun syncUserId(): String? {
         val token = try { sessionTokens.load() } catch (_: Exception) { null } ?: return null
         return services.accounts.prepare(token.userId).authDao().currentUserId()?.takeIf { it == token.userId }
@@ -57,6 +61,15 @@ class AppContainer private constructor(private val services: AppServices, privat
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
     fun teacherClasses(userId: String) = org.lara.app.data.remote.TeacherClassApi(userId, enrollmentApi, hubClient)
     val teacherNames get() = database.authDao().observeTeacherNames()
+    val commentNames by lazy { database.authDao().observeCommentNames().map { names ->
+        names.map { org.lara.app.domain.CommentAuthor(it.id, it.full_name, it.role) }
+    } }
+    val materialFiles by lazy {
+        val owner = requireNotNull(accountId)
+        val folder = java.security.MessageDigest.getInstance("SHA-256").digest(owner.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        org.lara.app.data.repository.MaterialFiles(database, enrollmentApi, java.io.File(services.handoutRoot, folder), owner)
+    }
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote, userId)
     val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }

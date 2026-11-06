@@ -1,0 +1,1 @@
+PASS: offline phone comment automatically delivered to teacher exactly once after reconnect with battery constraint satisfied.

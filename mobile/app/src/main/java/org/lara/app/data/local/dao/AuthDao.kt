@@ -8,9 +8,12 @@ import org.lara.app.data.local.entities.UserEntity
 import org.lara.app.data.local.entities.SyncStateEntity
 
 data class CachedTeacherName(val id: String, val full_name: String)
+data class CommentAuthorName(val id: String, val full_name: String, val role: String)
 
 @Dao
 abstract class AuthDao {
+    @Query("SELECT id, full_name, role FROM users")
+    abstract fun observeCommentNames(): kotlinx.coroutines.flow.Flow<List<CommentAuthorName>>
     @Query("SELECT id, full_name FROM users WHERE role = 'TEACHER'")
     abstract fun observeTeacherNames(): kotlinx.coroutines.flow.Flow<List<CachedTeacherName>>
     @Query("SELECT * FROM users WHERE id = :id")

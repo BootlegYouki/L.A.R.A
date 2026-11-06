@@ -85,6 +85,7 @@ fun AuthHost(container: AppContainer) {
                 val reachability = remember(endpoint) { active.auth.reachability(endpoint, active.syncScheduler.networkChanges) }
                 val reachable by reachability.collectAsStateWithLifecycle(initialValue = false)
                 val syncSession = rememberSyncSession(active, user.id, reachable, expired)
+                var teacherClassId by rememberSaveable(user.id) { mutableStateOf<String?>(null) }
                 val shell = ShellState(
                     role = if(user.role == "TEACHER") ShellRole.TEACHER else ShellRole.STUDENT,
                     isHubReachable = reachable,
@@ -107,6 +108,9 @@ fun AuthHost(container: AppContainer) {
                         active, user.id, shell, expired, sharedSession = syncSession)
                     else LaraNavigation(active.discovery, shell, sessionKey = user.id, teacherApprovalActions = {
                         org.lara.app.ui.screens.teacher.TeacherApprovalPanel(active, user.id, syncSession, expired)
+                    }, content = { destination ->
+                        org.lara.app.ui.screens.stream.ClassroomLearningHost(active, user.id, destination,
+                            teacherClassId = teacherClassId, onChooseClass = { teacherClassId = it })
                     })
                 }
             }
