@@ -97,3 +97,5 @@ The real Hub was stopped. After a full production Desktop process exit/relaunch 
 ## Not verified
 
 No new installer package/installation, physical second-PC real-Hub auth, WAN-disconnected run, Linux/macOS credentials/runtime, full screen-reader audit or low-spec performance measurement is claimed. Real-Hub end-to-end auth/class flows belong to the announced Round 2 integration, and classroom WAN/physical checks remain tracked in the integration report. Existing local/native tests do not turn those gaps into passes. Enrollment, roster, sync, class materials, quizzes and AI remain later issues.
+
+Teacher roster snapshots added by #47 retain only canonical enrollment/student UUIDs, public names/statuses and optional joined time in the existing account-scoped state. Learner restoration never returns rosters; LRNs and secrets are discarded. See [roster storage and native checks](roster.md).

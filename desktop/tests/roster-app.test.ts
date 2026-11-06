@@ -1,0 +1,35 @@
+import {act,create,type ReactTestRenderer} from 'react-test-renderer';
+import {createElement} from 'react';import {create as store} from 'zustand';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import type {CachedAccount,RosterEntry} from '../src/services/auth';
+const mocks=vi.hoisted(()=>({refresh:vi.fn(),roster:vi.fn(),signIn:vi.fn()}));
+const hub={name:'Test',ip:'127.0.0.1',http_port:8080,ws_port:8081},uid='11111111-1111-4111-8111-111111111111';
+const rooms=['22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333'].map(id=>({id,name:'Synthetic',section:'A',class_code:'K7M4QX',teacher_id:uid}));
+const account:CachedAccount={hub,user:{id:uid,full_name:'Teacher',lrn_or_id:'test',role:'TEACHER'},classrooms:rooms,persistent:true,expires_at:Date.now()+60000};
+const useStore=store<{status:string;account:CachedAccount|null;loadAccount:()=>void;setAccount:(a:CachedAccount|null)=>void}>(set=>({status:'ready',account,loadAccount:()=>{},setAccount:account=>set({account})}));
+vi.mock('../src/store/app',()=>({useAppStore:()=>useStore()}));
+vi.mock('../src/services/connection',()=>({observeHubConnection:(fn:(s:unknown)=>void)=>{fn({hub,status:'connected',persisted:true});return{stop:()=>{},discovered:()=>{}}}}));
+vi.mock('../src/services/discovery',()=>({observeDiscovery:()=>()=>{}}));
+vi.mock('../src/services/auth',async original=>({...await original<typeof import('../src/services/auth')>(),refreshClassrooms:mocks.refresh,signIn:mocks.signIn}));
+vi.mock('../src/services/classrooms',()=>({refreshRoster:mocks.roster,createClassroom:vi.fn(),decideEnrollment:vi.fn(),saveJoinStatus:vi.fn(),joinClass:vi.fn()}));
+vi.mock('../src/services/realtime',()=>({observeJoinUpdates:()=>()=>{}}));
+vi.mock('../src/services/websocket-policy',()=>({ensureWebSocketPolicy:()=>true}));
+vi.mock('../src/components/JoinClassModal',()=>({default:()=>null}));
+import App from '../src/App';import LoginPage from '../src/pages/LoginPage';
+let renderer:ReactTestRenderer;const releases=new Map<string,(rows:RosterEntry[])=>void>();
+beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('document',{documentElement:{lang:''}});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);useStore.setState({account});mocks.refresh.mockResolvedValue(rooms);releases.clear();mocks.roster.mockImplementation((_a:unknown,id:string)=>new Promise<RosterEntry[]>(resolve=>releases.set(id,resolve)));});
+afterEach(async()=>{if(renderer)await act(async()=>renderer.unmount());vi.useRealTimers();vi.unstubAllGlobals();vi.clearAllMocks();});
+const rows=(id:string):RosterEntry[]=>[{enrollment_id:id,student_id:uid,full_name:'Synthetic learner',status:'PENDING'}];
+it('retains both classroom rosters when two refreshes resolve in one React batch',async()=>{
+ await act(async()=>{renderer=create(createElement(App))});expect(releases.size).toBe(2);
+ await act(async()=>{for(const room of rooms)releases.get(room.id)!(rows(room.id));});
+ expect(Object.keys(useStore.getState().account?.rosters??{}).sort()).toEqual(rooms.map(c=>c.id).sort());
+});
+it('does not restore teacher rows after switching to a learner while roster reads are in flight',async()=>{
+ await act(async()=>{renderer=create(createElement(App))});
+ await act(async()=>renderer.root.findByProps({'aria-label':'Switch account'}).props.onClick());
+ mocks.signIn.mockResolvedValue({...account,user:{...account.user,id:rooms[0].id,role:'STUDENT'},classrooms:[],rosters:{}});
+ await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'1234'},false));
+ await act(async()=>{for(const room of rooms)releases.get(room.id)!(rows(room.id));});
+ expect(useStore.getState().account?.user.role).toBe('STUDENT');expect(useStore.getState().account?.rosters).toEqual({});
+});

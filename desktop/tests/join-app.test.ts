@@ -13,6 +13,7 @@ vi.mock('../src/services/discovery',()=>({observeDiscovery:()=>()=>{}}));
 vi.mock('../src/services/auth',async(importOriginal)=>({...await importOriginal<typeof import('../src/services/auth')>(),refreshClassrooms:mocks.refresh,forgetAccount:mocks.forget}));
 vi.mock('../src/services/classrooms',()=>({saveJoinStatus:mocks.save,joinClass:vi.fn()}));
 vi.mock('../src/services/realtime',()=>({observeJoinUpdates:(_a:unknown,update:(r?:JoinReceipt)=>Promise<void>)=>{mocks.update=update;return()=>{}}}));
+vi.mock('../src/services/websocket-policy',()=>({ensureWebSocketPolicy:()=>true}));
 vi.mock('../src/components/JoinClassModal',()=>({default:()=>null}));
 import App from '../src/App';
 import HomePage from '../src/pages/HomePage';

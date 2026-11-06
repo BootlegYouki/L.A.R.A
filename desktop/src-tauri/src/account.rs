@@ -49,6 +49,15 @@ pub struct JoinReceipt {
     pub classroom_id: String,
     pub status: String,
 }
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct RosterEntry {
+    pub enrollment_id: String,
+    pub student_id: String,
+    pub full_name: String,
+    pub status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub joined_at: Option<i64>,
+}
 #[derive(Serialize)]
 pub struct CachedAccount {
     pub hub: HubInfo,
@@ -57,6 +66,7 @@ pub struct CachedAccount {
     pub persistent: bool,
     pub classrooms: Vec<Classroom>,
     pub join_requests: Vec<JoinReceipt>,
+    pub rosters: HashMap<String, Vec<RosterEntry>>,
 }
 #[derive(Deserialize, Serialize)]
 struct Profile {
@@ -425,6 +435,7 @@ pub async fn save_join_status(
             .unwrap_or_else(|| read_token(&key, &p.credential_id).is_some());
     Ok(CachedAccount {
         classrooms: classes(&mut db, &p.user).await?,
+        rosters: get_rosters(&mut db, &p.user).await?,
         join_requests: join_requests(&mut db).await?,
         hub,
         user: p.user,
@@ -455,6 +466,7 @@ pub async fn restore_account_session(
             .unwrap_or_else(|| read_token(&key, &p.credential_id).is_some());
     Ok(Some(CachedAccount {
         classrooms: classes(&mut db, &p.user).await?,
+        rosters: get_rosters(&mut db, &p.user).await?,
         join_requests: join_requests(&mut db).await?,
         hub,
         user: p.user,
@@ -517,12 +529,165 @@ pub async fn save_account_session(
     );
     Ok(CachedAccount {
         hub,
+        rosters: get_rosters(&mut db, &session.user).await?,
         user: session.user,
         expires_at: session.expires_at,
         persistent,
         classrooms,
         join_requests: join_requests(&mut db).await?,
     })
+}
+fn validate_roster(roster: &[RosterEntry]) -> Result<(), &'static str> {
+    let mut enrollments = HashSet::new();
+    let mut students = HashSet::new();
+    for row in roster {
+        if !uuid(&row.enrollment_id)
+            || !uuid(&row.student_id)
+            || !enrollments.insert(row.enrollment_id.to_ascii_lowercase())
+            || !students.insert(row.student_id.to_ascii_lowercase())
+            || !text(&row.full_name, usize::MAX)
+            || !matches!(
+                row.status.as_str(),
+                "PENDING" | "ACTIVE" | "REJECTED" | "REMOVED"
+            )
+            || row.joined_at.is_some_and(|n| n < 0)
+        {
+            return Err(INVALID);
+        }
+    }
+    Ok(())
+}
+async fn stored_rosters(
+    db: &mut SqliteConnection,
+) -> Result<HashMap<String, Vec<RosterEntry>>, &'static str> {
+    match state(db, "account_rosters").await? {
+        Some(raw) => serde_json::from_str(&raw).map_err(|_| ERROR),
+        None => Ok(HashMap::new()),
+    }
+}
+async fn get_rosters(
+    db: &mut SqliteConnection,
+    user: &User,
+) -> Result<HashMap<String, Vec<RosterEntry>>, &'static str> {
+    if user.role != Role::TEACHER {
+        return Ok(HashMap::new());
+    }
+    let allowed: HashSet<_> = classes(db, user).await?.into_iter().map(|c| c.id).collect();
+    let mut rosters = stored_rosters(db).await?;
+    rosters.retain(|id, _| allowed.contains(id));
+    for rows in rosters.values() {
+        validate_roster(rows)?;
+    }
+    Ok(rosters)
+}
+fn require_roster_context(root: &Path, hub: &HubInfo, user_id: &str) -> Result<(), &'static str> {
+    if active(root, hub)?.as_deref() != Some(user_id) {
+        return Err("account_context_changed");
+    }
+    Ok(())
+}
+async fn authorize_roster(
+    db: &mut SqliteConnection,
+    user: &User,
+    classroom_id: &str,
+) -> Result<(), &'static str> {
+    if user.role != Role::TEACHER
+        || !uuid(classroom_id)
+        || !classes(db, user)
+            .await?
+            .iter()
+            .any(|c| c.id == classroom_id)
+    {
+        return Err(INVALID);
+    }
+    Ok(())
+}
+async fn clear_roster(
+    db: &mut SqliteConnection,
+    user: &User,
+    classroom_id: &str,
+) -> Result<(), &'static str> {
+    let mut tx = db.begin().await.map_err(|_| ERROR)?;
+    authorize_roster(&mut tx, user, classroom_id).await?;
+    let mut all = stored_rosters(&mut tx).await?;
+    all.remove(classroom_id);
+    put(
+        &mut tx,
+        "account_rosters",
+        &serde_json::to_string(&all).map_err(|_| ERROR)?,
+    )
+    .await?;
+    tx.commit().await.map_err(|_| ERROR)
+}
+#[tauri::command]
+pub async fn clear_roster_snapshot(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+    classroom_id: String,
+) -> Result<(), &'static str> {
+    validate_hub(&hub)?;
+    if !uuid(&user_id) || !uuid(&classroom_id) {
+        return Err(INVALID);
+    }
+    let user_id = user_id.to_ascii_lowercase();
+    let classroom_id = classroom_id.to_ascii_lowercase();
+    let _memory = accounts.0.lock().await;
+    let root = root(&app)?;
+    require_roster_context(&root, &hub, &user_id)?;
+    let mut db = database(&root, &context(&hub, &user_id)).await?;
+    let p = profile(&mut db, &user_id).await?;
+    clear_roster(&mut db, &p.user, &classroom_id).await
+}
+async fn roster_snapshot(
+    db: &mut SqliteConnection,
+    user: &User,
+    classroom_id: &str,
+    roster: &[RosterEntry],
+) -> Result<Vec<RosterEntry>, &'static str> {
+    if user.role != Role::TEACHER || !uuid(classroom_id) {
+        return Err(INVALID);
+    }
+    validate_roster(roster)?;
+    let mut tx = db.begin().await.map_err(|_| ERROR)?;
+    authorize_roster(&mut tx, user, classroom_id).await?;
+    let mut all = stored_rosters(&mut tx).await?;
+    all.insert(classroom_id.into(), roster.to_vec());
+    put(
+        &mut tx,
+        "account_rosters",
+        &serde_json::to_string(&all).map_err(|_| ERROR)?,
+    )
+    .await?;
+    tx.commit().await.map_err(|_| ERROR)?;
+    Ok(roster.to_vec())
+}
+#[tauri::command]
+pub async fn save_roster_snapshot(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+    classroom_id: String,
+    mut roster: Vec<RosterEntry>,
+) -> Result<Vec<RosterEntry>, &'static str> {
+    validate_hub(&hub)?;
+    if !uuid(&user_id) || !uuid(&classroom_id) {
+        return Err(INVALID);
+    }
+    let user_id = user_id.to_ascii_lowercase();
+    let classroom_id = classroom_id.to_ascii_lowercase();
+    for row in &mut roster {
+        row.enrollment_id.make_ascii_lowercase();
+        row.student_id.make_ascii_lowercase();
+    }
+    let _memory = accounts.0.lock().await;
+    let root = root(&app)?;
+    require_roster_context(&root, &hub, &user_id)?;
+    let mut db = database(&root, &context(&hub, &user_id)).await?;
+    let p = profile(&mut db, &user_id).await?;
+    roster_snapshot(&mut db, &p.user, &classroom_id, &roster).await
 }
 fn token_for(profile: &Profile, memory: &HashMap<String, Token>, key: &str) -> Option<String> {
     if profile.expires_at <= now() {
@@ -961,6 +1126,165 @@ mod tests {
                 .enrollment_status
                 .as_deref(),
             Some("PENDING")
+        );
+        db.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn roster_cache_is_teacher_only_and_atomic() {
+        let root = temporary();
+        let key = context(&hub(), TEACHER);
+        let mut db = database(&root, &key).await.unwrap();
+        let mut teacher = user();
+        teacher.id = TEACHER.into();
+        teacher.role = Role::TEACHER;
+        snapshot(&mut db, &teacher, &[class()]).await.unwrap();
+        assert!(get_rosters(&mut db, &teacher).await.unwrap().is_empty());
+        assert!(roster_snapshot(&mut db, &user(), CLASS, &[]).await.is_err());
+        assert!(roster_snapshot(&mut db, &teacher, STUDENT, &[])
+            .await
+            .is_err());
+        let raw = serde_json::json!({"enrollment_id":"44444444-4444-4444-8444-444444444444","student_id":STUDENT,"full_name":"Name","status":"ACTIVE","lrn":"private","pin_hash":"secret","token":"secret"});
+        let entry: RosterEntry = serde_json::from_value(raw).unwrap();
+        let wire = serde_json::to_string(&entry).unwrap();
+        assert!(!wire.contains("lrn") && !wire.contains("pin") && !wire.contains("token"));
+        assert!(
+            roster_snapshot(&mut db, &teacher, CLASS, &[entry.clone(), entry.clone()])
+                .await
+                .is_err()
+        );
+        let mut invalid = entry.clone();
+        invalid.joined_at = Some(-1);
+        assert!(roster_snapshot(&mut db, &teacher, CLASS, &[invalid])
+            .await
+            .is_err());
+        let mut invalid = entry.clone();
+        invalid.status = "UNKNOWN".into();
+        assert!(roster_snapshot(&mut db, &teacher, CLASS, &[invalid])
+            .await
+            .is_err());
+        let mut invalid = entry.clone();
+        invalid.full_name = " ".into();
+        assert!(roster_snapshot(&mut db, &teacher, CLASS, &[invalid])
+            .await
+            .is_err());
+        let mut long = entry.clone();
+        long.full_name = "x".repeat(1000);
+        assert!(validate_roster(&[long]).is_ok());
+        sqlx::raw_sql("INSERT INTO announcements VALUES('roster-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('roster-comment','roster-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        roster_snapshot(&mut db, &teacher, CLASS, &[entry])
+            .await
+            .unwrap();
+        assert!(get_rosters(&mut db, &user()).await.unwrap().is_empty());
+        sqlx::raw_sql("CREATE TRIGGER fail_roster BEFORE UPDATE ON sync_state WHEN NEW.key='account_rosters' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").execute(&mut db).await.unwrap();
+        assert!(roster_snapshot(&mut db, &teacher, CLASS, &[])
+            .await
+            .is_err());
+        assert_eq!(
+            get_rosters(&mut db, &teacher).await.unwrap()[CLASS].len(),
+            1
+        );
+        sqlx::raw_sql("DROP TRIGGER fail_roster")
+            .execute(&mut db)
+            .await
+            .unwrap();
+        snapshot(&mut db, &teacher, &[]).await.unwrap();
+        assert!(get_rosters(&mut db, &teacher).await.unwrap().is_empty());
+        snapshot(&mut db, &teacher, &[class()]).await.unwrap();
+        db.close().await.unwrap();
+        let mut db = database(&root, &key).await.unwrap();
+        assert_eq!(
+            get_rosters(&mut db, &teacher).await.unwrap()[CLASS].len(),
+            1
+        );
+        roster_snapshot(&mut db, &teacher, CLASS, &[])
+            .await
+            .unwrap();
+        assert!(get_rosters(&mut db, &teacher).await.unwrap()[CLASS].is_empty());
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT count(*) FROM enrollments")
+                .fetch_one(&mut db)
+                .await
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, String>(
+                "SELECT sync_status FROM announcement_comments WHERE id='roster-comment'"
+            )
+            .fetch_one(&mut db)
+            .await
+            .unwrap(),
+            "QUEUED_FOR_SYNC"
+        );
+        assert!(state(&mut db, "cursor").await.unwrap().is_none());
+        let mut other = database(&root, &context(&hub(), STUDENT)).await.unwrap();
+        assert!(get_rosters(&mut other, &teacher).await.unwrap().is_empty());
+        db.close().await.unwrap();
+        other.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn clearing_roster_forgets_only_requested_snapshot() {
+        let root = temporary();
+        let key = context(&hub(), TEACHER);
+        let mut db = database(&root, &key).await.unwrap();
+        let mut teacher = user();
+        teacher.id = TEACHER.into();
+        teacher.role = Role::TEACHER;
+        let mut other = class();
+        other.id = "55555555-5555-4555-8555-555555555555".into();
+        snapshot(&mut db, &teacher, &[class(), other.clone()])
+            .await
+            .unwrap();
+        roster_snapshot(&mut db, &teacher, CLASS, &[])
+            .await
+            .unwrap();
+        roster_snapshot(&mut db, &teacher, &other.id, &[])
+            .await
+            .unwrap();
+        sqlx::raw_sql("INSERT INTO announcements VALUES('clear-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('clear-comment','clear-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        assert!(clear_roster(&mut db, &user(), CLASS).await.is_err());
+        assert!(clear_roster(&mut db, &teacher, STUDENT).await.is_err());
+        sqlx::raw_sql("CREATE TRIGGER fail_clear BEFORE UPDATE ON sync_state WHEN NEW.key='account_rosters' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").execute(&mut db).await.unwrap();
+        assert!(clear_roster(&mut db, &teacher, CLASS).await.is_err());
+        assert!(get_rosters(&mut db, &teacher)
+            .await
+            .unwrap()
+            .contains_key(CLASS));
+        sqlx::raw_sql("DROP TRIGGER fail_clear")
+            .execute(&mut db)
+            .await
+            .unwrap();
+        clear_roster(&mut db, &teacher, CLASS).await.unwrap();
+        db.close().await.unwrap();
+        let mut db = database(&root, &key).await.unwrap();
+        assert!(require_roster_context(&root, &hub(), TEACHER).is_err());
+        set_active(&root, &hub(), STUDENT).unwrap();
+        assert!(require_roster_context(&root, &hub(), TEACHER).is_err());
+        set_active(&root, &hub(), TEACHER).unwrap();
+        assert!(require_roster_context(&root, &hub(), TEACHER).is_ok());
+        let mut other_hub = hub();
+        other_hub.http_port = 8082;
+        assert!(require_roster_context(&root, &other_hub, TEACHER).is_err());
+        let restored = get_rosters(&mut db, &teacher).await.unwrap();
+        assert!(!restored.contains_key(CLASS));
+        assert!(restored.contains_key(&other.id));
+        assert_eq!(
+            sqlx::query_scalar::<_, String>(
+                "SELECT sync_status FROM announcement_comments WHERE id='clear-comment'"
+            )
+            .fetch_one(&mut db)
+            .await
+            .unwrap(),
+            "QUEUED_FOR_SYNC"
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT count(*) FROM classrooms")
+                .fetch_one(&mut db)
+                .await
+                .unwrap(),
+            2
         );
         db.close().await.unwrap();
         std::fs::remove_dir_all(root).unwrap();

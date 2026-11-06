@@ -12,11 +12,11 @@ Learners enter the teacher's six-character class code in a Radix dialog. Six box
 
 Existing per-account SQLite `sync_state` stores exact receipts in `account_join_requests` and canonical learner statuses in `account_class_statuses`. Snapshots update metadata/statuses/visible IDs atomically. Existing #45 caches remain readable; their previously validated active IDs have the legacy ACTIVE fallback. No enrollment UUID, teacher name, cursor, new table or migration is invented. Pending metadata/receipt-only requests survive restart; queued children and old metadata remain when access is removed.
 
-GET includes only ACTIVE/PENDING learner classes. A received rejection/removal is saved. Missing classes disappear from accessible metadata after the next GET. An omitted old Pending receipt retains its last known status rather than being falsely relabelled Rejected. Full sync, cursor/epoch reconciliation and exact missed-decision recovery remain #48. No quiz recovery, teacher roster/create-class UI or sign-out is included.
+GET includes only ACTIVE/PENDING learner classes. A received rejection/removal is saved. Missing classes disappear from accessible metadata after the next GET. An omitted old Pending receipt retains its last known status rather than being falsely relabelled Rejected. Full sync, cursor/epoch reconciliation and exact missed-decision recovery remain #48. No quiz recovery or sign-out is included in #46. Teacher roster/create-class UI is now implemented by [#47](roster.md).
 
 ## Permissions and safety
 
-Only `/api/classrooms/join` is added to existing private-IPv4 native HTTP patterns. Browser CSP adds `ws:` for dynamic LAN addresses; this coarse scheme is not the authorization boundary. Realtime independently validates selected private/loopback IP/ports before reading credentials or opening a socket. No public HTTP, remote Hub or script source is enabled.
+Only `/api/classrooms/join` is added to existing private-IPv4 native HTTP patterns. The static transport CSP includes `ws:` for dynamic LAN addresses. The #47 follow-up adds an intersecting immutable document policy limited to the exact selected saved Hub; changing Hub reloads the document. See [roster security notes](roster.md#selected-hub-websocket-policy-lead-245-follow-up). Realtime independently validates selected private/loopback IP/ports before reading credentials or opening a socket. No public HTTP, remote Hub or script source is enabled.
 
 Tokens stay in OS credentials/session memory. Session invalidation advances the operation generation, aborts outstanding work and clears the account reference so a delayed native receipt cannot restore an expired account. Hub/account switching tears down realtime. ACTIVE hints alone never grant access.
 

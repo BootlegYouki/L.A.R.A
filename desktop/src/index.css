@@ -151,3 +151,29 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .join-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
 .join-status-card .class-icon, .join-status-card .class-details-status { background: var(--color-lara-warning-light); color: var(--color-lara-warning-dark); }
 @media (max-width: 420px) { .join-dialog { padding: 20px; } .join-code-boxes { gap: 4px; } .join-code-boxes input { width: calc((100% - 36px) / 6); } }
+.class-app-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 64px; }
+.class-crumb { display: grid; min-width: 0; overflow-wrap: anywhere; }
+.class-crumb strong { font-weight: 900; }
+.class-crumb span, .copy-feedback { color: var(--color-lara-ink-2); font-size: 0.875rem; }
+.class-code-badge { display: inline-flex; align-items: center; gap: 8px; padding-left: 12px; border: 1px solid var(--color-lara-border); border-radius: 12px; background: var(--color-lara-subtle); }
+.class-code-badge strong { letter-spacing: 1px; }
+.generated-class-code { text-align: center; font-size: 2.25rem !important; font-weight: 900; letter-spacing: 3px; user-select: all; }
+.pending-count { margin-left: auto; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; background: var(--color-lara-danger-dark); color: white; }
+.roster-page h1 { margin: 24px 0; font-size: 1.5rem; font-weight: 900; }
+.people-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 8px; padding-bottom: 12px; border-bottom: 2px solid var(--color-lara-primary); color: var(--color-lara-primary-dark); }
+.people-heading h2 { font-size: 1.5rem; font-weight: 900; }
+.roster-table-scroll { max-width: 100%; overflow-x: auto; }
+.roster-table { width: 100%; border-collapse: collapse; text-align: left; }
+.roster-table th, .roster-table td { padding: 14px 12px; border-bottom: 1px solid var(--color-lara-border); }
+.roster-table tbody tr { height: 68px; }
+.roster-table thead { color: var(--color-lara-ink-2); font-size: 0.875rem; }
+.person-name { display: flex; align-items: center; gap: 12px; overflow-wrap: anywhere; font-weight: 800; }
+.person-avatar { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); }
+.roster-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--color-lara-border); border-radius: 9999px; background: var(--color-lara-subtle); color: var(--color-lara-ink-2); text-transform: uppercase; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+.status-pending { background: var(--color-lara-warning-light); color: var(--color-lara-warning-dark); border-color: var(--color-lara-warning-border); }
+.status-active { background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); border-color: var(--color-lara-success-border); }
+.roster-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.roster-skeleton { height: 68px; margin: 8px 0; border-radius: 12px; background: var(--color-lara-subtle); }
+@media (max-width: 759px) { .roster-table th, .roster-table td { padding: 12px 8px; } .person-name { min-width: 120px; } .roster-actions { min-width: 100px; } }
+
+.destructive-button { background: var(--color-lara-danger-light); color: var(--color-lara-danger-dark); border: 1px solid var(--color-lara-danger-border); }

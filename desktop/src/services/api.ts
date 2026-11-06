@@ -5,12 +5,15 @@ export class ApiError extends Error {
   constructor(public code: string, public retryAfter = 0) { super(code); }
 }
 
-type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/classrooms' | '/api/classrooms/join';
+type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/classrooms' | '/api/classrooms/join'
+  | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string }; token?: string; signal?: AbortSignal;
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | { name: string; section: string } | { student_id: string }; token?: string; signal?: AbortSignal;
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
+  if (!['/api/auth/login', '/api/auth/register', '/api/classrooms', '/api/classrooms/join'].includes(path)
+    && !/^\/api\/classrooms\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(roster|approve|reject|remove)$/i.test(path)) throw new ApiError('invalid_fields');
   const url = new URL(`http://${hub.ip}:${hub.http_port}${path}`).href;
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -44,7 +47,7 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
       if (response.status !== 200) {
         const error = typeof payload === 'object' && payload !== null && 'error' in payload ? payload.error : null;
         const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : null;
-        throw new ApiError(typeof code === 'string' && ['ADMIN_LOCAL_ONLY', 'ALREADY_EXISTS', 'BAD_REQUEST', 'FORBIDDEN', 'CLASS_CODE_INVALID'].includes(code) ? code : 'server');
+        throw new ApiError(typeof code === 'string' && ['ADMIN_LOCAL_ONLY', 'ALREADY_EXISTS', 'BAD_REQUEST', 'FORBIDDEN', 'CLASS_CODE_INVALID', 'NOT_IMPLEMENTED', 'NOT_FOUND'].includes(code) ? code : 'server');
       }
       return payload;
     })()]);
