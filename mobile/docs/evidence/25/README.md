@@ -43,6 +43,12 @@ Temporary battery reporting, USB stay-awake and forwarding routes were restored.
 
 Merged staging `ceac7b4` without conflicts; the PR diff remains mobile-only. `staging-regression.txt` records `test lint assembleDebug assembleDebugAndroidTest`: BUILD SUCCESSFUL in 5m45s, 146 tests per variant, zero failures/errors/skips. Lint has zero errors. `staging-shared-checks.txt` records 67 shared tests passed; offline invariants passed. No mobile production source changed after the earlier physical reader scenarios.
 
+## Design refinement — 6 November 2026
+
+Compared Stream/Classwork with design-system sections 5.5 and 5.10–5.12. Added class-banner icon/elevation, topic rules/counts, blue handout tiles on white bordered cards, saved-file checks, tonal status pills and separate empty-state headings/help. Stream posts retain their specified borderless subtle surface. Only mobile files changed; existing tokens/assets and navigation/data behavior are retained.
+
+`ui-refinement-checks.txt`: test/lint BUILD SUCCESSFUL in 2m9s, 146 tests each Debug/Release, zero failures/errors/skips; lint zero errors. The first attempt failed because the Settings mock on 38080 was absent; after starting it, all tests passed without disabling any. Invariants passed. `ui-refinement-device.txt`: OK (2 tests), 20.017s, on Xiaomi 2311DRK48G. Stream, Classwork, comments, empty and 200% screenshots above were refreshed from that final isolated-app run and visually inspected. Reader functionality passed again. Earlier real-Hub screenshots document the prior cosmetic build, not the new styling. USB stay-awake was restored to 0 and the original app remains untouched.
+
 ![Stream](stream.png)
 ![PDF at 200 percent text](pdf-200.png)
 ![Offline queued comment](live-offline-queued.png)

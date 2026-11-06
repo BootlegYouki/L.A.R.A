@@ -205,7 +205,7 @@ class ReadingScreenDeviceTest {
                 show { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-empty") }
                 waitFor("This is where your class announcements will appear."); shot("empty-stream")
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-empty") }
-                waitFor("No handouts yet. Your teacher’s lesson files will appear here."); shot("empty-classwork")
+                waitFor(context.getString(org.lara.app.R.string.reading_handouts_empty_title)); shot("empty-classwork")
                 show { ReadingSkeleton() }; waitFor("Loading saved classroom content…"); shot("loading")
             }
         } finally { TokenStore(context).clear(); db.close() }

@@ -6,6 +6,10 @@ This branch starts at `origin/staging` commit `7444312`, including merged #231. 
 
 Existing `StreamDao`, `ClassworkDao`, Room repositories, `DeltaSyncWorker`, account-scoped databases, learner enrollment navigation and teacher role shell are reused. UI is English only under #223/#224; old bilingual issue wording is superseded.
 
+## Design-system review
+
+The first reading UI used plain text handout buttons and a single text block for empty states. The refinement follows design-system sections 5.5, 5.10–5.12: class banners gain a bundled subject icon and navy-tinted elevation; handouts use white bordered cards with blue type tiles and a saved-file check; topic headings have a green rule and item count; saved/queued/rejected states use an icon and a tonal pill. Stream posts retain the specified subtle fill and borderless shape, with white inset comment surfaces. Empty states separate their invitation heading from secondary explanatory text. Existing palettes, resource strings, large-text wrapping and 52/56dp action targets are retained; no gradients, dependencies or new product actions.
+
 ## Scope and data flow
 
 `ui/screens/stream/ClassroomLearningHost.kt` supplies Stream and Classwork content to both existing role graphs. Learners enter an approved class through the existing class list. Teachers select from their saved classes. Classroom-style banners, post cards, flat comments and topic-grouped handouts use existing L.A.R.A. tokens, Nunito and bundled icons. Other feature destinations remain owned by their later issues.

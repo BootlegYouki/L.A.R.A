@@ -1,6 +1,7 @@
 package org.lara.app.ui.screens.stream
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,7 +47,10 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
         if (fixedClassId == null) {
             var expanded by remember { mutableStateOf(false) }
             Box(Modifier.padding(horizontal = LaraSpacing.S4)) {
-                TextButton(onClick = { expanded = true }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                OutlinedButton(onClick = { expanded = true }, modifier = Modifier.heightIn(min = MinTouchTarget),
+                    border = BorderStroke(1.dp, LaraColors.Border), shape = LaraShapes.medium) {
+                    Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(LaraSpacing.S2))
                     Text(stringResource(R.string.reading_choose_class, selected.name))
                 }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = LaraColors.Surface) {
@@ -84,8 +88,12 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         item {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.large) {
+            Surface(modifier = Modifier.laraShadow(), color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.large) {
                 Column(Modifier.fillMaxWidth().padding(LaraSpacing.S6), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    Surface(color = LaraColors.Surface.copy(alpha = 0.18f), shape = CircleShape) {
+                        Icon(painterResource(R.drawable.ic_books_regular), null,
+                            Modifier.padding(LaraSpacing.S3).size(32.dp), tint = LaraColors.Surface)
+                    }
                     Text(classroom.name, style = MaterialTheme.typography.headlineMedium)
                     Text(classroom.section, color = LaraColors.PrimaryLight, style = MaterialTheme.typography.titleMedium)
                     Text(stringResource(if (destination == ShellDestination.STREAM) R.string.nav_stream else R.string.nav_classwork))
@@ -105,8 +113,15 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             val groups = handouts.groupBy { it.topicId }
             val ordered = topics.map { it.id }.filter { it in groups } + groups.keys.filter { id -> topics.none { it.id == id } }
             ordered.forEach { topicId ->
-                item(key = "topic-${topicId ?: "none"}") { Text(topics.find { it.id == topicId }?.name
-                    ?: stringResource(R.string.reading_handouts), style = MaterialTheme.typography.titleLarge) }
+                item(key = "topic-${topicId ?: "none"}") {
+                    Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                        Text(topics.find { it.id == topicId }?.name ?: stringResource(R.string.reading_handouts),
+                            style = MaterialTheme.typography.headlineMedium, color = LaraColors.PrimaryDark)
+                        Text(stringResource(R.string.reading_handout_count, groups[topicId].orEmpty().size),
+                            style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+                        HorizontalDivider(thickness = 2.dp, color = LaraColors.Primary)
+                    }
+                }
                 items(groups[topicId].orEmpty(), key = { it.id }) { material -> MaterialRow(material) { opened = material.id } }
             }
         }
@@ -133,7 +148,7 @@ private fun AnnouncementCard(container: AppContainer, post: Announcement, userId
                     Text(stringResource(R.string.reading_class_announcement), style = MaterialTheme.typography.titleMedium)
                     Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(post.createdAt)),
                         style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                    Text(stringResource(R.string.reading_saved), style = MaterialTheme.typography.bodyMedium, color = LaraColors.PrimaryDark)
+                    ReadingStatus("SYNCED")
                 }
             }
             Text(post.title, style = MaterialTheme.typography.titleLarge)
@@ -155,18 +170,13 @@ private fun AnnouncementCard(container: AppContainer, post: Announcement, userId
                         author.role == "STUDENT" -> author.name.trim().substringBefore(' ')
                         else -> author.name
                     }
-                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    Column(Modifier.fillMaxWidth().background(LaraColors.Surface, LaraShapes.medium).padding(LaraSpacing.S3),
+                        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                         Text(name, style = MaterialTheme.typography.titleSmall)
                         Text(comment.content)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                            Icon(painterResource(if (comment.syncStatus == "REJECTED") R.drawable.ic_warning_circle else R.drawable.ic_info),
-                                null, tint = LaraColors.TextSecondary)
-                            Text(stringResource(when (comment.syncStatus) {
-                                "QUEUED_FOR_SYNC" -> R.string.reading_queued
-                                "REJECTED" -> R.string.reading_rejected
-                                else -> R.string.reading_saved
-                            }), color = LaraColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
-                        }
+                        ReadingStatus(comment.syncStatus)
+                        if (comment.syncStatus == "REJECTED") Text(stringResource(R.string.reading_rejected),
+                            style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
                     }
                 }
                 if (post.allowComments) {
@@ -186,11 +196,39 @@ private fun AnnouncementCard(container: AppContainer, post: Announcement, userId
 
 @Composable
 private fun MaterialRow(material: Material, open: () -> Unit) {
-    OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget), shape = LaraShapes.medium) {
-        Column(Modifier.fillMaxWidth().padding(vertical = LaraSpacing.S2)) {
-            Text(material.title, style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(if (material.localFilePath == null) R.string.reading_open_handout else R.string.reading_saved_handout),
-                style = MaterialTheme.typography.bodyMedium)
+    Surface(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).laraShadow(),
+        color = LaraColors.Surface, contentColor = LaraColors.TextPrimary, shape = LaraShapes.large,
+        border = BorderStroke(1.dp, LaraColors.Border)) {
+        Row(Modifier.padding(LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
+            verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = LaraColors.InfoLight, shape = LaraShapes.medium) {
+                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.padding(LaraSpacing.S3).size(24.dp),
+                    tint = LaraColors.InfoDark)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                Text(material.title, style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(if (material.localFilePath == null) R.string.reading_open_handout else R.string.reading_saved_handout),
+                    style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+            }
+            if (material.localFilePath != null) Icon(painterResource(R.drawable.ic_check_circle), null,
+                Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+        }
+    }
+}
+
+@Composable
+private fun ReadingStatus(status: String) {
+    val queued = status == "QUEUED_FOR_SYNC"
+    val rejected = status == "REJECTED"
+    val tone = if (rejected) LaraColors.DangerDark else if (queued) LaraColors.WarningDark else LaraColors.PrimaryDark
+    val fill = if (rejected) LaraColors.DangerLight else if (queued) LaraColors.WarningLight else LaraColors.PrimaryLight
+    Surface(color = fill, contentColor = tone, shape = CircleShape) {
+        Row(Modifier.padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S1),
+            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(if (queued || rejected) R.drawable.ic_warning_circle else R.drawable.ic_check_circle),
+                null, Modifier.size(20.dp))
+            Text(stringResource(if (queued) R.string.reading_queued else if (rejected) R.string.reading_not_sent else R.string.reading_saved),
+                style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -200,10 +238,14 @@ internal fun ReadingEmpty(message: Int) {
     Column(Modifier.fillMaxWidth().padding(LaraSpacing.S6), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
         Surface(Modifier.size(80.dp), shape = CircleShape, color = LaraColors.PrimaryLight) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(painterResource(R.drawable.ic_info), null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
+                Icon(painterResource(if (message == R.string.reading_handouts_empty) R.drawable.ic_books_regular else R.drawable.ic_chats_regular),
+                    null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
             }
         }
-        Text(stringResource(message), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(if (message == R.string.reading_handouts_empty) R.string.reading_handouts_empty_title
+            else if (message == R.string.reading_stream_empty) R.string.reading_stream_empty_title else R.string.reading_classes_empty_title),
+            style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(message), style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
     }
 }
 

@@ -162,7 +162,12 @@
     <string name="reading_no_classes">No saved classes yet. Connect to the classroom Hub to update your classes.</string>
     <string name="reading_choose_class">Class: %1$s</string>
     <string name="reading_stream_empty">This is where your class announcements will appear.</string>
-    <string name="reading_handouts_empty">No handouts yet. Your teacher’s lesson files will appear here.</string>
+    <string name="reading_handouts_empty">Your teacher’s lesson files will appear here. Open a handout while connected to save it for offline study.</string>
+    <string name="reading_handouts_empty_title">Your lessons, in one place</string>
+    <string name="reading_stream_empty_title">Welcome to your class</string>
+    <string name="reading_classes_empty_title">Your classroom travels with you</string>
+    <string name="reading_handout_count">Handouts: %1$d</string>
+    <string name="reading_not_sent">Not sent</string>
     <string name="reading_class_announcement">Class announcement</string>
     <string name="reading_comments">Class comments (%1$d)</string>
     <string name="reading_hide_comments">Hide comments (%1$d)</string>
