@@ -20,7 +20,7 @@ Announcements, comments, public author names, topics, materials and extracted te
 
 - Announcement schema has no author ID. The screen uses a class-announcement source label and neutral class icon; it never misattributes a co-teacher's post to the class owner. An actual posting-teacher avatar needs a Lead-owned contract change.
 - The unmodified shared mock's material download route returns `%PDF-1.4 mock lesson handout` for every file, including uploaded images. This is not a valid PDF/image. The client must fail kindly and show cached chunks. Valid native PDF/image rendering is verified separately with synthetic fixture files; these must not be described as successful binary rendering against the unchanged shared mock.
-- Real Hub/LAN and budget-device certification remain separate from local mock/USB evidence.
+- Real Hub Wi-Fi discovery, sign-in, class creation, empty reading screens and offline/reconnect checks passed on 6 November. Real content integration remains blocked by missing announcement routes (404) and material download/chunk stubs (501) on staging. Physical WAN-unplugged and budget-device certification remain unverified.
 
 ## Verification
 

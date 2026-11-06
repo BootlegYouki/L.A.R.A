@@ -37,7 +37,11 @@ Temporary battery reporting, USB stay-awake and forwarding routes were restored.
 1. Announcements have no author ID in the contract. The screen uses a neutral class icon and **Class announcement** source instead of inventing the posting teacher. Actual author avatars need a Lead-owned contract change.
 2. The shared mock returns a non-renderable `%PDF-1.4 mock lesson handout` placeholder for every material download. Valid binary rendering against that unchanged mock cannot be claimed; native valid-file fixtures pass and the real mock fails kindly into cached chunks.
 3. Binary files download when opened. Sync alone caches metadata/chunks, not every file's bytes. File cache is account-private and persists across metadata renames; deleted files are pruned only after successful sync commits.
-4. Real Rust Hub integration, a physical WAN-disconnected router, low-RAM/vendor battery certification and an exhaustive TalkBack audit are not claimed by these USB/mock tests.
+4. Real Hub checks on 6 November passed automatic discovery, teacher login, mobile class creation, cached Stream/Classwork empty states, cold offline launch and reconnect over physical Wi-Fi. See [real-hub-preparation.md](real-hub-preparation.md). Announcements return 404 and material downloads/chunks return 501 in staging, so real-Hub content rendering remains unavailable. A physical WAN-disconnected router, low-RAM/vendor battery certification and an exhaustive TalkBack audit remain unverified.
+
+## Staging refresh — 6 November 2026
+
+Merged staging `ceac7b4` without conflicts; the PR diff remains mobile-only. `staging-regression.txt` records `test lint assembleDebug assembleDebugAndroidTest`: BUILD SUCCESSFUL in 5m45s, 146 tests per variant, zero failures/errors/skips. Lint has zero errors. `staging-shared-checks.txt` records 67 shared tests passed; offline invariants passed. No mobile production source changed after the earlier physical reader scenarios.
 
 ![Stream](stream.png)
 ![PDF at 200 percent text](pdf-200.png)
