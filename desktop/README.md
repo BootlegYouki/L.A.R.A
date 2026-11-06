@@ -146,3 +146,5 @@ The live list is on GitHub, so it is not copied here: [open `desktop` issues](ht
 * Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.
 
 Teacher creation and live roster management (#47): [implementation and verification](docs/roster.md), including the real-Hub removal limitation.
+
+Delta sync (#48): [native transactions, queue receipts, verification and integration limits](docs/sync.md).

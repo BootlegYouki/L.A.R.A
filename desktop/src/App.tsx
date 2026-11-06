@@ -12,10 +12,11 @@ import TopAppBar from './components/TopAppBar';
 import RosterPage from './pages/RosterPage';
 import { observeHubConnection, type HubConnectionState } from './services/connection';
 import { observeDiscovery, type HubInfo } from './services/discovery';
-import { AuthError, signIn, refreshClassrooms, forgetAccount, type Credentials, type CachedAccount, type JoinReceipt, type Classroom } from './services/auth';
+import { AuthError, signIn, refreshClassrooms, forgetAccount, restoreAccount, type Credentials, type CachedAccount, type JoinReceipt, type Classroom } from './services/auth';
 import { joinClass, saveJoinStatus, createClassroom, refreshRoster, decideEnrollment } from './services/classrooms';
 import { observeJoinUpdates } from './services/realtime';
 import {ensureWebSocketPolicy} from './services/websocket-policy';
+import {observeSync} from './services/sync';
 
 function errorMessage(error: unknown): string {
   if (!(error instanceof AuthError)) return t.auth_cache_error;
@@ -55,6 +56,9 @@ export default function App() {
   const [rosterBusy, setRosterBusy] = useState(false);
   const [rosterLoading, setRosterLoading] = useState<Record<string, boolean>>({});
   const [rosterErrors, setRosterErrors] = useState<Record<string, string>>({});
+  const [rosterActionErrors, setRosterActionErrors] = useState<Record<string,string>>({});
+  const [syncError,setSyncError]=useState(false);
+  const syncController=useRef<ReturnType<typeof observeSync>|null>(null);
   const controller = useRef<ReturnType<typeof observeHubConnection> | null>(null);
   const authRequest = useRef<AbortController | null>(null);
   const classRequest = useRef<AbortController | null>(null);
@@ -88,7 +92,7 @@ export default function App() {
   }, [abortTeacherWork]);
   useEffect(() => {
     epoch.current++; authRequest.current?.abort(); classRequest.current?.abort(); joinRequest.current?.abort();
-    abortTeacherWork(); setCreating(false); setCreateOpen(false); setCreatedClass(null); setCreateError(null); setRosterBusy(false); setRosterErrors({}); setRosterLoading({});
+    abortTeacherWork(); setCreating(false); setCreateOpen(false); setCreatedClass(null); setCreateError(null); setRosterBusy(false); setRosterErrors({}); setRosterActionErrors({}); setRosterLoading({});setSyncError(false);
     setJoinOpen(false); setJoining(false); setJoinError(null);
     setBusy(false); setRefreshing(false); setAuthError(null); setClassError(null); setSelectedId(undefined); setLoginVisible(false);
     void loadAccount(hub);
@@ -198,6 +202,20 @@ export default function App() {
     const timer = setTimeout(() => { if (accountRef.current) void refreshTeacherRoster(accountRef.current, selectedId); }, 5000);
     return () => clearTimeout(timer);
   }, [connection.status, selectedId, rosterErrors, rosterBusy, retryAfter, refreshTeacherRoster]);
+  useEffect(()=>{
+    if(connection.status!=='connected'||!identity||loginVisible||!accountRef.current)return;
+    const target=accountRef.current,current=epoch.current;let disposed=false;
+    const active=observeSync(target,async()=>{
+      if(disposed)return;
+      const saved=await restoreAccount(target.hub);
+      if(!disposed&&current===epoch.current&&saved?.user.id===target.user.id&&accountRef.current?.user.id===target.user.id){publishAccount(saved);setSyncError(false);}
+    },error=>{
+      if(disposed||current!==epoch.current)return;
+      if(error instanceof AuthError&&['UNAUTHORIZED','reauth_required'].includes(error.code))expireSession();else setSyncError(true);
+    });
+    syncController.current=active;
+    return()=>{disposed=true;active.stop();if(syncController.current===active)syncController.current=null;};
+  },[connection.status,identity,loginVisible,publishAccount,expireSession]);
   useEffect(() => {
     if (connection.status !== 'connected' || !identity || loginVisible || !accountRef.current) return;
     const target = accountRef.current, current = epoch.current;
@@ -227,7 +245,7 @@ export default function App() {
       expireSession();
     }, async (code?: string) => {
       if (current === epoch.current && accountRef.current?.user.role === 'TEACHER') void refreshTeacherRosters(accountRef.current, code);
-    });
+    },()=>syncController.current?.trigger());
   }, [connection.status, identity, hub?.ws_port, loginVisible, refresh, publishAccount, expireSession, refreshTeacherRosters]);
   function openCreate() { setCreatedClass(null); setCreateError(null); setCreateOpen(true); }
   async function submitCreate(name: string, section: string) {
@@ -245,11 +263,15 @@ export default function App() {
   async function decide(studentId: string, action: 'approve'|'reject'|'remove') {
     if (!activeAccount || activeAccount.user.role !== 'TEACHER' || !selectedClass || connection.status !== 'connected' || creating || rosterBusy || retryAfter) return;
     const target = activeAccount, id = selectedClass.id, current = epoch.current, request = new AbortController(); teacherMutation.current = request;
-    rosterRequests.current.get(id)?.abort(); setRosterBusy(true); setRosterErrors(previous => ({...previous, [id]: ''}));
+    rosterRequests.current.get(id)?.abort(); setRosterBusy(true); setRosterActionErrors(previous => ({...previous, [id]: ''}));
     try {
       await decideEnrollment(target, id, studentId, action, request.signal);
       if (current === epoch.current && !request.signal.aborted) await refreshTeacherRoster(accountRef.current ?? target, id);
-    } catch (error) { if (current === epoch.current && !request.signal.aborted) { const message = teacherError(error); setRosterErrors(previous => ({...previous, [id]: message})); } }
+    } catch (error) { if (current === epoch.current && !request.signal.aborted) {
+      const name=target.rosters?.[id]?.find(row=>row.student_id===studentId)?.full_name??t.roster_learner;
+      const title={approve:t.roster_accept_failed,reject:t.roster_decline_failed,remove:t.roster_remove_failed}[action].replace('{name}',name);
+      const message=teacherError(error);setRosterActionErrors(previous=>({...previous,[id]:`${title} ${message}`}));
+    } }
     finally { if (current === epoch.current) setRosterBusy(false); }
   }
   function openJoin() { setJoinError(null); setJoinOpen(true); }
@@ -277,7 +299,7 @@ export default function App() {
   }
   async function submit(fields: Credentials, register: boolean) {
     if (!hub || busy || retryAfter > 0) return;
-    epoch.current++; classRequest.current?.abort(); authRequest.current?.abort(); joinRequest.current?.abort(); abortTeacherWork(); setJoining(false); setJoinOpen(false); setCreateOpen(false); setCreating(false); setRosterBusy(false);
+    epoch.current++; classRequest.current?.abort(); authRequest.current?.abort(); joinRequest.current?.abort(); abortTeacherWork(); setJoining(false); setJoinOpen(false); setCreateOpen(false); setCreating(false); setRosterBusy(false);setRosterActionErrors({});setSyncError(false);
     const current = epoch.current, request = new AbortController(); authRequest.current = request;
     setBusy(true); setAuthError(null); setClassError(null);
     try {
@@ -312,9 +334,10 @@ export default function App() {
       <Sidebar user={activeAccount?.user ?? null} classrooms={activeAccount?.classrooms ?? []} selectedId={selectedClass?.id} onHome={() => { setSelectedId(undefined); setAuthError(null); }} onOpen={setSelectedId} pendingCounts={pendingCounts} />
       <main id="content" className="content-sheet" tabIndex={-1}><div className="content-wrap">
         <HubStatusBanner t={t} connection={connection} />
+        {activeAccount&&syncError&&<p className="hub-status-banner banner-warning" role="status">{t.sync_error}</p>}
         {activeAccount && !activeAccount.persistent && <p role="status" className="auth-session-note">{t.auth_session_only}</p>}
         {status === 'error' && <section className="database-error" role="alert"><h2>{t.database_error_title}</h2><p>{t.database_error_body}</p><button type="button" className="control tonal-button" onClick={() => { void loadAccount(hub); }}>{t.retry}</button></section>}
-        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => setSelectedId(undefined)} /><RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} /></> : selectedClass ? <section className="class-overview"><button type="button" className="control text-button" onClick={() => setSelectedId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.home}</button><header className="class-banner"><h1>{selectedClass.name}</h1><p>{selectedClass.section}</p></header><p><i className="ph ph-hard-drive" aria-hidden="true" />{t.class_details_saved}</p></section> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'} />}
+        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => setSelectedId(undefined)} /><RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} /></> : selectedClass ? <section className="class-overview"><button type="button" className="control text-button" onClick={() => setSelectedId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.home}</button><header className="class-banner"><h1>{selectedClass.name}</h1><p>{selectedClass.section}</p></header><p><i className="ph ph-hard-drive" aria-hidden="true" />{t.class_details_saved}</p></section> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'} />}
         <details className="hub-connection-details" open={!activeAccount || undefined}><summary>{t.auth_hub_settings}</summary><fieldset disabled={busy || joining || creating || rosterBusy} className="connection-fieldset"><ConnectionPage t={t} hubs={hubs} failed={discoveryFailed} searching={searching} connection={connection} onConnect={(next) => controller.current?.select(next)} /></fieldset></details>
         {activeAccount?.user.role === 'TEACHER' && !loginVisible && <CreateClassroomDialog open={createOpen} onOpenChange={setCreateOpen} busy={creating || rosterBusy} offline={connection.status !== 'connected'} error={createError} retryAfter={retryAfter} result={createdClass} onCreate={(name, section) => { void submitCreate(name, section); }} />}
         {activeAccount?.user.role === 'STUDENT' && !loginVisible && <JoinClassModal open={joinOpen} onOpenChange={setJoinOpen} fullName={activeAccount.user.full_name} busy={joining} offline={connection.status !== 'connected'} error={joinError} retryAfter={retryAfter} onJoin={(code) => { void submitJoin(code); }} />}

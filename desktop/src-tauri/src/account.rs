@@ -79,27 +79,46 @@ struct StoredToken {
     value: String,
     credential_id: String,
 }
-struct Token {
+pub(crate) struct Token {
     credential_id: String,
     value: String,
     persistent: bool,
 }
 #[derive(Default)]
-pub struct Accounts(Mutex<HashMap<String, Token>>);
+pub struct Accounts(
+    pub(crate) Mutex<HashMap<String, Token>>,
+    std::sync::Mutex<Option<String>>,
+);
+impl Accounts {
+    fn select(&self, key: Option<String>) -> Result<(), &'static str> {
+        *self.1.lock().map_err(|_| ERROR)? = key;
+        Ok(())
+    }
+    pub(crate) fn require_sync_selection(
+        &self,
+        hub: &HubInfo,
+        id: &str,
+    ) -> Result<(), &'static str> {
+        if self.1.lock().map_err(|_| ERROR)?.as_deref() != Some(context(hub, id).as_str()) {
+            return Err("account_context_changed");
+        }
+        Ok(())
+    }
+}
 fn now() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as i64
 }
-fn uuid(s: &str) -> bool {
+pub(crate) fn uuid(s: &str) -> bool {
     uuid::Uuid::parse_str(s)
         .is_ok_and(|v| v.hyphenated().to_string().eq_ignore_ascii_case(s) && !v.is_nil())
 }
 fn text(s: &str, max: usize) -> bool {
     !s.trim().is_empty() && s.chars().count() <= max && !s.chars().any(char::is_control)
 }
-fn validate_hub(hub: &HubInfo) -> Result<(), &'static str> {
+pub(crate) fn validate_hub(hub: &HubInfo) -> Result<(), &'static str> {
     if !(hub.ip.is_private() || hub.ip.is_loopback())
         || hub.http_port == 0
         || hub.ws_port == 0
@@ -118,7 +137,7 @@ fn validate_user(user: &User) -> Result<(), &'static str> {
 fn hub_key(h: &HubInfo) -> String {
     format!("{:x}", Sha256::digest(format!("{}:{}", h.ip, h.http_port)))
 }
-fn context(h: &HubInfo, id: &str) -> String {
+pub(crate) fn context(h: &HubInfo, id: &str) -> String {
     // SHA-256 makes a stable, traversal-safe filename without exposing the account identifier.
     format!(
         "{:x}",
@@ -142,7 +161,7 @@ fn delete_token(key: &str) -> Result<(), &'static str> {
         Err(_) => Err("credential_service_unavailable"),
     }
 }
-fn root(app: &tauri::AppHandle) -> Result<PathBuf, &'static str> {
+pub(crate) fn root(app: &tauri::AppHandle) -> Result<PathBuf, &'static str> {
     let p = app
         .path()
         .app_data_dir()
@@ -178,7 +197,7 @@ fn set_active(root: &Path, hub: &HubInfo, id: &str) -> Result<(), &'static str> 
         .map_err(|_| ERROR)?;
     std::fs::rename(temporary, path).map_err(|_| ERROR)
 }
-async fn database(root: &Path, key: &str) -> Result<SqliteConnection, &'static str> {
+pub(crate) async fn database(root: &Path, key: &str) -> Result<SqliteConnection, &'static str> {
     let options = SqliteConnectOptions::new()
         .filename(root.join(format!("account-{key}.db")))
         .create_if_missing(true)
@@ -209,14 +228,21 @@ async fn database(root: &Path, key: &str) -> Result<SqliteConnection, &'static s
     migrations.run_direct(&mut db).await.map_err(|_| ERROR)?;
     Ok(db)
 }
-async fn state(db: &mut SqliteConnection, key: &str) -> Result<Option<String>, &'static str> {
+pub(crate) async fn state(
+    db: &mut SqliteConnection,
+    key: &str,
+) -> Result<Option<String>, &'static str> {
     sqlx::query_scalar("SELECT value FROM sync_state WHERE key=?")
         .bind(key)
         .fetch_optional(db)
         .await
         .map_err(|_| ERROR)
 }
-async fn put(db: &mut SqliteConnection, key: &str, value: &str) -> Result<(), &'static str> {
+pub(crate) async fn put(
+    db: &mut SqliteConnection,
+    key: &str,
+    value: &str,
+) -> Result<(), &'static str> {
     sqlx::query("INSERT INTO sync_state(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(key).bind(value).bind(now()).execute(db).await.map_err(|_|ERROR)?;
     Ok(())
 }
@@ -267,7 +293,10 @@ fn visible(c: &Classroom, user: &User) -> bool {
             Role::STUDENT => matches!(c.enrollment_status.as_deref(), Some("ACTIVE" | "PENDING")),
         }
 }
-async fn classes(db: &mut SqliteConnection, user: &User) -> Result<Vec<Classroom>, &'static str> {
+pub(crate) async fn classes(
+    db: &mut SqliteConnection,
+    user: &User,
+) -> Result<Vec<Classroom>, &'static str> {
     let ids: Vec<String> = match state(db, "account_visible_classes").await? {
         Some(s) => serde_json::from_str(&s).map_err(|_| ERROR)?,
         None => vec![],
@@ -452,10 +481,12 @@ pub async fn restore_account_session(
     validate_hub(&hub)?;
     let memory = accounts.0.lock().await;
     let root = root(&app)?;
+    accounts.select(None)?;
     let Some(id) = active(&root, &hub)? else {
         return Ok(None);
     };
     let key = context(&hub, &id);
+    accounts.select(Some(key.clone()))?;
     let mut db = database(&root, &key).await?;
     let p = profile(&mut db, &id).await?;
     let persistent = p.expires_at > now()
@@ -513,6 +544,7 @@ pub async fn save_account_session(
     tx.commit().await.map_err(|_| ERROR)?;
     let classrooms = classes(&mut db, &session.user).await?;
     set_active(&root, &hub, &session.user.id)?;
+    accounts.select(Some(key.clone()))?;
     let secret = serde_json::to_string(&StoredToken {
         value: session.token.clone(),
         credential_id: generation.clone(),
@@ -580,7 +612,11 @@ async fn get_rosters(
     }
     Ok(rosters)
 }
-fn require_roster_context(root: &Path, hub: &HubInfo, user_id: &str) -> Result<(), &'static str> {
+pub(crate) fn require_roster_context(
+    root: &Path,
+    hub: &HubInfo,
+    user_id: &str,
+) -> Result<(), &'static str> {
     if active(root, hub)?.as_deref() != Some(user_id) {
         return Err("account_context_changed");
     }
@@ -769,6 +805,9 @@ pub async fn forget_account_session(
         std::fs::remove_file(pointer(&root, &hub)).map_err(|_| ERROR)?;
     }
     memory.remove(&key);
+    if accounts.require_sync_selection(&hub, &user_id).is_ok() {
+        accounts.select(None)?;
+    }
     delete_token(&key)
 }
 
@@ -1306,5 +1345,71 @@ mod tests {
         assert_eq!(found.as_deref(), Some("synthetic-token"));
         assert!(mismatch.is_none());
         assert!(read_token(&key, "generation").is_none());
+    }
+}
+
+pub(crate) async fn sync_user(db: &mut SqliteConnection, id: &str) -> Result<User, &'static str> {
+    Ok(profile(db, id).await?.user)
+}
+
+pub(crate) async fn sync_profile(
+    db: &mut SqliteConnection,
+    user: &User,
+) -> Result<(), &'static str> {
+    let Some(raw) = state(db, "account_profile").await? else {
+        return Ok(());
+    };
+    let mut p: Profile = serde_json::from_str(&raw).map_err(|_| ERROR)?;
+    if p.user.id != user.id {
+        return Err(ERROR);
+    }
+    if let Some(row) = sqlx::query("SELECT full_name,role FROM users WHERE id=?")
+        .bind(&user.id)
+        .fetch_optional(&mut *db)
+        .await
+        .map_err(|_| ERROR)?
+    {
+        p.user.full_name = row.get(0);
+        p.user.role = match row.get::<String, _>(1).as_str() {
+            "TEACHER" => Role::TEACHER,
+            "STUDENT" => Role::STUDENT,
+            _ => return Err(INVALID),
+        };
+        validate_user(&p.user)?;
+        put(
+            db,
+            "account_profile",
+            &serde_json::to_string(&p).map_err(|_| ERROR)?,
+        )
+        .await?;
+    }
+    Ok(())
+}
+#[cfg(test)]
+mod sync_context_tests {
+    use super::*;
+    #[test]
+    fn switching_hub_or_account_invalidates_the_old_native_sync_context() {
+        let accounts = Accounts::default();
+        let a = HubInfo {
+            name: "A".into(),
+            ip: "127.0.0.1".parse().unwrap(),
+            http_port: 8080,
+            ws_port: 8081,
+        };
+        let mut b = a.clone();
+        b.http_port = 8082;
+        let id = "11111111-1111-4111-8111-111111111111";
+        let other = "22222222-2222-4222-8222-222222222222";
+        assert!(accounts.require_sync_selection(&a, id).is_err());
+        accounts.select(Some(context(&a, id))).unwrap();
+        assert!(accounts.require_sync_selection(&a, id).is_ok());
+        accounts.select(Some(context(&b, id))).unwrap();
+        assert!(accounts.require_sync_selection(&a, id).is_err());
+        assert!(accounts.require_sync_selection(&b, id).is_ok());
+        accounts.select(Some(context(&b, other))).unwrap();
+        assert!(accounts.require_sync_selection(&b, id).is_err());
+        accounts.select(None).unwrap();
+        assert!(accounts.require_sync_selection(&b, other).is_err());
     }
 }

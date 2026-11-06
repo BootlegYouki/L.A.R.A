@@ -7,7 +7,7 @@ const uuid = (value: unknown): value is string => typeof value === 'string' && /
 // Events are hints: the caller refreshes authenticated REST data before unlocking a class.
 // shortcut: reconnect refreshes membership only; #48 adds full sync and missed rejection recovery.
 export function observeJoinUpdates(account: CachedAccount, update: (receipt?: JoinReceipt) => Promise<void>, unauthorized: () => void,
-  teacherRequest?: (classCode?: string) => Promise<void>): () => void {
+  teacherRequest?: (classCode?: string) => Promise<void>, syncHint?:()=>void): () => void {
   let stopped = false, attempt = 0, socket: WebSocket | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let handshake: ReturnType<typeof setTimeout> | undefined;
@@ -50,8 +50,11 @@ export function observeJoinUpdates(account: CachedAccount, update: (receipt?: Jo
       const value = frame as Record<string, unknown>;
       if (value.event === 'EVENT_ERROR' && value.code === 'UNAUTHORIZED') { expire(); return; }
       if (value.event === 'EVENT_HELLO_ACK') {
-        if (acknowledged || !uuid(value.hub_id) || !Number.isSafeInteger(value.server_time) || !Number.isSafeInteger(value.sync_epoch) || Number(value.sync_epoch) < 0) return;
-        acknowledged = true; attempt = 0; clearTimeout(handshake); enqueue();
+        if (acknowledged || typeof value.hub_id !== 'string' || value.hub_id.length === 0 || value.hub_id.length > 256 || !Number.isSafeInteger(value.server_time) || !Number.isSafeInteger(value.sync_epoch) || Number(value.sync_epoch) < 0) return;
+        acknowledged = true; attempt = 0; clearTimeout(handshake); enqueue();syncHint?.();
+      } else if(acknowledged&&value.event==='EVENT_ANNOUNCEMENT_PUSH'&&uuid(value.classroom_id)&&uuid(value.announcement_id)
+        &&typeof value.title==='string'&&Number.isSafeInteger(value.timestamp)) {
+        syncHint?.();
       } else if (acknowledged && value.event === 'EVENT_JOIN_APPROVAL'
         && value.student_id === account.user.id && uuid(value.classroom_id)
         && Number.isSafeInteger(value.timestamp) && ['ACTIVE', 'REJECTED', 'REMOVED'].includes(String(value.status))) {

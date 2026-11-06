@@ -1,5 +1,6 @@
 mod account;
 mod discovery;
+mod sync;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn run() {
@@ -20,6 +21,10 @@ pub fn run() {
             account::save_roster_snapshot,
             account::clear_roster_snapshot,
             account::save_join_status,
+            sync::read_sync_state,
+            sync::apply_sync_pull,
+            sync::read_sync_queue,
+            sync::apply_sync_receipts,
             account::forget_account_session
         ])
         .plugin(
@@ -86,11 +91,18 @@ mod permissions {
             "172.31.255.254",
         ] {
             for port in [80, 8080, 65535] {
-                for path in ["/api/classrooms", "/api/classrooms/join", "/api/auth/login", "/api/auth/register",
+                for path in [
+                    "/api/sync/pull",
+                    "/api/sync/push",
+                    "/api/classrooms",
+                    "/api/classrooms/join",
+                    "/api/auth/login",
+                    "/api/auth/register",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/roster",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/approve",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/reject",
-                    "/api/classrooms/11111111-1111-4111-8111-111111111111/remove"] {
+                    "/api/classrooms/11111111-1111-4111-8111-111111111111/remove",
+                ] {
                     let url: tauri_plugin_http::reqwest::Url =
                         format!("http://{ip}:{port}{path}").parse().unwrap();
                     assert!(
@@ -109,7 +121,9 @@ mod permissions {
             "http://192.168.1.2.evil.test/api/classrooms",
             "http://192.168.1.2:8080/download",
             "http://192.168.1.2:8080/api/auth/logout",
-            "http://192.168.1.2:8080/api/sync/pull",
+            "http://192.168.1.2:8080/api/sync/pull/extra",
+            "http://192.168.1.2:8080/api/sync/other",
+            "http://8.8.8.8:8080/api/sync/push",
             "http://8.8.8.8:8080/api/auth/login",
             "https://192.168.1.2:8080/api/classrooms",
         ] {
