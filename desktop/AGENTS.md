@@ -2,6 +2,8 @@
 
 Read the root `AGENTS.md` first. This file adds what is specific to `desktop/`.
 
+Before starting/resuming a task and before submitting a PR, check the repository's [Announcements](https://github.com/BootlegYouki/L.A.R.A/discussions/categories/announcements), including updated threads and Lead follow-up comments. Follow the announcement-check workflow in [the Desktop skill](../.agents/skills/lara-desktop/SKILL.md#check-announcements-and-current-status).
+
 ## What you are building
 A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, lab PCs and teachers. Learners get the offline classroom; teachers get **every teacher feature, the same set as the mobile app** (create class, roster approval, announcements, materials, assignments, grading, quiz builder, live monitor).
 

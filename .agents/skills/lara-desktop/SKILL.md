@@ -5,6 +5,14 @@ description: Work on L.A.R.A desktop issues using the approved Tauri/React archi
 
 # L.A.R.A Desktop team workflow
 
+## Check announcements and current status
+
+Before starting or resuming a Desktop task, giving a repository-priority update, and submitting a PR, read the repository's [Announcements](https://github.com/BootlegYouki/L.A.R.A/discussions/categories/announcements). Include recently updated older threads and Lead follow-up comments, not only new discussion titles. Use GitHub Discussions or authenticated `gh api graphql` when the connector cannot read discussions.
+
+Open the linked issues, PR decisions and integration reports relevant to Desktop. Check current staging, the assigned issue and the team's active PR before deciding what to build or retest. Report the relevant announcement links, changes in priority and remaining verification gaps in the progress update. If announcements are inaccessible, say so; do not report that there are no updates.
+
+Announcements guide coordination; they do not override the source-of-truth order in the root guide or authorize edits to another team's code. Follow the current contracts/rules when an older announcement is superseded. Link to the live decisions rather than copying their bodies into this skill. Then continue with the assigned-issue reading order below.
+
 ## Start from the assigned issue
 
 Load [lara-architect](../lara-architect/SKILL.md) for the reading order. Follow the [root guide](../../../AGENTS.md), [desktop guide](../../../desktop/AGENTS.md) and approved [desktop Tech Spec](../../../desktop/docs/TECH_SPEC.md). They own the requirements, file names and build order; this skill does not redefine them. The [desktop stack guide](../lara-desktop-web/SKILL.md) supplies focused implementation notes when relevant.
