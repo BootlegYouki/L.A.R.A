@@ -11,7 +11,9 @@ export interface Classroom {
   enrollment_status?: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'REMOVED';
 }
 export interface JoinReceipt { classroom_id: string; status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REMOVED' }
-export interface CachedAccount { hub: HubInfo; user: AuthUser; expires_at: number; persistent: boolean; classrooms: Classroom[]; join_requests?: JoinReceipt[] }
+export interface RosterEntry { enrollment_id: string; student_id: string; full_name: string; status: JoinReceipt['status']; joined_at?: number }
+export const hasControlCharacters = (value: string) => [...value].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
+export interface CachedAccount { hub: HubInfo; user: AuthUser; expires_at: number; persistent: boolean; classrooms: Classroom[]; join_requests?: JoinReceipt[]; rosters?: Record<string, RosterEntry[]> }
 export interface Credentials { lrn_or_id: string; pin: string; full_name?: string }
 const object = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -29,7 +31,7 @@ export function parseSession(value: unknown) {
     || !Number.isSafeInteger(value.expires_at) || Number(value.expires_at) <= Date.now()) throw new ApiError('invalid_response');
   return { token: value.token, expires_at: Number(value.expires_at), user: parseUser(value.user) };
 }
-function parseClassrooms(value: unknown): Classroom[] {
+export function parseClassrooms(value: unknown): Classroom[] {
   if (!Array.isArray(value)) throw new ApiError('invalid_response');
   const ids = new Set<string>();
   return value.map((row: unknown) => {
@@ -52,12 +54,32 @@ export function parseJoinReceipt(value: unknown): JoinReceipt {
   if (!object(value) || !uuid(value.classroom_id) || !['PENDING', 'ACTIVE', 'REJECTED', 'REMOVED'].includes(String(value.status))) throw new ApiError('invalid_response');
   return { classroom_id: value.classroom_id, status: value.status as JoinReceipt['status'] };
 }
+export function parseRoster(value: unknown): RosterEntry[] {
+  if (!Array.isArray(value) || value.length > 10000) throw new ApiError('invalid_response');
+  const enrollments = new Set<string>(), students = new Set<string>();
+  return value.map((row: unknown) => {
+    if (!object(row) || !uuid(row.enrollment_id) || !uuid(row.student_id) || enrollments.has(row.enrollment_id) || students.has(row.student_id)
+      || typeof row.full_name !== 'string' || !row.full_name.trim() || hasControlCharacters(row.full_name)
+      || !['PENDING', 'ACTIVE', 'REJECTED', 'REMOVED'].includes(String(row.status))
+      || (row.joined_at !== undefined && (!Number.isSafeInteger(row.joined_at) || Number(row.joined_at) < 0))) throw new ApiError('invalid_response');
+    enrollments.add(row.enrollment_id); students.add(row.student_id);
+    return { enrollment_id: row.enrollment_id, student_id: row.student_id, full_name: row.full_name, status: row.status as RosterEntry['status'],
+      ...(typeof row.joined_at === 'number' ? { joined_at: row.joined_at } : {}) };
+  });
+}
 export function parseAccount(value: unknown, hub: HubInfo): CachedAccount {
   if (!object(value) || !isHubInfo(value.hub) || value.hub.ip !== hub.ip || value.hub.http_port !== hub.http_port
     || typeof value.persistent !== 'boolean' || !Number.isSafeInteger(value.expires_at)) throw new ApiError('invalid_response');
   if (value.join_requests !== undefined && (!Array.isArray(value.join_requests) || value.join_requests.length > 10000)) throw new ApiError('invalid_response');
-  return { hub, user: parseUser(value.user), expires_at: Number(value.expires_at), persistent: value.persistent, classrooms: parseClassrooms(value.classrooms),
-    ...(Array.isArray(value.join_requests) ? { join_requests: value.join_requests.map(parseJoinReceipt) } : {}) };
+  const user = parseUser(value.user), classrooms = parseClassrooms(value.classrooms);
+  let rosters: Record<string, RosterEntry[]> | undefined;
+  if (user.role === 'TEACHER' && value.rosters !== undefined) {
+    if (!object(value.rosters) || Array.isArray(value.rosters)) throw new ApiError('invalid_response');
+    rosters = Object.fromEntries(Object.entries(value.rosters).filter(([id]) => classrooms.some(c => c.id === id
+      && (c.teacher_id === user.id || c.co_teacher_ids?.includes(user.id)))).map(([id, rows]) => [id, parseRoster(rows)]));
+  }
+  return { hub, user, expires_at: Number(value.expires_at), persistent: value.persistent, classrooms,
+    ...(Array.isArray(value.join_requests) ? { join_requests: value.join_requests.map(parseJoinReceipt) } : {}), ...(rosters ? { rosters } : {}) };
 }
 export async function accountToken(account: CachedAccount): Promise<string> {
   const token: unknown = await withDatabaseTimeout(invoke('account_token', { hub: account.hub, userId: account.user.id }));

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const { accountToken } = vi.hoisted(()=>({accountToken:vi.fn()}));
 vi.mock('../src/services/auth',()=>({accountToken}));
+vi.mock('../src/services/websocket-policy',()=>({ensureWebSocketPolicy:()=>true}));
 import { observeJoinUpdates } from '../src/services/realtime';
 const id='11111111-1111-4111-8111-111111111111', classroom_id='22222222-2222-4222-8222-222222222222';
 const account={hub:{name:'Hub',ip:'127.0.0.1',http_port:8080,ws_port:8085},user:{id,lrn_or_id:'synthetic',full_name:'Test',role:'STUDENT' as const},expires_at:Date.now()+60000,persistent:true,classrooms:[]};
@@ -40,4 +41,12 @@ it('rejects a public Hub before reading credentials and refreshes once after eve
  Socket.instances[0].message(ack);await vi.advanceTimersByTimeAsync(0);expect(update).toHaveBeenCalledTimes(1);
  Socket.instances[0].onclose?.({code:1006});await vi.advanceTimersByTimeAsync(1000);
  Socket.instances[1].message(ack);await vi.advanceTimersByTimeAsync(0);expect(update).toHaveBeenCalledTimes(2);stop();
+});
+it('passes only a class-code hint to teachers and never exposes join-request names or LRNs to a learner handler',async()=>{
+ const request={event:'EVENT_JOIN_REQUEST',class_code:'K7M4QX',student_id:id,full_name:'Synthetic learner',lrn:'private-lrn',timestamp:200};
+ const teacher=vi.fn().mockResolvedValue(undefined),update=vi.fn().mockResolvedValue(undefined);
+ const stop=observeJoinUpdates({...account,user:{...account.user,role:'TEACHER'}},update,vi.fn(),teacher);
+ await vi.advanceTimersByTimeAsync(0);const ws=Socket.instances[0];ws.message(request);await vi.advanceTimersByTimeAsync(0);expect(teacher).not.toHaveBeenCalled();
+ ws.message(ack);await vi.advanceTimersByTimeAsync(0);teacher.mockClear();ws.message(request);await vi.advanceTimersByTimeAsync(0);expect(teacher).toHaveBeenCalledWith('K7M4QX');expect(JSON.stringify(teacher.mock.calls)).not.toContain('private-lrn');stop();
+ const learnerRequest=vi.fn();const end=observeJoinUpdates(account,update,vi.fn(),learnerRequest);await vi.advanceTimersByTimeAsync(0);const learner=Socket.instances.at(-1)!;learner.message(ack);learner.message(request);await vi.advanceTimersByTimeAsync(0);expect(learnerRequest).not.toHaveBeenCalled();end();
 });

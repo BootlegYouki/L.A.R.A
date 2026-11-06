@@ -17,6 +17,8 @@ pub fn run() {
             account::save_account_session,
             account::account_token,
             account::save_classroom_snapshot,
+            account::save_roster_snapshot,
+            account::clear_roster_snapshot,
             account::save_join_status,
             account::forget_account_session
         ])
@@ -84,7 +86,11 @@ mod permissions {
             "172.31.255.254",
         ] {
             for port in [80, 8080, 65535] {
-                for path in ["/api/classrooms", "/api/classrooms/join", "/api/auth/login", "/api/auth/register"] {
+                for path in ["/api/classrooms", "/api/classrooms/join", "/api/auth/login", "/api/auth/register",
+                    "/api/classrooms/11111111-1111-4111-8111-111111111111/roster",
+                    "/api/classrooms/11111111-1111-4111-8111-111111111111/approve",
+                    "/api/classrooms/11111111-1111-4111-8111-111111111111/reject",
+                    "/api/classrooms/11111111-1111-4111-8111-111111111111/remove"] {
                     let url: tauri_plugin_http::reqwest::Url =
                         format!("http://{ip}:{port}{path}").parse().unwrap();
                     assert!(

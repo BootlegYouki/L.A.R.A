@@ -1,21 +1,27 @@
 import { accountToken, type CachedAccount, type JoinReceipt } from './auth';
 import { isHubInfo } from './discovery';
 import { ApiError } from './api';
+import {ensureWebSocketPolicy} from './websocket-policy';
 
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 // Events are hints: the caller refreshes authenticated REST data before unlocking a class.
 // shortcut: reconnect refreshes membership only; #48 adds full sync and missed rejection recovery.
-export function observeJoinUpdates(account: CachedAccount, update: (receipt?: JoinReceipt) => Promise<void>, unauthorized: () => void): () => void {
+export function observeJoinUpdates(account: CachedAccount, update: (receipt?: JoinReceipt) => Promise<void>, unauthorized: () => void,
+  teacherRequest?: (classCode?: string) => Promise<void>): () => void {
   let stopped = false, attempt = 0, socket: WebSocket | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let handshake: ReturnType<typeof setTimeout> | undefined;
   let pending = Promise.resolve(), queued = 0;
   const valid = isHubInfo(account.hub);
   function expire() { if (!stopped) { stop(); unauthorized(); } }
-  function enqueue(receipt?: JoinReceipt) {
+  function enqueue(receipt?: JoinReceipt | string) {
     if (queued >= 32) { socket?.close(); return; }
     queued++;
-    pending = pending.then(async () => { if (!stopped) await update(receipt); }).catch(() => {
+    pending = pending.then(async () => {
+      if (stopped) return;
+      if (typeof receipt === 'string') await teacherRequest?.(receipt);
+      else { await update(receipt); if (!receipt && account.user.role === 'TEACHER') await teacherRequest?.(); }
+    }).catch(() => {
       // The caller owns visible REST/cache errors; the socket remains recoverable.
     }).finally(() => { queued--; });
   }
@@ -50,6 +56,11 @@ export function observeJoinUpdates(account: CachedAccount, update: (receipt?: Jo
         && value.student_id === account.user.id && uuid(value.classroom_id)
         && Number.isSafeInteger(value.timestamp) && ['ACTIVE', 'REJECTED', 'REMOVED'].includes(String(value.status))) {
         enqueue({ classroom_id: value.classroom_id, status: value.status as JoinReceipt['status'] });
+      } else if (acknowledged && account.user.role === 'TEACHER' && value.event === 'EVENT_JOIN_REQUEST'
+        && typeof value.class_code === 'string' && /^[A-HJ-NP-Z2-9]{6}$/.test(value.class_code)
+        && uuid(value.student_id) && Number.isSafeInteger(value.timestamp)) {
+        // Discard names/LRNs from event payloads; only authenticated roster GET populates rows.
+        enqueue(value.class_code);
       }
     };
     ws.onerror = () => ws.close();
@@ -63,6 +74,6 @@ export function observeJoinUpdates(account: CachedAccount, update: (receipt?: Jo
     stopped = true; clearTimeout(timer); clearTimeout(handshake);
     if (socket) { socket.onopen = null; socket.onmessage = null; socket.onclose = null; socket.onerror = null; socket.close(); socket = undefined; }
   }
-  if (valid) void connect();
+  if (valid && ensureWebSocketPolicy(account.hub)) void connect();
   return stop;
 }

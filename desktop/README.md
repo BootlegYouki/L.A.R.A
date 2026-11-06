@@ -144,3 +144,5 @@ The live list is on GitHub, so it is not copied here: [open `desktop` issues](ht
 * Issues are titled `[DESKTOP sprint.step]`. The team works them **one at a time, in step order**, both developers together, with one open PR (`rules/team-workflow-and-prs.md` section 1.1).
 * Sprint 0 is `docs/TECH_SPEC.md`; its section 10 records the build order and what each step creates for later steps.
 * Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.
+
+Teacher creation and live roster management (#47): [implementation and verification](docs/roster.md), including the real-Hub removal limitation.
