@@ -1,5 +1,7 @@
 # Windows Installer Test Report
 
+> Historical installer report: language-toggle checks below describe the earlier build. The current UI is English only under #223/#225; see [english-only.md](english-only.md).
+
 **Date:** October 2026 (Single-PC test)  
 **Updated:** November 2, 2026 (Two-PC test completed)  
 **Tester:** Jan Kiervy  

@@ -11,7 +11,7 @@ A native Android app (package `org.lara.app`) with a **Student** graph and a **T
 ## Build against the mock hub
 * Develop every network feature against `scripts/mock_hub.py` and `contracts/`. Seed accounts: `T-0001`, `123456789012`, `123456789013`, all PIN `1234`; class code `K7M4QX`.
 * DTOs use `kotlinx.serialization` with `@SerialName` snake_case matching the contract. Never invent a field.
-* Switch to the real Hub only on integration day.
+* Before opening a PR, also run its main flow against the real Hub (`rules/developer-tooling-and-testing.md` section 4, "Checking client PRs against the real Hub"). Routes the Hub answers with `501` stay mock-only; say so in the PR.
 
 ## Rules that are easy to get wrong
 * **Memory:** never decode full-size bitmaps, never load whole files into memory, page lists, stream downloads. The tutor always uses the Hub stream; clients never build prompts.
