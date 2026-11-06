@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-local-database",
-  "description": "Local database, discovery events and the fixed LAN reachability probe for the main window.",
+  "description": "Local account cache, discovery and fixed LAN connection/login/registration requests for the main window.",
   "windows": [
     "main"
   ],
@@ -25,6 +25,30 @@
         },
         {
           "url": "http://(172[.](?:1[6-9]|2[0-9]|3[01])[.][0-9]+[.][0-9]+):*/api/classrooms"
+        },
+        {
+          "url": "http://(10[.][0-9]+[.][0-9]+[.][0-9]+):*/api/auth/login"
+        },
+        {
+          "url": "http://(10[.][0-9]+[.][0-9]+[.][0-9]+):*/api/auth/register"
+        },
+        {
+          "url": "http://(192[.]168[.][0-9]+[.][0-9]+):*/api/auth/login"
+        },
+        {
+          "url": "http://(192[.]168[.][0-9]+[.][0-9]+):*/api/auth/register"
+        },
+        {
+          "url": "http://(127[.][0-9]+[.][0-9]+[.][0-9]+):*/api/auth/login"
+        },
+        {
+          "url": "http://(127[.][0-9]+[.][0-9]+[.][0-9]+):*/api/auth/register"
+        },
+        {
+          "url": "http://(172[.](?:1[6-9]|2[0-9]|3[01])[.][0-9]+[.][0-9]+):*/api/auth/login"
+        },
+        {
+          "url": "http://(172[.](?:1[6-9]|2[0-9]|3[01])[.][0-9]+[.][0-9]+):*/api/auth/register"
         }
       ]
     }

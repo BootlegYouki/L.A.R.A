@@ -8,7 +8,7 @@ export interface SavedClassroom {
 
 let connection: Promise<Database> | undefined;
 
-async function withDatabaseTimeout<T>(operation: Promise<T>): Promise<T> {
+export async function withDatabaseTimeout<T>(operation: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([

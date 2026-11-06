@@ -1,6 +1,6 @@
 # Desktop Technical Spec
 
-> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Approved by the Lead 2026-10-26 (answers in section 14) | Last updated: 2026-11-05
+> Owner: Desktop team (Aki-QA and kerrV) | Reviewer: Lead Developer | Status: Approved by the Lead 2026-10-26 (answers in section 14) | Last updated: 2026-11-06
 > Sprint 0: [#37](https://github.com/BootlegYouki/L.A.R.A/issues/37). Kiervy may revise these implementation choices before approval. This draft does not claim his review or replace product requirements. Lead approval must precede a Sprint 1 merge.
 
 ## 1. Scope and Non-Goals
@@ -260,10 +260,10 @@ Use the mock's documented seed accounts (`T-0001`, enrolled learner, joining lea
 | #46 join | Joining seed learner enters grouped code, sees PENDING, teacher approval unlocks without refresh; invalid/rejected/removed states and WS 4401/backoff |
 | #47 roster | Create class, join from second session, accept/reject/remove with retained scores; forbidden role checks and offline read-only roster |
 | #48 sync | Paging/tombstones and users; fail halfway through apply and kill/reopen: rows and cursor unchanged; reset with queued child/parent; duplicate receipts; rejected item; revoked access; new-member full snapshot; refresh under 1 second on mock |
-| #105 settings | Toggle live and full-process relaunch; queued count warning before logout; offline logout clears local credential, preserves queued rows/context and reports unsent revocation |
+| #105 settings | English-only settings and full-process relaunch; queued count warning before logout; offline logout clears local credential, preserves queued rows/context and reports unsent revocation |
 | #123 class settings | Rename/archive appears after sync, archived class read-only; add/remove seeded second teacher; co-teacher cannot manage ownership; controls disabled offline |
 
-Every feature also requires local loading/empty/offline states, both dictionary keys, keyboard/focus/contrast and desktop 40px controls (48px tabs, 56px quiz choices). Test service state/unit logic plus actual native boundaries; mocked SQL alone cannot prove atomicity or OS credentials.
+Every feature also requires local loading/empty/offline states, English resource keys, keyboard/focus/contrast and desktop 40px controls (48px tabs, 56px quiz choices). Test service state/unit logic plus actual native boundaries; mocked SQL alone cannot prove atomicity or OS credentials.
 
 Sprint 0 evidence (2026-10-26): `python scripts/verify_invariants.py` passed; `python -m unittest discover tests` passed all 66 tests (12.237 seconds), exercising the running localhost mock. The suite emitted socket ResourceWarnings; no test failed. Guide-prompt self-review checked all ten criteria, corrected an inaccurate grade-event identifier concern, clarified preferences/context isolation, and retained the explicitly gated questions in section 14. Desktop builds/native feature tests belong to #161 and later feature PRs; do not describe them as testing this docs-only branch. Physical WAN-unplugged LAN, real-Hub, Linux/macOS native runs and Lead/Kiervy approval are not established by a localhost mock run.
 
@@ -298,3 +298,11 @@ These checks describe the proposed design, not proof that all features are imple
 Issue #40 uses native HTTP through `services/api.ts` for the fixed `/api/classrooms` reachability probe. An unauthenticated 401 marks the endpoint reachable without creating a session. `settings.ts` stores validated nonsecret REST and WebSocket addresses separately; no Hub settings/history table is introduced. The connection controller owns single-flight polling, cancellation and capped reconnect backoff. ConnectionPage remains within the offline Home shell so loss of the Hub cannot hide cached classes. New UI uses English per root rules; #225 removes the legacy dictionary and preference infrastructure.
 
 The canonical schema update in staging `0971ce3` supersedes Q3's former missing-rejection-column gap: `REJECTED` and nullable `sync_reject_reason` now exist on all four uploadable client tables. Migration 2 adopts those fields while retaining queued payloads; implementing sync receipt handling remains #48. No applied migration 1 is edited. See [connection verification](connection.md) for environment limits and checks.
+
+## Desktop 2.1 implementation notes (2026-11-06)
+
+Issue #45 implements the credential/profile/context decisions above. `services/auth.ts` owns the small authenticated class-list fetch as well as public auth guards; a separate `classrooms.ts` is deferred until join/authoring adds actual operations. `src-tauri/src/account.rs` keeps keyring credentials, context selection and atomic class snapshots together instead of adding thin `secure_token.rs` wrappers. OS storage failure keeps a session-only token; cached profiles never authenticate a new PIN offline.
+
+Signed-in snapshots use native SQLx in separate REST-origin/user-UUID cache files, initialized from the unchanged canonical migration files. The scaffold `lara_client.db` and queued rows are preserved, not imported into an unverified Hub/account. The old `db.ts` scaffold query remains a legacy helper; new authenticated reads must use the selected native account context. `withDatabaseTimeout` is reused to bound native UI waiting. The initial snapshot does not advance sync cursors or invent enrollment IDs.
+
+App/Home/Sidebar/ClassroomCard follow the current prototype-based Home. Codes are absent from cards per the higher design-system rule; only truthful saved-class-details state is shown, not a guessed download percentage or roster count. One labelled masked PIN field is an accessibility variation from four visual boxes. Card Open provides a read-only class banner; Stream, enrollment, authoring and sync remain later steps. See [accounts and native verification](auth.md) for exact files, test results, screenshots and outstanding platform/physical checks.

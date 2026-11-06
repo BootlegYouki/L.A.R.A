@@ -1,51 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { readSavedClasses } from '../src/services/db';
+import { restoreAccount, type CachedAccount } from '../src/services/auth';
 import { useAppStore } from '../src/store/app';
-
-vi.mock('../src/services/db', () => ({ readSavedClasses: vi.fn() }));
-const read = vi.mocked(readSavedClasses);
-
-describe('offline application state', () => {
-  beforeEach(() => {
-    read.mockReset();
-    useAppStore.setState({ status: 'loading', classrooms: [] });
-  });
-
-  it('loads cached classes without making a network request', async () => {
-    const fetch = vi.fn();
-    vi.stubGlobal('fetch', fetch);
-    const classrooms = [{ id: 'saved', name: 'Science', section: 'A' }];
-    read.mockResolvedValue(classrooms);
-    await useAppStore.getState().loadSavedClasses();
-    expect(useAppStore.getState()).toMatchObject({ status: 'ready', classrooms });
-    expect(fetch).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
-  });
-
-  it('handles a database failure without deleting cached work and allows retry', async () => {
-    const classrooms = [{ id: 'saved', name: 'Science', section: 'A' }];
-    useAppStore.setState({ classrooms });
-    read.mockRejectedValueOnce(new Error('database unavailable')).mockResolvedValueOnce(classrooms);
-    await useAppStore.getState().loadSavedClasses();
-    expect(useAppStore.getState()).toMatchObject({ status: 'error', classrooms });
-    await useAppStore.getState().loadSavedClasses();
-    expect(useAppStore.getState()).toMatchObject({ status: 'ready', classrooms });
-  });
-
-  it('deduplicates concurrent startup reads', async () => {
-    let resolve: (value: []) => void = () => {};
-    read.mockReturnValue(new Promise<[]>((done) => { resolve = done; }));
-    const first = useAppStore.getState().loadSavedClasses();
-    const second = useAppStore.getState().loadSavedClasses();
-    expect(first).toBe(second);
-    expect(read).toHaveBeenCalledTimes(1);
-    resolve([]);
-    await first;
-    expect(useAppStore.getState().status).toBe('ready');
-  });
-
-  it('has no language state or browser-storage hydration', () => {
-    expect(useAppStore.getState()).not.toHaveProperty('language');
-    expect(useAppStore).not.toHaveProperty('persist');
-  });
+vi.mock('../src/services/auth', () => ({ restoreAccount: vi.fn() }));
+const restore = vi.mocked(restoreAccount);
+const hub = {name:'Hub',ip:'192.168.1.50',http_port:8080,ws_port:8081};
+const cached: CachedAccount = {hub,user:{id:'10000000-0000-4000-8000-000000000001',lrn_or_id:'T-0001',full_name:'Teacher',role:'TEACHER'},expires_at:1,persistent:true,classrooms:[]};
+describe('account-isolated offline state', () => {
+ beforeEach(()=>{restore.mockReset();useAppStore.getState().setAccount(null)});
+ it('restores cached accounts without a network request',async()=>{
+  const fetch=vi.fn();vi.stubGlobal('fetch',fetch);restore.mockResolvedValue(cached);
+  await useAppStore.getState().loadAccount(hub);
+  expect(useAppStore.getState()).toMatchObject({status:'ready',account:cached});expect(fetch).not.toHaveBeenCalled();vi.unstubAllGlobals();
+ });
+ it('preserves the matching cached account on a read failure and allows retry',async()=>{
+  useAppStore.getState().setAccount(cached);restore.mockRejectedValueOnce(new Error('busy')).mockResolvedValueOnce(cached);
+  await useAppStore.getState().loadAccount(hub);expect(useAppStore.getState()).toMatchObject({status:'error',account:cached});
+  await useAppStore.getState().loadAccount(hub);expect(useAppStore.getState().status).toBe('ready');
+ });
+ it('deduplicates restores and ignores a stale result after switching Hub',async()=>{
+  let resolve!:(value:CachedAccount)=>void;restore.mockReturnValueOnce(new Promise(done=>{resolve=done})).mockResolvedValueOnce(null);
+  const first=useAppStore.getState().loadAccount(hub);expect(useAppStore.getState().loadAccount(hub)).toBe(first);
+  await useAppStore.getState().loadAccount({...hub,ip:'192.168.1.51'});resolve(cached);await first;
+  expect(useAppStore.getState()).toMatchObject({account:null,status:'ready'});expect(restore).toHaveBeenCalledTimes(2);
+ });
+ it('never hydrates language or account rows from browser preferences',()=>{
+  expect(useAppStore.getState()).not.toHaveProperty('language');expect(useAppStore).not.toHaveProperty('persist');
+ });
 });
