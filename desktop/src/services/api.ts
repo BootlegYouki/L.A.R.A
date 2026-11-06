@@ -5,9 +5,9 @@ export class ApiError extends Error {
   constructor(public code: string, public retryAfter = 0) { super(code); }
 }
 
-type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/classrooms';
+type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/classrooms' | '/api/classrooms/join';
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string }; token?: string; signal?: AbortSignal;
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string }; token?: string; signal?: AbortSignal;
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
@@ -44,7 +44,7 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
       if (response.status !== 200) {
         const error = typeof payload === 'object' && payload !== null && 'error' in payload ? payload.error : null;
         const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : null;
-        throw new ApiError(typeof code === 'string' && ['ADMIN_LOCAL_ONLY', 'ALREADY_EXISTS', 'BAD_REQUEST', 'FORBIDDEN'].includes(code) ? code : 'server');
+        throw new ApiError(typeof code === 'string' && ['ADMIN_LOCAL_ONLY', 'ALREADY_EXISTS', 'BAD_REQUEST', 'FORBIDDEN', 'CLASS_CODE_INVALID'].includes(code) ? code : 'server');
       }
       return payload;
     })()]);

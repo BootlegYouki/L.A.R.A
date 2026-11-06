@@ -17,6 +17,7 @@ pub fn run() {
             account::save_account_session,
             account::account_token,
             account::save_classroom_snapshot,
+            account::save_join_status,
             account::forget_account_session
         ])
         .plugin(
@@ -83,7 +84,7 @@ mod permissions {
             "172.31.255.254",
         ] {
             for port in [80, 8080, 65535] {
-                for path in ["/api/classrooms", "/api/auth/login", "/api/auth/register"] {
+                for path in ["/api/classrooms", "/api/classrooms/join", "/api/auth/login", "/api/auth/register"] {
                     let url: tauri_plugin_http::reqwest::Url =
                         format!("http://{ip}:{port}{path}").parse().unwrap();
                     assert!(

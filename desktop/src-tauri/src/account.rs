@@ -44,6 +44,11 @@ pub struct Classroom {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub enrollment_status: Option<String>,
 }
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct JoinReceipt {
+    pub classroom_id: String,
+    pub status: String,
+}
 #[derive(Serialize)]
 pub struct CachedAccount {
     pub hub: HubInfo,
@@ -51,6 +56,7 @@ pub struct CachedAccount {
     pub expires_at: i64,
     pub persistent: bool,
     pub classrooms: Vec<Classroom>,
+    pub join_requests: Vec<JoinReceipt>,
 }
 #[derive(Deserialize, Serialize)]
 struct Profile {
@@ -248,7 +254,7 @@ fn visible(c: &Classroom, user: &User) -> bool {
     c.archived_at.is_none()
         && match user.role {
             Role::TEACHER => c.enrollment_status.as_deref().is_none_or(|s| s == "ACTIVE"),
-            Role::STUDENT => c.enrollment_status.as_deref() == Some("ACTIVE"),
+            Role::STUDENT => matches!(c.enrollment_status.as_deref(), Some("ACTIVE" | "PENDING")),
         }
 }
 async fn classes(db: &mut SqliteConnection, user: &User) -> Result<Vec<Classroom>, &'static str> {
@@ -256,9 +262,13 @@ async fn classes(db: &mut SqliteConnection, user: &User) -> Result<Vec<Classroom
         Some(s) => serde_json::from_str(&s).map_err(|_| ERROR)?,
         None => vec![],
     };
+    let statuses: HashMap<String, String> = match state(db, "account_class_statuses").await? {
+        Some(s) => serde_json::from_str(&s).map_err(|_| ERROR)?,
+        None => HashMap::new(),
+    };
     let mut out = Vec::new();
     for id in ids {
-        let row=sqlx::query("SELECT id,name,section,class_code,teacher_id,co_teacher_ids_json,archived_at FROM classrooms WHERE id=?").bind(id).fetch_optional(&mut *db).await.map_err(|_|ERROR)?.ok_or(ERROR)?;
+        let row=sqlx::query("SELECT id,name,section,class_code,teacher_id,co_teacher_ids_json,archived_at FROM classrooms WHERE id=?").bind(&id).fetch_optional(&mut *db).await.map_err(|_|ERROR)?.ok_or(ERROR)?;
         let c = Classroom {
             id: row.get(0),
             name: row.get(1),
@@ -271,7 +281,12 @@ async fn classes(db: &mut SqliteConnection, user: &User) -> Result<Vec<Classroom
             .map_err(|_| ERROR)?,
             archived_at: row.get(6),
             enrollment_status: if user.role == Role::STUDENT {
-                Some("ACTIVE".into())
+                Some(
+                    statuses
+                        .get(&id)
+                        .cloned()
+                        .unwrap_or_else(|| "ACTIVE".into()),
+                )
             } else {
                 None
             },
@@ -294,6 +309,30 @@ async fn snapshot(
         sqlx::query("INSERT INTO classrooms(id,name,section,class_code,teacher_id,co_teacher_ids_json,archived_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,section=excluded.section,class_code=excluded.class_code,teacher_id=excluded.teacher_id,co_teacher_ids_json=excluded.co_teacher_ids_json,archived_at=excluded.archived_at,updated_at=excluded.updated_at")
             .bind(&c.id).bind(&c.name).bind(&c.section).bind(&c.class_code).bind(&c.teacher_id).bind(serde_json::to_string(&c.co_teacher_ids).map_err(|_|ERROR)?).bind(c.archived_at).bind(now()).bind(now()).execute(&mut *tx).await.map_err(|_|ERROR)?;
     }
+    let mut receipts = join_requests(&mut tx).await?;
+    for c in items {
+        if let Some(status) = &c.enrollment_status {
+            if let Some(receipt) = receipts.iter_mut().find(|r| r.classroom_id == c.id) {
+                receipt.status = status.clone();
+            }
+        }
+    }
+    put(
+        &mut tx,
+        "account_join_requests",
+        &serde_json::to_string(&receipts).map_err(|_| ERROR)?,
+    )
+    .await?;
+    let statuses: HashMap<_, _> = items
+        .iter()
+        .filter_map(|c| c.enrollment_status.as_ref().map(|s| (&c.id, s)))
+        .collect();
+    put(
+        &mut tx,
+        "account_class_statuses",
+        &serde_json::to_string(&statuses).map_err(|_| ERROR)?,
+    )
+    .await?;
     let visible: Vec<Classroom> = items.iter().filter(|c| visible(c, user)).cloned().collect();
     put(
         &mut tx,
@@ -304,6 +343,94 @@ async fn snapshot(
     .await?;
     tx.commit().await.map_err(|_| ERROR)?;
     Ok(visible)
+}
+async fn join_requests(db: &mut SqliteConnection) -> Result<Vec<JoinReceipt>, &'static str> {
+    match state(db, "account_join_requests").await? {
+        Some(s) => serde_json::from_str(&s).map_err(|_| ERROR),
+        None => Ok(vec![]),
+    }
+}
+fn validate_receipt(user: &User, receipt: &JoinReceipt) -> Result<(), &'static str> {
+    if user.role != Role::STUDENT
+        || !uuid(&receipt.classroom_id)
+        || !matches!(
+            receipt.status.as_str(),
+            "PENDING" | "ACTIVE" | "REJECTED" | "REMOVED"
+        )
+    {
+        return Err(INVALID);
+    }
+    Ok(())
+}
+async fn save_receipt(
+    db: &mut SqliteConnection,
+    user: &User,
+    receipt: JoinReceipt,
+) -> Result<(), &'static str> {
+    validate_receipt(user, &receipt)?;
+    let mut tx = db.begin().await.map_err(|_| ERROR)?;
+    let mut receipts = join_requests(&mut tx).await?;
+    receipts.retain(|r| r.classroom_id != receipt.classroom_id);
+    if receipt.status != "ACTIVE" {
+        let mut statuses: HashMap<String, String> =
+            match state(&mut tx, "account_class_statuses").await? {
+                Some(s) => serde_json::from_str(&s).map_err(|_| ERROR)?,
+                None => HashMap::new(),
+            };
+        statuses.insert(receipt.classroom_id.clone(), receipt.status.clone());
+        put(
+            &mut tx,
+            "account_class_statuses",
+            &serde_json::to_string(&statuses).map_err(|_| ERROR)?,
+        )
+        .await?;
+    }
+    receipts.push(receipt);
+    put(
+        &mut tx,
+        "account_join_requests",
+        &serde_json::to_string(&receipts).map_err(|_| ERROR)?,
+    )
+    .await?;
+    tx.commit().await.map_err(|_| ERROR)
+}
+#[tauri::command]
+pub async fn save_join_status(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+    mut receipt: JoinReceipt,
+) -> Result<CachedAccount, &'static str> {
+    validate_hub(&hub)?;
+    if !uuid(&user_id) {
+        return Err(INVALID);
+    }
+    let user_id = user_id.to_ascii_lowercase();
+    receipt.classroom_id.make_ascii_lowercase();
+    let memory = accounts.0.lock().await;
+    let root = root(&app)?;
+    if active(&root, &hub)?.as_deref() != Some(&user_id) {
+        return Err("account_context_changed");
+    }
+    let key = context(&hub, &user_id);
+    let mut db = database(&root, &key).await?;
+    let p = profile(&mut db, &user_id).await?;
+    save_receipt(&mut db, &p.user, receipt).await?;
+    let persistent = p.expires_at > now()
+        && memory
+            .get(&key)
+            .filter(|t| t.credential_id == p.credential_id)
+            .map(|t| t.persistent)
+            .unwrap_or_else(|| read_token(&key, &p.credential_id).is_some());
+    Ok(CachedAccount {
+        classrooms: classes(&mut db, &p.user).await?,
+        join_requests: join_requests(&mut db).await?,
+        hub,
+        user: p.user,
+        expires_at: p.expires_at,
+        persistent,
+    })
 }
 #[tauri::command]
 pub async fn restore_account_session(
@@ -328,6 +455,7 @@ pub async fn restore_account_session(
             .unwrap_or_else(|| read_token(&key, &p.credential_id).is_some());
     Ok(Some(CachedAccount {
         classrooms: classes(&mut db, &p.user).await?,
+        join_requests: join_requests(&mut db).await?,
         hub,
         user: p.user,
         expires_at: p.expires_at,
@@ -393,6 +521,7 @@ pub async fn save_account_session(
         expires_at: session.expires_at,
         persistent,
         classrooms,
+        join_requests: join_requests(&mut db).await?,
     })
 }
 fn token_for(profile: &Profile, memory: &HashMap<String, Token>, key: &str) -> Option<String> {
@@ -559,7 +688,7 @@ mod tests {
         let mut missing_status = c.clone();
         missing_status.enrollment_status = None;
         assert!(!visible(&missing_status, &user()));
-        for status in ["PENDING", "REJECTED", "REMOVED"] {
+        for status in ["REJECTED", "REMOVED"] {
             let mut c = c.clone();
             c.enrollment_status = Some(status.into());
             assert!(!visible(&c, &user()));
@@ -617,9 +746,16 @@ mod tests {
         sqlx::raw_sql("INSERT INTO announcements VALUES('announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('comment','announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
         let mut changed = class();
         changed.name = "Changed".into();
+        changed.enrollment_status = Some("PENDING".into());
         sqlx::raw_sql("CREATE TRIGGER fail_visibility BEFORE UPDATE ON sync_state WHEN NEW.key='account_visible_classes' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").execute(&mut db).await.unwrap();
         assert!(snapshot(&mut db, &user(), &[changed]).await.is_err());
         assert_eq!(classes(&mut db, &user()).await.unwrap()[0].name, "Science");
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0]
+                .enrollment_status
+                .as_deref(),
+            Some("ACTIVE")
+        );
         sqlx::raw_sql("DROP TRIGGER fail_visibility")
             .execute(&mut db)
             .await
@@ -657,6 +793,176 @@ mod tests {
         assert_eq!(active(&root, &hub()).unwrap().as_deref(), Some(TEACHER));
         db.close().await.unwrap();
         other.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn legacy_cache_defaults_and_receipt_lock_roll_back_together() {
+        let root = temporary();
+        let mut db = database(&root, &context(&hub(), STUDENT)).await.unwrap();
+        snapshot(&mut db, &user(), &[class()]).await.unwrap();
+        sqlx::query("DELETE FROM sync_state WHERE key IN ('account_class_statuses','account_join_requests')").execute(&mut db).await.unwrap();
+        assert!(join_requests(&mut db).await.unwrap().is_empty());
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0]
+                .enrollment_status
+                .as_deref(),
+            Some("ACTIVE")
+        );
+        sqlx::raw_sql("CREATE TRIGGER fail_receipt BEFORE INSERT ON sync_state WHEN NEW.key='account_join_requests' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").execute(&mut db).await.unwrap();
+        assert!(save_receipt(
+            &mut db,
+            &user(),
+            JoinReceipt {
+                classroom_id: CLASS.into(),
+                status: "REMOVED".into()
+            }
+        )
+        .await
+        .is_err());
+        assert!(join_requests(&mut db).await.unwrap().is_empty());
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0]
+                .enrollment_status
+                .as_deref(),
+            Some("ACTIVE")
+        );
+        db.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn receipts_lock_access_until_canonical_active_and_survive_omission() {
+        let root = temporary();
+        let key = context(&hub(), STUDENT);
+        let mut db = database(&root, &key).await.unwrap();
+        snapshot(&mut db, &user(), &[class()]).await.unwrap();
+        sqlx::raw_sql("INSERT INTO announcements VALUES('join-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('join-comment','join-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        for status in ["PENDING", "REJECTED", "REMOVED"] {
+            save_receipt(
+                &mut db,
+                &user(),
+                JoinReceipt {
+                    classroom_id: CLASS.into(),
+                    status: status.into(),
+                },
+            )
+            .await
+            .unwrap();
+            let cached = classes(&mut db, &user()).await.unwrap();
+            assert!(cached
+                .iter()
+                .all(|c| c.enrollment_status.as_deref() != Some("ACTIVE")));
+        }
+        save_receipt(
+            &mut db,
+            &user(),
+            JoinReceipt {
+                classroom_id: CLASS.into(),
+                status: "ACTIVE".into(),
+            },
+        )
+        .await
+        .unwrap();
+        assert!(classes(&mut db, &user()).await.unwrap().is_empty());
+        snapshot(&mut db, &user(), &[class()]).await.unwrap();
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0]
+                .enrollment_status
+                .as_deref(),
+            Some("ACTIVE")
+        );
+        save_receipt(
+            &mut db,
+            &user(),
+            JoinReceipt {
+                classroom_id: CLASS.into(),
+                status: "REMOVED".into(),
+            },
+        )
+        .await
+        .unwrap();
+        snapshot(&mut db, &user(), &[]).await.unwrap();
+        db.close().await.unwrap();
+        let mut db = database(&root, &key).await.unwrap();
+        assert_eq!(join_requests(&mut db).await.unwrap()[0].status, "REMOVED");
+        assert!(classes(&mut db, &user()).await.unwrap().is_empty());
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT count(*) FROM classrooms")
+                .fetch_one(&mut db)
+                .await
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, String>(
+                "SELECT sync_status FROM announcement_comments WHERE id='join-comment'"
+            )
+            .fetch_one(&mut db)
+            .await
+            .unwrap(),
+            "QUEUED_FOR_SYNC"
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT count(*) FROM enrollments")
+                .fetch_one(&mut db)
+                .await
+                .unwrap(),
+            0
+        );
+        let mut teacher = user();
+        teacher.role = Role::TEACHER;
+        assert!(save_receipt(
+            &mut db,
+            &teacher,
+            JoinReceipt {
+                classroom_id: CLASS.into(),
+                status: "ACTIVE".into()
+            }
+        )
+        .await
+        .is_err());
+        assert!(save_receipt(
+            &mut db,
+            &user(),
+            JoinReceipt {
+                classroom_id: "bad".into(),
+                status: "ACTIVE".into()
+            }
+        )
+        .await
+        .is_err());
+        assert!(save_receipt(
+            &mut db,
+            &user(),
+            JoinReceipt {
+                classroom_id: CLASS.into(),
+                status: "bad".into()
+            }
+        )
+        .await
+        .is_err());
+        db.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn pending_metadata_survives_restart() {
+        let root = temporary();
+        let key = context(&hub(), STUDENT);
+        let mut db = database(&root, &key).await.unwrap();
+        let mut pending = class();
+        pending.enrollment_status = Some("PENDING".into());
+        assert_eq!(
+            snapshot(&mut db, &user(), &[pending]).await.unwrap().len(),
+            1
+        );
+        db.close().await.unwrap();
+        let mut db = database(&root, &key).await.unwrap();
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0]
+                .enrollment_status
+                .as_deref(),
+            Some("PENDING")
+        );
+        db.close().await.unwrap();
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]

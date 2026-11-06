@@ -87,5 +87,22 @@
   "auth_session_expired": "Your session is no longer valid. Sign in again; your saved work has not been cleared.",
   "auth_switch_account": "Switch account",
   "auth_session_only": "Your sign-in is not remembered securely on this device. Cached classes remain available offline.",
-  "auth_hub_settings": "Classroom Hub connection"
+  "auth_hub_settings": "Classroom Hub connection",
+  "join_submit": "Join",
+  "join_pending_body": "Your teacher will review your request. You can keep using your saved classes.",
+  "join_as": "You are joining as {name}.",
+  "join_rejected_body": "Ask your teacher about joining this class.",
+  "join_offline": "Connect to the classroom Hub to send a join request.",
+  "join_waiting_details": "Waiting for class details",
+  "join_removed": "Class access removed",
+  "join_waiting_details_body": "Your approval is saved. Class details will appear after the next Hub refresh.",
+  "join_code_character": "Class code character {number} of 6",
+  "join_help": "Ask your teacher for the 6-character class code, then type it here.",
+  "join_request_title": "Class join request",
+  "join_rejected": "Request not approved",
+  "join_pending": "Waiting for approval",
+  "join_forbidden": "This class is not accepting join requests. Ask your teacher for help.",
+  "join_removed_body": "Ask your teacher if you need to join this class again.",
+  "join_code_label": "Class code",
+  "join_invalid_code": "That code does not match a class. Check it with your teacher."
 }

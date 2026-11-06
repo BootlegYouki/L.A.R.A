@@ -10,8 +10,8 @@ export function validateLoginFields(fields: Fields, register: boolean): Errors {
   if (register && (!fields.full_name?.trim() || [...fields.full_name.trim()].length > 100)) errors.full_name = t.auth_name_invalid;
   return errors;
 }
-interface Props { hub: HubInfo | null; busy: boolean; error: string | null; retryAfter: number; onSubmit: (fields: Fields, register: boolean) => void; onCancel?: () => void }
-export default function LoginPage({ hub, busy, error, retryAfter, onSubmit, onCancel }: Props) {
+interface Props { hub: HubInfo | null; busy: boolean; error: string | null; retryAfter: number; onSubmit: (fields: Fields, register: boolean) => void; onCancel?: () => void; onNavigate?: () => void }
+export default function LoginPage({ hub, busy, error, retryAfter, onSubmit, onCancel, onNavigate }: Props) {
   const [register, setRegister] = useState(false);
   const [fields, setFields] = useState<Fields>({ lrn_or_id: '', pin: '', full_name: '' });
   const [errors, setErrors] = useState<Errors>({});
@@ -34,6 +34,6 @@ export default function LoginPage({ hub, busy, error, retryAfter, onSubmit, onCa
       {retryAfter > 0 && <p role="status">{t.auth_retry_after.replace('{seconds}', String(retryAfter))}</p>}
       <div className="auth-actions"><button type="submit" className="control auth-submit" disabled={busy || !hub || retryAfter > 0}>{busy ? t.auth_working : register ? t.auth_register : t.auth_sign_in}</button>{onCancel && <button type="button" className="control text-button" disabled={busy} onClick={onCancel}>{t.cancel}</button>}</div>
     </form>
-    <button type="button" className="control text-button auth-toggle" disabled={busy} onClick={() => { setRegister(!register); setFields({ lrn_or_id: '', pin: '', full_name: '' }); setErrors({}); }}>{register ? t.auth_have_account : t.auth_new_learner}</button>
+    <button type="button" className="control text-button auth-toggle" disabled={busy} onClick={() => { onNavigate?.(); setRegister(!register); setFields({ lrn_or_id: '', pin: '', full_name: '' }); setErrors({}); }}>{register ? t.auth_have_account : t.auth_new_learner}</button>
   </section>;
 }

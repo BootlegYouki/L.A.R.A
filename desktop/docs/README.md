@@ -10,7 +10,7 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 | `components.md` | Component structure, design-system token usage, English resource dictionary | Sprint 1 |
 | `database.md` | `plugin-sql` setup, migrations from `client_offline.sql`, `sync_state` | Sprint 1 and 2 |
 | `sync_engine.md` | Pull and push loops, cursor handling, `reset`, offline queue | Sprint 2 |
-| `realtime.md` | WebSocket client, handshake, reconnect, event handling | Sprint 2 |
+| [`realtime.md`](./realtime.md) | Join dialog, durable status, WebSocket handshake/reconnect and verification | Sprint 2 (#46) |
 | `video_player.md` | Range streaming with `?token=`, disk download, local playback | Sprint 3 |
 | `quiz_runner.md` | Countdown with server offset, auto-submit, offline finish | Sprint 4 |
 | `ai_chat.md` | Hub chat client, token stream, quiz lockout | Sprint 5 |
