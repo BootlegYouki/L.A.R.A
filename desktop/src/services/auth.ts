@@ -10,7 +10,8 @@ export interface Classroom {
   co_teacher_ids?: string[]; archived_at?: number | null;
   enrollment_status?: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'REMOVED';
 }
-export interface CachedAccount { hub: HubInfo; user: AuthUser; expires_at: number; persistent: boolean; classrooms: Classroom[] }
+export interface JoinReceipt { classroom_id: string; status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REMOVED' }
+export interface CachedAccount { hub: HubInfo; user: AuthUser; expires_at: number; persistent: boolean; classrooms: Classroom[]; join_requests?: JoinReceipt[] }
 export interface Credentials { lrn_or_id: string; pin: string; full_name?: string }
 const object = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -47,10 +48,21 @@ function parseClassrooms(value: unknown): Classroom[] {
       ...(row.enrollment_status !== undefined ? { enrollment_status: row.enrollment_status as Classroom['enrollment_status'] } : {}) };
   });
 }
-function parseAccount(value: unknown, hub: HubInfo): CachedAccount {
+export function parseJoinReceipt(value: unknown): JoinReceipt {
+  if (!object(value) || !uuid(value.classroom_id) || !['PENDING', 'ACTIVE', 'REJECTED', 'REMOVED'].includes(String(value.status))) throw new ApiError('invalid_response');
+  return { classroom_id: value.classroom_id, status: value.status as JoinReceipt['status'] };
+}
+export function parseAccount(value: unknown, hub: HubInfo): CachedAccount {
   if (!object(value) || !isHubInfo(value.hub) || value.hub.ip !== hub.ip || value.hub.http_port !== hub.http_port
     || typeof value.persistent !== 'boolean' || !Number.isSafeInteger(value.expires_at)) throw new ApiError('invalid_response');
-  return { hub, user: parseUser(value.user), expires_at: Number(value.expires_at), persistent: value.persistent, classrooms: parseClassrooms(value.classrooms) };
+  if (value.join_requests !== undefined && (!Array.isArray(value.join_requests) || value.join_requests.length > 10000)) throw new ApiError('invalid_response');
+  return { hub, user: parseUser(value.user), expires_at: Number(value.expires_at), persistent: value.persistent, classrooms: parseClassrooms(value.classrooms),
+    ...(Array.isArray(value.join_requests) ? { join_requests: value.join_requests.map(parseJoinReceipt) } : {}) };
+}
+export async function accountToken(account: CachedAccount): Promise<string> {
+  const token: unknown = await withDatabaseTimeout(invoke('account_token', { hub: account.hub, userId: account.user.id }));
+  if (typeof token !== 'string' || !token) throw new ApiError('reauth_required');
+  return token;
 }
 export async function restoreAccount(hub: HubInfo): Promise<CachedAccount | null> {
   if (!isHubInfo(hub)) return null;
@@ -71,8 +83,7 @@ export async function signIn(hub: HubInfo, input: Credentials, register: boolean
 }
 export async function refreshClassrooms(account: CachedAccount, signal?: AbortSignal): Promise<Classroom[]> {
   const { hub, user } = account;
-  const token: unknown = await withDatabaseTimeout(invoke('account_token', { hub, userId: user.id }));
-  if (typeof token !== 'string' || !token) throw new ApiError('reauth_required');
+  const token = await accountToken(account);
   let classrooms: Classroom[];
   try { classrooms = parseClassrooms(await requestHub(hub, '/api/classrooms', { token, signal })); }
   catch (error) {

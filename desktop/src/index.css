@@ -132,3 +132,22 @@ button:disabled { cursor: default; }
 .class-banner p { font-size: 1.375rem; font-weight: 700; color: var(--color-lara-primary-light); }
 .connection-fieldset { margin: 0; padding: 0; min-width: 0; border: 0; }
 .hub-connection-details summary { min-height: 40px; padding: 8px 0; cursor: pointer; }
+
+button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara-ink-2); background: var(--color-lara-subtle); opacity: 0.65; cursor: default; box-shadow: none; }
+.join-scrim { position: fixed; inset: 0; z-index: 10; background: color-mix(in srgb, var(--color-lara-ink) 50%, transparent); }
+.join-dialog { position: fixed; z-index: 11; top: 50%; left: 50%; transform: translate(-50%, -50%); box-sizing: border-box; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border-radius: 24px; background: white; color: var(--color-lara-ink); box-shadow: var(--shadow-modal); }
+.join-dialog h2 { margin: 0 0 8px; font-size: 1.5rem; font-weight: 900; }
+.join-dialog p { margin: 12px 0; font-size: 0.875rem; }
+.join-code-field { margin: 20px 0 0; padding: 0; border: 0; min-width: 0; }
+.join-code-field legend { margin-bottom: 8px; font-weight: 800; }
+.join-code-boxes { display: flex; gap: 8px; }
+.join-code-boxes input { box-sizing: border-box; width: 52px; min-width: 0; height: 60px; border: 2px solid var(--color-lara-border); border-radius: 12px; background: white; color: var(--color-lara-ink); font: inherit; font-size: 1.5rem; font-weight: 900; text-align: center; }
+.join-code-boxes input:nth-child(3) { margin-right: 16px; }
+.join-code-boxes input:focus { border-color: var(--color-lara-primary); }
+.join-code-boxes input[aria-invalid=true] { border-color: var(--color-lara-danger-dark); }
+.join-code-boxes input:disabled { background: var(--color-lara-subtle); }
+.join-message { min-height: 24px; color: var(--color-lara-ink-2); }
+.join-error { display: flex; align-items: center; gap: 8px; color: var(--color-lara-danger-dark); }
+.join-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+.join-status-card .class-icon, .join-status-card .class-details-status { background: var(--color-lara-warning-light); color: var(--color-lara-warning-dark); }
+@media (max-width: 420px) { .join-dialog { padding: 20px; } .join-code-boxes { gap: 4px; } .join-code-boxes input { width: calc((100% - 36px) / 6); } }
