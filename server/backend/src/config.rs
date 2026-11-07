@@ -11,7 +11,7 @@ pub const DEFAULT_HUB_NAME: &str = "L.A.R.A Hub";
 
 #[derive(Clone, Debug)]
 pub struct HubConfig {
-    /// Holds `lara.db`; later steps add `storage/` and `hub_config.json` here.
+    /// Holds `lara.db` and `storage/`; a later step adds `hub_config.json` here.
     pub data_dir: PathBuf,
     /// Only tests change the ports (to 0, so parallel test hubs never collide).
     pub http_port: u16,
