@@ -544,7 +544,7 @@ def classroom_join(req):
     code = str(req.json().get("class_code", "")).replace("-", "").upper()
     c = next((c for c in STATE.classrooms.values() if c["class_code"] == code), None)
     if not c:
-        raise ApiError(404, "CLASS_CODE_INVALID", "Hindi nahanap ang Class Code")
+        raise ApiError(404, "CLASS_CODE_INVALID", "Class code not found")
     if c.get("archived_at"):
         raise ApiError(403, "FORBIDDEN", "This class is archived")
     t = now_ms()
@@ -1148,7 +1148,7 @@ def quiz_active(req):
     ids = STATE.visible_classroom_ids(req.user)
     quiz = next((q for q in STATE.quizzes.values() if q["classroom_id"] in ids and q["status"] == "ACTIVE"), None)
     if not quiz:
-        raise ApiError(404, "NOT_FOUND", "Walang aktibong pagsusulit")
+        raise ApiError(404, "NOT_FOUND", "No active quiz")
     return student_quiz(quiz)
 
 
@@ -1380,7 +1380,7 @@ def handle_ai_request(client, msg):
         chunks = STATE.chunks.get(msg.get("material_id"), [])
     chunk_id = chunks[0]["id"] if chunks else None
     client.send_text(json.dumps({"event": "EVENT_QUEUE_STATUS", "position": 2, "estimated_wait_seconds": 1,
-                                 "message": "Pangalawa ka sa pila - est. 1s"}))
+                                 "message": "You are second in line - est. 1s"}))
     time.sleep(0.3)
     reply = ("I can't give you the answer itself, but I will help you find it! "
              "Let's go back to what you read. What is the first step?").split(" ")
