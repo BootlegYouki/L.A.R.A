@@ -177,8 +177,36 @@ class ReadingScreenDeviceTest {
                 }
                 assertTrue(db.streamDao().observeComments("fixture-post").first().any { it.syncStatus == "QUEUED_FOR_SYNC" })
                 scrollTo("Queued for sync"); shot("queued-comment")
+                show(font = 2f) {
+                    org.lara.app.ui.navigation.TeacherNavGraph(org.lara.app.ui.navigation.ShellState(
+                        org.lara.app.ui.navigation.ShellRole.TEACHER, isHubReachable = false), approvalActions = {
+                        androidx.compose.material3.Text("Synthetic teacher tools")
+                    }, content = { destination -> ClassroomLearningHost(active, owner, destination, "fixture-class") })
+                }
+                scrollTo("Class comments (2)"); click("Class comments (2)")
+                scrollTo("Save comment")
+                val input = nodes().first { it.className?.toString() == "android.widget.EditText" }
+                var clickInput = input
+                while (!clickInput.isClickable && clickInput.parent != null) clickInput = clickInput.parent
+                clickInput.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                SystemClock.sleep(800)
+                scrollTo("Save comment")
+                val saveBounds = android.graphics.Rect().also { bounds ->
+                    nodes().first { it.text?.toString() == "Save comment" }.getBoundsInScreen(bounds)
+                }
+                var keyboardTop = Int.MAX_VALUE
+                scenario.onActivity { activity ->
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        val bottom = activity.window.decorView.rootWindowInsets?.getInsets(android.view.WindowInsets.Type.ime())?.bottom ?: 0
+                        assertTrue("Keyboard must be open for the composer check", bottom > 0)
+                        keyboardTop = activity.window.decorView.height - bottom
+                    }
+                }
+                assertTrue("Save comment must remain above the keyboard", saveBounds.bottom <= keyboardTop)
+                shot("comment-keyboard")
+                instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-class") }
-                waitFor("Synthetic PDF"); shot("classwork")
+                scrollTo("Synthetic PDF"); shot("classwork")
                 show(font=2f) { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-class") }
                 waitFor("Science"); shot("stream-200-top")
                 scrollTo("Class comments (2)"); click("Class comments (2)")
@@ -202,6 +230,10 @@ class ReadingScreenDeviceTest {
                 waitFor("Zoom in"); click("Zoom in"); shot("image-zoom")
                 show { MaterialReader(active, materials[2].toDomain()) {} }
                 waitFor("Synthetic DOCX lesson text is available offline."); shot("docx-text")
+                docx.delete()
+                show { MaterialReader(active, materials[2].toDomain()) {} }
+                waitFor(context.getString(org.lara.app.R.string.reading_showing_text)); shot("lesson-text-fallback")
+                assertFalse(nodes().any { it.text?.toString() == context.getString(org.lara.app.R.string.reading_file_unavailable) })
                 show { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-empty") }
                 waitFor("This is where your class announcements will appear."); shot("empty-stream")
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-empty") }

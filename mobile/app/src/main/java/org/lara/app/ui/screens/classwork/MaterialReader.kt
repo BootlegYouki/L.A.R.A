@@ -110,7 +110,9 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
         }
         if (loading) ReadingSkeleton()
         if (failed || renderFailed) {
-            Text(stringResource(if (renderFailed) R.string.reading_file_unreadable else R.string.reading_file_unavailable))
+            Text(stringResource(if (chunks.isNotEmpty()) R.string.reading_showing_text
+                else if (renderFailed) R.string.reading_file_unreadable else R.string.reading_file_unavailable),
+                color = LaraColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = { retry++ }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.reading_retry)) }
         }
         if (visual && raster == null && !loading && !failed && !renderFailed) ReadingSkeleton()

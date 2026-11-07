@@ -20,19 +20,10 @@ fun SettingsScreen(state: SettingsState, reachable: Boolean, version: String,
     onSignOut: () -> Unit, onConfirm: () -> Unit,
     onCancel: () -> Unit, onChangeHub: () -> Unit, onBack: () -> Unit) {
     Scaffold(containerColor = LaraColors.Canvas, topBar = {
-        Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S4),
-                verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.settings_title), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                TextButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.heightIn(min = MinTouchTarget),
-                    colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.Surface)) {
-                    Text(stringResource(R.string.settings_back))
-                }
-            }
-        }
+        org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.settings_title), back = { if (!state.busy) onBack() })
     }) { insets ->
         Column(Modifier.fillMaxSize().padding(insets).verticalScroll(rememberScrollState())
-            .padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+            .padding(LaraSpacing.S3), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             if (state.error) DiscoveryBanner(R.string.settings_failed, warning = true, success = false)
             else if (!reachable) DiscoveryBanner(R.string.settings_offline, warning = true, success = false)
             SettingsCard(R.string.settings_hub) {
@@ -75,11 +66,13 @@ fun SettingsScreen(state: SettingsState, reachable: Boolean, version: String,
 
 @Composable
 private fun SettingsCard(title: Int, content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxWidth().laraShadow(), color = LaraColors.Surface, shape = LaraShapes.large,
-        border = BorderStroke(1.dp, LaraColors.Border)) {
-        Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+    org.lara.app.ui.components.ClassroomSurface {
+        Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3), verticalAlignment = Alignment.CenterVertically) {
+            Icon(androidx.compose.ui.res.painterResource(if (title == R.string.settings_hub) R.drawable.ic_books_regular else R.drawable.ic_info),
+                null, Modifier.size(LaraSpacing.S6), tint = LaraColors.PrimaryDark)
             Text(stringResource(title), style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryDark)
-            content()
         }
+        HorizontalDivider(color = LaraColors.Border)
+        content()
     }
 }

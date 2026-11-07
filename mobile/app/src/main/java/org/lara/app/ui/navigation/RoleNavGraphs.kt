@@ -7,7 +7,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -58,9 +61,10 @@ fun TeacherNavGraph(
     state: ShellState,
     approvalActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
+    peopleContent: (@Composable (() -> Unit) -> Unit)? = null,
 ) {
     require(state.role == ShellRole.TEACHER)
-    RoleNavGraph(state, teacher = true, content = content, approvalActions = approvalActions)
+    RoleNavGraph(state, teacher = true, content = content, approvalActions = approvalActions, peopleContent = peopleContent)
 }
 
 @Composable
@@ -70,8 +74,10 @@ private fun RoleNavGraph(
     content: @Composable (ShellDestination) -> Unit,
     approvalActions: @Composable () -> Unit = {},
     learnerClassActions: @Composable () -> Unit = {},
+    peopleContent: (@Composable (() -> Unit) -> Unit)? = null,
 ) {
     val controller = rememberNavController()
+    val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val entry by controller.currentBackStackEntryAsState()
     val selected = when {
         entry?.destination?.hasRoute<Classwork>() == true -> ShellDestination.CLASSWORK
@@ -91,22 +97,16 @@ private fun RoleNavGraph(
         }
     }
     Scaffold(
+        modifier = Modifier.imePadding(),
         containerColor = LaraColors.Canvas,
         topBar = {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S4),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text(
-                    stringResource(if (teacher) R.string.teacher_classroom else R.string.learner_classroom),
-                    modifier = Modifier.weight(1f).heightIn(min = 64.dp).padding(vertical = LaraSpacing.S4),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                org.lara.app.ui.screens.settings.SettingsAction()
-                }
-            }
+            val classroom = org.lara.app.ui.components.LocalClassChrome.current
+            org.lara.app.ui.components.ClassroomTopBar(classroom?.name
+                ?: stringResource(if (teacher) R.string.teacher_classroom else R.string.learner_classroom),
+                classroom?.section, classroom?.back)
         },
         bottomBar = {
-            Column(Modifier.navigationBarsPadding()) {
+            if (!keyboardOpen) Column(Modifier.navigationBarsPadding()) {
                 if (state.hasInProgressAttempt) {
                     Text(stringResource(R.string.ai_quiz_locked), Modifier.padding(LaraSpacing.S4))
                 }
@@ -125,17 +125,23 @@ private fun RoleNavGraph(
         Column(Modifier.fillMaxSize().padding(insets)) {
             if (!state.isHubReachable) {
                 Box(Modifier.fillMaxWidth().padding(LaraSpacing.S4)) {
-                    DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
+                    if (keyboardOpen) Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                        Icon(painterResource(R.drawable.ic_info), null, Modifier.size(24.dp))
+                        Text(stringResource(R.string.settings_disconnected), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    else DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
                 }
             }
             if (!teacher) learnerClassActions()
             if (teacher) {
-                approvalActions()
-                Row(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    TextButton(onClick = { controller.navigate(People) { launchSingleTop = true } }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                if (selected != null) Box(if (keyboardOpen) Modifier.height(0.dp).clipToBounds() else Modifier) {
+                    approvalActions()
+                }
+                if (!keyboardOpen) Row(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    OutlinedButton(onClick = { controller.navigate(People) { launchSingleTop = true } }, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
                         Text(stringResource(R.string.nav_people))
                     }
-                    TextButton(onClick = { controller.navigate(Grades) { launchSingleTop = true } }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    OutlinedButton(onClick = { controller.navigate(Grades) { launchSingleTop = true } }, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
                         Text(stringResource(R.string.nav_grades))
                     }
                 }
@@ -146,7 +152,10 @@ private fun RoleNavGraph(
                 composable<Quizzes> { TabContent(ShellDestination.QUIZZES, state, content) }
                 composable<Tutor> { TabContent(ShellDestination.AI_TUTOR, state, content) }
                 if (teacher) {
-                    composable<People> { ManagementPlaceholder(R.string.nav_people, state.isLoading) }
+                    composable<People> {
+                        if (peopleContent != null) peopleContent { controller.popBackStack() }
+                        else ManagementPlaceholder(R.string.nav_people, state.isLoading)
+                    }
                     composable<Grades> { ManagementPlaceholder(R.string.nav_grades, state.isLoading) }
                 }
             }

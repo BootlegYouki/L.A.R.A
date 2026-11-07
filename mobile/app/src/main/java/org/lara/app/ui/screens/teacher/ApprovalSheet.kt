@@ -18,8 +18,8 @@ fun PendingApprovalButton(state: ApprovalState, onClick: () -> Unit) {
     BadgedBox(badge = { if (state.pending.isNotEmpty()) Badge(
         containerColor = LaraColors.PrimaryLight, contentColor = LaraColors.PrimaryDark,
     ) { Text(state.pending.size.toString()) } }) {
-        TextButton(onClick, Modifier.heightIn(min = MinTouchTarget),
-            colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark)) {
+        OutlinedButton(onClick, Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), shape = LaraShapes.medium,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark)) {
             Text(stringResource(R.string.approval_pending_count, state.pending.size))
         }
     }
@@ -48,8 +48,7 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                 if (state.roster == Cached.Loading) item { ApprovalLoadingSkeleton() }
                 else if (state.pending.isEmpty()) item { Text(stringResource(R.string.approval_empty)) }
                 items(state.pending.take(1), key = { it.enrollment.id }) { member ->
-                    Column(Modifier.fillMaxWidth().padding(vertical = LaraSpacing.S2),
-                        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    org.lara.app.ui.components.ClassroomSurface {
                         Text(member.user?.fullName ?: stringResource(R.string.approval_learner),
                             style = MaterialTheme.typography.titleMedium)
                         member.user?.lrnOrId?.let { Text(stringResource(R.string.approval_lrn, it)) }

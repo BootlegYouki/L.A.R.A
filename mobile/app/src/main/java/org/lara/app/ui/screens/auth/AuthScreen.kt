@@ -36,12 +36,20 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
     val retrying = now < state.retryAt
     val idLabel = stringResource(R.string.auth_id)
     val nameLabel = stringResource(R.string.auth_name)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
+    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, color = LaraColors.PrimaryDark)
         Text(stringResource(if(registering) R.string.auth_register else R.string.auth_login), style = MaterialTheme.typography.headlineMedium)
+        org.lara.app.ui.components.ClassroomSurface {
+            Text(stringResource(R.string.auth_hub_step), style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryDark)
+            Text(stringResource(R.string.auth_hub_step_help), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+            OutlinedButton(onClick = onDiscovery, enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), shape = LaraShapes.medium) {
+                Text(stringResource(R.string.discovery_open))
+            }
+        }
         Text(stringResource(R.string.auth_teacher_help), style = MaterialTheme.typography.bodyLarge)
-        state.error?.let { DiscoveryBanner(it, warning = true, success = false) }
+        state.error?.let { DiscoveryBanner(it, warning = it != R.string.auth_hub_required, success = false) }
         Text(idLabel, style = MaterialTheme.typography.labelLarge)
         OutlinedTextField(value = id, onValueChange = { id = it.take(32) }, enabled = !state.busy,
             singleLine = true, shape = LaraShapes.medium,
@@ -91,8 +99,6 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
             modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
             Text(stringResource(if(registering) R.string.auth_login_instead else R.string.auth_register_instead))
         }
-        OutlinedButton(onClick = onDiscovery, enabled = !state.busy,
-            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.discovery_open)) }
         onSettings?.let { open ->
             TextButton(onClick = open, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.settings_title))

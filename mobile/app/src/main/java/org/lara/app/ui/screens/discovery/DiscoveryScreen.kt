@@ -96,7 +96,7 @@ fun DiscoveryScreen(model: DiscoveryViewModel, onBack: () -> Unit) {
     val success = !connecting && result == ConnectionResult.RESPONDING
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(LaraSpacing.S4),
+        contentPadding = PaddingValues(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
     ) {
         item { Text(stringResource(R.string.discovery_title), style = MaterialTheme.typography.headlineMedium) }

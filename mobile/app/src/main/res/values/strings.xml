@@ -57,7 +57,13 @@
     <string name="auth_register_instead">New learner? Create an account</string>
     <string name="auth_login_instead">Already registered? Sign in</string>
     <string name="auth_invalid">Check your details: Enter your ID and four PIN digits. Learner registration needs a 12-digit LRN and full name.</string>
-    <string name="auth_hub_required">Connect to a Hub: Choose Find classroom Hub below before signing in.</string>
+    <string name="auth_hub_required">First, choose your classroom Hub. Then sign in with your account.</string>
+    <string name="auth_hub_step">1. Choose your classroom Hub</string>
+    <string name="auth_hub_step_help">Use the Hub on your classroom network, then enter your account details below.</string>
+    <string name="reading_showing_text">Showing the lesson text</string>
+    <string name="reading_save_home_badge">Save for home</string>
+    <string name="reading_saved_device_badge">Saved on this device</string>
+    <string name="reading_open">Open handout</string>
     <string name="auth_wrong_pin">Try again: Your ID or PIN did not match. Check them with your teacher if you need help.</string>
     <string name="auth_admin">Hub account: Administrators sign in on the Hub computer.</string>
     <string name="auth_exists">Account unavailable: This learner may already be registered, or this device has another saved account. Ask your teacher for help.</string>

@@ -53,12 +53,14 @@ fun LaraNavigation(
     teacherApprovalActions: @Composable () -> Unit = {},
     learnerClassActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
+    teacherPeopleContent: (@Composable (() -> Unit) -> Unit)? = null,
 ) {
     if (state != null) {
         key(sessionKey, state.role) {
             when (state.role) {
                 ShellRole.STUDENT -> StudentNavGraph(state, content = content, classActions = learnerClassActions)
-                ShellRole.TEACHER -> TeacherNavGraph(state, content = content, approvalActions = teacherApprovalActions)
+                ShellRole.TEACHER -> TeacherNavGraph(state, content = content, approvalActions = teacherApprovalActions,
+                    peopleContent = teacherPeopleContent)
             }
         }
         return
