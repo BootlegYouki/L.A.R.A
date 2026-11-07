@@ -50,3 +50,21 @@ it('passes only a class-code hint to teachers and never exposes join-request nam
  ws.message(ack);await vi.advanceTimersByTimeAsync(0);teacher.mockClear();ws.message(request);await vi.advanceTimersByTimeAsync(0);expect(teacher).toHaveBeenCalledWith('K7M4QX');expect(JSON.stringify(teacher.mock.calls)).not.toContain('private-lrn');stop();
  const learnerRequest=vi.fn();const end=observeJoinUpdates(account,update,vi.fn(),learnerRequest);await vi.advanceTimersByTimeAsync(0);const learner=Socket.instances.at(-1)!;learner.message(ack);learner.message(request);await vi.advanceTimersByTimeAsync(0);expect(learnerRequest).not.toHaveBeenCalled();end();
 });
+it('triggers sync only for validated announcements after ACK and stops after disposal',async()=>{
+ const hint=vi.fn(),stop=observeJoinUpdates(account,vi.fn().mockResolvedValue(undefined),vi.fn(),undefined,hint);await vi.advanceTimersByTimeAsync(0);const ws=Socket.instances[0];
+ const announcement={event:'EVENT_ANNOUNCEMENT_PUSH',classroom_id,announcement_id:id,title:'Synthetic',timestamp:200};ws.message(announcement);expect(hint).not.toHaveBeenCalled();ws.message(ack);await vi.advanceTimersByTimeAsync(0);expect(hint).toHaveBeenCalledTimes(1);
+ ws.message({...announcement,announcement_id:'invalid'});expect(hint).toHaveBeenCalledTimes(1);ws.message(announcement);expect(hint).toHaveBeenCalledTimes(2);stop();ws.message(announcement);expect(hint).toHaveBeenCalledTimes(2);
+});
+
+it('accepts an opaque Hub identity ACK and announcement sync hints',async()=>{
+ const hint=vi.fn(),update=vi.fn().mockResolvedValue(undefined),stop=observeJoinUpdates(account,update,vi.fn(),undefined,hint);
+ await vi.advanceTimersByTimeAsync(0);const ws=Socket.instances[0];ws.message({...ack,hub_id:'school-hub-identity'});
+ await vi.advanceTimersByTimeAsync(0);expect(update).toHaveBeenCalledTimes(1);expect(hint).toHaveBeenCalledTimes(1);
+ ws.message({event:'EVENT_ANNOUNCEMENT_PUSH',classroom_id,announcement_id:id,title:'Synthetic',timestamp:200});expect(hint).toHaveBeenCalledTimes(2);stop();
+});
+it.each([undefined,'','x'.repeat(257)])('ignores an ACK with invalid Hub identity %s',async hub_id=>{
+ const hint=vi.fn(),update=vi.fn().mockResolvedValue(undefined),stop=observeJoinUpdates(account,update,vi.fn(),undefined,hint);
+ await vi.advanceTimersByTimeAsync(0);const ws=Socket.instances[0];ws.message({...ack,hub_id});
+ ws.message({event:'EVENT_ANNOUNCEMENT_PUSH',classroom_id,announcement_id:id,title:'Synthetic',timestamp:200});
+ await vi.advanceTimersByTimeAsync(0);expect(update).not.toHaveBeenCalled();expect(hint).not.toHaveBeenCalled();stop();
+});
