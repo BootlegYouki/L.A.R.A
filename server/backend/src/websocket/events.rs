@@ -38,6 +38,16 @@ pub enum EnrollmentStatus {
     Removed,
 }
 
+impl EnrollmentStatus {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Active => "ACTIVE",
+            Self::Rejected => "REJECTED",
+            Self::Removed => "REMOVED",
+        }
+    }
+}
+
 impl ServerEvent {
     pub fn error(code: ErrorCode, message: &str) -> Self {
         Self::Error { code, message: message.to_owned() }

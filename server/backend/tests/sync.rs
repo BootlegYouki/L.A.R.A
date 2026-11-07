@@ -72,8 +72,12 @@ impl Class {
     }
 
     async fn announcements(&self, count: usize, timestamp: i64) {
+        self.announcements_from(0, count, timestamp).await;
+    }
+
+    async fn announcements_from(&self, first: usize, count: usize, timestamp: i64) {
         let mut tx = db::begin_immediate(&self.hub.state().db).await.unwrap();
-        for n in 0..count {
+        for n in first..first + count {
             let id = format!("post-{n}");
             sqlx::query("INSERT INTO announcements (id, classroom_id, title, content, created_at, updated_at) VALUES (?, ?, 'Lesson', 'Plants', ?, ?)")
                 .bind(&id).bind(&self.id).bind(timestamp).bind(timestamp).execute(&mut *tx).await.unwrap();
@@ -787,5 +791,209 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
         pull(&class.hub, &class.token, cursor(&student)).await["quiz_attempts"][0]["score"],
         1
     );
+    class.hub.stop().await;
+}
+
+// ---- #121: class management seen through sync, using the real routes ----
+
+impl Class {
+    async fn patch(&self, body: Value) -> u16 {
+        self.hub
+            .send_json(
+                reqwest::Method::PATCH,
+                &format!("/api/classrooms/{}", self.id),
+                &body,
+                Some(self.hub.teacher_token()),
+            )
+            .await
+            .0
+    }
+
+    async fn add_co_teacher(&self, lrn: &str) -> (String, String) {
+        let teacher = self.hub.seed_user(lrn, "Jose", Role::Teacher, "1234").await;
+        let id = teacher.id.clone();
+        let token = self.hub.open_session(teacher).await;
+        let (status, body) = self
+            .hub
+            .post_json(
+                &format!("/api/classrooms/{}/teachers", self.id),
+                &json!({"lrn_or_id": lrn}),
+                Some(self.hub.teacher_token()),
+            )
+            .await;
+        assert_eq!(status, 200, "{body}");
+        (id, token)
+    }
+
+    async fn drop_co_teacher(&self, id: &str) {
+        let (status, body) = self
+            .hub
+            .request(
+                reqwest::Method::DELETE,
+                &format!("/api/classrooms/{}/teachers/{id}", self.id),
+                Some(self.hub.teacher_token()),
+            )
+            .await;
+        assert_eq!(status, 200, "{body}");
+    }
+}
+
+async fn drain(hub: &TestHub, token: &str) -> i64 {
+    let mut position = 0;
+    loop {
+        let page = pull(hub, token, position).await;
+        position = cursor(&page);
+        if page["has_more"] == false {
+            return position;
+        }
+    }
+}
+
+#[tokio::test]
+async fn learners_pull_a_rename_and_an_archive_and_pulling_still_works_after() {
+    let class = Class::start().await;
+    let position = drain(&class.hub, &class.token).await;
+    assert_eq!(class.patch(json!({"name": "Science 4A"})).await, 200);
+    let renamed = pull(&class.hub, &class.token, position).await;
+    assert_eq!(renamed["classrooms"][0]["name"], "Science 4A");
+    assert_eq!(class.patch(json!({"archived": true})).await, 200);
+    let archived = pull(&class.hub, &class.token, cursor(&renamed)).await;
+    assert!(archived["classrooms"][0]["archived_at"].is_i64());
+    class.announcements(1, 5).await;
+    let later = pull(&class.hub, &class.token, cursor(&archived)).await;
+    assert_eq!(later["announcements"].as_array().unwrap().len(), 1, "a pull from an archived class still works");
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_learner_removed_through_the_route_gets_the_enrollment_and_nothing_else() {
+    let class = Class::start().await;
+    class.announcements(1, 1).await;
+    let position = drain(&class.hub, &class.token).await;
+    let (status, body) = class
+        .hub
+        .post_json(
+            &format!("/api/classrooms/{}/remove", class.id),
+            &json!({"student_id": class.student}),
+            Some(class.hub.teacher_token()),
+        )
+        .await;
+    assert_eq!(status, 200, "{body}");
+    class.announcements_from(1, 1, 2).await;
+    let removed = pull(&class.hub, &class.token, position).await;
+    assert_eq!(removed["enrollments"][0]["status"], "REMOVED");
+    assert_eq!(removed["announcements"], json!([]));
+    let fresh = pull(&class.hub, &class.token, 0).await;
+    assert_eq!(fresh["enrollments"][0]["status"], "REMOVED");
+    assert_eq!(fresh["announcements"], json!([]), "a device starting over gets none of the class");
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn an_added_co_teacher_gets_the_older_rows_and_the_learners_see_them_listed() {
+    let class = Class::start().await;
+    class.announcements(3, 1).await;
+    let teacher = class.hub.seed_user("T-0002", "Jose", Role::Teacher, "1234").await;
+    let teacher_token = class.hub.open_session(teacher.clone()).await;
+    let position = drain(&class.hub, &teacher_token).await;
+    let learner_position = drain(&class.hub, &class.token).await;
+    let (status, _) = class
+        .hub
+        .post_json(
+            &format!("/api/classrooms/{}/teachers", class.id),
+            &json!({"lrn_or_id": "T-0002"}),
+            Some(class.hub.teacher_token()),
+        )
+        .await;
+    assert_eq!(status, 200);
+    let pulled = pull(&class.hub, &teacher_token, position).await;
+    assert_eq!(pulled["announcements"].as_array().unwrap().len(), 3);
+    assert_eq!(pulled["classrooms"][0]["co_teacher_ids"], json!([teacher.id]));
+    let learner = pull(&class.hub, &class.token, learner_position).await;
+    assert_eq!(learner["classrooms"][0]["co_teacher_ids"], json!([teacher.id]));
+    class.hub.stop().await;
+}
+
+/// The removed teacher was offline while the class kept changing: their copy of the removal must
+/// survive later class-wide revisions of the same row.
+#[tokio::test]
+async fn a_removed_co_teacher_learns_it_even_after_the_class_changes_again() {
+    let class = Class::start().await;
+    let (teacher_id, teacher_token) = class.add_co_teacher("T-0002").await;
+    let position = drain(&class.hub, &teacher_token).await;
+    class.drop_co_teacher(&teacher_id).await;
+    assert_eq!(class.patch(json!({"name": "Science 4A"})).await, 200);
+    class.announcements(1, 9).await;
+
+    let pulled = pull(&class.hub, &teacher_token, position).await;
+    assert_eq!(pulled["classrooms"].as_array().unwrap().len(), 1);
+    assert_eq!(pulled["classrooms"][0]["co_teacher_ids"], json!([]));
+    assert_eq!(pulled["announcements"], json!([]));
+
+    let later = pull(&class.hub, &teacher_token, cursor(&pulled)).await;
+    assert_eq!(later["classrooms"], json!([]), "only the copy addressed to them, once");
+
+    let fresh = pull(&class.hub, &teacher_token, 0).await;
+    assert_eq!(fresh["classrooms"][0]["co_teacher_ids"], json!([]));
+    assert_eq!(fresh["announcements"], json!([]));
+
+    let learner = pull(&class.hub, &class.token, position).await;
+    assert_eq!(learner["classrooms"][0]["co_teacher_ids"], json!([]), "learners see the list change too");
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_co_teacher_added_back_gets_the_class_again() {
+    let class = Class::start().await;
+    class.announcements(2, 1).await;
+    let (teacher_id, teacher_token) = class.add_co_teacher("T-0002").await;
+    let position = drain(&class.hub, &teacher_token).await;
+    class.drop_co_teacher(&teacher_id).await;
+    let (status, _) = class
+        .hub
+        .post_json(
+            &format!("/api/classrooms/{}/teachers", class.id),
+            &json!({"lrn_or_id": "T-0002"}),
+            Some(class.hub.teacher_token()),
+        )
+        .await;
+    assert_eq!(status, 200);
+    let pulled = pull(&class.hub, &teacher_token, position).await;
+    assert_eq!(pulled["classrooms"][0]["co_teacher_ids"], json!([teacher_id]));
+    assert_eq!(pulled["announcements"].as_array().unwrap().len(), 2);
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn pushes_to_an_archived_class_are_refused_but_a_retry_of_saved_work_is_not() {
+    let class = Class::start().await;
+    class.announcements(1, 1).await;
+    class.assignment().await;
+    let saved = json!({"comments":[comment("saved")],"private_comments":[private("saved-private")]});
+    let (status, first) = class.hub.post_json("/api/sync/push", &saved, Some(&class.token)).await;
+    assert_eq!(status, 200);
+    assert_eq!(first["receipts"][0]["status"], "SYNCED");
+    assert_eq!(first["receipts"][1]["status"], "SYNCED");
+    assert_eq!(class.patch(json!({"archived": true})).await, 200);
+
+    let (_, retry) = class.hub.post_json("/api/sync/push", &saved, Some(&class.token)).await;
+    assert_eq!(retry["receipts"][0]["status"], "SYNCED", "the response was lost, the work was not");
+    assert_eq!(retry["receipts"][1]["status"], "SYNCED");
+
+    let new = json!({"comments":[comment("new")],"private_comments":[private("new-private")]});
+    let (status, refused) = class.hub.post_json("/api/sync/push", &new, Some(&class.token)).await;
+    assert_eq!(status, 200);
+    for receipt in refused["receipts"].as_array().unwrap() {
+        assert_eq!(receipt["status"], "REJECTED");
+        assert_eq!(receipt["reason"], "FORBIDDEN");
+    }
+    let edited = json!({"comments":[{"id":"saved","announcement_id":"post-0","content":"Changed","created_at":10}]});
+    let (_, refused) = class.hub.post_json("/api/sync/push", &edited, Some(&class.token)).await;
+    assert_eq!(refused["receipts"][0]["reason"], "FORBIDDEN", "an edit is a write");
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM announcement_comments WHERE content = 'My draft'")
+        .fetch_one(&class.hub.state().db)
+        .await
+        .unwrap();
+    assert_eq!(count, 1);
     class.hub.stop().await;
 }

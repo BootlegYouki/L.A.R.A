@@ -122,14 +122,16 @@ pub async fn pull_page(
         reset,
         ..Default::default()
     };
-    for ((table, id), _) in selected {
+    for ((table, id), revision) in selected {
         // A page may contain an older delete followed by a later recreation. Always send current state.
         let latest = sqlx::query_as::<_, Revision>(
             "SELECT seq, classroom_id, student_id, entity_table, entity_id, action FROM sync_revisions
              WHERE entity_table = ? AND entity_id = ?
              AND (student_id IS NULL OR student_id = ? OR ? = 'TEACHER') ORDER BY seq DESC LIMIT 1",
         ).bind(&table).bind(&id).bind(&user.id).bind(user.role.as_str()).fetch_one(&mut *conn).await?;
-        if !latest.visible(user, &classes) {
+        // A copy addressed to this user still counts when a later class-wide revision of the same
+        // row is one they can't see: a removed co-teacher must learn they left the class.
+        if !latest.visible(user, &classes) && revision.student_id.as_deref() != Some(user.id.as_str()) {
             continue;
         }
         if !matches!(
@@ -269,6 +271,15 @@ fn receipt(id: &str, reason: Option<&'static str>) -> SyncReceipt {
     }
 }
 
+/// Checked after the retry check in each push, so work saved before the archive still gets its receipt.
+async fn class_archived(conn: &mut SqliteConnection, classroom_id: &str) -> Result<bool, sqlx::Error> {
+    let archived_at: Option<i64> = sqlx::query_scalar("SELECT archived_at FROM classrooms WHERE id = ?")
+        .bind(classroom_id)
+        .fetch_one(conn)
+        .await?;
+    Ok(archived_at.is_some())
+}
+
 pub async fn push_comment(
     conn: &mut SqliteConnection,
     student_id: &str,
@@ -298,6 +309,9 @@ pub async fn push_comment(
     let Some((classroom_id, allow_comments)) = announcement else {
         return Ok(receipt(&comment.id, Some("FORBIDDEN")));
     };
+    if class_archived(conn, &classroom_id).await? {
+        return Ok(receipt(&comment.id, Some("FORBIDDEN")));
+    }
     if !allow_comments {
         return Ok(receipt(&comment.id, Some("COMMENTS_DISABLED")));
     }
@@ -345,6 +359,9 @@ pub async fn push_private_comment(
         .is_some_and(|e| e.3 == comment.content && e.4 == comment.created_at)
     {
         return Ok(receipt(&comment.id, None));
+    }
+    if class_archived(conn, &classroom_id).await? {
+        return Ok(receipt(&comment.id, Some("FORBIDDEN")));
     }
     sqlx::query(
         "INSERT INTO private_comments (id, assignment_id, student_id, author_id, content, created_at, updated_at)

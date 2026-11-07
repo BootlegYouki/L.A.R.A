@@ -80,6 +80,139 @@ pub async fn list(conn: &mut SqliteConnection, user: &AuthUser) -> Result<Vec<Cl
     Ok(rooms)
 }
 
+/// The class as the teacher routes answer it. The caller has already checked it exists.
+pub async fn get(conn: &mut SqliteConnection, classroom_id: &str) -> Result<Classroom, sqlx::Error> {
+    let mut room = sqlx::query_as::<_, Classroom>(
+        "SELECT id, name, section, class_code, teacher_id, archived_at, NULL AS enrollment_status
+         FROM classrooms WHERE id = ?",
+    )
+    .bind(classroom_id)
+    .fetch_one(&mut *conn)
+    .await?;
+    room.co_teacher_ids =
+        sqlx::query_scalar("SELECT teacher_id FROM classroom_teachers WHERE classroom_id = ? ORDER BY teacher_id")
+            .bind(classroom_id)
+            .fetch_all(conn)
+            .await?;
+    Ok(room)
+}
+
+pub struct ClassroomChange {
+    pub name: Option<String>,
+    pub section: Option<String>,
+    pub archived: Option<bool>,
+}
+
+/// A class that stays archived can't be renamed. Clearing the archive is the one way back, and a
+/// change to nothing writes no revision, so a retry keeps the first `archived_at`.
+pub async fn update(
+    conn: &mut SqliteConnection,
+    classroom_id: &str,
+    change: ClassroomChange,
+    now: i64,
+) -> Result<Classroom, ApiError> {
+    let mut room = get(conn, classroom_id).await?;
+    let name = change.name.unwrap_or_else(|| room.name.clone());
+    let section = change.section.unwrap_or_else(|| room.section.clone());
+    let archived_at = match change.archived {
+        Some(true) => room.archived_at.or(Some(now)),
+        Some(false) => None,
+        None => room.archived_at,
+    };
+    let renamed = name != room.name || section != room.section;
+    if renamed && room.archived_at.is_some() && archived_at.is_some() {
+        return Err(ApiError::forbidden("This class is archived"));
+    }
+    if !renamed && archived_at == room.archived_at {
+        return Ok(room);
+    }
+    sqlx::query("UPDATE classrooms SET name = ?, section = ?, archived_at = ?, updated_at = ? WHERE id = ?")
+        .bind(&name)
+        .bind(&section)
+        .bind(archived_at)
+        .bind(now)
+        .bind(classroom_id)
+        .execute(&mut *conn)
+        .await?;
+    record_revision(conn, Scope::class(classroom_id), "classrooms", classroom_id, Action::Upsert, now).await?;
+    room.name = name;
+    room.section = section;
+    room.archived_at = archived_at;
+    Ok(room)
+}
+
+/// Two revisions, class first: learners and teachers need the new `co_teacher_ids`, and the copy
+/// addressed to the teacher tells sync the class just appeared for them or just left them.
+async fn record_teacher_change(
+    conn: &mut SqliteConnection,
+    classroom_id: &str,
+    teacher_id: &str,
+    now: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE classrooms SET updated_at = ? WHERE id = ?")
+        .bind(now)
+        .bind(classroom_id)
+        .execute(&mut *conn)
+        .await?;
+    record_revision(conn, Scope::class(classroom_id), "classrooms", classroom_id, Action::Upsert, now).await?;
+    record_revision(
+        conn,
+        Scope::student(classroom_id, teacher_id),
+        "classrooms",
+        classroom_id,
+        Action::Upsert,
+        now,
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn add_co_teacher(
+    conn: &mut SqliteConnection,
+    classroom_id: &str,
+    lrn_or_id: &str,
+    now: i64,
+) -> Result<Classroom, ApiError> {
+    let teacher_id: Option<String> =
+        sqlx::query_scalar("SELECT id FROM users WHERE lrn_or_id = ? AND role = 'TEACHER' AND is_active = 1")
+            .bind(lrn_or_id)
+            .fetch_optional(&mut *conn)
+            .await?;
+    let teacher_id = teacher_id.ok_or_else(|| ApiError::not_found("No teacher with that ID"))?;
+    let added = sqlx::query(
+        "INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at)
+         SELECT id, ?, ? FROM classrooms WHERE id = ? AND teacher_id <> ?
+         ON CONFLICT(classroom_id, teacher_id) DO NOTHING",
+    )
+    .bind(&teacher_id)
+    .bind(now)
+    .bind(classroom_id)
+    .bind(&teacher_id)
+    .execute(&mut *conn)
+    .await?;
+    if added.rows_affected() > 0 {
+        record_teacher_change(conn, classroom_id, &teacher_id, now).await?;
+    }
+    Ok(get(conn, classroom_id).await?)
+}
+
+pub async fn remove_co_teacher(
+    conn: &mut SqliteConnection,
+    classroom_id: &str,
+    teacher_id: &str,
+    now: i64,
+) -> Result<(), sqlx::Error> {
+    let removed = sqlx::query("DELETE FROM classroom_teachers WHERE classroom_id = ? AND teacher_id = ?")
+        .bind(classroom_id)
+        .bind(teacher_id)
+        .execute(&mut *conn)
+        .await?;
+    if removed.rows_affected() > 0 {
+        record_teacher_change(conn, classroom_id, teacher_id, now).await?;
+    }
+    Ok(())
+}
+
 pub async fn roster(conn: &mut SqliteConnection, classroom_id: &str) -> Result<Vec<RosterEntry>, sqlx::Error> {
     sqlx::query_as(
         "SELECT e.id AS enrollment_id, e.student_id, u.full_name, u.lrn_or_id AS lrn, e.status, e.joined_at
@@ -171,6 +304,7 @@ pub async fn join(
     })
 }
 
+/// Approve and reject act on `PENDING`, remove on `ACTIVE`. A retry at the target changes nothing.
 pub async fn decide(
     conn: &mut SqliteConnection,
     classroom_id: &str,
@@ -184,12 +318,17 @@ pub async fn decide(
             .bind(student_id)
             .fetch_optional(&mut *conn)
             .await?;
-    let (id, current) = existing.ok_or_else(|| ApiError::not_found("No pending request"))?;
+    let (from, wrong_state) = if target == "REMOVED" {
+        ("ACTIVE", "Learner is not active")
+    } else {
+        ("PENDING", "No pending request")
+    };
+    let (id, current) = existing.ok_or_else(|| ApiError::not_found(wrong_state))?;
     if current == target {
         return Ok(false);
     }
-    if current != "PENDING" {
-        return Err(ApiError::not_found("No pending request"));
+    if current != from {
+        return Err(ApiError::not_found(wrong_state));
     }
     sqlx::query("UPDATE enrollments SET status = ?, updated_at = ? WHERE id = ?")
         .bind(target)

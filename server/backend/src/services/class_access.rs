@@ -26,6 +26,20 @@ pub async fn require_teacher(conn: &mut SqliteConnection, user: &AuthUser, class
     Ok(())
 }
 
+/// Rename, archive and managing teachers: the owner only (`rules/database-and-sync.md` section 4).
+pub async fn require_owner(conn: &mut SqliteConnection, user: &AuthUser, classroom_id: &str) -> Result<(), ApiError> {
+    require_role(user, Role::Teacher)?;
+    let owner: Option<String> = sqlx::query_scalar("SELECT teacher_id FROM classrooms WHERE id = ?")
+        .bind(classroom_id)
+        .fetch_optional(conn)
+        .await?;
+    match owner {
+        None => Err(ApiError::not_found("Classroom not found")),
+        Some(owner) if owner != user.id => Err(ApiError::forbidden("Only the class owner can do this")),
+        Some(_) => Ok(()),
+    }
+}
+
 pub async fn require_writable(conn: &mut SqliteConnection, classroom_id: &str) -> Result<(), ApiError> {
     let archived: Option<i64> = sqlx::query_scalar("SELECT archived_at FROM classrooms WHERE id = ?")
         .bind(classroom_id)
