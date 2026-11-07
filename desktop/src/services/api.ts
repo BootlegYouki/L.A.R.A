@@ -6,14 +6,14 @@ export class ApiError extends Error {
   constructor(public code: string, public retryAfter = 0) { super(code); }
 }
 
-type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
+type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
   | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | { name: string; section: string } | { student_id: string } | SyncState | SyncPush; token?: string; signal?: AbortSignal;
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
-  if (!['/api/auth/login', '/api/auth/register', '/api/classrooms', '/api/classrooms/join','/api/sync/pull','/api/sync/push'].includes(path)
+  if (!['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/classrooms', '/api/classrooms/join','/api/sync/pull','/api/sync/push'].includes(path)
     && !/^\/api\/classrooms\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(roster|approve|reject|remove)$/i.test(path)) throw new ApiError('invalid_fields');
   const url = new URL(`http://${hub.ip}:${hub.http_port}${path}`).href;
   const controller = new AbortController();
@@ -27,7 +27,7 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   try {
     return await Promise.race([cancelled, (async () => {
       const response = await fetch(url, {
-        method: options.body ? 'POST' : 'GET', credentials: 'omit', redirect: 'error', maxRedirections: 0,
+        method: options.body || path === '/api/auth/logout' ? 'POST' : 'GET', credentials: 'omit', redirect: 'error', maxRedirections: 0,
         connectTimeout: 10000, signal: controller.signal,
         headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}) },

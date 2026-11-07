@@ -1,5 +1,14 @@
 import { isHubInfo, type HubInfo } from './discovery';
+import { invoke } from '@tauri-apps/api/core';
+import { withDatabaseTimeout } from './db';
+import type { CachedAccount } from './auth';
 const key = 'lara-desktop-hub';
+
+export async function countQueuedWork(account: CachedAccount): Promise<number> {
+  const count = await withDatabaseTimeout(invoke<unknown>('count_queued_work', { hub: account.hub, userId: account.user.id }));
+  if (typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0) throw new Error('invalid_queue_count');
+  return count;
+}
 
 export function saveHubPreference(hub: HubInfo): boolean {
   if (!isHubInfo(hub)) return false;

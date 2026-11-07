@@ -24,6 +24,7 @@ pub fn run() {
             sync::read_sync_state,
             sync::apply_sync_pull,
             sync::read_sync_queue,
+            sync::count_queued_work,
             sync::apply_sync_receipts,
             account::forget_account_session
         ])
@@ -98,6 +99,7 @@ mod permissions {
                     "/api/classrooms/join",
                     "/api/auth/login",
                     "/api/auth/register",
+                    "/api/auth/logout",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/roster",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/approve",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/reject",
@@ -120,7 +122,8 @@ mod permissions {
             "http://172.32.0.1:8080/api/classrooms",
             "http://192.168.1.2.evil.test/api/classrooms",
             "http://192.168.1.2:8080/download",
-            "http://192.168.1.2:8080/api/auth/logout",
+            "http://192.168.1.2:8080/api/auth/logout/extra",
+            "http://8.8.8.8:8080/api/auth/logout",
             "http://192.168.1.2:8080/api/sync/pull/extra",
             "http://192.168.1.2:8080/api/sync/other",
             "http://8.8.8.8:8080/api/sync/push",

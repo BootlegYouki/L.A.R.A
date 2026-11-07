@@ -177,3 +177,6 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 @media (max-width: 759px) { .roster-table th, .roster-table td { padding: 12px 8px; } .person-name { min-width: 120px; } .roster-actions { min-width: 100px; } }
 
 .destructive-button { background: var(--color-lara-danger-light); color: var(--color-lara-danger-dark); border: 1px solid var(--color-lara-danger-border); }
+.settings-page { display: grid; gap: 16px; }
+.settings-page h1 { font-size: 1.5rem; font-weight: 800; }
+.settings-page summary { min-height: 40px; align-content: center; cursor: pointer; }

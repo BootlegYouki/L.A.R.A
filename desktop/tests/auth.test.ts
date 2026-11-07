@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 const { fetch, invoke } = vi.hoisted(() => ({ fetch: vi.fn(), invoke: vi.fn() }));
 vi.mock('@tauri-apps/plugin-http', () => ({ fetch }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
-import { signIn, refreshClassrooms, restoreAccount, AuthError, parseSession } from '../src/services/auth';
+import { signIn, signOut, refreshClassrooms, restoreAccount, AuthError, parseSession } from '../src/services/auth';
 
 const hub = { name: 'Hub', ip: '192.168.1.50', http_port: 8080, ws_port: 8081 };
 const user = { id: '10000000-0000-4000-8000-000000000001', lrn_or_id: 'T-0001', full_name: 'Teacher', role: 'TEACHER' as const };
@@ -11,6 +11,38 @@ const response = (status: number, data: unknown, path = '/api/auth/login', retry
   status, url: `http://192.168.1.50:8080${path}`, headers: new Headers(retry ? { 'Retry-After': retry } : {}), json: async () => data,
 });
 afterEach(() => { vi.clearAllMocks(); vi.useRealTimers(); });
+
+it('clears the native session before posting logout with the captured token', async () => {
+  invoke.mockResolvedValueOnce('test-token').mockResolvedValueOnce(undefined);
+  fetch.mockResolvedValueOnce(response(200, { success: true }, '/api/auth/logout'));
+  await expect(signOut(account, true)).resolves.toBe(true);
+  expect(invoke).toHaveBeenNthCalledWith(2, 'forget_account_session', { hub, userId: user.id });
+  expect(invoke.mock.invocationCallOrder[1]).toBeLessThan(fetch.mock.invocationCallOrder[0]);
+  expect(fetch).toHaveBeenCalledWith('http://192.168.1.50:8080/api/auth/logout', expect.objectContaining({
+    method: 'POST', headers: { Authorization: 'Bearer test-token' }, redirect: 'error',
+  }));
+});
+
+it('clears locally without a network request while offline', async () => {
+  invoke.mockResolvedValueOnce(undefined);
+  await expect(signOut(account, false)).resolves.toBe(false);
+  expect(invoke).toHaveBeenCalledExactlyOnceWith('forget_account_session', { hub, userId: user.id });
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+it('reports an unconfirmed Hub logout after local cleanup if the connection drops', async () => {
+  invoke.mockResolvedValueOnce('test-token').mockResolvedValueOnce(undefined);
+  fetch.mockRejectedValueOnce(new Error('network lost'));
+  await expect(signOut(account, true)).resolves.toBe(false);
+  expect(invoke).toHaveBeenLastCalledWith('forget_account_session', { hub, userId: user.id });
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it('does not report success when native credential cleanup fails', async () => {
+  invoke.mockRejectedValueOnce(new Error('credential service unavailable'));
+  await expect(signOut(account, false)).rejects.toThrow('credential service unavailable');
+  expect(fetch).not.toHaveBeenCalled();
+});
 
 it('stores a validated session natively without persisting the PIN or arbitrary server fields', async () => {
   fetch.mockResolvedValue(response(200, { token: 'test-token', expires_at: account.expires_at, user: { ...user, pin_hash: 'must-not-persist' } }));
