@@ -26,7 +26,8 @@ class SyncSessionViewModel(private val container: AppContainer, private val user
     }.transform { event ->
         emit(event)
         if (event is HubEvent.HelloAck || event is HubEvent.Announcement) {
-            container.syncScheduler.enqueueNow()
+            if (event is HubEvent.HelloAck) container.syncScheduler.enqueueReconnect()
+            else container.syncScheduler.enqueueNow()
             try { container.sync.pull(userId) }
             catch (e: CancellationException) { throw e }
             catch (e: HubFailure) { if (e.status == 401) emit(HubEvent.SessionExpired) }

@@ -130,6 +130,9 @@ abstract class CacheDao {
         upsertAssignment(batch.assignments)
         for (row in batch.assignmentSubmissions.filter { findAssignmentSubmission(it.id)?.syncStatus !in setOf("QUEUED_FOR_SYNC", "REJECTED") }) {
             val existingId = assignmentSubmissionsKey(row.assignmentId, row.studentId)
+            // A second device's canonical ID must not overwrite this device's unsent photo.
+            if (existingId != null && existingId != row.id &&
+                findAssignmentSubmission(existingId)?.syncStatus in setOf("QUEUED_FOR_SYNC", "REJECTED")) continue
             require(existingId == null || existingId == row.id) { "Conflicting assignment_submissions unique key" }
             upsertAssignmentSubmission(listOf(row))
         }

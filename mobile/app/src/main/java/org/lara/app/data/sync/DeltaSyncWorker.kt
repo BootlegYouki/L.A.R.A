@@ -15,6 +15,7 @@ class DeltaSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         if (container.endpoints.load() == null) return Result.success()
         return try {
             container.forUser(userId).sync.synchronize(userId)
+            container.forUser(userId).homework.uploadQueued()
             Result.success()
         } catch (e: CancellationException) { throw e }
         catch (e: HubFailure) {
