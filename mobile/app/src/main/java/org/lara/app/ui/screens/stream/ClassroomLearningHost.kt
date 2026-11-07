@@ -30,6 +30,7 @@ import org.lara.app.domain.model.*
 import org.lara.app.ui.navigation.*
 import org.lara.app.ui.screens.classwork.MaterialReader
 import org.lara.app.ui.theme.*
+import org.lara.app.ui.screens.teacher.classes.teacherIds
 import java.text.DateFormat
 import java.util.Date
 
@@ -81,6 +82,15 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     })
     val action by model.action.collectAsStateWithLifecycle()
     var opened by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
+    var openedAssignment by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
+    val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
+    val selectedAssignment = assignments.find { it.id == openedAssignment }
+    if (selectedAssignment != null) {
+        key(selectedAssignment.id) {
+            org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null }
+        }
+        return
+    }
     val materials = (work as? Cached.Content)?.value?.materials.orEmpty().filter { it.fileType != "VIDEO" }
     val selected = materials.find { it.id == opened }
     if (selected != null) {
@@ -111,6 +121,15 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
                     materials.filter { it.announcementId == post.id }) { opened = it.id }
             }
         } else {
+            val learner = userId !in classroom.teacherIds()
+            if (learner) items(assignments, key = { "assignment-${it.id}" }) { assignment ->
+                org.lara.app.ui.components.ClassroomSurface {
+                    Text(assignment.title, style = MaterialTheme.typography.titleLarge)
+                    OutlinedButton(onClick = { openedAssignment = assignment.id }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Text(stringResource(R.string.homework_open))
+                    }
+                }
+            }
             val handouts = materials.filter { it.assignmentId == null && it.announcementId == null }
             if (handouts.isEmpty()) item { ReadingEmpty(R.string.reading_handouts_empty) }
             val topics = (work as? Cached.Content)?.value?.topics.orEmpty()

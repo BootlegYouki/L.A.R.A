@@ -40,6 +40,7 @@ abstract class LaraDatabase : RoomDatabase() {
     abstract fun cacheDao(): CacheDao
     abstract fun syncStateDao(): SyncStateDao
     abstract fun syncDao(): SyncDao
+    abstract fun homeworkDao(): HomeworkDao
 
     companion object {
         internal val classAccessCleanup = object : Callback() {
