@@ -80,13 +80,12 @@ impl Storage {
 
     /// Moves a complete upload into place under a new name. The caller has already refused an
     /// unrecognised format; one that slips through is an error, never a nameless file.
-    pub async fn commit(&self, upload: Received, kind: StorageKind) -> io::Result<StoredFile> {
+    pub async fn commit(&self, mut upload: Received, kind: StorageKind) -> io::Result<StoredFile> {
         let format = upload
             .format
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "unrecognised file format"))?;
         let relative = format!("{}/{}.{}", kind.dir(), Uuid::new_v4(), format.extension());
         let target = self.root.join(&relative);
-        let mut upload = upload;
         fs::rename(&upload.guard.path, &target).await?;
         upload.guard.disarm();
         Ok(StoredFile { guard: RemoveOnDrop::new(target), relative })
