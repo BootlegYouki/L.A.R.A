@@ -14,7 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 argon2 = "0.6"
-axum = "0.8"
+axum = { version = "0.8", features = ["multipart"] }
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 getrandom = "0.4"
 libmdns = "0.10"
@@ -34,7 +34,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
-reqwest = { version = "0.13", default-features = false, features = ["json"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "multipart"] }
 tempfile = "3"
 
 # Unoptimized, one argon2 PIN hash takes about 430 ms instead of about 20 ms, which makes every
