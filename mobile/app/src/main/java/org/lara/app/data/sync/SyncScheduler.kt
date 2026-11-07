@@ -18,6 +18,11 @@ class SyncScheduler(context: Context) {
     private var started = false
     private val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val networkChanges = changes.asSharedFlow()
+    fun enqueueHomework() {
+        manager.enqueueUniqueWork("lara-homework-upload", ExistingWorkPolicy.APPEND_OR_REPLACE,
+            OneTimeWorkRequestBuilder<HomeworkUploadWorker>().setConstraints(constraints())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build())
+    }
     fun enqueueNow() {
         manager.enqueueUniqueWork(NOW, ExistingWorkPolicy.APPEND_OR_REPLACE, oneTime())
     }
