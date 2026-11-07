@@ -2,14 +2,14 @@
 
 > **Developer-scored.** The test set is written and scored by the L.A.R.A development team, not by teachers or an adviser. These pass rates are not validated by educators (`rules/socratic-ai-guardrails.md` section 5.4). If a teacher or adviser reviews them later, record who and when here.
 
-> **Status: PROVISIONAL, scoring pending.** Speed and RAM below are measured. The four quality criteria are not scored yet, the Filipino and Taglish prompts are not yet reviewed by a Filipino-fluent teammate, and the runs were on a **simulated** school PC, not the pilot Hub. No model is chosen and `MODEL_PATH` is not set.
+> **Status: PROVISIONAL, scoring pending.** Speed and RAM below are measured, on a **simulated** school PC, not the pilot Hub. The main candidate has not yet run on the full English set (prompt set version 3), and no reply is scored. No model is chosen and `MODEL_PATH` is not set.
 
 ## What is still needed before a decision
-1. **Filipino review** of the Filipino and Taglish prompts, recorded in the `review` block of `server/ai_eval/prompts.json`. If the review changes a prompt, bump `version` and re-run.
-2. **Run three smaller Hub candidates:** Qwen2.5-1.5B, Llama-3.2-1B and SmolLM2-1.7B (the Lead, 2026-10-30), because only MiniCPM5-2B at 1 slot fits the 4 GB reference PC. Run them before the score sheets are written, so all seven models are scored in one pass. Add them to the same `--out` folder before the Filipino review is recorded in `prompts.json`: `run` refuses to add to a folder whose runs were made under a different `review` block. If the review changes a prompt, all seven models re-run in a new folder anyway.
-3. **Two scorers** fill `score_scorer_a.csv` and `score_scorer_b.csv` independently (four criteria, `P` or `F`). At least one must be fluent in Filipino. A prompt's author should not be its only scorer. Both follow `server/ai_eval/SCORING.md`; the Lead approved its three calls as written on 2026-10-30 (a copied stock question fails criterion 3, how refusals are scored on criterion 3, a reply cut off mid-sentence fails criterion 3). Scoring starts once the Filipino review is done. Scorers must not open `replies.jsonl` or `blind_key.json`, which name the models.
-4. **Merge** with `report` (below). Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the generated pass-rate table here.
-5. **Re-run on the real pilot Hub** when it is known. Same commands (Linux, below), new `--out` folder. The slot count is set from that run (see "Slots" below).
+Rescoped by the Lead on 2026-11-02, with the rule for Filipino and Taglish messages changed on 2026-11-05 (#233). The full plan and the pass mark are in #73.
+1. **Run** `Qwen3-30B-A3B-Instruct-2507` pruned REAP-15B-A3B, Q4_K_M, on prompt set version 3 at 1 and 2 learners, 4 threads, prompt cache on, on a 16 GB machine, into a new `--out` folder. `run_eval.py validate` and `run` refuse a system prompt without rule 6, the Filipino and Taglish decline line.
+2. **Two scorers** (@meliodaff, @OpenYaji) fill `score_scorer_a.csv` and `score_scorer_b.csv` alone, following `server/ai_eval/SCORING.md`. No Filipino reviewer is needed: the 33 Filipino and Taglish prompts pass only with the English decline line, and `socratic_shape` is not scored on them. Scorers must not open `replies.jsonl` or `blind_key.json`, which name the models.
+3. **Merge** with `report`. Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the pass-rate table and the Filipino and Taglish table here. That table's "Answered instead" column is the rate the Lead asked to see.
+4. **Decide** against the pass mark in #73, then write the Hub spec in `server/docs/hub_hardware.md`, and record `MODEL_PATH` and `server/docs/slm_inference_queue.md`.
 
 ## Hardware
 No pilot school PC is available yet, so the runs used a developer laptop set up as a simulated school PC. The full description is in `server/docs/hub_hardware.md` ("Pilot Hub hardware").
@@ -28,7 +28,7 @@ No pilot school PC is available yet, so the runs used a developer laptop set up 
 | Prompt set | `server/ai_eval/prompts.json` version 1, 54 prompts |
 | Slot runs | 1, 2 and 4 concurrent slots, all 54 prompts each, after one unrecorded warm-up request |
 
-How the system prompt's placeholders are filled (the Hub's prompt builder must match): `{reply_language}` is `English` or `Filipino` (from the request's `EN`/`FIL`), and `{lesson_chunks}` is each lesson section's heading and text, in order, separated by blank lines.
+How the system prompt's placeholders are filled (the Hub's prompt builder must match): `{reply_language}` is `English` (every request is `EN` for the pilot; a Filipino or Taglish message gets the rule 6 decline line), and `{lesson_chunks}` is each lesson section's heading and text, in order, separated by blank lines.
 
 ### Candidates
 | Name | File (Q4_K_M) | Size (MB) | SHA-256 | System role merged into user turn | Chat template options |
@@ -131,7 +131,7 @@ PYTHONUTF8=1 py server/ai_eval/run_eval.py report --out server/ai_eval/results/s
 
 The run took about 75 minutes on the laptop above. Re-running `run` with the same `--out` skips the runs already finished.
 
-Stage 2 adds the three smaller models to the same folder (before the Filipino review is recorded; see "What is still needed"):
+Stage 2 added the three smaller models to the same folder:
 
 ```bash
 PYTHONUTF8=1 py server/ai_eval/run_eval.py run \

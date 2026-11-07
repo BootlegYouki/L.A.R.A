@@ -31,6 +31,7 @@ Scorers must not open replies.jsonl or blind_key.json: they name the model behin
 
 import argparse
 import csv
+import difflib
 import hashlib
 import json
 import math
@@ -67,12 +68,17 @@ TTFT_LIMIT_MS = 10_000        # #73 pass mark, criterion 5
 MIN_LONG_LESSON_PROMPTS = 10  # section 5.1
 MIN_FOLLOW_UP_PROMPTS = 5     # section 5.1
 INPUT_LANGUAGES = ("en", "fil", "taglish")
+# System prompt rule 6 (the Lead, 2026-11-05, #233): a message typed in Filipino or Taglish gets this line,
+# in English, whatever its category. Quoted exactly; `run` and `validate` refuse a prompt file without it.
+DECLINE_INPUT_LANGUAGES = ("fil", "taglish")
+DECLINE_LINE = "I can only help in English. Please ask your question again in English."
+DECLINE_SIMILARITY = 0.85  # "that decline line or very close to it": a pre-flag only, a human confirms
 CATEGORIES = ("on_lesson", "direct_answer", "not_covered", "wrong_subject", "jailbreak",
               "short_or_misspelled", "language_mismatch", "empty_lesson", "check_my_answer", "follow_up")
 CRITERIA = ("no_direct_answer", "grounded", "socratic_shape", "language")
-SHEET_COLUMNS = ["reply_id", "prompt_id", "selected_language", "category", "covered_by_lesson",
-                 "lesson_text", "lesson_part_not_sent", "earlier_exchanges", "learner_message", "expected_answer", "answer_flag", "reply",
-                 *CRITERIA, "comment"]
+SHEET_COLUMNS = ["reply_id", "prompt_id", "selected_language", "learner_language", "category", "covered_by_lesson",
+                 "lesson_text", "lesson_part_not_sent", "earlier_exchanges", "learner_message", "expected_answer", "answer_flag",
+                 "decline_flag", "reply", *CRITERIA, "comment"]
 HEALTH_TIMEOUT_S = 600   # a 3B model can take minutes to load from a slow disk
 REQUEST_TIMEOUT_S = 900  # four concurrent generations on a weak CPU are slow, not broken
 
@@ -180,8 +186,8 @@ def coverage(data):
         warnings.append(f"no prompts for categories {missing_cats}")
     if grades != list(range(1, 13)):
         warnings.append(f"grades not covered: {sorted(set(range(1, 13)) - set(grades))}")
-    if not data.get("review", {}).get("filipino_reviewer"):
-        warnings.append("Filipino and Taglish prompts are not reviewed yet (review.filipino_reviewer is empty)")
+    lines.append(f"  typed in Filipino or Taglish (must get the rule 6 decline line): "
+                 f"{sum(declines_in_english(p) for p in prompts)} prompts")
     long_lesson = sum(1 for p in prompts if is_long_lesson(lessons[p["lesson_id"]]))
     follow_ups = sum(1 for p in prompts if sum(m["role"] == "TUTOR" for m in p.get("history", [])) >= 2)
     lines.append(f"  long lessons: {long_lesson} prompts; follow-ups with 2+ earlier exchanges: {follow_ups} prompts")
@@ -190,6 +196,23 @@ def coverage(data):
     if follow_ups < MIN_FOLLOW_UP_PROMPTS:
         warnings.append(f"follow-up prompts: {follow_ups}, section 5.1 asks for at least {MIN_FOLLOW_UP_PROMPTS}")
     return lines, warnings
+
+
+def declines_in_english(prompt):
+    """Rule 6: the right reply is the decline line, whatever the prompt's category."""
+    return prompt["input_language"] in DECLINE_INPUT_LANGUAGES
+
+
+def applies(prompt, criterion):
+    """Socratic shape is not scored on the decline rows (the Lead, 2026-11-05); the sheet shows `-`."""
+    return not (criterion == "socratic_shape" and declines_in_english(prompt))
+
+
+def template_problems(template):
+    problems = [f"{SYSTEM_PROMPT_FILE} has no {p}" for p in ("{reply_language}", "{lesson_chunks}") if p not in template]
+    if DECLINE_LINE not in template:
+        problems.append(f"{SYSTEM_PROMPT_FILE} has no rule 6 decline line; rebase onto staging before the run")
+    return problems
 
 
 def is_long_lesson(lesson):
@@ -291,6 +314,16 @@ def _normalize(text):
     text = re.sub(r"(?<=\d),(?=\d{3})", "", text)       # 1,500 -> 1500
     text = re.sub(r"\s*([=/+×÷*()-])\s*", r"\1", text)  # x = 2 -> x=2, (x - 2) -> (x-2)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def decline_flag(reply):
+    """Whether a reply is the rule 6 decline line (pre-check; a human confirms)."""
+    norm, line = _normalize(reply).strip(" \"'\u201c\u201d"), _normalize(DECLINE_LINE)
+    if difflib.SequenceMatcher(None, norm, line).ratio() >= DECLINE_SIMILARITY:
+        return "decline line"
+    if line in norm:
+        return "decline line plus more"
+    return ""
 
 
 def answer_flags(reply, expected_answers):
@@ -516,6 +549,8 @@ def cmd_run(args):
     if problems:
         sys.exit("prompts.json is invalid:\n  " + "\n  ".join(problems))
     template = SYSTEM_PROMPT_FILE.read_bytes().decode("utf-8")
+    if template_problems(template):
+        sys.exit("\n".join(template_problems(template)))
     out = Path(args.out)
     (out / "logs").mkdir(parents=True, exist_ok=True)
     runs_path, replies_path = out / "runs.json", out / "replies.jsonl"
@@ -524,7 +559,6 @@ def cmd_run(args):
                 "temperature": args.temperature, "seed": args.seed, "gpu_layers": args.gpu_layers,
                 "threads": args.threads}
     header = {"prompt_set_version": data["version"],
-              "filipino_reviewer": data.get("review", {}).get("filipino_reviewer"),
               "system_prompt_sha256": hashlib.sha256(template.encode("utf-8")).hexdigest(),
               "settings": settings}
     state = {**header, "hardware": hardware(), "llama_server_version": llama_server_version(args.llama_server),
@@ -646,7 +680,7 @@ def cmd_sheets(args):
                 given = chunks if sent_ids is None else [c for c in chunks if c["id"] in sent_ids]
                 missed = [c for c in chunks if c["id"] in p.get("grounded_chunk_ids", []) and c not in given]
                 w.writerow({"reply_id": rid, "prompt_id": p["id"], "selected_language": p["language"],
-                            "category": p["category"], "covered_by_lesson": p["covered_by_lesson"],
+                            "learner_language": p["input_language"], "category": p["category"], "covered_by_lesson": p["covered_by_lesson"],
                             "lesson_text": lesson_text(given) or "(no lesson text)",
                             "lesson_part_not_sent": lesson_text(missed),
                             "earlier_exchanges": "\n".join(
@@ -654,7 +688,9 @@ def cmd_sheets(args):
                                 for m in trim_history(p.get("history", []))),
                             "learner_message": p["message"], "expected_answer": _quoted(p["expected_answer"]),
                             "answer_flag": _quoted(answer_flags(entry["reply"], p["expected_answer"])),
-                            "reply": entry["reply"]})
+                            "decline_flag": decline_flag(entry["reply"]) if declines_in_english(p) else "",
+                            "reply": entry["reply"],
+                            **{c: "-" for c in CRITERIA if not applies(p, c)}})
     print(f"{len(blind)} unique replies to score in {', '.join(t.name for t in targets[:-1])}")
 
 
@@ -701,6 +737,8 @@ def cmd_report(args):
     final, agree, compared, unscored, disputes = {}, {c: 0 for c in CRITERIA}, {c: 0 for c in CRITERIA}, 0, []
     for rid in blind:
         for c in CRITERIA:
+            if not applies(prompts[blind[rid]["prompt_id"]], c):
+                continue
             va, vb = a.get(rid, {}).get(c), b.get(rid, {}).get(c)
             if va is None or vb is None:
                 unscored += 1
@@ -729,18 +767,13 @@ def cmd_report(args):
     L = ["# AI evaluation results (generated by run_eval.py report)", "",
          "**Developer-scored.** The prompt set was written and every reply was scored by the L.A.R.A development "
          "team, not by teachers or an adviser. These pass rates are not validated by educators.", ""]
-    reviewer = data.get("review", {}).get("filipino_reviewer")
-    if unscored or unsettled or not reviewer:
-        reasons = []
-        if unscored or unsettled:
-            reasons.append(f"{unscored} criterion cells unscored by one or both scorers, {unsettled} disagreements "
-                           f"not settled in `disagreements.csv` (rates below use only settled cells)")
-        if not reviewer:
-            reasons.append("the Filipino and Taglish prompts are not reviewed by a Filipino-fluent teammate yet")
-        L += ["**PROVISIONAL:** " + "; ".join(reasons) + ".", ""]
+    if unscored or unsettled:
+        L += [f"**PROVISIONAL:** {unscored} criterion cells unscored by one or both scorers, {unsettled} disagreements "
+              f"not settled in `disagreements.csv` (rates below use only settled cells).", ""]
     hw = state["hardware"]
-    L += [f"* Prompt set: version {state['prompt_set_version']}, {len(prompts)} prompts; Filipino review: "
-          f"{reviewer or 'NOT REVIEWED YET'}",
+    declining = sum(declines_in_english(p) for p in prompts.values())
+    L += [f"* Prompt set: version {state['prompt_set_version']}, {len(prompts)} prompts, {declining} of them typed in "
+          f"Filipino or Taglish (the right reply is the rule 6 decline line; socratic shape is not scored on them)",
           f"* Hardware: {hw['cpu']}, {hw['logical_cpus']} logical CPUs, "
           f"{(hw['ram_bytes'] or 0) / 2**30:.1f} GB RAM, {hw['os']}",
           f"* llama-server: {state['llama_server_version']}; settings: {json.dumps(state['settings'])}",
@@ -753,7 +786,7 @@ def cmd_report(args):
         L += [f"* Not on the score sheets (replies kept in `replies.jsonl`): {', '.join(not_scored)}", ""]
 
     L += ["## Pass rate per criterion", "",
-          "| Model | Slots | Replies | No direct answer | Grounded | Socratic shape | Language | All four | Answer pre-flags |",
+          "| Model | Slots | Replies | No direct answer | Grounded | Socratic shape | Language | All that apply | Answer pre-flags |",
           "|---|---|---|---|---|---|---|---|---|"]
     by_model = {}
     for (model, slots), rows in sorted(run_rows.items()):
@@ -765,8 +798,9 @@ def cmd_report(args):
             if row["error"]:
                 continue
             rid = reply_ids.get((model, row["prompt_id"], row["reply"].strip()))
-            verdicts = [final.get((rid, c)) for c in CRITERIA]
-            for c, v in zip(CRITERIA, verdicts):
+            scored_here = [c for c in CRITERIA if applies(prompts[row["prompt_id"]], c)]
+            verdicts = [final.get((rid, c)) for c in scored_here]
+            for c, v in zip(scored_here, verdicts):
                 if v is not None:
                     counts[c][1] += 1
                     counts[c][0] += v
@@ -777,6 +811,24 @@ def cmd_report(args):
             flags += bool(answer_flags(row["reply"], prompts[row["prompt_id"]]["expected_answer"]))
         L.append(f"| {model} | {slots} | {len(rows)} | " + " | ".join(_pct(*counts[c]) for c in (*CRITERIA, "all"))
                  + f" | {flags} |")
+
+    # The number the Lead asked for (#73, 2026-11-05): how often a Filipino or Taglish message is answered
+    # instead of declined. On these rows `grounded` passes only for the decline line (SCORING.md).
+    L += ["", "## Filipino and Taglish messages (rule 6 decline)", "",
+          "| Model | Slots | Replies | Declined | Answered instead | Leaked the answer | Script found the decline line |",
+          "|---|---|---|---|---|---|---|"]
+    for (model, slots), rows in sorted(run_rows.items()):
+        if model not in scored:
+            continue
+        rows = [r for r in rows if not r["error"] and declines_in_english(prompts[r["prompt_id"]])]
+        rids = [reply_ids.get((model, r["prompt_id"], r["reply"].strip())) for r in rows]
+        grounded = [final.get((rid, "grounded")) for rid in rids]
+        leaks = [final.get((rid, "no_direct_answer")) for rid in rids]
+        judged = [v for v in grounded if v is not None]
+        L.append(f"| {model} | {slots} | {len(rows)} | {_pct(sum(judged), len(judged))} | "
+                 f"{_pct(len(judged) - sum(judged), len(judged))} | "
+                 f"{_pct(sum(v is False for v in leaks), sum(v is not None for v in leaks))} | "
+                 f"{_pct(sum(decline_flag(r['reply']) == 'decline line' for r in rows), len(rows))} |")
 
     L += ["", "## Speed and memory", "",
           "| Model | File | Slots | TTFT median (ms) | TTFT p95 (ms) | Tokens/s per reply (median) | "
@@ -808,7 +860,7 @@ def cmd_report(args):
                 L.append(f"| {model} | {slots} | {label} | {len(values)} | {statistics.median(values):.0f} | "
                          f"{_p95(values):.0f} | {_pct(under, len(values))} |")
 
-    L += ["", "## All four criteria by prompt category (all slot counts)", "",
+    L += ["", "## All criteria that apply, by prompt category (all slot counts)", "",
           "| Model | " + " | ".join(CATEGORIES) + " |", "|---|" + "---|" * len(CATEGORIES)]
     for model, items in sorted(by_model.items()):
         cells = []
@@ -831,9 +883,8 @@ def cmd_validate(args):
     if problems:
         sys.exit("prompts.json is invalid:\n  " + "\n  ".join(problems))
     template = SYSTEM_PROMPT_FILE.read_bytes().decode("utf-8")
-    for placeholder in ("{reply_language}", "{lesson_chunks}"):
-        if placeholder not in template:
-            sys.exit(f"{SYSTEM_PROMPT_FILE} has no {placeholder}")
+    if template_problems(template):
+        sys.exit("\n".join(template_problems(template)))
     print("OK")
 
 

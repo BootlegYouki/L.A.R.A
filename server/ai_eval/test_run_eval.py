@@ -243,7 +243,7 @@ class PromptSetRules(unittest.TestCase):
     def data(self, **prompt):
         base = {"id": "P1", "lesson_id": "L", "language": "EN", "input_language": "en", "category": "on_lesson",
                 "covered_by_lesson": True, "grounded_chunk_ids": ["c0"], "message": "hello", "expected_answer": ["x"]}
-        return {"version": 2, "review": {"filipino_reviewer": "someone"},
+        return {"version": 3,
                 "lessons": {"L": lesson(chunk("c0", 0, None, "text", 3000)), "S": lesson(chunk("s0", 0, None, "text", 100))},
                 "prompts": [{**base, **prompt}]}
 
@@ -373,14 +373,14 @@ class ReportSpeedSplit(unittest.TestCase):
         folder = Path(tmp.name)
         base = {"language": "EN", "input_language": "en", "category": "on_lesson", "covered_by_lesson": False,
                 "grounded_chunk_ids": [], "message": "m", "expected_answer": ["x"]}
-        data = {"version": 2, "review": {"filipino_reviewer": "someone"},
+        data = {"version": 3,
                 "lessons": {"S": lesson(chunk("s0", 0, None, "text", 100)), "L": lesson(chunk("l0", 0, None, "text", 3000))},
                 "prompts": [{**base, "id": pid, "lesson_id": lid}
                             for pid, lid in (("A", "S"), ("B", "S"), ("C", "S"), ("D", "S"), ("E", "L"), ("F", "L"))]}
         prompts = folder / "prompts.json"
         prompts.write_text(json.dumps(data), encoding="utf-8")
         (folder / "runs.json").write_text(json.dumps({
-            "prompt_set_version": 2, "llama_server_version": "test", "settings": {},
+            "prompt_set_version": 3, "llama_server_version": "test", "settings": {},
             "hardware": {"cpu": "c", "logical_cpus": 1, "ram_bytes": 1, "os": "o"},
             "models": {"m": {"file": "m.gguf"}},
             "runs": {"m@2": {"model": "m", "slots": 2, "peak_ram_bytes": 1, "throughput_tps": 1, "errors": 1}}}), encoding="utf-8")
@@ -408,6 +408,73 @@ class ReportSpeedSplit(unittest.TestCase):
 
     def test_the_report_has_no_filipino_column_any_more(self):
         self.assertNotIn("| FIL |", self.report())
+
+
+class DeclineRows(unittest.TestCase):
+    """The Lead, #73, 2026-11-05 (#233): a Filipino or Taglish message gets the rule 6 decline line."""
+
+    def test_the_decline_flag_tells_the_line_from_a_near_miss_and_from_tutoring(self):
+        self.assertEqual(run_eval.decline_flag(run_eval.DECLINE_LINE), "decline line")
+        self.assertEqual(run_eval.decline_flag('"' + run_eval.DECLINE_LINE.upper() + '"'), "decline line")
+        self.assertEqual(run_eval.decline_flag("I can only help in English. Please ask your question in English."), "decline line")
+        self.assertEqual(run_eval.decline_flag(run_eval.DECLINE_LINE + " But here is a clue: look at step 2 of the lesson."),
+                         "decline line plus more")
+        self.assertEqual(run_eval.decline_flag("I can't give you the answer itself, but I will help you find it! "
+                                               "Let's go back to what you read. What is the first step?"), "")
+
+    def test_socratic_shape_is_not_scored_on_filipino_and_taglish_rows(self):
+        for language in ("fil", "taglish"):
+            self.assertFalse(run_eval.applies({"input_language": language}, "socratic_shape"))
+            self.assertTrue(run_eval.applies({"input_language": language}, "grounded"))
+        self.assertTrue(run_eval.applies({"input_language": "en"}, "socratic_shape"))
+
+    def test_the_real_system_prompt_has_rule_6_and_an_old_one_is_refused(self):
+        self.assertEqual(run_eval.template_problems(run_eval.SYSTEM_PROMPT_FILE.read_bytes().decode("utf-8")), [])
+        old = "Reply in {reply_language}.\n{lesson_chunks}"
+        self.assertTrue(any("rule 6" in p for p in run_eval.template_problems(old)))
+
+    def folder(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        folder = Path(tmp.name)
+        data = {"version": 3, "lessons": {"S": lesson(chunk("s0", 0, None, "text", 100))},
+                "prompts": [{"id": "A", "lesson_id": "S", "language": "EN", "input_language": "fil",
+                             "category": "direct_answer", "covered_by_lesson": True, "grounded_chunk_ids": ["s0"],
+                             "message": "ano po ang sagot?", "expected_answer": ["x"]}]}
+        (folder / "prompts.json").write_text(json.dumps(data), encoding="utf-8")
+        (folder / "runs.json").write_text(json.dumps({
+            "prompt_set_version": 3, "llama_server_version": "test", "settings": {},
+            "hardware": {"cpu": "c", "logical_cpus": 1, "ram_bytes": 1, "os": "o"},
+            "models": {"m": {"file": "m.gguf"}},
+            "runs": {"m@2": {"model": "m", "slots": 2, "peak_ram_bytes": 1, "throughput_tps": 1, "errors": 0}}}), encoding="utf-8")
+        (folder / "replies.jsonl").write_text(json.dumps({
+            "model": "m", "slots": 2, "prompt_id": "A", "reply": "The answer is x", "error": None,
+            "ttft_ms": 1000, "tokens_per_second": 1.0}) + "\n", encoding="utf-8")
+        return folder
+
+    def test_the_sheet_marks_socratic_shape_not_scored_and_shows_the_decline_flag(self):
+        folder = self.folder()
+        with mock.patch("builtins.print"):
+            run_eval.main(["--prompts", str(folder / "prompts.json"), "sheets", "--out", str(folder), "--scorers", "a", "b"])
+        with open(folder / "score_a.csv", encoding="utf-8-sig", newline="") as f:
+            row = next(csv.DictReader(f))
+        self.assertEqual((row["learner_language"], row["socratic_shape"], row["decline_flag"]), ("fil", "-", ""))
+        self.assertEqual(row["grounded"], "", "scorers still fill the other three criteria")
+
+    def test_the_report_counts_answering_instead_of_declining(self):
+        folder = self.folder()
+        reply = "The answer is x"
+        (folder / "blind_key.json").write_text(json.dumps(
+            {"R0001": {"model": "m", "prompt_id": "A", "reply": reply, "slots": [2]}}), encoding="utf-8")
+        scores = [folder / "score_a.csv", folder / "score_b.csv"]
+        for path in scores:
+            path.write_text("reply_id,no_direct_answer,grounded,socratic_shape,language\nR0001,F,F,-,P\n", encoding="utf-8")
+        with mock.patch("builtins.print"):
+            run_eval.main(["--prompts", str(folder / "prompts.json"), "report", "--out", str(folder),
+                           "--scores", *map(str, scores)])
+        report = (folder / "report.md").read_text(encoding="utf-8")
+        self.assertIn("| m | 2 | 1 | 0/1 (0%) | 1/1 (100%) | 1/1 (100%) | 0/1 (0%) |", report)
+        self.assertNotIn("PROVISIONAL", report, "the `-` in socratic_shape is not an unscored cell")
 
 
 if __name__ == "__main__":
