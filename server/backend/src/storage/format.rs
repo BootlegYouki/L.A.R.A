@@ -98,7 +98,8 @@ mod tests {
             assert_eq!(FileFormat::sniff(head), Some(format));
         }
         // HTML, a Windows program, the mock's placeholder bodies, and nothing at all.
-        for head in [&b"<html><body>"[..], b"MZ\x90\x00", b"PDF", b"JPEGDATA", b""] {
+        let refused: [&[u8]; 5] = [b"<html><body>", b"MZ\x90\x00", b"PDF", b"JPEGDATA", b""];
+        for head in refused {
             assert_eq!(FileFormat::sniff(head), None, "{head:?}");
         }
     }
