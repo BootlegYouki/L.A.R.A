@@ -44,3 +44,10 @@ pub async fn close(db: &SqlitePool, token: &str) -> Result<(), sqlx::Error> {
     sqlx::query("DELETE FROM sessions WHERE token_hash = ?").bind(token_hash(token)).execute(&mut *tx).await?;
     tx.commit().await
 }
+
+/// Signs the user out everywhere, inside the caller's write transaction. A PIN reset calls it so
+/// whoever already holds a session from the old PIN is refused from the same commit.
+pub async fn close_all(tx: &mut SqliteConnection, user_id: &str) -> Result<(), sqlx::Error> {
+    sqlx::query("DELETE FROM sessions WHERE user_id = ?").bind(user_id).execute(&mut *tx).await?;
+    Ok(())
+}

@@ -17,6 +17,8 @@
   "admin_pin": "4-digit PIN",
   "admin_pin_digit": "PIN digit {digit}",
   "admin_pin_help": "Use four digits, including any leading zeros.",
+  "admin_pin_digits_only": "Digits only.",
+  "admin_pin_short": "The PIN must be 4 digits.",
   "admin_setup_action": "Set admin PIN",
   "admin_login_action": "Sign in",
   "admin_existing_action": "Admin already set up? Sign in",

@@ -58,6 +58,8 @@ async fn reset_pin(
     if !users::reset_pin(&mut tx, &id, &pin_hash, app.clock.now_ms()).await? {
         return Err(ApiError::not_found("User not found"));
     }
+    // A reset is how the admin answers a leaked PIN, so the old sessions end with it.
+    sessions::close_all(&mut tx, &id).await?;
     tx.commit().await?;
     Ok(Json(json!({"success": true})))
 }
