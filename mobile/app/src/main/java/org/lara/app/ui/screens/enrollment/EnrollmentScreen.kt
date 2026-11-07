@@ -47,12 +47,13 @@ fun EnrollmentScreen(
     onSubmit: (String) -> Unit,
     onOpenClass: (String) -> Unit,
     onCodeChanged: () -> Unit = {},
+    teacherNames: Map<String, String> = emptyMap(),
 ) {
     val classes = (state.classes as? Cached.Content)?.value.orEmpty()
     val cachedIds = classes.map { it.classroom.id }.toSet()
     val requests = state.requests.filterNot { it.classroomId in cachedIds }
     val loadingLabel = stringResource(R.string.enrollment_loading)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         item { Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium) }
         if (state.offline) item {
@@ -96,7 +97,7 @@ fun EnrollmentScreen(
             EnrollmentCard(item.classroom.name, item.classroom.section,
                 if (denied) requireNotNull(notice).status else item.status,
                 state.openableClass(item.classroom.id) != null,
-                onOpen = { onOpenClass(item.classroom.id) })
+                onOpen = { onOpenClass(item.classroom.id) }, teacher = teacherNames[item.classroom.teacherId])
         }
         items(requests, key = { "request:" + it.classroomId }) { item ->
             EnrollmentCard(item.title ?: stringResource(R.string.enrollment_request_title), null,
@@ -107,26 +108,12 @@ fun EnrollmentScreen(
 }
 
 @Composable
-private fun EnrollmentCard(title: String, section: String?, status: EnrollmentStatus, canOpen: Boolean, onOpen: () -> Unit) {
-    val active = status == EnrollmentStatus.ACTIVE
+private fun EnrollmentCard(title: String, section: String?, status: EnrollmentStatus, canOpen: Boolean, onOpen: () -> Unit, teacher: String? = null) {
     val label = when (status) {
         EnrollmentStatus.PENDING -> R.string.enrollment_pending
         EnrollmentStatus.ACTIVE -> if(canOpen) R.string.enrollment_active else R.string.enrollment_approval_received
         EnrollmentStatus.REJECTED -> R.string.enrollment_rejected
         EnrollmentStatus.REMOVED -> R.string.enrollment_removed
     }
-    Surface(color = LaraColors.Surface, shape = LaraShapes.large, border = BorderStroke(1.dp, LaraColors.Border),
-        modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(enabled = canOpen, onClick = onOpen)) {
-        Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            section?.let { Text(it, color = LaraColors.TextSecondary) }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                Icon(painterResource(if(active) R.drawable.ic_check_circle else R.drawable.ic_warning_circle), null,
-                    tint = if(active) LaraColors.PrimaryDark else LaraColors.WarningDark)
-                Text(stringResource(label), color = if(active) LaraColors.PrimaryDark else LaraColors.WarningBannerText)
-            }
-            if(canOpen) Text(stringResource(R.string.enrollment_open), color = LaraColors.PrimaryDark,
-                style = MaterialTheme.typography.labelLarge)
-        }
-    }
+    org.lara.app.ui.components.ClassroomCard(title, section, teacher, stringResource(label), canOpen, onOpen)
 }

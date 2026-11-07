@@ -38,6 +38,7 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
             } }) }
     })
     val state by model.state.collectAsStateWithLifecycle()
+    val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
     var selectedId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     val selected = state.openableClass(selectedId)
     EnrollmentSession(model)
@@ -47,31 +48,20 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
     BackHandler(enabled = selected != null) { selectedId = null }
     if (selected == null) {
         Scaffold(containerColor = LaraColors.Canvas, topBar = {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S4),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text(stringResource(R.string.learner_classroom), Modifier.weight(1f).padding(vertical = LaraSpacing.S4),
-                        style = MaterialTheme.typography.titleLarge)
-                    org.lara.app.ui.screens.settings.SettingsAction()
-                }
-            }
+            org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.app_name))
         }) { insets ->
             Box(Modifier.fillMaxSize().padding(insets)) {
                 EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit,
-                    onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id }, onCodeChanged = model::onInputChanged)
+                    onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id }, onCodeChanged = model::onInputChanged,
+                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name })
             }
         }
     } else {
-        LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.classroom.id}", learnerClassActions = {
-            Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4)) {
-                TextButton(onClick = { selectedId = null }, modifier = Modifier.heightIn(min = MinTouchTarget),
-                    colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark)) {
-                    Text(stringResource(R.string.enrollment_all_classes))
-                }
-                Text(selected.classroom.name, style = MaterialTheme.typography.titleMedium)
-            }
-        }, content = { destination ->
+        CompositionLocalProvider(org.lara.app.ui.components.LocalClassChrome provides
+            org.lara.app.ui.components.ClassChrome(selected.classroom.name, selected.classroom.section) { selectedId = null }) {
+        LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.classroom.id}", content = { destination ->
             org.lara.app.ui.screens.stream.ClassroomLearningHost(container, userId, destination, selected.classroom.id)
         })
+        }
     }
 }

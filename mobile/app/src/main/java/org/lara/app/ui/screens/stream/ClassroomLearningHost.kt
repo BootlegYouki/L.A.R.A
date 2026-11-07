@@ -2,6 +2,8 @@ package org.lara.app.ui.screens.stream
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,7 +89,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     }
     if (posts == Cached.Loading || work == Cached.Loading) { ReadingSkeleton(); return }
     val announcements = (posts as? Cached.Content)?.value.orEmpty()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
+    LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         item {
             Surface(modifier = Modifier.laraShadow(), color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.large) {
@@ -129,6 +133,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
 }
 
 @Composable
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 private fun AnnouncementCard(container: AppContainer, post: Announcement, userId: String,
     names: List<CommentAuthor>, action: CommentAction, model: StreamViewModel,
     attachments: List<Material>, onOpen: (Material) -> Unit) {
@@ -180,13 +185,23 @@ private fun AnnouncementCard(container: AppContainer, post: Announcement, userId
                     }
                 }
                 if (post.allowComments) {
+                    val composer = remember { BringIntoViewRequester() }
+                    var focused by remember { mutableStateOf(false) }
+                    val keyboardHeight = WindowInsets.ime.getBottom(LocalDensity.current)
+                    LaunchedEffect(keyboardHeight, focused) { if (focused) composer.bringIntoView() }
+                    Column(Modifier.fillMaxWidth().bringIntoViewRequester(composer),
+                        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                     OutlinedTextField(value = draft, onValueChange = { draft = it }, label = { Text(stringResource(R.string.reading_add_comment)) },
-                        modifier = Modifier.fillMaxWidth(), enabled = post.id !in action.sending, minLines = 2)
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
+                            focused = focus.isFocused
+                        }, shape = LaraShapes.extraLarge,
+                        enabled = post.id !in action.sending, minLines = 2)
                     if (post.id in action.failed) Text(stringResource(R.string.reading_comment_failed), color = LaraColors.DangerDark)
                     Button(onClick = { model.send(post.id, draft) { draft = "" } },
                         enabled = draft.isNotBlank() && post.id !in action.sending,
                         modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                         Text(stringResource(R.string.reading_send))
+                    }
                     }
                 }
             }
@@ -207,8 +222,14 @@ private fun MaterialRow(material: Material, open: () -> Unit) {
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 Text(material.title, style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(if (material.localFilePath == null) R.string.reading_open_handout else R.string.reading_saved_handout),
-                    style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+                Surface(color = if (material.localFilePath == null) LaraColors.InfoLight else LaraColors.PrimaryLight,
+                    shape = LaraShapes.small) {
+                    Text(stringResource(if (material.localFilePath == null) R.string.reading_save_home_badge else R.string.reading_saved_device_badge),
+                        Modifier.padding(horizontal = LaraSpacing.S2, vertical = LaraSpacing.S1),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (material.localFilePath == null) LaraColors.InfoDark else LaraColors.PrimaryDark)
+                }
+                Text(stringResource(R.string.reading_open), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
             }
             if (material.localFilePath != null) Icon(painterResource(R.drawable.ic_check_circle), null,
                 Modifier.size(24.dp), tint = LaraColors.PrimaryDark)

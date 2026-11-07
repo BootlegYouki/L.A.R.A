@@ -2,11 +2,13 @@ package org.lara.app.ui.screens.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -20,9 +22,8 @@ val LocalOpenSettings = staticCompositionLocalOf<(() -> Unit)?> { null }
 @Composable
 fun SettingsAction() {
     val open = LocalOpenSettings.current ?: return
-    TextButton(onClick = open, modifier = Modifier.heightIn(min = MinTouchTarget),
-        colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.Surface)) {
-        Text(stringResource(R.string.settings_title))
+    IconButton(onClick = open, modifier = Modifier.size(MinTouchTarget)) {
+        Icon(painterResource(R.drawable.ic_gear), stringResource(R.string.settings_title), tint = LaraColors.Surface)
     }
 }
 

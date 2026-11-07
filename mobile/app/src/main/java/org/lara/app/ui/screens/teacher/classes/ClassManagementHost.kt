@@ -27,6 +27,7 @@ import org.lara.app.domain.enrollment.ClassCode
 import org.lara.app.ui.theme.*
 import org.lara.app.ui.components.DiscoveryBanner
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun ClassManagementEntry(container: AppContainer, userId: String, reachable: StateFlow<Boolean>, expired: () -> Unit) {
@@ -35,17 +36,30 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
         Text(stringResource(R.string.classes_manage))
     }
     if (open) Dialog(onDismissRequest = { open = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        val latestExpired by rememberUpdatedState(expired)
-        val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
-            initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
-        })
-        val online by reachable.collectAsStateWithLifecycle()
-        ClassManagementScreen(model, userId, online) { open = false }
+        ClassManagementPage(container, userId, reachable, expired, close = { open = false })
     }
 }
 
 @Composable
-private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit) {
+fun ClassManagementPage(container: AppContainer, userId: String, reachable: StateFlow<Boolean>, expired: () -> Unit,
+    initialClassId: String? = null, embedded: Boolean = false, close: () -> Unit) {
+    val latestExpired by rememberUpdatedState(expired)
+    val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
+        initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
+    })
+    LaunchedEffect(model, initialClassId) {
+        if (initialClassId != null) {
+            model.state.first { !it.busy }
+            model.select(initialClassId)
+        }
+    }
+    val online by reachable.collectAsStateWithLifecycle()
+    ClassManagementScreen(model, userId, online, close, embedded)
+}
+
+@Composable
+private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit,
+    embedded: Boolean = false) {
     val cached by model.classrooms.collectAsStateWithLifecycle()
     val teacherNames by model.teacherNames.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
@@ -61,10 +75,12 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
     val clipboard = LocalClipboardManager.current
     val enabled = online && !state.busy
     BackHandler { if (form != null) form = null else close() }
-    Scaffold(containerColor = LaraColors.Canvas) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S4),
+    Scaffold(containerColor = LaraColors.Canvas, topBar = {
+        if (!embedded) org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.classes_manage), selected?.name, close)
+    }) { padding ->
+        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S3),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            item {
+            if (!embedded) item {
                 Surface(color = LaraColors.PrimaryLight, shape = LaraShapes.large) {
                     Column(Modifier.fillMaxWidth().padding(LaraSpacing.S6), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                         Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(LaraSpacing.S12), tint = LaraColors.PrimaryDark)
@@ -73,21 +89,20 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     }
                 }
             }
-            item { OutlinedButton(onClick = close, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.settings_back)) } }
             if (!online) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
             else state.error?.let { message -> item { DiscoveryBanner(message, warning = true, success = false) } }
-            item { Button(enabled = enabled, onClick = { name = ""; section = ""; form = "create" },
+            if (!embedded) item { Button(enabled = enabled, onClick = { name = ""; section = ""; form = "create" },
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_create)) } }
             item { OutlinedButton(enabled = enabled, onClick = model::refresh, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.classes_refresh))
             } }
             if (state.busy || cached == Cached.Loading) item { org.lara.app.ui.screens.teacher.ApprovalLoadingSkeleton() }
             if (cached != Cached.Loading && classes.isEmpty()) item { Text(stringResource(R.string.classes_empty)) }
-            items(classes, key = { it.id }) { row ->
+            if (!embedded) items(classes, key = { it.id }) { row ->
                 ManagedClassCard(row, selected?.id == row.id, !state.busy) { model.select(row.id) }
             }
             selected?.let { row ->
-                item {
+                if (!embedded) item {
                     ClassInfoCard {
                     Text(row.name, style = MaterialTheme.typography.headlineSmall, color = LaraColors.PrimaryDark)
                     Text(row.section, color = LaraColors.TextSecondary)
@@ -104,7 +119,7 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     Text(stringResource(R.string.classes_code_help), color = LaraColors.TextSecondary)
                     }
                 }
-                item {
+                if (!embedded) item {
                     val owner = row.canManage(userId, true)
                     TabRow(selectedTabIndex = if (settingsTab && owner) 1 else 0) {
                         Tab(selected = !settingsTab || !owner, onClick = { settingsTab = false },

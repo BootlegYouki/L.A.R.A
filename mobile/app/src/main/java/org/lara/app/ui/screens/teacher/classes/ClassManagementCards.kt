@@ -16,10 +16,7 @@ import org.lara.app.ui.theme.*
 
 @Composable
 internal fun ClassInfoCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxWidth().laraShadow(), shape = LaraShapes.large,
-        color = LaraColors.Surface, border = BorderStroke(1.dp, LaraColors.Border)) {
-        Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3), content = content)
-    }
+    org.lara.app.ui.components.ClassroomSurface(content = content)
 }
 
 @Composable
