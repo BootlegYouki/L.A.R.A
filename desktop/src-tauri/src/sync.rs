@@ -1204,6 +1204,28 @@ pub async fn apply_sync_pull(
     apply(&mut db, &user, &expected, payload).await
 }
 #[tauri::command]
+pub async fn count_queued_work(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+) -> Result<i64, &'static str> {
+    let _guard = accounts.0.lock().await;
+    let user_id = user_id.to_ascii_lowercase();
+    accounts.require_sync_selection(&hub, &user_id)?;
+    let (mut db, _) = context(&app, &hub, &user_id).await?;
+    sqlx::query_scalar("SELECT
+        (SELECT COUNT(*) FROM announcement_comments WHERE sync_status = 'QUEUED_FOR_SYNC' AND author_id = ?1) +
+        (SELECT COUNT(*) FROM private_comments WHERE sync_status = 'QUEUED_FOR_SYNC' AND author_id = ?1) +
+        (SELECT COUNT(*) FROM quiz_attempts WHERE sync_status = 'QUEUED_FOR_SYNC' AND student_id = ?1) +
+        (SELECT COUNT(*) FROM assignment_submissions WHERE sync_status = 'QUEUED_FOR_SYNC' AND student_id = ?1)")
+        .bind(user_id)
+        .fetch_one(&mut db)
+        .await
+        .map_err(|_| ERROR)
+}
+
+#[tauri::command]
 pub async fn read_sync_queue(
     app: tauri::AppHandle,
     accounts: tauri::State<'_, Accounts>,
