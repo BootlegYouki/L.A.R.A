@@ -174,3 +174,66 @@ async fn a_300_mb_upload_is_refused_and_leaves_no_file() {
     assert_eq!(class.count("SELECT COUNT(*) FROM sync_revisions WHERE entity_table = 'materials'").await, 0);
     class.hub.stop().await;
 }
+
+#[tokio::test]
+async fn members_download_the_bytes_with_range_and_token() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    let url = material["download_url"].as_str().unwrap();
+    let (status, headers, bytes) = class.hub.get_file(url, Some(&class.learner_token), None).await;
+    assert_eq!((status, bytes.as_slice()), (200, PDF));
+    assert_eq!(headers["content-type"], "application/octet-stream");
+    assert_eq!(headers["x-content-type-options"], "nosniff");
+    let with_query = format!("{url}?token={}", class.learner_token);
+    let (status, _, bytes) = class.hub.get_file(&with_query, None, None).await;
+    assert_eq!((status, bytes.as_slice()), (200, PDF), "players that cannot send headers use ?token=");
+    let (status, headers, bytes) = class.hub.get_file(url, Some(&class.learner_token), Some("bytes=0-3")).await;
+    assert_eq!((status, bytes.as_slice()), (206, &b"%PDF"[..]));
+    assert_eq!(headers["content-range"], format!("bytes 0-3/{}", PDF.len()));
+    let co_teacher = class.co_teacher("T-0003").await;
+    assert_eq!(class.hub.get_file(url, Some(&co_teacher), None).await.0, 200);
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn outsiders_cannot_download() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    let url = material["download_url"].as_str().unwrap();
+    assert_eq!(class.hub.get_file(url, None, None).await.0, 401);
+    assert_eq!(class.hub.get_file(&format!("{url}?token=not-a-session"), None, None).await.0, 401);
+    let (status, body) = class.hub.get("/api/materials/no-such-material/download", Some(class.teacher())).await;
+    assert_eq!((status, body["error"]["message"].as_str()), (404, Some("Material not found")));
+    let (_, pending) = class.add_learner("123456789013", false).await;
+    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.open_session(outsider).await;
+    let (_, other_teacher) = class.teacher_token("T-0002").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "1234").await;
+    let admin = class.hub.open_session(admin).await;
+    for token in [&pending, &outsider, &other_teacher, &admin] {
+        let (status, body) = class.hub.get(url, Some(token)).await;
+        assert_eq!((status, body["error"]["message"].as_str()), (403, Some("Not your class")));
+    }
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn a_missing_file_is_404_not_500() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    let stored = class.files_in("materials").remove(0);
+    std::fs::remove_file(class.hub.state().storage.root().join("materials").join(stored)).unwrap();
+    let (status, body) = class.hub.get(material["download_url"].as_str().unwrap(), Some(&class.learner_token)).await;
+    assert_eq!((status, body["error"]["code"].as_str()), (404, Some("NOT_FOUND")));
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn downloads_still_work_in_an_archived_class() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    class.archive().await;
+    let (status, _, bytes) = class.hub.get_file(material["download_url"].as_str().unwrap(), Some(&class.learner_token), None).await;
+    assert_eq!((status, bytes.as_slice()), (200, PDF));
+    class.hub.stop().await;
+}

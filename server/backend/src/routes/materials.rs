@@ -1,15 +1,17 @@
-//! Lesson files (contract `/api/materials`). Upload is step 3.3; rename, delete, chunks (3.1) and
-//! the video stream (3.2) are still stubs.
+//! Lesson files (contract `/api/materials`). Upload and download are step 3.3; rename, delete,
+//! chunks (3.1) and the video stream (3.2) are still stubs.
 
 use axum::extract::multipart::MultipartRejection;
-use axum::extract::{DefaultBodyLimit, Multipart, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Request, State};
 use axum::http::HeaderMap;
+use axum::response::Response;
 use axum::routing::{get, patch, post};
 use axum::{Json, Router};
 
+use super::files::serve_stored;
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
 use super::{not_implemented_signed_in as stub, not_implemented_teacher as teacher};
-use crate::auth::{require_role, AuthUser, Role};
+use crate::auth::{require_role, AuthUser, MediaUser, Role};
 use crate::db::begin_immediate;
 use crate::db::materials::{self, Attachment, NewMaterial};
 use crate::error::ApiError;
@@ -24,7 +26,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/materials", post(upload).layer(DefaultBodyLimit::max(UPLOAD_BODY_LIMIT)))
         .route("/api/materials/{id}", patch(teacher).delete(teacher))
-        .route("/api/materials/{id}/download", get(stub))
+        .route("/api/materials/{id}/download", get(download))
         .route("/api/materials/{id}/chunks", get(stub))
         .route("/api/materials/{id}/stream", get(stub))
 }
@@ -86,4 +88,20 @@ async fn upload(
     tx.commit().await?;
     stored.keep();
     Ok(Json(material))
+}
+
+/// Any member of the class, also while it is archived (read-only, not hidden). The contract and the
+/// mock send `application/octet-stream`; the client knows the kind from `Material.file_type`.
+async fn download(
+    State(app): State<AppState>,
+    MediaUser(user): MediaUser,
+    Path(id): Path<String>,
+    request: Request,
+) -> Result<Response, ApiError> {
+    let mut conn = app.db.acquire().await?;
+    let file = materials::file_of(&mut conn, &id).await?.ok_or_else(|| ApiError::not_found("Material not found"))?;
+    class_access::require_member(&mut conn, &user, &file.classroom_id).await?;
+    drop(conn);
+    let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
+    serve_stored(path, "application/octet-stream", request, &id).await
 }

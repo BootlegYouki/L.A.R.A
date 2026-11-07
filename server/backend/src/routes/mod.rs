@@ -9,6 +9,7 @@ mod backup;
 mod body;
 mod classrooms;
 mod export;
+mod files;
 mod materials;
 mod portal;
 mod quizzes;
