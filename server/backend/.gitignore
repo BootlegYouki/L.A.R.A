@@ -1,3 +1,6 @@
 # The root .gitignore drops every `models/` folder to keep AI weights out of git. This one is
 # Rust source (server/docs/TECH_SPEC.md: models/user.rs, models/classroom.rs, ...), so keep it.
 !/src/models/
+# Same for `storage/`, which the root drops to keep uploaded files out of git: this one is the
+# Rust module that writes them (TECH_SPEC section 3).
+!/src/storage/
