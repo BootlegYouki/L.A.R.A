@@ -96,9 +96,10 @@ async fn resubmitting_replaces_the_file_and_keeps_one_row_and_the_grade() {
 #[tokio::test]
 async fn two_resubmits_at_once_leave_one_row_and_one_file() {
     let class = class_with_assignment().await;
+    let (photo_a, photo_b) = (jpeg("A"), jpeg("B"));
     let (a, b) = tokio::join!(
-        submit(&class, &class.learner_token, "sub-1", &jpeg("A")),
-        submit(&class, &class.learner_token, "sub-1", &jpeg("B")),
+        submit(&class, &class.learner_token, "sub-1", &photo_a),
+        submit(&class, &class.learner_token, "sub-1", &photo_b),
     );
     assert_eq!((a.0, b.0), (200, 200), "{} {}", a.1, b.1);
     assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 1);

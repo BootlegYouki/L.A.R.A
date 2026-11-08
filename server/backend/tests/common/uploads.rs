@@ -129,14 +129,15 @@ impl Class {
             .await;
     }
 
-    async fn post_row(&self, table: &'static str, id: &str, sql: &str) {
+    // sqlx 0.9 takes query text as `SqlSafeStr`, which a plain `&str` is only when it is 'static.
+    async fn post_row(&self, table: &'static str, id: &str, sql: &'static str) {
         let mut tx = db::begin_immediate(&self.hub.state().db).await.unwrap();
         sqlx::query(sql).bind(id).bind(&self.id).execute(&mut *tx).await.unwrap();
         record_revision(&mut tx, Scope::class(&self.id), table, id, Action::Upsert, 1).await.unwrap();
         tx.commit().await.unwrap();
     }
 
-    pub async fn exec(&self, sql: &str, binds: &[&str]) {
+    pub async fn exec(&self, sql: &'static str, binds: &[&str]) {
         let mut query = sqlx::query(sql);
         for value in binds {
             query = query.bind(*value);
@@ -144,7 +145,7 @@ impl Class {
         query.execute(&self.hub.state().db).await.unwrap();
     }
 
-    pub async fn count(&self, sql: &str) -> i64 {
+    pub async fn count(&self, sql: &'static str) -> i64 {
         sqlx::query_scalar::<_, i64>(sql).fetch_one(&self.hub.state().db).await.unwrap()
     }
 
