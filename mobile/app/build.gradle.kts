@@ -28,6 +28,14 @@ android {
     bundle { language { enableSplit = false } }
     testOptions { unitTests.isIncludeAndroidResources = true }
     packaging { jniLibs { useLegacyPackaging = true } }
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
     sourceSets.getByName("test").resources.srcDir(rootProject.file("../contracts/schema"))
     sourceSets.getByName("test").java.srcDir("src/sharedTest/java")
     sourceSets.getByName("androidTest").java.srcDir("src/sharedTest/java")

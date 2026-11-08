@@ -1,5 +1,7 @@
 # MOBILE 3.2 automated checkpoint
 
+Latest review results are in [the November 8 verification](lead-review-2026-11-08/README.md), covering contract #257, Room v3, 166 tests per variant, the 3 GB emulator and ARM-only release sizes. The sections below preserve the original November 7 checkpoint.
+
 Branch `codex/9-mobile-3.2-homework-camera`, based on staging `4a01df0` after #250 merged. See [prerequisites and implementation](../../homework-capture.md).
 
 ## Passed

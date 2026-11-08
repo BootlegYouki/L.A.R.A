@@ -59,7 +59,7 @@ class HomeworkMockTest {
             sync.pull(learner.user.id)
             val upload = HomeworkApi(learnerApi)
             val repository = HomeworkRepository(db, root, learner.user.id,
-                { assignment, id, file -> upload.upload(learner.user.id, assignment, id, file) }, {})
+                { assignment, id, file, turnedInAt -> upload.upload(learner.user.id, assignment, id, file, turnedInAt) }, {})
             val file = File(root, "photo.jpg").apply { writeBytes(byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0xd9.toByte())) }
             repository.turnIn(assignmentId, file)
             repository.uploadQueued()
@@ -68,6 +68,38 @@ class HomeworkMockTest {
             assertEquals("SYNCED", saved.syncStatus)
             assertEquals(file.path, saved.filePath)
             assertTrue(file.isFile)
+            assertNotNull(saved.receivedAt)
+            fun patch(path: String, body: String) {
+                val edit = Request.Builder().url(hub.restBase + path)
+                    .header("Authorization", "Bearer ${teacher.token}")
+                    .patch(body.toRequestBody("application/json".toMediaType())).build()
+                OkHttpClient().newCall(edit).execute().use { assertEquals(200, it.code) }
+            }
+            val deadline = saved.submittedAt + 1
+            patch("/api/assignments/$assignmentId", """{"due_date":$deadline,"allow_late":false}""")
+            fun replacement(marker: Byte) = File.createTempFile("replacement-", ".jpg", root).apply {
+                writeBytes(byteArrayOf(0xff.toByte(), 0xd8.toByte(), marker, 0xff.toByte(), 0xd9.toByte()))
+            }
+            repository.turnIn(assignmentId, replacement(1))
+            val offline = requireNotNull(db.homeworkDao().find(assignmentId, learner.user.id))
+            db.homeworkDao().save(offline.copy(submittedAt = deadline - 1))
+            repository.uploadQueued()
+            val received = requireNotNull(db.homeworkDao().find(assignmentId, learner.user.id))
+            assertEquals("SYNCED", received.syncStatus)
+            assertEquals(deadline - 1, received.submittedAt)
+            assertTrue(requireNotNull(received.receivedAt) > deadline)
+            repository.turnIn(assignmentId, replacement(2))
+            repository.uploadQueued()
+            assertEquals("LATE_SUBMISSION", db.homeworkDao().find(assignmentId, learner.user.id)?.syncRejectReason)
+            patch("/api/submissions/${received.id}", """{"score":90,"teacher_feedback":"Synthetic feedback"}""")
+            repository.turnIn(assignmentId, replacement(3))
+            repository.uploadQueued()
+            val rejected = requireNotNull(db.homeworkDao().find(assignmentId, learner.user.id))
+            assertEquals("REJECTED", rejected.syncStatus)
+            assertEquals("ALREADY_GRADED", rejected.syncRejectReason)
+            assertTrue(File(rejected.filePath).isFile)
+            repository.uploadQueued()
+            assertEquals(rejected, db.homeworkDao().find(assignmentId, learner.user.id))
         } finally { db.close(); root.deleteRecursively() }
     }
 }

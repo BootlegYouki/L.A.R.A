@@ -14,7 +14,7 @@ import org.lara.app.data.remote.HubFailure
 import org.lara.app.data.remote.dto.SubmissionDto
 
 class HomeworkRepository(private val db: LaraDatabase, private val root: File, private val userId: String,
-    private val upload: suspend (String, String, File) -> SubmissionDto, private val onQueued: () -> Unit) {
+    private val upload: suspend (String, String, File, Long) -> SubmissionDto, private val onQueued: () -> Unit) {
     private val mutex = Mutex()
     fun observe(assignmentId: String) = db.homeworkDao().observe(assignmentId, userId)
 
@@ -67,7 +67,7 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
                 continue
             }
             try {
-                val receipt = upload(row.assignmentId, row.id, file)
+                val receipt = upload(row.assignmentId, row.id, file, row.submittedAt)
                 db.withTransaction {
                     checkOwner()
                     require(db.syncStateDao().get("hub_id")?.value == expectedHub)
@@ -77,7 +77,7 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
                         if (receipt.id != row.id) db.homeworkDao().adoptId(row.id, receipt.id)
                         db.homeworkDao().save(row.copy(id = receipt.id, syncStatus = "SYNCED", score = receipt.score,
                             teacherFeedback = receipt.teacherFeedback, submittedAt = receipt.submittedAt,
-                            updatedAt = receipt.updatedAt ?: receipt.submittedAt))
+                            updatedAt = receipt.updatedAt ?: receipt.submittedAt, receivedAt = receipt.receivedAt))
                         db.syncStateDao().put(SyncStateEntity("queued_hub:assignment_submissions:${receipt.id}", expectedHub, row.updatedAt))
                     }
                 }

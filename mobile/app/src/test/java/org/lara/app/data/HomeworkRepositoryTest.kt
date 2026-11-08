@@ -26,6 +26,7 @@ class HomeworkRepositoryTest {
     private lateinit var repository: HomeworkRepository
     private var queued = 0
     private var calls = mutableListOf<String>()
+    private val sentTimes = mutableListOf<Long>()
     private var failure: Exception? = null
     private var canonicalId: String? = null
 
@@ -39,10 +40,11 @@ class HomeworkRepositoryTest {
             enrollments = listOf(EnrollmentEntity("enrollment", "class", "learner", "ACTIVE", 1, 1)),
             assignments = listOf(AssignmentEntity("assignment", "class", "Notebook", dueDate = Long.MAX_VALUE, createdAt = 1, updatedAt = 1))))
         db.syncStateDao().put(SyncStateEntity("hub_id", "hub-a", 1))
-        repository = HomeworkRepository(db, root, "learner", { assignment, id, _ ->
+        repository = HomeworkRepository(db, root, "learner", { assignment, id, _, turnedInAt ->
             calls.add(id)
+            sentTimes.add(turnedInAt)
             failure?.let { throw it }
-            SubmissionDto(canonicalId ?: id, assignment, "learner", "IMAGE", 2, updatedAt = 2)
+            SubmissionDto(canonicalId ?: id, assignment, "learner", "IMAGE", 2, updatedAt = 2, receivedAt = 3)
         }, { queued++ })
     }
 
@@ -63,7 +65,25 @@ class HomeworkRepositoryTest {
         failure = null
         repository.uploadQueued()
         assertEquals(listOf(saved.id, saved.id), calls)
+        assertEquals(listOf(saved.submittedAt, saved.submittedAt), sentTimes)
         assertEquals("SYNCED", db.homeworkDao().find("assignment", "learner")?.syncStatus)
+        assertEquals(3L, db.homeworkDao().find("assignment", "learner")?.receivedAt)
+    }
+
+    @Test fun lateAndGradedRejectionsKeepWorkWithoutRetrying(): Unit = runBlocking {
+        for (reason in listOf("LATE_SUBMISSION", "ALREADY_GRADED")) {
+            val file = photo()
+            repository.turnIn("assignment", file)
+            failure = HubFailure(409, reason)
+            repository.uploadQueued()
+            val saved = requireNotNull(db.homeworkDao().find("assignment", "learner"))
+            assertEquals("REJECTED", saved.syncStatus)
+            assertEquals(reason, saved.syncRejectReason)
+            assertTrue(file.isFile)
+            val uploaded = calls.size
+            repository.uploadQueued()
+            assertEquals(uploaded, calls.size)
+        }
     }
 
     @Test fun refusesToUploadWorkBoundToAnotherHub(): Unit = runBlocking {

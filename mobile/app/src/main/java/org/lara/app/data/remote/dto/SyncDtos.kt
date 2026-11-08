@@ -120,6 +120,7 @@ data class SubmissionDto(
     @SerialName("score") val score: Long? = null,
     @SerialName("teacher_feedback") val teacherFeedback: String? = null,
     @SerialName("updated_at") val updatedAt: Long? = null,
+    @SerialName("received_at") val receivedAt: Long? = null,
 )
 
 @Serializable

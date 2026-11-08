@@ -248,4 +248,6 @@
     <string name="homework_failed">Your photo could not be saved or turned in. Keep this screen open and try again.</string>
     <string name="homework_photo_hint">Take a photo of your notebook page.</string>
     <string name="homework_photo_description">Your homework photo</string>
+    <string name="homework_rejected_late">The deadline has passed. Ask your teacher whether late work can be accepted.</string>
+    <string name="homework_rejected_graded">This homework has already been graded. Ask your teacher before replacing it.</string>
 </resources>

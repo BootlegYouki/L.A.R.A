@@ -2,7 +2,7 @@
 
 ## Prerequisites checked
 
-Started from staging `4a01df0`, which includes merged MOBILE 3.1.1 (#250) and all earlier mobile steps.
+Started from staging `4a01df0`, including MOBILE 3.1.1 (#250), then rebased onto `87f4413` for the homework contract merged in #257.
 
 | Requirement | Staging result |
 |---|---|
@@ -16,7 +16,7 @@ Started from staging `4a01df0`, which includes merged MOBILE 3.1.1 (#250) and al
 
 ## Boundaries
 
-The PRD and contract take precedence over the design-system assignment table's take-back action. Supported submission actions follow the contract's file-replacement route. Graded resubmission semantics remain an open PRD question, so graded work stays read-only in the capture screen and Hub grades are preserved.
+The PRD and contract take precedence over the design-system assignment table. Turn in records the device timestamp once in the queued row. Every multipart retry sends that same value as `turned_in_at`. The Hub provides effective `submitted_at` and arrival `received_at`. A 409 `LATE_SUBMISSION` or `ALREADY_GRADED` records `REJECTED` and its reason, retains the file and stops automatic retries. The learner sees the specific explanation. Graded work is read-only in the capture screen. The worker can still retry an already-queued identical file under the Hub idempotency contract.
 
 Camera files stay app-private. Compression runs off the main thread, corrects orientation, fits within a 1920-by-1080 envelope in either orientation, starts at JPEG quality 75 and reduces quality until strictly below 800 KB. Capture originals are removed after a compressed copy is safely written. Gallery originals are never modified.
 
@@ -33,7 +33,7 @@ Queued files must remain durable through process death, sign-out, retries and sy
 - A successful Hub handshake schedules the existing reconnect worker immediately, bypassing an earlier offline retry chain. Announcement events retain the regular queue. Phone evidence covers foreground recovery with Wi-Fi unchanged.
 - Replacement drafts explicitly say that Turn in is required for the new version. Bottom navigation reserves space for two enlarged label lines at 200% text.
 
-Implementation and evidence live in `mobile/`. Room version 2 stores accepted JPEG references. Capture and document review use CameraX, EXIF and OpenCV.
+Implementation and evidence live in `mobile/`. Room version 3 stores accepted JPEG references and the nullable Hub receipt time. Migration 2→3 adds `received_at` in place, preserving queued work, account/session state and cursor values. Migration 1→3 chains the existing rejection migration. Capture and document review use CameraX, EXIF and OpenCV.
 
 ## OpenCV document review
 
@@ -48,14 +48,22 @@ Capture and gallery import automatically open an adjusted, enhanced preview. Con
 
 Enhance clarity defaults on. It estimates paper illumination at low resolution, blends a mild shadow correction into neutral regions, and applies CLAHE to luminance while retaining chroma. Colored regions retain their original illumination before the contrast step. The preview supports returning to corner adjustment and switching enhancement off. Use this photo creates the final JPEG under 800 KB and replaces the local draft. Turn in queues the accepted image. Cancelling review preserves earlier drafts and submissions. Draft cleanup checks Room references before deleting a JPEG, protecting a queued file after process restoration.
 
-Native libraries use compressed APK packaging. The universal debug APK is approximately 80 MB with the bundled OpenCV engine and the existing supported architectures.
+Native libraries use compressed packaging and ARM-only ABI splits. Release APKs are 20,197,165 bytes for `arm64-v8a` and 18,487,291 bytes for `armeabi-v7a`, unsigned. The emulator test uses a temporary x86_64 init-script override. Release sizes, hashes and ABI contents are recorded in the lead-review evidence.
 
-This extends the original framing-guide scope at the user's request. Quality, native-library size, memory and timing evidence are recorded alongside the normal capture/upload checks. Budget-device certification remains a separate verification requirement.
+This extends the original framing-guide scope at the user's request. Quality, native-library size, memory and timing evidence are recorded alongside the normal capture/upload checks. The Lead-approved 3 GB emulator verification is recorded below.
 
 ## Verification still required
 
-Automated checkpoint passed 164 Debug and 164 Release tests, lint, 67 shared tests and invariants. It includes mock upload and retry checks. Results are in [evidence/9](evidence/9/README.md).
+Latest validation passed 166 Debug and 166 Release tests, lint, 68 shared tests and invariants. It includes mock upload and retry checks. Results are in [evidence/9](evidence/9/README.md).
 
 Phone evidence now covers real camera capture, the camera-permission fallback, gallery import, offline cold launch, sign-out retention, automatic foreground reconnect, replacement upload and 200% text. The real captured JPEG was 1080×1440 and 112,387 bytes. The gallery replacement reached the mock byte-for-byte with one submission retained. A later foreground reconnect uploaded in 9.03 seconds with Wi-Fi unchanged.
 
 The target 3–4 GB budget-phone compression measurement, peak-memory profiling, physical isolated-LAN testing and real-Hub submission integration remain pending. The Xiaomi reports 7,495,244 kB of physical memory; its synthetic 12MP timing results are in the evidence and apply to that device.
+
+## Lead review verification on 2026-11-08
+
+The contract update, Room migration and ARM release builds passed 166 Debug and 166 Release tests with no failures or skips, lint, and 68 shared tests under Python 3.11. The workflow's changed-area, branch-flow and co-author checks also passed locally.
+
+The Lead-approved 3 GB emulator alternative passed CameraX capture, document processing and compression. Peak combined allocated Java/native heap was 143,334,624 bytes, sampled every 5 ms. Camera JPEG encoding took 13.367 ms, scanned 12 MP JPEG encoding 48.358 ms, and direct 12 MP decode/resize/JPEG compression took 90.579, 72.445 and 60.094 ms. Normalize, detect and render took 508 ms for the camera image and 1,583 ms for the 12 MP synthetic page. These processing times are separate from JPEG compression.
+
+[Reproduction steps, raw results and remaining integration checks](evidence/9/lead-review-2026-11-08/README.md)

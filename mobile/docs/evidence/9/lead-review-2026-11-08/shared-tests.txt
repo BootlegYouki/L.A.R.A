@@ -1,0 +1,426 @@
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+test_all_json_keys_in_openapi_are_snake_case (test_contract_coverage.TestContractCoverage.test_all_json_keys_in_openapi_are_snake_case) ... ok
+test_every_event_schema_is_implemented_and_documented (test_contract_coverage.TestContractCoverage.test_every_event_schema_is_implemented_and_documented) ... ok
+[HTTP] 127.0.0.1 - "GET /download HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "POST /api/auth/logout HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/admin/users/00000000-0000-4000-8000-000000000000/reset-pin HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/remove HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/teachers HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "DELETE /api/classrooms/00000000-0000-4000-8000-000000000000/teachers/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/00000000-0000-4000-8000-000000000000/roster HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/approve HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/reject HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/topics HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/topics/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "DELETE /api/topics/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/announcements/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "DELETE /api/announcements/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/announcements/00000000-0000-4000-8000-000000000000/comments HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/announcements/00000000-0000-4000-8000-000000000000/comments HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/materials HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/materials/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "DELETE /api/materials/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/download HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/chunks HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/stream HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/assignments HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "DELETE /api/assignments/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/00000000-0000-4000-8000-000000000000/private-comments HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/00000000-0000-4000-8000-000000000000/private-comments HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/00000000-0000-4000-8000-000000000000/submit HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/00000000-0000-4000-8000-000000000000/submissions HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/submissions/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/submissions/00000000-0000-4000-8000-000000000000/file HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/active HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/start HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/begin HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/close HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/submit HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/00000000-0000-4000-8000-000000000000/results HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/export/class-record HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/backup HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/restore HTTP/1.1" 401 -
+test_every_openapi_operation_is_served_by_the_mock_hub (test_contract_coverage.TestContractCoverage.test_every_openapi_operation_is_served_by_the_mock_hub) ... ok
+test_mock_hub_does_not_serve_undocumented_api_routes (test_contract_coverage.TestContractCoverage.test_mock_hub_does_not_serve_undocumented_api_routes) ... ok
+test_student_schemas_never_declare_correct_answer (test_contract_coverage.TestContractCoverage.test_student_schemas_never_declare_correct_answer) ... ok
+test_one_shared_socratic_system_prompt (test_contracts.TestContracts.test_one_shared_socratic_system_prompt) ... ok
+test_openapi_yaml_exists_and_valid (test_contracts.TestContracts.test_openapi_yaml_exists_and_valid) ... ok
+test_required_event_schemas_exist (test_contracts.TestContracts.test_required_event_schemas_exist) ... ok
+test_sqlite_schemas_valid_and_executable (test_contracts.TestContracts.test_sqlite_schemas_valid_and_executable) ... ok
+test_color_kt_has_every_sample_color (test_design_tokens.TestDesignTokens.test_color_kt_has_every_sample_color) ... ok
+test_kotlin_theme_uses_only_tokens (test_design_tokens.TestDesignTokens.test_kotlin_theme_uses_only_tokens) ... ok
+test_no_gradients_and_no_external_urls_in_design_files (test_design_tokens.TestDesignTokens.test_no_gradients_and_no_external_urls_in_design_files) ... ok
+test_sample_was_parsed (test_design_tokens.TestDesignTokens.test_sample_was_parsed) ... ok
+test_shape_kt_has_what_the_showcase_code_uses (test_design_tokens.TestDesignTokens.test_shape_kt_has_what_the_showcase_code_uses) ... ok
+test_tailwind_theme_and_theme_css_have_every_sample_color (test_design_tokens.TestDesignTokens.test_tailwind_theme_and_theme_css_have_every_sample_color) ... ok
+test_tokens_css_has_every_showcase_variable_with_the_same_value (test_design_tokens.TestDesignTokens.test_tokens_css_has_every_showcase_variable_with_the_same_value) ... ok
+test_tokens_json_contains_every_showcase_color (test_design_tokens.TestDesignTokens.test_tokens_json_contains_every_showcase_color) ... ok
+test_type_scale_matches_the_showcase_kotlin (test_design_tokens.TestDesignTokens.test_type_scale_matches_the_showcase_kotlin) ... ok
+test_analytics_pattern_matches_the_sdk_not_the_word (test_guardrail_scanner.TestGuardrailScanner.test_analytics_pattern_matches_the_sdk_not_the_word) ... ok
+test_gitattributes_cannot_hide_a_violation_from_the_scan (test_guardrail_scanner.TestGuardrailScanner.test_gitattributes_cannot_hide_a_violation_from_the_scan) ... ok
+test_scanner_flags_forbidden_cloud_libs (test_guardrail_scanner.TestGuardrailScanner.test_scanner_flags_forbidden_cloud_libs) ... ok
+test_scanner_flags_play_services_and_analytics (test_guardrail_scanner.TestGuardrailScanner.test_scanner_flags_play_services_and_analytics) ... ok
+test_scanner_passes_normal_android_build_lines (test_guardrail_scanner.TestGuardrailScanner.test_scanner_passes_normal_android_build_lines) ... ok
+test_script_catches_dependency_in_gradle_kts_and_css_import (test_guardrail_scanner.TestGuardrailScanner.test_script_catches_dependency_in_gradle_kts_and_css_import) ... ok
+test_script_fails_when_it_cannot_diff_against_the_base (test_guardrail_scanner.TestGuardrailScanner.test_script_fails_when_it_cannot_diff_against_the_base) ... ok
+test_script_ignores_files_that_legitimately_name_forbidden_things (test_guardrail_scanner.TestGuardrailScanner.test_script_ignores_files_that_legitimately_name_forbidden_things) ... ok
+test_script_ignores_markdown_and_binary_assets (test_guardrail_scanner.TestGuardrailScanner.test_script_ignores_markdown_and_binary_assets) ... ok
+test_script_passes_a_clean_change (test_guardrail_scanner.TestGuardrailScanner.test_script_passes_a_clean_change) ... ok
+test_script_scans_extensions_nobody_listed (test_guardrail_scanner.TestGuardrailScanner.test_script_scans_extensions_nobody_listed) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 409 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 200 -
+test_admin_is_its_own_account_and_setup_runs_once (test_mock_hub.TestMockHub.test_admin_is_its_own_account_and_setup_runs_once) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+test_admin_login_is_hub_pc_only (test_mock_hub.TestMockHub.test_admin_login_is_hub_pc_only) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 200 -
+test_admin_routes_are_admin_only (test_mock_hub.TestMockHub.test_admin_routes_are_admin_only) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e21c9371-2d84-4840-acde-687ae31ea6ee/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e21c9371-2d84-4840-acde-687ae31ea6ee/begin HTTP/1.1" 200 -
+test_ai_tutor_locked_while_quiz_in_progress (test_mock_hub.TestMockHub.test_ai_tutor_locked_while_quiz_in_progress) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+test_ai_tutor_streams_when_no_quiz_active (test_mock_hub.TestMockHub.test_ai_tutor_streams_when_no_quiz_active) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+test_archived_class_is_read_only_until_unarchived (test_mock_hub.TestMockHub.test_archived_class_is_read_only_until_unarchived) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 403 -
+test_archived_class_refuses_join_and_decisions (test_mock_hub.TestMockHub.test_archived_class_refuses_join_and_decisions) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 404 -
+test_bad_class_code (test_mock_hub.TestMockHub.test_bad_class_code) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+test_bad_websocket_token_closes_with_4401 (test_mock_hub.TestMockHub.test_bad_websocket_token_closes_with_4401) ... unittest\case.py:579: ResourceWarning: unclosed <socket.socket fd=632, family=2, type=1, proto=0, laddr=('127.0.0.1', 55727), raddr=('127.0.0.1', 8099)>
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/b117cdba-4126-4b71-b83d-67d050fc2cf3/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/download HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/b117cdba-4126-4b71-b83d-67d050fc2cf3 HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/b117cdba-4126-4b71-b83d-67d050fc2cf3/begin HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/acc98a4f-7829-4304-ac8b-aa42198511cc/submissions HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 200 -
+test_class_content_is_closed_to_people_outside_the_class (test_mock_hub.TestMockHub.test_class_content_is_closed_to_people_outside_the_class) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+test_classrooms_for_teacher_and_pupil (test_mock_hub.TestMockHub.test_classrooms_for_teacher_and_pupil) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_cursor_never_misses_changes_made_in_the_same_millisecond (test_mock_hub.TestMockHub.test_cursor_never_misses_changes_made_in_the_same_millisecond) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/reject HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/reject HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+test_enrollment_transitions_retries_and_rejoin (test_mock_hub.TestMockHub.test_enrollment_transitions_retries_and_rejoin) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_first_pull_returns_everything_and_identifies_the_hub (test_mock_hub.TestMockHub.test_first_pull_returns_everything_and_identifies_the_hub) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/7454b3ed-df58-448b-bafa-5f5579d3165b/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/7454b3ed-df58-448b-bafa-5f5579d3165b/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/7454b3ed-df58-448b-bafa-5f5579d3165b/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/7454b3ed-df58-448b-bafa-5f5579d3165b/close HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_held_scores_stay_hidden_until_the_teacher_closes_the_quiz (test_mock_hub.TestMockHub.test_held_scores_stay_hidden_until_the_teacher_closes_the_quiz) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 409 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/submissions/future-time HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/d74293b8-5b9d-4ca1-9b6e-354d368a6922/submit HTTP/1.1" 409 -
+test_homework_late_submission_rules_and_idempotent_retry (test_mock_hub.TestMockHub.test_homework_late_submission_rules_and_idempotent_retry) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+test_join_approve_flow_pushes_websocket_events (test_mock_hub.TestMockHub.test_join_approve_flow_pushes_websocket_events) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 429 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+test_login_rate_limit_and_register_checks (test_mock_hub.TestMockHub.test_login_rate_limit_and_register_checks) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/materials HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/materials/318d6205-797d-4a29-ab0c-8773e4d86a49 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/materials/318d6205-797d-4a29-ab0c-8773e4d86a49 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_material_can_be_attached_renamed_and_deleted (test_mock_hub.TestMockHub.test_material_can_be_attached_renamed_and_deleted) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_newly_visible_class_arrives_with_its_older_rows (test_mock_hub.TestMockHub.test_newly_visible_class_arrives_with_its_older_rows) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/703bfab8-aa74-4e74-8ae7-d266464c0433/private-comments HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/703bfab8-aa74-4e74-8ae7-d266464c0433/private-comments HTTP/1.1" 400 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/703bfab8-aa74-4e74-8ae7-d266464c0433/private-comments?student_id=fe42895f-49fc-4286-b399-991976fa0378 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/703bfab8-aa74-4e74-8ae7-d266464c0433/private-comments HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/assignments/703bfab8-aa74-4e74-8ae7-d266464c0433/private-comments HTTP/1.1" 200 -
+test_private_comments_reach_only_that_learner_and_the_teacher (test_mock_hub.TestMockHub.test_private_comments_reach_only_that_learner_and_the_teacher) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_pull_from_a_different_hub_or_epoch_asks_for_a_reset (test_mock_hub.TestMockHub.test_pull_from_a_different_hub_or_epoch_asks_for_a_reset) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_pull_never_leaks_pin_data_or_other_pupils_lrn (test_mock_hub.TestMockHub.test_pull_never_leaks_pin_data_or_other_pupils_lrn) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners (test_mock_hub.TestMockHub.test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/878f4cc4-3dca-4993-aae0-da471e9a2d3c HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/878f4cc4-3dca-4993-aae0-da471e9a2d3c/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/878f4cc4-3dca-4993-aae0-da471e9a2d3c HTTP/1.1" 409 -
+test_quiz_can_be_edited_only_while_it_is_a_draft (test_mock_hub.TestMockHub.test_quiz_can_be_edited_only_while_it_is_a_draft) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/1746b156-6d7d-471b-941d-25033674bb3e/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/1746b156-6d7d-471b-941d-25033674bb3e HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/1746b156-6d7d-471b-941d-25033674bb3e/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/1746b156-6d7d-471b-941d-25033674bb3e/submit HTTP/1.1" 200 -
+test_quiz_grading_and_grade_event (test_mock_hub.TestMockHub.test_quiz_grading_and_grade_event) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers/c4d784ea-518e-412e-acc4-af164d6ca8d7 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_removed_learner_loses_the_class_and_co_teacher_gains_it (test_mock_hub.TestMockHub.test_removed_learner_loses_the_class_and_co_teacher_gains_it) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 401 -
+test_requires_bearer_token (test_mock_hub.TestMockHub.test_requires_bearer_token) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream?token=70ff6460c0684af6b1d070c33c091eda9900cf15fe344b368ff066fa2c5b1c0b HTTP/1.1" 206 -
+test_stream_accepts_token_query_for_html5_video (test_mock_hub.TestMockHub.test_stream_accepts_token_query_for_html5_video) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/announcements/754e3bfd-e886-4a3f-9004-7d48a3b3b022/comments HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/announcements/754e3bfd-e886-4a3f-9004-7d48a3b3b022/comments HTTP/1.1" 403 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+test_stream_comments_are_only_for_members_of_the_class (test_mock_hub.TestMockHub.test_stream_comments_are_only_for_members_of_the_class) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/7de005c1-2dc6-46f5-a756-e51ae10b9d9b/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/active HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/7de005c1-2dc6-46f5-a756-e51ae10b9d9b HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/quizzes/7de005c1-2dc6-46f5-a756-e51ae10b9d9b HTTP/1.1" 200 -
+test_student_quiz_never_contains_correct_answer (test_mock_hub.TestMockHub.test_student_quiz_never_contains_correct_answer) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/assignments/99e1d029-2dfe-49d5-ac3f-f0e2a76dfbda/submit HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_submissions_are_scoped_to_their_owner (test_mock_hub.TestMockHub.test_submissions_are_scoped_to_their_owner) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/54d39d4d-7d83-42bc-9121-ab16e8ced4d4/start HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/54d39d4d-7d83-42bc-9121-ab16e8ced4d4/begin HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/quizzes/54d39d4d-7d83-42bc-9121-ab16e8ced4d4/submit HTTP/1.1" 422 -
+test_submit_after_time_limit_is_rejected (test_mock_hub.TestMockHub.test_submit_after_time_limit_is_rejected) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/6fa14e5a-cbd3-4e04-985b-0dc4fb2d9ab0 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/assignments/6fa14e5a-cbd3-4e04-985b-0dc4fb2d9ab0 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/6fa14e5a-cbd3-4e04-985b-0dc4fb2d9ab0 HTTP/1.1" 403 -
+test_teacher_can_fix_or_remove_an_assignment_and_grades_are_kept (test_mock_hub.TestMockHub.test_teacher_can_fix_or_remove_an_assignment_and_grades_are_kept) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/announcements/ca67baf1-cd3e-4d86-aa27-11832a0be414 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_teacher_mobile_announcement_post_and_pull (test_mock_hub.TestMockHub.test_teacher_mobile_announcement_post_and_pull) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/topics HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/a76a49f0-1431-4ba2-9cdf-44d5c4c36260 HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "DELETE /api/topics/eb55dd44-9741-4fe4-978b-c14f687daa2f HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+test_topics_group_classwork_and_deleting_one_keeps_the_work (test_mock_hub.TestMockHub.test_topics_group_classwork_and_deleting_one_keeps_the_work) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/nope HTTP/1.1" 404 -
+test_unknown_route_is_route_not_found (test_mock_hub.TestMockHub.test_unknown_route_is_route_not_found) ... ok
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+test_video_byte_range_streaming (test_mock_hub.TestMockHub.test_video_byte_range_streaming) ... ok
+test_prototype_is_up_to_date (test_prototype_sync.TestPrototypeSync.test_prototype_is_up_to_date) ... ok
+
+----------------------------------------------------------------------
+Ran 68 tests in 21.850s
+
+OK

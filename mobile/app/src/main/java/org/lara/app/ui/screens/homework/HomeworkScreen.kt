@@ -92,6 +92,12 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 else -> R.string.homework_to_do
             }
             Text(stringResource(status), style = MaterialTheme.typography.labelLarge)
+            if (submission?.syncStatus == "REJECTED") {
+                when (submission?.syncRejectReason) {
+                    "LATE_SUBMISSION" -> Text(stringResource(R.string.homework_rejected_late))
+                    "ALREADY_GRADED" -> Text(stringResource(R.string.homework_rejected_graded))
+                }
+            }
             val path = draft ?: submission?.filePath
             PhotoPreview(path, container.homeworkPhotos)
             if (draft == null && submission?.syncStatus == "QUEUED_FOR_SYNC") Text(stringResource(R.string.homework_offline_help))

@@ -18,7 +18,7 @@ class HomeworkApi(private val api: EnrollmentApi) {
         .writeTimeout(15, TimeUnit.SECONDS).callTimeout(30, TimeUnit.SECONDS).build()
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun upload(userId: String, assignmentId: String, submissionId: String, file: File): SubmissionDto = withContext(Dispatchers.IO) {
+    suspend fun upload(userId: String, assignmentId: String, submissionId: String, file: File, turnedInAt: Long): SubmissionDto = withContext(Dispatchers.IO) {
         require(assignmentId.matches(Regex("[A-Za-z0-9-]{1,128}")))
         require(submissionId.matches(Regex("[A-Za-z0-9-]{1,128}")))
         val connection = api.connection(userId)
@@ -26,6 +26,7 @@ class HomeworkApi(private val api: EnrollmentApi) {
         require(isAllowedHubUrl(url))
         val body = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("submission_id", submissionId)
+            .addFormDataPart("turned_in_at", turnedInAt.toString())
             .addFormDataPart("file", "homework.jpg", file.asRequestBody("image/jpeg".toMediaType())).build()
         val request = Request.Builder().url(url).header("Authorization", "Bearer ${connection.session.token}").post(body).build()
         client.newCall(request).execute().use { response ->

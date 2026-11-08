@@ -80,7 +80,7 @@ class AppContainer private constructor(private val services: AppServices, privat
         val owner = requireNotNull(accountId)
         val api = org.lara.app.data.remote.HomeworkApi(enrollmentApi)
         org.lara.app.data.repository.HomeworkRepository(database, homeworkPhotos, owner,
-            upload = { assignment, submission, file -> api.upload(owner, assignment, submission, file) },
+            upload = { assignment, submission, file, turnedInAt -> api.upload(owner, assignment, submission, file, turnedInAt) },
             onQueued = syncScheduler::enqueueHomework)
     }
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =

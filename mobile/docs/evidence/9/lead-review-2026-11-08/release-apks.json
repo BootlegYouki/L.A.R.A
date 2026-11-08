@@ -1,0 +1,20 @@
+[
+  {
+    "file": "app-arm64-v8a-release-unsigned.apk",
+    "bytes": 20197165,
+    "MiB": 19.26,
+    "abis": [
+      "arm64-v8a"
+    ],
+    "sha256": "0092e873a6a872e1b7d8832d74944f5ed11b11aebcd59eb16a94666dcba667bf"
+  },
+  {
+    "file": "app-armeabi-v7a-release-unsigned.apk",
+    "bytes": 18487291,
+    "MiB": 17.63,
+    "abis": [
+      "armeabi-v7a"
+    ],
+    "sha256": "97ef550eda8599a11aa4b0bce5dc8c42e5884380a286263a02abd2498b1d8a1a"
+  }
+]

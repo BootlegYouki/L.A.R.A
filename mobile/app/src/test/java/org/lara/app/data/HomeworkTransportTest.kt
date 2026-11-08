@@ -27,28 +27,30 @@ class HomeworkTransportTest {
     @After fun close() { server.shutdown(); photo.delete() }
 
     @Test fun streamsMultipartAndAcceptsTheHubsCanonicalSubmissionId(): Unit = runBlocking {
-        server.enqueue(MockResponse().setBody("""{"id":"canonical","assignment_id":"assignment","student_id":"learner","file_type":"IMAGE","submitted_at":1}"""))
-        assertEquals("canonical", api.upload("learner", "assignment", "local", photo).id)
+        server.enqueue(MockResponse().setBody("""{"id":"canonical","assignment_id":"assignment","student_id":"learner","file_type":"IMAGE","submitted_at":1,"received_at":2}"""))
+        assertEquals("canonical", api.upload("learner", "assignment", "local", photo, 123456L).id)
         val request = server.takeRequest()
         assertEquals("/api/assignments/assignment/submit", request.path)
         assertEquals("Bearer synthetic", request.getHeader("Authorization"))
         val body = request.body.readUtf8()
         assertTrue(body.contains("name=\"submission_id\""))
         assertTrue(body.contains("local"))
+        assertTrue(body.contains("name=\"turned_in_at\""))
+        assertTrue(body.contains("123456"))
         assertTrue(body.contains("filename=\"homework.jpg\""))
         assertFalse(body.contains(photo.path))
     }
 
     @Test fun rejectsReceiptsForAnotherLearner(): Unit = runBlocking {
-        server.enqueue(MockResponse().setBody("""{"id":"local","assignment_id":"assignment","student_id":"someone-else","file_type":"IMAGE","submitted_at":1}"""))
-        try { api.upload("learner", "assignment", "local", photo); fail() } catch (_: IllegalArgumentException) { }
+        server.enqueue(MockResponse().setBody("""{"id":"local","assignment_id":"assignment","student_id":"someone-else","file_type":"IMAGE","submitted_at":1,"received_at":2}"""))
+        try { api.upload("learner", "assignment", "local", photo, 123456L); fail() } catch (_: IllegalArgumentException) { }
     }
 
     @Test fun neverFollowsRedirects(): Unit = runBlocking {
         val other = MockWebServer().apply { start() }
         try {
             server.enqueue(MockResponse().setResponseCode(307).addHeader("Location", other.url("/outside")))
-            try { api.upload("learner", "assignment", "local", photo); fail() }
+            try { api.upload("learner", "assignment", "local", photo, 123456L); fail() }
             catch (error: HubFailure) { assertEquals(307, error.status) }
             assertEquals(0, other.requestCount)
         } finally { other.shutdown() }
