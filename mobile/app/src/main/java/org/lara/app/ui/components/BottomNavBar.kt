@@ -8,8 +8,10 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -34,8 +36,11 @@ fun BottomNavBar(
     onSelect: (ShellDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val labelLineHeight = with(LocalDensity.current) { MaterialTheme.typography.labelMedium.lineHeight.toDp() }
+    val labelLines = if (LocalDensity.current.fontScale > 1f) 2 else 1
+    val barHeight = maxOf(68.dp, labelLineHeight * labelLines + 52.dp)
     NavigationBar(
-        modifier = modifier.height(68.dp),
+        modifier = modifier.height(barHeight),
         containerColor = LaraColors.Surface,
         tonalElevation = 0.dp,
         windowInsets = WindowInsets(0, 0, 0, 0),
@@ -56,7 +61,7 @@ fun BottomNavBar(
                 selected = active,
                 enabled = !locked,
                 onClick = { onSelect(destination) },
-                modifier = Modifier.height(68.dp).semantics {
+                modifier = Modifier.height(barHeight).semantics {
                     if (locked) stateDescription = explanation
                 },
                 icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },

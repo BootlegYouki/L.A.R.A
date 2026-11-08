@@ -4,6 +4,8 @@ Maintained by the **Mobile Team**. This folder is where the Lead Developer and f
 
 ## Required documents
 
+MOBILE 3.2 prerequisites and capture/upload behavior are tracked in [homework-capture.md](./homework-capture.md).
+
 The MOBILE 1.1 foundation is documented in [scaffold.md](./scaffold.md), with
 validation evidence under [evidence/23/](./evidence/23/README.md).
 

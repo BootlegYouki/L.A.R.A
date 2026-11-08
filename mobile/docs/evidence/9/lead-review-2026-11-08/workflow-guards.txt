@@ -1,0 +1,10 @@
+Detect Changed Areas PASS
+mobile changed: true
+desktop changed: false
+server changed: false
+Branch Flow Guard PASS
+No AI Co-Author PASS
+Changed areas
+mobile=true
+desktop=false
+server=false

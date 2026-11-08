@@ -23,6 +23,7 @@ class LaraApp : Application() {
 
 private class AppServices(context: Context) {
     val handoutRoot = java.io.File(context.filesDir, "handouts")
+    val homeworkRoot = java.io.File(context.filesDir, "homework")
     val accountContainers = java.util.concurrent.ConcurrentHashMap<String, AppContainer>()
     val endpoints = org.lara.app.data.remote.discovery.HubEndpointStore(context)
     val tokens = org.lara.app.data.remote.TokenStore(context)
@@ -69,6 +70,18 @@ class AppContainer private constructor(private val services: AppServices, privat
         val folder = java.security.MessageDigest.getInstance("SHA-256").digest(owner.toByteArray())
             .joinToString("") { "%02x".format(it) }
         org.lara.app.data.repository.MaterialFiles(database, enrollmentApi, java.io.File(services.handoutRoot, folder), owner)
+    }
+    val homeworkPhotos: java.io.File by lazy {
+        val folder = java.security.MessageDigest.getInstance("SHA-256").digest(requireNotNull(accountId).toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        java.io.File(services.homeworkRoot, folder)
+    }
+    val homework by lazy {
+        val owner = requireNotNull(accountId)
+        val api = org.lara.app.data.remote.HomeworkApi(enrollmentApi)
+        org.lara.app.data.repository.HomeworkRepository(database, homeworkPhotos, owner,
+            upload = { assignment, submission, file, turnedInAt -> api.upload(owner, assignment, submission, file, turnedInAt) },
+            onQueued = syncScheduler::enqueueHomework)
     }
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote, userId)

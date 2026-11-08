@@ -26,6 +26,7 @@ data class AssignmentSubmissionEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_status", defaultValue = "'QUEUED_FOR_SYNC'") val syncStatus: String = "QUEUED_FOR_SYNC",
     @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
+    @ColumnInfo(name = "received_at") val receivedAt: Long? = null,
 )
  {
     init {
