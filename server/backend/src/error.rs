@@ -23,6 +23,10 @@ pub enum ErrorCode {
     RouteNotFound,
     /// 413: an upload over 250 MB (contract `POST /api/materials`).
     FileTooLarge,
+    /// 409: homework after the due date when the assignment does not allow late work (contract #257).
+    LateSubmission,
+    /// 409: a different file for homework the teacher already graded (contract #257).
+    AlreadyGraded,
     /// Area stubs until their step lands; no client depends on it.
     NotImplemented,
     /// The database failed. The contract has no code for it yet (TECH_SPEC section 14, Q10).
@@ -43,6 +47,8 @@ impl ErrorCode {
             Self::AdminLocalOnly => "ADMIN_LOCAL_ONLY",
             Self::RouteNotFound => "ROUTE_NOT_FOUND",
             Self::FileTooLarge => "FILE_TOO_LARGE",
+            Self::LateSubmission => "LATE_SUBMISSION",
+            Self::AlreadyGraded => "ALREADY_GRADED",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
         }
@@ -117,6 +123,16 @@ impl ApiError {
     /// The mock's message. Uploads are refused before the file is kept (`storage`).
     pub fn file_too_large() -> Self {
         Self::new(StatusCode::PAYLOAD_TOO_LARGE, ErrorCode::FileTooLarge, "Max 250MB")
+    }
+
+    /// The mock's message (`submission_create` in `scripts/mock_hub.py`).
+    pub fn late_submission() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::LateSubmission, "This assignment does not accept late submissions")
+    }
+
+    /// The mock's message (`submission_create` in `scripts/mock_hub.py`).
+    pub fn already_graded() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::AlreadyGraded, "This submission has already been graded")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {

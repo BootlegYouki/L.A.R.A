@@ -44,6 +44,14 @@ pub fn submission_form(submission_id: &str, bytes: &[u8]) -> Form {
     Form::new().text("submission_id", submission_id.to_owned()).part("file", file_part("homework.jpg", bytes))
 }
 
+/// With the learner device's Turn in time (contract `turned_in_at`, epoch ms), sent as the phone sends it.
+pub fn submission_form_at(submission_id: &str, bytes: &[u8], turned_in_at: &str) -> Form {
+    Form::new()
+        .text("submission_id", submission_id.to_owned())
+        .text("turned_in_at", turned_in_at.to_owned())
+        .part("file", file_part("homework.jpg", bytes))
+}
+
 /// The real Hub with the mock's teacher `T-0001`, one class, and learner `123456789012` enrolled.
 pub struct Class {
     pub hub: TestHub,
@@ -107,13 +115,21 @@ impl Class {
         self.exec("UPDATE classrooms SET archived_at = 1 WHERE id = ?", &[self.id.as_str()]).await;
     }
 
+    /// Due in 2100, late work not allowed: on time for every test that does not set a deadline.
     pub async fn assignment(&self, id: &str) {
         self.post_row(
             "assignments",
             id,
-            "INSERT INTO assignments (id, classroom_id, title, due_date, created_at, updated_at) VALUES (?, ?, 'Homework', 100, 1, 1)",
+            "INSERT INTO assignments (id, classroom_id, title, due_date, created_at, updated_at) VALUES (?, ?, 'Homework', 4102444800000, 1, 1)",
         )
         .await;
+    }
+
+    pub async fn set_due(&self, assignment_id: &str, due_date: i64, allow_late: bool) {
+        let due_date = due_date.to_string();
+        let allow_late = if allow_late { "1" } else { "0" };
+        self.exec("UPDATE assignments SET due_date = ?, allow_late = ? WHERE id = ?", &[due_date.as_str(), allow_late, assignment_id])
+            .await;
     }
 
     pub async fn announcement(&self, id: &str) {

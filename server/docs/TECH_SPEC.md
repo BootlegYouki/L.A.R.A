@@ -145,7 +145,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/materials/{id}/stream` | `routes/video_stream.rs`, `BandwidthLimiter` | 404; 416 | Bucket released |
 | `/api/assignments`, `/{id}`, `/{id}/submissions` | `routes/assignments.rs` | 404 (archived counts as missing) | Delete archives |
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
-| `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10) | Old file kept until the new one commits |
+| `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10); 409 `ALREADY_GRADED`, `LATE_SUBMISSION` (#257) | Old file kept until the new one commits; identical retry returns the stored row |
 | `/api/quizzes`, `/active`, `/{id}` GET/PATCH, `/begin` | `routes/quizzes.rs` | 404; 409 `QUIZ_NOT_DRAFT`; 409 `QUIZ_CLOSED` (Q8) | Begin returns the existing attempt |
 | `/api/quizzes/{id}/start`, `/close`, `/results` | `routes/quiz_control.rs`, `quiz_hub.rs` | Non-draft or second active quiz (Q1) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits |
 | `/api/quizzes/{id}/submit` | `routes/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt |

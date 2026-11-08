@@ -2,11 +2,17 @@
 
 mod common;
 
-use common::uploads::{assert_file_too_large, file_part, jpeg, raw_upload, submission_form, Class, RawBody, HTML, PDF};
+use common::uploads::{
+    assert_file_too_large, file_part, jpeg, raw_upload, submission_form, submission_form_at, Class, RawBody, HTML, PDF,
+};
 use reqwest::multipart::Form;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 const SUBMIT: &str = "/api/assignments/asg-1/submit";
+
+fn now_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as i64
+}
 
 async fn class_with_assignment() -> Class {
     let class = Class::start().await;
@@ -16,6 +22,15 @@ async fn class_with_assignment() -> Class {
 
 async fn submit(class: &Class, token: &str, id: &str, bytes: &[u8]) -> (u16, Value) {
     class.upload(SUBMIT, Some(token), submission_form(id, bytes)).await
+}
+
+/// The learner hands in with the device's Turn in time.
+async fn submit_at(class: &Class, id: &str, bytes: &[u8], turned_in_at: &str) -> (u16, Value) {
+    class.upload(SUBMIT, Some(&class.learner_token), submission_form_at(id, bytes, turned_in_at)).await
+}
+
+fn code(body: &Value) -> &str {
+    body["error"]["code"].as_str().unwrap_or("")
 }
 
 async fn file(class: &Class, submission: &str, token: &str) -> (u16, String, Vec<u8>) {
@@ -37,7 +52,11 @@ async fn a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it() {
     assert_eq!(status, 200, "{sub}");
     let mut keys: Vec<&str> = sub.as_object().unwrap().keys().map(String::as_str).collect();
     keys.sort_unstable();
-    assert_eq!(keys, ["assignment_id", "file_type", "id", "score", "student_id", "submitted_at", "teacher_feedback", "updated_at"]);
+    assert_eq!(
+        keys,
+        ["assignment_id", "file_type", "id", "received_at", "score", "student_id", "submitted_at", "teacher_feedback", "updated_at"]
+    );
+    assert!(class.pull(&class.learner_token).await["submissions"][0]["received_at"].is_i64(), "sync carries it too");
     assert_eq!((sub["id"].as_str(), sub["assignment_id"].as_str()), (Some("sub-1"), Some("asg-1")));
     assert_eq!((sub["student_id"].as_str(), sub["file_type"].as_str()), (Some(class.learner.as_str()), Some("IMAGE")));
     assert!(sub["score"].is_null() && sub["teacher_feedback"].is_null());
@@ -77,17 +96,114 @@ async fn a_pdf_is_a_document() {
 }
 
 #[tokio::test]
-async fn resubmitting_replaces_the_file_and_keeps_one_row_and_the_grade() {
+async fn a_submission_records_when_it_was_turned_in_and_when_it_arrived() {
+    let class = class_with_assignment().await;
+    let before = now_ms();
+    let (status, sub) = submit(&class, &class.learner_token, "sub-1", &jpeg("A")).await;
+    assert_eq!(status, 200, "{sub}");
+    let received = sub["received_at"].as_i64().expect("received_at");
+    assert!((before..=now_ms()).contains(&received), "{received}");
+    assert_eq!((sub["submitted_at"].as_i64(), sub["updated_at"].as_i64()), (Some(received), Some(received)), "no turned_in_at: arrival time");
+
+    let pressed = before - 60_000;
+    let (status, sub) = submit_at(&class, "sub-2", &jpeg("B"), &pressed.to_string()).await;
+    assert_eq!(status, 200, "{sub}");
+    assert_eq!(sub["submitted_at"].as_i64(), Some(pressed), "the learner's Turn in time");
+    let received = sub["received_at"].as_i64().unwrap();
+    assert!(received >= before);
+    let stored: (i64, i64) = sqlx::query_as("SELECT submitted_at, received_at FROM assignment_submissions WHERE id = 'sub-2'")
+        .fetch_one(&class.hub.state().db)
+        .await
+        .unwrap();
+    assert_eq!(stored, (pressed, received));
+
+    let (status, sub) = submit_at(&class, "sub-3", &jpeg("C"), &(now_ms() + 3_600_000).to_string()).await;
+    assert_eq!(status, 200, "{sub}");
+    assert_eq!(sub["submitted_at"], sub["received_at"], "a device clock ahead of the Hub is clamped to the arrival");
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn late_work_is_refused_unless_the_assignment_allows_it() {
+    let class = class_with_assignment().await;
+    let deadline = now_ms() - 10_000;
+    class.set_due("asg-1", deadline, false).await;
+    let (status, body) = submit(&class, &class.learner_token, "late", &jpeg("A")).await;
+    assert_eq!((status, code(&body)), (409, "LATE_SUBMISSION"), "{body}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 0);
+    assert!(class.files_in("submissions").is_empty() && class.files_in("tmp").is_empty());
+
+    let (status, sub) = submit_at(&class, "offline", &jpeg("A"), &(deadline - 1).to_string()).await;
+    assert_eq!(status, 200, "pressed before the deadline, arrived after: {sub}");
+    assert_eq!(sub["submitted_at"].as_i64(), Some(deadline - 1));
+    assert!(sub["received_at"].as_i64().unwrap() > deadline);
+
+    class.set_due("asg-1", deadline, true).await;
+    let (status, sub) = submit(&class, &class.learner_token, "late-allowed", &jpeg("B")).await;
+    assert_eq!(status, 200, "{sub}");
+    assert_eq!(sub["submitted_at"], sub["received_at"]);
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn an_identical_retry_gets_the_stored_row_even_after_grading_and_the_deadline() {
+    let class = class_with_assignment().await;
+    let photo = jpeg("A");
+    let (_, saved) = submit(&class, &class.learner_token, "sub-1", &photo).await;
+    class
+        .exec("UPDATE assignment_submissions SET score = 8, teacher_feedback = 'Good', updated_at = updated_at + 1 WHERE id = 'sub-1'", &[])
+        .await;
+    class.set_due("asg-1", 1, false).await;
+    let (status, retry) = submit(&class, &class.learner_token, "sub-1", &photo).await;
+    assert_eq!(status, 200, "{retry}");
+    assert_eq!((retry["score"].as_i64(), retry["teacher_feedback"].as_str()), (Some(8), Some("Good")));
+    for key in ["submitted_at", "received_at"] {
+        assert_eq!(retry[key], saved[key], "{key} unchanged");
+    }
+    assert_eq!(retry["updated_at"].as_i64(), Some(saved["updated_at"].as_i64().unwrap() + 1), "the stored row");
+    assert_eq!(file(&class, "sub-1", class.teacher()).await.2, photo);
+    assert_eq!(class.files_in("submissions").len(), 1, "the retry's copy is not kept");
+    assert!(class.files_in("tmp").is_empty());
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn graded_work_cannot_be_replaced() {
     let class = class_with_assignment().await;
     assert_eq!(submit(&class, &class.learner_token, "sub-1", &jpeg("A")).await.0, 200);
-    class.exec("UPDATE assignment_submissions SET score = 8, teacher_feedback = 'Good' WHERE id = 'sub-1'", &[]).await;
-    assert_eq!(submit(&class, &class.learner_token, "sub-1", &jpeg("B")).await.0, 200, "an offline retry");
+    class.exec("UPDATE assignment_submissions SET score = 8 WHERE id = 'sub-1'", &[]).await;
+    for id in ["sub-1", "sub-2"] {
+        let (status, body) = submit(&class, &class.learner_token, id, &jpeg("B")).await;
+        assert_eq!((status, code(&body)), (409, "ALREADY_GRADED"), "{id}: {body}");
+    }
+    class.set_due("asg-1", 1, false).await;
+    let (status, body) = submit(&class, &class.learner_token, "sub-3", &jpeg("C")).await;
+    assert_eq!((status, code(&body)), (409, "ALREADY_GRADED"), "graded is checked before late: {body}");
+    assert_eq!(file(&class, "sub-1", class.teacher()).await.2, jpeg("A"));
+    assert_eq!(class.files_in("submissions").len(), 1);
+    assert!(class.files_in("tmp").is_empty());
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn before_grading_new_work_replaces_the_old_row_and_its_id() {
+    let class = class_with_assignment().await;
+    assert_eq!(submit(&class, &class.learner_token, "sub-1", &jpeg("A")).await.0, 200);
+    let (status, sub) = submit(&class, &class.learner_token, "sub-1", &jpeg("B")).await;
+    assert_eq!((status, sub["id"].as_str()), (200, Some("sub-1")), "same id, another file: {sub}");
+    assert_eq!(file(&class, "sub-1", class.teacher()).await.2, jpeg("B"));
+
     let (status, sub) = submit(&class, &class.learner_token, "sub-2", &jpeg("C")).await;
-    assert_eq!(status, 200, "{sub}");
-    assert_eq!((sub["id"].as_str(), sub["score"].as_i64()), (Some("sub-1"), Some(8)), "one row per learner, grade kept");
-    assert_eq!(sub["teacher_feedback"], "Good");
-    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 1);
-    assert_eq!(file(&class, "sub-1", class.teacher()).await.2, jpeg("C"));
+    assert_eq!((status, sub["id"].as_str()), (200, Some("sub-2")), "{sub}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 1, "one row per learner");
+    assert_eq!(file(&class, "sub-2", class.teacher()).await.2, jpeg("C"));
+    assert_eq!(class.hub.get("/api/submissions/sub-1/file", Some(class.teacher())).await.0, 404);
+    let tombstone = json!({"entity_table": "assignment_submissions", "entity_id": "sub-1"});
+    for token in [class.teacher(), class.learner_token.as_str()] {
+        let pulled = class.pull(token).await;
+        assert!(pulled["deleted"].as_array().unwrap().contains(&tombstone), "{pulled}");
+        assert_eq!(pulled["submissions"].as_array().unwrap().len(), 1);
+    }
     assert_eq!(class.files_in("submissions").len(), 1, "replaced files are deleted");
     assert!(class.files_in("tmp").is_empty());
     class.hub.stop().await;
@@ -144,6 +260,13 @@ async fn who_may_submit() {
     assert_eq!((status, message(&body)), (403, "This submission id belongs to other work"));
     assert_eq!(file(&class, "taken", class.teacher()).await.2, jpeg("theirs"), "the classmate's work is untouched");
     assert_eq!(class.files_in("submissions").len(), 1);
+    // Replacing own work under someone else's id is refused too, and both rows stay.
+    assert_eq!(submit(&class, &class.learner_token, "mine", &jpeg("mine")).await.0, 200);
+    let (status, body) = submit(&class, &class.learner_token, "taken", &jpeg("again")).await;
+    assert_eq!((status, message(&body)), (403, "This submission id belongs to other work"));
+    assert_eq!(file(&class, "taken", class.teacher()).await.2, jpeg("theirs"));
+    assert_eq!(file(&class, "mine", class.teacher()).await.2, jpeg("mine"));
+    assert_eq!(class.files_in("submissions").len(), 2);
     assert!(class.files_in("tmp").is_empty());
     class.hub.stop().await;
 }
@@ -158,6 +281,8 @@ async fn bad_forms_are_400() {
         assert_eq!((status, message(&body)), (400, expected));
     }
     assert_eq!(submit(&class, &class.learner_token, "sub-1", b"JPEGDATA").await.0, 400, "placeholder bytes are not a photo");
+    let (status, body) = submit_at(&class, "sub-1", &jpeg("x"), "yesterday").await;
+    assert_eq!((status, message(&body)), (400, "turned_in_at must be an integer epoch-millisecond timestamp"));
     assert!(class.files_in("submissions").is_empty());
     assert!(class.files_in("tmp").is_empty());
     assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 0);

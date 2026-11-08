@@ -235,7 +235,7 @@ async fn load_entity(
         }
         "assignment_submissions" => {
             if let Some(row) = sqlx::query_as::<_, Submission>(
-                "SELECT id, assignment_id, student_id, file_type, submitted_at, score, teacher_feedback, updated_at
+                "SELECT id, assignment_id, student_id, file_type, submitted_at, received_at, score, teacher_feedback, updated_at
                  FROM assignment_submissions WHERE id = ? AND (? = 'TEACHER' OR student_id = ?)",
             ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? { out.submissions.push(row); }
         }

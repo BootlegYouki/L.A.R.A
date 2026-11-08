@@ -35,8 +35,14 @@ Teachers upload lesson files and post attachments, and learners hand in homework
    - submissions: `Scope::student`, so only that learner and the class's teachers pull it.
 
    If any check refuses, the transaction rolls back and dropping `StoredFile` deletes the renamed file. No file I/O happens under the write lock.
-5. **Replace.** A resubmission updates the existing row (same id, score and feedback kept) to point at the new file. The old file is deleted only after the commit, so a failed resubmission still serves the work handed in before.
-6. **Serve.** `ServeFile` streams from disk and answers `Range` with 206. Both routes send `X-Content-Type-Options: nosniff`.
+5. **Homework rules (contract #257),** checked in the mock's order (`submission_create` in `scripts/mock_hub.py`):
+   1. **Identical retry:** the same `submission_id` with the same bytes gets the stored row back unchanged, even after grading or the due date. The upload's SHA-256 is computed while it streams; the stored file is read back only when its size matches, before the transaction. Inside it, the row must still name the file compared.
+   2. **Graded is final:** any other file once a score exists gets 409 `ALREADY_GRADED`.
+   3. **Late:** with `allow_late` off, work turned in after `due_date` gets 409 `LATE_SUBMISSION`.
+
+   The optional `turned_in_at` field is when the learner pressed Turn in (epoch ms). `submitted_at` is `min(turned_in_at, arrival)`, so work finished offline before the deadline still counts and a device clock ahead of the Hub cannot postdate it; without the field it is the arrival. `received_at` is always the arrival.
+6. **Replace.** Before grading, a new file replaces the learner's earlier one. Under the same id the row is updated; under a new id the old row is deleted with a `DELETE` revision (same learner and teachers) and the row takes the new id. The old file is deleted only after the commit, so a failed resubmission still serves the work handed in before.
+7. **Serve.** `ServeFile` streams from disk and answers `Range` with 206. Both routes send `X-Content-Type-Options: nosniff`.
    - Material downloads are `application/octet-stream`, as the contract and the mock send them.
    - Submission files carry their real type, as the mock does, so image views can show the photo.
 
@@ -48,7 +54,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 |---|---|---|
 | `POST /api/materials` | Owner or co-teacher of `classroom_id` | Learner 403 `Teacher only`; other teacher 403; unknown class 404; archived class 403 `This class is archived`; `topic_id`/`assignment_id`/`announcement_id` not in that class (or an archived assignment) 404 |
 | `GET /api/materials/{id}/download` | Class teachers and `ACTIVE` learners, also in an archived class | No or bad token 401; anyone else 403 `Not your class`; unknown id 404 |
-| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403 |
+| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403; graded work 409 `ALREADY_GRADED`; late work 409 `LATE_SUBMISSION`; a `turned_in_at` that is not an integer 400 |
 | `GET /api/submissions/{id}/file` | The owning learner and the class's teachers | Classmate 403 `Not your submission`; other teacher or admin 403; unknown id 404 |
 
 ## Gotchas
@@ -56,7 +62,8 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 - The root `.gitignore` drops every `storage/` folder (runtime uploads), so `server/backend/.gitignore` re-includes `src/storage/`, as it already does for `src/models/`.
 - `?token=` is accepted only through `MediaUser`, on the two download routes. `TraceLayer` logs the path only, so the token never reaches a log.
 - Axum's 2 MB default body limit is raised only on the two upload routes (`UPLOAD_BODY_LIMIT`, the cap plus 1 MiB).
-- The Hub may answer 413 while a client is still sending, then close the connection. Clients see the 413 or a reset; both mean "too large or not sent", and a retry with the same `submission_id` is safe.
+- The Hub may answer 413 while a client is still sending, then close the connection. Clients see the 413 or a reset; both mean "too large or not sent", and a retry with the same `submission_id` is safe. A Windows client that is still sending usually sees only the reset: Winsock drops an answer it already received when the connection is reset under it. So apps should check the 250 MB cap before uploading. The tests accept the reset on Windows only (`assert_file_too_large`); on Linux they check the 413.
+- `assignment_submissions.received_at` came with migration `002`, which rebuilds the table: `ADD COLUMN` would put the column last, and the schema must read exactly like `server_master.sql`. Rows from before keep their arrival time, `submitted_at`, as `received_at`.
 - A row whose file is missing from disk answers 404 `NOT_FOUND`, not 500, and logs the entity id.
 
 ## Decisions for the Lead
@@ -64,11 +71,11 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 These are calls where the contract and mock are silent. Each is listed in the PR.
 
 1. **Formats, from the file's bytes:** as in Data flow step 2. An unsupported file gets 400 `BAD_REQUEST`, since the contract has no code for it. Two calls follow PRD FR-3.1 and FR-3.3 strictly: an iPhone `.mov` video is refused (MP4 or WebM only), and so is any ZIP that is not a Word document.
-2. **Placeholder bytes in the mock tests:** `tests/test_mock_hub.py` uploads the bytes `PDF` and `JPEGDATA`. The real Hub refuses those, so those two flows need real file headers before they run against the real Hub. `submission_id` is not required to be a UUID, so `sub-1` works.
+2. **Placeholder bytes in the mock tests:** settled by the Lead in #257, which gave those flows real `%PDF` and JPEG headers. `submission_id` is not required to be a UUID, so `sub-1` works.
 3. **Homework cap (TECH_SPEC Q10):** the same 250 MB as materials.
 4. **Archived class:** uploads and new homework get 403. A retry of a stored submission (same id, learner and assignment) gets 200 with the stored row, unchanged, following #235's sync-push rule.
 5. **Submission id clash:** an id that already names another learner's or assignment's work gets 403. The mock would overwrite it.
-6. **Grades on resubmission are kept**, as in the mock (PRD section 11 leaves this open). Due date and `allow_late` are not enforced; the contract has no code for late work.
+6. **Late work, grades and retries:** settled by the Lead in contract #257 (Data flow step 5). The Hub records `received_at` as well as `submitted_at`.
 7. **Content types:** see Data flow step 6.
 8. **Empty optional ids** (`topic_id=""`) count as not sent, and an empty `submission_id` counts as missing.
 
@@ -76,9 +83,10 @@ These are calls where the contract and mock are silent. Each is listed in the PR
 
 | Criterion | Evidence |
 |---|---|
-| Flows match the mock for upload, download and resubmission | `teacher_uploads_a_pdf_and_gets_the_contract_material`, `attachments_link_to_their_post`, `members_download_the_bytes_with_range_and_token`, `a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it`, `resubmitting_replaces_the_file_and_keeps_one_row_and_the_grade` |
+| Flows match the mock for upload, download and resubmission | `teacher_uploads_a_pdf_and_gets_the_contract_material`, `attachments_link_to_their_post`, `members_download_the_bytes_with_range_and_token`, `a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it`, `before_grading_new_work_replaces_the_old_row_and_its_id` |
+| Contract #257: late work, graded work, identical retries, `turned_in_at` and `received_at` | `late_work_is_refused_unless_the_assignment_allows_it`, `graded_work_cannot_be_replaced`, `an_identical_retry_gets_the_stored_row_even_after_grading_and_the_deadline`, `a_submission_records_when_it_was_turned_in_and_when_it_arrived`; migration: `migrations_reproduce_the_server_master_contract`, `upgrading_keeps_handed_in_work_and_fills_received_at` |
 | A 300 MB upload is rejected without filling the disk | `a_300_mb_upload_is_refused_and_leaves_no_file`, with a declared `Content-Length` and chunked: 413, no row, no revision, empty `tmp/` and `materials/` |
-| `cargo check --all-targets && cargo test` pass | Not run yet. Paste the output here and in the PR |
+| `cargo clippy --all-targets -- -D warnings && cargo test` pass | In the PR (Windows 11, 2026-11-08) |
 | Log or screenshot against the Hub with the WAN unplugged | Not done yet. Manual steps below |
 
 ## Manual check (WAN unplugged)

@@ -14,6 +14,7 @@ mod format;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use sha2::{Digest, Sha256};
 use tokio::fs;
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufWriter};
 use uuid::Uuid;
@@ -111,6 +112,29 @@ impl Storage {
         Some(self.root.join(dir).join(name))
     }
 
+    /// Whether a stored file holds exactly these bytes: same size, then same SHA-256. Only a file of
+    /// the same size is read back. A missing file or an unexpected name holds nothing.
+    pub async fn holds(&self, stored: &str, size: u64, sha256: &[u8; 32]) -> io::Result<bool> {
+        let Some(path) = self.path(stored) else { return Ok(false) };
+        let mut file = match fs::File::open(&path).await {
+            Ok(file) => file,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+            Err(error) => return Err(error),
+        };
+        if file.metadata().await?.len() != size {
+            return Ok(false);
+        }
+        let mut hash = Sha256::new();
+        let mut buffer = vec![0; WRITE_BUFFER];
+        loop {
+            match file.read(&mut buffer).await? {
+                0 => break,
+                n => hash.update(&buffer[..n]),
+            }
+        }
+        Ok(<[u8; 32]>::from(hash.finalize()) == *sha256)
+    }
+
     /// Best effort: a replaced homework file that cannot be deleted only wastes space.
     pub async fn remove(&self, stored: &str) {
         let Some(path) = self.path(stored) else {
@@ -138,12 +162,13 @@ pub struct TempUpload {
     size: u64,
     cap: u64,
     head: Vec<u8>,
+    sha256: Sha256,
 }
 
 impl TempUpload {
     async fn create(path: PathBuf, cap: u64) -> io::Result<Self> {
         let file = BufWriter::with_capacity(WRITE_BUFFER, fs::File::create(&path).await?);
-        Ok(Self { file, guard: RemoveOnDrop::new(path), size: 0, cap, head: Vec::with_capacity(HEAD_LEN) })
+        Ok(Self { file, guard: RemoveOnDrop::new(path), size: 0, cap, head: Vec::with_capacity(HEAD_LEN), sha256: Sha256::new() })
     }
 
     /// Refuses the chunk that would pass the cap before writing any of it.
@@ -157,6 +182,7 @@ impl TempUpload {
             self.head.extend_from_slice(&chunk[..take]);
         }
         self.file.write_all(chunk).await?;
+        self.sha256.update(chunk);
         self.size = size;
         Ok(())
     }
@@ -164,7 +190,7 @@ impl TempUpload {
     /// Flushes to disk (so a power cut cannot leave a renamed but empty file) and identifies it.
     /// The guard moves into `Received`, so the file stays owned by one guard throughout.
     pub async fn finish(self) -> io::Result<Received> {
-        let Self { mut file, guard, size, head, .. } = self;
+        let Self { mut file, guard, size, head, sha256, .. } = self;
         file.flush().await?;
         file.get_ref().sync_all().await?;
         drop(file);
@@ -172,7 +198,7 @@ impl TempUpload {
         if format == Some(FileFormat::Docx) && !is_word_file(&guard.path, size).await? {
             format = None;
         }
-        Ok(Received { guard, size, format })
+        Ok(Received { guard, size, format, sha256: sha256.finalize().into() })
     }
 }
 
@@ -193,6 +219,8 @@ pub struct Received {
     pub size: u64,
     /// `None` when the bytes are not a format the Hub keeps.
     pub format: Option<FileFormat>,
+    /// Of the whole file, so a retry can be told from new work without reading it again.
+    pub sha256: [u8; 32],
 }
 
 /// A file in `materials/` or `submissions/`. Removed again on drop unless [`StoredFile::keep`] is
