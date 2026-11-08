@@ -29,6 +29,7 @@ import org.lara.app.domain.Cached
 import org.lara.app.domain.model.*
 import org.lara.app.ui.navigation.*
 import org.lara.app.ui.screens.classwork.MaterialReader
+import org.lara.app.ui.screens.classwork.VideoPlayerScreen
 import org.lara.app.ui.theme.*
 import org.lara.app.ui.screens.teacher.classes.teacherIds
 import java.text.DateFormat
@@ -69,6 +70,7 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination) {
     val scope = rememberCoroutineScope()
@@ -91,10 +93,13 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         }
         return
     }
-    val materials = (work as? Cached.Content)?.value?.materials.orEmpty().filter { it.fileType != "VIDEO" }
+    val materials = (work as? Cached.Content)?.value?.materials.orEmpty()
     val selected = materials.find { it.id == opened }
     if (selected != null) {
-        key(selected.id, selected.updatedAt) { MaterialReader(container, selected) { opened = null } }
+        key(selected.id) {
+            if (selected.fileType == "VIDEO") VideoPlayerScreen(container, userId, selected.id) { opened = null }
+            else MaterialReader(container, selected) { opened = null }
+        }
         return
     }
     if (posts == Cached.Loading || work == Cached.Loading) { ReadingSkeleton(); return }
@@ -236,7 +241,7 @@ private fun MaterialRow(material: Material, open: () -> Unit) {
         Row(Modifier.padding(LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
             verticalAlignment = Alignment.CenterVertically) {
             Surface(color = LaraColors.InfoLight, shape = LaraShapes.medium) {
-                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.padding(LaraSpacing.S3).size(24.dp),
+                Icon(painterResource(if (material.fileType == "VIDEO") R.drawable.ic_play else R.drawable.ic_books_regular), null, Modifier.padding(LaraSpacing.S3).size(24.dp),
                     tint = LaraColors.InfoDark)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {

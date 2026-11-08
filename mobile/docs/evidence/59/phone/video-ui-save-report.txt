@@ -1,0 +1,5 @@
+Tapped Save for Home on actual player screen.
+Observed downloading label and progress, then completion.
+Room local source and SHA-256 match.
+Tapped Play after saving; elapsed time advanced.
+Synthetic throttled loopback fixture, not mock/real Hub or classroom LAN.

@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import org.lara.app.R
 import org.lara.app.ui.navigation.ShellDestination
 import org.lara.app.ui.theme.LaraColors
@@ -65,7 +66,7 @@ fun BottomNavBar(
                     if (locked) stateDescription = explanation
                 },
                 icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(destination.label), maxLines = 2) },
+                label = { Text(stringResource(destination.label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = tint,
                     selectedTextColor = tint,
