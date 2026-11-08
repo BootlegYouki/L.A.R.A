@@ -753,19 +753,41 @@ paths:
 
   /api/materials/{id}/download:
     get:
-      summary: Download the full material file
+      summary: Download the full material file. VIDEO downloads honor Range and If-Range so Save for Home can resume after a Wi-Fi drop.
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/TokenQuery"
+        - name: Range
+          in: header
+          required: false
+          description: VIDEO only. Without it, or when If-Range no longer matches, the whole file is sent as 200.
+          schema:
+            type: string
+            example: "bytes=262144-"
+        - name: If-Range
+          in: header
+          required: false
+          description: The ETag from an earlier response. If the file changed, the Hub ignores Range and sends 200 with the whole new file.
+          schema:
+            type: string
       responses:
         "200":
-          description: File bytes
+          description: "File bytes (the whole file). VIDEO responses carry `ETag` and `Accept-Ranges: bytes`."
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
+        "206":
+          description: VIDEO only. The requested byte range, with `Content-Range` and `ETag`.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "416":
+          description: "VIDEO only. The range starts past the end of the file; `Content-Range: bytes */<size>`."
 
   /api/materials/{id}/chunks:
     get:
@@ -798,9 +820,11 @@ paths:
             example: "bytes=0-1048576"
       responses:
         "206":
-          description: Partial video content
+          description: Partial video content, with `Content-Range` and `ETag`
         "200":
           description: Full video content
+        "404":
+          description: Not a VIDEO material
 
   # ---------------------------------------------------------------- ASSIGNMENTS
   /api/assignments:
