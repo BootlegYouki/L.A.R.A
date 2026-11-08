@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ApiError, requestHub } from './api';
+import { ApiError, requestHub, type ClassroomChange } from './api';
 import { accountToken, forgetAccount, parseAccount, parseClassrooms, parseRoster, parseJoinReceipt, hasControlCharacters, type CachedAccount, type JoinReceipt, type RosterEntry } from './auth';
 import { withDatabaseTimeout } from './db';
 
@@ -30,10 +30,10 @@ function teacherClass(account: CachedAccount, id: string) {
   if (account.user.role !== 'TEACHER' || !uuid(id) || !classroom) throw new ApiError('FORBIDDEN');
   return classroom;
 }
-async function teacherRequest(account: CachedAccount, path: Parameters<typeof requestHub>[1], body?: {name: string; section: string} | {student_id: string}, signal?: AbortSignal) {
+async function teacherRequest(account: CachedAccount, path: Parameters<typeof requestHub>[1], body?: NonNullable<Parameters<typeof requestHub>[2]>['body'], signal?: AbortSignal, method?: 'PATCH' | 'DELETE') {
   if (account.user.role !== 'TEACHER') throw new ApiError('FORBIDDEN');
   const token = await accountToken(account);
-  try { return await requestHub(account.hub, path, {body, token, signal}); }
+  try { return await requestHub(account.hub, path, {body, token, signal, method}); }
   catch (error) { if (error instanceof ApiError && error.code === 'UNAUTHORIZED') await forgetAccount(account).catch(() => {}); throw error; }
 }
 export async function createClassroom(account: CachedAccount, name: string, section: string, signal?: AbortSignal) {
@@ -65,7 +65,43 @@ export async function refreshRoster(account: CachedAccount, classroomId: string,
 }
 export async function decideEnrollment(account: CachedAccount, classroomId: string, studentId: string, action: 'approve'|'reject'|'remove', signal?: AbortSignal): Promise<void> {
   const classroom = teacherClass(account, classroomId);
-  if (classroom.archived_at || !uuid(studentId) || !['approve','reject','remove'].includes(action)) throw new ApiError('FORBIDDEN');
+  if (classroom.archived_at != null || !uuid(studentId) || !['approve','reject','remove'].includes(action)) throw new ApiError('FORBIDDEN');
   const receipt = await teacherRequest(account, `/api/classrooms/${classroomId}/${action}`, {student_id: studentId}, signal);
   if (typeof receipt !== 'object' || receipt === null || !('success' in receipt) || receipt.success !== true) throw new ApiError('invalid_response');
+}
+
+export type ClassSettingsAction =
+  | { kind: 'settings'; change: ClassroomChange }
+  | { kind: 'add'; teacherId: string }
+  | { kind: 'remove'; teacherId: string };
+
+export async function changeClassroom(account: CachedAccount, id: string, action: ClassSettingsAction, signal: AbortSignal) {
+  const room = teacherClass(account, id);
+  if (room.teacher_id !== account.user.id || room.archived_at != null) throw new ApiError('FORBIDDEN');
+  const path = `/api/classrooms/${id}` as const;
+  if (action.kind === 'remove') {
+    if (!uuid(action.teacherId) || !room.co_teacher_ids?.includes(action.teacherId)) throw new ApiError('invalid_fields');
+    const receipt = await teacherRequest(account, `${path}/teachers/${action.teacherId}`, undefined, signal, 'DELETE');
+    if (typeof receipt !== 'object' || receipt === null || !('success' in receipt) || receipt.success !== true) throw new ApiError('invalid_response');
+    return null;
+  }
+  let payload: unknown;
+  if (action.kind === 'add') {
+    const lrn_or_id = action.teacherId.trim();
+    if (!lrn_or_id || [...lrn_or_id].length > 32 || hasControlCharacters(lrn_or_id)) throw new ApiError('invalid_fields');
+    payload = await teacherRequest(account, `${path}/teachers`, {lrn_or_id}, signal);
+  } else {
+    const {name, section} = action.change;
+    if (name !== undefined && !name.trim() || hasControlCharacters((name ?? '') + (section ?? ''))) throw new ApiError('invalid_fields');
+    payload = await teacherRequest(account, path, action.change, signal, 'PATCH');
+  }
+  const updated = parseClassrooms([payload])[0];
+  if (updated.id !== id || updated.teacher_id !== account.user.id) throw new ApiError('invalid_response');
+  return updated;
+}
+
+export function classroomTeacherNames(account: CachedAccount, classroomId: string) {
+  return withDatabaseTimeout(invoke<Record<string, string>>('classroom_teacher_names', {
+    hub: account.hub, userId: account.user.id, classroomId,
+  }));
 }

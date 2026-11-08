@@ -7,14 +7,22 @@ export class ApiError extends Error {
 }
 
 type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
-  | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
+  | `/api/classrooms/${string}` | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
+export interface ClassroomChange { name?: string; section?: string; archived?: boolean }
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | { name: string; section: string } | { student_id: string } | SyncState | SyncPush; token?: string; signal?: AbortSignal;
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE';
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
-  if (!['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/classrooms', '/api/classrooms/join','/api/sync/pull','/api/sync/push'].includes(path)
-    && !/^\/api\/classrooms\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(roster|approve|reject|remove)$/i.test(path)) throw new ApiError('invalid_fields');
+  const classroomId = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+  const classRoute = new RegExp('^/api/classrooms/' + classroomId + '$', 'i');
+  const teacherRoute = new RegExp('^/api/classrooms/' + classroomId + '/teachers/' + classroomId + '$', 'i');
+  const standardRoute = new RegExp('^/api/classrooms/' + classroomId + '/(roster|approve|reject|remove|teachers)$', 'i');
+  const allowed = options.method === 'PATCH' ? classRoute.test(path)
+    : options.method === 'DELETE' ? teacherRoute.test(path)
+    : standardRoute.test(path) || ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/classrooms',
+      '/api/classrooms/join', '/api/sync/pull', '/api/sync/push'].includes(path);
+  if (!allowed) throw new ApiError('invalid_fields');
   const url = new URL(`http://${hub.ip}:${hub.http_port}${path}`).href;
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -27,7 +35,7 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   try {
     return await Promise.race([cancelled, (async () => {
       const response = await fetch(url, {
-        method: options.body || path === '/api/auth/logout' ? 'POST' : 'GET', credentials: 'omit', redirect: 'error', maxRedirections: 0,
+        method: options.method ?? (options.body || path === '/api/auth/logout' ? 'POST' : 'GET'), credentials: 'omit', redirect: 'error', maxRedirections: 0,
         connectTimeout: 10000, signal: controller.signal,
         headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}) },

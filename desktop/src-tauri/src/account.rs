@@ -287,11 +287,14 @@ fn validate_classes(user: &User, classes: &[Classroom]) -> Result<(), &'static s
     Ok(())
 }
 fn visible(c: &Classroom, user: &User) -> bool {
-    c.archived_at.is_none()
-        && match user.role {
-            Role::TEACHER => c.enrollment_status.as_deref().is_none_or(|s| s == "ACTIVE"),
-            Role::STUDENT => matches!(c.enrollment_status.as_deref(), Some("ACTIVE" | "PENDING")),
-        }
+    match user.role {
+        Role::TEACHER => c.enrollment_status.as_deref().is_none_or(|s| s == "ACTIVE"),
+        Role::STUDENT => match c.enrollment_status.as_deref() {
+            Some("ACTIVE") => true,
+            Some("PENDING") => c.archived_at.is_none(),
+            _ => false,
+        },
+    }
 }
 pub(crate) async fn classes(
     db: &mut SqliteConnection,
@@ -758,6 +761,49 @@ pub async fn account_token(
     Ok(token_for(&p, &memory, &key))
 }
 #[tauri::command]
+pub async fn classroom_teacher_names(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+    classroom_id: String,
+) -> Result<HashMap<String, String>, &'static str> {
+    validate_hub(&hub)?;
+    if !uuid(&user_id) || !uuid(&classroom_id) {
+        return Err(INVALID);
+    }
+    let user_id = user_id.to_ascii_lowercase();
+    let _memory = accounts.0.lock().await;
+    let root = root(&app)?;
+    if active(&root, &hub)?.as_deref() != Some(&user_id) {
+        return Err("account_context_changed");
+    }
+    let mut db = database(&root, &context(&hub, &user_id)).await?;
+    let p = profile(&mut db, &user_id).await?;
+    if p.user.role != Role::TEACHER {
+        return Err(INVALID);
+    }
+    let classroom = classes(&mut db, &p.user)
+        .await?
+        .into_iter()
+        .find(|c| c.id.eq_ignore_ascii_case(&classroom_id))
+        .ok_or(INVALID)?;
+    let mut names = HashMap::from([(p.user.id.clone(), p.user.full_name)]);
+    for id in std::iter::once(classroom.teacher_id).chain(classroom.co_teacher_ids) {
+        let name: Option<String> =
+            sqlx::query_scalar("SELECT full_name FROM users WHERE id=? AND role='TEACHER'")
+                .bind(&id)
+                .fetch_optional(&mut db)
+                .await
+                .map_err(|_| ERROR)?;
+        if let Some(name) = name {
+            names.insert(id, name);
+        }
+    }
+    Ok(names)
+}
+
+#[tauri::command]
 pub async fn save_classroom_snapshot(
     app: tauri::AppHandle,
     accounts: tauri::State<'_, Accounts>,
@@ -933,6 +979,25 @@ mod tests {
         assert!(token_for(&profile, &memory, &key).is_none());
         let wire = serde_json::to_string(&profile).unwrap();
         assert!(!wire.contains("synthetic-memory-token"));
+    }
+    #[tokio::test]
+    async fn archived_class_restores_only_for_an_active_learner() {
+        let root = temporary();
+        let mut db = database(&root, &context(&hub(), STUDENT)).await.unwrap();
+        let mut archived = class();
+        archived.archived_at = Some(123);
+        snapshot(&mut db, &user(), std::slice::from_ref(&archived))
+            .await
+            .unwrap();
+        assert_eq!(
+            classes(&mut db, &user()).await.unwrap()[0].archived_at,
+            Some(123)
+        );
+        archived.enrollment_status = Some("PENDING".into());
+        snapshot(&mut db, &user(), &[archived]).await.unwrap();
+        assert!(classes(&mut db, &user()).await.unwrap().is_empty());
+        drop(db);
+        let _ = std::fs::remove_dir_all(root);
     }
     #[tokio::test]
     async fn snapshot_is_atomic_preserves_queued_parents_and_isolates_contexts() {

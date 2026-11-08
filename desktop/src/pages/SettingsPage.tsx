@@ -9,17 +9,20 @@ import { version } from '../../src-tauri/tauri.conf.json';
 interface Props {
   account: CachedAccount;
   connection: HubConnectionState;
+  hubName?: string;
   busy: boolean;
   error: string | null;
   onSignOut: () => void;
   children: ReactNode;
 }
 
-export default function SettingsPage({ account, connection, busy, error, onSignOut, children }: Props) {
+export default function SettingsPage({ account, connection, hubName, busy, error, onSignOut, children }: Props) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [countError, setCountError] = useState(false);
   const queueCheck = useRef(0);
+  const address = connection.hub && `${connection.hub.ip}:${connection.hub.http_port}`;
+  const name = hubName || connection.hub?.name;
 
   async function checkQueue() {
     const current = ++queueCheck.current;
@@ -37,8 +40,8 @@ export default function SettingsPage({ account, connection, busy, error, onSignO
     <h1 id="settings-title">{t.settings}</h1>
     <section className="discovery-panel" aria-labelledby="settings-hub-title">
       <h2 id="settings-hub-title">{t.auth_hub_settings}</h2>
-      {connection.hub && <p><strong>{connection.hub.name}</strong> · {connection.hub.ip}:{connection.hub.http_port}</p>}
-      <p>{connection.status === 'connected' ? t.connected_to_hub.replace('{name}', connection.hub?.name ?? '') : connection.status === 'connecting' ? t.connecting : t.hub_offline}</p>
+      {address && <p>{name && name !== address && <><strong>{name}</strong> · </>}{address}</p>}
+      <p>{connection.status === 'connected' ? t.settings_hub_connected : connection.status === 'connecting' ? t.connecting : t.hub_offline}</p>
       <details><summary>{t.settings_choose_hub}</summary>{children}</details>
     </section>
     <section className="discovery-panel" aria-labelledby="settings-account-title">

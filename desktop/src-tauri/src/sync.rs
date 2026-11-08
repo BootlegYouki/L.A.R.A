@@ -573,7 +573,7 @@ async fn metadata(
                                         i.as_str().is_some_and(|s| s.eq_ignore_ascii_case(&user.id))
                                     })
                                 });
-                        if own && row.get("archived_at").is_none_or(Value::is_null) {
+                        if own {
                             visible.insert(cid);
                         } else {
                             visible.remove(&cid);
@@ -582,8 +582,9 @@ async fn metadata(
                         row.get("enrollment_status").and_then(Value::as_str)
                     {
                         statuses.insert(cid.clone(), status.into());
-                        if matches!(status, "ACTIVE" | "PENDING")
-                            && row.get("archived_at").is_none_or(Value::is_null)
+                        if status == "ACTIVE"
+                            || (status == "PENDING"
+                                && row.get("archived_at").is_none_or(Value::is_null))
                         {
                             visible.insert(cid);
                         } else {
@@ -618,9 +619,14 @@ async fn metadata(
         .await
         .map_err(|_| ERROR)?;
     let present: HashSet<String> = rows
-        .iter()
-        .filter(|r| r.get::<Option<i64>, _>(1).is_none())
-        .map(|r| r.get(0))
+        .into_iter()
+        .filter_map(|row| {
+            let cid: String = row.get(0);
+            (user.role == Role::TEACHER
+                || row.get::<Option<i64>, _>(1).is_none()
+                || statuses.get(&cid).is_some_and(|status| status == "ACTIVE"))
+            .then_some(cid)
+        })
         .collect();
     visible.retain(|cid| present.contains(cid));
     account::put(db, "account_visible_classes", &json!(visible).to_string()).await?;

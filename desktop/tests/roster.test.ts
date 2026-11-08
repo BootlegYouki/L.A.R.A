@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 const {fetch,invoke}=vi.hoisted(()=>({fetch:vi.fn(),invoke:vi.fn()}));
 vi.mock('@tauri-apps/plugin-http',()=>({fetch}));vi.mock('@tauri-apps/api/core',()=>({invoke}));
-import {createClassroom,refreshRoster,decideEnrollment} from '../src/services/classrooms';
+import {createClassroom,refreshRoster,decideEnrollment,changeClassroom} from '../src/services/classrooms';
 const uid='11111111-1111-4111-8111-111111111111',cid='22222222-2222-4222-8222-222222222222',sid='33333333-3333-4333-8333-333333333333';
 const hub={name:'Test',ip:'127.0.0.1',http_port:8080,ws_port:8081};
 const classroom={id:cid,name:'Science',section:'A',class_code:'K7M4QX',teacher_id:uid};
@@ -44,4 +44,28 @@ it('keeps a successful creation receipt when local caching fails, so the UI cann
  fetch.mockResolvedValue(response('/api/classrooms',classroom));
  await expect(createClassroom({...account,classrooms:[]},'Science','A')).resolves.toMatchObject({classroom,classrooms:[],cacheSaved:false});
  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it('uses the owner-only class routes and accepts only a receipt for the selected class', async () => {
+  const signal = new AbortController().signal;
+  const action = {kind: 'settings', change: {archived: true}} as const;
+  const path = '/api/classrooms/' + cid;
+  const coTeacher = {...classroom, teacher_id: sid, co_teacher_ids: [uid]};
+  await expect(changeClassroom({...account, classrooms: [coTeacher]}, cid, action, signal)).rejects.toMatchObject({code: 'FORBIDDEN'});
+  await expect(changeClassroom({...account, classrooms: [{...classroom, archived_at: 1}]}, cid, action, signal)).rejects.toMatchObject({code: 'FORBIDDEN'});
+  expect(fetch).not.toHaveBeenCalled();
+
+  invoke.mockResolvedValue('test-token');
+  fetch.mockResolvedValueOnce(response(path, {...classroom, id: sid}));
+  await expect(changeClassroom(account, cid, action, signal)).rejects.toMatchObject({code: 'invalid_response'});
+  expect(fetch).toHaveBeenLastCalledWith('http://127.0.0.1:8080' + path, expect.objectContaining({method: 'PATCH', body: '{"archived":true}'}));
+
+  const updated = {...classroom, co_teacher_ids: [sid]};
+  fetch.mockResolvedValueOnce(response(path + '/teachers', updated));
+  await expect(changeClassroom(account, cid, {kind: 'add', teacherId: ' T-0002 '}, signal)).resolves.toEqual(updated);
+  expect(fetch).toHaveBeenLastCalledWith('http://127.0.0.1:8080' + path + '/teachers', expect.objectContaining({method: 'POST', body: '{"lrn_or_id":"T-0002"}'}));
+
+  fetch.mockResolvedValueOnce(response(path + '/teachers/' + sid, {success: true}));
+  await expect(changeClassroom({...account, classrooms: [updated]}, cid, {kind: 'remove', teacherId: sid}, signal)).resolves.toBeNull();
+  expect(fetch).toHaveBeenLastCalledWith('http://127.0.0.1:8080' + path + '/teachers/' + sid, expect.objectContaining({method: 'DELETE'}));
 });
