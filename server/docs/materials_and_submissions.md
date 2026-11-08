@@ -7,7 +7,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
 | File | Purpose |
 |---|---|
 | `backend/src/storage/mod.rs` | `Storage`: the folders under `<data_dir>/storage`, streamed temp uploads with the 250 MB cap, commit by rename, path checks. No database or HTTP types |
-| `backend/src/storage/format.rs` | `FileFormat`: identifies PDF, DOCX, JPEG, PNG, MP4 and WebM from the first bytes |
+| `backend/src/storage/format.rs` | `FileFormat`: identifies PDF, JPEG, PNG, MP4 and WebM from the first bytes, and DOCX from the ZIP's file list |
 | `backend/src/routes/upload.rs` | The one multipart reader for both upload routes; `FILE_TOO_LARGE` handling |
 | `backend/src/routes/files.rs` | `serve_stored`: `ServeFile` with Range, `nosniff`, and a 404 when the file is gone |
 | `backend/src/routes/materials.rs` | Upload and download handlers |
@@ -23,7 +23,9 @@ Teachers upload lesson files and post attachments, and learners hand in homework
    - A declared `Content-Length` over the limit gets 413 before anything is read.
    - The `file` part streams into `storage/tmp/<uuid>` and is counted. Past 250 MB it stops with 413 `FILE_TOO_LARGE` and the temp file is deleted.
    - Text parts are limited to 4 KiB, and parts the route does not use are skipped.
-2. **Identify.** The format comes from the first 16 bytes. The client's file name and part `Content-Type` are ignored.
+2. **Identify.** The format comes from the file's own bytes. The client's file name and part `Content-Type` are ignored.
+   - The first 16 bytes give PDF, JPEG, PNG, MP4 or WebM. MP4 also needs an MP4 brand after `ftyp`, so QuickTime `.mov`, HEIC and AVIF photos and `.m4a` audio are refused.
+   - A ZIP is DOCX only if its file list (read from the last 1 MiB) names `[Content_Types].xml` and `word/document.xml`. An APK, a spreadsheet or any other ZIP is refused.
    - `VIDEO` takes MP4 or WebM. `DOCUMENT` and `WORKSHEET` take PDF, DOCX, JPEG or PNG.
    - Homework takes JPEG or PNG (`IMAGE`) or PDF or DOCX (`DOCUMENT`).
    - Anything else gets 400.
@@ -46,7 +48,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 |---|---|---|
 | `POST /api/materials` | Owner or co-teacher of `classroom_id` | Learner 403 `Teacher only`; other teacher 403; unknown class 404; archived class 403 `This class is archived`; `topic_id`/`assignment_id`/`announcement_id` not in that class (or an archived assignment) 404 |
 | `GET /api/materials/{id}/download` | Class teachers and `ACTIVE` learners, also in an archived class | No or bad token 401; anyone else 403 `Not your class`; unknown id 404 |
-| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work; a `submission_id` used for other work 403 |
+| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403 |
 | `GET /api/submissions/{id}/file` | The owning learner and the class's teachers | Classmate 403 `Not your submission`; other teacher or admin 403; unknown id 404 |
 
 ## Gotchas
@@ -61,7 +63,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 
 These are calls where the contract and mock are silent. Each is listed in the PR.
 
-1. **Formats, by magic bytes:** as in Data flow step 2. An unsupported file gets 400 `BAD_REQUEST`, since the contract has no code for it.
+1. **Formats, from the file's bytes:** as in Data flow step 2. An unsupported file gets 400 `BAD_REQUEST`, since the contract has no code for it. Two calls follow PRD FR-3.1 and FR-3.3 strictly: an iPhone `.mov` video is refused (MP4 or WebM only), and so is any ZIP that is not a Word document.
 2. **Placeholder bytes in the mock tests:** `tests/test_mock_hub.py` uploads the bytes `PDF` and `JPEGDATA`. The real Hub refuses those, so those two flows need real file headers before they run against the real Hub. `submission_id` is not required to be a UUID, so `sub-1` works.
 3. **Homework cap (TECH_SPEC Q10):** the same 250 MB as materials.
 4. **Archived class:** uploads and new homework get 403. A retry of a stored submission (same id, learner and assignment) gets 200 with the stored row, unchanged, following #235's sync-push rule.

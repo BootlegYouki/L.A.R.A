@@ -47,12 +47,19 @@ async fn submit(
     multipart: Result<Multipart, MultipartRejection>,
 ) -> Result<Json<Submission>, ApiError> {
     require_role(&user, Role::Student)?;
-    // Before the body: someone who may not submit is refused without uploading the photo.
+    // Before the body: someone who may not submit is refused without uploading the photo. In an
+    // archived class only a retry of stored work is answered (below), so with nothing stored the
+    // learner is refused here too, before up to 250 MB is received for nothing.
     {
         let mut conn = app.db.acquire().await?;
         let classroom_id =
             submissions::assignment_class(&mut conn, &assignment_id).await?.ok_or_else(assignment_not_found)?;
         class_access::require_member(&mut conn, &user, &classroom_id).await?;
+        if class_access::is_archived(&mut conn, &classroom_id).await?
+            && submissions::for_learner(&mut conn, &assignment_id, &user.id).await?.is_none()
+        {
+            return Err(ApiError::forbidden("This class is archived"));
+        }
     }
     let mut form = read_form(&app.storage, &headers, multipart, &["submission_id"]).await?;
     let Some(submission_id) = form.field("submission_id").map(str::to_owned) else {

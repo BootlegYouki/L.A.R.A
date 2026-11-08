@@ -15,14 +15,18 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufWriter};
 use uuid::Uuid;
 
 pub use format::FileFormat;
-use format::HEAD_LEN;
+use format::{HEAD_LEN, TAIL_LEN};
 
 /// Contract `POST /api/materials` (max 250 MB). Homework uses the same cap (TECH_SPEC Q10).
 pub const MAX_UPLOAD_BYTES: u64 = 250 * 1024 * 1024;
+
+/// Multipart chunks are small (8 to 64 KB); batching them saves one blocking-pool round trip per
+/// chunk on a 250 MB video. 256 KiB per upload in progress keeps 40 at once around 10 MB.
+const WRITE_BUFFER: usize = 256 * 1024;
 
 const TMP: &str = "tmp";
 
@@ -99,7 +103,9 @@ impl Storage {
             return None;
         }
         let (stem, _) = name.rsplit_once('.')?;
-        if Uuid::parse_str(stem).is_err() || format_of(stored).is_none() {
+        // Exactly the form `commit` writes: `parse_str` alone also takes `{...}`, `urn:uuid:...`,
+        // no hyphens and upper case, and a colon on a Windows Hub would name an NTFS stream.
+        if !Uuid::parse_str(stem).is_ok_and(|id| id.to_string() == stem) || format_of(stored).is_none() {
             return None;
         }
         Some(self.root.join(dir).join(name))
@@ -127,7 +133,7 @@ pub fn format_of(stored: &str) -> Option<FileFormat> {
 /// A file being received in `tmp/`.
 pub struct TempUpload {
     // Declared before `guard` so the handle closes before the file is deleted.
-    file: fs::File,
+    file: BufWriter<fs::File>,
     guard: RemoveOnDrop,
     size: u64,
     cap: u64,
@@ -136,7 +142,7 @@ pub struct TempUpload {
 
 impl TempUpload {
     async fn create(path: PathBuf, cap: u64) -> io::Result<Self> {
-        let file = fs::File::create(&path).await?;
+        let file = BufWriter::with_capacity(WRITE_BUFFER, fs::File::create(&path).await?);
         Ok(Self { file, guard: RemoveOnDrop::new(path), size: 0, cap, head: Vec::with_capacity(HEAD_LEN) })
     }
 
@@ -156,14 +162,29 @@ impl TempUpload {
     }
 
     /// Flushes to disk (so a power cut cannot leave a renamed but empty file) and identifies it.
+    /// The guard moves into `Received`, so the file stays owned by one guard throughout.
     pub async fn finish(self) -> io::Result<Received> {
-        let Self { mut file, mut guard, size, head, .. } = self;
+        let Self { mut file, guard, size, head, .. } = self;
         file.flush().await?;
-        file.sync_all().await?;
+        file.get_ref().sync_all().await?;
         drop(file);
-        guard.disarm();
-        Ok(Received { guard: RemoveOnDrop::new(guard.path.clone()), size, format: FileFormat::sniff(&head) })
+        let mut format = FileFormat::sniff(&head);
+        if format == Some(FileFormat::Docx) && !is_word_file(&guard.path, size).await? {
+            format = None;
+        }
+        Ok(Received { guard, size, format })
     }
+}
+
+/// A ZIP is kept as Word only if its file list says so (`format::is_word_document`). The list is
+/// at the end of the file, so only the last `TAIL_LEN` bytes are read.
+async fn is_word_file(path: &Path, size: u64) -> io::Result<bool> {
+    let tail_len = size.min(TAIL_LEN as u64);
+    let mut file = fs::File::open(path).await?;
+    file.seek(io::SeekFrom::Start(size - tail_len)).await?;
+    let mut tail = vec![0; usize::try_from(tail_len).unwrap_or(TAIL_LEN)];
+    file.read_exact(&mut tail).await?;
+    Ok(format::is_word_document(&tail, size))
 }
 
 /// A complete upload, still in `tmp/` until [`Storage::commit`].
@@ -287,6 +308,22 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_zip_is_word_only_when_its_file_list_says_so() {
+        let (_dir, storage) = storage().await;
+        let word = format::test_zip(&["[Content_Types].xml", "word/document.xml"]);
+        assert_eq!(received(&storage, &word).await.format, Some(FileFormat::Docx));
+        let apk = format::test_zip(&["AndroidManifest.xml", "classes.dex"]);
+        assert_eq!(received(&storage, &apk).await.format, None);
+        // Written in pieces, as a multipart upload arrives, then read back from the end.
+        let mut upload = storage.temp().await.unwrap();
+        for piece in word.chunks(7) {
+            upload.write(piece).await.unwrap();
+        }
+        assert_eq!(upload.finish().await.unwrap().format, Some(FileFormat::Docx));
+        assert_eq!(files_in(&storage.root().join(TMP)), 0);
+    }
+
+    #[tokio::test]
     async fn stored_file_drop_removes_it_unless_kept() {
         let (_dir, storage) = storage().await;
         let dropped = storage.commit(received(&storage, PDF).await, StorageKind::Submission).await.unwrap();
@@ -314,6 +351,11 @@ mod tests {
             format!("materials/{id}.exe"),
             format!("materials/{id}"),
             "materials/lesson.pdf".to_string(),
+            // Other spellings of a UUID that the Hub never writes.
+            format!("materials/{}.pdf", id.simple()),
+            format!("materials/{{{id}}}.pdf"),
+            format!("materials/{}.pdf", id.urn()),
+            format!("materials/{}.pdf", id.to_string().to_uppercase()),
         ] {
             assert_eq!(storage.path(&bad), None, "{bad}");
         }
