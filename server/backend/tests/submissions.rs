@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::uploads::{file_part, jpeg, raw_upload, submission_form, Class, RawBody, HTML, PDF};
+use common::uploads::{assert_file_too_large, file_part, jpeg, raw_upload, submission_form, Class, RawBody, HTML, PDF};
 use reqwest::multipart::Form;
 use serde_json::Value;
 
@@ -183,9 +183,9 @@ async fn an_archived_class_refuses_new_work_but_answers_a_retry() {
 #[tokio::test]
 async fn an_oversized_homework_upload_is_413() {
     let class = class_with_assignment().await;
-    let (status, body) =
-        raw_upload(&class.hub, SUBMIT, &class.learner_token, &[("submission_id", "sub-1")], RawBody::Declared(300 * 1024 * 1024)).await;
-    assert_eq!((status, body["error"]["code"].as_str()), (413, Some("FILE_TOO_LARGE")));
+    let fields = [("submission_id", "sub-1")];
+    assert_file_too_large(raw_upload(&class.hub, SUBMIT, &class.learner_token, &fields, RawBody::Declared(300 * 1024 * 1024)).await);
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 0);
     assert!(class.files_in("tmp").is_empty());
     class.hub.stop().await;
 }

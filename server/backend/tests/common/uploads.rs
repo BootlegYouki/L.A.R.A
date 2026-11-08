@@ -2,6 +2,7 @@
 //! files with real leading bytes, multipart uploads, and a raw-socket upload for bodies too large
 //! to build in memory.
 
+use std::io::ErrorKind;
 use std::time::Duration;
 
 use lara_hub::auth::Role;
@@ -216,7 +217,12 @@ pub enum RawBody {
 /// Streams a multipart upload of `n` zero bytes over a plain socket, without building it in memory,
 /// and returns the Hub's answer. The Hub answers 413 before the body ends and closes the
 /// connection, so later writes fail; that is expected and ignored.
-pub async fn raw_upload(hub: &TestHub, path: &str, token: &str, fields: &[(&str, &str)], body: RawBody) -> (u16, Value) {
+///
+/// `None`: the connection was reset before a byte of the answer could be read. Only Windows does
+/// this: when the Hub closes with part of the upload unread, Winsock aborts the socket of a client
+/// that is still sending and throws away the answer it had already received (WSAECONNABORTED).
+/// Linux keeps the answer readable, so CI checks the 413 itself. See [`assert_file_too_large`].
+pub async fn raw_upload(hub: &TestHub, path: &str, token: &str, fields: &[(&str, &str)], body: RawBody) -> Option<(u16, Value)> {
     let stream = tokio::net::TcpStream::connect(("127.0.0.1", hub.http_port())).await.unwrap();
     let (mut read, mut write) = stream.into_split();
     let boundary = "lara-raw-upload";
@@ -266,9 +272,14 @@ pub async fn raw_upload(hub: &TestHub, path: &str, token: &str, fields: &[(&str,
     let response = tokio::time::timeout(Duration::from_secs(120), async {
         let mut response = Vec::new();
         let mut buf = [0u8; 4096];
+        let mut reset = false;
         loop {
             let n = match read.read(&mut buf).await {
-                Ok(0) | Err(_) => break,
+                Ok(0) => break,
+                Err(error) => {
+                    reset = matches!(error.kind(), ErrorKind::ConnectionAborted | ErrorKind::ConnectionReset);
+                    break;
+                }
                 Ok(n) => n,
             };
             response.extend_from_slice(&buf[..n]);
@@ -276,15 +287,31 @@ pub async fn raw_upload(hub: &TestHub, path: &str, token: &str, fields: &[(&str,
                 break;
             }
         }
-        response
+        (response, reset)
     })
     .await
     .expect("the Hub answers a too-large upload");
     writer.abort();
+    let (response, reset) = response;
+    if response.is_empty() && reset {
+        return None;
+    }
     let text = String::from_utf8_lossy(&response);
     let status = text.split_whitespace().nth(1).and_then(|s| s.parse().ok()).expect("an HTTP status line");
     let body = text.split_once("\r\n\r\n").map(|(_, b)| b).unwrap_or("");
-    (status, serde_json::from_str(body).unwrap_or(Value::Null))
+    Some((status, serde_json::from_str(body).unwrap_or(Value::Null)))
+}
+
+/// The Hub's 413 `FILE_TOO_LARGE`, or on Windows only a reset before the answer arrived
+/// ([`raw_upload`]). The callers' checks that nothing was kept run either way.
+pub fn assert_file_too_large(answer: Option<(u16, Value)>) {
+    match answer {
+        Some((status, body)) => {
+            assert_eq!((status, body["error"]["code"].as_str()), (413, Some("FILE_TOO_LARGE")), "{body}")
+        }
+        None if cfg!(windows) => {}
+        None => panic!("the connection was reset without an answer"),
+    }
 }
 
 fn response_complete(response: &[u8]) -> bool {

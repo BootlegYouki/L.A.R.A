@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::uploads::{file_part, material_form, raw_upload, Class, RawBody, HTML, MP4, PDF};
+use common::uploads::{assert_file_too_large, file_part, material_form, raw_upload, Class, RawBody, HTML, MP4, PDF};
 use reqwest::multipart::Form;
 use serde_json::Value;
 
@@ -165,8 +165,7 @@ async fn a_300_mb_upload_is_refused_and_leaves_no_file() {
     let class = Class::start().await;
     let fields = [("classroom_id", class.id.as_str()), ("title", "Big video"), ("file_type", "VIDEO")];
     for body in [RawBody::Declared(300 * 1024 * 1024), RawBody::Chunked(300 * 1024 * 1024)] {
-        let (status, answer) = raw_upload(&class.hub, "/api/materials", class.teacher(), &fields, body).await;
-        assert_eq!((status, error_code(&answer)), (413, "FILE_TOO_LARGE"), "{answer}");
+        assert_file_too_large(raw_upload(&class.hub, "/api/materials", class.teacher(), &fields, body).await);
         assert!(class.files_in("tmp").is_empty(), "the partial upload is deleted");
         assert!(class.files_in("materials").is_empty());
     }
