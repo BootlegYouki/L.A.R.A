@@ -1052,12 +1052,35 @@ def submission_create(req):
     need(fields, "submission_id")
     if "file" not in files:
         raise ApiError(400, "BAD_REQUEST", "Missing file")
-    t = now_ms()
+    received_at = now_ms()
+    file_hash = hashlib.sha256(files["file"]).hexdigest()
+    turned_in_at = fields.get("turned_in_at")
+    if turned_in_at is not None:
+        try:
+            turned_in_at = int(turned_in_at)
+        except ValueError:
+            raise ApiError(400, "BAD_REQUEST", "turned_in_at must be an integer epoch-millisecond timestamp")
+    effective_time = min(turned_in_at, received_at) if turned_in_at is not None else received_at
     existing = next((s for s in STATE.submissions.values()
                      if s["assignment_id"] == asg["id"] and s["student_id"] == req.user["id"]), None)
+    if (existing and existing["id"] == fields["submission_id"]
+            and existing.get("_file_sha256") == file_hash):
+        return existing
+    if existing and existing.get("score") is not None:
+        raise ApiError(409, "ALREADY_GRADED", "This submission has already been graded")
+    if (asg.get("due_date") is not None and not asg.get("allow_late", False)
+            and effective_time > asg["due_date"]):
+        raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
                        "file_type": "IMAGE", "score": None, "teacher_feedback": None}
-    sub["submitted_at"], sub["updated_at"] = t, t
+    if existing and existing["id"] != fields["submission_id"]:
+        old_id = existing["id"]
+        STATE.submissions.pop(old_id, None)
+        STATE.submission_files.pop(old_id, None)
+        STATE.log("assignment_submissions", old_id, asg["classroom_id"], req.user["id"], action="DELETE")
+        sub["id"] = fields["submission_id"]
+    sub["submitted_at"], sub["received_at"], sub["updated_at"] = effective_time, received_at, received_at
+    sub["_file_sha256"] = file_hash
     STATE.submissions[sub["id"]] = sub
     STATE.submission_files[sub["id"]] = files["file"]
     STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
