@@ -222,10 +222,10 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
 }
 
 @Composable
-private fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () -> Unit) {
-    val active = state.phase == DownloadPhase.DOWNLOADING || state.phase == DownloadPhase.PAUSED
+internal fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () -> Unit) {
+    val downloading = state.phase == DownloadPhase.DOWNLOADING
     val percent = if (state.total > 0) (state.bytes * 100 / state.total).toInt() else 0
-    if (active || state.phase == DownloadPhase.COMPLETE) {
+    if (downloading || state.phase == DownloadPhase.PAUSED || state.phase == DownloadPhase.COMPLETE) {
         val label = when (state.phase) {
             DownloadPhase.DOWNLOADING -> R.string.video_downloading
             DownloadPhase.COMPLETE -> R.string.video_downloaded
@@ -243,11 +243,10 @@ private fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () -
     if (state.phase == DownloadPhase.FAILED) Text(stringResource(R.string.video_download_failed), style = MaterialTheme.typography.titleMedium)
     state.problem?.let { VideoMessage(problemText(it)) }
     if (state.phase != DownloadPhase.COMPLETE) {
-        Button(onClick = if (active) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-            Text(stringResource(if (active) R.string.video_cancel else if (state.bytes > 0) R.string.video_resume else R.string.video_save))
+        Button(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+            Text(stringResource(if (downloading) R.string.video_cancel
+                else if (state.phase == DownloadPhase.PAUSED || state.bytes > 0) R.string.video_resume else R.string.video_save))
         }
-        if (state.phase == DownloadPhase.PAUSED) OutlinedButton(onClick = save,
-            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.video_resume)) }
     }
 }
 

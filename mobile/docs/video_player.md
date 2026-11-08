@@ -43,6 +43,8 @@ Successful bytes move from the partial to a final `.video` file using a same-dir
 
 Cancel stops the request/job and retains progress; it does not delete saved bytes. While this screen is foreground, transport failures show a paused/offline message and retry after three seconds. User cancellation stops retries. Leaving/backgrounding pauses the transfer; returning resumes a requested save. Process death preserves partial bytes but requires reopening and tapping Resume. There is no new background worker or service. Network validation never depends on an internet-validated Wi-Fi connection.
 
+Download actions follow the displayed phase: DOWNLOADING shows the primary cancel/keep-progress action wired to `pause`; PAUSED shows exactly one primary Resume action wired to `save`, including before the first byte arrives. Other states retain their existing actions. The [PR #258 review-fix evidence](evidence/59/review-fix/README.md) records the on-device Compose regression tests.
+
 ## Verification and integration limitations
 
 See [evidence/59/README.md](./evidence/59/README.md) for actual results, commands and limitations. Pure unit tests use deterministic streams or loopback MockWebServer. `VideoMockIntegrationTest` is separately gated by the existing `LARA_SYNC_MOCK=1` convention. `VideoDeviceTest` uses a separate APK ID and a synthetic H.264 fixture; it is not evidence of Python-mock or Rust-Hub video decoding.

@@ -38,6 +38,7 @@ import org.junit.runners.MethodSorters
 import org.junit.runner.RunWith
 import org.lara.app.AppContainer
 import org.lara.app.MainActivity
+import org.lara.app.R
 import org.lara.app.data.local.AccountDatabases
 import org.lara.app.data.local.dao.CacheBatch
 import org.lara.app.data.local.entities.*
@@ -45,6 +46,9 @@ import org.lara.app.data.remote.StoredToken
 import org.lara.app.data.remote.TokenStore
 import org.lara.app.data.remote.discovery.HubEndpoint
 import org.lara.app.domain.VideoSource
+import org.lara.app.domain.DownloadPhase
+import org.lara.app.domain.VideoDownload
+import org.lara.app.ui.screens.classwork.DownloadControls
 import org.lara.app.ui.screens.classwork.VideoPlayerScreen
 import org.lara.app.ui.theme.*
 
@@ -57,6 +61,46 @@ class VideoDeviceTest {
     private val context get() = instrumentation.targetContext
     private val ownerFile get() = File(context.filesDir, "video-test-owner.txt")
     private fun guard() { check(context.packageName == "org.lara.app.sprint33video") }
+    @Test fun ePausedDownloadShowsExactlyOneWorkingResumeAction() {
+        guard()
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            for (bytes in listOf(0L, 32_768L)) {
+                assertDownloadAction(scenario, VideoDownload(DownloadPhase.PAUSED, bytes, 65_536),
+                    R.string.video_resume, R.string.video_cancel, expectedSaves = 1, expectedPauses = 0)
+            }
+        }
+    }
+    @Test fun fDownloadingShowsOnlyWorkingPauseAction() {
+        guard()
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            assertDownloadAction(scenario, VideoDownload(DownloadPhase.DOWNLOADING, 32_768, 65_536),
+                R.string.video_cancel, R.string.video_resume, expectedSaves = 0, expectedPauses = 1)
+        }
+    }
+    private fun assertDownloadAction(scenario: ActivityScenario<MainActivity>, state: VideoDownload,
+        expectedLabel: Int, absentLabel: Int, expectedSaves: Int, expectedPauses: Int) {
+        var saves = 0
+        var pauses = 0
+        scenario.onActivity { activity -> activity.setContent {
+            LaraTheme { Surface(color = LaraColors.Canvas) {
+                Column(Modifier.fillMaxSize().safeDrawingPadding().padding(LaraSpacing.S4)) {
+                    DownloadControls(state, save = { saves++ }, pause = { pauses++ })
+                }
+            } }
+        } }
+        val expected = context.getString(expectedLabel)
+        val absent = context.getString(absentLabel)
+        waitUntil("Download action missing: $expected") { nodes().any { it.text?.toString() == expected } }
+        assertEquals("Expected exactly one $expected control", 1, nodes().count { it.text?.toString() == expected })
+        assertFalse("Unexpected $absent control", nodes().any { it.text?.toString() == absent })
+        assertEquals("Expected a single actionable download button", 1, nodes().count { it.isClickable })
+        val target = clickTarget(nodes().single { it.text?.toString() == expected })
+        assertTrue(target.isEnabled)
+        assertTrue(target.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+        instrumentation.waitForIdleSync()
+        assertEquals(expectedSaves, saves)
+        assertEquals(expectedPauses, pauses)
+    }
     private fun fixture() = instrumentation.context.assets.open("video-lesson.mp4").use { it.readBytes() }
     private fun waitUntil(message: String, predicate: () -> Boolean) {
         val deadline = SystemClock.uptimeMillis() + 20_000
