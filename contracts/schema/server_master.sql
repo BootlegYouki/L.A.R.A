@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     file_path TEXT NOT NULL,                   -- Server photo storage path (never sent to clients)
     file_type TEXT NOT NULL DEFAULT 'IMAGE' CHECK(file_type IN ('IMAGE', 'DOCUMENT')),
     submitted_at INTEGER NOT NULL,
+    received_at INTEGER NOT NULL,
     score INTEGER CHECK(score IS NULL OR score >= 0),
     teacher_feedback TEXT,
     updated_at INTEGER NOT NULL,

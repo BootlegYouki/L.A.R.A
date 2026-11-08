@@ -56,6 +56,18 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
         return quiz
 
+    def submit_homework(self, assignment_id, submission_id, file_bytes, turned_in_at=None):
+        boundary = "HW-BOUNDARY"
+        parts = [f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\n{submission_id}\r\n']
+        if turned_in_at is not None:
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="turned_in_at"\r\n\r\n{turned_in_at}\r\n')
+        body = "".join(parts).encode() + (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="work.jpg"\r\n'
+            f'Content-Type: image/jpeg\r\n\r\n'
+        ).encode() + file_bytes + f'\r\n--{boundary}--\r\n'.encode()
+        return call(BASE, "POST", f"/api/assignments/{assignment_id}/submit", token=self.pupil, raw=body,
+                    headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+
     def test_requires_bearer_token(self):
         status, body, _ = call(BASE, "GET", "/api/classrooms")
         self.assertEqual(status, 401)
@@ -473,7 +485,7 @@ class TestMockHub(unittest.TestCase):
         parts = "".join(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'
                         for k, v in (("classroom_id", CLASSROOM), ("title", "Worksheet"), ("file_type", "WORKSHEET"),
                                      ("assignment_id", asg)))
-        body = (parts + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="w.pdf"\r\n\r\nPDF\r\n--{boundary}--\r\n').encode()
+        body = (parts + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="w.pdf"\r\n\r\n%PDF-1.4\nexample\n%%EOF\r\n--{boundary}--\r\n').encode()
         _, mat, _ = call(BASE, "POST", "/api/materials", token=self.teacher, raw=body,
                          headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
         self.assertEqual(mat["assignment_id"], asg)
@@ -490,15 +502,57 @@ class TestMockHub(unittest.TestCase):
         sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         asg = self.pull(self.pupil)["assignments"][0]["id"]
-        boundary = "XX"
-        body = (f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\nsub-1\r\n'
-                f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="a.jpg"\r\n\r\nJPEGDATA\r\n--{boundary}--\r\n').encode()
-        status, _, _ = call(BASE, "POST", f"/api/assignments/{asg}/submit", token=self.pupil, raw=body,
-                            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        status, _, _ = self.submit_homework(asg, "sub-1", b"\xff\xd8\xff\xe0\x00\x10JFIF\x00sample")
         self.assertEqual(status, 200)
         self.assertEqual(len(self.pull(self.pupil)["submissions"]), 1)
         self.assertEqual(self.pull(self.teacher)["submissions"][0]["student_id"], self.pull(self.pupil)["submissions"][0]["student_id"])
         self.assertEqual(self.pull(ana)["submissions"], [], "classmates must never see each other's homework")
+
+    def test_homework_late_submission_rules_and_idempotent_retry(self):
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        assignment = self.server.state.assignments[asg]
+        image = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00first"
+        different_image = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00second"
+
+        assignment["due_date"] = int(time.time() * 1000) + 60_000
+        status, on_time, _ = self.submit_homework(asg, "on-time", image)
+        self.assertEqual(status, 200)
+        self.assertLessEqual(on_time["submitted_at"], on_time["received_at"])
+        self.assertEqual(on_time["received_at"], on_time["updated_at"])
+
+        assignment["due_date"] = int(time.time() * 1000) - 1
+        status, error, _ = self.submit_homework(asg, "late-refused", different_image)
+        self.assertEqual((status, error["error"]["code"]), (409, "LATE_SUBMISSION"))
+
+        assignment["allow_late"] = True
+        status, late, _ = self.submit_homework(asg, "late-allowed", different_image)
+        self.assertEqual(status, 200)
+        self.assertEqual(late["submitted_at"], late["received_at"])
+        assignment["allow_late"] = False
+
+        assignment["due_date"] = int(time.time() * 1000) - 10_000
+        before_deadline = assignment["due_date"] - 1
+        status, offline, _ = self.submit_homework(asg, "offline-on-time", image, before_deadline)
+        self.assertEqual(status, 200)
+        self.assertEqual(offline["submitted_at"], before_deadline)
+        self.assertGreater(offline["received_at"], assignment["due_date"])
+
+        assignment["due_date"] = int(time.time() * 1000) + 60_000
+        future = int(time.time() * 1000) + 3_600_000
+        status, clamped, _ = self.submit_homework(asg, "future-time", different_image, future)
+        self.assertEqual(status, 200)
+        self.assertLess(clamped["submitted_at"], future)
+        self.assertEqual(clamped["submitted_at"], clamped["received_at"])
+
+        status, graded, _ = call(BASE, "PATCH", f"/api/submissions/{clamped['id']}",
+                                 {"score": 10, "teacher_feedback": "Good work"}, self.teacher)
+        self.assertEqual(status, 200)
+        assignment["due_date"] = int(time.time() * 1000) - 1
+        status, retry, _ = self.submit_homework(asg, "future-time", different_image, future)
+        self.assertEqual(status, 200)
+        self.assertEqual(retry, graded)
+        status, error, _ = self.submit_homework(asg, "different-id", image)
+        self.assertEqual((status, error["error"]["code"]), (409, "ALREADY_GRADED"))
 
     def test_admin_routes_are_admin_only(self):
         status, _, _ = call(BASE, "GET", "/api/admin/users", token=self.teacher)

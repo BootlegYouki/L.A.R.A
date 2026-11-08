@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     file_path TEXT NOT NULL,                   -- local image path on device storage
     file_type TEXT NOT NULL DEFAULT 'IMAGE' CHECK(file_type IN ('IMAGE', 'DOCUMENT')),
     submitted_at INTEGER NOT NULL,
+    received_at INTEGER,                       -- NULL until the Hub acknowledges the queued upload
     score INTEGER,                             -- graded score received from the Hub
     teacher_feedback TEXT,
     updated_at INTEGER NOT NULL,
