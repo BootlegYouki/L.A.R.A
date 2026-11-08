@@ -213,6 +213,62 @@ class Conversation(unittest.TestCase):
             run_eval.build_conversation(TEMPLATE, huge, self.prompt(), False)
 
 
+def counter(per_word):
+    """A stand-in for the model's tokenizer: `per_word` tokens for every word."""
+    return lambda text: len(text.split()) * per_word
+
+
+class TokenizerBudget(unittest.TestCase):
+    """The Lead, #73, 2026-11-08 (#261): the run counts every part of the budget with the model's tokenizer."""
+
+    def prompt(self, **extra):
+        return {"id": "P1", "lesson_id": "L", "language": "EN", "message": "percent", **extra}
+
+    def test_the_tokenizer_count_replaces_the_token_estimate(self):
+        # The estimates say both fit (2 x 100). The tokenizer says 900 each, and 2048 - 6 - 300 leaves 1742.
+        template = "Reply in {reply_language}.\n{lesson_chunks}"
+        two = lesson(chunk("a", 0, None, words(450), 100), chunk("b", 1, None, "percent " + words(449), 100))
+        built = run_eval.build_conversation(template, two, self.prompt(), False, count=counter(2))
+        self.assertEqual(built["picked_chunk_ids"], ["b"])
+        # Offline (validate, no model loaded) the estimates still stand in.
+        self.assertEqual(run_eval.build_conversation(template, two, self.prompt(), False)["picked_chunk_ids"], ["a", "b"])
+
+    def test_the_system_prompt_and_the_history_are_counted_with_the_tokenizer(self):
+        template = words(700) + " {reply_language} {lesson_chunks}"  # 701 words filled: 1402 tokens at 2 a word
+        history = [user(words(50)), tutor(words(50))]  # 200 tokens, kept
+        # 2048 - 1402 - 200 - 300 = 146 left: 70 words (140 tokens) fit, 75 words (150) do not
+        fits = lesson(chunk("a", 0, None, "percent " + words(69), 1))
+        over = lesson(chunk("a", 0, None, "percent " + words(74), 1))
+        prompt = self.prompt(history=history)
+        self.assertEqual(run_eval.build_conversation(template, fits, prompt, False, count=counter(2))["picked_chunk_ids"], ["a"])
+        with self.assertRaisesRegex(ValueError, "P1"):
+            run_eval.build_conversation(template, over, prompt, False, count=counter(2))
+
+    def test_the_history_is_trimmed_with_the_tokenizer(self):
+        history = [user(words(100)), tutor(words(100))]  # 280 estimated tokens, 400 by a 2-a-word tokenizer
+        self.assertEqual(len(run_eval.trim_history(history)), 2)
+        self.assertEqual(run_eval.trim_history(history, count=counter(2)), history[1:])
+
+    def test_the_conversation_says_how_much_history_was_sent(self):
+        template = "Reply in {reply_language}.\n{lesson_chunks}"
+        built = run_eval.build_conversation(template, THREE, self.prompt(history=[user(words(100)), tutor(words(100))]),
+                                            False, count=counter(2))
+        self.assertEqual(built["history_sent"], 1)
+        self.assertEqual([m["role"] for m in built["messages"]], ["system", "assistant", "user"])
+
+
+class ServerTokenizer(unittest.TestCase):
+    def server(self):
+        args = mock.Mock(gpu_layers=0, threads=None)
+        return run_eval.LlamaServer("llama-server", Path("m.gguf"), 1, args, Path("log.txt"))
+
+    def test_text_is_counted_by_tokenize_without_special_tokens_and_counted_once(self):
+        srv = self.server()
+        with mock.patch.object(run_eval, "_post", return_value={"tokens": [1, 2, 3]}) as post:
+            self.assertEqual((srv.tokens("ten percent"), srv.tokens("ten percent")), (3, 3))
+        post.assert_called_once_with(f"{srv.base}/tokenize", {"content": "ten percent", "add_special": False})
+
+
 class Validation(unittest.TestCase):
     def data(self, history):
         return {"version": 1, "lessons": {"L": lesson(chunk("c0", 0, None, "text"))},
@@ -286,6 +342,7 @@ class PromptSetRules(unittest.TestCase):
 
 class FakeServer:
     asked = []
+    counted = []
 
     def __init__(self, binary, gguf, slots, args, log_path, template_kwargs=None):
         self.argv = ["llama-server"]
@@ -302,6 +359,13 @@ class FakeServer:
 
     def prompt_tokens(self, messages):
         return 10
+
+    def tokens(self, text):
+        """Each lesson chunk of LONG_SET is 800 tokens, like its estimates; anything else is words x 1.4."""
+        FakeServer.counted.append(text)
+        if any(c["text"] in text for c in LONG_SET["lessons"]["L"]["chunks"]):
+            return 800
+        return round(len(text.split()) * 1.4)
 
     def ask(self, messages, args):
         FakeServer.asked.append(messages)
@@ -332,6 +396,7 @@ class RunAndSheets(unittest.TestCase):
         gguf = self.dir / "m.gguf"
         gguf.write_bytes(b"gguf")
         FakeServer.asked = []
+        FakeServer.counted = []
         with mock.patch.object(run_eval, "LlamaServer", FakeServer), \
                 mock.patch.object(run_eval, "llama_server_version", return_value="test"), \
                 mock.patch.object(run_eval, "peak_rss_bytes", return_value=1):
@@ -362,6 +427,21 @@ class RunAndSheets(unittest.TestCase):
 
     def test_the_sheet_shows_the_expected_lesson_part_that_was_not_sent(self):
         self.assertEqual(self.sheet()["lesson_part_not_sent"], "Fractions\nA fraction names part of a whole")
+
+    def test_the_run_counts_the_budget_with_the_models_tokenizer(self):
+        self.assertTrue(any("Percent means out of hundred" in text for text in FakeServer.counted))
+        state = json.loads((self.out / "runs.json").read_text(encoding="utf-8"))
+        self.assertEqual(state["settings"]["prompt_budget"], "model tokenizer (llama-server /tokenize)")
+
+    def test_each_reply_saves_how_much_history_was_sent(self):
+        row = json.loads((self.out / "replies.jsonl").read_text(encoding="utf-8").splitlines()[0])
+        self.assertEqual(row["history_sent"], 2)
+
+    def test_the_sheet_shows_the_history_the_run_sent_not_a_new_trim(self):
+        path = self.out / "replies.jsonl"
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        path.write_text("".join(json.dumps({**r, "history_sent": 1}) + "\n" for r in rows), encoding="utf-8")
+        self.assertEqual(self.sheet()["earlier_exchanges"], "TUTOR: Where does the point go?")
 
 
 class ReportSpeedSplit(unittest.TestCase):

@@ -233,10 +233,15 @@ def system_prompt(template, chunks, language):
 
 
 def estimate_tokens(text):
+    """Offline stand-in when no model is loaded (validate, coverage, tests). Since #261 section 3.1 counts the run's
+    budget with the model's tokenizer: words x 1.4 undercounts math text by about 8% (P070, #73)."""
     return len(text.split()) * 1.4
 
 
-def _chunk_tokens(chunk):
+def _chunk_tokens(chunk, count=None):
+    """With `count` (the model's tokenizer), the chunk as `lesson_text` sends it, and `token_estimate` is not used."""
+    if count is not None:
+        return count(lesson_text([chunk]))
     if chunk.get("token_estimate") is not None:
         return chunk["token_estimate"]
     return estimate_tokens(f"{chunk.get('heading') or ''} {chunk['text']}")
@@ -251,18 +256,18 @@ def _last_message(history, role):
     return next((m for m in reversed(history) if m["role"] == role), {})
 
 
-def trim_history(history):
+def trim_history(history, count=estimate_tokens):
     """Section 3.2: the last 3 exchanges, dropping the oldest whole message until they fit 300 tokens."""
     kept = history[-HISTORY_MAX_MESSAGES:]
-    while sum(estimate_tokens(m["content"]) for m in kept) > HISTORY_MAX_TOKENS:
+    while sum(count(m["content"]) for m in kept) > HISTORY_MAX_TOKENS:
         kept = kept[1:]
     return kept
 
 
-def pick_chunks(lesson, message, history, budget):
+def pick_chunks(lesson, message, history, budget, count=None):
     """Section 3.1 steps 2 to 6. Returns (picked chunks in order_index order, grounded chunk id)."""
     chunks = sorted(lesson.get("chunks", []), key=lambda c: c["order_index"])
-    if sum(_chunk_tokens(c) for c in chunks) <= budget:
+    if sum(_chunk_tokens(c, count) for c in chunks) <= budget:
         return chunks, chunks[0]["id"] if chunks else None
 
     previous = _last_message(history, "USER").get("content", "")
@@ -277,10 +282,10 @@ def pick_chunks(lesson, message, history, budget):
 
     picked, used = [], 0
     for c in candidates:
-        if used + _chunk_tokens(c) > budget:
+        if used + _chunk_tokens(c, count) > budget:
             break
         picked.append(c)
-        used += _chunk_tokens(c)
+        used += _chunk_tokens(c, count)
     grounded = picked[0]["id"] if picked else None  # candidates run best first
     return sorted(picked, key=lambda c: c["order_index"]), grounded
 
@@ -296,17 +301,21 @@ def chat_messages(system, history, message, merge_system):
     return [{"role": "user", "content": system}, *turns]
 
 
-def build_conversation(template, lesson, prompt, merge_system):
-    """The messages for one prompt, and the chunks they carry. Section 3.1 step 1 sets the lesson budget."""
+def build_conversation(template, lesson, prompt, merge_system, count=None):
+    """The messages for one prompt, and the chunks they carry. Section 3.1 step 1 sets the lesson budget.
+
+    `count` is the loaded model's tokenizer (`LlamaServer.tokens`); the run counts every part of the budget with it
+    (#261). Without it, words x 1.4 stands in so the set can be checked with no model loaded."""
+    measure = count or estimate_tokens
     history = prompt.get("history", [])
-    kept = trim_history(history)
-    budget = (CONTEXT_TOKENS - estimate_tokens(system_prompt(template, [], prompt["language"]))
-              - sum(estimate_tokens(m["content"]) for m in kept) - REPLY_RESERVE_TOKENS)
-    picked, grounded = pick_chunks(lesson, prompt["message"], history, budget)
+    kept = trim_history(history, measure)
+    budget = (CONTEXT_TOKENS - measure(system_prompt(template, [], prompt["language"]))
+              - sum(measure(m["content"]) for m in kept) - REPLY_RESERVE_TOKENS)
+    picked, grounded = pick_chunks(lesson, prompt["message"], history, budget, count)
     if lesson.get("chunks") and not picked:
         raise ValueError(f"{prompt['id']}: no chunk of its lesson fits the {budget:.0f} tokens left; split the lesson")
     return {"messages": chat_messages(system_prompt(template, picked, prompt["language"]), kept, prompt["message"], merge_system),
-            "picked_chunk_ids": [c["id"] for c in picked], "grounded_chunk_id": grounded}
+            "picked_chunk_ids": [c["id"] for c in picked], "grounded_chunk_id": grounded, "history_sent": len(kept)}
 
 
 def _normalize(text):
@@ -448,6 +457,7 @@ class LlamaServer:
         if args.threads:
             self.argv += ["-t", str(args.threads)]
         self.log_path = log_path
+        self._token_counts = {}
 
     def __enter__(self):
         self.log = open(self.log_path, "w", encoding="utf-8", errors="replace")
@@ -489,6 +499,14 @@ class LlamaServer:
             return len(_post(f"{self.base}/tokenize", {"content": prompt, "add_special": True})["tokens"])
         except (urllib.error.URLError, OSError, ValueError, KeyError):
             return None
+
+    def tokens(self, text):
+        """Tokens of `text` by the loaded model's tokenizer, for the section 3.1 budget (#261). No BOS: the text is
+        one part of the prompt. Each text is counted once; the system prompt and chunks recur across prompts."""
+        if text not in self._token_counts:
+            reply = _post(f"{self.base}/tokenize", {"content": text, "add_special": False})
+            self._token_counts[text] = len(reply["tokens"])
+        return self._token_counts[text]
 
     def ask(self, messages, args):
         body = {"messages": messages, "stream": True, "max_tokens": args.max_tokens,
@@ -555,7 +573,8 @@ def cmd_run(args):
     (out / "logs").mkdir(parents=True, exist_ok=True)
     runs_path, replies_path = out / "runs.json", out / "replies.jsonl"
 
-    settings = {"context_tokens_per_slot": CONTEXT_TOKENS, "max_tokens": args.max_tokens,
+    settings = {"context_tokens_per_slot": CONTEXT_TOKENS, "prompt_budget": "model tokenizer (llama-server /tokenize)",
+                "max_tokens": args.max_tokens,
                 "temperature": args.temperature, "seed": args.seed, "gpu_layers": args.gpu_layers,
                 "threads": args.threads}
     header = {"prompt_set_version": data["version"],
@@ -586,7 +605,6 @@ def cmd_run(args):
             state["models"][name] = {"file": gguf.name, "size_bytes": gguf.stat().st_size,
                                      "sha256": sha256_file(gguf), "merge_system": merge,
                                      "chat_template_kwargs": template_kwargs}
-        conversations = [(p, build_conversation(template, lessons[p["lesson_id"]], p, merge)) for p in data["prompts"]]
         for slots in args.slots:
             key = f"{name}@{slots}"
             if key in state["runs"]:
@@ -598,6 +616,9 @@ def cmd_run(args):
                 n_ctx = srv.slot_context()
                 if n_ctx is not None and n_ctx < CONTEXT_TOKENS:
                     raise RuntimeError(f"{key}: each slot has {n_ctx} tokens of context, needs {CONTEXT_TOKENS}")
+                # Section 3.1 (#261): the budget is counted with this model's own tokenizer.
+                conversations = [(p, build_conversation(template, lessons[p["lesson_id"]], p, merge, count=srv.tokens))
+                                 for p in data["prompts"]]
                 counts = {p["id"]: srv.prompt_tokens(c["messages"]) for p, c in conversations}
                 over = [f"{pid} ({n})" for pid, n in counts.items() if n and n + args.max_tokens > CONTEXT_TOKENS]
                 if over:
@@ -609,7 +630,8 @@ def cmd_run(args):
                 wall = time.perf_counter() - started
                 peak = peak_rss_bytes(srv.proc.pid)
             rows = [{"model": name, "slots": slots, "prompt_id": p["id"], "prompt_tokens": counts[p["id"]],
-                     "picked_chunk_ids": c["picked_chunk_ids"], "grounded_chunk_id": c["grounded_chunk_id"], **r}
+                     "picked_chunk_ids": c["picked_chunk_ids"], "grounded_chunk_id": c["grounded_chunk_id"],
+                     "history_sent": c["history_sent"], **r}
                     for (p, c), r in zip(conversations, results)]
             with open(replies_path, "a", encoding="utf-8") as f:
                 for row in rows:
@@ -640,6 +662,13 @@ def _quoted(values):
     return " | ".join(f'"{v}"' for v in values)
 
 
+def _history_given(history, sent):
+    """The messages the run sent: the last `sent` of them, or the estimate's trim for folders that did not record it."""
+    if sent is None:
+        return trim_history(history)
+    return history[len(history) - sent:]
+
+
 def cmd_sheets(args):
     out = Path(args.out)
     data = load_prompt_set(args.prompts)
@@ -656,8 +685,10 @@ def cmd_sheets(args):
             sys.exit(f"--models: {unknown} have no replies in {out / 'replies.jsonl'}")
         replies = [row for row in replies if row["model"] in args.models]
 
-    # What the model was given is the same for a prompt in every run. Folders from before chunk picking lack it.
+    # What the model was given is the same for a prompt in every run. Folders from before chunk picking lack it,
+    # and folders from before the tokenizer budget (#261) lack history_sent; those re-trim with the estimate.
     sent = {row["prompt_id"]: row.get("picked_chunk_ids") for row in replies}
+    history_sent = {row["prompt_id"]: row.get("history_sent") for row in replies}
 
     unique = {}
     for row in replies:
@@ -685,7 +716,7 @@ def cmd_sheets(args):
                             "lesson_part_not_sent": lesson_text(missed),
                             "earlier_exchanges": "\n".join(
                                 f"{'LEARNER' if m['role'] == 'USER' else 'TUTOR'}: {m['content']}"
-                                for m in trim_history(p.get("history", []))),
+                                for m in _history_given(p.get("history", []), history_sent[p["id"]])),
                             "learner_message": p["message"], "expected_answer": _quoted(p["expected_answer"]),
                             "answer_flag": _quoted(answer_flags(entry["reply"], p["expected_answer"])),
                             "decline_flag": decline_flag(entry["reply"]) if declines_in_english(p) else "",
