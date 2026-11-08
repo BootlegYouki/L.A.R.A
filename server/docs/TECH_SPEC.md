@@ -262,7 +262,7 @@ Four issues' `Depends on` lines disagree with their step numbers (2.1 needs 2.4;
 | 1.0 | #39 | `Cargo.toml`, `lib.rs` (`serve`, `AppState`, `HubHandle`), `main.rs`, `config.rs`, `error.rs` (with `ROUTE_NOT_FOUND` fallback), `clock.rs`, `routes/mod.rs`, `websocket/mod.rs`, `tests/` `TestHub`, `src-tauri/src/main.rs`, `ui/package.json` with tokens and i18n | 0.1 |
 | 1.1 | #1 | `discovery/mdns.rs`, `discovery/udp.rs` | 1.0 |
 | 1.2 | #2 | `db/mod.rs`, `001_initial_schema.sql`, schema-parity test, **`db/sync_revisions.rs` `record_revision`** (Q5) | 1.0 |
-| 1.3 | #3 | `routes/portal.rs`, `static/portal/index.html` (bilingual guide) | 1.0 |
+| 1.3 | #3 | `routes/portal.rs`, `static/portal/index.html` (English guide) | 1.0 |
 | 1.4 | #20 | `tauri.conf.json`, `build.rs`, installer firewall hooks, `network/firewall_check.rs` | 1.0 |
 | 1.5 | #73 | `ai_eval/*`, `docs/benchmarks/ai_model_evaluation.md`, `server/docs/hub_hardware.md` | 0.1 |
 | 2.0 | #42 | `auth/*`, `routes/auth.rs`, `models/user.rs`, `db/users.rs`, `/api/admin/setup` in `routes/admin.rs` (moved from 2.3 by the Lead's #42 comment), the mock's role guards on every stub, `routes/backup.rs` admin-only stubs | 1.0, 1.2 |
@@ -330,7 +330,7 @@ python3 scripts/mock_hub.py               # reference behavior
 | 1.0 Scaffold | `TestHub` starts; `GET /api/nope` → 404 `ROUTE_NOT_FOUND`; bad WS token → close `4401`; window opens (screenshot) |
 | 1.1 Discovery | Test receives a beacon with the six keys; `dns-sd -B _lara._tcp` (Windows) or `avahi-browse _lara._tcp` (Linux) lists the Hub |
 | 1.2 Schema | Migrated temp DB's `sqlite_master` equals `server_master.sql` loaded into another; `journal_mode` = `wal` and `foreign_keys` = 1 on two pooled connections |
-| 1.3 Portal | Phone on the router opens `/download` with WAN unplugged, in English and Filipino; test finds no external URL in the HTML |
+| 1.3 Portal | Phone on the router opens `/download` with WAN unplugged, in English only; test finds no external URL in the HTML |
 | 1.4 Installer | Fresh Windows VM installs in under 3 minutes; `netsh advfirewall firewall show rule name=all` lists the three rules; Linux `ufw status` |
 | 1.5 AI spike | `docs/benchmarks/ai_model_evaluation.md`: pass rates, TTFT, tokens/s at 1, 2, 4 slots on the Hub PC, labelled developer-scored |
 | 2.0 Auth | Register, duplicate 409, login, wrong PIN 401, logout kills the token, 6th attempt in a minute limited; DB holds only token hashes; ported `test_admin_is_its_own_account_and_setup_runs_once` and `test_admin_routes_are_admin_only`; setup from the LAN or the tunnel → 403; admin login off the Hub PC → 403 `ADMIN_LOCAL_ONLY`, not counted toward the limit; register trims and limits LRN and name; every stub's role matches the mock |

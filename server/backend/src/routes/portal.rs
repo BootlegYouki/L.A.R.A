@@ -1,5 +1,5 @@
 //! The captive download portal (`GET /download`, contract `openapi.yaml`). No token: a learner who
-//! just joined the Wi-Fi opens it to get the app. It serves a bilingual 3-step sideloading guide
+//! just joined the Wi-Fi opens it to get the app. It serves an English 3-step sideloading guide
 //! and the client installers.
 //!
 //! Everything the page needs (HTML, CSS, Nunito and Phosphor) is compiled into the binary from

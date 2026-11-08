@@ -1,4 +1,4 @@
-//! The captive download portal (`GET /download`): a bilingual 3-step sideloading guide served
+//! The captive download portal (`GET /download`): an English 3-step sideloading guide served
 //! with no token, plus the bundled page assets and the client installers. Matches the mock's
 //! Sprint 1 flow (200 HTML on `/download`).
 
@@ -27,18 +27,19 @@ async fn root_shows_the_same_portal_page() {
 }
 
 #[tokio::test]
-async fn portal_guide_is_bilingual_and_shows_the_three_steps() {
+async fn portal_guide_is_english_only_and_shows_the_three_steps() {
     let hub = TestHub::start().await;
     let (_, _, body) = hub.get_raw("/download").await;
     let html = String::from_utf8(body).unwrap();
 
-    // English guide copy and its Filipino counterpart (bilingual rule, AGENTS §4).
+    // The three sideload steps.
     assert!(html.contains("Download L.A.R.A. (Android)"));
-    assert!(html.contains("I-download ang L.A.R.A. (Android)"));
-    // The three sideload steps, both languages.
     assert!(html.contains("Allow from this source"));
     assert!(html.contains("Install"));
-    assert!(html.contains("Pindutin"));
+    // The apps are English only (AGENTS.md section 1.4, decided 2026-11-03; #236).
+    for filipino in ["I-download", "Pindutin", "Paano i-install", "silid-aralan", "Kunin ang App", "Laptop o PC"] {
+        assert!(!html.contains(filipino), "the portal still shows Filipino text: {filipino:?}");
+    }
     hub.stop().await;
 }
 
