@@ -11,12 +11,13 @@ use axum::{Json, Router};
 
 use super::files::{serve_stored, stored_etag, Ranges};
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
-use super::{not_implemented_signed_in as stub, not_implemented_teacher as teacher};
+use super::not_implemented_teacher as teacher;
 use crate::auth::{require_role, AuthUser, MediaUser, Role};
 use crate::db::begin_immediate;
+use crate::db::material_chunks;
 use crate::db::materials::{self, Attachment, NewMaterial};
 use crate::error::ApiError;
-use crate::models::sync::Material;
+use crate::models::sync::{Material, MaterialChunk};
 use crate::services::class_access;
 use crate::storage::StorageKind;
 use crate::AppState;
@@ -28,7 +29,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/materials", post(upload).layer(DefaultBodyLimit::max(UPLOAD_BODY_LIMIT)))
         .route("/api/materials/{id}", patch(teacher).delete(teacher))
         .route("/api/materials/{id}/download", get(download))
-        .route("/api/materials/{id}/chunks", get(stub))
+        .route("/api/materials/{id}/chunks", get(chunks))
         .route("/api/materials/{id}/stream", get(stream))
 }
 
@@ -107,6 +108,15 @@ async fn download(
     let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
     let ranges = if file.file_type == "VIDEO" { Ranges::Resumable(stored_etag(&file.file_path)) } else { Ranges::WholeFile };
     serve_stored(path, "application/octet-stream", request, &id, ranges).await
+}
+
+/// Contract `GET /api/materials/{id}/chunks`: the lesson text for the AI tutor (3.1), for members
+/// of the class, also while it is archived. Bearer token only: `?token=` is for the media routes.
+async fn chunks(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Vec<MaterialChunk>>, ApiError> {
+    let mut conn = app.db.acquire().await?;
+    let file = materials::file_of(&mut conn, &id).await?.ok_or_else(|| ApiError::not_found("Material not found"))?;
+    class_access::require_member(&mut conn, &user, &file.classroom_id).await?;
+    Ok(Json(material_chunks::for_material(&mut conn, &id).await?))
 }
 
 /// Contract #259: `/stream` is for VIDEO materials, so a member asking for any other kind gets 404,
