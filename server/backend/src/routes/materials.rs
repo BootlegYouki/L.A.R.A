@@ -61,13 +61,16 @@ async fn upload(
             "File must be a PDF, Word document or image"
         }));
     };
+    let classroom_id = form.fields["classroom_id"].as_str();
+    // Read-only, before the file is kept or read (review of #267), so a teacher of another class
+    // cannot make the Hub parse a handout. The transaction checks again: the class can change.
+    class_access::require_teacher(&mut *app.db.acquire().await?, &user, classroom_id).await?;
     let size = i64::try_from(file.size).map_err(|_| ApiError::file_too_large())?;
     let stored = app.storage.commit(file, StorageKind::Material).await.map_err(storage_error)?;
     let id = uuid::Uuid::new_v4().to_string();
     // Lesson text for the AI tutor, before the write lock: parsing a long PDF takes CPU time.
     let chunks = if video { Vec::new() } else { extract(&app, &stored.relative, format, &form.fields["title"], &id).await };
 
-    let classroom_id = form.fields["classroom_id"].as_str();
     let now = app.clock.now_ms();
     let mut tx = begin_immediate(&app.db).await?;
     class_access::require_teacher(&mut tx, &user, classroom_id).await?;
