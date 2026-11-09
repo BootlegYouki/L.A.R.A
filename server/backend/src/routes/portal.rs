@@ -7,8 +7,10 @@
 //! The installers themselves are too large and are not committed (`.gitignore`); the Hub serves
 //! them from `<data_dir>/releases/` once the build or the installer step (1.4) puts them there.
 
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
 use axum::body::Body;
-use axum::extract::{Path, Request, State};
+use axum::extract::{ConnectInfo, Path, Request, State};
 use axum::http::{header, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
@@ -17,6 +19,7 @@ use mime::Mime;
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
+use crate::services::bandwidth;
 use crate::AppState;
 
 /// APKs must arrive with the Android package mime so the browser offers to install them, not save
@@ -107,11 +110,16 @@ async fn installer(State(app): State<AppState>, Path(file): Path<String>, reques
         _ => ServeFile::new(&full),
     };
 
+    // No one is signed in here, so the 2.0 MB/s cap is per device address (step 3.2, server
+    // TECH_SPEC Bandwidth). The Hub always serves with connect info (`lib.rs`).
+    let device = request.extensions().get::<ConnectInfo<SocketAddr>>().map_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED), |c| c.0.ip());
     // `ServeFile` reads the request's `Range` header and streams the body; it cannot fail here, so
-    // the error arm is unreachable, but we answer 404 rather than unwrap. The 2.0 MB/s per-client
-    // cap is added across every download route (and the portal) in step 3.2.
+    // the error arm is unreachable, but we answer 404 rather than unwrap.
     match service.oneshot(request).await {
-        Ok(res) => res.into_response(),
+        Ok(res) => {
+            let (parts, body) = res.into_response().into_parts();
+            Response::from_parts(parts, bandwidth::throttle(body, app.bandwidth.device(device)))
+        }
         Err(_) => not_found(),
     }
 }
