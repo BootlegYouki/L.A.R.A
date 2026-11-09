@@ -171,43 +171,37 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
         }
     }
     form?.let { action ->
-        val editing = action in setOf("create", "rename", "add")
-        AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
-            titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
-            shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
-            "create" -> R.string.classes_create; "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
-            "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
-        })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            if (action == "create" && review) {
-                Text(stringResource(R.string.classes_review), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.classes_review_help), color = LaraColors.TextSecondary)
-                ClassInfoCard {
-                    Text(stringResource(R.string.classes_name), style = MaterialTheme.typography.labelLarge)
-                    Text(name.trim())
-                    Text(stringResource(R.string.classes_section), style = MaterialTheme.typography.labelLarge)
-                    Text(section.trim())
-                }
-                OutlinedButton(onClick = { review = false }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.classes_edit)) }
-            } else if (editing) {
-                OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                    label = { Text(stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)) })
-                if (action != "add") OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                    label = { Text(stringResource(R.string.classes_section)) })
-            } else Text(stringResource(when (action) {
-                "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
-            }))
-        } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
-            onClick = {
-                if (action == "create" && !review) review = true else {
-                when(action) {
-                    "create" -> model.create(name, section); "rename" -> model.rename(name, section)
-                    "add" -> model.addTeacher(name); "archive" -> model.archive()
-                    "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
-                }; form = null
-                }
-            }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "create" && !review) R.string.classes_review else if (action == "create") R.string.classes_create else R.string.classes_confirm)) } },
-            dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Text(stringResource(R.string.enrollment_cancel_action))
-            } })
+        if (action == "create") {
+            CreateClassDialog(name, section, review, online, state.busy,
+                { name = it }, { section = it }, { review = true }, { review = false },
+                { model.create(name, section); form = null }, { form = null })
+        } else {
+            val editing = action in setOf("rename", "add")
+            AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
+                titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
+                shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
+                "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
+                "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
+            })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+                if (editing) {
+                    OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
+                        label = { Text(stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)) })
+                    if (action != "add") OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
+                        label = { Text(stringResource(R.string.classes_section)) })
+                } else Text(stringResource(when (action) {
+                    "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
+                }))
+            } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
+                onClick = {
+                    when(action) {
+                        "rename" -> model.rename(name, section)
+                        "add" -> model.addTeacher(name); "archive" -> model.archive()
+                        "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
+                    }; form = null
+                }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_confirm)) } },
+                dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    Text(stringResource(R.string.enrollment_cancel_action))
+                } })
+        }
     }
 }
