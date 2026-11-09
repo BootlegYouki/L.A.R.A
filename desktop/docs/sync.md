@@ -21,6 +21,10 @@ Local media paths survive metadata refresh. A received submission without a loca
 
 Outbox reads return at most 100 records per family. Photos use their separate future multipart upload path; in-progress quizzes are excluded. Only the caller's unchanged queued row matching the exact sent payload can be acknowledged. Partial/missing receipts leave rows queued; rejected rows retain the reason and are not automatically retried. A malformed receipt batch rolls back. Sync processes one batch per cycle; remaining work is picked up by later triggers/the 60-second tick. Stable IDs make retries safe after a lost response.
 
+## Submission receipt timestamp
+
+Migration 3 adds the nullable `assignment_submissions.received_at` column to the account databases and the Tauri SQL cache. Existing files, queued submissions and rejection state are preserved. Desktop stores the Hub's receipt timestamp when present in a sync pull. Older Hub responses can omit it, and queued uploads keep a null receipt timestamp until the Hub acknowledges them.
+
 ## Lead #246 follow-ups
 
 Roster mutation failures now have their own named Accept/Decline/Remove error, separate from roster-read errors. A read retry cannot erase the failed-action message or pretend to repeat that action. Failed Accept/Decline regression tests leave Pending/count unchanged, recover controls and assert one POST. Production reachable-Hub 500 tests verified the named errors and unchanged Pending state for both actions. These use only English resources and the existing warning style.

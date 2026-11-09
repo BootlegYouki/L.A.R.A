@@ -222,6 +222,13 @@ pub(crate) async fn database(root: &Path, key: &str) -> Result<SqliteConnection,
                 include_str!("../migrations/002_sync_rejections.sql").into(),
                 false,
             ),
+            sqlx::migrate::Migration::new(
+                3,
+                "submission_received_at".into(),
+                sqlx::migrate::MigrationType::ReversibleUp,
+                include_str!("../migrations/003_submission_received_at.sql").into(),
+                false,
+            ),
         ]),
         ..sqlx::migrate::Migrator::DEFAULT
     };

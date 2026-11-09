@@ -1,6 +1,8 @@
 //! `TestHub`: the real Hub on a temp data dir and free ports, one per test.
 #![allow(dead_code)]
 
+pub mod uploads;
+
 use lara_hub::auth::{sessions, Role};
 use lara_hub::db::users;
 use lara_hub::models::user::User;
@@ -101,6 +103,18 @@ impl TestHub {
         let status = res.status().as_u16();
         let headers = res.headers().clone();
         (status, headers, res.json().await.unwrap_or(Value::Null))
+    }
+
+    /// A JSON request with any method, such as `PATCH`.
+    pub async fn send_json(&self, method: Method, path: &str, body: &Value, token: Option<&str>) -> (u16, Value) {
+        let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
+        let mut req = self.client.request(method, url).json(body);
+        if let Some(token) = token {
+            req = req.bearer_auth(token);
+        }
+        let res = req.send().await.unwrap();
+        let status = res.status().as_u16();
+        (status, res.json().await.unwrap_or(Value::Null))
     }
 
     pub fn ws_url(&self) -> String {

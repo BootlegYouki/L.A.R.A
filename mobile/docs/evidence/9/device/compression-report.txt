@@ -1,0 +1,5 @@
+Submission status SYNCED
+Saved JPEG 1440x1080, 122376 bytes
+Synthetic 12MP compression 1: 99.889538 ms, 122758 bytes
+Synthetic 12MP compression 2: 87.608538 ms, 122758 bytes
+Synthetic 12MP compression 3: 84.633847 ms, 122758 bytes

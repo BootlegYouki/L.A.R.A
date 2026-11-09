@@ -121,3 +121,15 @@ export async function refreshClassrooms(account: CachedAccount, signal?: AbortSi
 export async function forgetAccount(account: CachedAccount) {
   await withDatabaseTimeout(invoke('forget_account_session', { hub: account.hub, userId: account.user.id }));
 }
+
+export async function signOut(account: CachedAccount, online: boolean): Promise<boolean> {
+  const token = online ? await accountToken(account).catch(() => null) : null;
+  await forgetAccount(account);
+  if (!token) return false;
+  try {
+    const result = await requestHub(account.hub, '/api/auth/logout', { token });
+    return object(result) && result.success === true;
+  } catch (error) {
+    return error instanceof ApiError && error.code === 'UNAUTHORIZED';
+  }
+}

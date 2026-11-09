@@ -1,0 +1,10 @@
+Device Android SDK built for x86_64
+Physical memory 3149860864 bytes
+Normalize, detect and render 508.0013 ms
+Camera JPEG compression 13.367 ms, 17539 bytes
+12MP normalize, detect and render 1582.5689 ms
+12MP scanned JPEG compression 48.3577 ms, 117546 bytes
+12MP JPEG compression 1 90.5793 ms, 127282 bytes
+12MP JPEG compression 2 72.4447 ms, 127282 bytes
+12MP JPEG compression 3 60.0936 ms, 127282 bytes
+Peak combined managed/native allocated heap 143334624 bytes, sampled every 5 ms

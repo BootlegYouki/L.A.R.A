@@ -59,7 +59,7 @@ One process on the Hub PC. The Tauri window starts the backend library on its ow
 | Auth | argon2id PINs (crate defaults: 19 MiB, t=2), at most one hash per core at a time; 32-byte random hex token, SHA-256 stored; 12 h expiry; `LoginLimiter` 5 attempts per minute per `lrn_or_id`, counted when they start and cleared by a success (step 2.0, [`auth_sessions.md`](./auth_sessions.md)) | `server/AGENTS.md`, `lara-hub-rust` skill; mock sessions last 12 h; 40 hashes at once would need 760 MB | bcrypt; JWT (no revocation) |
 | Clock | All time from `AppState.clock` (`SystemClock`, `FakeClock` in tests) | Time-limit and expiry rules testable | `SystemTime::now()` scattered |
 | Broker | Bounded `mpsc::channel(64)` per connection, `try_send`, drop when full | A slow phone never blocks others | Unbounded channels |
-| Files | `<data_dir>/storage/{materials,submissions,tmp}/<uuid>`; stream to `tmp/`, then rename | Paths never from client names; partial uploads never visible | Blobs in SQLite |
+| Files | `<data_dir>/storage/{materials,submissions,tmp}/<uuid>.<ext>` (extension from the sniffed format, step 3.3); stream to `tmp/`, then rename | Paths never from client names; partial uploads never visible | Blobs in SQLite |
 | Bandwidth | `BandwidthLimiter`: 2.0 MB/s bucket per signed-in user, per client IP on the public portal | `rules/networking-and-lan.md` §3 (per client, all streams) | Per connection |
 | Hub name | `<data_dir>/hub_config.json`, set from the window | Beacon `name`; no column for it | New `hub_meta` key (contract change) |
 | Firewall | The three named rules in `rules/networking-and-lan.md` §4.1; `ufw`/`firewalld` on Linux | Rules file outranks `server/README.md` | README's combined rule |
@@ -105,7 +105,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name, `test_seed` (`LARA_TEST_SEED=1`, CI only) |
 | `AppState` / `HubHandle` | struct | Shared state (`SqlitePool`, `Broker`, `AiQueue`, `Storage`, `Clock`, limiters) / running Hub with `shutdown()` |
 | `ApiError`, `ErrorCode` | struct, enum | Error envelope with the contract's code strings |
-| `AuthUser`, `Role`, `require_role` | extractor, enum, fn | Bearer (or `?token=` on media routes only) → `{ id, role }`; 403 on wrong role |
+| `AuthUser`, `MediaUser`, `Role`, `require_role` | extractors, enum, fn | Bearer → `{ id, role }`; `MediaUser` also takes `?token=`, on media routes only (3.3); 403 on wrong role |
 | `class_access::require_teacher`, `require_owner`, `require_member` | fn | Mock's `owned_classroom`, `owned_classroom(owner_only)`, `member_of`; "teaches" = owner or `classroom_teachers` row |
 | `LoginLimiter`, `BandwidthLimiter` | struct | Login attempts per `lrn_or_id`; 2.0 MB/s per client |
 | `record_revision`, `pull_page` | fn (`db::sync_revisions`) | Write one revision in the caller's transaction; read one visible page after a cursor |
@@ -141,11 +141,11 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/topics`, `/api/topics/{id}` | `routes/topics.rs` | 404 | Delete clears `topic_id` in the same transaction |
 | `/api/announcements`, `/{id}`, `/{id}/comments` | `routes/announcements.rs` | 403 `COMMENTS_DISABLED`; 404 | Push after commit |
 | `POST /api/materials` | `routes/materials.rs`, `storage/*`, `document_parser` | 413 `FILE_TOO_LARGE` over 250 MB | Temp file deleted; nothing committed |
-| `/api/materials/{id}` PATCH/DELETE, `/download`, `/chunks` | `routes/materials.rs` | 404 | Range resume |
+| `/api/materials/{id}` PATCH/DELETE, `/download`, `/chunks` | `routes/materials.rs` | 404 | VIDEO resumes with Range and If-Range (#259); other files whole |
 | `/api/materials/{id}/stream` | `routes/video_stream.rs`, `BandwidthLimiter` | 404; 416 | Bucket released |
 | `/api/assignments`, `/{id}`, `/{id}/submissions` | `routes/assignments.rs` | 404 (archived counts as missing) | Delete archives |
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
-| `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10) | Old file kept until the new one commits |
+| `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10); 409 `ALREADY_GRADED`, `LATE_SUBMISSION` (#257) | Old file kept until the new one commits; identical retry returns the stored row |
 | `/api/quizzes`, `/active`, `/{id}` GET/PATCH, `/begin` | `routes/quizzes.rs` | 404; 409 `QUIZ_NOT_DRAFT`; 409 `QUIZ_CLOSED` (Q8) | Begin returns the existing attempt |
 | `/api/quizzes/{id}/start`, `/close`, `/results` | `routes/quiz_control.rs`, `quiz_hub.rs` | Non-draft or second active quiz (Q1) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits |
 | `/api/quizzes/{id}/submit` | `routes/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt |
@@ -245,7 +245,7 @@ async fn unknown_route_is_route_not_found() {
 * **Write lock across I/O** (upload body, WebSocket send, `llama-server`) stalls every learner. Slow work first, then the transaction, then emit.
 * **Axum's 2 MB body limit** rejects uploads silently. Raise `DefaultBodyLimit` on upload routes only; never `field.bytes()` a video.
 * **Hub PC check** for admin setup and admin login (`auth::is_hub_pc`) needs `into_make_service_with_connect_info::<SocketAddr>()`, then a loopback peer **and** no `Cf-Connecting-IP` header: `cloudflared` also connects from loopback.
-* **`?token=` in logs:** log the path only. Accept `?token=` only on `/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file`.
+* **`?token=` in logs:** log the path only. Accept `?token=` only on the media routes, the ones with the contract's `TokenQuery`: `/api/materials/{id}/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file` (`/download` needs no token).
 * **Blocking the runtime:** argon2 (40 logins at once), PDF extraction and spreadsheet writing run in `spawn_blocking`.
 * **Wrong beacon IP:** virtual adapters (VirtualBox, Hyper-V, VPN). Pick the interface with the default route, show it in the window, let the admin choose if several.
 * **Windows Public profile** blocks 8080/8081/8888. Installer adds the rules; `PortHealth` detects and offers the fix.
@@ -351,7 +351,7 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 7. **Login limit:** no status or code in the contract (no 429), and does it count failed attempts only? **Call:** failed attempts only, 5 per minute per `lrn_or_id`, reset by a successful login. Over the limit: 429 `TOO_MANY_ATTEMPTS` with `Retry-After`, so clients show "wait a minute" instead of "wrong PIN". A `contract-change` adds both; needed before 2.0. **Status (2026-11-01):** built as called in 2.0 (attempts are counted when they start, so parallel guesses cannot slip past). The `contract-change` merged as #197; it also added register limits (trimmed LRN 1-32, name 1-100 characters) and Hub-PC-only admin login (`403 ADMIN_LOCAL_ONLY`), both built in 2.0.
 8. **Mock codes missing from the contract:** `ALREADY_EXISTS`, `QUIZ_CLOSED`, `ROUTE_NOT_FOUND`. We use them as the mock does. The 1.0 scaffold adds `501 NOT_IMPLEMENTED` for area stubs; it disappears as each step replaces its stubs, so no client relies on it.
 9. **Archived class enrollment writes (resolved by contract-change #216):** join, approve, reject and remove answer 403 `FORBIDDEN`. Approve/reject require `PENDING`; remove requires `ACTIVE`. A retry already at its target is 200 with no change or event; other states are 404 `NOT_FOUND`. Rejoining as `REJECTED` or `REMOVED` restores `PENDING`, preserving the enrollment ID, and notifies the class's teachers. Owner and co-teachers may list, read the roster and decide. Step 2.1 implements join/approve/reject; step 2.5 adds remove. See [`classroom_enrollment.md`](./classroom_enrollment.md).
-10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`). Since 2.0 a database error answers 500 `INTERNAL_ERROR` "Hub database error" until the contract names one.
+10. **Undefined limits and codes:** homework size cap (Axum's 2 MB default would reject documents; **call (3.3):** the same 250 MB as materials, see [`materials_and_submissions.md`](./materials_and_submissions.md)); USB missing or read-only; restore checksum mismatch; DB busy or internal error (mock: `MOCK_INTERNAL`). Since 2.0 a database error answers 500 `INTERNAL_ERROR` "Hub database error" until the contract names one.
 11. **Tombstone retention window** is undefined, so pruning is not scheduled.
 12. **#17 targets `tests/stress/`** (Lead-owned). Move it to `server/`?
 13. **Hub window layout:** no section 9 anatomy or showcase entry covers its screens, and staging's `rules/ui-and-accessibility.md` §1 says layout is not free design.

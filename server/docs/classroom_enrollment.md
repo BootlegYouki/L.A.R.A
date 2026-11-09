@@ -28,7 +28,7 @@ Nothing in this feature calls an external service or adds a dependency. A discon
 
 This issue adds no screen or UI strings; clients translate contract status/error codes using their own English dictionaries. Class-code grouping belongs to those clients.
 
-Rename, archive, remove and co-teacher management remain guarded stubs for #121. Tests seed archived, removed and co-teacher states directly to verify #6 without implementing those later routes. The shared WebSocket broker already supports bounded, targeted delivery and event-schema validation.
+Rename, archive, remove and co-teacher management are in [`class_management.md`](./class_management.md) (#121). The tests in the table below seed archived, removed and co-teacher states directly, which still verifies #6 on its own. The shared WebSocket broker already supports bounded, targeted delivery and event-schema validation.
 
 `POST /api/sync/pull` is implemented in #7; see [`delta_sync.md`](./delta_sync.md). It returns the same enrollment IDs as the roster and recovers missed approvals after reconnecting, including older class records for newly approved learners.
 
@@ -83,4 +83,4 @@ Ask a developer to start this branch's Hub with one teacher account and two lear
 6. Disconnect the teacher device before another learner joins. Reconnect: the pending roster entry must still be there. Disconnect the learner before accepting; reconnect: the learner must see the active class. Restart the Hub and check the same roster again.
 7. Stop the Hub. Requests should fail to connect, and the client should show its existing Hub-unreachable behavior. Restart the Hub: the class and enrollment must still be present. Checking the client's offline mirror is a separate client-team check.
 
-Archived and removed-state checks need fixtures from the developer until #121 supplies those management routes. Record screenshots and any client limitations alongside the backend test output in the PR.
+For archived and removed states, use the steps in [`class_management.md`](./class_management.md). Record screenshots and any client limitations alongside the backend test output in the PR.

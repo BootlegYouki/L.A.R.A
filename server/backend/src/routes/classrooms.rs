@@ -4,8 +4,9 @@ use axum::Json;
 use axum::Router;
 use serde_json::{json, Value};
 
-use super::{body::JsonBody, not_implemented_teacher as teacher};
+use super::body::JsonBody;
 use crate::auth::{require_role, AuthUser, Role};
+use crate::db::classrooms::ClassroomChange;
 use crate::db::{begin_immediate, classrooms};
 use crate::error::ApiError;
 use crate::models::classroom::{Classroom, RosterEntry};
@@ -17,10 +18,10 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/classrooms", get(list).post(create))
         .route("/api/classrooms/join", post(join))
-        .route("/api/classrooms/{id}", patch(teacher))
-        .route("/api/classrooms/{id}/remove", post(teacher))
-        .route("/api/classrooms/{id}/teachers", post(teacher))
-        .route("/api/classrooms/{id}/teachers/{teacher_id}", delete(teacher))
+        .route("/api/classrooms/{id}", patch(update))
+        .route("/api/classrooms/{id}/remove", post(remove))
+        .route("/api/classrooms/{id}/teachers", post(add_teacher))
+        .route("/api/classrooms/{id}/teachers/{teacher_id}", delete(remove_teacher))
         .route("/api/classrooms/{id}/roster", get(roster))
         .route("/api/classrooms/{id}/approve", post(approve))
         .route("/api/classrooms/{id}/reject", post(reject))
@@ -102,7 +103,7 @@ async fn approve(
     Path(id): Path<String>,
     body: JsonBody,
 ) -> Result<Json<Value>, ApiError> {
-    decide(app, user, id, body, true).await
+    decide(app, user, id, body, EnrollmentStatus::Active).await
 }
 
 async fn reject(
@@ -111,7 +112,16 @@ async fn reject(
     Path(id): Path<String>,
     body: JsonBody,
 ) -> Result<Json<Value>, ApiError> {
-    decide(app, user, id, body, false).await
+    decide(app, user, id, body, EnrollmentStatus::Rejected).await
+}
+
+async fn remove(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Value>, ApiError> {
+    decide(app, user, id, body, EnrollmentStatus::Removed).await
 }
 
 async fn decide(
@@ -119,7 +129,7 @@ async fn decide(
     user: AuthUser,
     id: String,
     body: JsonBody,
-    approved: bool,
+    status: EnrollmentStatus,
 ) -> Result<Json<Value>, ApiError> {
     require_role(&user, Role::Teacher)?;
     let student_id = body.text("student_id").unwrap_or_default();
@@ -127,27 +137,74 @@ async fn decide(
     class_access::require_teacher(&mut tx, &user, &id).await?;
     class_access::require_writable(&mut tx, &id).await?;
     let now = app.clock.now_ms();
-    let changed = classrooms::decide(
-        &mut tx,
-        &id,
-        &student_id,
-        if approved { "ACTIVE" } else { "REJECTED" },
-        now,
-    )
-    .await?;
+    let changed = classrooms::decide(&mut tx, &id, &student_id, status.as_str(), now).await?;
     tx.commit().await?;
     if changed {
         let event = ServerEvent::JoinApproval {
             classroom_id: id,
             student_id: student_id.clone(),
-            status: if approved {
-                EnrollmentStatus::Active
-            } else {
-                EnrollmentStatus::Rejected
-            },
+            status,
             timestamp: now,
         };
         app.broker.send_to_user(&student_id, &event);
     }
+    Ok(Json(json!({"success": true})))
+}
+
+fn optional_text(body: &JsonBody, key: &str) -> Result<Option<String>, ApiError> {
+    match body.0.get(key) {
+        None => Ok(None),
+        Some(Value::String(text)) => Ok(Some(text.clone())),
+        Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
+    }
+}
+
+async fn update(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Classroom>, ApiError> {
+    let mut tx = begin_immediate(&app.db).await?;
+    class_access::require_owner(&mut tx, &user, &id).await?;
+    let archived = match body.0.get("archived") {
+        None => None,
+        Some(Value::Bool(archived)) => Some(*archived),
+        Some(_) => return Err(ApiError::bad_request("archived must be true or false")),
+    };
+    let change = ClassroomChange {
+        name: optional_text(&body, "name")?,
+        section: optional_text(&body, "section")?,
+        archived,
+    };
+    let room = classrooms::update(&mut tx, &id, change, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(room))
+}
+
+async fn add_teacher(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Classroom>, ApiError> {
+    let mut tx = begin_immediate(&app.db).await?;
+    class_access::require_owner(&mut tx, &user, &id).await?;
+    body.need(&["lrn_or_id"])?;
+    let lrn_or_id = body.text("lrn_or_id").unwrap_or_default();
+    let room = classrooms::add_co_teacher(&mut tx, &id, &lrn_or_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(room))
+}
+
+async fn remove_teacher(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path((id, teacher_id)): Path<(String, String)>,
+) -> Result<Json<Value>, ApiError> {
+    let mut tx = begin_immediate(&app.db).await?;
+    class_access::require_owner(&mut tx, &user, &id).await?;
+    classrooms::remove_co_teacher(&mut tx, &id, &teacher_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
     Ok(Json(json!({"success": true})))
 }

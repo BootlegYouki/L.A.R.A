@@ -5,11 +5,11 @@ pub mod token;
 
 use std::net::SocketAddr;
 
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, Query};
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
-use axum::http::HeaderMap;
-use serde::Serialize;
+use axum::http::{HeaderMap, Uri};
+use serde::{Deserialize, Serialize};
 
 use crate::error::ApiError;
 use crate::AppState;
@@ -88,6 +88,35 @@ impl FromRequestParts<AppState> for AuthUser {
     }
 }
 
+/// [`AuthUser`] for media routes only (`/api/materials/{id}/download`, `/api/submissions/{id}/file`;
+/// step 3.2 adds `/stream`): HTML5 video and image views cannot send headers, so the contract
+/// (`TokenQuery`) also accepts `?token=` there. Every other route takes `AuthUser`, header only.
+pub struct MediaUser(pub AuthUser);
+
+impl FromRequestParts<AppState> for MediaUser {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(parts: &mut Parts, app: &AppState) -> Result<Self, Self::Rejection> {
+        let token = media_token(&parts.headers, &parts.uri).ok_or_else(ApiError::unauthorized)?;
+        let user = sessions::user_for_token(&app.db, &token, app.clock.now_ms()).await?;
+        user.map(Self).ok_or_else(ApiError::unauthorized)
+    }
+}
+
+#[derive(Deserialize)]
+struct TokenQuery {
+    token: Option<String>,
+}
+
+/// The bearer header when present, else `?token=` (as the mock's `_token` reads it).
+fn media_token(headers: &HeaderMap, uri: &Uri) -> Option<String> {
+    if let Some(token) = bearer_token(headers) {
+        return Some(token.to_owned());
+    }
+    let Query(query) = Query::<TokenQuery>::try_from_uri(uri).ok()?;
+    query.token.filter(|token| !token.is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,6 +134,17 @@ mod tests {
         assert_eq!(bearer_token(&headers("Bearer ")), None);
         assert_eq!(bearer_token(&headers("Basic abc")), None);
         assert_eq!(bearer_token(&HeaderMap::new()), None);
+    }
+
+    #[test]
+    fn media_routes_take_the_header_then_the_query() {
+        let uri = |s: &str| s.parse::<Uri>().unwrap();
+        assert_eq!(media_token(&HeaderMap::new(), &uri("/api/materials/m/download?token=abc")).as_deref(), Some("abc"));
+        assert_eq!(media_token(&headers("Bearer hdr"), &uri("/x?token=abc")).as_deref(), Some("hdr"));
+        assert_eq!(media_token(&HeaderMap::new(), &uri("/x?other=1&token=abc")).as_deref(), Some("abc"));
+        for bare in ["/x", "/x?token=", "/x?tokens=abc"] {
+            assert_eq!(media_token(&HeaderMap::new(), &uri(bare)), None, "{bare}");
+        }
     }
 
     #[test]

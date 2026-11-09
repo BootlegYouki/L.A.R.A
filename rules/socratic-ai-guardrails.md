@@ -45,7 +45,7 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
 
 A lesson longer than the window cannot be pasted in whole, so the Hub picks chunks on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, and deterministic chunk selection.
 
-1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus the chat history (section 3.2) minus 300 reserved for the reply. Use `material_chunks.token_estimate` (when it is empty, count words × 1.4).
+1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus the chat history (section 3.2) minus 300 reserved for the reply. Count every part with the loaded model's own tokenizer (`llama-server` `POST /tokenize`), never a words-based estimate: words × 1.4 undercounts math text by about 8%, enough to overflow the window (#73). `material_chunks.token_estimate` is only a hint for clients and is never used for this budget.
 2. **Short lesson:** if all of the lesson's chunks fit the budget, send all of them and skip steps 3 to 5.
 3. **Query words:** take the learner's message plus their previous message in this lesson's chat (so "I don't know" or "is it 5?" still finds the topic). Lowercase, split on anything that is not a letter or digit, drop words under 3 characters and these stopwords: `the and for are was what how why who when where which this that with from you your can does did not ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang lang din rin pa po`.
 4. **Score:** each chunk scores the number of distinct query words found in its `heading` + `text` (as whole words, lowercased).
@@ -60,7 +60,7 @@ A Socratic tutor builds on its own last clue and the learner's last answer, so t
 
 1. **Which turns:** the last 3 exchanges (up to 6 messages, learner and tutor) of this learner's chat about this material (same `student_id` and `material_id` in `ai_chat_messages`), oldest first. A chat about another material starts fresh.
 2. **Where:** as normal chat turns after the system prompt (`user` for `USER`, `assistant` for `TUTOR`), then the new learner message. Never paste them into the system prompt file; it keeps only its two placeholders.
-3. **Budget:** at most 300 tokens (words × 1.4). Drop the oldest whole message until it fits, so a long early reply never pushes out the latest one.
+3. **Budget:** at most 300 tokens, counted with the model's tokenizer as in section 3.1. Drop the oldest whole message until it fits, so a long early reply never pushes out the latest one.
 4. **Who reads it:** the Hub reads its own `ai_chat_messages`; clients send only the new message in `EVENT_AI_CHAT_REQUEST`.
 5. **Saving:** after each reply, the Hub stores the learner message and the tutor reply in `ai_chat_messages`, with the reply's `chunk_id` set to its `grounded_chunk_id`, so section 3.1 step 5 can reuse it. A reply cut off by an error is not stored.
 
