@@ -5,7 +5,20 @@ use std::path::Path;
 
 use super::{Block, ParseError};
 
+/// The PDF reader holds the whole file and its objects in memory, about twice the file size, and a
+/// timed-out parse keeps running. Past this the file is left unread: on the 4 GB reference Hub the
+/// model already takes about 2.4 GB. Handouts with a text layer are rarely more than a few MB; the
+/// files that reach this are mostly scans, which have no text to read anyway.
+const MAX_PDF_BYTES: u64 = 50 * 1024 * 1024;
+
 pub(super) fn pdf_blocks(path: &Path) -> Result<Vec<Block>, ParseError> {
+    read_pdf(path, MAX_PDF_BYTES)
+}
+
+fn read_pdf(path: &Path, max_bytes: u64) -> Result<Vec<Block>, ParseError> {
+    if std::fs::metadata(path)?.len() > max_bytes {
+        return Err(ParseError::TooLarge);
+    }
     let text = pdf_extract::extract_text(path).map_err(|e| ParseError::Pdf(e.to_string()))?;
     Ok(text_to_blocks(&text))
 }
@@ -34,12 +47,13 @@ fn text_to_blocks(text: &str) -> Vec<Block> {
             continue;
         }
         if joined.starts_with(char::is_lowercase) {
-            if let Some(Block::Heading(prev) | Block::Paragraph(prev)) = blocks.last() {
+            if let Some(last) = blocks.last_mut() {
+                let (Block::Heading(prev) | Block::Paragraph(prev)) = last;
                 if !prev.ends_with(['.', '?', '!', ':']) {
-                    let merged = join_lines(&[prev.as_str(), joined.as_str()]);
-                    if let Some(last) = blocks.last_mut() {
-                        *last = Block::Paragraph(merged);
-                    }
+                    // Appended in place: a long run of such blocks stays linear.
+                    let mut merged = std::mem::take(prev);
+                    append_line(&mut merged, &joined);
+                    *last = Block::Paragraph(merged);
                     continue;
                 }
             }
@@ -52,17 +66,21 @@ fn text_to_blocks(text: &str) -> Vec<Block> {
 fn join_lines(lines: &[&str]) -> String {
     let mut out = String::new();
     for line in lines {
-        if out.is_empty() {
-            out.push_str(line);
-        } else if out.ends_with('-') && line.starts_with(char::is_lowercase) {
-            out.pop();
-            out.push_str(line);
-        } else {
-            out.push(' ');
-            out.push_str(line);
-        }
+        append_line(&mut out, line);
     }
     out
+}
+
+fn append_line(out: &mut String, line: &str) {
+    if out.is_empty() {
+        out.push_str(line);
+    } else if out.ends_with('-') && line.starts_with(char::is_lowercase) {
+        out.pop();
+        out.push_str(line);
+    } else {
+        out.push(' ');
+        out.push_str(line);
+    }
 }
 
 fn is_page_number(text: &str) -> bool {
@@ -130,12 +148,30 @@ mod tests {
     }
 
     #[test]
+    fn many_wrapped_lines_rejoin_in_linear_time() {
+        // A long run with no sentence end: each block continues the one before it.
+        let text = vec!["and the water keeps moving through the cycle"; 50_000].join("\n\n");
+        let started = std::time::Instant::now();
+        let blocks = text_to_blocks(&format!("Start {text}."));
+        assert_eq!(blocks.len(), 1);
+        assert!(started.elapsed() < std::time::Duration::from_secs(2), "{:?}", started.elapsed());
+    }
+
+    #[test]
     fn fixture_pdf_keeps_the_sections_in_order() {
         let blocks = pdf_blocks(&fixture("lesson.pdf")).unwrap();
         let text = format!("{blocks:?}");
         let at = |word: &str| text.find(word).unwrap_or_else(|| panic!("{word} missing from {text}"));
         assert!(at("Evaporation") < at("Condensation") && at("Condensation") < at("Precipitation"), "{text}");
         assert!(text.contains("Paraño"), "{text}");
+    }
+
+    #[test]
+    fn a_pdf_over_the_size_limit_is_not_loaded() {
+        let lesson = fixture("lesson.pdf");
+        let size = std::fs::metadata(&lesson).unwrap().len();
+        assert!(read_pdf(&lesson, size).is_ok(), "a file at the limit is read");
+        assert!(matches!(read_pdf(&lesson, size - 1), Err(ParseError::TooLarge)), "a file past it is not");
     }
 
     #[test]

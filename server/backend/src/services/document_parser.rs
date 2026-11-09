@@ -12,8 +12,8 @@ use std::path::Path;
 use crate::storage::FileFormat;
 
 /// The chunks of a stored handout, or none. Never fails: a file with no text layer, an unreadable
-/// file and a parser panic (lopdf has known panic paths on broken fonts) all give an empty list
-/// and one warning that names no file contents. Images and videos have no lesson text.
+/// file, a PDF over 50 MB and a parser panic (lopdf has known panic paths on broken fonts) all give
+/// an empty list and one warning that names no file contents. Images and videos have no lesson text.
 pub fn extract_chunks(path: &Path, format: FileFormat, title: &str) -> Vec<ChunkDraft> {
     let parse: fn(&Path) -> Result<Vec<Block>, ParseError> = match format {
         FileFormat::Pdf => pdf::pdf_blocks,
@@ -62,6 +62,8 @@ pub enum ParseError {
     Xml(String),
     #[error("unreadable PDF: {0}")]
     Pdf(String),
+    #[error("PDF too large to read for lesson text")]
+    TooLarge,
 }
 
 impl ParseError {
@@ -72,6 +74,7 @@ impl ParseError {
             Self::Zip(_) => "not a readable Word document",
             Self::Xml(_) => "unreadable Word XML",
             Self::Pdf(_) => "unreadable PDF",
+            Self::TooLarge => "PDF too large to read",
         }
     }
 }

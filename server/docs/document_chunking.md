@@ -34,6 +34,7 @@ When a teacher uploads a PDF or Word handout, the Hub extracts its text, splits 
 | Chunks per material | 1,000 (`MAX_CHUNKS`) | The rest of the document is left out |
 | Extraction time | 20 s (`EXTRACT_TIMEOUT`) | Zero chunks and a warning; the upload still succeeds |
 | `word/document.xml` size | 64 MB decompressed | The rest is not read (guards against a ZIP bomb) |
+| PDF file size | 50 MB (`MAX_PDF_BYTES`) | Not read: zero chunks and a warning; the upload still succeeds |
 
 Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-printed handout gave 28 chunks in 79 to 96 ms, `lesson.pdf` 5 chunks in 13 ms, and `lesson.docx.zip` 4 chunks in under 1 ms. Issue #10 asks for under 2 seconds.
 
@@ -42,7 +43,7 @@ Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-print
 - **Extraction never fails an upload.** A scan or photo has no text layer and gets zero chunks (no OCR, PRD FR-3.2). An unreadable file, a parser panic (`lopdf` has known panic paths on broken fonts, so parsing runs under `catch_unwind`) or the timeout also give zero chunks. The tutor then says it cannot help with that file.
 - **`token_estimate` is a size hint, not the model's count.** Since #261 the prompt budget is counted with the model's own tokenizer; words x 1.4 undercounts math text by about 8%. The estimate only keeps chunks near 500 tokens and is never sent to clients (contract `MaterialChunk`).
 - **Logs name the material, never its text.** One `info` line per upload (`lesson text extracted material_id=… chunks=… ms=…`), and a `warn` with a fixed reason when extraction fails, since a parser's own message can quote the file.
-- **A timed-out parse keeps running** on its blocking thread until it ends; the upload has already moved on.
+- **A timed-out parse keeps running** on its blocking thread until it ends; the upload has already moved on. The PDF size limit bounds that work: the PDF reader holds the whole file and its objects in memory (about twice the file size), and on the 4 GB reference Hub the model already takes about 2.4 GB. Word files are not limited by size, since only their text part is read.
 - **PDF quirks** (`pdf-extract` on Chrome-printed files): some kerned letter pairs come out with a space after the first letter ("H igh", "C louds"), and a table row reads as one line, so a short row such as "Rain Snow" can be taken for a heading. Word documents have neither problem.
 - **No backfill.** Materials uploaded before 3.1 have no chunks; uploading the file again creates them.
 - **TXT is not extracted.** Since #53 the Hub refuses `.txt` uploads (not a format it keeps), so only PDF and DOCX have lesson text.
@@ -53,6 +54,7 @@ Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-print
 2. **Limits:** 1,000 chunks per material and a 20-second extraction limit. Past the cap the material keeps the chunks made so far; after a timeout it gets none.
 3. **Heading fallback:** text before the first heading takes the material's title as its heading, as the mock does.
 4. **No backfill:** materials uploaded before 3.1 keep zero chunks until uploaded again.
+5. **PDF size limit:** PDFs over 50 MB are not read (uploads allow 250 MB). Handouts with a text layer are rarely more than a few MB; most files past the limit are scans with no text anyway.
 
 ## Acceptance evidence
 
