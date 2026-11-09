@@ -966,10 +966,13 @@ def video_bytes(m):
 
 
 def byte_range(req, m, data, default_span):
-    """Range per RFC 9110: no header (or a stale If-Range) sends the whole file as 200."""
+    """Range per RFC 9110: no header (or a stale If-Range) sends the whole file as 200; a stale If-Match is 412."""
     size, header = len(data), req.handler.headers.get("Range")
     etag = f'"{m["id"]}-{m["updated_at"]}"'
     base = {"Accept-Ranges": "bytes", "ETag": etag}
+    if_match = req.handler.headers.get("If-Match")
+    if if_match and not any(t.strip() in ("*", etag) for t in if_match.split(",")):
+        return Raw(b"", "video/mp4", 412, {"ETag": etag})
     if_range = req.handler.headers.get("If-Range")
     if not header or not header.startswith("bytes=") or (if_range and if_range != etag):
         if default_span >= size:

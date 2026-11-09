@@ -132,6 +132,12 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual((status, again), (200, whole), "a changed file restarts from byte 0")
         status, _, _ = call(BASE, "GET", path, token=self.pupil, headers={"Range": f"bytes={len(whole)}-"})
         self.assertEqual(status, 416)
+        status, tail, _ = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": etag})
+        self.assertEqual((status, tail), (206, whole[1000:]), "Android/Chrome resume with If-Match")
+        status, _, hdrs = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": '"stale"'})
+        self.assertEqual((status, hdrs["ETag"]), (412, etag), "a changed file is refused, so the client restarts")
 
     def test_stream_accepts_token_query_for_html5_video(self):
         status, _, _ = call(BASE, "GET", f"/api/materials/m2000000-0000-4000-8000-000000000002/stream?token={self.pupil}",
