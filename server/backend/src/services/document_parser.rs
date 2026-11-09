@@ -4,6 +4,7 @@
 
 pub mod chunk;
 mod docx;
+mod pdf;
 
 /// A piece of a document, in reading order.
 #[derive(Clone, Debug, PartialEq, Eq)]
