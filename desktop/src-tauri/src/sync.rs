@@ -181,6 +181,7 @@ const ENTITIES: &[Entity] = &[
             ("student_id", "uuid!"),
             ("file_type", "IMAGE|DOCUMENT!"),
             ("submitted_at", "int!"),
+            ("received_at", "int"),
             ("score", "nullable_int"),
             ("teacher_feedback", "nullable_string"),
             ("updated_at", "int"),
@@ -1285,6 +1286,10 @@ mod tests {
             .execute(&mut db)
             .await
             .unwrap();
+        sqlx::raw_sql(include_str!("../migrations/003_submission_received_at.sql"))
+            .execute(&mut db)
+            .await
+            .unwrap();
         (db, root)
     }
     #[tokio::test]
@@ -1565,7 +1570,7 @@ mod tests {
         p["quizzes"] = json!([{"id":QUIZ,"classroom_id":CLASS,"title":"Quiz","status":"CLOSED","time_limit_minutes":10,"started_at":null,"correct_answer":"secret"}]);
         p["comments"] = json!([{"id":COMMENT,"announcement_id":ANN,"author_id":USER,"content":"Comment","created_at":0}]);
         p["private_comments"] = json!([{"id":PRIVATE,"assignment_id":ASSIGN,"student_id":USER,"author_id":USER,"content":"Private","created_at":0}]);
-        p["submissions"] = json!([{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","assignment_id":ASSIGN,"student_id":USER,"file_type":"IMAGE","submitted_at":0,"score":null,"teacher_feedback":null,"file_path":"SECRET_SERVER_PHOTO"}]);
+        p["submissions"] = json!([{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","assignment_id":ASSIGN,"student_id":USER,"file_type":"IMAGE","submitted_at":0,"received_at":2,"score":null,"teacher_feedback":null,"file_path":"SECRET_SERVER_PHOTO"}]);
         p["quiz_attempts"] = json!([{"attempt_id":ATTEMPT,"quiz_id":QUIZ,"student_id":USER,"score":null,"total_points":10,"submitted_at":0}]);
         apply(&mut db, &user(), &SyncState::default(), p)
             .await
@@ -1602,6 +1607,13 @@ mod tests {
             .as_object()
             .unwrap()
             .contains_key("started_at"));
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT received_at FROM assignment_submissions")
+                .fetch_one(&mut db)
+                .await
+                .unwrap(),
+            2
+        );
         assert_eq!(
             sqlx::query_scalar::<_, String>("SELECT file_path FROM assignment_submissions")
                 .fetch_one(&mut db)
