@@ -99,7 +99,7 @@ impl ApiError {
     }
 
     pub fn class_code_invalid() -> Self {
-        Self::new(StatusCode::NOT_FOUND, ErrorCode::ClassCodeInvalid, "Hindi nahanap ang Class Code")
+        Self::new(StatusCode::NOT_FOUND, ErrorCode::ClassCodeInvalid, "Class code not found")
     }
 
     pub fn internal(message: impl Into<String>) -> Self {
