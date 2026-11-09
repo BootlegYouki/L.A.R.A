@@ -36,7 +36,7 @@ When a teacher uploads a PDF or Word handout, the Hub extracts its text, splits 
 | `word/document.xml` size | 64 MB decompressed | The rest is not read (guards against a ZIP bomb) |
 | PDF file size | 50 MB (`MAX_PDF_BYTES`) | Not read: zero chunks and a warning; the upload still succeeds |
 
-Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-printed handout gave 28 chunks in 79 to 96 ms, `lesson.pdf` 5 chunks in 13 ms, and `lesson.docx.zip` 4 chunks in under 1 ms. Issue #10 asks for under 2 seconds.
+Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-printed handout gave 28 chunks in 79 to 107 ms over five uploads, `lesson.pdf` 5 chunks in 11 to 17 ms, and `lesson.docx.zip` 4 chunks in 0 to 1 ms. Issue #10 asks for under 2 seconds.
 
 ## Gotchas
 
@@ -60,7 +60,7 @@ Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-print
 
 | Criterion | Evidence |
 |---|---|
-| Multi-page PDF extracted in under 2 seconds | Release build: 24 pages, 28 chunks, 79 to 96 ms (log lines in the PR) |
+| Multi-page PDF extracted in under 2 seconds | Release build: 24 pages, 28 chunks, 79 to 107 ms (log lines in the PR) |
 | Clients get JSON chunks without parsing PDFs | `chunks_route_answers_members_only`, `uploading_a_pdf_stores_ordered_chunks`, `uploading_a_docx_stores_chunks_with_its_headings`, `chunks_reach_learners_through_sync` |
 | Files with no text get zero chunks | `files_without_text_get_no_chunks`, `a_broken_pdf_still_uploads_with_no_chunks`, `scanned_pdf_has_no_blocks` |
 | Chunks stay within 500 tokens, nothing lost | `paragraphs_fill_a_chunk_up_to_500_tokens`, `a_long_paragraph_is_split_at_sentence_ends`, `a_run_without_sentence_ends_is_split_by_words`, `chunk_count_is_capped` |
