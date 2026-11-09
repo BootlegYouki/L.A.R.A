@@ -1,3 +1,4 @@
+pub mod material_chunks;
 pub mod materials;
 pub mod seed;
 pub mod submissions;
