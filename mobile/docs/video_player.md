@@ -8,7 +8,8 @@ Learners and teachers open videos from the existing Classwork topics or Stream a
 | --- | --- |
 | `domain/VideoRepository.kt` | Pure Kotlin source, download state, and repository contract |
 | `ui/screens/classwork/VideoPlayerScreen.kt` | Custom Compose controls around a controller-free Media3 rendering view |
-| `ui/screens/classwork/VideoViewModel.kt` | Resolve Room content, saving state, cancel, foreground retries |
+| `ui/screens/classwork/VideoViewModel.kt` | Resolve Room content, saving state, cancel, foreground retries and confirmed removal |
+| `ui/screens/classwork/VideoPlaybackSession.kt` | Retained player ownership and Media3 rendering-view handoff |
 | `data/repository/VideoRepository.kt` | Room lookup, account-private files, stale paths, completion transaction, pruning |
 | `data/media/DownloadManager.kt` | Sequential disk transfer, partial files, validators, finalization |
 | `data/media/VideoPlayers.kt` | One bounded-buffer ExoPlayer; network or file-only factory |
@@ -29,7 +30,13 @@ ExoPlayer targets 8 MiB of buffer, with 2–10 seconds of media buffered. Contro
 
 All feature text is in `values/strings.xml`. The initial master prompt requested Filipino, but current root/Mobile instructions require English only (#223/#224). After this conflict was reported, the user explicitly chose the current English-only repository policy. No translations, language selector, or lint exception is added.
 
-The player releases synchronously on `ON_STOP` and on disposal, removes its listener, and detaches the rendering view. Position and play intent are saved for configuration recreation. Position polling only runs while STARTED. No audio or decoder is intentionally retained in the background. Retry resolves Room/local files again.
+The player releases synchronously on a real `ON_STOP` or screen disposal. Configuration recreation keeps the same player in `VideoPlaybackSession`; the old rendering view and listener detach, and the new view uses Media3 `PlayerView.switchTargetView`. Both video ViewModels use the Activity store with account/material keys because the account shell's composition-owned store is cleared during rotation. Position and play intent survive a real stop/restart. Position polling only runs while STARTED. Retry resolves Room/local files again.
+
+## Fullscreen
+
+Fullscreen is saved presentation state (`rememberSaveable`), with no separate media session or orientation lock. A full-window Android ComponentDialog hosting Compose covers the classroom shell. Its own window uses black, fit-center video, immersive system bars with transient edge-swipe reveal, and safe drawing insets for the controls. Compose 1.7 Dialog measures against screen dp excluding system bars and left a visible border on the phone; ComponentDialog avoids that limit without changing dependencies. The underlying Activity window is unchanged. The dialog restores its previous bar visibility/appearance/behavior on stop/disposal and reapplies immersive mode on start; dismissal restores the normal page.
+
+The 52dp fullscreen entry overlays the normal video independently of the transport row, preserving its target at large text sizes. The same play/pause, seek and elapsed/total-time controls render over the video in fullscreen. Playing controls hide after three seconds without interaction, extended by Android's recommended accessibility timeout. Scrubbing suspends hiding; paused controls remain visible. Tapping the video reveals controls and restarts the timeout. CornersOut/CornersIn use the bundled Phosphor glyphs, resource labels and 52dp targets; play/pause remains 56dp. Exit and Android Back dismiss only fullscreen. Black is the explicit lead-requested media background, rather than an invented palette color.
 
 ## Save for Home
 
@@ -47,6 +54,14 @@ Download actions follow the displayed phase: DOWNLOADING shows the primary cance
 
 Cancellation can close a blocking transport with an exception other than `CancellationException`. The ViewModel checks the transfer's coroutine context before classifying an error or publishing completion, and ignores progress callbacks from cancelled transfers. An old transfer cannot replace PAUSED or a resumed transfer's progress. Active network and file failures still use the existing error handling. In landscape the video viewport has a bounded height; the existing scrolling column keeps transport and download controls reachable. Both Classwork and the player use the design system's **Save for home** label.
 
+## Remove from device
+
+A valid local source displays Saved on this device and a 52dp Phosphor Trash action. Remove opens the lead's confirmation wording in a scrollable body for large-text landscape layouts; Cancel does nothing. Confirm releases local playback before starting removal. The ViewModel cancels and joins this material's transfer, blocks another save during removal, then calls the existing video repository.
+
+`RoomVideoRepository.remove` uses the existing transfer lock. It checks the current account/material, validates a completed hashed `.video` filename directly under that account's private video root, rejects paths shared by another video, and delegates to `DownloadManager.remove`. The downloader validates every target before deleting only this version's and the saved version's `.video`, `.part` and `.validator` files. It never traverses directories. Other videos, handouts and queued files are untouched. A deletion error retains remaining bytes and reports the storage problem; `clearFile(id, originalPath)` runs if the saved file is gone, so Room cannot retain a removed-file receipt. Once the lock is acquired, the short disk/Room cleanup is non-cancellable to keep those two operations consistent.
+
+Removal requires neither a Hub request nor a valid bearer token. Completion resets download progress and resolves the ordinary source again. Online, Save for home can download afresh; offline, the existing unavailable/playback-error state is used. There is no schema, endpoint, dependency, background worker or server change.
+
 ## Verification and integration limitations
 
 See [evidence/59/README.md](./evidence/59/README.md) for actual results, commands and limitations. Pure unit tests use deterministic streams or loopback MockWebServer. `VideoMockIntegrationTest` is separately gated by the existing `LARA_SYNC_MOCK=1` convention. `VideoDeviceTest` uses a separate APK ID and a synthetic H.264 fixture; it is not evidence of Python-mock or Rust-Hub video decoding.
@@ -58,3 +73,5 @@ At the original base `86204fe`, Rust material routes were stubs. Current staging
 The required `.agents/skills/lara-mobile/SKILL.md` was missing locally and on fetched staging. The user explicitly authorized `lara-android-offline` and `android-jetpack-compose` instead, with `lara-architect` first. Restore/maintain the missing team skill in a separate process PR; no skill file is created here.
 
 Media3 references: [DataSource read/open contract](https://developer.android.com/reference/androidx/media3/datasource/DataSource), [ExoPlayer lifecycle](https://developer.android.com/media/media3/exoplayer/hello-world).
+
+The fullscreen/removal continuation report and current evidence are in [evidence/59/fullscreen-removal/README.md](evidence/59/fullscreen-removal/README.md). Earlier evidence above describes historical runs, not the current working tree.

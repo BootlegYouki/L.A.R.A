@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -13,7 +14,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.lara.app.domain.*
 
-data class VideoState(val loading: Boolean = true, val source: VideoSource? = null, val problem: VideoProblem? = null)
+data class VideoState(val loading: Boolean = true, val source: VideoSource? = null, val problem: VideoProblem? = null,
+    val removing: Boolean = false)
 
 class VideoViewModel(private val repository: VideoRepository, private val id: String) : ViewModel() {
     val material = repository.observe(id).stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), null)
@@ -24,10 +26,12 @@ class VideoViewModel(private val repository: VideoRepository, private val id: St
     private var loading: Job? = null
     private var transfer: Job? = null
     private var resumeOnStart = false
+    private var removal: Job? = null
     fun load() {
+        if (removal?.isActive == true) return
         loading?.cancel()
         loading = viewModelScope.launch {
-            mutableState.value = VideoState()
+            mutableState.update { it.copy(loading = true, problem = null) }
             try {
                 mutableDownload.value = repository.progress(id)
                 mutableState.value = VideoState(false, repository.source(id))
@@ -36,6 +40,7 @@ class VideoViewModel(private val repository: VideoRepository, private val id: St
         }
     }
     fun save() {
+        if (removal?.isActive == true) return
         if (transfer?.isActive == true) return
         resumeOnStart = true
         transfer = viewModelScope.launch {
@@ -66,6 +71,27 @@ class VideoViewModel(private val repository: VideoRepository, private val id: St
         }
     }
     fun pause() { resumeOnStart = false; stop() }
+    fun remove() {
+        if (removal?.isActive == true) return
+        resumeOnStart = false
+        removal = viewModelScope.launch {
+            loading?.cancelAndJoin()
+            transfer?.cancelAndJoin(); transfer = null
+            mutableState.value = VideoState(loading = false, removing = true)
+            try {
+                repository.remove(id)
+                mutableDownload.value = VideoDownload()
+                mutableState.value = try { VideoState(false, repository.source(id)) }
+                    catch (e: CancellationException) { throw e }
+                    catch (e: Exception) { VideoState(false, problem = problem(e)) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                val source = runCatching { repository.source(id) }.getOrNull()
+                mutableDownload.value = runCatching { repository.progress(id) }.getOrDefault(VideoDownload())
+                mutableState.value = VideoState(false, source, problem(e))
+            }
+        }
+    }
     fun stop() {
         loading?.cancel()
         transfer?.cancel(); transfer = null

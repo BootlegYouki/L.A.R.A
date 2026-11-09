@@ -51,6 +51,17 @@ class DownloadManager internal constructor(private val root: File,
         return VideoDownload(if (bytes > 0) DownloadPhase.PAUSED else DownloadPhase.IDLE, bytes, size)
     }
 
+    internal suspend fun remove(key: String, saved: File?) = mutex.withLock { withContext(Dispatchers.IO) {
+        val keys = setOfNotNull(key, saved?.nameWithoutExtension)
+        val files = keys.flatMap { listOf(part(it), validator(it), target(it)) }
+        if (keys.any { !it.matches(Regex("[a-f0-9]{64}")) } || files.any {
+            it.canonicalFile.parentFile != root.canonicalFile || it.canonicalFile.name != it.name
+        }) throw VideoFailure(VideoProblem.STORAGE)
+        disk {
+            files.forEach { if (it.exists() && (!it.isFile || !it.delete())) throw VideoFailure(VideoProblem.STORAGE) }
+        }
+    } }
+
     internal suspend fun download(id: String, key: String, size: Long,
         progress: (VideoDownload) -> Unit): File = mutex.withLock { withContext(Dispatchers.IO) {
         if (size !in 1..MAX) throw VideoFailure(VideoProblem.INVALID_FILE)

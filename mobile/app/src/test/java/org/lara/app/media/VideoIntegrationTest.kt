@@ -193,4 +193,54 @@ class VideoIntegrationTest {
         assertEquals(4, requests.size)
         assertTrue(File(requireNotNull(db.classworkDao().material("lesson")?.localFilePath)).isFile)
     }
+
+    @Test fun offlineRemoveClearsOnlyThisVideoAndCanDownloadAgain(): Unit = runBlocking {
+        val repository = RoomVideoRepository(db, api, root, "owner")
+        val other = row.copy(id = "other")
+        db.cacheDao().upsertBatch(CacheBatch(materials = listOf(other)))
+        repository.save("lesson") {}
+        repository.save("other") {}
+        val saved = File(requireNotNull(db.classworkDao().material("lesson")?.localFilePath))
+        val otherFile = File(requireNotNull(db.classworkDao().material("other")?.localFilePath))
+        val part = File(root, "${saved.nameWithoutExtension}.part").apply { writeText("partial") }
+        val validator = File(root, "${saved.nameWithoutExtension}.validator").apply { writeText("etag") }
+        val handout = File(root, "handout.pdf").apply { writeText("keep") }
+        val queued = File(root, "homework.jpg").apply { writeText("keep") }
+        val validToken = token
+        token = null
+        val before = requests.size
+        repository.remove("lesson")
+        assertEquals(before, requests.size)
+        assertFalse(saved.exists()); assertFalse(part.exists()); assertFalse(validator.exists())
+        assertNull(db.classworkDao().material("lesson")?.localFilePath)
+        assertArrayEquals(bytes, otherFile.readBytes())
+        assertEquals("keep", handout.readText()); assertEquals("keep", queued.readText())
+        assertEquals(DownloadPhase.IDLE, repository.progress("lesson").phase)
+        token = validToken
+        repository.save("lesson") {}
+        assertArrayEquals(bytes, File(requireNotNull(db.classworkDao().material("lesson")?.localFilePath)).readBytes())
+    }
+
+    @Test fun removalRejectsForeignPathsWithoutDeletingAnything(): Unit = runBlocking {
+        val foreign = File(root.parentFile, "${System.nanoTime()}.video").apply { writeBytes(bytes) }
+        try {
+            db.classworkDao().saveFile("lesson", 1, foreign.path, "video/mp4")
+            val repository = RoomVideoRepository(db, api, root, "owner")
+            try { repository.remove("lesson"); fail("Foreign path accepted") }
+            catch (e: VideoFailure) { assertEquals(VideoProblem.STORAGE, e.problem) }
+            assertTrue(foreign.isFile)
+            assertEquals(foreign.path, db.classworkDao().material("lesson")?.localFilePath)
+        } finally { foreign.delete() }
+    }
+
+    @Test fun deletionFailureKeepsCompletedVideoAndRoomReceipt(): Unit = runBlocking {
+        val repository = RoomVideoRepository(db, api, root, "owner")
+        repository.save("lesson") {}
+        val saved = File(requireNotNull(db.classworkDao().material("lesson")?.localFilePath))
+        File(root, "${saved.nameWithoutExtension}.part").mkdir()
+        try { repository.remove("lesson"); fail("Directory accepted as partial file") }
+        catch (e: VideoFailure) { assertEquals(VideoProblem.STORAGE, e.problem) }
+        assertTrue(saved.isFile)
+        assertEquals(saved.path, db.classworkDao().material("lesson")?.localFilePath)
+    }
 }

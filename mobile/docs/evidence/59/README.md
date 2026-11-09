@@ -130,3 +130,7 @@ Commit: `feat(mobile): stream lesson videos and resume offline saves (#59)`
 PR title: `[MOBILE 3.3] Add authenticated video playback and Save for Home`
 
 Suggested description is in [PR_DRAFT.md](./PR_DRAFT.md). Review all Not Verified entries before deciding readiness. The user subsequently requested a PR; its draft status keeps the outstanding integration checks explicit.
+
+## Fullscreen and removal continuation
+
+See [fullscreen-removal/README.md](fullscreen-removal/README.md) for both lead additions, current tests, physical-phone screenshots, installation transparency and remaining limits. Historical results above remain unchanged.

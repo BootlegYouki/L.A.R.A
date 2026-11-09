@@ -4,6 +4,7 @@ import java.io.File
 import java.security.MessageDigest
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
@@ -53,6 +54,19 @@ class RoomVideoRepository(private val db: LaraDatabase, private val api: Enrollm
         if (local(row) != null) VideoDownload(DownloadPhase.COMPLETE, row.fileSizeBytes, row.fileSizeBytes)
         else downloads.progress(key(row), row.fileSizeBytes)
     }
+    override suspend fun remove(id: String) = transfers.withLock { withContext(Dispatchers.IO + NonCancellable) {
+        val original = row(id)
+        val saved = original.localFilePath?.let(::File)
+        if (saved != null && (saved.canonicalFile.parentFile != root.canonicalFile ||
+            saved.name != saved.canonicalFile.name || !saved.name.matches(Regex("[a-f0-9]{64}\\.video")) ||
+            db.classworkDao().videos().any { it.id != id && it.localFilePath == original.localFilePath }))
+            throw VideoFailure(VideoProblem.STORAGE)
+        try { downloads.remove(key(original), saved) }
+        finally {
+            // A partial failure must never leave Room pointing at a file already removed.
+            if (saved != null && !saved.exists()) db.classworkDao().clearFile(id, saved.path)
+        }
+    } }
     override suspend fun save(id: String, progress: (VideoDownload) -> Unit) = transfers.withLock { withContext(Dispatchers.IO) {
         val original = row(id)
         if (local(original) != null) {

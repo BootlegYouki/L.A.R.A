@@ -19,6 +19,7 @@ class VideoViewModelTest {
     private val released = CompletableDeferred<Unit>()
     private val gate = CompletableDeferred<Unit>()
     private val repository = object : VideoRepository {
+        override suspend fun remove(id: String) {}
         override fun observe(id: String) = MutableStateFlow<Material?>(null)
         override suspend fun source(id: String) = VideoSource.Hub(id, 1000)
         override suspend fun progress(id: String) = VideoDownload(DownloadPhase.PAUSED, 200, 1000)
@@ -81,7 +82,8 @@ class VideoViewModelTest {
         val resumed = CompletableDeferred<Unit>()
         var attempts = 0
         val controlled = object : VideoRepository {
-            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun remove(id: String) {}
+        override fun observe(id: String) = MutableStateFlow<Material?>(null)
             override suspend fun source(id: String) = VideoSource.Hub(id, 1000)
             override suspend fun progress(id: String) = VideoDownload(DownloadPhase.PAUSED, 500, 1000)
             override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {
@@ -117,7 +119,8 @@ class VideoViewModelTest {
 
     @Test fun cancelledTransportExceptionLeavesPausedBytesWithoutProblem() = runTest(dispatcher) {
         val controlled = object : VideoRepository {
-            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun remove(id: String) {}
+        override fun observe(id: String) = MutableStateFlow<Material?>(null)
             override suspend fun source(id: String) = VideoSource.Hub(id, 1000)
             override suspend fun progress(id: String) = VideoDownload()
             override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {
@@ -132,4 +135,55 @@ class VideoViewModelTest {
         assertNull(model.state.value.problem)
         model.stop()
     }
+    @Test fun removeWaitsForCancelledTransferAndBlocksConcurrentSave() = runTest(dispatcher) {
+        val cleanup = CompletableDeferred<Unit>()
+        var removed = false
+        var saves = 0
+        val controlled = object : VideoRepository {
+            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun source(id: String): VideoSource {
+                if (removed) throw IOException()
+                return VideoSource.Local("lesson.video")
+            }
+            override suspend fun progress(id: String) = VideoDownload(DownloadPhase.COMPLETE, 1000, 1000)
+            override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {
+                saves++
+                try { awaitCancellation() }
+                finally { withContext(NonCancellable) { cleanup.await() } }
+            }
+            override suspend fun remove(id: String) { removed = true }
+        }
+        val model = VideoViewModel(controlled, "lesson")
+        model.save(); runCurrent()
+        model.remove(); runCurrent()
+        model.save(); runCurrent()
+        assertFalse(removed)
+        assertEquals(1, saves)
+        cleanup.complete(Unit); runCurrent()
+        assertTrue(removed)
+        assertNull(model.state.value.source)
+        assertEquals(VideoProblem.HUB_UNAVAILABLE, model.state.value.problem)
+        assertEquals(DownloadPhase.IDLE, model.download.value.phase)
+        model.start(); runCurrent()
+        assertEquals(1, saves)
+        model.stop()
+    }
+
+    @Test fun removalStorageFailureKeepsSavedSourceVisible() = runTest(dispatcher) {
+        val controlled = object : VideoRepository {
+            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun source(id: String) = VideoSource.Local("lesson.video")
+            override suspend fun progress(id: String) = VideoDownload(DownloadPhase.COMPLETE, 1000, 1000)
+            override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {}
+            override suspend fun remove(id: String) { throw VideoFailure(VideoProblem.STORAGE) }
+        }
+        val model = VideoViewModel(controlled, "lesson")
+        model.remove(); runCurrent()
+        assertEquals(VideoSource.Local("lesson.video"), model.state.value.source)
+        assertEquals(VideoProblem.STORAGE, model.state.value.problem)
+        assertFalse(model.state.value.removing)
+        assertEquals(DownloadPhase.COMPLETE, model.download.value.phase)
+        model.stop()
+    }
+
 }

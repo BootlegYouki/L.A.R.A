@@ -19,4 +19,5 @@ interface VideoRepository {
     suspend fun source(id: String): VideoSource
     suspend fun progress(id: String): VideoDownload
     suspend fun save(id: String, progress: (VideoDownload) -> Unit)
+    suspend fun remove(id: String)
 }
