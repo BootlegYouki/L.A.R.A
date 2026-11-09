@@ -192,5 +192,5 @@ async fn submission_file(
     let missing = || ApiError::not_found("File not found");
     let format = format_of(&file.file_path).ok_or_else(missing)?;
     let path = app.storage.path(&file.file_path).ok_or_else(missing)?;
-    serve_stored(path, format.mime(), request, &id, Ranges::AsServed).await
+    serve_stored(path, format.mime(), request, &id, Ranges::AsServed, &app.bandwidth).await
 }

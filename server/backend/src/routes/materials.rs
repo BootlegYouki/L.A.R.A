@@ -138,7 +138,7 @@ async fn download(
     drop(conn);
     let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
     let ranges = if file.file_type == "VIDEO" { Ranges::Resumable(stored_etag(&file.file_path)) } else { Ranges::WholeFile };
-    serve_stored(path, "application/octet-stream", request, &id, ranges).await
+    serve_stored(path, "application/octet-stream", request, &id, ranges, &app.bandwidth).await
 }
 
 /// Contract `GET /api/materials/{id}/chunks`: the lesson text for the AI tutor (3.1), for members
@@ -169,5 +169,5 @@ async fn stream(
     }
     drop(conn);
     let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
-    serve_stored(path, &file.mime_type, request, &id, Ranges::Resumable(stored_etag(&file.file_path))).await
+    serve_stored(path, &file.mime_type, request, &id, Ranges::Resumable(stored_etag(&file.file_path)), &app.bandwidth).await
 }
