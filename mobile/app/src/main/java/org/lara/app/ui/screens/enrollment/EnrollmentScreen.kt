@@ -49,6 +49,7 @@ fun EnrollmentScreen(
     onCodeChanged: () -> Unit = {},
     teacherNames: Map<String, String> = emptyMap(),
     showJoinAction: Boolean = true,
+    learnerName: String? = null,
 ) {
     val classes = (state.classes as? Cached.Content)?.value.orEmpty()
     val cachedIds = classes.map { it.classroom.id }.toSet()
@@ -106,7 +107,7 @@ fun EnrollmentScreen(
                 item.status, canOpen = false, onOpen = {})
         }
     }
-    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged)
+    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged, learnerName)
 }
 
 @Composable

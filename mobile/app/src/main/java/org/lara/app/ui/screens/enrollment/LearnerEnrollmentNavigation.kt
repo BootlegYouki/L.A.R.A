@@ -58,7 +58,8 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
             Box(Modifier.fillMaxSize().padding(insets)) {
                 EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit,
                     onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id }, onCodeChanged = model::onInputChanged,
-                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name }, showJoinAction = false)
+                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name }, showJoinAction = false,
+                    learnerName = names.find { it.id == userId }?.name)
             }
         }
     } else {
