@@ -3,6 +3,7 @@
 //! No HTTP or database types here.
 
 pub mod chunk;
+mod docx;
 
 /// A piece of a document, in reading order.
 #[derive(Clone, Debug, PartialEq, Eq)]
