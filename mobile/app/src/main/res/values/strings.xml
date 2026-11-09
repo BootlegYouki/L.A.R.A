@@ -84,6 +84,11 @@
     <string name="enrollment_cancel_action">Cancel</string>
     <string name="enrollment_loading">Loading saved classes</string>
     <string name="enrollment_classes">My classes</string>
+    <string name="home_classes">Classes</string>
+    <string name="home_enrolled">Enrolled</string>
+    <string name="home_teaching">Teaching</string>
+    <string name="home_open_navigation">Open navigation menu</string>
+    <string name="home_add_unavailable">Adding a class needs the Hub. Connect to the Hub and wait for any current request to finish.</string>
     <string name="enrollment_empty">No classes yet</string>
     <string name="enrollment_empty_help">Ask your teacher for a class code to get started.</string>
     <string name="enrollment_request_title">Class request</string>

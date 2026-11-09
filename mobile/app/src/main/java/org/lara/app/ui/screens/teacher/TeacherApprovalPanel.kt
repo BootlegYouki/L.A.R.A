@@ -27,7 +27,8 @@ import org.lara.app.ui.screens.teacher.classes.teacherIds
 
 @Composable
 fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: org.lara.app.data.sync.SyncSessionViewModel,
-    onSessionExpired: () -> Unit, selectedClassId: String? = null, onOpenClass: ((String) -> Unit)? = null) {
+    onSessionExpired: () -> Unit, selectedClassId: String? = null, onOpenClass: ((String) -> Unit)? = null,
+    showManagementEntry: Boolean = true) {
     val session: TeacherApprovalSession = viewModel(key = "teacher-approvals-$userId", factory = viewModelFactory {
         initializer { TeacherApprovalSession(container, userId, syncSession) }
     })
@@ -49,10 +50,12 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: o
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
     val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
     Column(Modifier.fillMaxWidth().then(if (onOpenClass != null) Modifier.fillMaxHeight() else Modifier.heightIn(max = LaraSpacing.S12 * 4))
-        .verticalScroll(rememberScrollState()).padding(LaraSpacing.S3), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+        .verticalScroll(rememberScrollState()).padding(LaraSpacing.S4)
+        .padding(bottom = if (onOpenClass != null) org.lara.app.ui.theme.PrimaryTouchTarget + LaraSpacing.S8 else LaraSpacing.S1),
+        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         if (onOpenClass != null) Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium)
         if (onOpenClass != null && !reachable) DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
-        org.lara.app.ui.screens.teacher.classes.ClassManagementEntry(container, userId, session.reachable) { latestExpired() }
+        if (showManagementEntry) org.lara.app.ui.screens.teacher.classes.ClassManagementEntry(container, userId, session.reachable) { latestExpired() }
         if (error != null && reachable) DiscoveryBanner(R.string.approval_failed, warning = true, success = false)
         if (cached == Cached.Loading || classes.isEmpty() && refreshing) ApprovalLoadingSkeleton()
         else if (classes.isEmpty()) Text(stringResource(if (reachable) R.string.approval_no_classes else R.string.approval_no_saved_classes))
