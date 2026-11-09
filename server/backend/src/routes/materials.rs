@@ -2,12 +2,15 @@
 //! resumable VIDEO downloads; lesson text chunks are 3.1 and the video stream 3.2. Rename and delete
 //! are still stubs (3.4).
 
+use std::sync::Arc;
+
 use axum::extract::multipart::MultipartRejection;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, Request, State};
 use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::routing::{get, patch, post};
 use axum::{Json, Router};
+use tokio::sync::Semaphore;
 
 use super::files::{serve_stored, stored_etag, Ranges};
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
@@ -25,6 +28,7 @@ use crate::AppState;
 
 const FILE_TYPES: [&str; 3] = ["VIDEO", "DOCUMENT", "WORKSHEET"];
 /// Lesson text extraction (3.1) stops here, so a huge or hostile handout still uploads, with no chunks.
+/// It includes the wait for a free parse slot (`PARSE_SLOTS`).
 const EXTRACT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 
 pub fn router() -> Router<AppState> {
@@ -110,10 +114,10 @@ async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, 
     let Some(path) = app.storage.path(stored) else { return Vec::new() };
     let title = title.to_owned();
     let started = std::time::Instant::now();
-    let task = tokio::task::spawn_blocking(move || document_parser::extract_chunks(&path, format, &title));
-    let chunks = match tokio::time::timeout(EXTRACT_TIMEOUT, task).await {
-        Ok(Ok(chunks)) => chunks,
-        Ok(Err(_)) => {
+    let parse = run_in_slot(Arc::clone(&app.parse_slots), move || document_parser::extract_chunks(&path, format, &title));
+    let chunks = match tokio::time::timeout(EXTRACT_TIMEOUT, parse).await {
+        Ok(Some(chunks)) => chunks,
+        Ok(None) => {
             tracing::warn!(material_id, "lesson text extraction stopped unexpectedly");
             Vec::new()
         }
@@ -124,6 +128,20 @@ async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, 
     };
     tracing::info!(material_id, chunks = chunks.len(), ms = started.elapsed().as_millis() as u64, "lesson text extracted");
     chunks
+}
+
+/// Runs `parse` on a blocking thread once one of the Hub's parse slots is free (review of #267). The
+/// slot is held until `parse` ends, even after the upload stopped waiting at `EXTRACT_TIMEOUT`, so
+/// parses that ran too long cannot pile up and take every core. `None` if the thread ended without
+/// a result (the parser already runs under `catch_unwind`).
+async fn run_in_slot<T: Send + 'static>(slots: Arc<Semaphore>, parse: impl FnOnce() -> T + Send + 'static) -> Option<T> {
+    let slot = slots.acquire_owned().await.ok()?;
+    tokio::task::spawn_blocking(move || {
+        let _slot = slot;
+        parse()
+    })
+    .await
+    .ok()
 }
 
 /// Any member of the class, also while it is archived (read-only, not hidden). The contract and the
@@ -173,4 +191,45 @@ async fn stream(
     drop(conn);
     let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
     serve_stored(path, &file.mime_type, request, &id, Ranges::Resumable(stored_etag(&file.file_path)), &app.bandwidth).await
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    use tokio::sync::Semaphore;
+
+    use super::*;
+    use crate::services::document_parser::PARSE_SLOTS;
+
+    #[tokio::test]
+    async fn at_most_two_handouts_are_read_at_once() {
+        let slots = Arc::new(Semaphore::new(PARSE_SLOTS));
+        let (running, most) = (Arc::new(AtomicUsize::new(0)), Arc::new(AtomicUsize::new(0)));
+        let parses = (0..5).map(|_| {
+            let (running, most) = (Arc::clone(&running), Arc::clone(&most));
+            run_in_slot(Arc::clone(&slots), move || {
+                most.fetch_max(running.fetch_add(1, Ordering::SeqCst) + 1, Ordering::SeqCst);
+                std::thread::sleep(Duration::from_millis(50));
+                running.fetch_sub(1, Ordering::SeqCst);
+            })
+        });
+        let finished = futures_util::future::join_all(parses).await;
+        assert!(finished.iter().all(Option::is_some), "every parse ran");
+        assert_eq!(most.load(Ordering::SeqCst), 2);
+    }
+
+    /// The upload stops waiting at the time limit, but the parse runs on until it ends. It keeps its
+    /// slot for that long, so parses that ran too long cannot pile up and use every core.
+    #[tokio::test]
+    async fn a_parse_past_the_time_limit_keeps_its_slot_until_it_ends() {
+        let slots = Arc::new(Semaphore::new(PARSE_SLOTS));
+        let slow = run_in_slot(Arc::clone(&slots), || std::thread::sleep(Duration::from_millis(300)));
+        assert!(tokio::time::timeout(Duration::from_millis(20), slow).await.is_err(), "the upload stops waiting");
+        assert_eq!(slots.available_permits(), PARSE_SLOTS - 1, "the parse still runs, so its slot stays taken");
+        tokio::time::sleep(Duration::from_millis(600)).await;
+        assert_eq!(slots.available_permits(), PARSE_SLOTS, "its slot is free once it ends");
+    }
 }

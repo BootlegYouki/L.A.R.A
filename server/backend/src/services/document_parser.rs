@@ -11,6 +11,10 @@ use std::path::Path;
 
 use crate::storage::FileFormat;
 
+/// How many handouts the Hub reads at once (review of #267). Parsing is CPU work on a blocking
+/// thread; two leave the Hub's other cores for requests and the AI tutor.
+pub const PARSE_SLOTS: usize = 2;
+
 /// The chunks of a stored handout, or none. Never fails: a file with no text layer, an unreadable
 /// file, a PDF over 50 MB and a parser panic (lopdf has known panic paths on broken fonts) all give
 /// an empty list and one warning that names no file contents. Images and videos have no lesson text.

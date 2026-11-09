@@ -6,8 +6,9 @@ use std::path::Path;
 use super::{Block, ParseError};
 
 /// The PDF reader holds the whole file and its objects in memory, about twice the file size, and a
-/// timed-out parse keeps running. Past this the file is left unread: on the 4 GB reference Hub the
-/// model already takes about 2.4 GB. Handouts with a text layer are rarely more than a few MB; the
+/// timed-out parse keeps running. Past this the file is left unread: since 2026-11-02 the AI tutor
+/// runs on the Hub, and the candidate model (#73) takes about 11 GB of a 16 GB Hub, so one upload
+/// cannot be allowed hundreds of MB. Handouts with a text layer are rarely more than a few MB; the
 /// files that reach this are mostly scans, which have no text to read anyway.
 const MAX_PDF_BYTES: u64 = 50 * 1024 * 1024;
 

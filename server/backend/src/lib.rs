@@ -51,6 +51,8 @@ pub struct AppState {
     pub storage: Arc<Storage>,
     /// 2.0 MB/s per device across every file download (`services::bandwidth`, step 3.2).
     pub bandwidth: Arc<Bandwidth>,
+    /// How many handouts may be read for lesson text at once (`routes::materials`, step 3.1).
+    pub parse_slots: Arc<tokio::sync::Semaphore>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -124,6 +126,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
         storage: Arc::new(storage),
         bandwidth: Arc::default(),
+        parse_slots: Arc::new(tokio::sync::Semaphore::new(services::document_parser::PARSE_SLOTS)),
     };
     // Before the listeners open, so no request finds the accounts missing.
     if config.test_seed {

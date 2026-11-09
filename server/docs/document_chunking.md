@@ -18,7 +18,7 @@ When a teacher uploads a PDF or Word handout, the Hub extracts its text, splits 
 ## Data flow
 
 1. **Store.** The upload is stored as in step 3.3 (`materials_and_submissions.md`).
-2. **Extract.** For a PDF or DOCX (`DOCUMENT` or `WORKSHEET`; images and videos have no lesson text), `extract_chunks` runs in `spawn_blocking` with a 20-second limit, before the write transaction opens. No CPU work happens under the write lock (TECH_SPEC section 9).
+2. **Extract.** For a PDF or DOCX (`DOCUMENT` or `WORKSHEET`; images and videos have no lesson text), `extract_chunks` runs in `spawn_blocking` once one of the Hub's 2 parse slots is free, with a 20-second limit that includes the wait, before the write transaction opens. No CPU work happens under the write lock (TECH_SPEC section 9). Whether the uploader teaches the class is checked first, so a teacher of another class gets the 403 without the file being read.
 3. **Split into blocks.**
    - **Word:** each `w:p` is a block with the text of its `w:t` runs. A tab or line break inside a run is a space. A paragraph styled `Title` or `Heading…` is a heading. Table cells are ordinary paragraphs. Headers, footers and footnotes are other parts of the ZIP, so they are not read.
    - **PDF:** blank lines separate blocks. A block that is one line of 2 to 60 characters, with no closing punctuation and no lowercase start, is a heading. Bare page numbers and "Page N of M" are dropped. A hyphen at a line end joins the split word; other line breaks are spaces. `pdf-extract` puts a blank line at some ordinary wraps, so a block that starts lowercase continues the block before it unless that one ended a sentence.
@@ -32,7 +32,8 @@ When a teacher uploads a PDF or Word handout, the Hub extracts its text, splits 
 |---|---|---|
 | Tokens per chunk | 500 (words x 1.4, rounded up; 357 words) | The text moves to the next chunk |
 | Chunks per material | 1,000 (`MAX_CHUNKS`) | The rest of the document is left out |
-| Extraction time | 20 s (`EXTRACT_TIMEOUT`) | Zero chunks and a warning; the upload still succeeds |
+| Extraction time | 20 s (`EXTRACT_TIMEOUT`), including the wait for a slot | Zero chunks and a warning; the upload still succeeds |
+| Handouts read at once | 2 (`PARSE_SLOTS`) | The next upload waits for a slot, within its 20 s |
 | `word/document.xml` size | 64 MB decompressed | The rest is not read (guards against a ZIP bomb) |
 | PDF file size | 50 MB (`MAX_PDF_BYTES`) | Not read: zero chunks and a warning; the upload still succeeds |
 
@@ -43,12 +44,12 @@ Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-print
 - **Extraction never fails an upload.** A scan or photo has no text layer and gets zero chunks (no OCR, PRD FR-3.2). An unreadable file, a parser panic (`lopdf` has known panic paths on broken fonts, so parsing runs under `catch_unwind`) or the timeout also give zero chunks. The tutor then says it cannot help with that file.
 - **`token_estimate` is a size hint, not the model's count.** Since #261 the prompt budget is counted with the model's own tokenizer; words x 1.4 undercounts math text by about 8%. The estimate only keeps chunks near 500 tokens and is never sent to clients (contract `MaterialChunk`).
 - **Logs name the material, never its text.** One `info` line per upload (`lesson text extracted material_id=… chunks=… ms=…`), and a `warn` with a fixed reason when extraction fails, since a parser's own message can quote the file.
-- **A timed-out parse keeps running** on its blocking thread until it ends; the upload has already moved on. The PDF size limit bounds that work: the PDF reader holds the whole file and its objects in memory (about twice the file size), and on the 4 GB reference Hub the model already takes about 2.4 GB. Word files are not limited by size, since only their text part is read.
+- **A timed-out parse keeps running** on its blocking thread until it ends; the upload has already moved on. It keeps its parse slot until then, so parses that run too long cannot pile up and take every core. The PDF size limit bounds the memory: the PDF reader holds the whole file and its objects in memory (about twice the file size), and since 2026-11-02 the AI tutor runs on the Hub, where the candidate model (#73) takes about 11 GB of a 16 GB Hub. Word files are not limited by size, since only their text part is read.
 - **PDF quirks** (`pdf-extract` on Chrome-printed files): some kerned letter pairs come out with a space after the first letter ("H igh", "C louds"), and a table row reads as one line, so a short row such as "Rain Snow" can be taken for a heading. Word documents have neither problem.
 - **No backfill.** Materials uploaded before 3.1 have no chunks; uploading the file again creates them.
 - **TXT is not extracted.** Since #53 the Hub refuses `.txt` uploads (not a format it keeps), so only PDF and DOCX have lesson text.
 
-## Decisions for the Lead
+## Decisions (approved by the Lead with #267)
 
 1. **TXT:** the Tech Spec listed PDF, DOCX and TXT, but the Hub refuses `.txt` uploads since #53. Extract PDF and DOCX only?
 2. **Limits:** 1,000 chunks per material and a 20-second extraction limit. Past the cap the material keeps the chunks made so far; after a timeout it gets none.
