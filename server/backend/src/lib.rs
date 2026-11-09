@@ -27,6 +27,7 @@ use tokio::task::JoinHandle;
 use auth::limiter::LoginLimiter;
 use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
+use services::bandwidth::BandwidthLimiter;
 pub use config::HubConfig;
 use storage::Storage;
 use websocket::broker::Broker;
@@ -48,6 +49,11 @@ pub struct AppState {
     pub releases_dir: Arc<std::path::Path>,
     /// `<data_dir>/storage`: lesson files and homework (`storage`, step 3.3).
     pub storage: Arc<Storage>,
+    /// 2.0 MB/s per signed-in user across every file download, per device on the portal
+    /// (`services::bandwidth`, step 3.2).
+    pub bandwidth: Arc<BandwidthLimiter>,
+    /// How many handouts may be read for lesson text at once (`routes::materials`, step 3.1).
+    pub parse_slots: Arc<tokio::sync::Semaphore>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -120,6 +126,8 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         sync_epoch: meta.sync_epoch,
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
         storage: Arc::new(storage),
+        bandwidth: Arc::default(),
+        parse_slots: Arc::new(tokio::sync::Semaphore::new(services::document_parser::PARSE_SLOTS)),
     };
     // Before the listeners open, so no request finds the accounts missing.
     if config.test_seed {

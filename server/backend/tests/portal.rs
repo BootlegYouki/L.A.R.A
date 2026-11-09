@@ -121,3 +121,20 @@ async fn installer_path_cannot_escape_the_releases_folder() {
     }
     hub.stop().await;
 }
+
+/// Step 3.2: no one is signed in on the portal, so its installers count against 2.0 MB/s per device
+/// address (server TECH_SPEC, Bandwidth). The first 64 KiB go at once, the rest at 2 MB/s.
+#[tokio::test]
+async fn installer_downloads_are_capped_at_2_mb_a_second_per_device() {
+    let hub = TestHub::start().await;
+    tokio::fs::create_dir_all(hub.releases_dir()).await.unwrap();
+    let len = 1_000_000;
+    tokio::fs::write(hub.releases_dir().join("lara-student.apk"), vec![7u8; len]).await.unwrap();
+    let started = std::time::Instant::now();
+    let (status, _, body) = hub.get_raw("/download/lara-student.apk").await;
+    let took = started.elapsed();
+    assert_eq!((status, body.len()), (200, len));
+    let least = std::time::Duration::from_secs_f64((len as f64 - 65_536.0) / 2_000_000.0);
+    assert!(took >= least, "1 MB installer in {took:?}, faster than 2 MB/s");
+    hub.stop().await;
+}

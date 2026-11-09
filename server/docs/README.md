@@ -17,7 +17,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`class_management.md`](./class_management.md) | Rename, archive, remove a learner, co-teachers; who can do what, retries, what sync delivers and manual test steps | Sprint 2 (#121) |
 | [`materials_and_submissions.md`](./materials_and_submissions.md) | Lesson file and homework uploads: storage layout, accepted formats, 250 MB cap, access rules, resubmission, downloads with Range and `?token=` | Sprint 3 (#53) |
 | [`document_chunking.md`](./document_chunking.md) | Lesson text from PDF and Word handouts: extraction on upload, 500-token chunks, the chunks route, limits and gotchas | Sprint 3 (#10) |
-| `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
+| [`streaming_rate_limit.md`](./streaming_rate_limit.md) | Video streaming in byte ranges and the 2.0 MB/s cap per signed-in user (per device on the portal): data flow, limits, decisions, manual check. Upload caps are in `materials_and_submissions.md` | Sprint 3 (#8) |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |
 | [`hub_hardware.md`](./hub_hardware.md) | Installer (`.exe`/`.deb`), firewall rules and the LAN port check; pilot machine CPU and RAM, measured capacity | Sprint 1 (#20) and 5 |

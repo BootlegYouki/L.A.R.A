@@ -1,6 +1,7 @@
 //! `TestHub`: the real Hub on a temp data dir and free ports, one per test.
 #![allow(dead_code)]
 
+pub mod logs;
 pub mod uploads;
 
 use lara_hub::auth::{sessions, Role};
