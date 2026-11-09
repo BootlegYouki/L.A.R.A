@@ -1,0 +1,12 @@
+Final isolated APK: normal AuthHost navigation; saved PR #259 mock video, no injected player UI.
+airplane_mode_on=1
+wifi_on=0
+After Play: Elapsed 0:01 of 0:30
+After forward seek: Elapsed 0:18 of 0:30
+After backward seek: Elapsed 0:13 of 0:30
+Saved badge and reachable Pause confirm active local playback; screenshot frames require visual inspection.
+Restored airplane_mode_on=0
+Restored wifi_on=1
+Restored font_scale=0.85
+Restored user_rotation=0
+Restored accelerometer_rotation=0

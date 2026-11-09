@@ -2,14 +2,33 @@ mod common;
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use common::{TestHub, TEACHER_TOKEN};
+use common::TestHub;
 use futures_util::{SinkExt, StreamExt};
+use lara_hub::auth::Role;
 use reqwest::Method;
 use serde_json::{json, Value};
 use tokio_tungstenite::tungstenite::Message;
 
 fn code(body: &Value) -> Option<&str> {
     body["error"]["code"].as_str()
+}
+
+/// Operations whose step has landed, so they answer like the contract instead of 501: whole
+/// areas, plus single routes of areas still partly scaffolded. Paths as in `openapi.yaml`.
+const BUILT_AREAS: [&str; 3] = ["/api/classrooms", "/api/sync/", "/api/admin/"];
+const BUILT_ROUTES: [(&str, &str); 6] = [
+    ("POST", "/api/materials"),                // 3.3
+    ("GET", "/api/materials/{id}/download"),   // 3.3
+    ("GET", "/api/materials/{id}/chunks"),     // 3.1
+    ("GET", "/api/materials/{id}/stream"),     // 3.2 streams a video; 3.3 refuses a non-video (#259)
+    ("POST", "/api/assignments/{id}/submit"),  // 3.3
+    ("GET", "/api/submissions/{id}/file"),     // 3.3
+];
+
+/// `path` is a template (`{id}`) or a mock path with `x` for each parameter.
+fn is_built(method: &Method, path: &str) -> bool {
+    BUILT_AREAS.iter().any(|area| path.starts_with(area))
+        || BUILT_ROUTES.iter().any(|(m, p)| method.as_str() == *m && p.replace("{id}", "x") == path.replace("{id}", "x"))
 }
 
 #[tokio::test]
@@ -24,39 +43,91 @@ async fn unknown_route_is_route_not_found() {
 #[tokio::test]
 async fn wrong_method_is_route_not_found_like_the_mock() {
     let hub = TestHub::start().await;
-    let (status, body) = hub.get("/api/sync/pull", Some(TEACHER_TOKEN)).await;
+    let (status, body) = hub.get("/api/sync/pull", Some(hub.teacher_token())).await;
     assert_eq!((status, code(&body)), (404, Some("ROUTE_NOT_FOUND")));
     hub.stop().await;
 }
 
 #[tokio::test]
-async fn stubs_check_the_token_first() {
+async fn sync_checks_the_token_first() {
     let hub = TestHub::start().await;
     for token in [None, Some("not-a-session")] {
         let (status, body) = hub.request(Method::POST, "/api/sync/pull", token).await;
         assert_eq!((status, code(&body)), (401, Some("UNAUTHORIZED")), "token {token:?}");
     }
-    let (status, body) = hub.request(Method::POST, "/api/sync/pull", Some(TEACHER_TOKEN)).await;
-    assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")));
+    let (status, body) = hub.post_json("/api/sync/pull", &json!({"cursor":0}), Some(hub.teacher_token())).await;
+    assert_eq!((status, code(&body)), (200, None));
     hub.stop().await;
 }
 
 #[tokio::test]
 async fn open_routes_need_no_token() {
     let hub = TestHub::start().await;
+    // An empty body reaches the handler, which asks for its fields: no 401 first.
     for path in ["/api/auth/register", "/api/auth/login", "/api/admin/setup"] {
         let (status, body) = hub.request(Method::POST, path, None).await;
-        assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")), "{path}");
+        assert_eq!((status, code(&body)), (400, Some("BAD_REQUEST")), "{path}");
     }
     hub.stop().await;
 }
 
-/// Every contract operation in the eight scaffolded areas is registered (501, not 404).
+/// `(method, path, role)` for every `@route(..., role="...")` in the mock hub, with each path
+/// pattern's `([^/]+)` replaced by `x`.
+fn mock_role_routes() -> Vec<(Method, String, Role)> {
+    let mock = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../scripts/mock_hub.py")).unwrap();
+    mock.lines()
+        .filter_map(|line| {
+            let rest = line.strip_prefix("@route(\"")?;
+            let (method, rest) = rest.split_once("\", r\"")?;
+            let (path, rest) = rest.split_once('"')?;
+            let role = rest.strip_prefix(", role=\"")?.strip_suffix("\")")?;
+            let role = Role::parse(role).unwrap_or_else(|| panic!("unknown role in {line}"));
+            Some((method.parse().unwrap(), path.replace("([^/]+)", "x"), role))
+        })
+        .collect()
+}
+
+/// Gap A of #42: every stub this Hub registers answers the mock's role check now, so the
+/// mock's role 403s (an admin creating a class, a teacher on admin routes) already hold.
+#[tokio::test]
+async fn stub_role_guards_match_the_mock() {
+    let hub = TestHub::start().await;
+    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "1234").await;
+    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let tokens = [
+        (Role::Teacher, hub.teacher_token().to_owned()),
+        (Role::Student, hub.open_session(learner).await),
+        (Role::Admin, hub.open_session(admin).await),
+    ];
+    let mut checked = 0;
+    for (method, path, role) in mock_role_routes() {
+        let right = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
+        let (status, body) = hub.request(method.clone(), &path, Some(right)).await;
+        if code(&body) == Some("ROUTE_NOT_FOUND") {
+            continue; // an area this Hub has not scaffolded yet (announcements, topics)
+        }
+        if code(&body) != Some("NOT_IMPLEMENTED") {
+            assert!(is_built(&method, &path), "unexpected implemented route: {method} {path}");
+            assert_ne!(status, 403, "right role was rejected: {method} {path}");
+        } else {
+            assert_eq!(status, 501, "{method} {path}");
+        }
+        for (other, token) in tokens.iter().filter(|(r, _)| *r != role) {
+            let (status, body) = hub.request(method.clone(), &path, Some(token)).await;
+            assert_eq!((status, code(&body)), (403, Some("FORBIDDEN")), "{method} {path} as {other:?}");
+        }
+        checked += 1;
+    }
+    assert!(checked >= 30, "only {checked} mock role routes are registered");
+    hub.stop().await;
+}
+
+/// Every contract operation in the scaffolded areas is registered (501 or a role's 403, not 404).
 #[tokio::test]
 async fn every_scaffolded_contract_route_is_registered() {
-    const AREAS: [&str; 9] = [
-        "/api/auth/", "/api/admin/", "/api/classrooms", "/api/sync/", "/api/materials",
-        "/api/assignments", "/api/submissions", "/api/quizzes", "/api/export/",
+    const AREAS: [&str; 10] = [
+        "/api/admin/", "/api/classrooms", "/api/sync/", "/api/materials", "/api/assignments",
+        "/api/submissions", "/api/quizzes", "/api/export/", "/api/backup", "/api/restore",
     ];
     let openapi = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../contracts/openapi.yaml")).unwrap();
     let mut operations = Vec::new();
@@ -75,14 +146,32 @@ async fn every_scaffolded_contract_route_is_registered() {
     let scaffolded: Vec<_> = operations
         .into_iter()
         .filter(|(_, p)| AREAS.iter().any(|a| p.starts_with(a)) && !p.ends_with("/private-comments"))
+        .filter(|(_, p)| p != "/api/admin/setup") // built in 2.0 (tests/admin_setup.rs)
         .collect();
     assert!(scaffolded.len() >= 40, "parsed only {} operations", scaffolded.len());
 
     let hub = TestHub::start().await;
+    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "1234").await;
+    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let tokens = [
+        (Role::Teacher, hub.teacher_token().to_owned()),
+        (Role::Student, hub.open_session(learner).await),
+        (Role::Admin, hub.open_session(admin).await),
+    ];
+    let roles = mock_role_routes();
     for (method, template) in scaffolded {
-        let path = template.replace("{id}", "x").replace("{teacher_id}", "y");
-        let (status, body) = hub.request(method.clone(), &path, Some(TEACHER_TOKEN)).await;
-        assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")), "{method} {template}");
+        // The mock writes every path parameter as `([^/]+)`, which `mock_role_routes` turns into `x`.
+        let path = template.replace("{id}", "x").replace("{teacher_id}", "x");
+        // The route's role in the mock, or the teacher for a route any signed-in user may call.
+        let role = roles.iter().find(|(m, p, _)| *m == method && *p == path).map_or(Role::Teacher, |(_, _, r)| *r);
+        let token = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
+        let (status, body) = hub.request(method.clone(), &path, Some(token)).await;
+        if is_built(&method, &template) && code(&body) != Some("NOT_IMPLEMENTED") {
+            assert!(matches!(status, 200 | 400 | 404), "{method} {template}: {status} {body}");
+            assert_ne!(code(&body), Some("ROUTE_NOT_FOUND"));
+        } else {
+            assert_eq!((status, code(&body)), (501, Some("NOT_IMPLEMENTED")), "{method} {template} as {role:?}");
+        }
     }
     hub.stop().await;
 }
@@ -112,7 +201,7 @@ fn hello(token: &str) -> Message {
 async fn hello_gets_hello_ack_and_registers_the_connection() {
     let hub = TestHub::start().await;
     let (mut ws, _) = tokio_tungstenite::connect_async(hub.ws_url()).await.unwrap();
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
 
     let ack = next_json(&mut ws).await;
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
@@ -158,7 +247,7 @@ async fn frames_before_hello_get_event_error() {
     let err = next_json(&mut ws).await;
     assert_eq!(err["code"], "BAD_REQUEST");
 
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
     assert_eq!(next_json(&mut ws).await["event"], "EVENT_HELLO_ACK");
 
     ws.send(Message::text("still not json")).await.unwrap();
@@ -170,10 +259,22 @@ async fn frames_before_hello_get_event_error() {
 async fn shutdown_closes_open_sockets() {
     let hub = TestHub::start().await;
     let (mut ws, _) = tokio_tungstenite::connect_async(hub.ws_url()).await.unwrap();
-    ws.send(hello(TEACHER_TOKEN)).await.unwrap();
+    ws.send(hello(hub.teacher_token())).await.unwrap();
     next_json(&mut ws).await;
 
     tokio::time::timeout(Duration::from_secs(5), hub.stop()).await.unwrap();
     let ended = tokio::time::timeout(Duration::from_secs(5), ws.next()).await.unwrap();
     assert!(matches!(ended, None | Some(Ok(Message::Close(_))) | Some(Err(_))));
+}
+
+/// Discovery (the UDP beacon task and the mDNS responder) is started inside `serve` and must not
+/// break startup or clean shutdown. A router that drops broadcast packets never stops the Hub, so
+/// starting on a machine with or without a reachable LAN both have to succeed here.
+#[tokio::test]
+async fn hub_with_discovery_starts_and_stops_cleanly() {
+    let hub = TestHub::start().await;
+    // The HTTP listener still answers, proving the added discovery tasks did not stall serve().
+    let (status, _) = hub.get("/api/nope", None).await;
+    assert_eq!(status, 404);
+    tokio::time::timeout(Duration::from_secs(5), hub.stop()).await.unwrap();
 }

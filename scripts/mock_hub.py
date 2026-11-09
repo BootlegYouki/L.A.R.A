@@ -22,6 +22,7 @@ import base64
 import hashlib
 import http.server
 import json
+import os
 import re
 import socket
 import socketserver
@@ -35,11 +36,9 @@ WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 GRACE_MS = 60_000
 CLASS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 ADMIN_ID = "ADMIN-0001"
-MOCK_VIDEO_SIZE = 1024 * 1024
-MOCK_MODEL_NAME = "mock-model-q4.gguf"
-MOCK_MODEL_SIZE = 3 * 1024 * 1024          # a small stand-in; the real file is about 1.5 GB
-MOCK_MODEL_BYTE = b"7"
-MOCK_MODEL_SHA256 = hashlib.sha256(MOCK_MODEL_BYTE * MOCK_MODEL_SIZE).hexdigest()
+# A real 30 s H.264 clip so clients can decode, seek and save it, not just count bytes.
+MOCK_VIDEO = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lesson-video.mp4"), "rb").read()
+MOCK_VIDEO_SIZE = len(MOCK_VIDEO)
 
 
 def now_ms():
@@ -59,6 +58,7 @@ class HubState:
 
     def __init__(self):
         self.lock = threading.RLock()
+        self.login_failures = {}  # lrn_or_id -> monotonic times of wrong PINs in the last 60 s
         self.users = {}
         self.sessions = {}
         self.classrooms = {}
@@ -67,6 +67,7 @@ class HubState:
         self.comments = {}
         self.materials = {}
         self.chunks = {}
+        self.material_files = {}
         self.assignments = {}
         self.submissions = {}
         self.submission_files = {}
@@ -247,8 +248,8 @@ def parse_multipart(content_type, body):
 
 # ----------------------------------------------------------------- HTTP
 class ApiError(Exception):
-    def __init__(self, status, code, message=""):
-        self.status, self.code, self.message = status, code, message or code
+    def __init__(self, status, code, message="", headers=None):
+        self.status, self.code, self.message, self.headers = status, code, message or code, headers or {}
 
 
 ROUTES = []
@@ -273,11 +274,13 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, PUT, DELETE")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization")
 
-    def send_json(self, status, obj):
+    def send_json(self, status, obj, extra=None):
         data = json.dumps(strip_private(obj)).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data)))
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
         self._cors()
         self.end_headers()
         self.wfile.write(data)
@@ -346,7 +349,7 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
                 return
             raise ApiError(404, "ROUTE_NOT_FOUND", f"{method} {path}")
         except ApiError as e:
-            self.send_json(e.status, {"error": {"code": e.code, "message": e.message}})
+            self.send_json(e.status, {"error": {"code": e.code, "message": e.message}}, e.headers)
         except (BrokenPipeError, ConnectionResetError):
             pass
         except Exception as e:  # keep the mock alive for client developers
@@ -422,6 +425,9 @@ def portal_file(req):
 def register(req):
     b = req.json()
     need(b, "lrn_or_id", "full_name", "pin")
+    b["lrn_or_id"], b["full_name"] = str(b["lrn_or_id"]).strip(), str(b["full_name"]).strip()
+    if not (0 < len(b["lrn_or_id"]) <= 32 and 0 < len(b["full_name"]) <= 100):
+        raise ApiError(400, "BAD_REQUEST", "LRN and name must be 1-32 and 1-100 characters")
     if not re.fullmatch(r"\d{4}", str(b["pin"])):
         raise ApiError(400, "BAD_REQUEST", "PIN must be 4 digits")
     if any(u["lrn_or_id"] == b["lrn_or_id"] for u in STATE.users.values()):
@@ -434,10 +440,25 @@ def register(req):
 def login(req):
     b = req.json()
     need(b, "lrn_or_id", "pin")
-    for u in STATE.users.values():
-        if u["lrn_or_id"] == b["lrn_or_id"] and u["pin_hash"] == hash_pin(str(b["pin"])):
-            return STATE.open_session(u)
+    lrn, now = b["lrn_or_id"], time.monotonic()
+    fails = [t for t in STATE.login_failures.get(lrn, []) if now - t < 60]
+    if len(fails) >= 5:
+        wait = max(1, int(60 - (now - fails[0])) + 1)
+        raise ApiError(429, "TOO_MANY_ATTEMPTS", "Too many wrong PINs, try again later", {"Retry-After": str(wait)})
+    user = next((u for u in STATE.users.values() if u["lrn_or_id"] == lrn), None)
+    if user and user["role"] == "ADMIN" and not is_hub_pc(req):
+        raise ApiError(403, "ADMIN_LOCAL_ONLY", "The admin signs in on the Hub PC only")
+    if user and user["pin_hash"] == hash_pin(str(b["pin"])):
+        STATE.login_failures.pop(lrn, None)
+        return STATE.open_session(user)
+    STATE.login_failures[lrn] = fails + [now]
     raise ApiError(401, "UNAUTHORIZED", "Wrong LRN or PIN")
+
+
+def is_hub_pc(req):
+    # cloudflared also connects from loopback, so a tunnel-relayed request carries Cf-Connecting-IP.
+    h = req.handler
+    return h.client_address[0] in ("127.0.0.1", "::1") and not h.headers.get("Cf-Connecting-IP")
 
 
 @route("POST", r"/api/auth/logout")
@@ -527,14 +548,18 @@ def classroom_join(req):
     code = str(req.json().get("class_code", "")).replace("-", "").upper()
     c = next((c for c in STATE.classrooms.values() if c["class_code"] == code), None)
     if not c:
-        raise ApiError(404, "CLASS_CODE_INVALID", "Hindi nahanap ang Class Code")
+        raise ApiError(404, "CLASS_CODE_INVALID", "Class code not found")
+    if c.get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     t = now_ms()
     enr = next((e for e in STATE.enrollments.values()
                 if e["classroom_id"] == c["id"] and e["student_id"] == req.user["id"]), None)
-    if not enr:
-        enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"],
-               "status": "PENDING", "joined_at": t, "updated_at": t}
-        STATE.enrollments[enr["id"]] = enr
+    if not enr or enr["status"] in ("REJECTED", "REMOVED"):
+        # A rejected or removed learner may ask again; the teacher decides again.
+        if not enr:
+            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"], "joined_at": t}
+            STATE.enrollments[enr["id"]] = enr
+        enr["status"], enr["updated_at"] = "PENDING", t
         STATE.log("enrollments", enr["id"], c["id"], req.user["id"])
         STATE.broadcast({"event": "EVENT_JOIN_REQUEST", "class_code": c["class_code"],
                          "student_id": req.user["id"], "full_name": req.user["full_name"],
@@ -545,18 +570,26 @@ def classroom_join(req):
 @route("GET", r"/api/classrooms/([^/]+)/roster", role="TEACHER")
 def roster(req):
     owned_classroom(req, req.groups[0])
-    return [{"student_id": e["student_id"], "full_name": STATE.users[e["student_id"]]["full_name"],
+    return [{"enrollment_id": e["id"], "student_id": e["student_id"], "full_name": STATE.users[e["student_id"]]["full_name"],
              "lrn": STATE.users[e["student_id"]]["lrn_or_id"], "status": e["status"], "joined_at": e["joined_at"]}
             for e in STATE.enrollments.values() if e["classroom_id"] == req.groups[0]]
 
 
+# Allowed transitions: approve and reject act on PENDING, remove on ACTIVE.
+DECIDE_FROM = {"ACTIVE": "PENDING", "REJECTED": "PENDING", "REMOVED": "ACTIVE"}
+
+
 def decide(req, status):
-    owned_classroom(req, req.groups[0])
+    c = owned_classroom(req, req.groups[0])
+    if c.get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     sid = req.json().get("student_id")
     enr = next((e for e in STATE.enrollments.values()
                 if e["classroom_id"] == req.groups[0] and e["student_id"] == sid), None)
-    if not enr:
-        raise ApiError(404, "NOT_FOUND", "Enrollment not found")
+    if enr and enr["status"] == status:
+        return {"success": True}  # retry of a done request: no change, no event
+    if not enr or enr["status"] != DECIDE_FROM[status]:
+        raise ApiError(404, "NOT_FOUND", "No pending request" if status != "REMOVED" else "Learner is not active")
     enr["status"], enr["updated_at"] = status, now_ms()
     STATE.log("enrollments", enr["id"], req.groups[0], sid)
     STATE.broadcast({"event": "EVENT_JOIN_APPROVAL", "classroom_id": req.groups[0], "student_id": sid,
@@ -583,6 +616,9 @@ def remove_learner(req):
 def classroom_patch(req):
     c = owned_classroom(req, req.groups[0], owner_only=True)
     b = req.json()
+    # Read-only while archived; the same request may unarchive it and rename it.
+    if c.get("archived_at") and b.get("archived") is not False and ("name" in b or "section" in b):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     for k in ("name", "section"):
         if k in b:
             c[k] = b[k]
@@ -605,6 +641,8 @@ def co_teacher_add(req):
         STATE.co_teachers.setdefault(c["id"], set()).add(t["id"])
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
+    # Marks the class as newly visible to the added teacher, so their next pull includes its older rows.
+    STATE.log("classrooms", c["id"], c["id"], student_id=t["id"])
     return public_classroom(c, req.user)
 
 
@@ -614,6 +652,8 @@ def co_teacher_remove(req):
     STATE.co_teachers.get(c["id"], set()).discard(req.groups[1])
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
+    # A copy addressed to the removed teacher, who no longer sees the class but must learn they left it.
+    STATE.log("classrooms", c["id"], c["id"], student_id=req.groups[1])
     return {"success": True}
 
 
@@ -629,9 +669,15 @@ def sync_pull(req):
     ids = STATE.visible_classroom_ids(req.user)
     teacher = req.user["role"] == "TEACHER"
 
+    # Classes that became visible after the cursor (learner approved, co-teacher added): send their older rows too.
+    fresh = {e["classroom_id"] for e in STATE.ledger if e["seq"] > cursor and e["student_id"] == req.user["id"]
+             and e["table"] in ("enrollments", "classrooms") and e["classroom_id"] in ids}
     latest = {}
     for e in STATE.ledger:
-        if e["seq"] <= cursor or e["table"] == "users" or e["classroom_id"] not in ids:
+        own = e["table"] in ("enrollments", "classrooms") and e["student_id"] == req.user["id"]
+        # A removed learner or co-teacher no longer sees the class but must still receive the row that says so.
+        if (e["seq"] <= cursor and e["classroom_id"] not in fresh) or e["table"] == "users" \
+                or (e["classroom_id"] not in ids and not own):
             continue
         if e["student_id"] and e["student_id"] != req.user["id"] and not teacher:
             continue
@@ -706,6 +752,10 @@ def sync_push(req):
         if not ann or ann["classroom_id"] not in STATE.visible_classroom_ids(req.user) or (
                 existing and existing["author_id"] != req.user["id"]):
             receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
+        elif STATE.classrooms[ann["classroom_id"]].get("archived_at"):
+            # A retry of a comment saved before the archive is still SYNCED; new work is refused.
+            receipts.append({"id": c["id"], "status": "SYNCED"} if existing
+                            else {"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
         elif ann["allow_comments"]:
             STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
                                        "author_id": req.user["id"], "content": c["content"],
@@ -719,7 +769,11 @@ def sync_push(req):
         existing = STATE.private_comments.get(c["id"])
         # Same rule as the REST route: only a learner enrolled in the class, and a retry may only
         # re-send the caller's own comment, never overwrite someone else's row by guessing its id.
-        if (asg and not asg.get("archived_at")
+        if (asg and existing and existing["author_id"] == req.user["id"]
+                and STATE.classrooms[asg["classroom_id"]].get("archived_at")):
+            receipts.append({"id": c["id"], "status": "SYNCED"})
+        elif (asg and not asg.get("archived_at")
+                and not STATE.classrooms[asg["classroom_id"]].get("archived_at")
                 and asg["classroom_id"] in STATE.active_classroom_ids(req.user["id"])
                 and (existing is None or existing["author_id"] == req.user["id"])):
             add_private_comment(asg, req.user["id"], req.user["id"], c["content"], c["id"], c["created_at"])
@@ -881,6 +935,7 @@ def material_create(req):
          "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
          "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
     STATE.materials[mid] = m
+    STATE.material_files[mid] = data
     STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
         chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
@@ -892,10 +947,47 @@ def material_create(req):
 
 @route("GET", r"/api/materials/([^/]+)/download")
 def material_download(req):
+    m = visible_material(req)
+    if m["file_type"] == "VIDEO":
+        return byte_range(req, m, video_bytes(m), len(video_bytes(m)))
+    return Raw(STATE.material_files.get(m["id"], b"%PDF-1.4 mock lesson handout\n"), "application/octet-stream")
+
+
+def visible_material(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
-    member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
-    return Raw(b"%PDF-1.4 mock lesson handout\n", "application/octet-stream")
+    m = STATE.materials[req.groups[0]]
+    member_of(req.user, m["classroom_id"])
+    return m
+
+
+def video_bytes(m):
+    return STATE.material_files.get(m["id"]) or MOCK_VIDEO
+
+
+def byte_range(req, m, data, default_span):
+    """Range per RFC 9110: no header (or a stale If-Range) sends the whole file as 200; a stale If-Match is 412."""
+    size, header = len(data), req.handler.headers.get("Range")
+    etag = f'"{m["id"]}-{m["updated_at"]}"'
+    base = {"Accept-Ranges": "bytes", "ETag": etag}
+    if_match = req.handler.headers.get("If-Match")
+    if if_match and not any(t.strip() in ("*", etag) for t in if_match.split(",")):
+        return Raw(b"", "video/mp4", 412, {"ETag": etag})
+    if_range = req.handler.headers.get("If-Range")
+    if not header or not header.startswith("bytes=") or (if_range and if_range != etag):
+        if default_span >= size:
+            return Raw(data, "video/mp4", 200, base)
+        header = "bytes=0-"
+    lo, _, hi = header[6:].partition("-")
+    try:
+        start = int(lo) if lo else max(size - int(hi), 0)
+        end = int(hi) if hi and lo else min(start + default_span - 1, size - 1)
+    except ValueError:
+        start, end = size, size
+    if start >= size or end < start:
+        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    return Raw(data[start:end + 1], "video/mp4", 206, {**base, "Content-Range": f"bytes {start}-{end}/{size}"})
 
 
 @route("GET", r"/api/materials/([^/]+)/chunks")
@@ -908,42 +1000,10 @@ def material_chunks(req):
 
 @route("GET", r"/api/materials/([^/]+)/stream")
 def material_stream(req):
-    header = req.handler.headers.get("Range")
-    start, end = 0, min(65535, MOCK_VIDEO_SIZE - 1)
-    if header and header.startswith("bytes="):
-        lo, _, hi = header[6:].partition("-")
-        start = int(lo) if lo else 0
-        end = int(hi) if hi else min(start + 65535, MOCK_VIDEO_SIZE - 1)
-    if start >= MOCK_VIDEO_SIZE:
-        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{MOCK_VIDEO_SIZE}"})
-    end = min(end, MOCK_VIDEO_SIZE - 1)
-    return Raw(b"0" * (end - start + 1), "video/mp4", 206,
-               {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_VIDEO_SIZE}"})
-
-
-# ---- AI model file (resumable download; the real Hub serves the file chosen by the AI evaluation)
-@route("GET", r"/api/model")
-def model_offer(req):
-    return {"available": True, "file_name": MOCK_MODEL_NAME, "size_bytes": MOCK_MODEL_SIZE,
-            "sha256": MOCK_MODEL_SHA256}
-
-
-@route("GET", r"/api/model/file")
-def model_file(req):
-    header = req.handler.headers.get("Range")
-    if not header:
-        return Raw(MOCK_MODEL_BYTE * MOCK_MODEL_SIZE, "application/octet-stream", 200, {"Accept-Ranges": "bytes"})
-    lo, _, hi = header.removeprefix("bytes=").partition("-")
-    try:
-        start = int(lo) if lo else 0
-        end = int(hi) if hi else MOCK_MODEL_SIZE - 1
-    except ValueError:
-        return Raw(b"", "application/octet-stream", 416, {"Content-Range": f"bytes */{MOCK_MODEL_SIZE}"})
-    end = min(end, MOCK_MODEL_SIZE - 1)
-    if start > end:
-        return Raw(b"", "application/octet-stream", 416, {"Content-Range": f"bytes */{MOCK_MODEL_SIZE}"})
-    return Raw(MOCK_MODEL_BYTE * (end - start + 1), "application/octet-stream", 206,
-               {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_MODEL_SIZE}"})
+    m = visible_material(req)
+    if m["file_type"] != "VIDEO":
+        raise ApiError(404, "NOT_FOUND", "Not a video")
+    return byte_range(req, m, video_bytes(m), 65536)
 
 
 # ---- assignments
@@ -1027,12 +1087,35 @@ def submission_create(req):
     need(fields, "submission_id")
     if "file" not in files:
         raise ApiError(400, "BAD_REQUEST", "Missing file")
-    t = now_ms()
+    received_at = now_ms()
+    file_hash = hashlib.sha256(files["file"]).hexdigest()
+    turned_in_at = fields.get("turned_in_at")
+    if turned_in_at is not None:
+        try:
+            turned_in_at = int(turned_in_at)
+        except ValueError:
+            raise ApiError(400, "BAD_REQUEST", "turned_in_at must be an integer epoch-millisecond timestamp")
+    effective_time = min(turned_in_at, received_at) if turned_in_at is not None else received_at
     existing = next((s for s in STATE.submissions.values()
                      if s["assignment_id"] == asg["id"] and s["student_id"] == req.user["id"]), None)
+    if (existing and existing["id"] == fields["submission_id"]
+            and existing.get("_file_sha256") == file_hash):
+        return existing
+    if existing and existing.get("score") is not None:
+        raise ApiError(409, "ALREADY_GRADED", "This submission has already been graded")
+    if (asg.get("due_date") is not None and not asg.get("allow_late", False)
+            and effective_time > asg["due_date"]):
+        raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
                        "file_type": "IMAGE", "score": None, "teacher_feedback": None}
-    sub["submitted_at"], sub["updated_at"] = t, t
+    if existing and existing["id"] != fields["submission_id"]:
+        old_id = existing["id"]
+        STATE.submissions.pop(old_id, None)
+        STATE.submission_files.pop(old_id, None)
+        STATE.log("assignment_submissions", old_id, asg["classroom_id"], req.user["id"], action="DELETE")
+        sub["id"] = fields["submission_id"]
+    sub["submitted_at"], sub["received_at"], sub["updated_at"] = effective_time, received_at, received_at
+    sub["_file_sha256"] = file_hash
     STATE.submissions[sub["id"]] = sub
     STATE.submission_files[sub["id"]] = files["file"]
     STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
@@ -1123,7 +1206,7 @@ def quiz_active(req):
     ids = STATE.visible_classroom_ids(req.user)
     quiz = next((q for q in STATE.quizzes.values() if q["classroom_id"] in ids and q["status"] == "ACTIVE"), None)
     if not quiz:
-        raise ApiError(404, "NOT_FOUND", "Walang aktibong pagsusulit")
+        raise ApiError(404, "NOT_FOUND", "No active quiz")
     return student_quiz(quiz)
 
 
@@ -1184,6 +1267,8 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
                 if a["quiz_id"] == quiz_id and a["student_id"] == user["id"]), None)
     if att and att["status"] == "SUBMITTED":
         return att
+    if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
+        raise ApiError(403, "FORBIDDEN", "This class is archived")
     score, total = grade(quiz, answers)
     t = now_ms()
     if not att:
@@ -1211,7 +1296,8 @@ def quiz_submit(req):
 def grade_receipt(quiz, att, for_learner):
     # Held scores stay hidden from the learner until the teacher closes the quiz (PRD FR-4.6, FR-4.7).
     held = for_learner and not quiz["release_scores_immediately"] and quiz["status"] != "CLOSED"
-    return {"attempt_id": att["id"], "score": None if held else att["score"],
+    return {"attempt_id": att["id"], "quiz_id": quiz["id"], "student_id": att["student_id"],
+            "score": None if held else att["score"],
             "total_points": att["total_points"], "submitted_at": att["submitted_at"]}
 
 
@@ -1352,10 +1438,10 @@ def handle_ai_request(client, msg):
         chunks = STATE.chunks.get(msg.get("material_id"), [])
     chunk_id = chunks[0]["id"] if chunks else None
     client.send_text(json.dumps({"event": "EVENT_QUEUE_STATUS", "position": 2, "estimated_wait_seconds": 1,
-                                 "message": "Pangalawa ka sa pila - est. 1s"}))
+                                 "message": "You are second in line - est. 1s"}))
     time.sleep(0.3)
-    reply = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
-             "Balikan natin ang binasa mo. Ano ang unang hakbang?").split(" ")
+    reply = ("I can't give you the answer itself, but I will help you find it! "
+             "Let's go back to what you read. What is the first step?").split(" ")
     for i, word in enumerate(reply):
         ev = {"event": "EVENT_AI_TOKEN_STREAM", "request_id": rid, "token": word + " ",
               "is_finished": i == len(reply) - 1}

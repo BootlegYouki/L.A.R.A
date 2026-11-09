@@ -11,6 +11,41 @@ pub enum ServerEvent {
     /// Only the codes listed in `contracts/events/error.json`.
     #[serde(rename = "EVENT_ERROR")]
     Error { code: ErrorCode, message: String },
+    #[serde(rename = "EVENT_PRESENCE")]
+    Presence { classroom_id: String, student_id: String, state: PresenceState, timestamp: i64 },
+    #[serde(rename = "EVENT_JOIN_REQUEST")]
+    JoinRequest { class_code: String, student_id: String, full_name: String, lrn: String, timestamp: i64 },
+    #[serde(rename = "EVENT_JOIN_APPROVAL")]
+    JoinApproval { classroom_id: String, student_id: String, status: EnrollmentStatus, timestamp: i64 },
+    #[serde(rename = "EVENT_ANNOUNCEMENT_PUSH")]
+    AnnouncementPush { classroom_id: String, announcement_id: String, title: String, timestamp: i64 },
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum PresenceState {
+    Online,
+    Offline,
+    AnsweringQuiz,
+    Submitted,
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum EnrollmentStatus {
+    Active,
+    Rejected,
+    Removed,
+}
+
+impl EnrollmentStatus {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Active => "ACTIVE",
+            Self::Rejected => "REJECTED",
+            Self::Removed => "REMOVED",
+        }
+    }
 }
 
 impl ServerEvent {
@@ -53,6 +88,86 @@ mod tests {
     fn contract(name: &str) -> Value {
         let path = format!("{}/../../contracts/events/{name}", env!("CARGO_MANIFEST_DIR"));
         serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
+    }
+
+    // Covers the keywords used by the emitted event schemas, without fetching remote schemas.
+    fn validate(frame: &Value, schema: &Value) {
+        if let Some(kind) = schema["type"].as_str() {
+            assert!(
+                match kind {
+                    "object" => frame.is_object(),
+                    "string" => frame.is_string(),
+                    "integer" => frame.is_i64() || frame.is_u64(),
+                    "boolean" => frame.is_boolean(),
+                    _ => panic!("unhandled schema type {kind}"),
+                },
+                "{frame} does not match {schema}"
+            );
+        }
+        if let Some(required) = schema["required"].as_array() {
+            for key in required {
+                assert!(frame.get(key.as_str().unwrap()).is_some(), "missing {key}");
+            }
+        }
+        if let Some(properties) = schema["properties"].as_object() {
+            for (key, property) in properties {
+                if let Some(value) = frame.get(key) {
+                    validate(value, property);
+                }
+            }
+        }
+        if let Some(value) = schema.get("const") {
+            assert_eq!(frame, value);
+        }
+        if let Some(values) = schema["enum"].as_array() {
+            assert!(values.contains(frame));
+        }
+    }
+
+    #[test]
+    fn emitted_push_frames_match_the_contract_schemas() {
+        let mut events = vec![
+            (
+                "join_request.json",
+                ServerEvent::JoinRequest {
+                    class_code: "K7M4QX".into(),
+                    student_id: "s".into(),
+                    full_name: "Learner".into(),
+                    lrn: "123456789013".into(),
+                    timestamp: 1,
+                },
+            ),
+            (
+                "announcement_push.json",
+                ServerEvent::AnnouncementPush {
+                    classroom_id: "c".into(),
+                    announcement_id: "a".into(),
+                    title: "Lesson".into(),
+                    timestamp: 1,
+                },
+            ),
+        ];
+        for state in
+            [PresenceState::Online, PresenceState::Offline, PresenceState::AnsweringQuiz, PresenceState::Submitted]
+        {
+            events.push((
+                "presence.json",
+                ServerEvent::Presence { classroom_id: "c".into(), student_id: "s".into(), state, timestamp: 1 },
+            ));
+        }
+        for status in [EnrollmentStatus::Active, EnrollmentStatus::Rejected, EnrollmentStatus::Removed] {
+            events.push((
+                "join_approval.json",
+                ServerEvent::JoinApproval { classroom_id: "c".into(), student_id: "s".into(), status, timestamp: 1 },
+            ));
+        }
+        for code in [ErrorCode::Unauthorized, ErrorCode::Forbidden, ErrorCode::BadRequest] {
+            events.push(("error.json", ServerEvent::error(code, "m")));
+        }
+        for (name, event) in events {
+            let frame: Value = serde_json::from_str(&event.to_frame()).unwrap();
+            validate(&frame, &contract(name));
+        }
     }
 
     #[test]

@@ -1,0 +1,43 @@
+Branch: feat/4-mobile-discovery
+HEAD: 21c95626c450fa9c1e2ae7e51d6090d98fddffab
+
+Modified:
+mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryScreen.kt
+mobile/app/src/main/java/org/lara/app/ui/theme/Color.kt
+mobile/app/src/main/res/values-tl/strings.xml
+mobile/app/src/main/res/values/strings.xml
+mobile/docs/discovery.md
+
+New:
+mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryFeedback.kt
+mobile/app/src/main/res/drawable/ic_check_circle.xml
+mobile/app/src/main/res/drawable/ic_warning_circle.xml
+mobile/app/src/test/java/org/lara/app/ui/screens/discovery/DiscoveryFeedbackTest.kt
+mobile/docs/evidence/4/review-fixes/README.md
+mobile/docs/evidence/4/review-fixes/after-discovery.png
+mobile/docs/evidence/4/review-fixes/after-discovery.xml
+mobile/docs/evidence/4/review-fixes/after-filipino.png
+mobile/docs/evidence/4/review-fixes/after-filipino.xml
+mobile/docs/evidence/4/review-fixes/after-invalid.png
+mobile/docs/evidence/4/review-fixes/after-invalid.xml
+mobile/docs/evidence/4/review-fixes/after-offline.png
+mobile/docs/evidence/4/review-fixes/after-offline.xml
+mobile/docs/evidence/4/review-fixes/after-success.png
+mobile/docs/evidence/4/review-fixes/after-success.xml
+mobile/docs/evidence/4/review-fixes/after-unavailable.png
+mobile/docs/evidence/4/review-fixes/after-unavailable.xml
+mobile/docs/evidence/4/review-fixes/before-device.png
+mobile/docs/evidence/4/review-fixes/before-device.xml
+mobile/docs/evidence/4/review-fixes/device-log.txt
+mobile/docs/evidence/4/review-fixes/emulator-stderr.txt
+mobile/docs/evidence/4/review-fixes/emulator-stdout.txt
+mobile/docs/evidence/4/review-fixes/gradle-checks-final.txt
+mobile/docs/evidence/4/review-fixes/gradle-checks.txt
+mobile/docs/evidence/4/review-fixes/invariants.txt
+mobile/docs/evidence/4/review-fixes/lint-summary.txt
+mobile/docs/evidence/4/review-fixes/mock-alternate.txt
+mobile/docs/evidence/4/review-fixes/mock-hub.txt
+mobile/docs/evidence/4/review-fixes/repository-tests.txt
+mobile/docs/evidence/4/review-fixes/unit-results.txt
+
+Scope: all changes inside mobile/. No APKs in change list.

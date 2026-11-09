@@ -1,0 +1,506 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="dfd-level-0" name="Level 0 Data Flow Diagram">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1120" pageHeight="790" grid="1" gridSize="10" background="#ffffff" design_basis="Lead review of PR 176; issue 172; topics-quizzes association approved in issue 177">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;div style=&quot;font-family:Arial;font-size:20px;line-height:1.05;&quot;&gt;Level 0 Data Flow Diagram&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=20;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="16" y="12" width="1088" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="P1" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;1.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="1.0" process_name="Manage Accounts &amp; Enrollment">
+          <mxGeometry x="215" y="101" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Manage Accounts &amp;amp; Enrollment&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P1" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="">
+          <mxGeometry x="12" y="64" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.25;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P1-actor-0" target="P1" kind="data_flow" flow_label="Register / join&#10;Access">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="95" />
+              <mxPoint x="184" y="133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P1-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Register / join&lt;br&gt;Access&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="71" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="">
+          <mxGeometry x="12" y="134" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P1-actor-1" target="P1" kind="data_flow" flow_label="Classes /&#10;approvals">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="165" />
+              <mxPoint x="184" y="165" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P1-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classes /&lt;br&gt;approvals&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="141" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Admin&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Admin" duplicate_of="">
+          <mxGeometry x="12" y="204" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-actor-flow-2" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.75;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P1-actor-2" target="P1" kind="data_flow" flow_label="Accounts /&#10;PIN setup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="235" />
+              <mxPoint x="184" y="197" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P1-actor-flow-2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Accounts /&lt;br&gt;PIN setup&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="211" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D1" store_name="D1 Accounts &amp; Sessions" table_names="users,sessions" duplicate_of="">
+          <mxGeometry x="418" y="99" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D1-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D1&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P1-D1" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D1-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Accounts &amp;amp; Sessions&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P1-D1" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D1-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P1-D1" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P1-store-flow-D1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.2109375;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P1" target="P1-D1" kind="data_flow" flow_label="Account&#10;data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P1-store-flow-D1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Account&lt;br&gt;data&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="350" y="109" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D2" store_name="D2 Classes &amp; Enrollment" table_names="classrooms,classroom_teachers,enrollments" duplicate_of="">
+          <mxGeometry x="418" y="173" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D2-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D2&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P1-D2" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D2-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classes &amp;amp; Enrollment&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P1-D2" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P1-D2-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P1-D2" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P1-store-flow-D2" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.7890625;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P1" target="P1-D2" kind="data_flow" flow_label="Class&#10;data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P1-store-flow-D2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Class&lt;br&gt;data&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="350" y="183" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P2" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;2.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="2.0" process_name="Manage Stream">
+          <mxGeometry x="215" y="282" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Manage Stream&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P2" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="Learner">
+          <mxGeometry x="12" y="280" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.3333333333333333;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P2-actor-0" target="P2" kind="data_flow" flow_label="Comments /&#10;announcements">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="311" />
+              <mxPoint x="184" y="324.667" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P2-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Comments /&lt;br&gt;announcements&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="287" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="Teacher">
+          <mxGeometry x="12" y="350" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.6666666666666666;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P2-actor-1" target="P2" kind="data_flow" flow_label="Posts /&#10;comments">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="381" />
+              <mxPoint x="184" y="367.333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P2-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Posts /&lt;br&gt;comments&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="357" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-D3" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D3" store_name="D3 Stream" table_names="announcements,announcement_comments" duplicate_of="">
+          <mxGeometry x="418" y="317" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-D3-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D3&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P2-D3" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-D3-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Stream&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P2-D3" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P2-D3-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P2-D3" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P2-store-flow-D3" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P2" target="P2-D3" kind="data_flow" flow_label="Stream&#10;data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P2-store-flow-D3" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Stream&lt;br&gt;data&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="350" y="327" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P3" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;3.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="3.0" process_name="Manage Classwork">
+          <mxGeometry x="215" y="428" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Manage Classwork&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P3" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="Learner">
+          <mxGeometry x="12" y="426" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.3333333333333333;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P3-actor-0" target="P3" kind="data_flow" flow_label="Homework /&#10;feedback">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="457" />
+              <mxPoint x="184" y="470.667" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P3-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Homework /&lt;br&gt;feedback&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="433" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="Teacher">
+          <mxGeometry x="12" y="496" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.6666666666666666;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P3-actor-1" target="P3" kind="data_flow" flow_label="Classwork /&#10;grades">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="527" />
+              <mxPoint x="184" y="513.333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P3-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classwork /&lt;br&gt;grades&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="503" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D5" store_name="D5 Classwork" table_names="topics,materials,material_chunks,assignments,assignment_submissions,private_comments" duplicate_of="">
+          <mxGeometry x="418" y="463" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-D5-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D5&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P3-D5" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-D5-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classwork&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P3-D5" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P3-D5-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P3-D5" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P3-store-flow-D5" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P3" target="P3-D5" kind="data_flow" flow_label="Work&#10;data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P3-store-flow-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Work&lt;br&gt;data&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="350" y="473" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P4" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;4.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="4.0" process_name="Run Quizzes">
+          <mxGeometry x="215" y="574" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Run Quizzes&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P4" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="Learner">
+          <mxGeometry x="12" y="572" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.3333333333333333;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P4-actor-0" target="P4" kind="data_flow" flow_label="Answers /&#10;quiz scores">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="603" />
+              <mxPoint x="184" y="616.667" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P4-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Answers /&lt;br&gt;quiz scores&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="579" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="Teacher">
+          <mxGeometry x="12" y="642" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.6666666666666666;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P4-actor-1" target="P4" kind="data_flow" flow_label="Quiz control /&#10;results">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="673" />
+              <mxPoint x="184" y="659.333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P4-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Quiz control /&lt;br&gt;results&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="82" y="649" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-D4" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D4" store_name="D4 Quizzes" table_names="quizzes,quiz_questions,quiz_attempts" duplicate_of="">
+          <mxGeometry x="418" y="609" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-D4-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D4&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P4-D4" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-D4-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Quizzes&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P4-D4" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P4-D4-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P4-D4" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P4-store-flow-D4" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P4" target="P4-D4" kind="data_flow" flow_label="Quiz&#10;data">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P4-store-flow-D4" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Quiz&lt;br&gt;data&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="350" y="619" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P5" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;5.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="5.0" process_name="Gradebook, Export &amp; Backup">
+          <mxGeometry x="775" y="101" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Gradebook, Export &amp;amp; Backup&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P5" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="Teacher">
+          <mxGeometry x="572" y="64" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.25;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P5-actor-0" target="P5" kind="data_flow" flow_label="Export request /&#10;gradebook file">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="95" />
+              <mxPoint x="744" y="133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P5-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Export request /&lt;br&gt;gradebook file&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="71" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Admin*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Admin" duplicate_of="Admin">
+          <mxGeometry x="572" y="134" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P5-actor-1" target="P5" kind="data_flow" flow_label="Export /&#10;backup controls">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="165" />
+              <mxPoint x="744" y="165" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P5-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Export /&lt;br&gt;backup controls&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="141" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;USB Drive&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="USB Drive" duplicate_of="">
+          <mxGeometry x="572" y="204" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-actor-flow-2" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.75;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P5-actor-2" target="P5" kind="data_flow" flow_label="Gradebook file /&#10;backup archive">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="235" />
+              <mxPoint x="744" y="197" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P5-actor-flow-2" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Gradebook file /&lt;br&gt;backup archive&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="211" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D4" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D4" store_name="D4 Quizzes" table_names="quizzes,quiz_questions,quiz_attempts" duplicate_of="D4">
+          <mxGeometry x="978" y="99" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D4-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D4*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P5-D4" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D4-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Quizzes&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P5-D4" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D4-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P5-D4" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P5-store-flow-D4" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0;exitY=0.5;entryX=1;entryY=0.2109375;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P5-D4" target="P5" kind="data_flow" flow_label="Quiz&#10;grades">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P5-store-flow-D4" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Quiz&lt;br&gt;grades&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="109" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D5" store_name="D5 Classwork" table_names="topics,materials,material_chunks,assignments,assignment_submissions,private_comments" duplicate_of="D5">
+          <mxGeometry x="978" y="173" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D5-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D5*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P5-D5" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D5-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classwork&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P5-D5" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P5-D5-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P5-D5" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P5-store-flow-D5" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0;exitY=0.5;entryX=1;entryY=0.7890625;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P5-D5" target="P5" kind="data_flow" flow_label="Work&#10;grades">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P5-store-flow-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Work&lt;br&gt;grades&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="183" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P6" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;6.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="6.0" process_name="Socratic AI Tutor">
+          <mxGeometry x="775" y="282" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Socratic AI Tutor&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P6" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="Learner">
+          <mxGeometry x="572" y="315" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P6-actor-0" target="P6" kind="data_flow" flow_label="Question /&#10;guiding hint">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="346" />
+              <mxPoint x="744" y="346" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P6-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Question /&lt;br&gt;guiding hint&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="322" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D5" store_name="D5 Classwork" table_names="topics,materials,material_chunks,assignments,assignment_submissions,private_comments" duplicate_of="D5">
+          <mxGeometry x="978" y="280" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D5-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D5*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P6-D5" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D5-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Classwork&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P6-D5" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D5-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P6-D5" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P6-store-flow-D5" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0;exitY=0.5;entryX=1;entryY=0.2109375;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P6-D5" target="P6" kind="data_flow" flow_label="Lesson&#10;text">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P6-store-flow-D5" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Lesson&lt;br&gt;text&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="290" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D6" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D6" store_name="D6 Tutor History" table_names="ai_chat_messages" duplicate_of="">
+          <mxGeometry x="978" y="354" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D6-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D6&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P6-D6" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D6-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Tutor History&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P6-D6" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P6-D6-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P6-D6" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P6-store-flow-D6" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.7890625;entryX=0;entryY=0.5;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P6" target="P6-D6" kind="data_flow" flow_label="Tutor&#10;history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P6-store-flow-D6" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Tutor&lt;br&gt;history&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="364" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P7" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;7.0&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;swimlane;startSize=26;rounded=1;arcSize=10;align=left;spacingLeft=8;swimlaneFillColor=#ffffff;fontStyle=1;" vertex="1" parent="1" kind="process" process_number="7.0" process_name="Synchronize Devices">
+          <mxGeometry x="775" y="428" width="130" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-name" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Synchronize Devices&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P7" kind="process_label">
+          <mxGeometry x="8" y="32" width="114" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-actor-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Learner*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Learner" duplicate_of="Learner">
+          <mxGeometry x="572" y="426" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-actor-flow-0" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.3333333333333333;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P7-actor-0" target="P7" kind="data_flow" flow_label="Queued work /&#10;updates">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="457" />
+              <mxPoint x="744" y="470.667" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P7-actor-flow-0" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Queued work /&lt;br&gt;updates&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="433" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-actor-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Teacher*&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="external_entity" entity_name="Teacher" duplicate_of="Teacher">
+          <mxGeometry x="572" y="496" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-actor-flow-1" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=1;exitY=0.5;entryX=0;entryY=0.6666666666666666;exitPerimeter=0;entryPerimeter=0;startArrow=block;startFill=1;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P7-actor-1" target="P7" kind="data_flow" flow_label="Queued work /&#10;updates">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="744" y="527" />
+              <mxPoint x="744" y="513.333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-P7-actor-flow-1" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Queued work /&lt;br&gt;updates&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="642" y="503" width="96" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D7" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D7" store_name="D7 Sync Ledger" table_names="sync_revisions" duplicate_of="">
+          <mxGeometry x="978" y="426" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D7-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D7&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P7-D7" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D7-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Sync Ledger&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P7-D7" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D7-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P7-D7" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P7-store-flow-D7" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0;exitY=0.5;entryX=1;entryY=0.2109375;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P7-D7" target="P7" kind="data_flow" flow_label="Change&#10;records">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P7-store-flow-D7" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Change&lt;br&gt;records&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="436" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D8" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;shape=partialRectangle;top=1;bottom=1;left=1;right=0;" vertex="1" parent="1" kind="data_store" store_code="D8" store_name="D8 Hub Identity" table_names="hub_meta" duplicate_of="">
+          <mxGeometry x="978" y="500" width="130" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D8-id" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;D8&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;" vertex="1" parent="P7-D8" kind="store_label">
+          <mxGeometry x="0" y="0" width="32" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D8-name" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Hub Identity&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="P7-D8" kind="store_label">
+          <mxGeometry x="37" y="3" width="88" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="P7-D8-divider" style="endArrow=none;strokeColor=#000000;" edge="1" parent="P7-D8" kind="store_divider">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="32" y="0" as="sourcePoint" />
+            <mxPoint x="32" y="58" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P7-store-flow-D8" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0;exitY=0.5;entryX=1;entryY=0.7890625;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=block;endFill=1;startSize=5;endSize=5;" edge="1" parent="1" source="P7-D8" target="P7" kind="data_flow" flow_label="Hub&#10;identity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="label-P7-store-flow-D8" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;Hub&lt;br&gt;identity&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="flow_label">
+          <mxGeometry x="910" y="510" width="62" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="backup-note" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;5.0 reads all stores for backup.&lt;br&gt;Restoration updates the saved records and Hub identity.&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="578" y="586" width="516" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="ai-note" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;The tutor is locked during an active quiz attempt.&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="578" y="654" width="516" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;div style=&quot;font-family:Arial;font-size:15px;line-height:1.05;&quot;&gt;* Repeated entity or store: the same actor or logical data store.&lt;br&gt;A combined arrow groups the input and output for one pair.&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=15;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="16" y="737" width="1088" height="42" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

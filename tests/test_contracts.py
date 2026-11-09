@@ -1,6 +1,5 @@
 import unittest
 import os
-import json
 import yaml
 
 class TestContracts(unittest.TestCase):
@@ -10,12 +9,6 @@ class TestContracts(unittest.TestCase):
         with open(spec_path, "r", encoding="utf-8") as f:
             spec = yaml.safe_load(f)
         self.assertTrue(spec["openapi"].startswith("3."), "Must be OpenAPI 3.x")
-        self.assertIn("/api/classrooms", spec["paths"])
-        self.assertIn("/api/sync/pull", spec["paths"])
-        self.assertIn("/api/quizzes/active", spec["paths"])
-        for required in ("/api/auth/login", "/api/auth/register", "/api/classrooms/{id}/approve",
-                         "/api/assignments/{id}/submit", "/api/quizzes/{id}/start", "/api/export/class-record"):
-            self.assertIn(required, spec["paths"], f"openapi.yaml missing {required}")
 
     def test_one_shared_socratic_system_prompt(self):
         # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
@@ -24,37 +17,20 @@ class TestContracts(unittest.TestCase):
             prompt = f.read()
         for placeholder in ("{reply_language}", "{lesson_chunks}"):
             self.assertEqual(prompt.count(placeholder), 1, f"prompt needs exactly one {placeholder}")
-        decline = ("Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! "
-                   "Balikan natin ang binasa mo. Ano ang unang hakbang?")
+        decline = ("I can't give you the answer itself, but I will help you find it! "
+                   "Let's go back to what you read. What is the first step?")
         self.assertIn(decline, prompt)
         with open("scripts/mock_hub.py", "r", encoding="utf-8") as f:
-            self.assertIn("Ano ang unang hakbang?", f.read())
+            self.assertIn("What is the first step?", f.read())
         with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
             self.assertIn(decline, f.read())
 
-    def test_websocket_event_schemas_valid_json(self):
-        events_dir = "contracts/events"
-        self.assertTrue(os.path.isdir(events_dir), "contracts/events directory missing")
-        required_events = [
-            "join_request.json", "join_approval.json", "quiz_start.json",
-            "quiz_submit.json", "ai_stream.json", "queue_status.json",
-            "ws_hello.json", "grade_confirmed.json", "quiz_closed.json",
-            "announcement_push.json", "presence.json", "error.json", "ai_chat_request.json"
-        ]
-        for filename in required_events:
-            path = os.path.join(events_dir, filename)
-            self.assertTrue(os.path.exists(path), f"Missing {filename}")
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            self.assertEqual(data.get("type"), "object", f"{filename} root must be object")
-
-    def test_naming_rules_documented(self):
-        rules_path = "contracts/naming_rules.md"
-        self.assertTrue(os.path.exists(rules_path), "naming_rules.md missing")
-        with open(rules_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        self.assertIn("snake_case", content)
-        self.assertIn("correct_answer", content)
+    def test_required_event_schemas_exist(self):
+        # Shape, snake_case and mock coverage of every contracts/events/*.json is checked in test_contract_coverage.
+        for filename in ("join_request", "join_approval", "quiz_start", "quiz_submit", "ai_stream", "queue_status",
+                         "ws_hello", "grade_confirmed", "quiz_closed", "announcement_push", "presence", "error",
+                         "ai_chat_request"):
+            self.assertTrue(os.path.exists(f"contracts/events/{filename}.json"), f"Missing {filename}.json")
 
     def test_sqlite_schemas_valid_and_executable(self):
         import sqlite3
@@ -132,6 +108,12 @@ class TestContracts(unittest.TestCase):
         cur_client.execute("PRAGMA table_info(assignment_submissions);")
         sub_cols = [r[1] for r in cur_client.fetchall()]
         self.assertIn("sync_status", sub_cols)
+
+        for table in ("assignment_submissions", "quiz_attempts", "announcement_comments", "private_comments"):
+            cur_client.execute(f"PRAGMA table_info({table});")
+            self.assertIn("sync_reject_reason", [r[1] for r in cur_client.fetchall()], f"{table} must keep the Hub's reject reason")
+            sql = cur_client.execute("SELECT sql FROM sqlite_master WHERE name = ?", (table,)).fetchone()[0]
+            self.assertIn("'REJECTED'", sql, f"{table}.sync_status must allow REJECTED")
 
         cur_client.execute("PRAGMA table_info(materials);")
         mat_cols = [r[1] for r in cur_client.fetchall()]

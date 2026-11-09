@@ -1,0 +1,57 @@
+/*
+ * Portal fonts, served by the Hub only. No CDN, no Google Fonts, no internet.
+ * Nunito (OFL) and Phosphor (MIT) are bundled from design-system/assets.
+ * Font files live under /download/assets/web and are served by routes/portal.rs.
+ */
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/download/assets/web/nunito-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/download/assets/web/nunito-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/download/assets/web/nunito-latin-800-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("/download/assets/web/nunito-latin-900-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Phosphor";
+  font-style: normal;
+  font-weight: normal;
+  font-display: block;
+  src: url("/download/assets/web/Phosphor.woff2") format("woff2");
+}
+
+.ph {
+  font-family: "Phosphor" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.ph.ph-device-mobile:before { content: "\e1e0"; }
+.ph.ph-desktop:before { content: "\e560"; }
+.ph.ph-wifi-high:before { content: "\e4ea"; }

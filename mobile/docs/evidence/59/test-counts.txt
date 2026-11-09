@@ -1,0 +1,10 @@
+testDebugUnitTest: tests=194, failures=0, errors=0, skipped=0
+  org.lara.app.media.DownloadManagerTest: tests=13 failures=0 skipped=0
+  org.lara.app.media.VideoIntegrationTest: tests=10 failures=0 skipped=0
+  org.lara.app.media.VideoMockIntegrationTest: tests=1 failures=0 skipped=0
+  org.lara.app.media.VideoViewModelTest: tests=4 failures=0 skipped=0
+testReleaseUnitTest: tests=194, failures=0, errors=0, skipped=0
+  org.lara.app.media.DownloadManagerTest: tests=13 failures=0 skipped=0
+  org.lara.app.media.VideoIntegrationTest: tests=10 failures=0 skipped=0
+  org.lara.app.media.VideoMockIntegrationTest: tests=1 failures=0 skipped=0
+  org.lara.app.media.VideoViewModelTest: tests=4 failures=0 skipped=0

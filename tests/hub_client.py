@@ -5,7 +5,18 @@ import os
 import socket
 import struct
 import urllib.error
+import urllib.parse
 import urllib.request
+
+# Set LARA_HUB_URL (and optionally LARA_HUB_WS_URL) to run the Hub tests against an already-running Hub.
+EXTERNAL_HUB = os.environ.get("LARA_HUB_URL", "").rstrip("/")
+
+
+def external_target():
+    """(http base, ws host, ws port) of the external Hub. The WebSocket defaults to the same host on :8081."""
+    http = urllib.parse.urlparse(EXTERNAL_HUB)
+    ws = urllib.parse.urlparse(os.environ.get("LARA_HUB_WS_URL") or f"ws://{http.hostname}:8081")
+    return EXTERNAL_HUB, ws.hostname, ws.port or 8081
 
 
 def call(base, method, path, body=None, token=None, headers=None, raw=None):

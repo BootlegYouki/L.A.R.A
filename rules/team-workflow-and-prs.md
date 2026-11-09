@@ -10,7 +10,7 @@ All AI agents and contributors must follow these rules.
 
 The engineering group operates across three independent streams overseen by the Lead Developer:
 
-1. **Mobile Project Team (`mobile/`):** Android Native (Kotlin 2.x, Jetpack Compose M3, Room DB, CameraX, JNI `llama.cpp`).
+1. **Mobile Project Team (`mobile/`):** Android Native (Kotlin 2.x, Jetpack Compose M3, Room DB, CameraX).
 2. **Desktop Project Team (`desktop/`):** Tauri Desktop Client (Tauri 2.x, React 19, TypeScript, Tailwind M3, bundled `llama.cpp`).
 3. **Server Project Team (`server/`):** Local Hub Host (mDNS, UDP `:8888`, SQLite, WebSockets `:8081`, video streaming, `llama-server` queue).
 4. **Lead Developer:** Reviews and gatekeeps all pull requests before merging into `staging`.
@@ -25,7 +25,7 @@ The engineering group operates across three independent streams overseen by the 
 4. **Mock hub parity is enforced.** `tests/test_contract_coverage.py` fails CI when a contract route or event has no mock implementation.
 5. **File ownership.** A team edits only its own folder. `contracts/`, `design-system/`, `rules/`, `scripts/`, `tests/` and `.github/` are Lead-owned (see `.github/CODEOWNERS`).
 6. **Integration day.** The last working day of each sprint, clients switch from the mock hub to the real Hub on `staging`. Failures become bug issues labelled with the owning team. The sprint is done only when the Definition of Done runs end to end against the real Hub.
-7. **Inside a team: one issue at a time, in step order.** The three teams are the only parallel streams. Both developers on a team work the same issue together (with their AI agents) and open one PR for it. The team takes its issues in step order (`2.1`, then `2.2`, ...) and starts the next only after the current PR is merged into `staging`, so a team never has two feature PRs open at once and there are no developer roles or slots to assign. An issue whose `Depends on` names another team's step builds against the mock hub and does not wait.
+7. **Inside a team: one issue at a time, in step order.** The three teams are the only parallel streams. Both developers on a team work the same issue together (with their AI agents) and open one PR for it. The team takes its issues in step order (`2.1`, then `2.2`, ...) and starts the next only after the current PR is merged into `staging`, so a team never has two feature PRs open at once and there are no developer roles or slots to assign. An issue whose `Depends on` names another team's step builds against the mock hub and does not wait. **Evaluations do not hold the line:** a spike or evaluation step (its output is a report in `docs/evaluations/` or `docs/benchmarks/`, not app code, e.g. [SERVER 1.5]) may stay open while the team starts the next feature step, so a team can have one feature PR and one evaluation PR open at once. Nothing may depend on an evaluation that has not merged.
 8. **Technical Spec before code.** Each team writes `<team>/docs/TECH_SPEC.md` from `docs/templates/TECH_SPEC_TEMPLATE.md` and the Lead approves it before Sprint 1 work starts. The spec cites `contracts/` and never redefines product behavior; `docs/PRD.md` is the single product source.
 9. **Reports are the one shared place a team PR may add to.** Benchmark, audit and evaluation write-ups go in `docs/benchmarks/`, `docs/audits/` and `docs/evaluations/` (new files only). Everything else outside the team folder stays Lead-owned.
 
@@ -58,7 +58,11 @@ Before opening a PR targeting `staging`:
 2. **PR Template:** Complete all sections in `.github/PULL_REQUEST_TEMPLATE.md`. CI (contracts, guardrails and the team job) must be green.
 3. **Subsystem Documentation Updated:** Must include documentation of changes within the assigned subsystem folder (`mobile/docs/`, `desktop/docs/`, or `server/docs/`).
 4. **Attach Verification Evidence:** Attach a log snippet, terminal output, or screenshot proving your code works on local LAN with zero internet.
-5. **Lead Review:** Wait for the Lead Developer's review against the checklist in section 5 before merging.
+5. **Tested Before Review, On The Right Device:** the author runs the change and attaches the proof; a PR without it is not reviewed.
+   * **Screens:** if the PR adds or changes anything a teacher or learner sees, screenshots of every changed screen against the mock hub or real Hub: normal, empty, offline (Hub unreachable). Mobile adds one at 200% font size.
+   * **Features an emulator or one PC cannot prove:** real Wi-Fi and LAN (Hub discovery, mDNS/UDP, two or more devices talking to one Hub, WebSocket pushes between devices), camera, file picking and storage permissions, notifications, background sync, the phone sleeping or the app being killed, low memory on a 3 to 4 GB phone, and the Windows installer. These are run on real hardware (a physical Android phone, a second PC on the same Wi-Fi, the router with the WAN cable unplugged) and proved with a screenshot, short video or log that names the device model.
+   * If the team has no device for a case, say so under **Not Verified**; the PR is not merged until someone on the team has run it.
+6. **Lead Review:** Wait for the Lead Developer's review against the checklist in section 5 before merging.
 
 ---
 
@@ -67,7 +71,7 @@ Before opening a PR targeting `staging`:
 To ensure the Lead Developer and teammates always have immediate architectural context without digging through commit histories, **all developers must maintain documentation inside their assigned folder**:
 
 * **Mobile Developers (`mobile/`):** Maintain module documentation and architecture notes in `mobile/docs/` (e.g. `navigation.md`, `room_schema.md`, `camerax.md`, `budget_device_benchmarks.md`) or update `mobile/README.md`.
-* **Desktop Developers (`desktop/`):** Maintain component and service notes in `desktop/docs/` (e.g. `components.md`, `database.md`, `video_player.md`, `sidecar_llama.md`) or update `desktop/README.md`.
+* **Desktop Developers (`desktop/`):** Maintain component and service notes in `desktop/docs/` (e.g. `components.md`, `database.md`, `video_player.md`, `ai_chat.md`) or update `desktop/README.md`.
 * **Server Developers (`server/`):** Maintain endpoint, WebSocket, and background worker notes in `server/docs/` (e.g. `discovery_mdns_udp.md`, `database_sync.md`, `streaming_rate_limit.md`, `slm_inference_queue.md`) or update `server/README.md`.
 
 ### What Every Subsystem Document Must Include:
@@ -88,7 +92,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Check for: Firebase, Google Play Services, external CDNs, Google Fonts URLs, remote analytics, third-party tracking, or external API endpoints.
    * Rule: All networking must operate exclusively over local LAN (ports 8080, 8081, 8888, or mDNS).
 2. **RAM Bloat & Hardware Crashes (Budget Phone Invariant):**
-   * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM, or initiating on-device SLM inference without checking `RAM >= 6GB`.
+   * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM.
    * Rule: Target devices are 3GB/4GB RAM phones (Infinix, TECNO, realme). Mobile heap must remain < 250MB during Hub-assisted mode.
 3. **Pedagogical AI Leaks (Socratic Invariant):**
    * Check for: Prompts or endpoints that provide direct answers, complete formulas, or write out homework solutions for students.
@@ -97,7 +101,7 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
    * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the backend must reject AI requests (`HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`).
 5. **Accessibility & Touch Degradation (Grades 1 to 12 Invariant):**
-   * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded English strings in UI files without Filipino resource keys, or tiny, unreadable fonts.
+   * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded user-facing strings in UI files instead of English resources, or tiny, unreadable fonts.
 
 ---
 
@@ -108,10 +112,11 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 8. **Sync Correctness:** a timestamp used as the sync cursor; a pull response applied without storing `next_cursor` in the same transaction; no handling of `reset: true`; a revision row not written in the same transaction as the change; `SYNCED` set without a server receipt.
 9. **Scope Violation:** a PR that touches more than one team's folder, edits Lead-owned paths (`contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, `AGENTS.md`) inside a feature PR, or does not match the linked issue.
 10. **Destructive Data Handling:** deleting users, classrooms or graded rows instead of deactivating or archiving.
+11. **Untested Change:** a changed screen without screenshots, or a feature from the list in section 3 item 5 without proof from real hardware.
 
 ### Also checked (usually a comment, not a blocker)
 * Design tokens only (no invented hex, gradients, non-Phosphor icons, non-Nunito fonts); purple used only for the AI tutor.
-* Offline state, empty state and loading skeleton exist for every new screen; English and Filipino strings present.
+* Offline state, empty state and loading skeleton exist for every new screen; English strings in resources.
 * Server authorisation by role and class ownership, not only in the UI.
 * Evidence is real: build or test output, a log or screenshot against the mock hub, and a plain statement of anything not verified.
 * Docs updated in the team folder (and `TECH_SPEC.md` if the design changed).

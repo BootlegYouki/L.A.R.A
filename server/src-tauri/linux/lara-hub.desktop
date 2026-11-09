@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories={{categories}}
+Comment=Classroom Hub for L.A.R.A: accounts, port health, USB export and backup
+Comment[fil]=Hub ng silid-aralan para sa L.A.R.A: mga account, kalagayan ng port, pag-export sa USB at backup
+Exec={{exec}}
+StartupWMClass={{exec}}
+Icon={{icon}}
+Name={{name}}
+Terminal=false
+Type=Application

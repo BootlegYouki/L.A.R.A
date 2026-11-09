@@ -8,10 +8,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.dirname(__file__))
 
 from scripts.mock_hub import MockHubServer  # noqa: E402
-from hub_client import WsClient, call, login  # noqa: E402
+from hub_client import EXTERNAL_HUB, WsClient, call, external_target, login  # noqa: E402
 
 HTTP, WS = 8089, 8099
-BASE = f"http://127.0.0.1:{HTTP}"
+BASE, WS_HOST = f"http://127.0.0.1:{HTTP}", "127.0.0.1"
+if EXTERNAL_HUB:
+    BASE, WS_HOST, WS = external_target()
+
 CLASSROOM = "c1a2b3c4-0001-4000-8000-000000000001"
 
 QUIZ = {
@@ -25,19 +28,26 @@ QUIZ = {
 }
 
 
+needs_mock = unittest.skipIf(bool(EXTERNAL_HUB), "inspects mock hub internals (self.server.state)")
+
+
 class TestMockHub(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        if EXTERNAL_HUB:
+            return
         cls.server = MockHubServer(http_port=HTTP, ws_port=WS, udp_port=8899, broadcast_interval=1.0)
         cls.server.start()
         time.sleep(0.3)
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.stop()
+        if not EXTERNAL_HUB:
+            cls.server.stop()
 
     def setUp(self):
-        self.server.state.__init__()
+        if not EXTERNAL_HUB:
+            self.server.state.__init__()
         self.teacher = login(BASE, "T-0001")
         self.pupil = login(BASE, "123456789012")
 
@@ -46,10 +56,39 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
         return quiz
 
+    def submit_homework(self, assignment_id, submission_id, file_bytes, turned_in_at=None):
+        boundary = "HW-BOUNDARY"
+        parts = [f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\n{submission_id}\r\n']
+        if turned_in_at is not None:
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="turned_in_at"\r\n\r\n{turned_in_at}\r\n')
+        body = "".join(parts).encode() + (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="work.jpg"\r\n'
+            f'Content-Type: image/jpeg\r\n\r\n'
+        ).encode() + file_bytes + f'\r\n--{boundary}--\r\n'.encode()
+        return call(BASE, "POST", f"/api/assignments/{assignment_id}/submit", token=self.pupil, raw=body,
+                    headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+
     def test_requires_bearer_token(self):
         status, body, _ = call(BASE, "GET", "/api/classrooms")
         self.assertEqual(status, 401)
         self.assertEqual(body["error"]["code"], "UNAUTHORIZED")
+
+    def test_login_rate_limit_and_register_checks(self):
+        wrong = {"lrn_or_id": "123456789013", "pin": "9999"}
+        for _ in range(5):
+            self.assertEqual(call(BASE, "POST", "/api/auth/login", wrong)[0], 401)
+        status, body, headers = call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "123456789013", "pin": "1234"})
+        self.assertEqual((status, body["error"]["code"]), (429, "TOO_MANY_ATTEMPTS"))
+        self.assertGreater(int(headers["Retry-After"]), 0)
+        self.assertEqual(call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "T-0001", "pin": "1234"})[0], 200)
+        for bad in ({"lrn_or_id": " ", "full_name": "A", "pin": "1234"}, {"lrn_or_id": "999", "full_name": "", "pin": "1234"}):
+            self.assertEqual(call(BASE, "POST", "/api/auth/register", bad)[0], 400)
+
+    def test_admin_login_is_hub_pc_only(self):
+        body = {"lrn_or_id": "ADMIN-0001", "pin": "1234"}
+        status, err, _ = call(BASE, "POST", "/api/auth/login", body, headers={"Cf-Connecting-IP": "203.0.113.7"})
+        self.assertEqual((status, err["error"]["code"]), (403, "ADMIN_LOCAL_ONLY"))
+        self.assertEqual(call(BASE, "POST", "/api/auth/login", body)[0], 200)
 
     def test_classrooms_for_teacher_and_pupil(self):
         _, rooms, _ = call(BASE, "GET", "/api/classrooms", token=self.teacher)
@@ -75,50 +114,95 @@ class TestMockHub(unittest.TestCase):
                                   token=self.pupil, headers={"Range": "bytes=0-99"})
         self.assertEqual(status, 206)
         self.assertEqual(len(body), 100)
-        self.assertEqual(hdrs["Content-Range"], "bytes 0-99/1048576")
+        self.assertTrue(hdrs["Content-Range"].startswith("bytes 0-99/"))
+        self.assertEqual(body[4:8], b"ftyp", "stream must serve a decodable MP4, not filler bytes")
+
+    def test_video_download_resumes_with_range_and_if_range(self):
+        path = "/api/materials/m2000000-0000-4000-8000-000000000002/download"
+        status, whole, hdrs = call(BASE, "GET", path, token=self.pupil)
+        self.assertEqual(status, 200)
+        etag = hdrs["ETag"]
+        status, tail, hdrs = call(BASE, "GET", path, token=self.pupil,
+                                  headers={"Range": "bytes=1000-", "If-Range": etag})
+        self.assertEqual(status, 206)
+        self.assertEqual(tail, whole[1000:])
+        self.assertEqual(hdrs["Content-Range"], f"bytes 1000-{len(whole) - 1}/{len(whole)}")
+        status, again, _ = call(BASE, "GET", path, token=self.pupil,
+                                headers={"Range": "bytes=1000-", "If-Range": '"stale"'})
+        self.assertEqual((status, again), (200, whole), "a changed file restarts from byte 0")
+        status, _, _ = call(BASE, "GET", path, token=self.pupil, headers={"Range": f"bytes={len(whole)}-"})
+        self.assertEqual(status, 416)
+        status, tail, _ = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": etag})
+        self.assertEqual((status, tail), (206, whole[1000:]), "Android/Chrome resume with If-Match")
+        status, _, hdrs = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": '"stale"'})
+        self.assertEqual((status, hdrs["ETag"]), (412, etag), "a changed file is refused, so the client restarts")
 
     def test_stream_accepts_token_query_for_html5_video(self):
         status, _, _ = call(BASE, "GET", f"/api/materials/m2000000-0000-4000-8000-000000000002/stream?token={self.pupil}",
                             headers={"Range": "bytes=0-9"})
         self.assertEqual(status, 206)
 
-    def test_model_file_is_offered_and_resumable_and_matches_its_checksum(self):
-        import hashlib
-        status, offer, _ = call(BASE, "GET", "/api/model", token=self.pupil)
-        self.assertEqual(status, 200)
-        self.assertTrue(offer["available"])
-        # download in two Range requests, the second resuming where the first stopped
-        half = offer["size_bytes"] // 2
-        s1, first, h1 = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": f"bytes=0-{half - 1}"})
-        s2, rest, h2 = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": f"bytes={half}-"})
-        self.assertEqual((s1, s2), (206, 206))
-        self.assertEqual(h2["Content-Range"], f"bytes {half}-{offer['size_bytes'] - 1}/{offer['size_bytes']}")
-        data = first if isinstance(first, bytes) else first.encode()
-        data += rest if isinstance(rest, bytes) else rest.encode()
-        self.assertEqual(len(data), offer["size_bytes"])
-        self.assertEqual(hashlib.sha256(data).hexdigest(), offer["sha256"])
-
-    def test_model_file_needs_a_token_accepts_token_query_and_rejects_bad_range(self):
-        self.assertEqual(call(BASE, "GET", "/api/model")[0], 401)
-        self.assertEqual(call(BASE, "GET", "/api/model/file", headers={"Range": "bytes=0-9"})[0], 401)
-        status, _, _ = call(BASE, "GET", f"/api/model/file?token={self.pupil}", headers={"Range": "bytes=0-9"})
-        self.assertEqual(status, 206)
-        status, _, _ = call(BASE, "GET", "/api/model/file", token=self.pupil, headers={"Range": "bytes=999999999-"})
-        self.assertEqual(status, 416)
-
     def test_join_approve_flow_pushes_websocket_events(self):
         ana = login(BASE, "123456789013")
-        teacher_ws = WsClient("127.0.0.1", WS, self.teacher)
-        ana_ws = WsClient("127.0.0.1", WS, ana)
+        teacher_ws = WsClient(WS_HOST, WS, self.teacher)
+        ana_ws = WsClient(WS_HOST, WS, ana)
         status, receipt, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M-4QX"}, ana)
         self.assertEqual((status, receipt["status"]), (200, "PENDING"))
         self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["lrn"], "123456789013")
         _, roster, _ = call(BASE, "GET", f"/api/classrooms/{CLASSROOM}/roster", token=self.teacher)
-        sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
+        row = next(r for r in roster if r["lrn"] == "123456789013")
+        sid = row["student_id"]
+        _, pulled, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.teacher)
+        synced = {(e["classroom_id"], e["student_id"]): e["id"] for e in pulled["enrollments"]}
+        self.assertEqual(row["enrollment_id"], synced[(CLASSROOM, sid)])
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "ACTIVE")
         teacher_ws.close()
         ana_ws.close()
+
+    @needs_mock
+    def test_enrollment_transitions_retries_and_rejoin(self):
+        ana, sid = self.enroll_ana()
+        post = lambda action: call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/{action}", {"student_id": sid}, self.teacher)
+        join = lambda: call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)[1]["status"]
+        self.assertEqual(post("approve")[0], 200)  # retry of a done approval
+        self.assertEqual(post("reject")[0], 404)  # ACTIVE is not pending
+        self.assertEqual(join(), "ACTIVE")
+        self.assertEqual(post("remove")[0], 200)
+        self.assertEqual(post("remove")[0], 200)
+        self.assertEqual(post("approve")[0], 404)  # REMOVED is not pending
+        teacher_ws = WsClient(WS_HOST, WS, self.teacher)
+        self.assertEqual(join(), "PENDING")  # a removed learner may ask again
+        self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["student_id"], sid)
+        teacher_ws.close()
+        self.assertEqual(post("reject")[0], 200)
+        self.assertEqual(post("remove")[0], 404)
+        self.assertEqual(join(), "PENDING")
+
+    @needs_mock
+    def test_archived_class_refuses_join_and_decisions(self):
+        ana, sid = self.enroll_ana()
+        call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
+        status, body, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, self.pupil)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+        status, body, _ = call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+
+    def test_archived_class_is_read_only_until_unarchived(self):
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        saved = {"id": "c-saved", "announcement_id": ann, "content": "before", "created_at": 1}
+        call(BASE, "POST", "/api/sync/push", {"comments": [saved]}, self.pupil)
+        call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
+        status, body, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New"}, self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
+        new = {"id": "c-new", "announcement_id": ann, "content": "after", "created_at": 2}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [saved, new]}, self.pupil)
+        self.assertEqual(res["receipts"], [{"id": "c-saved", "status": "SYNCED"},
+                                           {"id": "c-new", "status": "REJECTED", "reason": "FORBIDDEN"}])
+        status, room, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New", "archived": False}, self.teacher)
+        self.assertEqual((status, room["name"], room["archived_at"]), (200, "New", None))
 
     def test_bad_class_code(self):
         status, body, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "ZZZZZZ"}, self.pupil)
@@ -128,7 +212,7 @@ class TestMockHub(unittest.TestCase):
         quiz = self.make_active_quiz()
         _, full, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.teacher)
         ids = [q["id"] for q in full["questions"]]
-        pupil_ws = WsClient("127.0.0.1", WS, self.pupil)
+        pupil_ws = WsClient(WS_HOST, WS, self.pupil)
         _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
         now = int(time.time() * 1000)
         _, receipt, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/submit", {
@@ -149,13 +233,17 @@ class TestMockHub(unittest.TestCase):
         _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
         mine = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
         self.assertIsNone(mine[0]["score"])
-        pupil_ws = WsClient("127.0.0.1", WS, self.pupil)
+        pupil_ws = WsClient(WS_HOST, WS, self.pupil)
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)
         self.assertEqual(pupil_ws.recv_until("EVENT_GRADE_CONFIRMED")["attempt_id"], receipt["attempt_id"])
         pupil_ws.close()
         _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": pull["next_cursor"]}, self.pupil)
         released = [a for a in pull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
         self.assertEqual(released[0]["score"], 0)
+        _, tpull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.teacher)
+        seen = [a for a in tpull["quiz_attempts"] if a["attempt_id"] == receipt["attempt_id"]]
+        self.assertEqual(seen[0]["quiz_id"], quiz["id"], "a teacher's pull says which quiz each score belongs to")
+        self.assertTrue(seen[0]["student_id"], "and which learner")
 
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()
@@ -168,7 +256,7 @@ class TestMockHub(unittest.TestCase):
     def test_ai_tutor_locked_while_quiz_in_progress(self):
         quiz = self.make_active_quiz()
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
-        ws = WsClient("127.0.0.1", WS, self.pupil)
+        ws = WsClient(WS_HOST, WS, self.pupil)
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r1", "classroom_id": CLASSROOM,
                  "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Ano ang sagot sa #3?", "language": "FIL"})
         err = ws.recv_until("EVENT_ERROR")
@@ -176,7 +264,7 @@ class TestMockHub(unittest.TestCase):
         ws.close()
 
     def test_ai_tutor_streams_when_no_quiz_active(self):
-        ws = WsClient("127.0.0.1", WS, login(BASE, "123456789012"))
+        ws = WsClient(WS_HOST, WS, login(BASE, "123456789012"))
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r2", "classroom_id": CLASSROOM,
                  "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Tulong po", "language": "FIL"})
         self.assertEqual(ws.recv_until("EVENT_QUEUE_STATUS")["position"], 2)
@@ -191,7 +279,7 @@ class TestMockHub(unittest.TestCase):
         ws.close()
 
     def test_bad_websocket_token_closes_with_4401(self):
-        ws = WsClient("127.0.0.1", WS)
+        ws = WsClient(WS_HOST, WS)
         ws.send({"event": "EVENT_HELLO", "token": "nope"})
         self.assertEqual(ws.recv(), {"event": "CLOSED", "code": 4401})
 
@@ -256,6 +344,7 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         return ana, sid
 
+    @needs_mock
     def test_teacher_can_fix_or_remove_an_assignment_and_grades_are_kept(self):
         first = self.pull(self.pupil)
         asg = first["assignments"][0]
@@ -330,6 +419,7 @@ class TestMockHub(unittest.TestCase):
         _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
         self.assertEqual(res["receipts"][0]["status"], "SYNCED")
 
+    @needs_mock
     def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):
         asg = self.pull(self.pupil)["assignments"][0]["id"]
         mine = {"id": "pc-1", "assignment_id": asg, "content": "Akin ito", "created_at": 1}
@@ -345,14 +435,40 @@ class TestMockHub(unittest.TestCase):
         _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [mine]}, self.pupil)
         self.assertEqual(res["receipts"][0]["status"], "SYNCED", "the owner's retry is still idempotent")
 
+    @needs_mock
+    def test_newly_visible_class_arrives_with_its_older_rows(self):
+        _, ann, _ = call(BASE, "POST", "/api/announcements", {
+            "classroom_id": CLASSROOM, "title": "Old post", "content": "Bago ka sumali."}, self.teacher)
+        ana = login(BASE, "123456789013")
+        before = self.pull(ana)
+        self.assertEqual(before["announcements"], [])
+        ana, _ = self.enroll_ana()
+        after = self.pull(ana, cursor=before["next_cursor"], hub_id=before["hub_id"], sync_epoch=before["sync_epoch"])
+        self.assertIn(ann["id"], [a["id"] for a in after["announcements"]],
+                      "an approved learner gets posts made before their cursor")
+        self.assertIn(CLASSROOM, [c["id"] for c in after["classrooms"]])
+        again = self.pull(ana, cursor=after["next_cursor"], hub_id=after["hub_id"], sync_epoch=after["sync_epoch"])
+        self.assertEqual(again["announcements"], [], "the snapshot is sent once, not on every pull")
+
+        admin = login(BASE, "ADMIN-0001")
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        jose = login(BASE, "T-0002")
+        first = self.pull(jose)
+        call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/teachers", {"lrn_or_id": "T-0002"}, self.teacher)
+        added = self.pull(jose, cursor=first["next_cursor"], hub_id=first["hub_id"], sync_epoch=first["sync_epoch"])
+        self.assertIn(ann["id"], [a["id"] for a in added["announcements"]], "an added co-teacher gets older posts too")
+
     def test_removed_learner_loses_the_class_and_co_teacher_gains_it(self):
         ana, sid = self.enroll_ana()
-        ana_ws = WsClient("127.0.0.1", WS, ana)
+        ana_ws = WsClient(WS_HOST, WS, ana)
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/remove", {"student_id": sid}, self.teacher)
         self.assertEqual(ana_ws.recv_until("EVENT_JOIN_APPROVAL")["status"], "REMOVED")
         ana_ws.close()
         self.assertEqual(call(BASE, "GET", "/api/classrooms", token=ana)[1], [])
-        self.assertEqual(self.pull(ana)["announcements"], [])
+        pulled = self.pull(ana)
+        self.assertEqual(pulled["announcements"], [])
+        self.assertEqual([e["status"] for e in pulled["enrollments"] if e["student_id"] == sid], ["REMOVED"],
+                         "the removed learner still receives their own REMOVED enrollment")
 
         admin = login(BASE, "ADMIN-0001")
         call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
@@ -368,6 +484,13 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(room["name"], "Science 4A")
         self.assertIsNotNone(room["archived_at"])
 
+        jose_id = room["co_teacher_ids"][0]
+        call(BASE, "DELETE", f"/api/classrooms/{CLASSROOM}/teachers/{jose_id}", None, self.teacher)
+        rows = [c for c in self.pull(jose)["classrooms"] if c["id"] == CLASSROOM]
+        self.assertEqual([c["co_teacher_ids"] for c in rows], [[]], "the removed co-teacher learns they left the class")
+        self.assertEqual(self.pull(jose)["announcements"], [], "and gets nothing else of it")
+
+    @needs_mock
     def test_admin_is_its_own_account_and_setup_runs_once(self):
         status, body, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "X", "pin": "9999"})
         self.assertEqual((status, body["error"]["code"]), (409, "ADMIN_EXISTS"))
@@ -385,7 +508,7 @@ class TestMockHub(unittest.TestCase):
         parts = "".join(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'
                         for k, v in (("classroom_id", CLASSROOM), ("title", "Worksheet"), ("file_type", "WORKSHEET"),
                                      ("assignment_id", asg)))
-        body = (parts + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="w.pdf"\r\n\r\nPDF\r\n--{boundary}--\r\n').encode()
+        body = (parts + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="w.pdf"\r\n\r\n%PDF-1.4\nexample\n%%EOF\r\n--{boundary}--\r\n').encode()
         _, mat, _ = call(BASE, "POST", "/api/materials", token=self.teacher, raw=body,
                          headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
         self.assertEqual(mat["assignment_id"], asg)
@@ -402,15 +525,57 @@ class TestMockHub(unittest.TestCase):
         sid = next(r["student_id"] for r in roster if r["lrn"] == "123456789013")
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/approve", {"student_id": sid}, self.teacher)
         asg = self.pull(self.pupil)["assignments"][0]["id"]
-        boundary = "XX"
-        body = (f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\nsub-1\r\n'
-                f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="a.jpg"\r\n\r\nJPEGDATA\r\n--{boundary}--\r\n').encode()
-        status, _, _ = call(BASE, "POST", f"/api/assignments/{asg}/submit", token=self.pupil, raw=body,
-                            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        status, _, _ = self.submit_homework(asg, "sub-1", b"\xff\xd8\xff\xe0\x00\x10JFIF\x00sample")
         self.assertEqual(status, 200)
         self.assertEqual(len(self.pull(self.pupil)["submissions"]), 1)
         self.assertEqual(self.pull(self.teacher)["submissions"][0]["student_id"], self.pull(self.pupil)["submissions"][0]["student_id"])
         self.assertEqual(self.pull(ana)["submissions"], [], "classmates must never see each other's homework")
+
+    def test_homework_late_submission_rules_and_idempotent_retry(self):
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        assignment = self.server.state.assignments[asg]
+        image = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00first"
+        different_image = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00second"
+
+        assignment["due_date"] = int(time.time() * 1000) + 60_000
+        status, on_time, _ = self.submit_homework(asg, "on-time", image)
+        self.assertEqual(status, 200)
+        self.assertLessEqual(on_time["submitted_at"], on_time["received_at"])
+        self.assertEqual(on_time["received_at"], on_time["updated_at"])
+
+        assignment["due_date"] = int(time.time() * 1000) - 1
+        status, error, _ = self.submit_homework(asg, "late-refused", different_image)
+        self.assertEqual((status, error["error"]["code"]), (409, "LATE_SUBMISSION"))
+
+        assignment["allow_late"] = True
+        status, late, _ = self.submit_homework(asg, "late-allowed", different_image)
+        self.assertEqual(status, 200)
+        self.assertEqual(late["submitted_at"], late["received_at"])
+        assignment["allow_late"] = False
+
+        assignment["due_date"] = int(time.time() * 1000) - 10_000
+        before_deadline = assignment["due_date"] - 1
+        status, offline, _ = self.submit_homework(asg, "offline-on-time", image, before_deadline)
+        self.assertEqual(status, 200)
+        self.assertEqual(offline["submitted_at"], before_deadline)
+        self.assertGreater(offline["received_at"], assignment["due_date"])
+
+        assignment["due_date"] = int(time.time() * 1000) + 60_000
+        future = int(time.time() * 1000) + 3_600_000
+        status, clamped, _ = self.submit_homework(asg, "future-time", different_image, future)
+        self.assertEqual(status, 200)
+        self.assertLess(clamped["submitted_at"], future)
+        self.assertEqual(clamped["submitted_at"], clamped["received_at"])
+
+        status, graded, _ = call(BASE, "PATCH", f"/api/submissions/{clamped['id']}",
+                                 {"score": 10, "teacher_feedback": "Good work"}, self.teacher)
+        self.assertEqual(status, 200)
+        assignment["due_date"] = int(time.time() * 1000) - 1
+        status, retry, _ = self.submit_homework(asg, "future-time", different_image, future)
+        self.assertEqual(status, 200)
+        self.assertEqual(retry, graded)
+        status, error, _ = self.submit_homework(asg, "different-id", image)
+        self.assertEqual((status, error["error"]["code"]), (409, "ALREADY_GRADED"))
 
     def test_admin_routes_are_admin_only(self):
         status, _, _ = call(BASE, "GET", "/api/admin/users", token=self.teacher)

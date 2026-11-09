@@ -3,9 +3,11 @@
 > **How to use this PRD:** it is the single source of *product behavior*. API shapes, events and the database live in [`../contracts/`](../contracts/) and win if they differ; visual rules live in [`design-system.md`](../design-system/design-system.md). Team Tech Specs describe *how* to build and must not redefine behavior here. Documentation map: [`README.md`](./README.md).
 
 
-**Project Title:** Offline LAN-Based Classroom Management System with Hybrid Socratic SLM Tutor and Paperless Assessment Engine 
+**Project Title:** Offline LAN-Based Classroom Management System with Hub Socratic SLM Tutor and Paperless Assessment Engine
 **Working Codename:** L.A.R.A. 
-**Document Version:** 1.4.0 
+**Document Version:** 1.6.1
+**Last Updated:** 2026-11-05
+**Change Summary:** The tutor declines Filipino and Taglish messages in English, 2026-11-05
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
 **Target Environment:** Philippine Public Schools (DepEd Grades 1–12: elementary, junior and senior high), Rural Campuses, and Zero-Internet Classrooms 
 
@@ -14,17 +16,17 @@
 ## 1. Executive Summary & Context
 
 ### 1.1 Project Overview
-L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with an embedded, local Small Language Model (SLM). The model is chosen from the AI evaluation in `rules/socratic-ai-guardrails.md` section 5; **MiniCPM5-2B** is the baseline candidate.
+L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with a Hub-hosted language model for Socratic tutoring. Small models tested in issue #73 failed to provide reliable guidance without leaking answers or refusing everything. The current candidate is **Qwen3-30B-A3B-Instruct-2507, pruned REAP-15B-A3B, Q4_K_M**, on a 16 GB Hub. Final model and hardware selection depend on the evaluation pass marks in section 10, following `rules/socratic-ai-guardrails.md` section 5; this is not a claim that the candidate has passed.
 
 The system operates across three interconnected applications:
 1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
-2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, bilingual localization, and optional on-device SLM execution.
+2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, English interface strings in resources, and Hub AI streaming.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It has the same learner and teacher features as the mobile app, laid out for a large screen.
 
 ### 1.2 The Philippine Context & Research Motivation
 * **High Smartphone Penetration vs. Absent Connectivity:** IDC and Canalys (2024) market reports demonstrate that Transsion Holdings (Infinix, TECNO, itel) dominates the Philippine smartphone market with a 37.3% share, followed by realme (13.3%) and Xiaomi. More than 50% of shipped phones are entry-level devices under $100 (~₱3,500–₱5,500). Filipino learners commonly have physical access to these household smartphones. However, persistent mobile data costs, lack of campus broadband, and rural network dead-zones render cloud-based LMS solutions (Google Classroom, MS Teams, Canvas) unusable.
 * **Teacher Financial & Logistical Burden:** Public school teachers routinely shoulder out-of-pocket expenses for paper and printing to produce daily worksheets, weekly formative tests, and quarterly summative assessments. A paperless, offline LAN assessment engine removes recurring reproduction expenses.
-* **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. Running an unoptimized 2B model on-device triggers out-of-memory (LMK/OOM) crashes. L.A.R.A. solves this via an adaptive hybrid architecture: the Local Hub executes the model for low-spec phones, while capable devices (≥6GB RAM) run 100% on-device.
+* **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. The Hub runs inference for every client, keeping model memory off phones and laptops.
 * **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s embedded SLM is engineered with strict Socratic system prompts, guiding learners step-by-step using teacher-provided materials without divulging final answers.
 
 ---
@@ -38,8 +40,8 @@ The system operates across three interconnected applications:
  * Creates class sections, distributes digitized modules and educational videos, conducts paperless quizzes, reviews homework photo submissions, and exports gradebook sheets directly to a USB flash drive.
 * **Learner Juan (Grade 4 Learner):**
  * Uses a family-owned budget Android phone (e.g., realme Note 50 or Infinix Smart 8 with 3GB/4GB RAM).
- * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets bilingual Socratic guidance from the AI tutor.
- * Takes his phone home where the app remains completely functional in disconnected mode.
+ * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets English Socratic guidance from the AI tutor.
+ * Takes his phone home where classroom content remains available offline and the tutor requires a reachable Hub.
 * **School Admin (ICT coordinator or principal's designee):**
  * Installs and runs the Hub on the school PC, creates teacher accounts, resets forgotten PINs, checks port health, and keeps the USB backup.
 
@@ -64,18 +66,18 @@ flowchart TD
 
  subgraph ClientApps["Client Applications (Offline-First Architecture)"]
  subgraph AndroidClient["Android Mobile Client (Kotlin + Jetpack Compose M3)"]
- DroidUI["Compose Material 3 UI<br/>(Bilingual: EN / FIL)"]
+ DroidUI["Compose Material 3 UI<br/>(English only)"]
  DroidRoom[("Room SQLite DB<br/>(Offline Cache)")]
  DroidCam["CameraX Module<br/>(Homework Photos)"]
  DroidMedia["Jetpack Media3<br/>(Hardware Video Player)"]
- DroidAI["Optional Local SLM<br/>(llama.cpp JNI - RAM ≥ 6GB)"]
+ DroidAI["Hub AI WebSocket Client"]
  end
 
  subgraph DesktopClient["Desktop Client (Tauri + React + TS + Tailwind)"]
- DeskUI["React + Tailwind UI<br/>(Bilingual: EN / FIL)"]
+ DeskUI["React + Tailwind UI<br/>(English only)"]
  DeskSQLite[("Local SQLite DB")]
  DeskVideo["HTML5 Video Player"]
- DeskAI["Local SLM (llama.cpp) or Hub Stream"]
+ DeskAI["Hub AI WebSocket Client"]
  end
  end
 
@@ -95,19 +97,18 @@ flowchart TD
  ```json
  {"app": "lara", "version": "1.2.0", "name": "Grade 4 - Room 102", "ip": "192.168.1.50", "http_port": 8080, "ws_port": 8081}
  ```
- * **Manual IP Fallback:** Client provides a manual connection field where learners/teachers can enter the host IP shown on the Hub GUI (e.g., `192.168.1.50:8080`).
+ * **Manual IP Fallback:** Client provides a manual connection field where learners/teachers can enter the host IP shown on the Hub GUI (e.g., `192.168.1.50:8080`) or save the Hub's remote URL. Discovery is LAN-only; clients try a saved remote address only after LAN discovery fails.
 2. **Captive Distribution Portal with Visual Sideloading Guide (HTTP):**
  * Hub serves a responsive HTML landing page at `http://<hub-ip>:8080/download`.
  * Hosts:
  * `L.A.R.A.-Student.apk` (Android client)
  * `L.A.R.A.-Desktop-Setup.exe` / `.deb` (Desktop client)
- * Quantized model weight bundle (the GGUF chosen by the AI evaluation) for optional on-device AI. Clients fetch it from the Hub with HTTP Range (`GET /api/model` for its name, size and SHA-256, `GET /api/model/file` for the bytes) so a dropped connection resumes, then verify the checksum.
  * **3-Step Visual Installation Guide on Web Portal:**
  * *Step 1:* Tap the large **"Download L.A.R.A. (Android)"** button.
  * *Step 2:* When prompted by Android browser, tap **Settings** Toggle on **"Allow from this source"**.
- * *Step 3:* Tap **Install** Open L.A.R.A. and enter your Name & Student ID.
+ * *Step 3:* Tap **Install**, open L.A.R.A., and register with your full name, 12-digit LRN and 4-digit PIN (`full_name`, `lrn_or_id`, `pin` in `POST /api/auth/register`).
 3. **Data Communication Protocols:**
- * **HTTP/1.1 REST (Port 8080):** Large binary transfers (APKs, PDF handouts, MP4 video streams, student homework photo submissions) with HTTP Byte-Range support (`Range: bytes=X-`).
+ * **HTTP/1.1 REST (Port 8080):** Large binary transfers (APKs, PDF handouts, MP4 video streams, student homework photo submissions) with HTTP Byte-Range support for video streaming (`Range: bytes=X-`).
  * **WebSocket (Port 8081):** Real-time bidirectional event bus (announcements push, live quiz synchronization, automated timeout enforcement, instant grade delivery, and Hub-assisted SLM token streaming).
 
 ### 3.2 Remote/Suspension Mode (the one sanctioned exception to LAN-only)
@@ -124,24 +125,26 @@ flowchart TD
 ## 4. Functional Specifications
 
 ### 4.1 Module 1: Offline Identity & Class Enrollment Gate
-* **FR-1.0 Admin-Created Teacher Accounts:** The first time the Hub starts, it asks the person at the school PC to set an admin PIN. The Hub window asks for that PIN before showing accounts, export and backup. The admin creates teacher accounts and resets forgotten PINs. Teachers never self-register; learners do. The admin is not a teacher and has no classes.
-* **FR-1.1 Self-Registration:** Students register locally upon first connecting to the Hub by providing: Full Name, Learner Reference Number (LRN) / Student ID, and a 4-digit PIN.
+* **FR-1.0 Admin-Created Teacher Accounts:** A single Hub admin creates teacher accounts; teachers never self-register. Learners may self-register. The admin is not a teacher and has no classes (Hub console requirements in section 4.6).
+* **FR-1.1 Self-Registration:** Students register locally upon first connecting to the Hub by providing: full name, 12-digit Learner Reference Number (LRN), and a 4-digit PIN through `POST /api/auth/register` (`full_name`, `lrn_or_id`, `pin`). Successful registration opens a learner session.
 * **FR-1.2 Class Code Entry:** Learners join a subject by entering a 6-character uppercase code (no 0/O/1/I; shown as XXX-XXX) generated by the teacher (e.g., `K7M-4QX`).
 * **FR-1.3 Teacher Verification Gate:**
- * Entering a valid code places the student in a `PENDING_APPROVAL` queue.
- * The teacher's interface alerts: *"Juan Dela Cruz (LRN: 123456789) wants to join Grade 4 - Science."*
+ * The client strips the display hyphen and sends the code to `POST /api/classrooms/join`. A new request creates a `PENDING` enrollment; pending learners cannot access class content. The Hub sends `EVENT_JOIN_REQUEST` to the class teachers.
+ * The teacher's interface alerts: *"Juan Dela Cruz (LRN: 123456789012) wants to join Grade 4 - Science."*
  * Teacher has one-click actions: **Accept** or **Decline**.
- * Once approved, the class key is sent via WebSocket to unlock class access on the learner's app.
-* **FR-1.4 Class Management:** The teacher who created a class can rename it, archive it at the end of the year (it becomes read-only and keeps its grades) and add co-teachers by teacher ID. A co-teacher can do everything in the class except rename it, archive it or manage teachers. Any teacher of the class can remove a learner; the learner loses access and their past scores are kept.
+ * The teacher approves or rejects through `POST /api/classrooms/{id}/approve` or `/reject`. The learner receives `EVENT_JOIN_APPROVAL` with status `ACTIVE` or `REJECTED`; approved class content is fetched through REST and delta sync. Missed events are recovered through sync, not a separate class key.
+* **FR-1.4 Class Management:** Teachers create classes with a name and section through `POST /api/classrooms`; the Hub generates the Class Code. The owner can rename or archive the class through `PATCH /api/classrooms/{id}` (an archived class is read-only and keeps its grades), and add or remove co-teachers through the classroom teachers routes. A co-teacher can do everything in the class except rename, archive or manage teachers. Class teachers view the enrollment roster and its statuses through `GET /api/classrooms/{id}/roster`. Removing an active learner through `/remove` sets enrollment to `REMOVED`, sends `EVENT_JOIN_APPROVAL` with that status, and revokes access while keeping submissions and scores on the Hub.
+* **FR-1.5 Forgotten PINs:** The Hub admin resets a learner's or teacher's PIN to a new 4-digit PIN through `POST /api/admin/users/{id}/reset-pin`. The contract provides no teacher or learner self-service PIN reset.
+* **FR-1.6 Shared Devices:** Each signed-in account has its own local database, mirror and sync cursor, as required by `rules/database-and-sync.md` section 2. Signing into another account never exposes or overwrites the first account's data; queued work survives until its owner signs in again.
 
 ### 4.2 Module 2: Stream & Announcements
-* **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices.
+* **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices, and can edit or delete them. Posting requires a reachable Hub; when it is unreachable, Post is disabled with an explanation. Comments can queue offline.
 * **FR-2.2 Comment Moderation:** Teachers can enable or disable student commenting per post to prevent distractions.
 * **FR-2.3 Offline Persistence:** All stream items are cached in the client’s local SQLite database for viewing outside the school network.
 * **FR-2.4 Attachments:** A teacher can attach files to an announcement.
 
 ### 4.3 Module 3: Classwork, Handouts, Videos & Homework Submissions
-* **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images.
+* **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images. `POST /api/materials` caps material uploads, including handouts and videos, at 250 MB.
 * **FR-3.2 Automated Text Chunking (Hub Side):** Upon document upload, the Hub automatically extracts plain text and splits it into structured chunks. This metadata is bundled with the document so student phones avoid heavy PDF parsing. Files with no extractable text (scans, photos) have no chunks, so the tutor says it cannot help with that file.
 * **FR-3.3 Video Upload & Byte-Range Streaming:**
  * Teachers can upload educational video files (MP4 / WebM encoded in H.264, max file size capped at 250MB).
@@ -150,11 +153,12 @@ flowchart TD
  * Android client uses **Jetpack Media3 (ExoPlayer)** with hardware acceleration; Desktop uses HTML5 `<video>`.
 * **FR-3.4 Bandwidth Rate-Limiting:** Hub enforces a per-client streaming limit (max 2.0 MB/s) to prevent classroom Wi-Fi router congestion during simultaneous video playback.
 * **FR-3.5 Homework Assignments & Camera Photo Submission:**
- * Teachers can post assignments with title, instructions, due date, and maximum points.
- * **In-App Camera Capture:** Learners can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app (or attach an image file).
- * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. The moment the learner walks into school and connects to the Hub Wi-Fi, the submission uploads automatically.
+ * Teachers can post assignments with title, instructions, due date, maximum points, optional topic, and `allow_late` (default false). The late-submission setting controls whether work is accepted after the due date.
+ * **In-App Camera Capture:** Learners can take a photo of handwritten worksheets, drawings, or math calculations directly inside the Android app, with a document framing guide and JPEG compression under 800 KB. Learners can also attach an image or document file.
+ * **Offline Queuing:** If completed at home without Wi-Fi, the photo submission is stored locally with status `QUEUED_FOR_SYNC`. When the Hub becomes reachable over the classroom network or its saved remote address, the submission uploads automatically.
  * **Grade and Feedback Visibility:** Learners see their score and the teacher's feedback once homework is graded, and it stays available offline.
- * **Teacher Grading Interface:** Teacher reviews learner photo submissions in the app (on desktop or on the phone), assigns a score, and types short encouraging feedback.
+ * **Teacher Grading Interface:** Teachers list submissions for an assignment through `GET /api/assignments/{id}/submissions`, open an image or document through `GET /api/submissions/{id}/file`, and record a score and feedback through `PATCH /api/submissions/{id}`. The file is accessible only to the owning learner and class teachers.
+ * **Submit and Resubmit:** `POST /api/assignments/{id}/submit` uploads a file with a client-generated `submission_id` reused for offline retries. The optional `turned_in_at` is the learner device's epoch-millisecond time when Turn in was pressed; the Hub clamps future values to its current time and uses its arrival time when the field is missing. With a due date and `allow_late` false, an effective turn-in time after the deadline is refused with `409 LATE_SUBMISSION`; an offline submission pressed before the deadline remains eligible when it later reaches the Hub. The Hub records effective turn-in time as `submitted_at` and actual receipt time as `received_at`. A byte-identical SHA-256 retry with the same submission ID returns the stored submission unchanged, including after grading or the deadline. Before grading, a different file replaces the existing submission; after grading, it is refused with `409 ALREADY_GRADED`. A queued submission refused for either reason becomes `REJECTED`, explains the reason to the learner, and is not retried indefinitely. There is one submission per learner per assignment; no unsubmit or separate teacher return action is provided.
 
 * **FR-3.6 Fixing Mistakes:** Teachers can edit and delete materials and assignments after posting. A deleted assignment disappears for everyone and from the gradebook, but its submissions and grades are kept on the Hub, never destroyed.
 * **FR-3.7 Topics:** Teachers group materials, assignments and quizzes under topics (for example "Unit 1: Plants"). Deleting a topic keeps its work.
@@ -192,96 +196,87 @@ sequenceDiagram
 * **FR-4.1 Quiz Authoring:**
  * Teacher defines Title, Instructions, and a **Global Quiz Time Limit** (e.g., 20 minutes for 15 questions).
  * Supported question types:
- 1. *Multiple Choice* (Single answer, up to 4 options, optional question image).
+ 1. *Multiple Choice* (single answer).
  2. *True or False*.
- 3. *Identification / Short Answer* (Case-insensitive string matching with teacher keyword list).
- * Option to shuffle question order per student.
+ 3. *Identification / Short Answer* (case-insensitive string matching, trimmed whitespace, optional teacher-defined synonyms).
+ * Teachers set positive integer points per question (default 1) and may supply an optional `image_url`. A dedicated question-image upload flow is not specified (section 11).
+ * Option to shuffle question order per learner; grading uses `question_id`, never display position. The contract does not provide option shuffling.
+ * V1 permits one attempt per learner per quiz, with no retakes; only one quiz per classroom may be active at a time.
 * **FR-4.2 Timed Learner Experience:**
- * Synchronized countdown timer at the top of the screen with visual color cues (Green; Yellow at 5 minutes; Red and pulsing at 2 minutes).
+ * On the classroom LAN, a countdown anchored to the Hub start event runs on a monotonic clock with the Hub clock offset from the WebSocket handshake. Remote countdowns follow FR-4.10. The timer appears at the top of the screen with visual color cues (Green; Yellow at 5 minutes; Red and pulsing at 2 minutes).
  * Questions are presented in clean, easy-to-read cards with large tap targets (minimum 56dp).
 * **FR-4.3 Anti-Cheating & AI Lockout:**
- * **Strict AI Lock:** While the quiz session is active, the Socratic AI tutor floating button is completely removed and locked out.
- * **Server-Side Rejection:** The Hub drops any inference calls originating from a student with an active quiz attempt.
-* **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, the test is locked and answers are immediately transmitted to the Hub.
+ * **Strict AI Lock:** From creation of the learner's `IN_PROGRESS` attempt through `POST /api/quizzes/{id}/begin` until submission, the tutor chat is never mounted or composed. Any visible AI navigation is disabled with an explanation; the entry point itself remains an open decision.
+ * **Server-Side Rejection:** The Hub rejects AI requests from a learner with any `IN_PROGRESS` attempt with HTTP 403 / `QUIZ_IN_PROGRESS`, or `EVENT_ERROR` with the same code over WebSocket.
+* **FR-4.4 Auto-Submit on Timeout:** When the countdown reaches `00:00`, input locks and current answers submit automatically, or queue if the Hub is unreachable. A teacher may also close the quiz through `POST /api/quizzes/{id}/close`; the Hub auto-submits and grades in-progress attempts and broadcasts `EVENT_QUIZ_CLOSED`.
 * **FR-4.5 Disconnection Resilience:** If classroom Wi-Fi drops during an active quiz, the timer continues locally. The test completes and is saved locally with a `QUEUED_FOR_SYNC` state. As soon as the learner reconnects to the Hub, the test submits automatically with the recorded finish timestamp.
 * **FR-4.6 Instant Auto-Grading:** Objective questions are graded instantaneously upon receipt by the Hub. Teacher can configure whether learners see their score immediately or only after the teacher closes the assessment; closing the quiz is what releases held scores.
 * **FR-4.7 Result History:** Learners can see their own past quiz scores on the device, including offline. Scores the teacher is still holding stay hidden.
 * **FR-4.8 Editing a Quiz:** A teacher can change a quiz's questions, answers and settings while it is still a draft. Once started it is locked so scores stay fair.
+* **FR-4.9 Teacher Monitoring:** Teachers on desktop and mobile see the live and final results matrix through `GET /api/quizzes/{id}/results`: one row per learner with `NOT_STARTED`, `IN_PROGRESS` or `SUBMITTED`, and score/total points when available. `EVENT_PRESENCE` supplies connection and quiz progress hints; REST remains authoritative.
+* **FR-4.10 Remote Quizzes:** Learners can start or resume remotely using the same accounts and quiz routes. The client fetches `started_at` from the Hub and runs a local countdown from it and the duration, rather than relying on classroom-LAN timer pushes. The Hub validates `submitted_at - started_at <= limit + 60s`; AI lockout, score release and offline queueing remain the same (section 3.2 and `rules/quiz-and-anti-cheat.md`).
 
 ### 4.5 Module 5: Gradebook & Export
 * **FR-5.1 Gradebook Dashboard:** Teachers can view a consolidated spreadsheet-like matrix of all students, their quiz scores, and homework grades.
 * **FR-5.2 One-Click Gradebook Export:**
  * Exports **Excel (.xlsx) and CSV** files: one row per learner, one column per assignment and quiz (points earned, maximum in the header) and a total. Like Google Classroom, L.A.R.A. records points only; each teacher applies their own grading system, so there are no DepEd categories, quarters or weights.
- * Direct export to plugged-in **USB Flash Drives** from the Hub desktop application for easy transfer to school computers.
+ * `POST /api/export/class-record` exports a class in `XLSX` or `CSV` format, either to a mounted USB `target_path` or as a download when that path is omitted. The UI location for initiating USB export on the Hub or teacher client is an **(open decision)**; see `design-system/design-system.md` section 9.16. No client-side filesystem access is implied by a Hub path.
+
+### 4.6 Module 6: Hub Administration, Backup & Restore
+* **FR-6.1 First-Run Admin Setup:** On the Hub PC, `POST /api/admin/setup` accepts a full name and 4-digit PIN to create the single `ADMIN-0001` account with role `ADMIN`. Setup is local-only and returns `ADMIN_EXISTS` once configured. Later access uses `/api/auth/login`; admin login is restricted to the Hub PC and disallowed through the remote tunnel. The admin is never synced to a client.
+* **FR-6.2 Account Administration:** The console lists accounts through `GET /api/admin/users` and creates teacher or learner accounts through `POST /api/admin/users` with ID/LRN, full name, role and PIN. Forgotten PINs use the admin reset route (FR-1.5). Account deactivation is a data-preservation rule, but its management workflow is not yet contracted (section 11).
+* **FR-6.3 Hub Operations:** The console shows port health for HTTP 8080 and WebSocket 8081, supports USB export and backup, and lets the admin opt into Remote/Suspension Mode per section 3.2. These are Hub console responsibilities under `AGENTS.md`; this PRD adds no new health or tunnel API routes. The export UI location remains an open decision (FR-5.2).
+* **FR-6.4 Backup:** `POST /api/backup` writes a `.lara-backup` snapshot to the selected `target_path`, such as a mounted USB location, and returns its filename and SHA-256 checksum.
+* **FR-6.5 Restore:** `POST /api/restore` restores a `.lara-backup` archive from `source_path` after verifying its checksum. Restore increments `sync_epoch`; clients rebuild their mirrors on the next sync while preserving queued and rejected local work, per `rules/database-and-sync.md` section 3.3.
 
 ---
 
-## 5. Bilingual Socratic AI Tutor System (L.A.R.A. AI)
+## 5. Socratic AI Tutor System (L.A.R.A. AI)
 
 ### 5.0 The Hub Always Has the AI; Using It Is Optional
-The Hub is installed with the AI model, so a learner on any phone or laptop can use the tutor without downloading anything. Using it is optional for everyone: a learner or teacher can ignore it, and nothing else in L.A.R.A depends on it. There are two ways to use it, and the user chooses:
-1. **On the Hub (the default),** shared by everyone through a first-in-first-out queue, so a few learners at a time are served and the rest see their place in line.
-2. **On their own device,** if it is capable (a phone with 6 GB RAM or more, a laptop with 4 GB or more). The user may download the model from the Hub once to run it offline, for example at home. It is never downloaded automatically.
+The Hub is installed with the AI model. Every phone, laptop and lab PC uses it through the Hub WebSocket stream, shared through a first-in-first-out queue. Using the tutor is optional; nothing else in L.A.R.A depends on it.
 
-The model the Hub runs and the model a device runs may be different: a smarter model on the Hub PC, and a smaller one for devices that can use it. Each is chosen by the AI evaluation and must pass the same Socratic checks (no direct answers, grounded, one clue and one question, right language). If the small model does not pass on the weakest device it would run on, devices simply use the Hub.
+The small models tested in #73 leaked answers or refused everything. The current REAP-15B-A3B Q4_K_M candidate needs about 11 GB RAM on a 16 GB Hub; its final selection depends on passing the evaluation. The pilot runs inference only on the Hub, with no model download or inference on phones or laptops (decision of 2026-11-02).
 
-If the Hub's model file is missing or fails to load, the Hub reports it (`AI_NOT_AVAILABLE`), the tutor says "AI is not available right now", and every other feature keeps working. The quiz lockout (no AI during a quiz) applies on every path.
+When the Hub is unreachable, clients show "The AI tutor needs the classroom Hub" and may display past chats from local `ai_chat_messages`. Every other feature keeps working offline. With Remote/Suspension Mode, the tutor works through the Hub tunnel.
 
-### 5.1 Pluggable SLM Architecture & Candidate Model Benchmarking
-The inference engine is model-agnostic and pluggable, standardizing on **GGUF quantization via `llama.cpp`** (Android JNI, Desktop sidecar, and Hub `llama-server`).
+If the Hub's model file is missing or fails to load, its dashboard shows the problem and it reports `AI_NOT_AVAILABLE`; clients show "AI is not available right now", and every other feature keeps working. During a quiz, clients never show the chat and the Hub rejects requests with 403 / `QUIZ_IN_PROGRESS`.
 
-To identify the optimal Small Language Model for Philippine classrooms (Grades 1 to 12), the project experimentally benchmarks candidate sub-3B models:
-* **Primary Baseline Candidate:** **MiniCPM5-2B (Int4 / Q4_K_M GGUF, ~1.55GB)** — High multimodal and bilingual capability.
-* **Alternative Experimental Candidates:**
-  * **Qwen2.5-1.5B / 3B (Instruct GGUF)** — Exceptional reasoning density and multilingual instruction following.
-  * **Llama-3.2-1B / 3B (Instruct GGUF)** — Ultra-lightweight edge execution and high CPU throughput.
-  * **SmolLM2-1.7B (Instruct GGUF)** — Minimal memory overhead designed for constrained devices.
-  * **Gemma-2-2B (IT GGUF)** — Factual grounding and textbook reasoning.
+### 5.1 Pluggable Hub SLM Architecture & Candidate Model Benchmarking
+The Hub inference engine uses **GGUF models with `llama-server` from `llama.cpp`**. Candidates and model selection follow `rules/socratic-ai-guardrails.md` section 5. Only the Hub loads `contracts/ai/socratic_system_prompt.txt` unchanged, selects lesson chunks per section 3.1 and includes the last 3 exchanges for this learner and material, within the history budget, per section 3.2. Those rules define chunk selection and history trimming; this PRD does not redefine them. Clients send the learner's message and render the stream.
 
-All models operate within a standardized **2,048 token context window** to maintain predictable RAM and latency bounds.
-
-
-### 5.2 Adaptive Hybrid Execution Logic
+### 5.2 Hub-Only Execution Logic
 
 ```mermaid
 flowchart TD
- Start["Student Launches App on Mobile or Laptop"] --> DeviceType{"Device Platform"}
- 
- DeviceType -->|"Student Laptop / Lab PC"| DeskCheck{"Check Local Storage:<br/>Model GGUF exists?"}
- DeskCheck -->|Yes| DeskLocal["100% On-Device Mode (llama.cpp CPU/GPU)<br/>• Zero network usage<br/>• Works completely offline at home"]
- DeskCheck -->|No| DeskPrompt["Prompt Download or Stream from Hub"]
- DeskPrompt --> DeskLocal
- DeskPrompt --> HubMode
-
- DeviceType -->|"Android Mobile Phone"| HardwareCheck{"Check Physical RAM<br/>(ActivityManager)"}
- HardwareCheck -->|"RAM < 6GB"| HubMode["Hub-Assisted Mode (WebSocket)<br/>• Zero phone RAM burden<br/>• Lightweight token streaming"]
- HardwareCheck -->|"RAM >= 6GB"| MobCheck{"Model GGUF exists?"}
- MobCheck -->|Yes| MobLocal["100% On-Device Mode (llama.cpp JNI)<br/>• Works offline anywhere"]
- MobCheck -->|No| MobPrompt["Prompt Model Download (1.55 GB)"]
- MobPrompt --> MobLocal
- MobPrompt --> HubMode
-
- HubMode --> HubQueue["Local Hub Inference Slots"]
- HubQueue -->|"Slot Available (1-4)"| Infer["Execute the chosen model on the Hub PC"]
- HubQueue -->|"Slots Busy"| QueueWait["FIFO Queue: Pangalawa ka sa pila - est. 4s"]
- QueueWait --> Infer
- Infer --> StreamTokens["Stream Socratic Hints over WebSocket"]
+ Start["Learner opens tutor on any client"] --> Quiz{"Quiz in progress?"}
+ Quiz -->|Yes| Locked["Chat not shown; Hub rejects QUIZ_IN_PROGRESS"]
+ Quiz -->|No| Reachable{"Hub reachable over LAN or remote tunnel?"}
+ Reachable -->|No| Offline["The AI tutor needs the classroom Hub"]
+ Reachable -->|Yes| Request["EVENT_AI_CHAT_REQUEST: learner message"]
+ Request --> Available{"Hub AI available?"}
+ Available -->|No| Unavailable["AI_NOT_AVAILABLE: other features keep working"]
+ Available -->|Yes| Queue["Hub FIFO queue: EVENT_QUEUE_STATUS"]
+ Queue --> Prompt["Hub builds prompt with chunks and history"]
+ Prompt --> Infer["Hub llama-server inference"]
+ Infer --> Stream["EVENT_AI_TOKEN_STREAM: client renders hints"]
 ```
 
-### 5.3 Bilingual Localization & Persona Design
-* **Interface Language:** Toggle between **English** and **Filipino** in Settings.
-* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide adapted for Filipino learners (Grades 1 to 12).
-* **Language Agility:** L.A.R.A. AI understands and responds in the student's selected language (English or natural conversational Filipino / Taglish standard in DepEd classrooms).
-* **Interaction Trigger:** Located inside the Material Viewer as a floating button: **"Magtanong kay L.A.R.A. AI" / "Ask L.A.R.A. AI"**.
-* **Grounding:** The prompt binds the pre-extracted text of the active lesson document.
+### 5.3 English Interface & Persona Design
+* **Interface Language:** Mobile, desktop and the Hub window are English only, with no language toggle. All user-facing strings live in Android `values/strings.xml` or the English JSON dictionary for desktop and the Hub window; never hardcode them in UI components.
+* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide for Grades 1 to 12. It uses the same Socratic behavior at every grade level, with no grade setting or grade-specific prompt. Each reply gives one small clue followed by one leading question, never the final answer.
+* **Reply Language:** L.A.R.A. AI works in English only. When the learner writes in Filipino or Taglish, it does not answer and replies with "I can only help in English. Please ask your question again in English." (the small models tested could not work in Filipino without leaking answers).
+* **Interaction Trigger:** The tutor entry point on phone and desktop, such as a tab or Material Viewer button, is an **(open decision)** (`design-system/design-system.md` section 9.16). Quiz lockout applies wherever it is placed.
+* **Grounding:** Hints use only selected text chunks from the active teacher-provided lesson and show their lesson grounding reference (`grounded_chunk_id`). When the lesson does not cover the question, the tutor says so and points the learner back to the lesson. If no text is extractable, it explains that the lesson text is unavailable; it never fills the gap from general knowledge.
 
-* **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), used unchanged by the Hub, mobile and desktop. It is not copied here so it cannot drift.
+* **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), loaded unchanged only by the Hub. It is not copied here so it cannot drift.
 
 ### 5.4 Hub Inference Queue
 To prevent the Hub PC from overloading when multiple low-RAM devices request hints simultaneously:
 * Hub configures `llama-server` with **2–4 parallel inference slots**.
 * Additional requests enter a **FIFO Queue**.
-* The learner’s screen displays real-time queue position: *"Nag-iisip si L.A.R.A. AI.. Pangalawa ka sa pila (~4s)"*.
+* `EVENT_QUEUE_STATUS` supplies real-time queue position, estimated wait and a message, displayed in English in the interface.
+* The queue is bounded: when full, the Hub returns `EVENT_ERROR` / `AI_QUEUE_FULL` with a kind retry message. Slot capacity is based on measured Hub performance so inference does not starve quizzes or video streaming.
 
 ---
 
@@ -313,7 +308,7 @@ erDiagram
  MATERIAL_CHUNKS ||--o{ AI_CHAT_MESSAGES : "grounds"
 ```
 
-Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only table: `sync_state`. Clients never store PIN hashes, other people's LRNs or answer keys (see `rules/database-and-sync.md`).
+Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only table: `sync_state`. Learner mirrors never store PIN hashes, other people's LRNs or answer keys; teachers may receive LRNs in their authorized class roster (see `rules/database-and-sync.md`).
 
 ### 6.2 Delta-Sync Protocol Lifecycle
 
@@ -341,7 +336,8 @@ sequenceDiagram
  App->>App: Mark rows SYNCED only from a receipt
 ```
 
-* **Cursor:** a monotonic integer (`sync_revisions.seq`), never a timestamp, because the offline Hub clock can be wrong. A `hub_id` or `sync_epoch` mismatch makes the client do a full resync (`reset`).
+* **Cursor:** a monotonic integer (`sync_revisions.seq`), never a timestamp, because the offline Hub clock can be wrong. A `hub_id` or `sync_epoch` mismatch makes the client do a full resync (`reset`), preserving all `QUEUED_FOR_SYNC` and `REJECTED` rows while rebuilding its mirror. Restore and tombstone pruning increment the epoch.
+* **Receipts:** A queued item becomes `SYNCED` only after the Hub acknowledges it. A rejected item stays visible as `REJECTED` with a kind explanation, is not automatically retried, and is never silently deleted (`rules/database-and-sync.md` section 3).
 * **Conflict Policy:** Server is authoritative for classroom metadata, class rosters, and official quiz score calculations. Client is authoritative for its own locally initiated drafts and homework photos.
 
 ---
@@ -350,24 +346,26 @@ sequenceDiagram
 
 | Layer | Technology | Rationale |
 | :--- | :--- | :--- |
-| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | Compose Material 3 components themed with the L.A.R.A tokens; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; native C++/JNI binding to `llama.cpp`. |
+| **Mobile Client** | **Native Android (Kotlin + Jetpack Compose)** | Compose Material 3 components themed with the L.A.R.A tokens; lowest RAM footprint on 3GB/4GB Transsion/realme phones; native CameraX integration for homework photos; Hub AI token streaming. |
 | **Mobile Local DB** | **Android Room (SQLite)** | Compile-time SQL validation, robust migrations, native coroutine/Flow support. |
-| **Desktop Client** | **Tauri + React + TypeScript + Tailwind CSS** | Ultra-lightweight binary (~15MB installer vs ~120MB Electron), low memory overhead on student laptops & lab PCs; styled with the L.A.R.A design tokens; runs the chosen model via bundled llama.cpp or Hub streaming. |
+| **Desktop Client** | **Tauri + React + TypeScript + Tailwind CSS** | Ultra-lightweight binary (~15MB installer vs ~120MB Electron), low memory overhead on student laptops & lab PCs; styled with the L.A.R.A design tokens; uses the Hub WebSocket stream for all tutor requests. |
 | **Local Hub (Server)** | **Tauri + Rust Backend (Axum, Tokio, SQLx)** | Native admin console window for the school admin (accounts, port health, USB export and backup); high-concurrency async I/O; low idle CPU/RAM usage; direct USB flash drive export. |
 | **Server Local DB** | **SQLite (via SQLx)** | Zero-config, single-file ACID storage embedded directly in the Hub. |
-| **Realtime Protocol** | **WebSockets (`ws` / Rust `tokio-tungstenite`)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
+| **Realtime Protocol** | **WebSockets (Rust Axum / Tokio)** | Low-latency state sync, quiz countdown coordination, and token streaming. |
 | **SLM Runtime** | **`llama.cpp` / `llama-server`** | Highly optimized CPU/GPU GGUF inference; supports 4-bit quantization and multi-slot continuous batching. |
-| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large targets (52dp on phones, 56dp primary actions and quiz options, 40px buttons on desktop), a fixed brand palette (no dynamic color), bilingual strings. |
+| **Design System** | **L.A.R.A Design System** (Compose Material 3 and Tailwind components themed with the L.A.R.A tokens; Nunito; Phosphor icons) | Accessible components, high legibility, large targets (52dp on phones, 56dp primary actions and quiz options, 40px buttons on desktop), a fixed brand palette (no dynamic color), English strings in resources. |
 
 ---
 
 ## 8. Non-Functional Requirements & Guardrails
 
 1. **Zero Internet Dependency:** The system must function 100% locally across an isolated Wi-Fi router or peer hotspot with no uplink to the global internet, except through the one sanctioned Remote/Suspension Mode tunnel (section 3.2), which an admin must explicitly enable per Hub.
-2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. On-device SLM execution is strictly gated behind a 6GB physical RAM hardware check.
+2. **Crash Prevention on Budget Hardware:** The mobile app must never allocate more than 250MB of heap RAM on 3GB/4GB devices. Tutor inference runs only on the Hub.
 3. **Low-Latency Quiz Sync:** Submissions and timer events must register with the Hub within <300ms across 40 concurrent connected devices.
-4. **Resumable Transfers:** Any interrupted file transfer (PDF, video, photo submission, or model bundle) must resume from the last received byte via HTTP Range headers.
-5. **Gradebook Export:** Hub must export learner rosters, quiz scores, and homework grades to `.xlsx` / `.csv` with one click.
+4. **Resumable Transfers:** Video downloads and playback use HTTP Range requests to continue from the last received byte. The contract does not promise byte-resumable handout or installer downloads or multipart homework uploads; homework retries use the same submission ID. Clients do not download models.
+5. **Gradebook Export:** Hub must export the class record of learners, quiz scores and homework grades to `.xlsx` / `.csv` (FR-5.2).
+6. **Privacy and Authorization:** The Hub checks roles and class membership on every protected operation, including through the tunnel. Learners receive only their own grades, submissions and private threads. PIN hashes and server file paths never reach clients; answer keys and synonyms never reach learner payloads; another learner's LRN is visible only to authorized class teachers through the roster. Never log PINs, tokens, LRNs or homework file contents. User deactivation and classroom/assignment archiving preserve graded records.
+7. **Accessible Offline UI:** Every screen provides an offline state, empty state and loading skeleton without blocking access to cached work. All interface strings are English and stored in resources. Use bundled Nunito and Phosphor assets, design tokens, minimum 52dp phone targets (56dp primary actions and quiz options) and 40px desktop buttons; status uses text and icons as well as color.
 
 ---
 
@@ -378,16 +376,17 @@ sequenceDiagram
 * Local Hub standalone desktop application with captive download portal and 3-step sideloading guide.
 * Native Android client (Material 3) with CameraX homework photo capture.
 * Desktop client (Tauri + React).
-* Bilingual support (English and Filipino).
+* English-only interface with strings in resources; tutor replies in English for the pilot.
 * Offline Class Code enrollment with manual teacher approval gate.
 * Google Classroom's classwork features: topics, attachments, private comments, To-do, editing and deleting posts, co-teachers, archiving a class.
 * The same teacher features on desktop and on the phone.
 * Stream announcements with teacher comment controls.
 * Downloadable materials (PDF/images) and streaming/offline educational video (MP4).
 * Timed paperless quizzes with instant auto-grading for objective questions.
-* Hybrid Socratic AI tutor with a model chosen by the AI evaluation (MiniCPM5-2B is the baseline candidate): Hub-assisted for low RAM, on-device for ≥6GB RAM.
+* Hub-only Socratic AI tutor with a model chosen by the AI evaluation.
 * Strict AI tutor lockout during active quizzes.
-* One-click gradebook export to USB flash drives.
+* Gradebook export to USB flash drives or download; UI entry point remains open.
+* Hub admin account management, PIN resets, port health, backup and checksum-verified restore.
 * Delta synchronization and offline-first persistence.
 
 ### Out-of-Scope (Future Enhancements):
@@ -406,7 +405,11 @@ sequenceDiagram
 | **Offline Independence** | Complete classroom cycle with WAN cable unplugged | 100% operational (zero failures due to lack of internet). |
 | **Paperless Cost Savings** | Simulated quiz & worksheet cycle vs printed test papers | 100% reduction in paper and reproduction costs. |
 | **Mobile Stability** | RAM consumption on 3GB/4GB Android devices | Heap usage < 250MB; zero OOM crashes during Hub-assisted AI mode. |
-| **Inference Latency** | Time-to-First-Token (TTFT) for Socratic hints | < 2.5s on Hub queue; 8–15 tokens/s generation speed. |
+| **Tutor Answer Safety** | Replies that never give the final answer | At least 95%. |
+| **Tutor Grounding** | Replies grounded in the lesson, including correct refusal and relevant long-lesson chunk selection | At least 90%. |
+| **Socratic Guidance** | One clue and one leading question, building on the learner's response in follow-ups | At least 80%. |
+| **Tutor Reply Language** | English replies at the learner's level; Filipino/Taglish inputs get the English-only decline line | At least 90%. |
+| **Inference Latency** | Time to first token on the proposed Hub with 2 learners at once | Under 10 seconds for 95% of requests. |
 | **Quiz Sync Accuracy** | Grade calculation and submission reliability | 100% accuracy in score recording across 40 simultaneous submissions. |
 | **Homework Photo Upload** | Upload success rate over local Wi-Fi | 100% across 40 concurrent submissions with offline queueing. |
 | **Resilience to Disconnects** | Unannounced Wi-Fi disconnection mid-quiz | 0% data loss; automatic submission upon reconnect. |
@@ -414,3 +417,21 @@ sequenceDiagram
 | **Software Quality (ISO 25010)** | Evaluation across Functional Suitability, Reliability, Usability | Mean Likert score >= 4.50 / 5.00 across all dimensions. |
 | **Disaster Recovery** | Database restore from USB backup after sudden power loss | 100% data recovery with zero corrupted records. |
 | **Day 0 Deployment** | Standalone installer (.exe/.deb) setup on a fresh Hub PC | Complete installation in < 3 minutes with zero CLI commands. |
+
+The tutor pass marks above come from [issue #73](https://github.com/BootlegYouki/L.A.R.A/issues/73), set before scoring. They are acceptance targets, not achieved results. Model selection requires the fixed evaluation on actual Hub hardware before the chat UI is built, following `rules/socratic-ai-guardrails.md` section 5. Two developers score replies independently and blind to the model; report agreement and label results **developer-scored**, not educator-validated. Final model and Hub hardware remain subject to that evidence and the Lead's decision.
+
+---
+
+## 11. Open questions
+
+These gaps need a Lead decision or coordination; they do not authorize unsupported behavior. The design system leaves the two UI placements below to the implementing team to propose and report, rather than requiring a Lead decision before screen work.
+
+* **Account deactivation:** The schema has `is_active` and the rules require deactivation instead of deletion, but the contract has no deactivation/reactivation route. Who can perform it, and what happens to existing sessions and client access?
+* **Late quiz joining:** The contract supports beginning an active quiz and gives its start time, but does not explicitly settle admission after the teacher's start or the time available to a late joiner. Decide without changing the existing authoritative timing check. One attempt per learner is already settled for v1.
+* **Quiz option shuffling:** Only question-order shuffling is contracted. Should option shuffling be added in a future contract change?
+* **Question image uploads:** Questions already support an optional `image_url`; how teachers upload and attach a question image is not specified. Per-question points are already supported and are not an open decision.
+* **Shared-device recovery after a Hub reset:** Separate databases per account are already required. QA observed HTTP 409 “Account unavailable” after a Hub reset; what recovery should be offered if a saved account no longer exists on that Hub, while protecting its queued work?
+* **Tombstone retention:** Pruning and epoch reset are defined, but how long should deletion tombstones be retained before pruning?
+* **Privacy consent and data retention:** What learner/guardian consent process and retention periods apply to accounts, homework photos, grades, chat history and backups, within the rule that graded records must not be deleted?
+* **USB export location (open decision):** Where should users initiate export in the Hub console and teacher clients? The contract already supports a mounted USB path or a download; the design system leaves UI placement open (section 9.16).
+* **AI Tutor entry point (open decision):** Should phone and desktop reach the tutor through a tab, a Material Viewer button or another entry? Follow `design-system/design-system.md` section 9.16 and retain quiz lockout everywhere.

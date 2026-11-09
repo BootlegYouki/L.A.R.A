@@ -1,0 +1,112 @@
+package org.lara.app.data.remote
+
+import kotlinx.serialization.json.*
+import org.lara.app.data.remote.discovery.HubEndpoint
+import java.net.HttpURLConnection
+import java.net.URL
+
+class HubFailure(val status: Int, val code: String, val retryAfterSeconds: Long = 0) : Exception()
+
+/** Fixed route groups and no redirects: credentials remain on the selected LAN Hub. */
+class HubClient {
+    internal fun manageClass(c: EnrollmentConnection, classroomId: String?, action: String?,
+        teacherId: String?, method: String, payload: String?): String {
+        fun valid(value: String) = value.matches(Regex("[A-Za-z0-9-]{1,128}"))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        val path = if (classroomId == null) {
+            require(method == "POST" && action == null && teacherId == null)
+            "/api/classrooms"
+        } else {
+            require(valid(classroomId))
+            val suffix = when (action) {
+                null -> { require(method == "PATCH" && teacherId == null); "" }
+                "remove" -> { require(method == "POST" && teacherId == null); "/remove" }
+                "teachers" -> if (teacherId == null) {
+                    require(method == "POST"); "/teachers"
+                } else {
+                    require(method == "DELETE" && valid(teacherId)); "/teachers/$teacherId"
+                }
+                else -> error("Unsupported class action")
+            }
+            "/api/classrooms/$classroomId$suffix"
+        }
+        return exchange(c.endpoint, path, method, payload, c.session.token)
+    }
+    internal fun logout(endpoint: HubEndpoint, session: StoredToken): String {
+        require(session.hub == endpoint.restBase)
+        require(session.token.isNotBlank() && session.token.none(Char::isWhitespace))
+        return exchange(endpoint, "/api/auth/logout", "POST", "{}", session.token)
+    }
+    internal fun postAuth(endpoint: HubEndpoint, path: String, payload: String): String {
+        require(path in setOf("/api/auth/login", "/api/auth/register"))
+        return try { exchange(endpoint, path, "POST", payload, null) }
+        catch (e: HubFailure) { throw AuthFailure(e.status, e.retryAfterSeconds) }
+    }
+
+    internal fun enrollment(endpoint: HubEndpoint, session: StoredToken, method: String, payload: String? = null): String {
+        require(session.hub == endpoint.restBase)
+        require(session.token.isNotBlank() && session.token.none(Char::isWhitespace))
+        val path = when (method) {
+            "GET" -> "/api/classrooms"
+            "POST" -> "/api/classrooms/join"
+            else -> error("Unsupported enrollment method")
+        }
+        return exchange(endpoint, path, method, payload, session.token)
+    }
+
+    internal fun teacherRoster(c: EnrollmentConnection, classroomId: String, action: String?, payload: String?): String {
+        require(classroomId.matches(Regex("[A-Za-z0-9-]{1,128}")))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        require(action == null || action in setOf("approve", "reject"))
+        return exchange(c.endpoint, "/api/classrooms/$classroomId/${action ?: "roster"}",
+            if (action == null) "GET" else "POST", payload, c.session.token)
+    }
+
+    internal fun sync(c: EnrollmentConnection, action: String, payload: String): String {
+        require(action in setOf("pull", "push"))
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        return exchange(c.endpoint, "/api/sync/$action", "POST", payload, c.session.token, 8 * 1024 * 1024)
+    }
+    private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?, maxBytes: Int = 65_536): String {
+        val url = endpoint.restBase + path
+        require(isAllowedHubUrl(url))
+        val connection = URL(url).openConnection() as HttpURLConnection
+        try {
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 5_000
+            connection.readTimeout = 5_000
+            connection.requestMethod = method
+            token?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            if (payload != null) {
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
+            }
+            val status = connection.responseCode
+            if (status != 200) {
+                val body = connection.errorStream?.use { readBounded(it, 65_536) }.orEmpty()
+                val code = runCatching {
+                    Json.parseToJsonElement(body).jsonObject["error"]?.jsonObject?.get("code")?.jsonPrimitive?.content
+                }.getOrNull() ?: "UNKNOWN"
+                throw HubFailure(status, code,
+                    connection.getHeaderField("Retry-After")?.toLongOrNull()?.coerceIn(1, 3600) ?: 60)
+            }
+            return connection.inputStream.use { readBounded(it, maxBytes) }
+        } finally { connection.disconnect() }
+    }
+
+    private fun readBounded(input: java.io.InputStream, maxBytes: Int): String {
+        val output = java.io.ByteArrayOutputStream()
+        val buffer = ByteArray(4096)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            require(output.size() + count <= maxBytes)
+            output.write(buffer, 0, count)
+        }
+        return output.toString("UTF-8")
+    }
+}

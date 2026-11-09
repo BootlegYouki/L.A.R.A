@@ -1,0 +1,4 @@
+Physical Infinix X6731, Android 14/API 34.
+PC Ethernet 192.168.100.12; phone Wi-Fi 192.168.100.21.
+Gesture navigation mode 2. Actual left-edge back swipe exited fullscreen to the existing video page.
+No USB port forwarding, emulator address or firewall/router change.

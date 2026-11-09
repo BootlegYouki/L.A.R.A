@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="sitemap-hub" name="Sitemap: Hub Admin Console">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1120" pageHeight="790" grid="1" gridSize="10" background="#ffffff" design_basis="Lead review of PR 176; issue 172; topics-quizzes association approved in issue 177">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;div style=&quot;font-family:Arial;font-size:20px;line-height:1.05;&quot;&gt;Sitemap: Hub Admin Console&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=20;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;" vertex="1" parent="1" kind="note">
+          <mxGeometry x="16" y="12" width="1088" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="setup" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Setup&lt;br&gt;Admin PIN&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="440" y="60" width="240" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="signin" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Sign-in&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="440" y="190" width="240" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="dashboard" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Dashboard&lt;br&gt;Hub address and status&lt;br&gt;Language toggle&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="410" y="320" width="300" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="accounts" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Teacher accounts&lt;br&gt;Create accounts&lt;br&gt;Reset PIN&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="22" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="ports" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Port health&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="203" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="ai" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;AI status&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="384" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="export" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Gradebook export&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="565" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="backup" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Backup and restore&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="746" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="remote" value="&lt;div style=&quot;font-family:Arial;font-size:18px;line-height:1.05;&quot;&gt;Remote Mode&lt;/div&gt;" style="html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=18;fontColor=#000000;strokeColor=#000000;fillColor=#ffffff;rounded=0;align=center;verticalAlign=middle;" vertex="1" parent="1" kind="sitemap_screen">
+          <mxGeometry x="927" y="590" width="165" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="setup-signin" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="setup" target="signin" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="signin-dashboard" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="signin" target="dashboard" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dashboard-accounts" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="accounts" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="104.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dashboard-ports" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="ports" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="285.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dashboard-ai" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="ai" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="466.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dashboard-export" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="export" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="647.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dashboard-backup" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="backup" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="828.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dashboard-remote" value="" style="edgeStyle=none;noEdgeStyle=1;rounded=0;html=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;strokeWidth=1;fillColor=#ffffff;fontColor=#000000;fontFamily=Arial;fontSize=15;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitPerimeter=0;entryPerimeter=0;startArrow=none;endArrow=none;" edge="1" parent="1" source="dashboard" target="remote" kind="tree" flow_label="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="510" />
+              <mxPoint x="1009.5" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

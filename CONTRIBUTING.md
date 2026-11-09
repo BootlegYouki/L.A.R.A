@@ -8,8 +8,8 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 
 | Team | Folder | Developers | Lead's view |
 | :--- | :--- | :--- | :--- |
-| **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3, JNI |
-| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, sidecar AI |
+| **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3 |
+| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, Hub AI stream |
 | **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
 | **Lead Developer** | all | 1 | Reviews every PR, owns `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` |
 
@@ -243,7 +243,7 @@ Closes #6
 A PR containing any of these is rejected immediately:
 
 1. **Cloud leakage:** Firebase, Google Play APIs, external CDNs, Google Fonts or unpkg links, remote analytics. Everything is 100% offline LAN.
-2. **Hardware RAM crashes:** mobile heap over 250 MB, or loading an on-device model without checking physical RAM of at least 6 GB.
+2. **Hardware RAM crashes:** mobile heap over 250 MB.
 3. **Socratic AI leaks:** prompts or logic that give direct answers or homework solutions.
 4. **Quiz lockout bypass:** any path that lets the AI tutor run while the learner has an `IN_PROGRESS` quiz attempt.
 5. **Accessibility regressions:** touch targets under 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px or English-only strings.

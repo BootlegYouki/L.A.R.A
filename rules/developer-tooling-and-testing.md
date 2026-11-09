@@ -34,7 +34,7 @@ State is in memory and resets on restart. Seeded accounts (PIN `1234`): teacher 
 ### What It Simulates
 1. **UDP Discovery Beacon (`255.255.255.255:8888`):** every 3 seconds.
 2. **Captive Web Portal (`/download`).**
-3. **REST (`:8080`):** every operation in `contracts/openapi.yaml`: auth, admin setup and accounts, classrooms (approval, rename, archive, remove a learner, co-teachers), delta-sync, topics, announcements and comments, materials (upload, edit, delete, download, chunks, `206` streaming), assignments (create, edit, delete, homework upload, private comments), teacher grading, quizzes (create, edit while draft, start, begin, submit, close, results), the AI model file, export and backup. Bearer auth is enforced. Media routes also accept `?token=`.
+3. **REST (`:8080`):** every operation in `contracts/openapi.yaml`: auth, admin setup and accounts, classrooms (approval, rename, archive, remove a learner, co-teachers), delta-sync, topics, announcements and comments, materials (upload, edit, delete, download, chunks, `206` streaming), assignments (create, edit, delete, homework upload, private comments), teacher grading, quizzes (create, edit while draft, start, begin, submit, close, results), export and backup. Bearer auth is enforced. Media routes also accept `?token=`.
 4. **WebSocket (`:8081`):** `EVENT_HELLO` handshake, then pushes `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH`, `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE`, and streams `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM` for `EVENT_AI_CHAT_REQUEST`.
 5. **Rules it enforces so clients meet them early:** learner quiz payloads never contain `correct_answer`; AI requests fail with `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt; quiz submissions later than the limit plus 60 seconds fail with `TIME_LIMIT_EXCEEDED`; held scores are `null` for the learner until the quiz is closed; private comments and homework reach only their owner and the class teachers; a co-teacher can teach but not rename or archive; unknown routes return `ROUTE_NOT_FOUND`.
 
@@ -45,7 +45,7 @@ Any change to `contracts/` must be mirrored in the mock hub in the same PR. `tes
 
 ## 3. Pre-Push Invariant Scanner (`scripts/verify_invariants.py`)
 
-Before pushing code or opening a Pull Request targeting `staging`, developers must verify that their changes do not violate the core offline or localization policies.
+Before pushing code or opening a Pull Request targeting `staging`, developers must verify that their changes do not violate the core offline or string-resource policies.
 
 ### Usage
 Run from the repository root:
@@ -55,11 +55,10 @@ python3 scripts/verify_invariants.py
 
 ### What It Enforces
 1. **Zero Cloud Dependencies:** Scans the git diff of every text file (not only code; build files, CSS and config count) for additions introducing forbidden libraries or external links. Markdown, `docs/`, `rules/`, `tests/`, `scripts/` and binary assets are skipped.
-   * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, `amplitude`, `posthog`, Google Analytics and Tag Manager.
+   * `firebase`, `@prisma/client`, `prisma`, `crashlytics`, `sentry`, `mixpanel`, the Amplitude SDK (`com.amplitude`, `@amplitude/`, `amplitude-js`; the plain word is fine), `posthog`, Google Analytics and Tag Manager.
    * Google Play Services (`play-services`, `com.google.android.gms`, `google-services`) and `googleapis.com` / `gstatic.com` (web fonts must be bundled locally).
    * External CDNs (`cdnjs`, `unpkg`, `cdn.jsdelivr`).
-2. **String Parity:** Every key in `mobile/app/src/main/res/values/strings.xml` needs a key in `values-tl/strings.xml`, and every key in `desktop/src/i18n/en.json` needs one in `fil.json`. A language file without its pair fails.
-3. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
+2. **Fails closed:** if the diff against the base branch cannot be computed (for example a shallow checkout with no base), the script exits 2 instead of passing. Run `git fetch origin staging` first.
 
 If any violation is detected, the script exits with code 1 and prints the exact offending lines.
 
@@ -73,6 +72,26 @@ All contract schemas, mock hub endpoints and guardrail scanners are covered by a
 ```bash
 python3 -m unittest discover tests
 ```
+
+### Running the Hub tests against the real Hub
+`tests/test_mock_hub.py` and `tests/test_contract_coverage.py` can target an already-running Hub instead of the mock, so one suite checks both:
+```bash
+cd server/backend && cargo run          # Hub on :8080 / :8081
+LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub tests.test_contract_coverage
+```
+`LARA_HUB_WS_URL` (default `ws://<host of LARA_HUB_URL>:8081`) overrides the WebSocket address. With the switch set the tests do not start the mock, and the ones that read mock internals (`ROUTES`, `mock_hub.py` source, `server.state`) are skipped. CI does not run this mode yet: the Hub still answers `501 NOT_IMPLEMENTED` for most routes (all tests fail at login), so it would be red. The server team runs it as routes land. Preconditions the real Hub does not meet yet: the tests log in with the mock's seed accounts (`T-0001`, `123456789012`, `ADMIN-0001`, PIN `1234`) and its seed classroom and quiz ids, and the Hub has no seed accounts (admin comes from `POST /api/admin/setup`), so a fresh Hub needs equivalent data loaded first, and the tests assume a state reset the real Hub cannot do. Once the suite is green against the real Hub, the server team may drop their Rust ports of these tests.
+
+### Checking client PRs against the real Hub
+Build against the mock hub. Before you open a mobile or desktop PR, also run the PR's main flow against the real Hub on `staging`, so differences between the mock and the Hub show up in your PR instead of at the integration checkpoint.
+
+```bash
+cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub
+```
+`LARA_TEST_SEED=1` creates the mock's accounts (`ADMIN-0001`, `T-0001`, `123456789012`, `123456789013`, PIN `1234`), but not the mock's class or posts: create those through the app or the API. Delete the data folder to start fresh. Point the app at `127.0.0.1:8080` (desktop), `10.0.2.2:8080` (emulator) or the PC's LAN IP (phone).
+
+* A route the Hub has not built yet answers `501 NOT_IMPLEMENTED`. That part of your PR is mock-only: say so under Not Verified (for example "class settings: real Hub answers 501, tested on the mock only").
+* Put one screenshot or log of the flow against the real Hub in the PR's Evidence.
+* If the real Hub and the mock answer differently for the same request, the contract decides. Report the difference on the PR and tag the server team; do not code around it in the client.
 
 ### Quality Gate Rule
 * All tests in `tests/` must pass before pushing to `staging` or `main`.

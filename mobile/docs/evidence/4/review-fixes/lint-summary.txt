@@ -1,0 +1,4 @@
+Warning: UnusedAttribute: Attribute `enableOnBackInvokedCallback` is only used in API level 33 and higher (current min is 26)
+Warning: InsecureBaseConfiguration: Insecure Base Configuration
+Warning: DataExtractionRules: The attribute `android:allowBackup` is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute `android:dataExtractionRules` specifying an `@xml` resource which configures cloud backups and device transfers on Android 12 and higher.
+Warning: MissingApplicationIcon: Should explicitly set `android:icon`, there is no default

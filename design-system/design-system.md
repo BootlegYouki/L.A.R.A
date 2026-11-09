@@ -85,7 +85,7 @@ Contrast notes: Text Muted is never used for essential content. White on Primary
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Display | 40 / 48 | Black 900 | `displayLarge` | `text-[40px] leading-[48px] font-black` | Welcome and onboarding only |
 | Heading 1 | 28 / 36 | ExtraBold 800 | `headlineLarge` | `text-[28px] leading-9 font-extrabold` | Subject and class headers |
-| Heading 2 | 22 / 30 | Bold 700 | `headlineMedium` | `text-[22px] leading-[30px] font-bold` | Section titles ("Mga Pagsusulit", "Stream") |
+| Heading 2 | 22 / 30 | Bold 700 | `headlineMedium` | `text-[22px] leading-[30px] font-bold` | Section titles ("Quizzes", "Stream") |
 | Title | 18 / 26 | ExtraBold 800 | `titleMedium` | `text-lg leading-[26px] font-extrabold` | Quiz questions, card titles |
 | Body | 16 / 24 | Medium 500 | `bodyLarge` | `text-base leading-6 font-medium` | Announcements, instructions, chat |
 | Label | 14 / 20 | ExtraBold 800 | `labelLarge` | `text-sm leading-5 font-extrabold` | Buttons, form labels, nav items |
@@ -261,7 +261,7 @@ Screen layouts are in section 9. These are the parts they are built from.
 - Results: score ring, encouraging copy regardless of score, per-item review with Correct or Review badge, link each missed item to its lesson page. Never compare a learner with classmates and never use a full-screen red state.
 
 ### 5.15 Socratic AI tutor
-- Panel: 2px `#D6CCFC` border, radius 16, `shadow-elevated`. Header is solid Primary Purple with sparkle icon and language tag (FILIPINO or ENGLISH).
+- Panel: 2px `#D6CCFC` border, radius 16, `shadow-elevated`. Header is solid Primary Purple with sparkle icon.
 - Learner message: right aligned, white background, `#E4EAF0` border, Primary Text, radius 16 with 4px bottom-right corner.
 - Tutor message: left aligned, Light Purple `#EEEAFE`, `#D6CCFC` border, text `#2D237A`, 4px bottom-left corner.
 - Grounding tag required on every tutor message: pill, white fill, `#D6CCFC` border, 11px ExtraBold uppercase purple, book-open icon, "BASED ON LESSON 1 (PAGE 2)".
@@ -296,39 +296,39 @@ Screen layouts are in section 9. These are the parts they are built from.
 - **Empty is an invitation, not an error.** Say what will appear and that it is saved on this device. "Nothing due yet. Take a break!"
 - **Errors say what to do.** "That code does not match a class. Check it with your teacher." No blame, no apologies, no codes.
 - **Offline is calm.** "Saved on this device." "It will turn in by itself when you are connected to the Hub." Never say "internet".
-- Greet by time of day on Home ("Magandang umaga, Ana!").
-- Bilingual: English and Filipino, Taglish allowed in the tutor. Section titles may use Filipino ("Mga Pagsusulit", "Pagsusulit #2"). All user-facing strings live in resource files, never hard-coded in components.
+- Greet by time of day on Home ("Good morning, Ana!").
+- English only on mobile, desktop and the Hub window, with no language toggle. All user-facing strings live in English resource files, never hard-coded in components. Learners may write Filipino or Taglish to the tutor; it replies in English.
 - Dates use the form "Fri, Oct 9". Times use 12 hour with AM or PM. Numbers for scores show "9 / 10" with spaces around the slash.
 - Do not use emojis in the product UI.
 
 ### 7.2 Classroom words in L.A.R.A.
-Keep Classroom's English words where people already know them. Change only the ones that can sting a child. The Filipino column is a suggestion for the Filipino string files and must be confirmed with a Filipino-speaking teacher before release.
+Keep Classroom's English words where people already know them. Change only the ones that can sting a child.
 
-| Classroom says | L.A.R.A. says (English) | Filipino (suggested) |
-| :--- | :--- | :--- |
-| Stream | Stream | Mga anunsyo |
-| Classwork | Classwork | Mga gawain |
-| Quizzes | Quizzes | Mga pagsusulit |
-| People | People (teacher only) | Mga kasapi |
-| Grades | Grades | Mga marka |
-| To-do | To-do | Mga gagawin |
-| Due soon | Due soon | Malapit nang ipasa |
-| Upcoming | Upcoming | Paparating |
-| Join class | Join class | Sumali sa klase |
-| Class code | Class code | Code ng klase |
-| Your work | Your work | Iyong gawa |
-| Private comments | Private comments | Pribadong komento |
-| Assigned | To do (learner), Assigned (teacher) | Gagawin |
-| Turn in | Turn in | Ipasa |
-| Turned in | Turned in | Naipasa na |
-| Missing | Not turned in yet (learner), Missing (teacher) | Hindi pa naipasa |
-| Turned in late | Turned in after the due date (preview line only) | Naipasa pagkatapos ng due date |
-| Graded | Graded | May marka na |
-| Unsubmit | Take it back to edit | Bawiin para baguhin |
-| (none) | Take a photo | Kunan ng litrato |
-| (none) | Saved on this device | Naka-save sa device na ito |
-| (none) | Queued for sync | Naghihintay ma-sync |
-| (none) | Waiting for approval | Naghihintay ng pag-apruba |
+| Classroom says | L.A.R.A. says (English) |
+| :--- | :--- |
+| Stream | Stream |
+| Classwork | Classwork |
+| Quizzes | Quizzes |
+| People | People (teacher only) |
+| Grades | Grades |
+| To-do | To-do |
+| Due soon | Due soon |
+| Upcoming | Upcoming |
+| Join class | Join class |
+| Class code | Class code |
+| Your work | Your work |
+| Private comments | Private comments |
+| Assigned | To do (learner), Assigned (teacher) |
+| Turn in | Turn in |
+| Turned in | Turned in |
+| Missing | Not turned in yet (learner), Missing (teacher) |
+| Turned in late | Turned in after the due date (preview line only) |
+| Graded | Graded |
+| Unsubmit | Take it back to edit |
+| (none) | Take a photo |
+| (none) | Saved on this device |
+| (none) | Queued for sync |
+| (none) | Waiting for approval |
 
 ## 8. Definition of Done (Checklist for Every UI Change)
 
@@ -341,7 +341,7 @@ Keep Classroom's English words where people already know them. Change only the o
 - [ ] Offline and loading states exist (badge or banner, skeleton, empty state)
 - [ ] Assessment lock rules respected (no AI during an active quiz)
 - [ ] Accessible names, roles and states set; focus order checked
-- [ ] Strings localized (English and Filipino) with no hard-coded text
+- [ ] English strings in resources with no hard-coded text
 - [ ] A screen keeps the structure and positions in section 9 and matches its entry in the Classroom Screens group of `design-system/showcase.html` (for the remade desktop screens, also `design-system/prototype.html`)
 - [ ] Words follow section 7: warm, no shaming statuses for learners, a kind empty state, a next step in every helper line
 - [ ] Matches the corresponding entry in `design-system/showcase.html`. If you add or change a component, update the showcase and this file in the same change
@@ -352,7 +352,7 @@ Keep Classroom's English words where people already know them. Change only the o
 
 Teachers and learners already know Google Classroom. Every L.A.R.A. screen copies the **structure** of the matching Classroom screen, so people find each thing where they expect it, and then says it in L.A.R.A.'s friendly voice (section 7) using L.A.R.A.'s look (sections 1 to 5). Layout is not free design: use the anatomies below. Live, interactive versions are in the **Classroom Screens** group of `design-system/showcase.html`, and as a full-window app in `prototype.html`, generated from the showcase by `python3 scripts/build_prototype.py` (a test fails when it is stale). To open it, serve `design-system/` with any static server, for example `python3 -m http.server`, and visit `/prototype.html`. **Home, Stream and the quiz on desktop are the remade screens** (showcase entry "Remake: Home, Stream and Quiz (desktop)"). The first-pass screens were removed from the showcase; each returns when it is remade.
 
-Measurements marked "Classroom" were read from the computed styles of the current Classroom web app on 2026-10-11, in a 1440 px wide window, for both a learner and a teacher account: Home, Stream, Classwork with its Create menu, the assignment form, the material form, student work with private comments, People, Grades, class settings, the learner's assignment page and To-do. The teacher screens other than Stream are measured but not yet remade (9.15 lists what was found). **Phone layouts were not measured:** a browser shows only Classroom's web layout, so phone screens are derived from these at a narrow width and are supplied separately. Do not copy its colors, fonts, logo or pictures.
+Measurements marked "Classroom" were read from the computed styles of the current Classroom web app on 2026-10-11, in a 1440 px wide window, for both a learner and a teacher account: Home, Stream, Classwork with its Create menu, the assignment form, the material form, student work with private comments, People, Grades, class settings, the learner's assignment page and To-do. The teacher screens other than Stream are measured but not yet remade (9.15 lists what was found). **Phone layouts were not measured:** a browser shows only Classroom's web layout, so phone screens are derived from these at a narrow width and are supplied separately. **The phone screens are now supplied:** `design-system/mobile/google-classroom-reference/` has screenshots of the real Classroom Android app (`teacher/` and `student/`, numbered in walkthrough order). For every phone screen, open the matching screenshot and follow its flow and layout; the brand (colors, type, icons, spacing, wording) stays L.A.R.A.'s. Screens Classroom does not have are built from the same parts, so they look like the same app. Do not copy its colors, fonts, logo or pictures.
 
 **Stage 2 (2026-10-11): do not look like a Classroom clone.** Keep every element where Classroom puts it, but give it L.A.R.A.'s own look: the class card, tonal buttons, the solid Dark Green banner, the Hub pill, status pills, no greeting. Where this section says "L.A.R.A." next to a Classroom measurement, the L.A.R.A. value wins.
 
@@ -404,7 +404,7 @@ The drawer is hidden below 760 px of width until the phone layouts are supplied 
 ```
  Due soon (2)  [View To-do] [collapse]        learner. Teacher: Recently due
  +--------------------------------------------------------------+
- | [tile] Pagsusulit #2: Parts of a Leaf  Science 4   [Fri, Oct 9]|
+ | [tile] Quiz #2: Parts of a Leaf  Science 4   [Fri, Oct 9]|
  | [tile] Fractions drill                 Math 4      [Mon, Oct 12]|
  +--------------------------------------------------------------+
  Classes                                        [+ Join class]
@@ -422,7 +422,7 @@ The drawer is hidden below 760 px of width until the phone layouts are supplied 
   - Section headings are 22 Black. The heading row is 56 high with a text link ("View To-do", "View work in progress") and a 40 px collapse button on the right.
   - **Due soon (learner):** rows with a 44 px type tile, title, class name and a due-date badge (Amber when soon, neutral later). **Recently due (teacher):** a row such as "Handout #2: Parts of a Leaf, 5 turned in, 27 assigned" with a Review button.
   - **Class card:** white, 1 px Border, radius 16, `shadow-card`, 20 padding, 232 high at least. From the top: a 56 px Dark Green tile (radius 12) with the white subject icon and a 40 px kebab on the right; the class name (24 Black); the section (14 Bold, Secondary); one status pill; a rule; a footer with the teacher's initials avatar and name (learner) or a users icon and "27 learners" (teacher) on the left, and "Open" with an arrow in Dark Green on the right.
-  - **Status pill:** 8 by 12 padding, radius 12, 13 ExtraBold, icon plus words. Amber for something due or to review ("Pagsusulit #2 is due Fri, Oct 9", "5 turned in: Handout #2"), Light Green for "All caught up" or "Nothing to review".
+  - **Status pill:** 8 by 12 padding, radius 12, 13 ExtraBold, icon plus words. Amber for something due or to review ("Quiz #2 is due Fri, Oct 9", "5 turned in: Handout #2"), Light Green for "All caught up" or "Nothing to review".
   - **Behaviour:** the whole card opens the class (a stretched button; the kebab stays above it). On hover or focus the border turns Primary Green and the shadow becomes `shadow-card-hover`.
   - **Grid:** `repeat(auto-fill, minmax(280px, 1fr))`, 20 gap, so cards stretch to fill the 1240 wide content.
   - The class code is never on a card.
@@ -451,7 +451,7 @@ The drawer is hidden below 760 px of width until the phone layouts are supplied 
   - **Left column, 220 wide:** teacher sees the **Class code** card first (title 16 Black with a kebab, the code `K7M-4QX` at 22 Black with 1 px letter spacing, a hint that learners must be approved). **Upcoming** card for everyone: the next due item for learners, "No work due soon" for a teacher with nothing, and a View all link. Both cards are white, 1 px Border, radius 12, 16 padding.
   - **Teacher bar:** a tonal **New announcement** button (Light Green fill, Dark Green text, 40 high pill, pencil icon) and a text **Repost** button. Learners have no bar: they comment, they do not post.
   - **New announcement dialog:** 640 wide, radius 24, `shadow-modal`, 24 padding, over a dimmed sheet. Title "Announcement" (24 Black), two neutral chips (the class and "All learners"), a text area "Announce something to your class", attach and link icon buttons, Cancel and Post. Post is disabled while the Hub is unreachable, with the hint "Waiting for the Hub. Posting needs the classroom network."
-  - **Classwork rows:** 72 high, Surface Subtle, radius 12, no border. A 40 px circle (Amber for a quiz, Light Blue for a material, Light Green for an assignment), "Ms. Reyes posted a new quiz: Pagsusulit #2" (14 ExtraBold), the date under it, a 40 px kebab. The row opens the work (next slice).
+  - **Classwork rows:** 72 high, Surface Subtle, radius 12, no border. A 40 px circle (Amber for a quiz, Light Blue for a material, Light Green for an assignment), "Ms. Reyes posted a new quiz: Quiz #2" (14 ExtraBold), the date under it, a 40 px kebab. The row opens the work (next slice).
   - **Announcement card:** Surface Subtle, radius 12, no border. Header: 40 px initials avatar, name, date, kebab. Body 14 Bold. A rule, then comments (one level, 12 gap, a 32 px avatar, first name only), a text **Add comment** button that opens a pill reply box (40 high) with a Send icon button.
   - **Comment badges:** a comment sent while the Hub is unreachable shows "Queued for sync" (Amber), otherwise "Saved" (Light Green).
   - **Empty** ("This is where you can talk to your class", plus a line for teachers about announcements and one for learners about what appears here) also shows for any class that has no posts. *Loading* is Surface Subtle blocks. *Offline* adds the same Amber banner as Home.
@@ -493,7 +493,7 @@ Status words (learners see the left column, teachers the right):
 ```
  +--------------------------------------------+  +- Your work ------ [To do] -+
  | (tile) Homework: Draw and label a leaf   : |  | [ photo slot             ] |
- | Ms. Reyes, posted Oct 5                    |  | [ Kunan ng litrato     ]   |  56
+ | Ms. Reyes, posted Oct 5                    |  | [ Take a photo     ]   |  56
  | 50 points | Due Mon, Oct 12, 5:00 PM       |  | [ Choose a photo       ]   |
  |--------------------------------------------|  | [ Turn in (disabled)   ]   |
  | instructions                               |  | helper text                |
@@ -507,7 +507,7 @@ Status words (learners see the left column, teachers the right):
 
 | State | Status badge | Card shows | Actions |
 | :--- | :--- | :--- | :--- |
-| Assigned | To do | Dashed photo slot "Take a photo of your notebook page" | **Kunan ng litrato** (primary, 56), Choose a photo, Turn in (disabled until there is a photo) |
+| Assigned | To do | Dashed photo slot "Take a photo of your notebook page" | **Take a photo** (primary, 56), Choose a photo, Turn in (disabled until there is a photo) |
 | Queued | Queued for sync | The photo, "Saved on this device" | Take a new photo, Turn in. Note: "You are not connected to the Hub yet. Your work will turn in by itself when you are." |
 | Turned in | Turned in | The photo, "Your teacher has it" | Take it back to edit (until graded) |
 | Graded | Graded | Score ("45 / 50") and the teacher's message | See your work. No take back |
@@ -575,7 +575,7 @@ Classroom has no timed quiz (it hands off to Google Forms), so this screen is L.
 ```
  <- Back to Stream
  +-----------------------------------------------+      intro: card, 760 wide, 2 px border, radius 16
- | Pagsusulit #2: Parts of a Leaf                |
+ | Quiz #2: Parts of a Leaf                |
  | [5 questions] [10 minutes] [Science 4]       |
  | - one timer for the whole quiz ...            |
  | - if the Wi-Fi drops, keep going ...          |
@@ -636,4 +636,4 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 1. **White on Primary Green is 3.56:1.** The 4.5:1 accessibility rule stands, so a screen must meet it: use Dark Green for filled buttons, darken the button green (touches the code mirrors and the token test), or keep white only for large bold text.
 2. **Where the AI tutor is reached** on phone and desktop. The remade shell has no Ask L.A.R.A. entry; the quiz screens only say it is off during a quiz. The quiz lockout rule applies wherever it goes.
 3. **Where Export to USB lives.** PRD FR-5.2 says the Hub window.
-4. **Filipino strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) need a Filipino-speaking teacher's check.
+4. **English strings** for the new words (Recently due, Teaching, Enrolled, Queued for sync, Start quiz) belong in resources.

@@ -1,0 +1,81 @@
+package org.lara.app.ui.screens.teacher
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import org.lara.app.AppContainer
+import org.lara.app.R
+import org.lara.app.domain.Cached
+import org.lara.app.ui.theme.LaraSpacing
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.flow.filterNot
+import org.lara.app.domain.enrollment.ClassCode
+import org.lara.app.domain.enrollment.HubEvent
+import org.lara.app.ui.components.DiscoveryBanner
+import org.lara.app.ui.screens.teacher.classes.teacherIds
+
+@Composable
+fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: org.lara.app.data.sync.SyncSessionViewModel,
+    onSessionExpired: () -> Unit, selectedClassId: String? = null, onOpenClass: ((String) -> Unit)? = null) {
+    val session: TeacherApprovalSession = viewModel(key = "teacher-approvals-$userId", factory = viewModelFactory {
+        initializer { TeacherApprovalSession(container, userId, syncSession) }
+    })
+    val latestExpired by rememberUpdatedState(onSessionExpired)
+    val reachable by syncSession.reachable.collectAsStateWithLifecycle()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(session, reachable, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            session.setReachable(reachable)
+            try { session.events.collect { if (it == HubEvent.SessionExpired) latestExpired() } }
+            finally { session.setReachable(false) }
+        }
+    }
+    DisposableEffect(session) { onDispose { session.setReachable(false) } }
+    val cached by session.classrooms.collectAsStateWithLifecycle()
+    val pendingCodes by session.pendingClassCodes.collectAsStateWithLifecycle()
+    val error by session.error.collectAsStateWithLifecycle()
+    val refreshing by session.refreshingClasses.collectAsStateWithLifecycle()
+    val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
+    val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
+    Column(Modifier.fillMaxWidth().then(if (onOpenClass != null) Modifier.fillMaxHeight() else Modifier.heightIn(max = LaraSpacing.S12 * 4))
+        .verticalScroll(rememberScrollState()).padding(LaraSpacing.S3), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+        if (onOpenClass != null) Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium)
+        if (onOpenClass != null && !reachable) DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
+        org.lara.app.ui.screens.teacher.classes.ClassManagementEntry(container, userId, session.reachable) { latestExpired() }
+        if (error != null && reachable) DiscoveryBanner(R.string.approval_failed, warning = true, success = false)
+        if (cached == Cached.Loading || classes.isEmpty() && refreshing) ApprovalLoadingSkeleton()
+        else if (classes.isEmpty()) Text(stringResource(if (reachable) R.string.approval_no_classes else R.string.approval_no_saved_classes))
+        classes.filter { selectedClassId == null || it.id == selectedClassId }.forEach { classroom ->
+            key(classroom.id) {
+                val model: RosterViewModel = viewModel(key = "approval-$userId-${classroom.id}", factory = viewModelFactory {
+                    initializer { RosterViewModel(classroom.id, classroom.classCode, container.enrollments,
+                        session.remote, session.reachable, session.events.filterNot { it is HubEvent.JoinRequest },
+                        { id -> container.sync.refreshRoster(userId) { session.refresher.refresh(id) } }, { latestExpired() }) }
+                })
+                val code = ClassCode.canonicalOrNull(classroom.classCode)
+                LaunchedEffect(model, code, pendingCodes) {
+                    if (classroom.managedBy(userId) && code != null && code in pendingCodes) {
+                        model.onJoinRequested()
+                        session.consumeJoinRequest(code)
+                    }
+                }
+                if (onOpenClass != null) org.lara.app.ui.components.ClassroomCard(classroom.name, classroom.section,
+                    names.find { it.id == classroom.teacherId }?.name,
+                    stringResource(if (classroom.archivedAt == null) R.string.classes_active else R.string.classes_archived),
+                    true) { onOpenClass(classroom.id) }
+                if (classroom.managedBy(userId)) org.lara.app.ui.components.ClassroomSurface { TeacherApprovalHost(model) }
+            }
+        }
+    }
+}

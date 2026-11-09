@@ -1,0 +1,2 @@
+# The .deb runs postinst.sh with /bin/sh; a CRLF checkout would break it ("not found" on `\r`).
+linux/* text eol=lf

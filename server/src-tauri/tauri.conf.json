@@ -4,6 +4,7 @@
   "identifier": "org.lara.hub",
   "build": {
     "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../ui/dist"
   },
   "app": {
@@ -17,12 +18,28 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'",
-      "devCsp": "default-src 'self' 'unsafe-inline' http://localhost:5173 ws://localhost:5173"
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:8080; style-src 'self'; font-src 'self'; img-src 'self'",
+      "devCsp": "default-src 'self' 'unsafe-inline' http://localhost:5173 ws://localhost:5173; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:8080 ws://localhost:5173"
     }
   },
   "bundle": {
-    "active": false,
-    "icon": ["icons/icon.png", "icons/icon.ico"]
+    "active": true,
+    "targets": ["nsis", "deb", "appimage"],
+    "category": "Education",
+    "shortDescription": "L.A.R.A classroom Hub",
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "windows": {
+      "webviewInstallMode": { "type": "offlineInstaller", "silent": true },
+      "nsis": {
+        "installMode": "perMachine",
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    },
+    "linux": {
+      "deb": {
+        "postInstallScript": "./linux/postinst.sh",
+        "desktopTemplate": "./linux/lara-hub.desktop"
+      }
+    }
   }
 }

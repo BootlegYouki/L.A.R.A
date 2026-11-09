@@ -1,0 +1,2 @@
+Hub stopped: cached session reopens; Settings English; 200% text scroll reaches Sign out
+System font scale restored to 1.0

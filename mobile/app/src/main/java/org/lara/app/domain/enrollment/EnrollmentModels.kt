@@ -1,0 +1,43 @@
+package org.lara.app.domain.enrollment
+
+import org.lara.app.domain.model.Classroom
+import org.lara.app.domain.model.Enrollment
+
+/** Class access requires a canonical saved enrollment supplied by sync. */
+data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment) {
+    val status: EnrollmentStatus get() = EnrollmentStatus.valueOf(enrollment.status)
+    val canOpen: Boolean get() = status == EnrollmentStatus.ACTIVE
+}
+
+enum class EnrollmentStatus { PENDING, ACTIVE, REJECTED, REMOVED }
+
+/** Request metadata is not an enrollment and never grants class access. */
+data class EnrollmentNotice(val classroomId: String, val title: String?, val status: EnrollmentStatus)
+
+interface EnrollmentNoticeRepository {
+    fun notices(userId: String): kotlinx.coroutines.flow.Flow<List<EnrollmentNotice>>
+    suspend fun save(userId: String, notice: EnrollmentNotice)
+}
+
+interface EnrollmentSessionSource {
+    val reachable: kotlinx.coroutines.flow.StateFlow<Boolean>
+    val events: kotlinx.coroutines.flow.Flow<HubEvent>
+}
+
+sealed interface HubEvent {
+    data class HelloAck(val hubId: String, val syncEpoch: Long, val serverTime: Long) : HubEvent
+    data class JoinApproval(val classroomId: String, val studentId: String,
+        val status: EnrollmentStatus, val timestamp: Long) : HubEvent
+    data class JoinRequest(val classCode: String, val studentId: String, val fullName: String,
+        val lrn: String, val timestamp: Long) : HubEvent {
+        override fun toString() = "JoinRequest([redacted])"
+    }
+    data class Announcement(val classroomId: String, val announcementId: String, val title: String, val timestamp: Long) : HubEvent
+    data object SessionExpired : HubEvent
+}
+
+sealed interface EnrollmentRefreshHint {
+    data object Foreground : EnrollmentRefreshHint
+    data class Connected(val hubId: String, val syncEpoch: Long) : EnrollmentRefreshHint
+    data class MembershipChanged(val classroomId: String) : EnrollmentRefreshHint
+}

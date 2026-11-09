@@ -13,7 +13,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 * **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
-**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English or Filipino, and is locked while a quiz is active.
+**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -35,7 +35,7 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 |---|---|
 | Run the Hub simulator (clients build against it) | `python3 scripts/mock_hub.py` |
 | All contract, schema and mock hub tests | `python3 -m unittest discover tests` |
-| Offline and localization guardrail | `python3 scripts/verify_invariants.py` |
+| Offline invariant guardrail | `python3 scripts/verify_invariants.py` |
 | Mobile | `./gradlew test lint` (in `mobile/`) |
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
@@ -44,7 +44,7 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
-* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open PR at a time (`rules/team-workflow-and-prs.md` section 1.1).
+* The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open feature PR at a time; an evaluation PR may run alongside (`rules/team-workflow-and-prs.md` section 1.1).
 * **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
 * Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 
@@ -58,7 +58,9 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * **Remote/Suspension Mode is the one sanctioned exception to LAN-only** (decided 2026-10-26): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it from outside the school network while classes are suspended (e.g. bad weather). Same accounts, same bearer tokens, same contract, same sync cursor — nothing about in-school behavior changes, and the tunnel is the only sanctioned path off the LAN (section 3.5).
 * **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
+* **The apps are English only** (decided 2026-11-03): no Filipino strings and no language toggle on mobile, desktop or the Hub window. The tutor already replies in English (§5.2).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
+* **The AI tutor runs only on the Hub** (decided 2026-11-02): no model download and no on-device inference on phones or laptops; every client uses the Hub WebSocket stream. The small models tested in #73 leaked answers or refused everything; the passing candidate needs about 11 GB RAM on a 16 GB Hub.
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
@@ -69,8 +71,8 @@ Say so, in an issue, with evidence. Every developer and agent may propose a bett
 
 ## 2. Team Organization
 
-1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3, optional JNI `llama.cpp`. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
-2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`, bundled `llama.cpp` sidecar on laptops with at least 4 GB RAM.
+1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
+2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`.
 3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, gradebook export, backup.
 4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
@@ -94,7 +96,7 @@ Rule documents (read the ones for your task):
 
 ### 3.2 Offline-first persistence
 * Both clients keep an offline mirror of enrolled classes, announcements, handouts, videos and quiz history in local SQLite.
-* A learner can launch the app at home with no Wi-Fi and read, watch and (when capable) use the local AI without errors or blocking loaders.
+* A learner can launch the app at home with no Wi-Fi and read and watch without errors or blocking loaders. The tutor shows "The AI tutor needs the classroom Hub" when the Hub is unreachable.
 * Offline actions (finished quizzes, homework photos, comments) are saved with `sync_status = 'QUEUED_FOR_SYNC'` and flush automatically when the Hub is reachable. Never describe the connection as "internet"; say "Hub" or "classroom network".
 
 ### 3.3 Network protocol and ports
@@ -120,11 +122,11 @@ Rule documents (read the ones for your task):
 
 ## 4. UI/UX Guidelines (Accessibility for Grades 1 to 12)
 
-* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the visual reference for the remade desktop screens (Home, Stream and the quiz): it was built under the Lead's supervision so developers have the vision. It is a reference, not a spec: the developers handle the details and everything it does not show. Tokens, invariants and accessibility rules are fixed. Keep the vision and the spirit; where real development shows something must change, change it and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Anything the prototype does not show is yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system).
+* **Design authority:** [`design-system/design-system.md`](./design-system/design-system.md) and `design-system/` are the reference. The prototype (`design-system/prototype.html`) is the visual reference for the remade desktop screens (Home, Stream and the quiz): it was built under the Lead's supervision so developers have the vision. It is a reference, not a spec: the developers handle the details and everything it does not show. Tokens, invariants and accessibility rules are fixed. Keep the vision and the spirit; where real development shows something must change, change it and report the deviation in the PR so the Lead can update the design system (see the note at the top of `design-system.md`). Anything the prototype does not show is yours to design with only the documented tokens and components, following Google Classroom as the structural reference (section 9 of the design system). **Mobile:** for flow and layout, open the matching screenshot of the real Classroom Android app in `design-system/mobile/google-classroom-reference/` (`teacher/`, `student/`); the brand (tokens, Nunito, Phosphor, wording) stays L.A.R.A.'s.
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
-* **Bilingual:** all user-facing text in English and Filipino, no hardcoded strings (`values/strings.xml` + `values-tl/strings.xml`; a JSON dictionary on desktop with runtime toggle).
+* **English only, no hardcoded strings:** all user-facing text in `values/strings.xml` on Android and the English JSON dictionary on desktop and the Hub window, so wording stays in one place.
 * **Every screen** needs an offline state, an empty state and a loading skeleton.
 * **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
 * **Gradebook export:** `.xlsx` and `.csv` of learners by assignment and quiz with points, per class, direct to USB. Like Google Classroom, L.A.R.A records points only; each teacher applies their own grading system.
@@ -133,34 +135,33 @@ Rule documents (read the ones for your task):
 
 ## 5. Socratic AI Tutor (L.A.R.A AI)
 
-A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. Inference is pluggable GGUF via `llama.cpp` (JNI on Android, sidecar on Desktop, `llama-server` on the Hub). Full rules: `rules/socratic-ai-guardrails.md`.
+A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. Inference runs only on the Hub with pluggable GGUF models via `llama-server`. Full rules: `rules/socratic-ai-guardrails.md`.
 
 ### 5.1 Routing
-* **Phones under 6 GB RAM:** always use the Hub over WebSocket. Never load a model locally.
-* **Phones with 6 GB or more, and laptops with 4 GB or more:** may run a downloaded GGUF fully offline.
-* The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"Pangalawa ka sa pila - est. 4s"`).
-* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. Downloading the model to run on your own device is opt-in, never automatic. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
+* **Every client uses the Hub over WebSocket:** `EVENT_AI_CHAT_REQUEST` → `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. No RAM check. When the Hub is unreachable, show "The AI tutor needs the classroom Hub"; Remote/Suspension Mode carries the same stream through the tunnel.
+* The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"You are second in the queue - est. 4s"`).
+* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
 
 ### 5.2 Behavior (every model, every path)
-0. **One prompt for every path:** `contracts/ai/socratic_system_prompt.txt`. The Hub, mobile and desktop load that file byte for byte and never write their own; changing it is a `contract-change` PR followed by a re-run of the evaluation.
-1. **Never give the final answer.** Decline warmly: *"Hindi ko maibibigay ang mismong sagot, pero tutulungan kitang tuklasin ito! Balikan natin ang binasa mo. Ano ang unang hakbang?"*
+0. **Only the Hub builds the prompt:** `contracts/ai/socratic_system_prompt.txt`. The Hub loads that file byte for byte, selects chunks per `rules/socratic-ai-guardrails.md` section 3.1 and history per section 3.2; clients send the learner's message and render the stream. The Hub never writes its own prompt; changing it is a `contract-change` PR followed by a re-run of the evaluation.
+1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
-4. **Reply in the learner's chosen language** (English or natural Filipino/Taglish).
+4. **English only:** the tutor replies in English, and it does not help with messages written in Filipino or Taglish. It declines in English with exactly "I can only help in English. Please ask your question again in English." (decided 2026-11-05, replacing the 2026-11-01 rule that answered them in English).
 5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI; the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`.
 
 ### 5.3 Model choice is open
-MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. There may be two choices: a smarter model on the Hub and a smaller one for devices that can run it. Each must pass the same evaluation; if the small one does not, devices use the Hub.
+MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. The Hub model must pass the evaluation.
 
 ### 5.4 Evaluation requirement
-Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, Filipino and Taglish, run on the actual Hub machine. Do not claim "good enough" without those numbers.
+Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, run on the actual Hub machine. Do not claim "good enough" without those numbers.
 
 ---
 
 ## 6. Subsystem Conventions
 
 ### 6.1 Mobile
-Kotlin 2.x, Compose Material 3, Clean Architecture with MVI/MVVM, Coroutines and StateFlow, Room, Media3, JNI for `arm64-v8a`. Teacher and Student nav graphs. Verify: `./gradlew test lint`.
+Kotlin 2.x, Compose Material 3, Clean Architecture with MVI/MVVM, Coroutines and StateFlow, Room, Media3. Teacher and Student nav graphs. Verify: `./gradlew test lint`.
 
 ### 6.2 Desktop
 Tauri 2.x, React 19, TypeScript 5 with `strict: true` and no `any`, Tailwind 4 with design-system tokens, `@tauri-apps/plugin-sql`. Verify: `npm run build`.
@@ -175,7 +176,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 ## 7. Working Rules For Agents
 
-* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code.
+* **Read before you write, in this order:** the issue (its `PRD`, `Contract` and `Design system` lines name what to open), the PRD requirement it cites, the contract routes and events, the rule file, the nested `AGENTS.md`, then your team's `docs/TECH_SPEC.md` for file names and patterns. Search for existing code before creating new code. The skill `.agents/skills/lara-architect` walks through this process; load it at the start of every issue, plus your team's skill (`.agents/skills/lara-<team>`) when it exists. Each team owns and edits its own skill folder; `lara-architect` is Lead-owned.
 * **The issue is the scope.** Build its sub-tasks and acceptance criteria, in its Target Files, and nothing else. If the issue disagrees with a contract, rule or the PRD, the higher document wins: stop and report it.
 * **Do not invent behavior.** If a requirement is missing or contradicts another document, write the open question in the PR or issue instead of guessing.
 * **Smallest change that satisfies the issue.** No drive-by refactors, no new dependencies without need, no edits outside your folder.
@@ -189,7 +190,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 - [ ] Contract, mock hub and tests updated first if the API changed
 - [ ] Build, tests and `verify_invariants.py` pass, output attached
 - [ ] Works with the Hub unreachable (offline state defined)
-- [ ] English and Filipino strings, tokens only, targets at least 52dp on phones and 40px buttons on desktop
+- [ ] Strings in resources (English), tokens only, targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or foreign LRN reaches a client
 - [ ] AI unavailable during a quiz
 - [ ] Team docs updated

@@ -1,0 +1,10 @@
+testDebugUnitTest: org.lara.app.data.remote.discovery.DiscoveryLogicTest: 5 tests, 0 failures, 0 errors
+testDebugUnitTest: org.lara.app.data.remote.discovery.HubProbeTest: 2 tests, 0 failures, 0 errors
+testDebugUnitTest: org.lara.app.data.remote.HubUrlPolicyTest: 4 tests, 0 failures, 0 errors
+testDebugUnitTest: org.lara.app.ui.screens.discovery.DiscoveryViewModelTest: 2 tests, 0 failures, 0 errors
+testDebugUnitTest: TOTAL 13
+testReleaseUnitTest: org.lara.app.data.remote.discovery.DiscoveryLogicTest: 5 tests, 0 failures, 0 errors
+testReleaseUnitTest: org.lara.app.data.remote.discovery.HubProbeTest: 2 tests, 0 failures, 0 errors
+testReleaseUnitTest: org.lara.app.data.remote.HubUrlPolicyTest: 4 tests, 0 failures, 0 errors
+testReleaseUnitTest: org.lara.app.ui.screens.discovery.DiscoveryViewModelTest: 2 tests, 0 failures, 0 errors
+testReleaseUnitTest: TOTAL 13

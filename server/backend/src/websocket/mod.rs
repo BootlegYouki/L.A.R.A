@@ -4,6 +4,7 @@
 
 pub mod broker;
 pub mod events;
+pub mod presence;
 
 use std::time::Duration;
 
@@ -16,11 +17,12 @@ use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
-use crate::auth::AuthUser;
+use crate::auth::{sessions, AuthUser};
 use crate::error::ErrorCode;
 use crate::AppState;
 use broker::Frame;
-use events::{ClientEvent, ServerEvent};
+use events::{ClientEvent, PresenceState, ServerEvent};
+use presence::Presence;
 
 const HELLO_TIMEOUT: Duration = Duration::from_secs(10);
 const CLOSE_INVALID_TOKEN: u16 = 4401;
@@ -66,12 +68,15 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
     if !queue(&tx, &ack) {
         return;
     }
-    let connection_id = app.broker.register(&user.id, tx.clone());
+    let (connection_id, mut stopped) = app.broker.register_with_stop(&user.id, tx.clone());
+    if let Err(e) = Presence::emit(&app, &user, PresenceState::Online).await {
+        tracing::warn!(error = %e, "presence update failed");
+    }
 
     let (mut sink, mut source) = ws.split();
     let writer = async {
         while let Some(frame) = rx.recv().await {
-            if sink.send(Message::text(frame.as_ref())).await.is_err() {
+            if !matches!(timeout(Duration::from_secs(10), sink.send(Message::text(frame.as_ref()))).await, Ok(Ok(()))) {
                 break;
             }
         }
@@ -95,13 +100,21 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
     tokio::select! {
         _ = writer => {}
         _ = reader => {}
+        _ = stopped.changed() => {}
     }
     app.broker.unregister(&user.id, connection_id);
+    // Closing a phone must not mark the learner offline while their laptop is still connected.
+    if !app.broker.is_online(&user.id) {
+        if let Err(e) = Presence::emit(&app, &user, PresenceState::Offline).await {
+            tracing::warn!(error = %e, "presence update failed");
+        }
+    }
     let _ = timeout(Duration::from_secs(1), sink.close()).await;
 }
 
 /// Answers frames sent before `EVENT_HELLO` like the mock does, and closes with 4401 when the
-/// token is missing or unknown. `None` once the socket is closed.
+/// token is missing, unknown, expired or belongs to a deactivated account. `None` once the
+/// socket is closed.
 async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> Option<AuthUser> {
     while let Some(Ok(message)) = ws.next().await {
         let text = match message {
@@ -113,10 +126,21 @@ async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> 
             None => ServerEvent::error(ErrorCode::BadRequest, "Invalid JSON"),
             Some(ClientEvent::Other) => ServerEvent::error(ErrorCode::Unauthorized, "Send EVENT_HELLO first"),
             Some(ClientEvent::Hello { token }) => {
-                if let Some(user) = token.as_deref().and_then(|t| app.sessions.user_for_token(t)) {
-                    return Some(user);
-                }
-                let _ = ws.close(Some(close_frame(CloseCode::from(CLOSE_INVALID_TOKEN), "Invalid token"))).await;
+                let lookup = match token.as_deref() {
+                    Some(token) => sessions::user_for_token(&app.db, token, app.clock.now_ms()).await,
+                    None => Ok(None),
+                };
+                let frame = match lookup {
+                    Ok(Some(user)) => return Some(user),
+                    Ok(None) => close_frame(CloseCode::from(CLOSE_INVALID_TOKEN), "Invalid token"),
+                    // Not 4401: that tells the client to drop its token. A failed lookup is the
+                    // Hub's fault, so the client should just reconnect.
+                    Err(e) => {
+                        tracing::error!(error = %e, "session lookup failed");
+                        close_frame(CloseCode::Error, "Hub database error")
+                    }
+                };
+                let _ = ws.close(Some(frame)).await;
                 return None;
             }
         };

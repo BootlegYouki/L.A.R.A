@@ -18,7 +18,7 @@
 
 **Where things live:** API and events in [`contracts/`](../contracts/) (never edit in a feature PR), schema in [`contracts/schema/`](../contracts/schema/), UI rules in [`design-system/design-system.md`](../design-system/design-system.md), product behavior in [`docs/PRD.md`](../docs/PRD.md), all rules in [`rules/`](../rules/).
 
-**Status:** No application code yet. Contracts, theme files, bundled Nunito and the mock hub are ready.
+**Status:** MOBILE 1.1 provides the Android scaffold, bundled theme/Nunito, bilingual disconnected placeholder, and tested Hub URL policy. See [scaffold notes](./docs/scaffold.md) for entry points, build versions, and enforcement deferred to MOBILE 1.2/2.2. MOBILE 1.2 adds the startup discovery screen, NSD/UDP scanners, validated manual address entry, and portal reachability checks; see [discovery notes](./docs/discovery.md). Room and real classroom features are not implemented yet.
 
 ---
 
@@ -29,7 +29,7 @@
 1. **Strict Zero-Internet Policy:** Never import Firebase, Google Play APIs, external CDNs, Google Fonts web links, or remote telemetry. The application must operate with the phone's mobile data turned off and the router's WAN unplugged.
 2. **Budget Hardware Reality (Heap < 250MB):** The primary target devices are Philippine budget smartphones (Infinix Smart 8, TECNO Spark, realme Note 50) with 3GB to 4GB physical RAM.
    * Total JVM heap memory must remain **strictly under 250MB** during Hub-assisted mode.
-   * Devices with `< 6GB physical RAM` must **never** attempt to load GGUF weights into phone memory. They must stream tokens over WebSockets from the Local Hub.
+   * Every device streams tutor tokens over WebSockets from the Hub. Clients send the learner's message; only the Hub builds prompts and runs inference.
 3. **Database Stack Invariant:** Use **Android Room (SQLite)** with Kotlin Coroutines and StateFlow. **Prisma is strictly forbidden.**
 4. **Canonical Network Contracts (`contracts/`):**
    * Check [`../contracts/openapi.yaml`](../contracts/openapi.yaml) and [`../contracts/events/`](../contracts/events/) before writing any API call or DTO.
@@ -40,7 +40,7 @@
    * Implement screens with `androidx.compose.material3` components themed through `LaraTheme` (`design-system/mobile/`). No `Color(0xFF...)` in screens.
    * Touch targets must be **minimum 52dp (preferred 56dp)** for young learners (Grades 1 to 3 have the least fine motor control).
    * Text contrast must meet **minimum 4.5:1**.
-   * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` and translated to Filipino in `values-tl/strings.xml`.
+   * **Zero hardcoded strings:** All strings must be externalized in `mobile/app/src/main/res/values/strings.xml` (English only).
 6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
    ```bash
    python3 ../scripts/mock_hub.py
@@ -50,7 +50,7 @@
    python3 ../scripts/verify_invariants.py
    ```
 8. **Mandatory Documentation:** Every major feature PR must include updated architectural notes in [`mobile/docs/`](./docs/).
-9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error screen on launch. When disconnected from the classroom server (e.g. at home), learners must be able to view enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline. Homework photos queue locally as `'QUEUED_FOR_SYNC'`. If the device has ≥6GB RAM and has downloaded a GGUF model, Socratic AI works 100% offline at home too; otherwise, AI features gracefully indicate they unlock upon reconnecting to the classroom Hub.
+9. **Offline-First by Default (Home Study Mode):** The app must **never** show a blocking "No Connection" error screen on launch. When disconnected from the classroom server (e.g. at home), learners must be able to view enrolled classes, read announcements, study lesson text chunks, and watch downloaded videos completely offline. Homework photos queue locally as `'QUEUED_FOR_SYNC'`. When the Hub is unreachable, the tutor shows "The AI tutor needs the classroom Hub". Past chats remain readable offline. Remote/Suspension Mode carries the tutor stream through the Hub tunnel.
 
 
 ---
@@ -68,7 +68,7 @@
 * **MulticastLock Requirement:** Must acquire `WifiManager.createMulticastLock("lara_discovery_lock")` to prevent Android OS power-saving from dropping UDP discovery packets on budget phones.
 * **Hardware Camera:** CameraX (`androidx.camera`) with in-app rectangular framing overlay, downscaling to max 1080p, and compressing worksheets to JPEG < 800KB.
 * **Media Playback:** Jetpack Media3 (ExoPlayer) supporting HTTP 206 Byte-Range streaming and offline local disk caching.
-* **Pluggable Edge SLM:** `llama.cpp` JNI C++ bindings compiled for `arm64-v8a` executing candidate GGUF models (MiniCPM5-2B, Qwen2.5, Llama 3.2) only on phones with **≥ 6GB RAM**.
+* **Hub AI Client:** Sends learner messages and renders queue status and streamed hints over WebSocket.
 
 ---
 
@@ -88,10 +88,8 @@ The app switches navigation graphs depending on authenticated role:
 ### 2.3 Socratic AI Tutor (L.A.R.A AI)
 * Draggable `ModalBottomSheet` inside the lesson module viewer.
 * Bound strictly to teacher lesson text chunks. Never provides direct answers or homework solutions.
-* Bilingual toggle: English and conversational Filipino/Taglish.
-* **RAM Routing:**
-  * Physical RAM < 6GB: Streams hints via WebSocket from Hub FIFO queue (`heap < 250MB`).
-  * Physical RAM ≥ 6GB: Runs local GGUF model via `llama.cpp` JNI 100% offline.
+* Bilingual interface; tutor replies in English for the pilot.
+* **Hub stream:** Every phone uses the Hub FIFO queue over WebSocket (`heap < 250MB`). Quiz lockout removes the chat UI during an active attempt.
 
 ---
 
@@ -117,9 +115,6 @@ mobile/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── AndroidManifest.xml
-│   │   │   ├── cpp/                     # llama.cpp JNI ARM64 C++ bindings
-│   │   │   │   ├── CMakeLists.txt
-│   │   │   │   └── llama-jni.cpp
 │   │   │   ├── java/org/lara/app/
 │   │   │   │   ├── data/
 │   │   │   │   │   ├── local/           # Room Database, DAOs, Entities
@@ -127,7 +122,7 @@ mobile/
 │   │   │   │   │   ├── sync/            # DeltaSyncWorker, HomeworkUploadWorker
 │   │   │   │   │   └── repository/      # Repository implementations over local + remote
 │   │   │   │   ├── domain/              # Models, Repositories, UseCases
-│   │   │   │   ├── ai/                  # Tutor routing (local GGUF vs Hub), lockout checks
+│   │   │   │   ├── ai/                  # Hub chat client, quiz lockout checks
 │   │   │   │   └── ui/
 │   │   │   │       ├── navigation/      # StudentNavGraph, TeacherNavGraph
 │   │   │   │       ├── theme/           # Material 3 Color, Type, Shape tokens
@@ -135,7 +130,7 @@ mobile/
 │   │   │   │       └── screens/         # Discovery, Classwork, Quiz, Tutor, Camera
 │   │   │   └── res/
 │   │   │       ├── values/strings.xml   # Canonical English strings
-│   │   │       └── values-tl/strings.xml# Filipino localization strings
+
 └── docs/                               # Mandatory subsystem architectural documentation
 ```
 

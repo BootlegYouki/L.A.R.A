@@ -1,0 +1,6 @@
+Shared contract/mock tests: 66 passed (27.185 seconds).
+Offline/localization invariants: passed.
+Live MockSyncIntegrationTest: 1 passed, 0 skipped; announcement event to Room: 96 ms.
+Teacher POST /api/sync/push against isolated actual mock: HTTP 403 / FORBIDDEN.
+Identifier regression probe: expected <synthetic> but was <null> (failure reproduced).
+Final existing debug suite with both live mock tests enabled: 104 passed, 0 failed, 0 skipped.

@@ -50,9 +50,15 @@ paths:
               properties:
                 lrn_or_id:
                   type: string
+                  minLength: 1
+                  maxLength: 32
+                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
                   example: "123456789012"
                 full_name:
                   type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
                   example: "Juan dela Cruz"
                 pin:
                   type: string
@@ -64,12 +70,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
 
   /api/auth/login:
     post:
       summary: Log in with LRN/ID and 4-digit PIN
+      description: |
+        Rate limit per lrn_or_id: after 5 wrong PINs within 60 seconds, every further attempt for that
+        lrn_or_id (even with the right PIN) answers 429 TOO_MANY_ATTEMPTS with a Retry-After header (whole
+        seconds) until 60 seconds have passed since the oldest of those failures. A successful login clears
+        the count. The ADMIN account signs in only from the Hub PC itself (loopback, and not a request relayed
+        by the Remote/Suspension Mode tunnel, which also arrives on loopback); from anywhere else it answers
+        403 ADMIN_LOCAL_ONLY, checked before the PIN.
       security: []
       tags: [auth]
       requestBody:
@@ -94,6 +109,19 @@ paths:
                 $ref: "#/components/schemas/AuthSession"
         "401":
           $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          description: Too many wrong PINs for this lrn_or_id. Error code TOO_MANY_ATTEMPTS.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the next attempt is accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/auth/logout:
     post:
@@ -237,6 +265,7 @@ paths:
   /api/classrooms/join:
     post:
       summary: Request to enroll in a classroom using a 6-character Class Code
+      description: A new request, or one from a learner whose enrollment is REJECTED or REMOVED, becomes PENDING and emits EVENT_JOIN_REQUEST to the class's teachers. A PENDING or ACTIVE learner gets their current status back and nothing changes. An archived class answers 403 FORBIDDEN.
       tags: [classrooms]
       requestBody:
         required: true
@@ -272,6 +301,7 @@ paths:
   /api/classrooms/{id}:
     patch:
       summary: Rename a class or archive it (owning teacher only). An archived class is read-only for everyone and keeps all its grades.
+      description: While archived, a rename answers 403 FORBIDDEN unless the same request sets archived to false. Managing co-teachers stays allowed.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -299,6 +329,7 @@ paths:
   /api/classrooms/{id}/remove:
     post:
       summary: Remove an ACTIVE learner from the class (teacher). The enrollment becomes REMOVED, the learner gets EVENT_JOIN_APPROVAL with status REMOVED and loses access; their submissions and scores are kept on the Hub.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. ACTIVE becomes REMOVED. Repeating it on a REMOVED learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -367,6 +398,7 @@ paths:
   /api/classrooms/{id}/approve:
     post:
       summary: Approve a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL to the learner.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. PENDING becomes ACTIVE. Repeating it on an ACTIVE learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -379,6 +411,7 @@ paths:
   /api/classrooms/{id}/reject:
     post:
       summary: Reject a pending enrollment (teacher). Emits EVENT_JOIN_APPROVAL with status REJECTED.
+      description: Any teacher of the class (owner or co-teacher). An archived class answers 403 FORBIDDEN. PENDING becomes REJECTED. Repeating it on a REJECTED learner answers 200 with no change and no event; any other status answers 404 NOT_FOUND.
       tags: [classrooms]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -398,6 +431,12 @@ paths:
         If they do not match the Hub (different school Hub, restored backup), the response has `reset: true`: wipe the
         mirrored tables (keep rows still QUEUED_FOR_SYNC) and apply the response, which then starts from cursor 0.
         Commit the whole response and the new cursor in ONE local transaction.
+        The response also carries the caller's own enrollment rows for classes they no longer see, so a learner who was
+        removed receives their `REMOVED` enrollment on the next pull and stops showing that class. Likewise a removed
+        co-teacher receives that class's row once more, with `co_teacher_ids` no longer listing them.
+        When a class becomes visible to the caller after their cursor (their enrollment turned ACTIVE, or they were
+        added as a co-teacher), the response also carries that class's current rows from before the cursor, so the
+        class does not open empty. Apply them like any other rows (upsert by id).
       tags: [sync]
       requestBody:
         required: true
@@ -447,7 +486,7 @@ paths:
                     $ref: "#/components/schemas/PrivateCommentPush"
       responses:
         "200":
-          description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit.
+          description: Per-item receipts. Homework photos are uploaded separately via /api/assignments/{id}/submit. New or edited work for an archived class is REJECTED with reason FORBIDDEN; a retry of work the Hub saved before the archive is SYNCED.
           content:
             application/json:
               schema:
@@ -714,19 +753,49 @@ paths:
 
   /api/materials/{id}/download:
     get:
-      summary: Download the full material file
+      summary: Download the full material file. VIDEO downloads honor Range, If-Range and If-Match so Save for Home can resume after a Wi-Fi drop.
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/TokenQuery"
+        - name: Range
+          in: header
+          required: false
+          description: VIDEO only. Without it, or when If-Range no longer matches, the whole file is sent as 200.
+          schema:
+            type: string
+            example: "bytes=262144-"
+        - name: If-Range
+          in: header
+          required: false
+          description: The ETag from an earlier response. If the file changed, the Hub ignores Range and sends 200 with the whole new file.
+          schema:
+            type: string
+        - name: If-Match
+          in: header
+          required: false
+          description: "VIDEO only. How Android's and Chrome's download managers resume: the ETag from an earlier response, or `*`. If it no longer matches, the Hub answers 412 and the client starts over."
+          schema:
+            type: string
       responses:
         "200":
-          description: File bytes
+          description: "File bytes (the whole file). VIDEO responses carry `ETag` and `Accept-Ranges: bytes`."
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
+        "206":
+          description: VIDEO only. The requested byte range, with `Content-Range` and `ETag`.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "416":
+          description: "VIDEO only. The range starts past the end of the file; `Content-Range: bytes */<size>`."
+        "412":
+          description: "VIDEO only. If-Match no longer matches the file (it changed); the response carries the current `ETag`."
 
   /api/materials/{id}/chunks:
     get:
@@ -757,46 +826,27 @@ paths:
           schema:
             type: string
             example: "bytes=0-1048576"
-      responses:
-        "206":
-          description: Partial video content
-        "200":
-          description: Full video content
-
-  # ---------------------------------------------------------------- AI MODEL FILE
-  /api/model:
-    get:
-      summary: Describe the on-device AI model file this Hub offers (any signed-in user). It may be a smaller model than the one the Hub itself runs. Models are chosen by the AI evaluation (rules/socratic-ai-guardrails.md section 5).
-      tags: [model]
-      responses:
-        "200":
-          description: "The Hub ships with the model installed. `available` is false only if the model file is missing or failed to load."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ModelOffer"
-
-  /api/model/file:
-    get:
-      summary: Resumable download of the model file (HTTP Range, max 2.0 MB/s per client). Clients verify `sha256` from /api/model after the last byte.
-      tags: [model]
-      parameters:
-        - $ref: "#/components/parameters/TokenQuery"
-        - name: Range
+        - name: If-Range
           in: header
           required: false
+          description: As on the VIDEO download.
           schema:
             type: string
-            example: "bytes=1048576-"
+        - name: If-Match
+          in: header
+          required: false
+          description: "How Android's and Chrome's download managers resume: the ETag from an earlier response, or `*`. If it no longer matches, the Hub answers 412 and the client starts over."
+          schema:
+            type: string
       responses:
         "206":
-          description: Partial model file
+          description: Partial video content, with `Content-Range` and `ETag`
         "200":
-          description: Full model file
+          description: Full video content
         "404":
-          description: NOT_FOUND when the Hub has no model file configured
-        "416":
-          description: Range outside the file
+          description: Not a VIDEO material
+        "412":
+          description: "If-Match no longer matches the video; the response carries the current `ETag`."
 
   # ---------------------------------------------------------------- ASSIGNMENTS
   /api/assignments:
@@ -927,7 +977,15 @@ paths:
 
   /api/assignments/{id}/submit:
     post:
-      summary: Upload a homework photo or document (learner). Idempotent on (assignment_id, student_id); a resubmission replaces the file.
+      summary: Turn in homework (learner). Identical retries are idempotent; ungraded work can be replaced, but graded work cannot.
+      description: |
+        `turned_in_at` is the learner device's epoch-millisecond time when Turn in was pressed. The Hub
+        clamps future values to its current time; if omitted, the Hub arrival time is used. When `allow_late`
+        is false, a submission after `due_date` is refused with 409 LATE_SUBMISSION. An identical retry
+        (same submission_id and SHA-256 file hash) returns the stored submission unchanged, including after
+        grading or the due date. A different file after grading is refused with 409 ALREADY_GRADED.
+        A queued submission refused with either code is rejected permanently; the client shows the learner
+        why it was not turned in instead of retrying it indefinitely.
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -943,6 +1001,10 @@ paths:
                   type: string
                   format: uuid
                   description: Client-generated id so offline retries are idempotent
+                turned_in_at:
+                  type: integer
+                  format: int64
+                  description: Optional learner device epoch time in milliseconds when Turn in was pressed
                 file:
                   type: string
                   format: binary
@@ -954,6 +1016,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Submission"
+        "409":
+          $ref: "#/components/responses/Error"
 
   /api/assignments/{id}/submissions:
     get:
@@ -1324,7 +1388,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:
@@ -1406,8 +1470,12 @@ components:
 
     RosterEntry:
       type: object
-      required: [student_id, full_name, lrn, status]
+      required: [enrollment_id, student_id, full_name, lrn, status]
       properties:
+        enrollment_id:
+          type: string
+          format: uuid
+          description: The enrollment row's id, the same id sync delivers in `enrollments`, so a client can save the row before its first sync.
         student_id:
           type: string
           format: uuid
@@ -1510,20 +1578,6 @@ components:
         updated_at:
           type: integer
 
-    ModelOffer:
-      type: object
-      required: [available]
-      properties:
-        available:
-          type: boolean
-        file_name:
-          type: string
-        size_bytes:
-          type: integer
-          format: int64
-        sha256:
-          type: string
-          description: Lowercase hex SHA-256 of the whole file.
     MaterialChunk:
       type: object
       required: [id, material_id, order_index, text]
@@ -1625,7 +1679,7 @@ components:
 
     Submission:
       type: object
-      required: [id, assignment_id, student_id, file_type, submitted_at]
+      required: [id, assignment_id, student_id, file_type, submitted_at, received_at]
       properties:
         id:
           type: string
@@ -1641,6 +1695,10 @@ components:
           enum: ["IMAGE", "DOCUMENT"]
         submitted_at:
           type: integer
+          description: Effective learner turn-in time in epoch milliseconds (future values clamped by Hub)
+        received_at:
+          type: integer
+          description: Epoch milliseconds when the Hub stored the file
         score:
           type: integer
         teacher_feedback:
@@ -1807,6 +1865,14 @@ components:
         attempt_id:
           type: string
           format: uuid
+        quiz_id:
+          type: string
+          format: uuid
+          description: Optional. The quiz this attempt answers; lets a teacher's pull match scores to quizzes.
+        student_id:
+          type: string
+          format: uuid
+          description: Optional. The learner who made the attempt; lets a teacher's pull match scores to learners.
         score:
           type: [integer, "null"]
           description: Null for a learner while the teacher holds scores (release_scores_immediately false and the quiz is not CLOSED). Teachers always see it.

@@ -18,7 +18,7 @@ local.properties
 *.keystore
 *.p12
 
-# NDK & CMake C++ artifacts (llama.cpp JNI build directories)
+# NDK & CMake C++ build artifacts
 .cxx/
 **/CMakeCache.txt
 **/CMakeFiles/
@@ -83,7 +83,7 @@ out/
 
 # ------------------------------------------------------------------------------
 # 4. AI Models & Large Binary Weights
-# (Quantized GGUF files must be downloaded via captive portal, never committed to git!)
+# Hub GGUF model weights are installed separately, never committed to git.
 # ------------------------------------------------------------------------------
 *.gguf
 *.bin

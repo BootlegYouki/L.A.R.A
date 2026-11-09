@@ -1,0 +1,19 @@
+{
+  "application_id": "org.lara.app.sprint33video",
+  "artifacts": [
+    {
+      "path": "mobile/build/59-phone-apks/app-arm64-v8a-debug.apk",
+      "bytes": 27797775,
+      "sha256": "ab4745e2f3a5d787e702f7673b7ae71c58421a6de642510d47e70220bc67bd37"
+    },
+    {
+      "path": "mobile/build/59-phone-apks/app-debug-androidTest.apk",
+      "bytes": 1481091,
+      "sha256": "886c27cb27023e6cdd4068cc6c74588b6ec30100bf5408b817e316fa45e720d4"
+    }
+  ],
+  "synthetic_fixture": {
+    "bytes": 647947,
+    "sha256": "266f335dfe818363e83649b44f653e0dc1e1ca4c580f413ff5f19d03a9bf68d9"
+  }
+}

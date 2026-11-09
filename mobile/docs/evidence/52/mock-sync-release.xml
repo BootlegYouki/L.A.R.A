@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.lara.app.sync.MockSyncIntegrationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-31T13:21:21" hostname="DESKTOP-TIJCN7H" time="1.043">
+  <properties/>
+  <testcase name="actualMockPullQueueApprovalAndAnnouncementEventPersistIntoRoom" classname="org.lara.app.sync.MockSyncIntegrationTest" time="1.043"/>
+  <system-out><![CDATA[Local mock announcement event to Room: 58 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

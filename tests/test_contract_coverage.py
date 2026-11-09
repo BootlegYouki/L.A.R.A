@@ -14,10 +14,10 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(__file__))
 
 from scripts.mock_hub import MockHubServer  # noqa: E402
-from hub_client import call, login  # noqa: E402
+from hub_client import EXTERNAL_HUB, call, external_target, login  # noqa: E402
 
 HTTP, WS = 8090, 8091
-BASE = f"http://127.0.0.1:{HTTP}"
+BASE = external_target()[0] if EXTERNAL_HUB else f"http://127.0.0.1:{HTTP}"
 UUID = "00000000-0000-4000-8000-000000000000"
 METHODS = ("get", "post", "patch", "put", "delete")
 
@@ -25,16 +25,18 @@ METHODS = ("get", "post", "patch", "put", "delete")
 class TestContractCoverage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = MockHubServer(http_port=HTTP, ws_port=WS, udp_port=8898, broadcast_interval=5.0)
-        cls.server.start()
-        time.sleep(0.3)
+        if not EXTERNAL_HUB:
+            cls.server = MockHubServer(http_port=HTTP, ws_port=WS, udp_port=8898, broadcast_interval=5.0)
+            cls.server.start()
+            time.sleep(0.3)
         cls.admin = login(BASE, "ADMIN-0001")
         with open(os.path.join(ROOT, "contracts/openapi.yaml"), encoding="utf-8") as f:
             cls.spec = yaml.safe_load(f)
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.stop()
+        if not EXTERNAL_HUB:
+            cls.server.stop()
 
     def test_every_openapi_operation_is_served_by_the_mock_hub(self):
         missing = []
@@ -48,6 +50,7 @@ class TestContractCoverage(unittest.TestCase):
                     missing.append(f"{method.upper()} {path}")
         self.assertEqual(missing, [], "Mock hub lacks routes declared in contracts/openapi.yaml")
 
+    @unittest.skipIf(EXTERNAL_HUB, "inspects scripts/mock_hub.py ROUTES")
     def test_mock_hub_does_not_serve_undocumented_api_routes(self):
         from scripts.mock_hub import ROUTES
         documented = {(m.upper(), re.compile("^" + re.sub(r"\{[^}]+\}", "[^/]+", p) + "$"))
@@ -61,6 +64,7 @@ class TestContractCoverage(unittest.TestCase):
                 extra.append(f"{method} {sample}")
         self.assertEqual(extra, [], "Mock hub serves routes missing from contracts/openapi.yaml")
 
+    @unittest.skipIf(EXTERNAL_HUB, "greps scripts/mock_hub.py source")
     def test_every_event_schema_is_implemented_and_documented(self):
         with open(os.path.join(ROOT, "scripts/mock_hub.py"), encoding="utf-8") as f:
             hub_source = f.read()

@@ -22,9 +22,14 @@ Describe the tests executed to verify these changes:
 - [ ] Tested on local LAN / Wi-Fi router with WAN cable unplugged
 - [ ] Verified on 3GB/4GB physical Android phone or low-spec emulator
 - [ ] Verified offline persistence in Room/SQLite DB
+- [ ] Main flow run against the real Hub on `staging` (mobile/desktop; routes it answers with `501` listed under Not Verified)
 - [ ] Verified Material Design 3 accessibility (phones minimum 52dp, 56dp primary actions; desktop buttons 40px)
-- [ ] Verified bilingual text (English & Filipino)
+- [ ] Verified English text in resources
 - [ ] Screen matches `design-system/design-system.md`; any deviation (and why) is listed under Not Verified or in the description
+
+## Screens and real-device tests (required; `rules/team-workflow-and-prs.md` section 3 item 5)
+- **Screens:** screenshots of every changed screen, run by you against the mock hub or real Hub: normal, empty, offline (Hub unreachable); mobile also 200% font size. Or write "no screen changes".
+- **Real hardware:** if the change touches Wi-Fi/LAN, Hub discovery, several devices on one Hub, live pushes, camera, files, notifications, background sync, sleep or app killed, low memory or the Windows installer, a screenshot, video or log from a physical phone or second PC, naming the device model. Or write "nothing device-specific".
 
 ## Evidence
 Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.

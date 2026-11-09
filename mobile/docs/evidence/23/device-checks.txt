@@ -1,0 +1,13 @@
+﻿ADB installation: Success (after user enabled Install via USB).
+Final APK cold launch: Status ok; LaunchState COLD; TotalTime 615 ms; WaitTime 619 ms.
+Android API:
+36
+Airplane mode (1 means enabled):
+1
+Wi-Fi (0 means disabled):
+0
+App PID:
+14778
+App-specific crash buffer:
+Screen density:
+Physical density: 520

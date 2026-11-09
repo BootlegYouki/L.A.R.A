@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "WsHelloEvent",
-  "description": "First frame a client sends after the WebSocket opens. The Hub answers EVENT_HELLO_ACK or closes with code 4401. last_event_id lets the Hub replay missed events after a reconnect.",
+  "description": "First frame a client sends after the WebSocket opens. The Hub answers EVENT_HELLO_ACK or closes with code 4401. The Hub does not replay missed events; see README Rules.",
   "type": "object",
   "required": [
     "event",
@@ -13,9 +13,6 @@
       "const": "EVENT_HELLO"
     },
     "token": {
-      "type": "string"
-    },
-    "last_event_id": {
       "type": "string"
     }
   }

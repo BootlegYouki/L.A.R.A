@@ -1,0 +1,93 @@
+# Discovery: mDNS responder and UDP beacon
+
+> Step 1.1 (issue #1). Area rule: [`rules/networking-and-lan.md`](../../rules/networking-and-lan.md) §2.
+
+## 1. Purpose
+Let learner and teacher devices find the Hub on the classroom network with no configuration. Two
+independent mechanisms run side by side so one failing does not leave the Hub invisible:
+
+* **UDP subnet beacon** — a JSON heartbeat broadcast every 3 s to `255.255.255.255:8888`.
+* **mDNS / DNS-SD responder** — advertises the service `_lara._tcp.local` on the HTTP port (8080).
+
+Neither is required for a device to connect: every client also keeps a manual IP box, which is the
+fallback when a cheap router has AP / client isolation turned on and drops both broadcast and
+multicast (`rules/networking-and-lan.md` §4.2).
+
+## 2. Key files and entry points
+| File | Responsibility |
+| :--- | :--- |
+| `backend/src/discovery/mod.rs` | `lan_ip() -> Option<IpAddr>`: the one reachable LAN address (skips loopback/unspecified). Declares the two submodules. |
+| `backend/src/discovery/udp.rs` | `run(BeaconInfo, watch::Receiver<bool>)`: the beacon loop. `bind_beacon_socket(Ipv4Addr)`: the socket on the classroom adapter's address (#200). `BeaconInfo { name, http_port, ws_port }`. Consts `BEACON_PORT = 8888`, `BEACON_INTERVAL = 3 s`. |
+| `backend/src/discovery/mdns.rs` | `start(name, http_port, lan_ip) -> Option<MdnsResponder>`: registers `_lara._tcp` via `libmdns` under `announced_name(name)` (see section 4). The returned guard unregisters on drop. |
+| `backend/src/lib.rs` | `serve()` spawns the beacon as a task and holds the mDNS guard in `HubHandle`; both stop on `shutdown()`. |
+| `backend/src/config.rs` | `HubConfig.hub_name` (the beacon `name`), default `DEFAULT_HUB_NAME`. |
+| `backend/src/main.rs` | Headless runs may override the name with the `LARA_HUB_NAME` env var. |
+
+## 3. Data flow and state
+No database, no files, no events on the Broker. Discovery is read-only network output.
+
+**Beacon packet** (keys exactly as `scripts/mock_hub.py`, verified by a unit test in `udp.rs`):
+
+```json
+{"app": "lara", "version": "<CARGO_PKG_VERSION>", "name": "<hub name>", "ip": "<lan ip>", "http_port": 8080, "ws_port": 8081}
+```
+
+* `ip`, `http_port` and `ws_port` are re-read every tick, so a Hub PC plugged into the router *after*
+  startup begins advertising a reachable address within one 3 s interval without a restart.
+* `serve()` advertises the **actually bound** ports, not the configured ones, so a test hub on
+  ephemeral ports still broadcasts a correct address.
+* mDNS advertises only the single `lan_ip()` address (empty IP list when there is no LAN), so a
+  client never resolves an unreachable VirtualBox / Hyper-V / VPN address.
+
+## 4. Gotchas and edge cases
+* **Best-effort, never fatal.** A router that blocks broadcast or a busy `:5353` must not stop the
+  Hub. If the beacon socket cannot be opened, `udp::run` logs once and retries every tick;
+  `mdns::start` returns `None`; serving continues. This is why the manual IP box is mandatory on
+  every client.
+* **The beacon leaves through the classroom adapter (#200).** The socket is bound to `lan_ip()`,
+  not `0.0.0.0`. With `0.0.0.0`, Windows picked the adapter for `255.255.255.255` itself: both the
+  classroom adapter and VirtualBox's Host-Only adapter had an on-link route for it with metric 281,
+  and Windows chose VirtualBox, so phones on the router never received the beacon (only mDNS found
+  the Hub). A phone test from the same laptop showed a beacon sent from a socket bound to the LAN
+  address arrives and one bound to `0.0.0.0` does not. Hyper-V, Docker and VPN adapters can cause
+  the same. `lan_ip()` is re-read every tick, and the socket is re-bound when the address changes.
+* **No network yet.** When `lan_ip()` is `None` the beacon skips that tick quietly (an address-less
+  packet would only mislead). mDNS still starts and advertises whatever interfaces it finds.
+* **`libmdns` runs its own OS thread** with a current-thread runtime; it does not borrow the Hub's
+  Tokio runtime. The `MdnsResponder` guard owns the `Service` and `Responder`; field order drops the
+  registration before its host so no stale record lingers after a restart.
+* **The mDNS name has no dots (#167).** Phones show the mDNS instance name in their Hub list.
+  `libmdns` starts a new DNS label at every dot, so "L.A.R.A Hub" went out as `L` / `A` / `R` /
+  `A Hub` and phones listed the Hub as "L". `announced_name` drops the dots ("LARA Hub"); the
+  beacon, the window and everything else keep the full name. It also trims spaces, and a name left
+  empty (only dots or spaces, such as "...") falls back to "LARA Hub".
+* **The mDNS name is at most 62 bytes.** `libmdns` asserts that each label is under 63 bytes while
+  it registers the name, so a longer room name (no dots to split it) panicked inside `serve()` and
+  the Hub never started. `announced_name` cuts it on a character boundary instead.
+* **Why not `mdns-sd`:** tried for #167 and dropped. 0.21.6 does not match queries for a name with
+  dots, and its known-answer suppression made an Android 13 phone drop the Hub every 2 minutes
+  (the phone sends an impossible known-answer TTL). `libmdns` answers every query, so it has
+  neither problem.
+* **Dropped packets are normal** (AP isolation, transient routing). A send error is logged at
+  `debug` only, never at warn, so a flaky adapter does not spam the console every 3 seconds.
+* **Android clients** must hold a `WifiManager.MulticastLock` to receive these UDP packets at all
+  (`rules/networking-and-lan.md` §4.3); that is the mobile team's responsibility, not the Hub's.
+* **Firewall:** inbound UDP 8888 (and TCP 8080/8081) is opened by the installer / dashboard auto-fix
+  (step 1.4); without it Windows "Public" profile blocks the beacon. See `network/firewall_check.rs`.
+
+## 5. Tests
+* `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, a
+  name with dots arrives whole, the port and interval match the rules file, and the beacon socket is
+  bound to the address it is given (never `0.0.0.0`), may broadcast, and sends from that address
+  (#200; loopback stands in for the classroom adapter).
+* Manual check for #200: on a Hub PC with VirtualBox's Host-Only adapter up and mDNS blocked, a phone
+  on the router lists the Hub from the beacon alone.
+* `discovery/mdns.rs` unit tests: the announced name drops the dots, a name of only dots or spaces
+  falls back to "LARA Hub", and a long name is cut below the label limit without splitting a
+  character.
+* `tests/scaffold.rs::hub_with_discovery_starts_and_stops_cleanly`: `serve()` with the beacon task
+  and mDNS responder still serves HTTP and shuts down cleanly.
+
+Receiving a live broadcast packet is not asserted in CI: loopback broadcast reception and a fixed
+`:8888` collide across parallel test hubs and vary by OS. The serialization unit test is the
+authoritative check on the wire shape.

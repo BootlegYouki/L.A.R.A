@@ -1,0 +1,113 @@
+//! Serving a stored upload. `ServeFile` streams it off disk (never into memory) and answers
+//! `Range` with `206` and an unsatisfiable range with `416`. Every file sent here counts against the
+//! signed-in user's 2.0 MB/s (`services::bandwidth`, step 3.2): the video stream, material downloads
+//! and homework files alike.
+//!
+//! `ServeFile` ignores `If-Range`, so for a resumable download the Hub checks it here (contract
+//! #259): a client resuming a file that changed since its first request gets the whole new file.
+//! `ServeFile` checks `If-Match` against its own tag, which clients never see (the Hub sends
+//! `stored_etag` instead), so the Hub checks that one here too.
+
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use axum::extract::Request;
+use axum::http::{header, HeaderValue, StatusCode};
+use axum::response::{IntoResponse, Response};
+use mime::Mime;
+use sha2::{Digest, Sha256};
+use tower::ServiceExt;
+use tower_http::services::ServeFile;
+
+use crate::error::ApiError;
+use crate::services::bandwidth::{self, Allowance};
+
+/// How a download treats `Range` (contract #259).
+pub enum Ranges {
+    /// `ServeFile`'s own handling (submission files; the contract says nothing more).
+    AsServed,
+    /// VIDEO downloads: `Range` and `If-Range` against this strong `ETag`, so Save for Home resumes.
+    Resumable(HeaderValue),
+    /// Every other material download: the whole file as `200`, whatever `Range` asks for.
+    WholeFile,
+}
+
+/// A strong `ETag` for a stored file. Stored files are never changed in place (each upload gets a
+/// new name), so the name identifies the bytes. Hashed, so the storage name stays private.
+pub fn stored_etag(stored: &str) -> HeaderValue {
+    let digest = Sha256::digest(stored.as_bytes());
+    let hex: String = digest[..16].iter().map(|b| format!("{b:02x}")).collect();
+    HeaderValue::from_str(&format!("\"{hex}\"")).expect("hex in quotes is a valid header value")
+}
+
+/// `nosniff` keeps a browser from reading a file as anything but its declared type.
+pub async fn serve_stored(
+    path: PathBuf,
+    content_type: &str,
+    mut request: Request,
+    id: &str,
+    ranges: Ranges,
+    allowance: Arc<Allowance>,
+) -> Result<Response, ApiError> {
+    let mime: Mime = content_type.parse().map_err(|_| ApiError::internal("Unknown file type"))?;
+    let headers = request.headers_mut();
+    match &ranges {
+        Ranges::AsServed => {}
+        Ranges::Resumable(etag) => {
+            // RFC 9110 13.1.5: a validator that no longer matches means "send the whole file".
+            if headers.get(header::IF_RANGE).is_some_and(|sent| sent != etag) {
+                headers.remove(header::RANGE);
+            }
+            headers.remove(header::IF_RANGE);
+            // Android's download manager and Chrome resume with `If-Match: <the tag we sent>`. Left to
+            // `ServeFile`, that is compared with its own tag and always fails with 412 (seen on a phone
+            // in step 3.2). RFC 9110 13.1.1: a stale tag is 412, so the client starts over.
+            if let Some(sent) = headers.remove(header::IF_MATCH) {
+                if !if_match_passes(&sent, etag) {
+                    let mut refused = StatusCode::PRECONDITION_FAILED.into_response();
+                    refused.headers_mut().insert(header::ETAG, etag.clone());
+                    return Ok(refused);
+                }
+            }
+        }
+        Ranges::WholeFile => {
+            headers.remove(header::RANGE);
+            headers.remove(header::IF_RANGE);
+        }
+    }
+    let response = match ServeFile::new_with_mime(&path, &mime).oneshot(request).await {
+        Ok(response) => response,
+        Err(_) => return Err(missing(id)),
+    };
+    // The row is there but its file is not (deleted by hand, or a restore without storage/).
+    if response.status() == StatusCode::NOT_FOUND {
+        return Err(missing(id));
+    }
+    let mut response = response.into_response();
+    let headers = response.headers_mut();
+    headers.insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    match ranges {
+        Ranges::AsServed => {}
+        // Replaces `ServeFile`'s own metadata tag, so `If-Range` is compared with what clients got.
+        Ranges::Resumable(etag) => {
+            headers.insert(header::ETAG, etag);
+        }
+        Ranges::WholeFile => {
+            headers.insert(header::ACCEPT_RANGES, HeaderValue::from_static("none"));
+            headers.remove(header::ETAG);
+        }
+    }
+    let (parts, body) = response.into_parts();
+    Ok(Response::from_parts(parts, bandwidth::throttle(body, allowance)))
+}
+
+/// `If-Match` (RFC 9110 13.1.1): `*`, or a list in which one tag is ours. Strong comparison, so a
+/// weak `W/` tag never matches.
+fn if_match_passes(sent: &HeaderValue, etag: &HeaderValue) -> bool {
+    sent.to_str().is_ok_and(|list| list.split(',').map(str::trim).any(|tag| tag == "*" || tag.as_bytes() == etag.as_bytes()))
+}
+
+fn missing(id: &str) -> ApiError {
+    tracing::warn!(id, "a stored file is missing from storage/");
+    ApiError::not_found("File not found")
+}

@@ -1,0 +1,6 @@
+Final full mock-enabled run: BUILD SUCCESSFUL in 2m38s.
+Debug: 146 tests, 0 failures, 0 errors, 0 skipped.
+Release: 146 tests, 0 failures, 0 errors, 0 skipped.
+Lint: 0 errors, 24 existing warnings.
+Shared checks: 66 passed; invariants passed.
+Final phone scenarios: 2 passed in 20.437s; live exactly-once reconnect and offline cold launch passed.

@@ -1,28 +1,23 @@
 ---
 name: lara-ai-runtime
-description: Running small GGUF models with llama.cpp for the L.A.R.A Socratic tutor on three paths: llama-server on the Hub (slots, queue, streaming), a sidecar on desktop, and JNI on 6 GB+ Android phones. Context and memory budgeting, grounding, quiz lockout and how to record evidence. Use when working on anything under an ai/ folder or the AI issues.
+description: Running GGUF models with llama-server on the Hub for the L.A.R.A Socratic tutor (slots, queue, streaming). Context and memory budgeting, grounding, quiz lockout and how to record evidence. Use when working on anything under an ai/ folder or the AI issues.
 ---
 
-# L.A.R.A AI runtime: llama.cpp on weak hardware
+# L.A.R.A AI runtime: Hub llama-server
 
 Read `rules/socratic-ai-guardrails.md` first. It decides **what** the tutor may say; this skill covers **how** to run the model. AI quality on weak hardware is the project's biggest risk, so measure everything and write the numbers down.
 
 ## 0. Three facts
 
 * **The model is not chosen yet.** It comes from the evaluation in `rules/socratic-ai-guardrails.md` section 5, recorded as `MODEL_PATH` in `docs/benchmarks/ai_model_evaluation.md`. Never hard-code a model file name, a slot count or a tokens-per-second figure.
-* **One behavior on every path:** never give the final answer, one small clue then one leading question, reply in the learner's language, ground in the teacher's lesson chunks, and say "I cannot help with that, go back to your lesson" when the lesson does not cover it.
-* **Quiz lockout everywhere:** while the learner has an `IN_PROGRESS` attempt the Hub rejects the request (`QUIZ_IN_PROGRESS`) and clients never compose the chat UI or call a local model.
+* **Hub tutor behavior:** never give the final answer, one small clue then one leading question, reply in English for the pilot, ground in the teacher's lesson chunks, and say "I cannot help with that, go back to your lesson" when the lesson does not cover it.
+* **Quiz lockout everywhere:** while the learner has an `IN_PROGRESS` attempt the Hub rejects the request (`QUIZ_IN_PROGRESS`) and clients never compose the chat UI.
 
-## 1. Routing
+## 1. Hub-only routing
 
-| Device | Path |
-|---|---|
-| Phone under 6 GB, or a phone whose measured RAM says so | Hub over WebSocket. Never load a model on the phone. |
-| Phone with 6 GB or more, model file present | JNI, fully offline |
-| Laptop with 4 GB or more, model file present | Sidecar, fully offline |
-| Anything else, or the model file is missing | Hub over WebSocket |
+Every phone, laptop and lab PC sends the learner's message through `EVENT_AI_CHAT_REQUEST` and renders `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. Only the Hub builds prompts and runs inference; there is no client RAM check or model download. The phone heap remains under 250 MB on the 3 to 4 GB target.
 
-Android reports less RAM than the number on the box, so a 6 GB phone can read about 5.5 GB. Measure the real phones and set the gate from the readings.
+When the Hub is unreachable, clients show "The AI tutor needs the classroom Hub" and may read past chats from local `ai_chat_messages`. Other features keep working offline. Remote/Suspension Mode carries the same stream through the Hub tunnel. If the Hub model is missing or fails to load, return `AI_NOT_AVAILABLE`; AI remains optional.
 
 ## 2. `llama-server` on the Hub
 
@@ -36,24 +31,10 @@ Android reports less RAM than the number on the box, so a 6 GB phone can read ab
 
 ## 3. Prompt and grounding
 
-* Select chunks from `material_chunks` by `order_index` and `token_estimate` to fit about 2048 tokens. Files with no extracted text have no chunks: the answer is the "cannot help with that file" message, not an invented hint.
-* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. Load it byte for byte on every path (the Hub reads it at start; Android and desktop copy it into the app at build time) and fill `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
-* Test each builder against the same learner prompts (`server/ai_eval/`), in English, Filipino and Taglish, and add a regression test when you fix a leak.
+* Only the Hub selects chunks using `rules/socratic-ai-guardrails.md` section 3.1 and includes recent history from its `ai_chat_messages` using section 3.2. Files with no extracted text have no chunks: return the lesson-text-unavailable response rather than inventing a hint.
+* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. Only the Hub loads it byte for byte at start and fills `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
+* Test the Hub builder against learner prompts (`server/ai_eval/`), with English replies even to Filipino and Taglish messages, and add a regression test when you fix a leak.
 
-## 4. Android (JNI, arm64-v8a only)
-
-* One inference thread. Set the thread count to the phone's performance cores, not all cores.
-* Load the model with `mmap` (the default) so pages can be evicted under pressure. The Java heap number does not include native memory, but the Android low-memory killer counts it. Watch **PSS** with `adb shell dumpsys meminfo org.lara.app`.
-* Context window 2048. Stream tokens to the UI through a `Flow`.
-* Unload on `onTrimMemory`. Never load below the measured RAM gate.
-* Test on a real 6 GB+ phone and record tokens per second and peak memory in `mobile/docs/`. An emulator cannot tell you this.
-
-## 5. Desktop sidecar
-
-* Ship `llama-server` as a Tauri sidecar (`bundle.externalBin`, with the target-triple suffix in the file name), run it on a free port bound to `127.0.0.1`, and kill it when the app exits.
-* Prefer `llama-server` over parsing `llama-cli` text: the stream then has the same format as the Hub path, so one client can read both.
-* Fall back to the Hub stream when the laptop has under 4 GB or the model file is missing.
-
-## 6. Evidence to record
+## 4. Evidence to record
 
 For every model and slot count: pass rate per criterion from the evaluation, time to first token, tokens per second, peak RAM, and the hardware it ran on. Label results "developer-scored" as the rules require, and write them to `docs/benchmarks/`. Do not say "good enough" without these numbers.

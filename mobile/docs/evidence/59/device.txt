@@ -1,0 +1,8 @@
+List of devices attached
+
+INFO         |      Ok: Disk space requirements to run avd: `LARA_Test23` are met
+ERROR        | x86_64 emulation currently requires hardware acceleration!
+CPU acceleration status: Android Emulator hypervisor driver is not installed on this machine
+More info on configuring VM acceleration on Windows:
+https://developer.android.com/studio/run/emulator-acceleration#vm-windows
+General information on acceleration: https://developer.android.com/studio/run/emulator-acceleration.
