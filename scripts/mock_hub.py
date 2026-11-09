@@ -22,6 +22,7 @@ import base64
 import hashlib
 import http.server
 import json
+import os
 import re
 import socket
 import socketserver
@@ -35,7 +36,9 @@ WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 GRACE_MS = 60_000
 CLASS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 ADMIN_ID = "ADMIN-0001"
-MOCK_VIDEO_SIZE = 1024 * 1024
+# A real 30 s H.264 clip so clients can decode, seek and save it, not just count bytes.
+MOCK_VIDEO = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lesson-video.mp4"), "rb").read()
+MOCK_VIDEO_SIZE = len(MOCK_VIDEO)
 
 
 def now_ms():
@@ -64,6 +67,7 @@ class HubState:
         self.comments = {}
         self.materials = {}
         self.chunks = {}
+        self.material_files = {}
         self.assignments = {}
         self.submissions = {}
         self.submission_files = {}
@@ -931,6 +935,7 @@ def material_create(req):
          "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
          "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
     STATE.materials[mid] = m
+    STATE.material_files[mid] = data
     STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
         chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
@@ -942,10 +947,44 @@ def material_create(req):
 
 @route("GET", r"/api/materials/([^/]+)/download")
 def material_download(req):
+    m = visible_material(req)
+    if m["file_type"] == "VIDEO":
+        return byte_range(req, m, video_bytes(m), len(video_bytes(m)))
+    return Raw(STATE.material_files.get(m["id"], b"%PDF-1.4 mock lesson handout\n"), "application/octet-stream")
+
+
+def visible_material(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
-    member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
-    return Raw(b"%PDF-1.4 mock lesson handout\n", "application/octet-stream")
+    m = STATE.materials[req.groups[0]]
+    member_of(req.user, m["classroom_id"])
+    return m
+
+
+def video_bytes(m):
+    return STATE.material_files.get(m["id"]) or MOCK_VIDEO
+
+
+def byte_range(req, m, data, default_span):
+    """Range per RFC 9110: no header (or a stale If-Range) sends the whole file as 200."""
+    size, header = len(data), req.handler.headers.get("Range")
+    etag = f'"{m["id"]}-{m["updated_at"]}"'
+    base = {"Accept-Ranges": "bytes", "ETag": etag}
+    if_range = req.handler.headers.get("If-Range")
+    if not header or not header.startswith("bytes=") or (if_range and if_range != etag):
+        if default_span >= size:
+            return Raw(data, "video/mp4", 200, base)
+        header = "bytes=0-"
+    lo, _, hi = header[6:].partition("-")
+    try:
+        start = int(lo) if lo else max(size - int(hi), 0)
+        end = int(hi) if hi and lo else min(start + default_span - 1, size - 1)
+    except ValueError:
+        start, end = size, size
+    if start >= size or end < start:
+        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    return Raw(data[start:end + 1], "video/mp4", 206, {**base, "Content-Range": f"bytes {start}-{end}/{size}"})
 
 
 @route("GET", r"/api/materials/([^/]+)/chunks")
@@ -958,17 +997,10 @@ def material_chunks(req):
 
 @route("GET", r"/api/materials/([^/]+)/stream")
 def material_stream(req):
-    header = req.handler.headers.get("Range")
-    start, end = 0, min(65535, MOCK_VIDEO_SIZE - 1)
-    if header and header.startswith("bytes="):
-        lo, _, hi = header[6:].partition("-")
-        start = int(lo) if lo else 0
-        end = int(hi) if hi else min(start + 65535, MOCK_VIDEO_SIZE - 1)
-    if start >= MOCK_VIDEO_SIZE:
-        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{MOCK_VIDEO_SIZE}"})
-    end = min(end, MOCK_VIDEO_SIZE - 1)
-    return Raw(b"0" * (end - start + 1), "video/mp4", 206,
-               {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_VIDEO_SIZE}"})
+    m = visible_material(req)
+    if m["file_type"] != "VIDEO":
+        raise ApiError(404, "NOT_FOUND", "Not a video")
+    return byte_range(req, m, video_bytes(m), 65536)
 
 
 # ---- assignments
