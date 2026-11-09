@@ -19,10 +19,13 @@ use crate::db::materials::{self, Attachment, NewMaterial};
 use crate::error::ApiError;
 use crate::models::sync::{Material, MaterialChunk};
 use crate::services::class_access;
-use crate::storage::StorageKind;
+use crate::services::document_parser::{self, ChunkDraft};
+use crate::storage::{FileFormat, StorageKind};
 use crate::AppState;
 
 const FILE_TYPES: [&str; 3] = ["VIDEO", "DOCUMENT", "WORKSHEET"];
+/// Lesson text extraction (3.1) stops here, so a huge or hostile handout still uploads, with no chunks.
+const EXTRACT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -60,9 +63,11 @@ async fn upload(
     };
     let size = i64::try_from(file.size).map_err(|_| ApiError::file_too_large())?;
     let stored = app.storage.commit(file, StorageKind::Material).await.map_err(storage_error)?;
+    let id = uuid::Uuid::new_v4().to_string();
+    // Lesson text for the AI tutor, before the write lock: parsing a long PDF takes CPU time.
+    let chunks = if video { Vec::new() } else { extract(&app, &stored.relative, format, &form.fields["title"], &id).await };
 
     let classroom_id = form.fields["classroom_id"].as_str();
-    let id = uuid::Uuid::new_v4().to_string();
     let now = app.clock.now_ms();
     let mut tx = begin_immediate(&app.db).await?;
     class_access::require_teacher(&mut tx, &user, classroom_id).await?;
@@ -87,9 +92,35 @@ async fn upload(
         announcement_id: form.field("announcement_id"),
     };
     let material = materials::insert(&mut tx, &new, now).await?;
+    material_chunks::insert_all(&mut tx, &id, classroom_id, &chunks, now).await?;
     tx.commit().await?;
     stored.keep();
     Ok(Json(material))
+}
+
+/// Never fails the upload (#10): no text, an unreadable file, a parser panic or the timeout all give
+/// zero chunks. Logs the material id, chunk count and time only, never the text.
+async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, material_id: &str) -> Vec<ChunkDraft> {
+    if !matches!(format, FileFormat::Pdf | FileFormat::Docx) {
+        return Vec::new();
+    }
+    let Some(path) = app.storage.path(stored) else { return Vec::new() };
+    let title = title.to_owned();
+    let started = std::time::Instant::now();
+    let task = tokio::task::spawn_blocking(move || document_parser::extract_chunks(&path, format, &title));
+    let chunks = match tokio::time::timeout(EXTRACT_TIMEOUT, task).await {
+        Ok(Ok(chunks)) => chunks,
+        Ok(Err(_)) => {
+            tracing::warn!(material_id, "lesson text extraction stopped unexpectedly");
+            Vec::new()
+        }
+        Err(_) => {
+            tracing::warn!(material_id, seconds = EXTRACT_TIMEOUT.as_secs(), "lesson text extraction timed out");
+            Vec::new()
+        }
+    };
+    tracing::info!(material_id, chunks = chunks.len(), ms = started.elapsed().as_millis() as u64, "lesson text extracted");
+    chunks
 }
 
 /// Any member of the class, also while it is archived (read-only, not hidden). The contract and the
