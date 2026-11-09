@@ -1,5 +1,6 @@
 //! Step 3.2 (#8): `GET /api/materials/{id}/stream` serves a lesson video in byte ranges, so a player
-//! can seek anywhere, and every file download is capped at 2.0 MB/s per device (PRD FR-3.3, FR-3.4).
+//! can seek anywhere, and every file download is capped at 2.0 MB/s per signed-in user (PRD FR-3.3,
+//! FR-3.4, rules/networking-and-lan.md section 3).
 
 mod common;
 
@@ -9,7 +10,7 @@ use std::time::{Duration, Instant};
 
 use common::uploads::{material_form, Class, MP4};
 
-/// The contract's cap per device, and what a device may send at once after a pause.
+/// The cap per signed-in user, and what a learner may get at once after a pause.
 const RATE: f64 = 2_000_000.0;
 const BURST: f64 = 64.0 * 1024.0;
 
@@ -121,56 +122,67 @@ fn video_of(len: usize) -> Vec<u8> {
     video
 }
 
-/// The least time a device can take to get `bytes`: its first 64 KiB at once, the rest at 2 MB/s.
+/// The least time one learner can take to get `bytes`: 64 KiB at once, the rest at 2 MB/s.
 fn least_time(bytes: usize) -> Duration {
     Duration::from_secs_f64((bytes as f64 - BURST).max(0.0) / RATE)
 }
 
 /// A device on the LAN, by its address. Every 127.0.0.x is the Hub PC's own loopback, but the Hub
-/// sees each as a different device, as it would see each phone's address on the router.
+/// sees each as a different address, as it would see each phone on the router.
 fn device(last: u8) -> IpAddr {
     IpAddr::V4(Ipv4Addr::new(127, 0, 0, last))
 }
 
-/// A whole-file GET from `from`: how long it took and how many bytes arrived.
-async fn fetch(class: &Class, from: IpAddr, path: &str) -> (Duration, usize) {
+/// A whole-file GET by `token`'s learner from `from`: how long it took and how many bytes arrived.
+async fn fetch(class: &Class, from: IpAddr, token: &str, path: &str) -> (Duration, usize) {
     let client = reqwest::Client::builder().local_address(from).build().unwrap();
     let url = format!("http://127.0.0.1:{}{path}", class.hub.http_port());
     let started = Instant::now();
-    let res = client.get(url).bearer_auth(&class.learner_token).send().await.unwrap();
+    let res = client.get(url).bearer_auth(token).send().await.unwrap();
     assert!(res.status().is_success(), "{}", res.status());
     let bytes = res.bytes().await.unwrap().len();
     (started.elapsed(), bytes)
 }
 
-/// Generous, for a slow CI machine: the cap must not make a device much slower than 2 MB/s.
+/// `n` more learners in the class, approved; their tokens.
+async fn learners(class: &Class, n: usize) -> Vec<String> {
+    let mut tokens = Vec::new();
+    for i in 0..n {
+        tokens.push(class.add_learner(&format!("1234567899{i:02}"), true).await.1);
+    }
+    tokens
+}
+
+/// Generous, for a slow CI machine: the cap must not make a learner much slower than 2 MB/s.
 fn at_most_double(time: Duration) -> Duration {
     time * 2 + Duration::from_secs(1)
 }
 
 #[tokio::test]
-async fn one_device_gets_at_most_2_mb_a_second() {
+async fn one_learner_gets_at_most_2_mb_a_second() {
     let class = Class::start().await;
     let len = 1_000_000;
     let id = upload_video(&class, &video_of(len)).await;
-    let (took, got) = fetch(&class, device(1), &stream_path(&id)).await;
+    let (took, got) = fetch(&class, device(1), &class.learner_token, &stream_path(&id)).await;
     assert_eq!(got, len);
     assert!(took >= least_time(len), "1 MB in {took:?}, faster than 2 MB/s");
     assert!(took < at_most_double(least_time(len)), "1 MB in {took:?}, far slower than 2 MB/s");
     class.hub.stop().await;
 }
 
-/// A player often opens a second connection to seek; it shares the device's 2 MB/s, not doubles it.
+/// A player often opens a second connection to seek; it shares the learner's 2 MB/s, not doubles it
+/// (rules/networking-and-lan.md section 3: per signed-in user, not per connection).
 #[tokio::test]
-async fn two_streams_on_one_device_share_its_2_mb_a_second() {
+async fn two_streams_of_one_learner_share_2_mb_a_second() {
     let class = Class::start().await;
     let len = 600_000;
     let path = stream_path(&upload_video(&class, &video_of(len)).await);
+    let token = class.learner_token.clone();
     let started = Instant::now();
-    let (a, b) = tokio::join!(fetch(&class, device(1), &path), fetch(&class, device(1), &path));
+    let (a, b) = tokio::join!(fetch(&class, device(1), &token, &path), fetch(&class, device(1), &token, &path));
     let took = started.elapsed();
     assert_eq!((a.1, b.1), (len, len));
-    assert!(took >= least_time(2 * len), "2 x 600 KB in {took:?}, faster than 2 MB/s for the device");
+    assert!(took >= least_time(2 * len), "2 x 600 KB in {took:?}, faster than 2 MB/s for the learner");
     class.hub.stop().await;
 }
 
@@ -181,33 +193,67 @@ async fn a_download_shares_the_allowance_with_a_stream() {
     let len = 600_000;
     let id = upload_video(&class, &video_of(len)).await;
     let (stream, download) = (stream_path(&id), format!("/api/materials/{id}/download"));
+    let token = class.learner_token.clone();
     let started = Instant::now();
-    let (a, b) = tokio::join!(fetch(&class, device(1), &stream), fetch(&class, device(1), &download));
+    let (a, b) = tokio::join!(fetch(&class, device(1), &token, &stream), fetch(&class, device(1), &token, &download));
     let took = started.elapsed();
     assert_eq!((a.1, b.1), (len, len));
     assert!(took >= least_time(2 * len), "a stream and a download of 600 KB each in {took:?}");
     class.hub.stop().await;
 }
 
-/// Issue #8: "20 simultaneous video streams do not exceed 40 MB/s total router bandwidth". Each
-/// device keeps its own 2 MB/s, so one device does not slow the others.
+/// Per signed-in user: the same learner on a phone and a desktop still has 2 MB/s in all.
 #[tokio::test]
-async fn twenty_devices_streaming_at_once_stay_within_40_mb_a_second() {
+async fn one_learner_on_two_devices_shares_2_mb_a_second() {
+    let class = Class::start().await;
+    let len = 600_000;
+    let path = stream_path(&upload_video(&class, &video_of(len)).await);
+    let token = class.learner_token.clone();
+    let started = Instant::now();
+    let (a, b) = tokio::join!(fetch(&class, device(2), &token, &path), fetch(&class, device(3), &token, &path));
+    let took = started.elapsed();
+    assert_eq!((a.1, b.1), (len, len));
+    assert!(took >= least_time(2 * len), "one learner on two devices got 2 x 600 KB in {took:?}");
+    class.hub.stop().await;
+}
+
+/// Learners who share one address (a shared phone, or a classroom router that translates addresses
+/// so every phone looks the same to the Hub) each keep their own 2 MB/s.
+#[tokio::test]
+async fn two_learners_on_one_address_each_get_2_mb_a_second() {
+    let class = Class::start().await;
+    let len = 600_000;
+    let path = stream_path(&upload_video(&class, &video_of(len)).await);
+    let other = learners(&class, 1).await.remove(0);
+    let mine = class.learner_token.clone();
+    let started = Instant::now();
+    let (a, b) = tokio::join!(fetch(&class, device(1), &mine, &path), fetch(&class, device(1), &other, &path));
+    let took = started.elapsed();
+    assert_eq!((a.1, b.1), (len, len));
+    assert!(took < least_time(2 * len), "two learners on one address took {took:?}, as if they shared 2 MB/s");
+    class.hub.stop().await;
+}
+
+/// Issue #8: "20 simultaneous video streams do not exceed 40 MB/s total router bandwidth". Each
+/// learner keeps their own 2 MB/s, so one does not slow the others.
+#[tokio::test]
+async fn twenty_learners_streaming_at_once_stay_within_40_mb_a_second() {
     let class = Class::start().await;
     let len = 1_000_000;
     let path = stream_path(&upload_video(&class, &video_of(len)).await);
+    let tokens = learners(&class, 20).await;
     let started = Instant::now();
-    let streams = (2..=21).map(|last| fetch(&class, device(last), &path));
+    let streams = tokens.iter().zip(2..=21).map(|(token, last)| fetch(&class, device(last), token, &path));
     let results = futures_util::future::join_all(streams).await;
     let took = started.elapsed();
     let total: usize = results.iter().map(|(_, bytes)| bytes).sum();
     assert_eq!(total, 20 * len);
     for (each, _) in &results {
-        assert!(*each >= least_time(len), "a device got 1 MB in {each:?}, faster than 2 MB/s");
+        assert!(*each >= least_time(len), "a learner got 1 MB in {each:?}, faster than 2 MB/s");
     }
     let mb_per_second = total as f64 / took.as_secs_f64() / 1e6;
-    println!("20 devices: {total} bytes in {took:?}, {mb_per_second:.1} MB/s in total");
-    assert!(total as f64 <= 20.0 * (RATE * took.as_secs_f64() + BURST), "{mb_per_second:.1} MB/s for 20 devices");
-    assert!(took < at_most_double(least_time(len)), "20 devices took {took:?}: they slowed each other down");
+    println!("20 learners: {total} bytes in {took:?}, {mb_per_second:.1} MB/s in total");
+    assert!(total as f64 <= 20.0 * (RATE * took.as_secs_f64() + BURST), "{mb_per_second:.1} MB/s for 20 learners");
+    assert!(took < at_most_double(least_time(len)), "20 learners took {took:?}: they slowed each other down");
     class.hub.stop().await;
 }

@@ -27,7 +27,7 @@ use tokio::task::JoinHandle;
 use auth::limiter::LoginLimiter;
 use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
-use services::bandwidth::Bandwidth;
+use services::bandwidth::BandwidthLimiter;
 pub use config::HubConfig;
 use storage::Storage;
 use websocket::broker::Broker;
@@ -49,8 +49,9 @@ pub struct AppState {
     pub releases_dir: Arc<std::path::Path>,
     /// `<data_dir>/storage`: lesson files and homework (`storage`, step 3.3).
     pub storage: Arc<Storage>,
-    /// 2.0 MB/s per device across every file download (`services::bandwidth`, step 3.2).
-    pub bandwidth: Arc<Bandwidth>,
+    /// 2.0 MB/s per signed-in user across every file download, per device on the portal
+    /// (`services::bandwidth`, step 3.2).
+    pub bandwidth: Arc<BandwidthLimiter>,
     /// How many handouts may be read for lesson text at once (`routes::materials`, step 3.1).
     pub parse_slots: Arc<tokio::sync::Semaphore>,
 }

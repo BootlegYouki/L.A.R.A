@@ -1,15 +1,15 @@
 //! Serving a stored upload. `ServeFile` streams it off disk (never into memory) and answers
 //! `Range` with `206` and an unsatisfiable range with `416`. Every file sent here counts against the
-//! device's 2.0 MB/s (`services::bandwidth`, step 3.2): the video stream, material downloads and
-//! homework files alike.
+//! signed-in user's 2.0 MB/s (`services::bandwidth`, step 3.2): the video stream, material downloads
+//! and homework files alike.
 //!
 //! `ServeFile` ignores `If-Range`, so for a resumable download the Hub checks it here (contract
 //! #259): a client resuming a file that changed since its first request gets the whole new file.
 
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
+use std::sync::Arc;
 
-use axum::extract::{ConnectInfo, Request};
+use axum::extract::Request;
 use axum::http::{header, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use mime::Mime;
@@ -18,7 +18,7 @@ use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
 use crate::error::ApiError;
-use crate::services::bandwidth::{self, Bandwidth};
+use crate::services::bandwidth::{self, Allowance};
 
 /// How a download treats `Range` (contract #259).
 pub enum Ranges {
@@ -45,11 +45,9 @@ pub async fn serve_stored(
     mut request: Request,
     id: &str,
     ranges: Ranges,
-    bandwidth: &Bandwidth,
+    allowance: Arc<Allowance>,
 ) -> Result<Response, ApiError> {
     let mime: Mime = content_type.parse().map_err(|_| ApiError::internal("Unknown file type"))?;
-    // The Hub always serves with connect info (`lib.rs`); without it every caller shares one allowance.
-    let device = request.extensions().get::<ConnectInfo<SocketAddr>>().map_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED), |c| c.0.ip());
     let headers = request.headers_mut();
     match &ranges {
         Ranges::AsServed => {}
@@ -88,7 +86,7 @@ pub async fn serve_stored(
         }
     }
     let (parts, body) = response.into_parts();
-    Ok(Response::from_parts(parts, bandwidth::throttle(body, bandwidth.device(device))))
+    Ok(Response::from_parts(parts, bandwidth::throttle(body, allowance)))
 }
 
 fn missing(id: &str) -> ApiError {
