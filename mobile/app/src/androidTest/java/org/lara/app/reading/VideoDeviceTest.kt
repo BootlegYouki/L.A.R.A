@@ -77,6 +77,51 @@ class VideoDeviceTest {
                 R.string.video_cancel, R.string.video_resume, expectedSaves = 0, expectedPauses = 1)
         }
     }
+    @Test fun gLandscapePlayerControlsRemainReachable(): Unit = runBlocking {
+        guard()
+        val owner = ownerFile.readText()
+        val container = AppContainer(context)
+        requireNotNull(container.auth.cachedUser())
+        val active = container.forUser(owner)
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+            waitUntil("Activity did not rotate") {
+                context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            }
+            scenario.onActivity { activity -> activity.setContent {
+                LaraTheme { Surface(color = LaraColors.Canvas) {
+                    Box(Modifier.fillMaxSize().safeDrawingPadding()) { VideoPlayerScreen(active, owner, "video-fixture") {} }
+                } }
+            } }
+            fun reachable(label: String): AccessibilityNodeInfo {
+                val display = context.resources.displayMetrics
+                val minimum = 52 * display.density - 1
+                var match: AccessibilityNodeInfo? = null
+                waitUntil("Landscape control clipped: $label") {
+                    match = nodes().firstOrNull { node ->
+                        val bounds = android.graphics.Rect().also(clickTarget(node)::getBoundsInScreen)
+                        (node.text?.toString() == label || node.contentDescription?.toString() == label) &&
+                            bounds.height() >= minimum && bounds.top >= 0 && bounds.bottom <= display.heightPixels
+                    }
+                    if (match == null) instrumentation.uiAutomation.executeShellCommand(
+                        "input swipe 400 650 400 450 200").close()
+                    match != null
+                }
+                return requireNotNull(match)
+            }
+            reachable(context.getString(R.string.video_seek))
+            assertTrue(clickTarget(reachable(context.getString(R.string.video_play)))
+                .performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            shot("landscape-play-seek")
+            // This saved fixture has a completion status instead of a download action.
+            waitUntil("Saved status unreachable in landscape") {
+                val visible = nodes().any { it.text?.toString() == context.getString(R.string.video_local) }
+                if (!visible) nodes().firstOrNull { it.isScrollable }?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                visible
+            }
+            shot("landscape-saved")
+        }
+    }
     private fun assertDownloadAction(scenario: ActivityScenario<MainActivity>, state: VideoDownload,
         expectedLabel: Int, absentLabel: Int, expectedSaves: Int, expectedPauses: Int) {
         var saves = 0
@@ -303,7 +348,7 @@ class VideoDeviceTest {
                 return MockResponse().setResponseCode(206).setHeader("Content-Type", "video/mp4")
                     .setHeader("Content-Range", "bytes $start-$end/${bytes.size}").setHeader("ETag", "\"video-ui-v1\"")
                     .setBody(Buffer().write(bytes.copyOfRange(start, end + 1)))
-                    .throttleBody(32768, 150, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .throttleBody(8192, 150, java.util.concurrent.TimeUnit.MILLISECONDS)
             }
         }
         server.start()
@@ -324,10 +369,26 @@ class VideoDeviceTest {
                         Box(Modifier.fillMaxSize().safeDrawingPadding()) { VideoPlayerScreen(active, owner, "video-ui-download") {} }
                     } }
                 } }
-                waitUntil("Save for Home action missing") { nodes().any { it.text?.toString() == "Save for Home" } }
-                assertTrue(clickTarget(nodes().first { it.text?.toString() == "Save for Home" }).performAction(AccessibilityNodeInfo.ACTION_CLICK))
+                val saveLabel = context.getString(R.string.video_save)
+                waitUntil("Save for home action missing") { nodes().any { it.text?.toString() == saveLabel } }
+                assertTrue(clickTarget(nodes().first { it.text?.toString() == saveLabel }).performAction(AccessibilityNodeInfo.ACTION_CLICK))
                 waitUntil("Download progress missing") { nodes().any { it.text?.toString() == "Downloading lesson" } }
                 shot("download-progress")
+                val cancelLabel = context.getString(R.string.video_cancel)
+                assertTrue(clickTarget(nodes().first { it.text?.toString() == cancelLabel })
+                    .performAction(AccessibilityNodeInfo.ACTION_CLICK))
+                waitUntil("Cancel did not leave a paused download") {
+                    nodes().any { it.text?.toString() == context.getString(R.string.video_resume) }
+                }
+                // Allow socket closure and coroutine cleanup to finish before asserting the settled UI.
+                SystemClock.sleep(500)
+                assertFalse(nodes().any { it.text?.toString() == context.getString(R.string.video_download_failed) })
+                assertFalse(nodes().any { it.text?.toString() == context.getString(R.string.video_unavailable) })
+                val partial = active.videos.progress("video-ui-download")
+                assertTrue(partial.bytes in 1 until bytes.size.toLong())
+                shot("download-paused")
+                assertTrue(clickTarget(nodes().first { it.text?.toString() == context.getString(R.string.video_resume) })
+                    .performAction(AccessibilityNodeInfo.ACTION_CLICK))
                 waitUntil("Download did not finish") { nodes().any { it.text?.toString() == "Download complete" } }
                 val source = active.videos.source("video-ui-download")
                 assertTrue(source is VideoSource.Local)

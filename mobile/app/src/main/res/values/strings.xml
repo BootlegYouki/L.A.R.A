@@ -261,7 +261,7 @@
     <string name="video_time">Elapsed %1$s of %2$s</string>
     <string name="video_buffering">Loading video…</string>
     <string name="video_finished">Lesson video finished. You can play it again.</string>
-    <string name="video_save">Save for Home</string>
+    <string name="video_save">Save for home</string>
     <string name="video_downloading">Downloading lesson</string>
     <string name="video_downloaded">Download complete</string>
     <string name="video_download_failed">Download failed</string>

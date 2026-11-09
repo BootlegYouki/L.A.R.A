@@ -6,6 +6,9 @@ import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.lara.app.domain.*
@@ -36,15 +39,23 @@ class VideoViewModel(private val repository: VideoRepository, private val id: St
         if (transfer?.isActive == true) return
         resumeOnStart = true
         transfer = viewModelScope.launch {
+            val context = currentCoroutineContext()
             while (true) {
                 try {
                     mutableDownload.update { it.copy(phase = DownloadPhase.DOWNLOADING, problem = null) }
-                    repository.save(id) { mutableDownload.value = it }
-                    mutableState.value = VideoState(false, repository.source(id))
+                    repository.save(id) { progress ->
+                        mutableDownload.update { previous -> if (context.isActive) progress else previous }
+                    }
+                    context.ensureActive()
+                    val source = repository.source(id)
+                    context.ensureActive()
+                    mutableState.value = VideoState(false, source)
                     resumeOnStart = false
                     break
                 } catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
+                    // Closing a cancelled transport can throw something other than CancellationException.
+                    context.ensureActive()
                     val problem = problem(e)
                     mutableDownload.update { it.copy(phase = if (problem == VideoProblem.HUB_UNAVAILABLE)
                         DownloadPhase.PAUSED else DownloadPhase.FAILED, problem = problem) }

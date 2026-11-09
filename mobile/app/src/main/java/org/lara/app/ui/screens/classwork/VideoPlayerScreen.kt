@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
@@ -175,7 +176,11 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
             }
         }
     }
-    Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(LaraShapes.medium).background(LaraColors.TextPrimary)) {
+    val configuration = LocalConfiguration.current
+    val landscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val viewport = if (landscape) Modifier.height((configuration.screenHeightDp * 0.45f).dp)
+        else Modifier.aspectRatio(16f / 9f)
+    Box(Modifier.fillMaxWidth().then(viewport).clip(LaraShapes.medium).background(LaraColors.TextPrimary)) {
         AndroidView(factory = { context -> PlayerView(context).apply {
             useController = false
             importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO

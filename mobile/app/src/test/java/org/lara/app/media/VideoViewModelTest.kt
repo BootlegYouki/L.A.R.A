@@ -75,4 +75,61 @@ class VideoViewModelTest {
         assertEquals(DownloadPhase.FAILED, model.download.value.phase)
         model.stop()
     }
+
+    @Test fun cancelledTransferCannotReportFailureOrOverwriteResumedProgress() = runTest(dispatcher) {
+        val finishingCancelled = CompletableDeferred<Unit>()
+        val resumed = CompletableDeferred<Unit>()
+        var attempts = 0
+        val controlled = object : VideoRepository {
+            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun source(id: String) = VideoSource.Hub(id, 1000)
+            override suspend fun progress(id: String) = VideoDownload(DownloadPhase.PAUSED, 500, 1000)
+            override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {
+                if (++attempts == 1) {
+                    progress(VideoDownload(DownloadPhase.DOWNLOADING, 500, 1000))
+                    try { awaitCancellation() }
+                    finally {
+                        withContext(NonCancellable) { finishingCancelled.await() }
+                        // Model a blocking transport's late callback and non-cancellation exception.
+                        progress(VideoDownload(DownloadPhase.DOWNLOADING, 600, 1000))
+                        throw IllegalStateException("Transport closed during cancellation")
+                    }
+                } else {
+                    progress(VideoDownload(DownloadPhase.DOWNLOADING, 750, 1000))
+                    resumed.await()
+                    progress(VideoDownload(DownloadPhase.COMPLETE, 1000, 1000))
+                }
+            }
+        }
+        val model = VideoViewModel(controlled, "lesson")
+        model.save(); runCurrent(); model.pause(); runCurrent()
+        assertEquals(VideoDownload(DownloadPhase.PAUSED, 500, 1000), model.download.value)
+        assertNull(model.state.value.problem)
+        model.save(); runCurrent()
+        finishingCancelled.complete(Unit); runCurrent()
+        assertEquals(VideoDownload(DownloadPhase.DOWNLOADING, 750, 1000), model.download.value)
+        assertNull(model.state.value.problem)
+        resumed.complete(Unit); runCurrent()
+        assertEquals(DownloadPhase.COMPLETE, model.download.value.phase)
+        assertEquals(2, attempts)
+        model.stop()
+    }
+
+    @Test fun cancelledTransportExceptionLeavesPausedBytesWithoutProblem() = runTest(dispatcher) {
+        val controlled = object : VideoRepository {
+            override fun observe(id: String) = MutableStateFlow<Material?>(null)
+            override suspend fun source(id: String) = VideoSource.Hub(id, 1000)
+            override suspend fun progress(id: String) = VideoDownload()
+            override suspend fun save(id: String, progress: (VideoDownload) -> Unit) {
+                progress(VideoDownload(DownloadPhase.DOWNLOADING, 500, 1000))
+                try { awaitCancellation() }
+                finally { throw IllegalStateException("Transport closed during cancellation") }
+            }
+        }
+        val model = VideoViewModel(controlled, "lesson")
+        model.save(); runCurrent(); model.pause(); runCurrent()
+        assertEquals(VideoDownload(DownloadPhase.PAUSED, 500, 1000), model.download.value)
+        assertNull(model.state.value.problem)
+        model.stop()
+    }
 }

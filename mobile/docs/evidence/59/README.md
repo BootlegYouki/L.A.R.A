@@ -1,5 +1,7 @@
 # Issue #59 review evidence
 
+Latest verification: [9 November follow-up review fix](follow-up/README.md) records cancellation regression fixes and actual cold-start offline playback on the physical phone against merged PR #259's playable mock. It supersedes the original mock-placeholder playback limitation below; this original report remains historical evidence.
+
 Date: 8 November 2026 (Asia/Manila). Working branch: `feat/59-mobile-3.3-video-offline`.
 Base: `86204fef6979e175aa158c512e98e0d1abced4ef`, the merge of MOBILE 3.2 PR #252 into staging. See feature-branch history for the implementation commit. The user authorized publication after implementation and phone verification. No merge was performed.
 

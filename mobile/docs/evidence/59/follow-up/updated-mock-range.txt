@@ -1,0 +1,20 @@
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/download HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/download HTTP/1.1" 206 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/download HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/download HTTP/1.1" 416 -
+python : ..
+At line:2 char:53
++ ... NG='utf-8'; python -m unittest tests.test_mock_hub.TestMockHub.test_v ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (..:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.019s
+
+OK

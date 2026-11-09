@@ -45,13 +45,15 @@ Cancel stops the request/job and retains progress; it does not delete saved byte
 
 Download actions follow the displayed phase: DOWNLOADING shows the primary cancel/keep-progress action wired to `pause`; PAUSED shows exactly one primary Resume action wired to `save`, including before the first byte arrives. Other states retain their existing actions. The [PR #258 review-fix evidence](evidence/59/review-fix/README.md) records the on-device Compose regression tests.
 
+Cancellation can close a blocking transport with an exception other than `CancellationException`. The ViewModel checks the transfer's coroutine context before classifying an error or publishing completion, and ignores progress callbacks from cancelled transfers. An old transfer cannot replace PAUSED or a resumed transfer's progress. Active network and file failures still use the existing error handling. In landscape the video viewport has a bounded height; the existing scrolling column keeps transport and download controls reachable. Both Classwork and the player use the design system's **Save for home** label.
+
 ## Verification and integration limitations
 
 See [evidence/59/README.md](./evidence/59/README.md) for actual results, commands and limitations. Pure unit tests use deterministic streams or loopback MockWebServer. `VideoMockIntegrationTest` is separately gated by the existing `LARA_SYNC_MOCK=1` convention. `VideoDeviceTest` uses a separate APK ID and a synthetic H.264 fixture; it is not evidence of Python-mock or Rust-Hub video decoding.
 
-The shared Python mock currently serves zero-filled stream bytes and a PDF placeholder for downloads, including videos. Authenticated forward/backward ranges can be checked, but actual video decoding and correct video downloads cannot pass against those placeholder bytes. Mobile refuses to mark the PDF placeholder as a completed video. Do not weaken validation or change the shared mock inside this feature.
+The original branch's Python mock serves zero-filled stream bytes and a PDF placeholder for downloads. The existing JVM integration test still verifies that legacy behavior on this branch. PR #259, merged into staging, replaces it with a playable 30-second video and adds Range/If-Range downloads. The [follow-up evidence](evidence/59/follow-up/README.md) records physical-phone streaming, saving and cold-start airplane-mode playback against an unmodified extracted staging snapshot. No shared files or staging changes are merged into this feature branch for testing.
 
-At base `86204fe`, Rust material routes are stubs. Server PR #254 is an open draft, and its branch is not part of this feature. The real-Hub attempt and any observed result belong in evidence; source inspection alone does not prove an HTTP `501` was observed.
+At the original base `86204fe`, Rust material routes were stubs. Current staging has since advanced; the follow-up tests use its Python mock only. A real Rust Hub run and WAN-unplugged integration remain unverified here (the local environment has no `cargo`). Source inspection alone does not prove an HTTP `501` was observed.
 
 The required `.agents/skills/lara-mobile/SKILL.md` was missing locally and on fetched staging. The user explicitly authorized `lara-android-offline` and `android-jetpack-compose` instead, with `lara-architect` first. Restore/maintain the missing team skill in a separate process PR; no skill file is created here.
 
