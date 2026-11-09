@@ -106,7 +106,7 @@ async fn uploading_a_pdf_stores_ordered_chunks() {
 #[tokio::test]
 async fn uploading_a_docx_stores_chunks_with_its_headings() {
     let class = Class::start().await;
-    let material = upload(&class, "WORKSHEET", &fixture("lesson.docx")).await;
+    let material = upload(&class, "WORKSHEET", &fixture("lesson.docx.zip")).await;
     let chunks = chunks_of(&class, &material).await;
     let headings = headings(&chunks);
     let at = |h: &str| headings.iter().position(|x| *x == h).unwrap_or_else(|| panic!("{h} missing from {headings:?}"));

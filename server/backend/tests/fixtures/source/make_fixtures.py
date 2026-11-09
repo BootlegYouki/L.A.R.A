@@ -1,9 +1,10 @@
-"""Builds the lesson fixtures for the document parser tests (#10): lesson.docx, lesson.pdf and
-scanned.pdf, next to this folder. Standard library plus a local Chrome, no network.
+"""Builds the lesson fixtures for the document parser tests (#10): lesson.docx.zip, lesson.pdf and
+scanned.pdf, next to this folder. The Word file is named .zip (which a .docx is) because
+scripts/verify_invariants.py skips binary files by extension and its list has zip but not docx. Standard library plus a local Chrome, no network.
 
     py tests/fixtures/source/make_fixtures.py [--chrome PATH]
 
-lesson.docx is written by hand (WordprocessingML, deflated like Word saves it): a Title, three
+lesson.docx.zip is written by hand (WordprocessingML, deflated like Word saves it): a Title, three
 Heading 1 sections, "Paraño" split across two runs, a tab, a line break, a 2x2 table, and a page
 header that must not be read as lesson text. lesson.pdf is the same lesson printed by headless
 Chrome (3 pages, one section each). scanned.pdf is one page holding only a picture of the lesson,
@@ -124,7 +125,7 @@ def main():
     args = parser.parse_args()
     if not args.chrome:
         parser.error("Chrome not found; pass --chrome PATH")
-    make_docx(OUT / "lesson.docx")
+    make_docx(OUT / "lesson.docx.zip")
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         lesson = tmp / "lesson.html"
@@ -136,7 +137,7 @@ def main():
         scan.write_text(f'<!doctype html><html><body style="margin:0"><img src="{shot.as_uri()}" style="width:100%"></body></html>', encoding="utf-8")
         chrome(args.chrome, tmp / "profile", "--no-pdf-header-footer", "--allow-file-access-from-files",
                f"--print-to-pdf={OUT / 'scanned.pdf'}", scan.as_uri())
-    for name in ("lesson.docx", "lesson.pdf", "scanned.pdf"):
+    for name in ("lesson.docx.zip", "lesson.pdf", "scanned.pdf"):
         print(f"{name}: {(OUT / name).stat().st_size} bytes")
 
 

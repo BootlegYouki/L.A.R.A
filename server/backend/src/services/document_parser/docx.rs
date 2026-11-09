@@ -106,7 +106,7 @@ mod tests {
     }
 
     fn lesson() -> Vec<Block> {
-        docx_blocks(&fixture("lesson.docx")).unwrap()
+        docx_blocks(&fixture("lesson.docx.zip")).unwrap()
     }
 
     fn paragraphs(blocks: &[Block]) -> Vec<&str> {

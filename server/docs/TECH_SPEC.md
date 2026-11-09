@@ -114,7 +114,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `Presence`, `QuizHub` | struct | `EVENT_PRESENCE`; quiz start/close fan-out and close-time auto-submit |
 | `grading_engine::grade` | fn | Pure scoring by `question_id` |
 | `Storage` | struct | Paths and streamed writes under `data_dir/storage` |
-| `document_parser::extract_chunks` | fn | PDF/DOCX/TXT → ordered `material_chunks` |
+| `document_parser::extract_chunks` | fn | PDF/DOCX → ordered `material_chunks` (3.1; TXT is not an accepted upload since #53, see [`document_chunking.md`](./document_chunking.md)) |
 | `GradebookExporter`, `BackupManager` | struct | Export; `.lara-backup` snapshot and restore |
 | `LlamaServerManager`, `AiQueue`, `PromptBuilder` | struct | Child process; bounded FIFO over slots; fills `contracts/ai/socratic_system_prompt.txt` |
 | `guardrails::check_quiz_lockout` | fn | `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt |
@@ -302,7 +302,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 | Zero-CLI installer with firewall rules (#20) | John Rey Calipes | During 1.4 | Window's auto-fix runs the rules elevated |
 | argon2 cost under 40 simultaneous logins (#42) | Jv Bialen | During 2.0, measured on the Hub PC. Laptop upper bound (2026-11-01, 12 hashes at once): 40 logins at once 414 ms wall, p95 402 ms; peak 245 MB, idle 18 MB ([`auth_sessions.md`](./auth_sessions.md)). Still to measure on the 4-core Hub PC (one hash per logical CPU) | Lower memory cost within OWASP minimums |
 | Pull page size 500 on real data (#7) | Jv Bialen | During 2.2, confirmed in 6.1 | Tune the constant |
-| Pure-Rust PDF/DOCX text extraction (#10) | John Rey Calipes | During 3.1 | PDF and TXT only; DOCX gets no chunks |
+| Pure-Rust PDF/DOCX text extraction (#10) | John Rey Calipes | During 3.1. Done: `pdf-extract`, and `zip` + `quick-xml` for DOCX; a 24-page PDF in 79 to 96 ms on a release build ([`document_chunking.md`](./document_chunking.md)) | PDF and TXT only; DOCX gets no chunks |
 | Token bucket accuracy at 2.0 MB/s with 40 streams (#8) | Jv Bialen | During 3.2 | Coarser chunks; measure on the router |
 | SQLite write contention, 40 submits in a second (#11) | Jv Bialen | Measured in 4.2, confirmed in 6.1 | One transaction per close batch |
 | USB detection on Windows and Linux (#13) | John Rey Calipes | During 4.3 | Admin picks a folder |
