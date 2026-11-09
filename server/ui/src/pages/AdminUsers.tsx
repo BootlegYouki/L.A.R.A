@@ -27,6 +27,7 @@ function Dialog({ title, close, children, busy = false }: {
 function PinInput({ value, change }: { value: string; change: (value: string) => void }) {
   const { t } = useStrings();
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const [lettersRefused, setLettersRefused] = useState(false);
   function digit(index: number, next: string) {
     const digits = value.padEnd(4, ' ').split('');
     digits[index] = next || ' ';
@@ -36,10 +37,12 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
     <div className="flex gap-2">{[0, 1, 2, 3].map(index => <input key={index} ref={node => { inputs.current[index] = node; }}
       className="admin-pin-digit" aria-label={t.admin_pin_digit.replace('{digit}', String(index + 1))}
       aria-describedby="pin-help" type="password" inputMode="numeric" pattern="[0-9]" maxLength={1}
-      autoComplete="off" required value={value[index]?.trim() ?? ''}
+      autoComplete="off" value={value[index]?.trim() ?? ''}
       onChange={event => {
         const next = event.target.value;
-        if (!/^[0-9]?$/.test(next)) return;
+        const isDigit = /^[0-9]?$/.test(next);
+        setLettersRefused(!isDigit);
+        if (!isDigit) return;
         digit(index, next);
         if (next) inputs.current[index + 1]?.focus();
       }} onKeyDown={event => {
@@ -52,7 +55,9 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
           event.preventDefault(); change(pasted); inputs.current[3]?.focus();
         }
       }} />)}</div>
-    <p id="pin-help" className="text-sm text-lara-ink-2">{t.admin_pin_help}</p>
+    <p id="pin-help" className="text-sm text-lara-ink-2" aria-live="polite">
+      {lettersRefused ? t.admin_pin_digits_only : t.admin_pin_help}
+    </p>
   </fieldset>;
 }
 
@@ -116,8 +121,18 @@ export default function AdminUsers() {
     return () => clearTimeout(timer);
   }, [session, t]);
 
+  // The digit boxes are not `required`, so a short PIN gets this message in the form's error area
+  // instead of the browser's "Please fill out this field." bubble on one box.
+  function pinComplete() {
+    if (/^[0-9]{4}$/.test(pin)) return true;
+    setError(t.admin_pin_short);
+    return false;
+  }
+
   async function authenticate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(''); setNotice('');
+    event.preventDefault();
+    if (!pinComplete()) return;
+    setBusy(true); setError(''); setNotice('');
     try {
       const data = await request<AuthSession>(setup ? '/api/admin/setup' : '/api/auth/login', undefined,
         setup ? { full_name: name.trim(), pin } : { lrn_or_id: 'ADMIN-0001', pin });
@@ -132,7 +147,7 @@ export default function AdminUsers() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!session || !form) return;
+    if (!session || !form || !pinComplete()) return;
     setBusy(true); setError('');
     try {
       const created = form === 'create'

@@ -51,6 +51,33 @@ async fn created_accounts_sign_in_and_reset_pin_survives_restart() {
 }
 
 #[tokio::test]
+async fn a_pin_reset_signs_the_user_out_everywhere_but_not_the_admin() {
+    let hub = TestHub::start().await;
+    let token = admin(&hub).await;
+    let other = hub.login("T-0001", "1234").await;
+    let learner = hub.seed_user("123456789014", "Learner", lara_hub::auth::Role::Student, "1234").await;
+    let learner_token = hub.open_session(learner).await;
+    let users = hub.get("/api/admin/users", Some(&token)).await.1;
+    let id = users.as_array().unwrap().iter().find(|u| u["lrn_or_id"] == "T-0001").unwrap()["id"].as_str().unwrap().to_owned();
+    assert_eq!(hub.get("/api/classrooms", Some(&other)).await.0, 200);
+    assert_eq!(hub.post_json(&format!("/api/admin/users/{id}/reset-pin"), &json!({"pin": "0907"}), Some(&token)).await.0, 200);
+    for old in [hub.teacher_token(), other.as_str()] {
+        let (status, body) = hub.get("/api/classrooms", Some(old)).await;
+        assert_eq!((status, body["error"]["code"].as_str()), (401, Some("UNAUTHORIZED")));
+    }
+    let remaining: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
+        .bind(&id).fetch_one(&hub.state().db).await.unwrap();
+    assert_eq!(remaining, 0);
+    assert_eq!(hub.post_json("/api/auth/login", &json!({"lrn_or_id": "T-0001", "pin": "1234"}), None).await.0, 401);
+    let fresh = hub.login("T-0001", "0907").await;
+    assert_eq!(hub.get("/api/classrooms", Some(&fresh)).await.0, 200);
+    // Only that user's sessions end: the admin and other accounts stay signed in.
+    assert_eq!(hub.get("/api/admin/users", Some(&token)).await.0, 200);
+    assert_eq!(hub.get("/api/classrooms", Some(&learner_token)).await.0, 200);
+    hub.stop().await;
+}
+
+#[tokio::test]
 async fn account_routes_require_admin_and_do_not_change_data_for_other_roles() {
     let hub = TestHub::start().await;
     let token = admin(&hub).await;
@@ -105,7 +132,13 @@ async fn cors_allows_the_local_window_but_not_other_web_origins() {
             .header("Access-Control-Request-Headers", "authorization,content-type").send().await.unwrap();
         assert!(response.status().is_success());
         let allowed = response.headers().get("Access-Control-Allow-Origin").and_then(|v| v.to_str().ok());
-        assert_eq!(allowed, if origin == "https://untrusted.invalid" { None } else { Some(origin) });
+        // The Vite dev origins are allowed in debug builds only; `cargo test --release` checks the shipped list.
+        let expected = match origin {
+            "https://untrusted.invalid" => None,
+            o if o.ends_with(":5173") && !cfg!(debug_assertions) => None,
+            o => Some(o),
+        };
+        assert_eq!(allowed, expected, "{origin}");
     }
     // CORS grants no authentication: a permitted origin still needs an admin bearer session.
     let response = reqwest::Client::new().get(url).header("Origin", "http://tauri.localhost").send().await.unwrap();

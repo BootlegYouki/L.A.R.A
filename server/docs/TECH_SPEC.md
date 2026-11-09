@@ -120,7 +120,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `guardrails::check_quiz_lockout` | fn | `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt |
 | `PortHealth`, `TestHub` | struct | Port bind/reachability; integration-test server |
 | `StartError` | enum | Why `serve` could not start (data dir, database, migrations, port bind) |
-| `auth::sessions` | module | `open`, `user_for_token` (the extractor and the WebSocket handshake), `close`, on the `sessions` table (2.0; was the in-memory `Sessions` struct) |
+| `auth::sessions` | module | `open`, `user_for_token` (the extractor and the WebSocket handshake), `close`, `close_all` (PIN reset, 2.3.1), on the `sessions` table (2.0; was the in-memory `Sessions` struct) |
 | `PinHasher` | struct | argon2id `hash` / `verify` on the blocking pool, one at a time per core |
 | `discovery::lan_ip`, `lan_address` | fn, Tauri command | IPv4 of the default-route adapter; the window's address display |
 | Wire types | structs | Exactly the `openapi.yaml` schema names (`AuthSession`, `PublicUser`, `Classroom`, `StudentQuizResponse`, `TeacherQuiz`, `GradeReceipt`, `SyncPullResponse`, ...) |
