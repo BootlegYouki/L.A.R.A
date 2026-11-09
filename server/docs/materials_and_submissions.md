@@ -42,7 +42,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
 
    The optional `turned_in_at` field is when the learner pressed Turn in (epoch ms). `submitted_at` is `min(turned_in_at, arrival)`, so work finished offline before the deadline still counts and a device clock ahead of the Hub cannot postdate it; without the field it is the arrival. `received_at` is always the arrival.
 6. **Replace.** Before grading, a new file replaces the learner's earlier one. Under the same id the row is updated; under a new id the old row is deleted with a `DELETE` revision (same learner and teachers) and the row takes the new id. The old file is deleted only after the commit, so a failed resubmission still serves the work handed in before.
-7. **Serve.** `ServeFile` streams from disk. Both routes send `X-Content-Type-Options: nosniff`.
+7. **Serve.** `ServeFile` streams from disk. Both routes send `X-Content-Type-Options: nosniff`. Every file sent counts against the user's 2.0 MB/s (step 3.2, `streaming_rate_limit.md`).
    - Material downloads are `application/octet-stream`, as the contract and the mock send them.
    - **VIDEO downloads resume** (contract #259): `Range` gets 206 with `Content-Range`, a range past the end gets 416 with `Content-Range: bytes */<size>`, and every answer carries `Accept-Ranges: bytes` and an `ETag`. With `If-Range`, a tag that no longer matches gets the whole file as 200, so Save for Home starts over when the file changed. `ServeFile` ignores `If-Range`, so `serve_stored` checks it and drops `Range` when it is stale. The `ETag` is a hash of the stored name; stored files are never changed in place, so it changes only with the file.
    - **Other material downloads** come whole (200) whatever `Range` asks for, with `Accept-Ranges: none` (the contract makes `Range` VIDEO only).
@@ -57,7 +57,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 |---|---|---|
 | `POST /api/materials` | Owner or co-teacher of `classroom_id` | Learner 403 `Teacher only`; other teacher 403; unknown class 404; archived class 403 `This class is archived`; `topic_id`/`assignment_id`/`announcement_id` not in that class (or an archived assignment) 404 |
 | `GET /api/materials/{id}/download` | Class teachers and `ACTIVE` learners, also in an archived class | No or bad token 401; anyone else 403 `Not your class`; unknown id 404 |
-| `GET /api/materials/{id}/stream` | The same members, for a VIDEO only | As `/download`; a material that is not a video 404 `Not a video` (#259). A video answers 501 until step 3.2 (#8) streams it with the 2.0 MB/s cap |
+| `GET /api/materials/{id}/stream` | The same members, for a VIDEO only | As `/download`; a material that is not a video 404 `Not a video` (#259). Streaming itself is step 3.2 (`streaming_rate_limit.md`) |
 | `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403; graded work 409 `ALREADY_GRADED`; late work 409 `LATE_SUBMISSION`; a `turned_in_at` that is not an integer 400 |
 | `GET /api/submissions/{id}/file` | The owning learner and the class's teachers | Classmate 403 `Not your submission`; other teacher or admin 403; unknown id 404 |
 
