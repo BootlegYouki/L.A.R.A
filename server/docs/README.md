@@ -15,6 +15,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`websocket_broker.md`](./websocket_broker.md) | Registry, handshake, presence, targeted delivery and reconnect recovery | Sprint 2 (#44) |
 | [`classroom_enrollment.md`](./classroom_enrollment.md) | Class codes, roster privacy, teacher approval, retries and rejoin rules; acceptance evidence and manual test steps | Sprint 2 (#6) |
 | [`class_management.md`](./class_management.md) | Rename, archive, remove a learner, co-teachers; who can do what, retries, what sync delivers and manual test steps | Sprint 2 (#121) |
+| [`materials_and_submissions.md`](./materials_and_submissions.md) | Lesson file and homework uploads: storage layout, accepted formats, 250 MB cap, access rules, resubmission, downloads with Range and `?token=` | Sprint 3 (#53) |
 | `streaming_rate_limit.md` | HTTP Range, token bucket, upload caps | Sprint 3 |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |

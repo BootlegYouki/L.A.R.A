@@ -136,7 +136,10 @@ pub struct Submission {
     pub assignment_id: String,
     pub student_id: String,
     pub file_type: String,
+    /// When the learner pressed Turn in, never later than `received_at` (contract #257).
     pub submitted_at: i64,
+    /// When the Hub stored the file.
+    pub received_at: i64,
     pub score: Option<i64>,
     pub teacher_feedback: Option<String>,
     pub updated_at: i64,

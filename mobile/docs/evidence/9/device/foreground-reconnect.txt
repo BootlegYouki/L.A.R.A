@@ -1,0 +1,3 @@
+Foreground Hub reconnect uploaded the queued replacement in 9.03 seconds.
+Phone stayed in the foreground, with Wi-Fi unchanged and no app restart after reconnect.
+Exactly one submission remains.

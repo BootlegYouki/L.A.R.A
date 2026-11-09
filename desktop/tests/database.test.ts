@@ -9,6 +9,7 @@ import { savedClassesQuery } from '../src/services/db';
 
 const migration = readFileSync(new URL('../src-tauri/migrations/001_client_offline.sql', import.meta.url), 'utf8');
 const upgrade = readFileSync(new URL('../src-tauri/migrations/002_sync_rejections.sql', import.meta.url), 'utf8');
+const receiptMigration = readFileSync(new URL('../src-tauri/migrations/003_submission_received_at.sql', import.meta.url), 'utf8');
 const contract = readFileSync(new URL('../../contracts/schema/client_offline.sql', import.meta.url), 'utf8');
 
 describe('client database', () => {
@@ -30,7 +31,8 @@ describe('client database', () => {
     if (db.prepare('PRAGMA user_version').get()?.user_version === 0) {
       db.exec(migration);
       db.exec(upgrade);
-      db.exec('PRAGMA user_version = 2');
+      db.exec(receiptMigration);
+      db.exec('PRAGMA user_version = 3');
     }
     return db;
   }
@@ -40,8 +42,12 @@ describe('client database', () => {
     expected.exec(contract);
     const actual = open();
     const tables = expected.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all();
+    // An additive SQLite migration appends a column regardless of its position in the contract.
+    const columns = (database: DatabaseSync, table: string) => database.prepare(
+      'SELECT name, type, "notnull", dflt_value, pk FROM pragma_table_info(?) ORDER BY name',
+    ).all(table);
     for (const { name } of tables) {
-      expect(actual.prepare(`PRAGMA table_info(${name})`).all()).toEqual(expected.prepare(`PRAGMA table_info(${name})`).all());
+      expect(columns(actual, String(name))).toEqual(columns(expected, String(name)));
       expect(actual.prepare(`PRAGMA foreign_key_list(${name})`).all()).toEqual(expected.prepare(`PRAGMA foreign_key_list(${name})`).all());
     }
     expected.close(); actual.close(); db = undefined;
@@ -105,7 +111,9 @@ it('upgrades queued rows without clearing them and stores contracted rejection r
     local.exec('BEGIN');
     local.exec(upgrade);
     local.exec('COMMIT');
-    expect(local.prepare("SELECT file_path,sync_status FROM assignment_submissions WHERE id='s'").get()).toMatchObject({file_path:'photo.jpg',sync_status:'QUEUED_FOR_SYNC'});
+    local.exec(receiptMigration);
+    expect(local.prepare("SELECT file_path,sync_status,received_at FROM assignment_submissions WHERE id='s'").get())
+      .toMatchObject({file_path:'photo.jpg',sync_status:'QUEUED_FOR_SYNC',received_at:null});
     expect(local.prepare("SELECT answers_json,sync_status FROM quiz_attempts WHERE id='attempt'").get()).toMatchObject({answers_json:'[1]',sync_status:'QUEUED_FOR_SYNC'});
     expect(local.prepare("SELECT content,sync_status FROM private_comments WHERE id='private'").get()).toMatchObject({content:'Private queued',sync_status:'QUEUED_FOR_SYNC'});
     expect(local.prepare("SELECT content,sync_status,sync_reject_reason FROM announcement_comments WHERE id='q'").get())

@@ -1,0 +1,7 @@
+Final font scale 1.0
+Final USB stay-awake 0
+Final ADB forwarding empty
+Task-owned mock services stopped
+Task gallery fixture removed
+Post-capture sample total PSS 164904 kB
+Device MemTotal 7495244 kB

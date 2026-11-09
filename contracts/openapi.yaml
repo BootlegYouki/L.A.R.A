@@ -753,19 +753,41 @@ paths:
 
   /api/materials/{id}/download:
     get:
-      summary: Download the full material file
+      summary: Download the full material file. VIDEO downloads honor Range and If-Range so Save for Home can resume after a Wi-Fi drop.
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/TokenQuery"
+        - name: Range
+          in: header
+          required: false
+          description: VIDEO only. Without it, or when If-Range no longer matches, the whole file is sent as 200.
+          schema:
+            type: string
+            example: "bytes=262144-"
+        - name: If-Range
+          in: header
+          required: false
+          description: The ETag from an earlier response. If the file changed, the Hub ignores Range and sends 200 with the whole new file.
+          schema:
+            type: string
       responses:
         "200":
-          description: File bytes
+          description: "File bytes (the whole file). VIDEO responses carry `ETag` and `Accept-Ranges: bytes`."
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
+        "206":
+          description: VIDEO only. The requested byte range, with `Content-Range` and `ETag`.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "416":
+          description: "VIDEO only. The range starts past the end of the file; `Content-Range: bytes */<size>`."
 
   /api/materials/{id}/chunks:
     get:
@@ -798,9 +820,11 @@ paths:
             example: "bytes=0-1048576"
       responses:
         "206":
-          description: Partial video content
+          description: Partial video content, with `Content-Range` and `ETag`
         "200":
           description: Full video content
+        "404":
+          description: Not a VIDEO material
 
   # ---------------------------------------------------------------- ASSIGNMENTS
   /api/assignments:
@@ -931,7 +955,15 @@ paths:
 
   /api/assignments/{id}/submit:
     post:
-      summary: Upload a homework photo or document (learner). Idempotent on (assignment_id, student_id); a resubmission replaces the file.
+      summary: Turn in homework (learner). Identical retries are idempotent; ungraded work can be replaced, but graded work cannot.
+      description: |
+        `turned_in_at` is the learner device's epoch-millisecond time when Turn in was pressed. The Hub
+        clamps future values to its current time; if omitted, the Hub arrival time is used. When `allow_late`
+        is false, a submission after `due_date` is refused with 409 LATE_SUBMISSION. An identical retry
+        (same submission_id and SHA-256 file hash) returns the stored submission unchanged, including after
+        grading or the due date. A different file after grading is refused with 409 ALREADY_GRADED.
+        A queued submission refused with either code is rejected permanently; the client shows the learner
+        why it was not turned in instead of retrying it indefinitely.
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -947,6 +979,10 @@ paths:
                   type: string
                   format: uuid
                   description: Client-generated id so offline retries are idempotent
+                turned_in_at:
+                  type: integer
+                  format: int64
+                  description: Optional learner device epoch time in milliseconds when Turn in was pressed
                 file:
                   type: string
                   format: binary
@@ -958,6 +994,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Submission"
+        "409":
+          $ref: "#/components/responses/Error"
 
   /api/assignments/{id}/submissions:
     get:
@@ -1328,7 +1366,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:
@@ -1619,7 +1657,7 @@ components:
 
     Submission:
       type: object
-      required: [id, assignment_id, student_id, file_type, submitted_at]
+      required: [id, assignment_id, student_id, file_type, submitted_at, received_at]
       properties:
         id:
           type: string
@@ -1635,6 +1673,10 @@ components:
           enum: ["IMAGE", "DOCUMENT"]
         submitted_at:
           type: integer
+          description: Effective learner turn-in time in epoch milliseconds (future values clamped by Hub)
+        received_at:
+          type: integer
+          description: Epoch milliseconds when the Hub stored the file
         score:
           type: integer
         teacher_feedback:

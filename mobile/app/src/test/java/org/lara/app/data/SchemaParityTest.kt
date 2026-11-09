@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], application = Application::class)
 class SchemaParityTest {
     private fun exported(): JsonObject {
-        val file = File(System.getProperty("lara.schemaDir"), "org.lara.app.data.local.LaraDatabase/2.json")
+        val file = File(System.getProperty("lara.schemaDir"), "org.lara.app.data.local.LaraDatabase/3.json")
         assertTrue("Room must export its compiled schema: $file", file.isFile)
         return Json.parseToJsonElement(file.readText()).jsonObject.getValue("database").jsonObject
     }
@@ -77,7 +77,7 @@ class SchemaParityTest {
 
     @Test fun allSixteenTablesMatchActualContractIncludingConstraints() {
         val schema = exported()
-        assertEquals(2, schema.getValue("version").jsonPrimitive.int)
+        assertEquals(3, schema.getValue("version").jsonPrimitive.int)
         val entities = schema.getValue("entities").jsonArray.map { it.jsonObject }
         contract().use { expected ->
             val tables = rows(expected, "SELECT name FROM sqlite_master WHERE type = 'table' AND name != 'android_metadata'").map { it[0] }.toSet()
