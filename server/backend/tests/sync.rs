@@ -690,7 +690,7 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
         .execute(&mut *tx).await.unwrap();
     for (sid, suffix) in [(&class.student, "mine"), (&ana_id, "ana")] {
         let submission = format!("submission-{suffix}");
-        sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, score, updated_at) VALUES (?, 'assignment', ?, 'secret-disk-path', 1, 8, 1)")
+        sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, received_at, score, updated_at) VALUES (?, 'assignment', ?, 'secret-disk-path', 1, 1, 8, 1)")
             .bind(&submission).bind(sid).execute(&mut *tx).await.unwrap();
         record_revision(
             &mut tx,
