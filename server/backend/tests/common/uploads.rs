@@ -206,13 +206,19 @@ impl TestHub {
 
     /// A file GET with a bearer token, or none (for `?token=` in the path): status, headers, bytes.
     pub async fn get_file(&self, path: &str, token: Option<&str>, range: Option<&str>) -> (u16, HeaderMap, Vec<u8>) {
+        let headers: Vec<(&str, &str)> = range.map(|r| ("Range", r)).into_iter().collect();
+        self.get_file_with(path, token, &headers).await
+    }
+
+    /// With any request headers, such as `Range` and `If-Range` together.
+    pub async fn get_file_with(&self, path: &str, token: Option<&str>, headers: &[(&str, &str)]) -> (u16, HeaderMap, Vec<u8>) {
         let url = format!("http://127.0.0.1:{}{path}", self.http_port());
         let mut req = reqwest::Client::new().get(url);
         if let Some(token) = token {
             req = req.bearer_auth(token);
         }
-        if let Some(range) = range {
-            req = req.header("Range", range);
+        for (name, value) in headers {
+            req = req.header(*name, *value);
         }
         let res = req.send().await.unwrap();
         let status = res.status().as_u16();

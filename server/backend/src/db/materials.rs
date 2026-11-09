@@ -24,6 +24,8 @@ pub struct NewMaterial<'a> {
 pub struct MaterialFile {
     pub classroom_id: String,
     pub file_path: String,
+    /// `VIDEO` downloads resume with `Range` (contract #259).
+    pub file_type: String,
 }
 
 /// A post a material can be attached to (contract `POST /api/materials`).
@@ -113,5 +115,5 @@ pub async fn insert(tx: &mut SqliteConnection, new: &NewMaterial<'_>, now_ms: i6
 }
 
 pub async fn file_of(conn: &mut SqliteConnection, id: &str) -> Result<Option<MaterialFile>, sqlx::Error> {
-    sqlx::query_as("SELECT classroom_id, file_path FROM materials WHERE id = ?").bind(id).fetch_optional(conn).await
+    sqlx::query_as("SELECT classroom_id, file_path, file_type FROM materials WHERE id = ?").bind(id).fetch_optional(conn).await
 }

@@ -12,6 +12,12 @@ async fn upload_pdf(class: &Class, token: &str) -> Value {
     material
 }
 
+async fn upload_video(class: &Class) -> Value {
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "VIDEO", MP4)).await;
+    assert_eq!(status, 200, "{material}");
+    material
+}
+
 fn error_code(body: &Value) -> &str {
     body["error"]["code"].as_str().unwrap_or("")
 }
@@ -175,7 +181,7 @@ async fn a_300_mb_upload_is_refused_and_leaves_no_file() {
 }
 
 #[tokio::test]
-async fn members_download_the_bytes_with_range_and_token() {
+async fn members_download_the_bytes_with_a_token() {
     let class = Class::start().await;
     let material = upload_pdf(&class, class.teacher()).await;
     let url = material["download_url"].as_str().unwrap();
@@ -186,11 +192,67 @@ async fn members_download_the_bytes_with_range_and_token() {
     let with_query = format!("{url}?token={}", class.learner_token);
     let (status, _, bytes) = class.hub.get_file(&with_query, None, None).await;
     assert_eq!((status, bytes.as_slice()), (200, PDF), "players that cannot send headers use ?token=");
-    let (status, headers, bytes) = class.hub.get_file(url, Some(&class.learner_token), Some("bytes=0-3")).await;
-    assert_eq!((status, bytes.as_slice()), (206, &b"%PDF"[..]));
-    assert_eq!(headers["content-range"], format!("bytes 0-3/{}", PDF.len()));
     let co_teacher = class.co_teacher("T-0003").await;
     assert_eq!(class.hub.get_file(url, Some(&co_teacher), None).await.0, 200);
+    class.hub.stop().await;
+}
+
+/// Contract #259: `Range` is for VIDEO downloads only. Any other file comes whole.
+#[tokio::test]
+async fn a_document_download_sends_the_whole_file_whatever_the_range() {
+    let class = Class::start().await;
+    let url = upload_pdf(&class, class.teacher()).await["download_url"].as_str().unwrap().to_owned();
+    let (status, headers, bytes) = class.hub.get_file(&url, Some(&class.learner_token), Some("bytes=0-3")).await;
+    assert_eq!((status, bytes.as_slice()), (200, PDF));
+    assert!(headers.get("content-range").is_none());
+    assert_eq!(headers["accept-ranges"], "none");
+    class.hub.stop().await;
+}
+
+/// Contract #259 and the mock's `test_video_download_resumes_with_range_and_if_range`: Save for Home
+/// resumes after a Wi-Fi drop, and starts over when the file changed.
+#[tokio::test]
+async fn a_video_download_resumes_with_range_and_if_range() {
+    let class = Class::start().await;
+    let url = upload_video(&class).await["download_url"].as_str().unwrap().to_owned();
+    let token = class.learner_token.clone();
+    let (status, headers, whole) = class.hub.get_file(&url, Some(&token), None).await;
+    assert_eq!((status, whole.as_slice()), (200, MP4));
+    assert_eq!(headers["accept-ranges"], "bytes");
+    let etag = headers["etag"].to_str().unwrap().to_owned();
+
+    let (status, headers, tail) = class.hub.get_file_with(&url, Some(&token), &[("Range", "bytes=10-"), ("If-Range", &etag)]).await;
+    assert_eq!((status, tail.as_slice()), (206, &MP4[10..]));
+    assert_eq!(headers["content-range"], format!("bytes 10-{}/{}", MP4.len() - 1, MP4.len()));
+    assert_eq!(headers["etag"], etag.as_str());
+
+    let (status, _, start) = class.hub.get_file(&url, Some(&token), Some("bytes=0-3")).await;
+    assert_eq!((status, start.as_slice()), (206, &MP4[..4]), "a Range alone works too");
+
+    let (status, _, again) = class.hub.get_file_with(&url, Some(&token), &[("Range", "bytes=10-"), ("If-Range", "\"stale\"")]).await;
+    assert_eq!((status, again.as_slice()), (200, MP4), "a changed file restarts from byte 0");
+
+    let past = format!("bytes={}-", MP4.len());
+    let (status, headers, _) = class.hub.get_file(&url, Some(&token), Some(&past)).await;
+    assert_eq!(status, 416);
+    assert_eq!(headers["content-range"], format!("bytes */{}", MP4.len()));
+    class.hub.stop().await;
+}
+
+/// Contract #259: `/stream` is for VIDEO materials. Streaming itself (with the 2 MB/s cap) is step 3.2.
+#[tokio::test]
+async fn the_stream_route_refuses_a_material_that_is_not_a_video() {
+    let class = Class::start().await;
+    let pdf = upload_pdf(&class, class.teacher()).await["id"].as_str().unwrap().to_owned();
+    let (status, body) = class.hub.get(&format!("/api/materials/{pdf}/stream"), Some(&class.learner_token)).await;
+    assert_eq!((status, error_code(&body), body["error"]["message"].as_str()), (404, "NOT_FOUND", Some("Not a video")));
+    let (status, body) = class.hub.get("/api/materials/no-such-material/stream", Some(&class.learner_token)).await;
+    assert_eq!((status, body["error"]["message"].as_str()), (404, Some("Material not found")));
+    let (_, outsider) = class.teacher_token("T-0002").await;
+    assert_eq!(class.hub.get(&format!("/api/materials/{pdf}/stream"), Some(&outsider)).await.0, 403);
+    let video = upload_video(&class).await["id"].as_str().unwrap().to_owned();
+    let (status, body) = class.hub.get(&format!("/api/materials/{video}/stream"), Some(&class.learner_token)).await;
+    assert_eq!((status, error_code(&body)), (501, "NOT_IMPLEMENTED"), "video streaming is step 3.2");
     class.hub.stop().await;
 }
 

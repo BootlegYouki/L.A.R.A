@@ -8,7 +8,7 @@ use axum::response::Response;
 use axum::routing::{get, patch, post};
 use axum::{Json, Router};
 
-use super::files::serve_stored;
+use super::files::{serve_stored, Ranges};
 use super::not_implemented_teacher as teacher;
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
 use crate::auth::{require_role, AuthUser, MediaUser, Role};
@@ -192,5 +192,5 @@ async fn submission_file(
     let missing = || ApiError::not_found("File not found");
     let format = format_of(&file.file_path).ok_or_else(missing)?;
     let path = app.storage.path(&file.file_path).ok_or_else(missing)?;
-    serve_stored(path, format.mime(), request, &id).await
+    serve_stored(path, format.mime(), request, &id, Ranges::AsServed).await
 }

@@ -16,9 +16,10 @@ fn code(body: &Value) -> Option<&str> {
 /// Operations whose step has landed, so they answer like the contract instead of 501: whole
 /// areas, plus single routes of areas still partly scaffolded. Paths as in `openapi.yaml`.
 const BUILT_AREAS: [&str; 3] = ["/api/classrooms", "/api/sync/", "/api/admin/"];
-const BUILT_ROUTES: [(&str, &str); 4] = [
+const BUILT_ROUTES: [(&str, &str); 5] = [
     ("POST", "/api/materials"),                // 3.3
     ("GET", "/api/materials/{id}/download"),   // 3.3
+    ("GET", "/api/materials/{id}/stream"),     // 3.3 refuses a non-video (#259); streaming itself is 3.2
     ("POST", "/api/assignments/{id}/submit"),  // 3.3
     ("GET", "/api/submissions/{id}/file"),     // 3.3
 ];

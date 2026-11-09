@@ -141,7 +141,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/topics`, `/api/topics/{id}` | `routes/topics.rs` | 404 | Delete clears `topic_id` in the same transaction |
 | `/api/announcements`, `/{id}`, `/{id}/comments` | `routes/announcements.rs` | 403 `COMMENTS_DISABLED`; 404 | Push after commit |
 | `POST /api/materials` | `routes/materials.rs`, `storage/*`, `document_parser` | 413 `FILE_TOO_LARGE` over 250 MB | Temp file deleted; nothing committed |
-| `/api/materials/{id}` PATCH/DELETE, `/download`, `/chunks` | `routes/materials.rs` | 404 | Range resume |
+| `/api/materials/{id}` PATCH/DELETE, `/download`, `/chunks` | `routes/materials.rs` | 404 | VIDEO resumes with Range and If-Range (#259); other files whole |
 | `/api/materials/{id}/stream` | `routes/video_stream.rs`, `BandwidthLimiter` | 404; 416 | Bucket released |
 | `/api/assignments`, `/{id}`, `/{id}/submissions` | `routes/assignments.rs` | 404 (archived counts as missing) | Delete archives |
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
