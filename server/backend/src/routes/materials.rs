@@ -1,6 +1,6 @@
 //! Lesson files (contract `/api/materials`). Upload and download are step 3.3, with contract #259's
-//! resumable VIDEO downloads; rename, delete, chunks (3.1) and the video stream itself (3.2) are
-//! still stubs. `/stream` already refuses a material that is not a video (#259).
+//! resumable VIDEO downloads; lesson text chunks are 3.1 and the video stream 3.2. Rename and delete
+//! are still stubs (3.4).
 
 use axum::extract::multipart::MultipartRejection;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, Request, State};
@@ -150,8 +150,11 @@ async fn chunks(State(app): State<AppState>, user: AuthUser, Path(id): Path<Stri
     Ok(Json(material_chunks::for_material(&mut conn, &id).await?))
 }
 
-/// Contract #259: `/stream` is for VIDEO materials, so a member asking for any other kind gets 404,
-/// as in the mock. Streaming the video, with the 2.0 MB/s cap, is step 3.2 (#8).
+/// Contract `GET /api/materials/{id}/stream` (step 3.2, #8): a lesson video in byte ranges, so the
+/// player seeks anywhere without fetching the whole file. Any member of the class, also while it is
+/// archived. `Range` gets `206`, none gets the whole video as `200`, and `If-Range` works as on
+/// the VIDEO download (contract #259). The video's own type (`video/mp4` or `video/webm`), so a
+/// desktop `<video>` tag plays it. Any other kind of material is 404, as in the mock.
 async fn stream(
     State(app): State<AppState>,
     MediaUser(user): MediaUser,
@@ -164,5 +167,7 @@ async fn stream(
     if file.file_type != "VIDEO" {
         return Err(ApiError::not_found("Not a video"));
     }
-    Err(ApiError::not_implemented(request.method(), request.uri().path()))
+    drop(conn);
+    let path = app.storage.path(&file.file_path).ok_or_else(|| ApiError::not_found("File not found"))?;
+    serve_stored(path, &file.mime_type, request, &id, Ranges::Resumable(stored_etag(&file.file_path))).await
 }

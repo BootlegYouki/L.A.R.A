@@ -20,7 +20,7 @@ const BUILT_ROUTES: [(&str, &str); 6] = [
     ("POST", "/api/materials"),                // 3.3
     ("GET", "/api/materials/{id}/download"),   // 3.3
     ("GET", "/api/materials/{id}/chunks"),     // 3.1
-    ("GET", "/api/materials/{id}/stream"),     // 3.3 refuses a non-video (#259); streaming itself is 3.2
+    ("GET", "/api/materials/{id}/stream"),     // 3.2 streams a video; 3.3 refuses a non-video (#259)
     ("POST", "/api/assignments/{id}/submit"),  // 3.3
     ("GET", "/api/submissions/{id}/file"),     // 3.3
 ];

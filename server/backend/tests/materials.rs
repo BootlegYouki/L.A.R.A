@@ -239,7 +239,7 @@ async fn a_video_download_resumes_with_range_and_if_range() {
     class.hub.stop().await;
 }
 
-/// Contract #259: `/stream` is for VIDEO materials. Streaming itself (with the 2 MB/s cap) is step 3.2.
+/// Contract #259: `/stream` is for VIDEO materials. Streaming a video is tested in `streaming.rs` (3.2).
 #[tokio::test]
 async fn the_stream_route_refuses_a_material_that_is_not_a_video() {
     let class = Class::start().await;
@@ -251,8 +251,7 @@ async fn the_stream_route_refuses_a_material_that_is_not_a_video() {
     let (_, outsider) = class.teacher_token("T-0002").await;
     assert_eq!(class.hub.get(&format!("/api/materials/{pdf}/stream"), Some(&outsider)).await.0, 403);
     let video = upload_video(&class).await["id"].as_str().unwrap().to_owned();
-    let (status, body) = class.hub.get(&format!("/api/materials/{video}/stream"), Some(&class.learner_token)).await;
-    assert_eq!((status, error_code(&body)), (501, "NOT_IMPLEMENTED"), "video streaming is step 3.2");
+    assert_eq!(class.hub.get(&format!("/api/materials/{video}/stream"), Some(&outsider)).await.0, 403, "not their class");
     class.hub.stop().await;
 }
 
