@@ -10,3 +10,9 @@
 local.properties
 .gradle-user-home/
 .kotlin/
+
+# Source packages named media are code, not uploaded lesson files.
+!app/src/main/java/org/lara/app/data/media/
+!app/src/main/java/org/lara/app/data/media/*.kt
+!app/src/test/java/org/lara/app/media/
+!app/src/test/java/org/lara/app/media/*.kt

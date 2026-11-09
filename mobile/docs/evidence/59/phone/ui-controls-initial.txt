@@ -1,0 +1,68 @@
+INSTRUMENTATION_STATUS: class=org.lara.app.reading.VideoDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+org.lara.app.reading.VideoDeviceTest:
+INSTRUMENTATION_STATUS: test=cEnglishAndLargeFontControls
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.lara.app.reading.VideoDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Playback control missing: Play
+	at org.lara.app.reading.VideoDeviceTest.waitUntil(VideoDeviceTest.kt:64)
+	at org.lara.app.reading.VideoDeviceTest.access$waitUntil(VideoDeviceTest.kt:52)
+	at org.lara.app.reading.VideoDeviceTest$cEnglishAndLargeFontControls$1.invokeSuspend(VideoDeviceTest.kt:214)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:280)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at org.lara.app.reading.VideoDeviceTest.cEnglishAndLargeFontControls(VideoDeviceTest.kt:194)
+
+INSTRUMENTATION_STATUS: stream=
+Error in cEnglishAndLargeFontControls(org.lara.app.reading.VideoDeviceTest):
+java.lang.AssertionError: Playback control missing: Play
+	at org.lara.app.reading.VideoDeviceTest.waitUntil(VideoDeviceTest.kt:64)
+	at org.lara.app.reading.VideoDeviceTest.access$waitUntil(VideoDeviceTest.kt:52)
+	at org.lara.app.reading.VideoDeviceTest$cEnglishAndLargeFontControls$1.invokeSuspend(VideoDeviceTest.kt:214)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:280)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at org.lara.app.reading.VideoDeviceTest.cEnglishAndLargeFontControls(VideoDeviceTest.kt:194)
+
+INSTRUMENTATION_STATUS: test=cEnglishAndLargeFontControls
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 20.907
+There was 1 failure:
+1) cEnglishAndLargeFontControls(org.lara.app.reading.VideoDeviceTest)
+java.lang.AssertionError: Playback control missing: Play
+	at org.lara.app.reading.VideoDeviceTest.waitUntil(VideoDeviceTest.kt:64)
+	at org.lara.app.reading.VideoDeviceTest.access$waitUntil(VideoDeviceTest.kt:52)
+	at org.lara.app.reading.VideoDeviceTest$cEnglishAndLargeFontControls$1.invokeSuspend(VideoDeviceTest.kt:214)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:280)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:85)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:59)
+	at kotlinx.coroutines.BuildersKt.runBlocking(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:38)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(dex-id-f800dfbac09e332a48eec10d06dd481c693e1a98:1)
+	at org.lara.app.reading.VideoDeviceTest.cEnglishAndLargeFontControls(VideoDeviceTest.kt:194)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

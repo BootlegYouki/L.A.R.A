@@ -1,0 +1,15 @@
+Uncommitted implementation/tests on HEAD 65f1b061960a6ac961aa3c32363c5fc59b67ee02
+SHA-256
+52ec7f4665d691f9ef84d7acd2471ba3d92434c0edabebebbde62ab54bc24475  mobile/app/src/androidTest/java/org/lara/app/reading/VideoDeviceTest.kt
+1a6901200b70016d23edebc7e0b1a1378b384745b3b6051a805c180a5a20150b  mobile/app/src/main/java/org/lara/app/data/media/DownloadManager.kt
+8d7704b16190f3c830a6a62f39926456fae02cdc52bb020b1f89cbe3de6cab5c  mobile/app/src/main/java/org/lara/app/data/repository/VideoRepository.kt
+45c1e24b4568fa5cfb1b8de925129e25f7b3d9747c25e4dd2fc906e4914dc891  mobile/app/src/main/java/org/lara/app/domain/VideoRepository.kt
+c94c1dc1f915ae49f4f0aa224a9ed60e7ae6fd97827ad6e3b8f17ac8a8ce6029  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoPlaybackSession.kt
+865b9bed8439c391a01a82647edba82329319074d34c69090d0ee0e341db74f5  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoPlayerScreen.kt
+827974a842a7e622e6b97cdc001e4408ff9b419aadf8ea1232b49070233ace89  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoViewModel.kt
+de3bc5a27e63c2b77833f5aea102c0cf00ff02a4dab288186c02fdea0665286b  mobile/app/src/main/res/drawable/ic_corners_in.xml
+0c962894dd4f7aa3e1c153cf268c4eab1659256dc91479f9d09d693666700b27  mobile/app/src/main/res/drawable/ic_corners_out.xml
+beaedd401cb52c90c798c4a49d844e3e73b29a08ed03402ee672b9cbbb74df85  mobile/app/src/main/res/drawable/ic_trash.xml
+35d2797f56d85bef260177217eeee36ffb620695e5ecce9667696289b5fd3c37  mobile/app/src/main/res/values/strings.xml
+6ab498551a4de828ee604f08db3930d666cc27221f74bdf045094d9f3b7b6a12  mobile/app/src/test/java/org/lara/app/media/VideoIntegrationTest.kt
+82fe26a11953ec269bb5fd4cec7dca52723e826065ae1f333b22e6f38a3c47ed  mobile/app/src/test/java/org/lara/app/media/VideoViewModelTest.kt

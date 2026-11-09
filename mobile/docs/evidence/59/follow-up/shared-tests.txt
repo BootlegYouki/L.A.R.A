@@ -1,0 +1,733 @@
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /download HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/logout HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/users/00000000-0000-4000-8000-000000000000/reset-pin HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/remove HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/teachers HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/classrooms/00000000-0000-4000-8000-000000000000/teachers/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/00000000-0000-4000-8000-000000000000/roster HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/approve HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/00000000-0000-4000-8000-000000000000/reject HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/topics HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/topics/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/topics/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/announcements/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/announcements/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/announcements/00000000-0000-4000-8000-000000000000/comments HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements/00000000-0000-4000-8000-000000000000/comments HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/materials HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/materials/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/materials/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/download HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/chunks HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/00000000-0000-4000-8000-000000000000/stream HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/assignments/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/00000000-0000-4000-8000-000000000000/private-comments HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/00000000-0000-4000-8000-000000000000/private-comments HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/00000000-0000-4000-8000-000000000000/submit HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/00000000-0000-4000-8000-000000000000/submissions HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/submissions/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/submissions/00000000-0000-4000-8000-000000000000/file HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/active HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/00000000-0000-4000-8000-000000000000 HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/start HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/begin HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/close HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/00000000-0000-4000-8000-000000000000/submit HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/00000000-0000-4000-8000-000000000000/results HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/export/class-record HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/backup HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/restore HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 409 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/setup HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/admin/users HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/5b281012-ffed-4077-a460-a09253a976f3/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/5b281012-ffed-4077-a460-a09253a976f3/begin HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 404 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+python : .....................................C:\Users\DJ
+
+Rapmasta\AppData\Local\Programs\Python\Python313\Lib\unittest\case.py:606: ResourceWarning: unclosed <socket.socket
+
+fd=528, family=2, type=1, proto=0, laddr=('127.0.0.1', 52687), raddr=('127.0.0.1', 8099)>
+
+At line:2 char:158
+
++ ... NG='utf-8'; python -m unittest discover tests *> mobile/build/59-shar ...
+
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo          : NotSpecified: (...................0.0.1', 8099)>:String) [], RemoteException
+
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+
+  if method() is not None:
+
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e5646f9a-38a7-4b61-ba0e-83dc60e7344f/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/download HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/e5646f9a-38a7-4b61-ba0e-83dc60e7344f HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/e5646f9a-38a7-4b61-ba0e-83dc60e7344f/begin HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/461a74c4-757e-4090-a9f8-61e917959df1/submissions HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/m1000000-0000-4000-8000-000000000001/chunks HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/reject HTTP/1.1" 404 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 404 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/reject HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 404 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/dd1814f4-abb6-4370-b5dd-3fe2a00829f1/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/dd1814f4-abb6-4370-b5dd-3fe2a00829f1/begin HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/dd1814f4-abb6-4370-b5dd-3fe2a00829f1/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/dd1814f4-abb6-4370-b5dd-3fe2a00829f1/close HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 409 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/submissions/future-time HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/d3fe73c9-c043-4ffa-bd31-f83ca3e5a266/submit HTTP/1.1" 409 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 429 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/register HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/materials HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/materials/f7a9c019-d931-43ca-8243-b2223714786c HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/materials/f7a9c019-d931-43ca-8243-b2223714786c HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/a48f3d31-f5e1-4539-8c2f-ccf8f0c2124b/private-comments HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/a48f3d31-f5e1-4539-8c2f-ccf8f0c2124b/private-comments HTTP/1.1" 400 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/a48f3d31-f5e1-4539-8c2f-ccf8f0c2124b/private-comments?student_id=c9b86f20-eb9f-49a3-bebb-4f11bc8f2c6b HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/a48f3d31-f5e1-4539-8c2f-ccf8f0c2124b/private-comments HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/assignments/a48f3d31-f5e1-4539-8c2f-ccf8f0c2124b/private-comments HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/6357729b-a2ae-4a95-98b5-9f9c675d7a04 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/6357729b-a2ae-4a95-98b5-9f9c675d7a04/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/quizzes/6357729b-a2ae-4a95-98b5-9f9c675d7a04 HTTP/1.1" 409 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/a53510e5-6918-455c-8aa1-a46f70ec9ff1/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/a53510e5-6918-455c-8aa1-a46f70ec9ff1 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/a53510e5-6918-455c-8aa1-a46f70ec9ff1/begin HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/a53510e5-6918-455c-8aa1-a46f70ec9ff1/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/remove HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/admin/users HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/teachers/e27bb5e2-daad-4d84-bd2f-015d7f3c9d65 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms HTTP/1.1" 401 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream?token=7a65dbcb86a94b0785ad48264c92b92f6102ef29048046d9ae1316353fe53ea3 HTTP/1.1" 206 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/announcements/a0de1dfa-59a3-4f62-86a1-e509f3fc4d64/comments HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements/a0de1dfa-59a3-4f62-86a1-e509f3fc4d64/comments HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/push HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/c98fcbac-9d98-42c3-95f8-1876a757c2f8/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/active HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/c98fcbac-9d98-42c3-95f8-1876a757c2f8 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/quizzes/c98fcbac-9d98-42c3-95f8-1876a757c2f8 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/join HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/roster HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/classrooms/c1a2b3c4-0001-4000-8000-000000000001/approve HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/assignments/21e953b5-2eef-4076-994c-599cff92e814/submit HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/95bd20bf-e439-488c-bbd0-7bd5c6ebf2d2/start HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/95bd20bf-e439-488c-bbd0-7bd5c6ebf2d2/begin HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/quizzes/95bd20bf-e439-488c-bbd0-7bd5c6ebf2d2/submit HTTP/1.1" 422 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/96c0f5e5-4113-4841-9602-1bbb76e82bc0 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/assignments/96c0f5e5-4113-4841-9602-1bbb76e82bc0 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/96c0f5e5-4113-4841-9602-1bbb76e82bc0 HTTP/1.1" 403 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/announcements HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/announcements/0b1a1718-147f-4de2-b9a6-889e727f0503 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/topics HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "PATCH /api/assignments/5d0ff9b0-c504-4394-84a0-24f50b3f5f88 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "DELETE /api/topics/c0db1d52-2642-4eb0-a8a3-886e755029e3 HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/sync/pull HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/nope HTTP/1.1" 404 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+
+...............................
+
+----------------------------------------------------------------------
+
+Ran 68 tests in 7.542s
+
+
+
+OK

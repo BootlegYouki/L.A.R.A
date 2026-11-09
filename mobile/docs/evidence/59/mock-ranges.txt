@@ -1,0 +1,16 @@
+[HTTP] 127.0.0.1 - "POST /api/auth/login HTTP/1.1" 200 -
+Authenticated documented seeded learner; credential output suppressed.
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+Range bytes=0-65535: HTTP 206; Content-Range=bytes 0-65535/1048576; bytes=65536
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+Range bytes=200000-209999: HTTP 206; Content-Range=bytes 200000-209999/1048576; bytes=10000
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 206 -
+Range bytes=1000-1999: HTTP 206; Content-Range=bytes 1000-1999/1048576; bytes=1000
+DISCREPANCY: stream bytes are ASCII zero placeholders, not a decodable video.
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/download HTTP/1.1" 200 -
+Download resume request: HTTP 200; bytes=29; Content-Range=None; PDF placeholder=True
+DISCREPANCY: video download returns PDF placeholder and ignores Range; real video saving/resume cannot be verified against this mock.
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 401 -
+Refusal probe: HTTP 401
+[HTTP] 127.0.0.1 - "GET /api/materials/m2000000-0000-4000-8000-000000000002/stream HTTP/1.1" 416 -
+Refusal probe: HTTP 416

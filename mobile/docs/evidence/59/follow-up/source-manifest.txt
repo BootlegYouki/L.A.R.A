@@ -1,0 +1,11 @@
+Baseline: 132417f417804e3387d085fc0d3aade749dd4ad5
+Branch: feat/59-mobile-3.3-video-offline
+Mock snapshot: 16a52980b5a87119306a68340f850ba1b5a5fc83
+Uncommitted source SHA-256:
+eff77c72c50673308c7d6207e4ac628e81a0be9e0033deef76c98fe299c1d19f  mobile/app/src/androidTest/java/org/lara/app/reading/VideoDeviceTest.kt
+99da95457238742b0b93a424eabef8c7b152ae124e072658e1249c92adab93c0  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoPlayerScreen.kt
+680d13d6f6e5bd167a13e5df91ae4655a9cafd564c1907373081979b7e10a1f2  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoViewModel.kt
+121d1cb068b1d1170f7e7902604c6526652e25d9967f793ebad9a13066ad3a3d  mobile/app/src/main/res/values/strings.xml
+e527d933ddb8bfcd16a58e5426fa8ccc76da1f952dfa6dc5be27446e2329f50a  mobile/app/src/test/java/org/lara/app/media/VideoViewModelTest.kt
+9cbbb4d68ff7fb5211c4d58f598ac9d8664c05fdcd1e5f59b7f2c3ac1ee00af0  mobile/gradlew
+Gradle wrapper mode: 100755 d95bf6131dc41079a1665889f84d4cfec92a2bc1 0	mobile/gradlew
