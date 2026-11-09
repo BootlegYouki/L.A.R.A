@@ -92,6 +92,30 @@ async fn if_range_resumes_only_while_the_video_is_unchanged() {
     class.hub.stop().await;
 }
 
+/// Android's download manager and Chrome resume with `If-Match` and the `ETag` the Hub sent (seen on a
+/// Redmi in the 3.2 phone check, where every such resume got 412). While the file is unchanged the
+/// range comes back; a stale tag gets 412, so the client starts over. Both routes that resume.
+#[tokio::test]
+async fn if_match_with_the_hubs_etag_resumes_and_a_stale_one_gets_412() {
+    let class = Class::start().await;
+    let video = lesson_video();
+    let id = upload_video(&class, &video).await;
+    for path in [stream_path(&id), format!("/api/materials/{id}/download")] {
+        let (_, headers, _) = class.hub.get_file(&path, Some(&class.learner_token), Some("bytes=0-9")).await;
+        let etag = headers["etag"].to_str().unwrap().to_owned();
+        for tag in [etag.as_str(), "*"] {
+            let resume = [("Range", "bytes=1000-"), ("If-Match", tag)];
+            let (status, _, body) = class.hub.get_file_with(&path, Some(&class.learner_token), &resume).await;
+            assert_eq!(status, 206, "{path} with If-Match {tag}");
+            assert!(body == video[1000..], "{path} with If-Match {tag}: not the bytes from 1000 on");
+        }
+        let stale = [("Range", "bytes=1000-"), ("If-Match", "\"stale\"")];
+        let (status, _, _) = class.hub.get_file_with(&path, Some(&class.learner_token), &stale).await;
+        assert_eq!(status, 412, "{path}: a changed file must not be resumed");
+    }
+    class.hub.stop().await;
+}
+
 #[tokio::test]
 async fn a_range_past_the_end_gets_416() {
     let class = Class::start().await;

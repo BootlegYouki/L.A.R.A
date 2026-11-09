@@ -5,6 +5,8 @@
 //!
 //! `ServeFile` ignores `If-Range`, so for a resumable download the Hub checks it here (contract
 //! #259): a client resuming a file that changed since its first request gets the whole new file.
+//! `ServeFile` checks `If-Match` against its own tag, which clients never see (the Hub sends
+//! `stored_etag` instead), so the Hub checks that one here too.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -57,6 +59,16 @@ pub async fn serve_stored(
                 headers.remove(header::RANGE);
             }
             headers.remove(header::IF_RANGE);
+            // Android's download manager and Chrome resume with `If-Match: <the tag we sent>`. Left to
+            // `ServeFile`, that is compared with its own tag and always fails with 412 (seen on a phone
+            // in step 3.2). RFC 9110 13.1.1: a stale tag is 412, so the client starts over.
+            if let Some(sent) = headers.remove(header::IF_MATCH) {
+                if !if_match_passes(&sent, etag) {
+                    let mut refused = StatusCode::PRECONDITION_FAILED.into_response();
+                    refused.headers_mut().insert(header::ETAG, etag.clone());
+                    return Ok(refused);
+                }
+            }
         }
         Ranges::WholeFile => {
             headers.remove(header::RANGE);
@@ -87,6 +99,12 @@ pub async fn serve_stored(
     }
     let (parts, body) = response.into_parts();
     Ok(Response::from_parts(parts, bandwidth::throttle(body, allowance)))
+}
+
+/// `If-Match` (RFC 9110 13.1.1): `*`, or a list in which one tag is ours. Strong comparison, so a
+/// weak `W/` tag never matches.
+fn if_match_passes(sent: &HeaderValue, etag: &HeaderValue) -> bool {
+    sent.to_str().is_ok_and(|list| list.split(',').map(str::trim).any(|tag| tag == "*" || tag.as_bytes() == etag.as_bytes()))
 }
 
 fn missing(id: &str) -> ApiError {

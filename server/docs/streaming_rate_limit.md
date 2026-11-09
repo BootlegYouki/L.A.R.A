@@ -22,6 +22,7 @@ Learners play lesson videos straight from the Hub over the classroom Wi-Fi. `GET
    - No `Range` gets the whole video as 200.
    - A range past the end gets 416 with `Content-Range: bytes */<size>`.
    - An `If-Range` that no longer matches the strong `ETag` gets the whole file, so a player never mixes two versions.
+   - `If-Match` with the `ETag` (how Android's download manager and Chrome resume) gets the range; a stale tag gets 412. The Hub checks it itself: left to `ServeFile`, it was compared with a tag clients never see and always failed (found on a Redmi in the phone check).
    - Every answer carries `Accept-Ranges: bytes`, the `ETag`, `X-Content-Type-Options: nosniff`, and the video's own type (`video/mp4` or `video/webm`), so `<video>` plays it.
 4. **How fast.** The response body goes out in the pieces `ServeFile` reads, 64 KiB each. Before each piece is sent, it books its bytes from the user's allowance and waits until they are paid for. A player that closes the connection (to seek, say) drops the body, and its spending stops at once.
 

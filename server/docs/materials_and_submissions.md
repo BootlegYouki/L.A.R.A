@@ -45,6 +45,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
 7. **Serve.** `ServeFile` streams from disk. Both routes send `X-Content-Type-Options: nosniff`. Every file sent counts against the user's 2.0 MB/s (step 3.2, `streaming_rate_limit.md`).
    - Material downloads are `application/octet-stream`, as the contract and the mock send them.
    - **VIDEO downloads resume** (contract #259): `Range` gets 206 with `Content-Range`, a range past the end gets 416 with `Content-Range: bytes */<size>`, and every answer carries `Accept-Ranges: bytes` and an `ETag`. With `If-Range`, a tag that no longer matches gets the whole file as 200, so Save for Home starts over when the file changed. `ServeFile` ignores `If-Range`, so `serve_stored` checks it and drops `Range` when it is stale. The `ETag` is a hash of the stored name; stored files are never changed in place, so it changes only with the file.
+   - **`If-Match` works too** (step 3.2): Android's download manager and Chrome resume with `If-Match` and the Hub's `ETag`. The Hub checks it against its own tag, since `ServeFile` would compare it with a tag clients never see and always answer 412. A stale tag is 412, so the client starts over.
    - **Other material downloads** come whole (200) whatever `Range` asks for, with `Accept-Ranges: none` (the contract makes `Range` VIDEO only).
    - Submission files answer `Range` as `ServeFile` does; the contract says nothing more for them.
    - Submission files carry their real type, as the mock does, so image views can show the photo.
