@@ -17,7 +17,7 @@ multicast (`rules/networking-and-lan.md` §4.2).
 | File | Responsibility |
 | :--- | :--- |
 | `backend/src/discovery/mod.rs` | `lan_ip() -> Option<IpAddr>`: the one reachable LAN address (skips loopback/unspecified). Declares the two submodules. |
-| `backend/src/discovery/udp.rs` | `run(BeaconInfo, watch::Receiver<bool>)`: the beacon loop. `BeaconInfo { name, http_port, ws_port }`. Consts `BEACON_PORT = 8888`, `BEACON_INTERVAL = 3 s`. |
+| `backend/src/discovery/udp.rs` | `run(BeaconInfo, watch::Receiver<bool>)`: the beacon loop. `bind_beacon_socket(Ipv4Addr)`: the socket on the classroom adapter's address (#200). `BeaconInfo { name, http_port, ws_port }`. Consts `BEACON_PORT = 8888`, `BEACON_INTERVAL = 3 s`. |
 | `backend/src/discovery/mdns.rs` | `start(name, http_port, lan_ip) -> Option<MdnsResponder>`: registers `_lara._tcp` via `libmdns` under `announced_name(name)` (see section 4). The returned guard unregisters on drop. |
 | `backend/src/lib.rs` | `serve()` spawns the beacon as a task and holds the mDNS guard in `HubHandle`; both stop on `shutdown()`. |
 | `backend/src/config.rs` | `HubConfig.hub_name` (the beacon `name`), default `DEFAULT_HUB_NAME`. |
@@ -41,8 +41,16 @@ No database, no files, no events on the Broker. Discovery is read-only network o
 
 ## 4. Gotchas and edge cases
 * **Best-effort, never fatal.** A router that blocks broadcast or a busy `:5353` must not stop the
-  Hub. `udp::run` logs once and returns; `mdns::start` returns `None`; serving continues. This is why
-  the manual IP box is mandatory on every client.
+  Hub. If the beacon socket cannot be opened, `udp::run` logs once and retries every tick;
+  `mdns::start` returns `None`; serving continues. This is why the manual IP box is mandatory on
+  every client.
+* **The beacon leaves through the classroom adapter (#200).** The socket is bound to `lan_ip()`,
+  not `0.0.0.0`. With `0.0.0.0`, Windows picked the adapter for `255.255.255.255` itself: both the
+  classroom adapter and VirtualBox's Host-Only adapter had an on-link route for it with metric 281,
+  and Windows chose VirtualBox, so phones on the router never received the beacon (only mDNS found
+  the Hub). A phone test from the same laptop showed a beacon sent from a socket bound to the LAN
+  address arrives and one bound to `0.0.0.0` does not. Hyper-V, Docker and VPN adapters can cause
+  the same. `lan_ip()` is re-read every tick, and the socket is re-bound when the address changes.
 * **No network yet.** When `lan_ip()` is `None` the beacon skips that tick quietly (an address-less
   packet would only mislead). mDNS still starts and advertises whatever interfaces it finds.
 * **`libmdns` runs its own OS thread** with a current-thread runtime; it does not borrow the Hub's
@@ -69,7 +77,11 @@ No database, no files, no events on the Broker. Discovery is read-only network o
 
 ## 5. Tests
 * `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, a
-  name with dots arrives whole, and the port and interval match the rules file.
+  name with dots arrives whole, the port and interval match the rules file, and the beacon socket is
+  bound to the address it is given (never `0.0.0.0`), may broadcast, and sends from that address
+  (#200; loopback stands in for the classroom adapter).
+* Manual check for #200: on a Hub PC with VirtualBox's Host-Only adapter up and mDNS blocked, a phone
+  on the router lists the Hub from the beacon alone.
 * `discovery/mdns.rs` unit tests: the announced name drops the dots, a name of only dots or spaces
   falls back to "LARA Hub", and a long name is cut below the label limit without splitting a
   character.
