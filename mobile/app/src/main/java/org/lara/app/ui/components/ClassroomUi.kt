@@ -47,29 +47,27 @@ fun ClassroomSurface(modifier: Modifier = Modifier, content: @Composable ColumnS
 fun ClassroomCard(name: String, section: String?, teacher: String?, status: String, ready: Boolean, open: () -> Unit) {
     Surface(onClick = open, enabled = ready, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).laraShadow(),
         shape = LaraShapes.large, color = LaraColors.Surface, border = BorderStroke(1.dp, LaraColors.Border)) {
-        Column {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-                Column(Modifier.fillMaxWidth().padding(LaraSpacing.S5), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+        Column(Modifier.padding(LaraSpacing.S5), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.medium) {
+                Box(Modifier.size(PrimaryTouchTarget), contentAlignment = Alignment.Center) {
                     Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(32.dp))
-                    Text(name, style = MaterialTheme.typography.headlineMedium)
-                    if (!section.isNullOrBlank()) Text(section, color = LaraColors.PrimaryLight, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                Surface(color = if (ready) LaraColors.PrimaryLight else LaraColors.WarningLight, shape = CircleShape) {
-                    Row(Modifier.padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S2),
-                        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(painterResource(if (ready) R.drawable.ic_check_circle else R.drawable.ic_info), null,
-                            Modifier.size(20.dp), tint = if (ready) LaraColors.PrimaryDark else LaraColors.WarningDark)
-                        Text(status, style = MaterialTheme.typography.labelLarge,
-                            color = if (ready) LaraColors.PrimaryDark else LaraColors.WarningBannerText)
-                    }
+            Text(name, style = MaterialTheme.typography.headlineMedium)
+            if (!section.isNullOrBlank()) Text(section, color = LaraColors.TextSecondary, style = MaterialTheme.typography.bodyLarge)
+            Surface(color = if (ready) LaraColors.PrimaryLight else LaraColors.WarningLight, shape = CircleShape) {
+                Row(Modifier.padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S2),
+                    horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(if (ready) R.drawable.ic_check_circle else R.drawable.ic_info), null,
+                        Modifier.size(20.dp), tint = if (ready) LaraColors.PrimaryDark else LaraColors.WarningDark)
+                    Text(status, style = MaterialTheme.typography.labelLarge,
+                        color = if (ready) LaraColors.PrimaryDark else LaraColors.WarningBannerText)
                 }
-                if (!teacher.isNullOrBlank()) Text(teacher, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                if (ready) {
-                    HorizontalDivider(color = LaraColors.Border)
-                    Text(stringResource(R.string.enrollment_open), color = LaraColors.PrimaryDark, style = MaterialTheme.typography.labelLarge)
-                }
+            }
+            if (!teacher.isNullOrBlank()) Text(teacher, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+            if (ready) {
+                HorizontalDivider(color = LaraColors.Border)
+                Text(stringResource(R.string.enrollment_open), color = LaraColors.PrimaryDark, style = MaterialTheme.typography.labelLarge)
             }
         }
     }

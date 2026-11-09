@@ -42,7 +42,7 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
 
 @Composable
 fun ClassManagementPage(container: AppContainer, userId: String, reachable: StateFlow<Boolean>, expired: () -> Unit,
-    initialClassId: String? = null, embedded: Boolean = false, close: () -> Unit) {
+    initialClassId: String? = null, embedded: Boolean = false, startCreating: Boolean = false, close: () -> Unit) {
     val latestExpired by rememberUpdatedState(expired)
     val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
         initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
@@ -54,18 +54,18 @@ fun ClassManagementPage(container: AppContainer, userId: String, reachable: Stat
         }
     }
     val online by reachable.collectAsStateWithLifecycle()
-    ClassManagementScreen(model, userId, online, close, embedded)
+    ClassManagementScreen(model, userId, online, close, embedded, startCreating)
 }
 
 @Composable
 private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit,
-    embedded: Boolean = false) {
+    embedded: Boolean = false, startCreating: Boolean = false) {
     val cached by model.classrooms.collectAsStateWithLifecycle()
     val teacherNames by model.teacherNames.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
     val selected = classes.find { it.id == state.selected }
-    var form by rememberSaveable { mutableStateOf<String?>(null) }
+    var form by rememberSaveable { mutableStateOf<String?>(if (startCreating) "create" else null) }
     var name by rememberSaveable { mutableStateOf("") }
     var section by rememberSaveable { mutableStateOf("") }
     var target by rememberSaveable { mutableStateOf("") }
