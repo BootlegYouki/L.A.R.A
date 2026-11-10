@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.lara.app.ui.theme.PaletteTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-10T16:39:54" hostname="DESKTOP-TIJCN7H" time="0.048">
+  <properties/>
+  <testcase name="semanticTextAndIconsKeepReadableContrast" classname="org.lara.app.ui.theme.PaletteTest" time="0.048"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

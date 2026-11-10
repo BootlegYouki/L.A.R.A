@@ -1,0 +1,50 @@
+[
+  {
+    "role": "Primary white label",
+    "foreground": "#FFFFFF",
+    "background": "#059669",
+    "contrast": 3.77
+  },
+  {
+    "role": "Darker emerald white label",
+    "foreground": "#FFFFFF",
+    "background": "#047857",
+    "contrast": 5.48
+  },
+  {
+    "role": "Success text",
+    "foreground": "#047857",
+    "background": "#ECFDF5",
+    "contrast": 5.21
+  },
+  {
+    "role": "Secondary action text",
+    "foreground": "#2563EB",
+    "background": "#EFF6FF",
+    "contrast": 4.75
+  },
+  {
+    "role": "Metadata",
+    "foreground": "#64748B",
+    "background": "#F8FAFC",
+    "contrast": 4.55
+  },
+  {
+    "role": "Alert text",
+    "foreground": "#B45309",
+    "background": "#FFFBEB",
+    "contrast": 4.84
+  },
+  {
+    "role": "Alert icon",
+    "foreground": "#D97706",
+    "background": "#FFFBEB",
+    "contrast": 3.07
+  },
+  {
+    "role": "Small header metadata",
+    "foreground": "#0F172A",
+    "background": "#059669",
+    "contrast": 4.74
+  }
+]
