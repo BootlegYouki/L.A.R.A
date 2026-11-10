@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="" version="32.6.10" type="device">
+  <diagram id="erd-quizzes-ai-sync" name="erd-quizzes-ai-sync">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="quizzes" value="&lt;b&gt;quizzes&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK classroom_id → classrooms.id&lt;br&gt;title, instructions, topic_id&lt;br&gt;time_limit_minutes, shuffle_questions&lt;br&gt;release_scores_immediately, scores_released_at&lt;br&gt;status, started_at&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="377" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_questions" value="&lt;b&gt;quiz_questions&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK quiz_id → quizzes.id&lt;br&gt;order_index, question_text, question_type&lt;br&gt;options_json, points, image_path&lt;br&gt;correct_answer, synonyms_json&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="339" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_attempts" value="&lt;b&gt;quiz_attempts&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK quiz_id → quizzes.id&lt;br&gt;FK student_id → users.id&lt;br&gt;status, started_at, submitted_at&lt;br&gt;score, total_points, answers_json&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="430" width="278" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_chat_messages" value="&lt;b&gt;ai_chat_messages&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK classroom_id → classrooms.id&lt;br&gt;FK student_id → users.id&lt;br&gt;FK material_id → materials.id (nullable)&lt;br&gt;FK chunk_id → material_chunks.id (nullable)&lt;br&gt;language, role, content, created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="900" y="200" width="354" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="sync_revisions" value="&lt;b&gt;sync_revisions&lt;/b&gt;&lt;br&gt;PK seq&lt;br&gt;classroom_id (nullable)&lt;br&gt;student_id (nullable)&lt;br&gt;entity_table, entity_id&lt;br&gt;action, created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="202" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="hub_meta" value="&lt;b&gt;hub_meta&lt;/b&gt;&lt;br&gt;PK key&lt;br&gt;value" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="400" y="620" width="88" height="67" as="geometry" />
+        </mxCell>
+        <mxCell id="classrooms" value="&lt;b&gt;classrooms&lt;/b&gt;&lt;br&gt;see account and classroom ERD" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f4f7f9;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="248" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="users" value="&lt;b&gt;users&lt;/b&gt;&lt;br&gt;see account and classroom ERD" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f4f7f9;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="953" y="430" width="248" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="materials" value="&lt;b&gt;materials&lt;/b&gt;&lt;br&gt;see classwork ERD" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f4f7f9;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="200" width="157" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="material_chunks" value="&lt;b&gt;material_chunks&lt;/b&gt;&lt;br&gt;see classwork ERD" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f4f7f9;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="320" width="157" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="classrooms" target="quizzes">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="classrooms" target="ai_chat_messages">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.33;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="quizzes" target="quiz_questions">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="quizzes" target="quiz_attempts">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="users" target="quiz_attempts">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERmandOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="users" target="ai_chat_messages">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERzeroToOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="materials" target="ai_chat_messages">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;strokeWidth=1.5;startArrow=ERzeroToOne;endArrow=ERmany;startFill=0;endFill=0;fontSize=11;fontColor=#526777;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="material_chunks" target="ai_chat_messages">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
