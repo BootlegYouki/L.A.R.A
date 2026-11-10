@@ -1,0 +1,9 @@
+Base: origin/staging 88f12b929f62102095759d2e20d5dbc4c89b3e71
+Final working-source SHA-256 (uncommitted):
+59101601100df63c3ad6553656e1b023d3178448955455c30ff723b8ac56fb94  mobile/app/src/main/java/org/lara/app/ui/screens/homework/CameraCaptureScreen.kt
+c217a5fc0ca1c5c8f83db8301d723d482f67cf0598714efb6b580430084d3902  mobile/app/src/main/java/org/lara/app/ui/screens/homework/DocumentReviewScreen.kt
+cd4fc3671340d00e95682aae91467b37ffada2769dcaa3153a6b331bacef5151  mobile/app/src/main/java/org/lara/app/ui/screens/homework/HomeworkScreen.kt
+864d18e4b8a9a7b537af32af3d459b6576edededc2805a71d7215e15afef2088  mobile/app/src/main/res/values/strings.xml
+d99229d5ea32bac8aad442e202919d1c2a49a264c09774c714e2b0a53648b4ea  mobile/app/src/androidTest/java/org/lara/app/reading/AssignmentUiDeviceTest.kt
+Installed isolated APK SHA-256:
+81961d1f789d27a547f89c0b491cdbf7bb0c753b72b6cf333674945bffc750b9  /data/app/~~HGkHNYn2L2Zw02EfiDQrew==/org.lara.app.group5-xQwFsxvsL8MqimAZD0uFpA==/base.apk

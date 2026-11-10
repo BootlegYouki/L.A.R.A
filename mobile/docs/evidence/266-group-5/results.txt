@@ -1,0 +1,4 @@
+testDebugUnitTest: {'tests': 201, 'failures': 1, 'errors': 0, 'skipped': 6}
+testReleaseUnitTest: {'tests': 201, 'failures': 1, 'errors': 0, 'skipped': 6}
+Targeted homework/scanner run: 20 tests, 0 failures, 0 skips, including HomeworkMockTest with LARA_SYNC_MOCK=1.
+Lint: 0 errors, 43 warnings.

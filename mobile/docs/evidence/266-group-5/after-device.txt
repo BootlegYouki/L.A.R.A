@@ -1,0 +1,5 @@
+org.lara.app.reading.AssignmentUiDeviceTest:..
+
+Time: 39.703
+
+OK (2 tests)

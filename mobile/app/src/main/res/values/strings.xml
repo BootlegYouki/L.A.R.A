@@ -304,4 +304,10 @@
     <string name="video_remove_confirm">Remove</string>
     <string name="video_remove_cancel">Cancel</string>
     <string name="video_removing">Removing from device</string>
+    <string name="homework_add_work">Add work</string>
+    <string name="homework_open_work">Open your work</string>
+    <string name="homework_close_work">Close your work</string>
+    <string name="homework_points">Points: %1$d</string>
+    <string name="homework_confirm_title">Turn in your work?</string>
+    <string name="homework_confirm_photo">Your photo will be saved on this device and sent when the classroom Hub is reachable.</string>
 </resources>

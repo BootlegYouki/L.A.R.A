@@ -8,86 +8,138 @@ description: Work on L.A.R.A. Mobile issues using Kotlin, Jetpack Compose, Room,
 
 ## Check announcements first
 
-Before starting or resuming work, addressing PR reviews, or submitting a PR, check the latest [Announcements](https://github.com/BootlegYouki/L.A.R.A/discussions/categories/announcements).
+Before starting work, check the latest [Announcements](https://github.com/BootlegYouki/L.A.R.A/discussions/categories/announcements), including relevant updated threads, Lead comments, issues, PR reviews, and staging status.
 
-Include updated older threads, Lead comments, relevant issues, PR reviews, and the current staging status. Report important changes before coding.
+Check again before PR submission or when resuming after a significant gap. Do not repeatedly reread unchanged announcements.
 
-If announcements cannot be accessed, disclose that limitation. Never assume there are no updates.
+Report important changes before coding. If access fails, disclose the limitation.
 
-## Follow the project architecture
+## Follow project architecture
 
-Load [lara-architect](../lara-architect/SKILL.md) and follow the [root guide](../../../AGENTS.md), [Mobile guide](../../../mobile/AGENTS.md), [Mobile Tech Spec](../../../mobile/docs/TECH_SPEC.md), PRD, contracts, and repository rules.
+Load [lara-architect](../lara-architect/SKILL.md) and follow the applicable [root guide](../../../AGENTS.md), [Mobile guide](../../../mobile/AGENTS.md), and [Mobile Tech Spec](../../../mobile/docs/TECH_SPEC.md).
 
-The assigned issue determines scope. Read its dependencies, comments, contracts, and design references before implementation.
+Read only relevant sections of the PRD, contracts, design references, and repository rules. Use targeted searches rather than repeatedly loading entire documents.
 
-Inspect existing code first. Do not invent endpoints, database fields, features, or requirements.
+The assigned issue determines scope. Inspect existing code before editing. Never invent endpoints, database fields, or features.
 
 ## Use tokens efficiently
 
-Prefer targeted searches, small diffs, and concise reports. Avoid repeatedly reading unchanged files or creating unnecessary abstractions.
+Prefer small diffs, targeted searches, concise progress reports, and existing components.
 
-Delegate bounded, low-risk tasks to an available Luna subagent when doing so is likely to reduce total effort:
+Avoid:
+- Repeatedly reading unchanged files or documentation.
+- Repeating completed planning or screenshot comparisons.
+- Running full test suites after every small visual change.
+- Unnecessary abstractions or unrelated refactoring.
+- Reinvestigating known baseline failures without new evidence.
+- Rebuilding working test infrastructure unnecessarily.
 
+Reuse verified environments, previous test results, and documented limitations when applicable. Still rerun required checks before PR submission.
+
+Delegate bounded, low-risk tasks to Luna when available and useful:
 - Screenshot and layout comparisons.
-- Simple Compose spacing and UI checks.
+- Simple Compose spacing and visual adjustments.
 - Phosphor icon and string audits.
 - Documentation summaries.
-- Small isolated visual changes.
+- Small isolated UI changes.
 
 Keep architecture, navigation state, Room, Hub networking, authentication, synchronization, Media3 lifecycle, security, Git operations, and final verification with the main agent.
 
-Verify Luna availability before using it. Fall back to the main agent when unavailable. Never sacrifice correctness or testing to save tokens.
+Verify Luna availability first. Do not delegate when overhead exceeds the expected benefit.
 
-Use Ponytail when installed, but repository rules take priority.
+Use Ponytail when installed, subject to repository rules.
 
 ## Follow Mobile design and behavior
 
-Use L.A.R.A.'s design tokens, Nunito, Phosphor icons, and string resources. Never introduce arbitrary colors, gradients, or Google branding.
+Use L.A.R.A. design tokens, Nunito, Phosphor icons, and string resources. No arbitrary colors, gradients, or Google branding.
 
-For redesign issues, read `design-system/mobile/google-classroom-reference/README.md` and inspect the actual referenced screenshots. Match Google Classroom's layout and flow, not its branding or unsupported features.
+For redesigns, read `design-system/mobile/google-classroom-reference/README.md` and inspect only the screenshots relevant to the assigned group.
+
+Match Google Classroom's layout and flow without introducing unsupported features.
 
 Keep touch targets at least 52dp (56dp primary). Preserve accessibility, offline, loading, empty, and error states.
 
-Keep existing ViewModels, repositories, Room data, Hub calls, and sync behavior intact unless the issue explicitly requires changes.
+Preserve existing ViewModels, repositories, Room data, Hub calls, and synchronization unless the issue explicitly requires changes.
 
 ## Protect Git and team ownership
 
-Check `git status`, current branch, and latest remote state before editing.
+Check Git status, current branch, and remote state before editing.
 
-Start new issues from the approved staging revision. Continue review fixes on their existing PR branch.
+Start new issues from the approved staging revision. Continue PR review fixes on the existing PR branch.
 
 Preserve uncommitted work. Never reset, force-push, merge unrelated changes, or edit another team's files without approval.
 
-Follow the issue's PR structure and screen-group order. Do not automatically commit, push, or merge without permission.
+Follow the assigned issue's implementation order and PR structure.
 
-## Test and collect evidence
+Do not commit, push, open PRs, or merge without explicit permission.
 
-Use the issue's required mock Hub and, when applicable, the real Rust Hub. Distinguish mock, real-Hub, and deferred integration tests.
+## Test efficiently and collect evidence
 
-For physical-device testing, verify the connected phone with `adb devices -l`. Protect existing app data.
+Choose testing depth based on the change and applicable Lead requirements.
 
-From `mobile/`, run the applicable Gradle checks:
+For UI-only redesigns:
+- Prefer mock Hub, Room fixtures, and cached data during implementation.
+- Use targeted Compose tests for navigation, accessibility, and UI behavior.
+- Avoid unnecessary Rust Hub rebuilding or infrastructure troubleshooting.
+- Reuse an existing working real-Hub setup when required.
+- If required real-Hub testing cannot be completed, disclose it as pending and obtain approval before treating it as deferred.
 
-`.\gradlew.bat assembleDebug`
-`.\gradlew.bat test`
-`.\gradlew.bat lint`
+For physical-device tests, verify the connected phone using `adb devices -l` and protect existing app data.
+
+Run targeted tests during development. Complete applicable required checks before PR submission.
+
+From `mobile/`:
+
+```powershell
+.\gradlew.bat assembleDebug
+.\gradlew.bat test
+.\gradlew.bat lint
+```
 
 From the repository root:
 
-`python scripts/verify_invariants.py`
+```powershell
+python scripts/verify_invariants.py
+```
 
-Run relevant Compose/device tests. Record actual results, screenshots, tested commit, and limitations.
+Record actual pass/fail results, known baseline failures, environment limitations, and tested revision.
 
-For UI redesigns, include reference, BEFORE, and AFTER screenshots, plus documented design deviations.
+For UI redesigns:
+- Capture genuine BEFORE screenshots once before changes.
+- Capture final AFTER screenshots when layouts stabilize.
+- Include the corresponding reference screenshots.
+- Document design deviations.
+- Avoid repeated captures unless evidence is incorrect or a relevant UI change requires them.
+
+Never claim an unexecuted or failing check passed.
+
+## Handle unrelated failures
+
+When a check fails, determine whether it is caused by the current change.
+
+If a failure is already documented on untouched staging, reference its existing issue or evidence. Do not repeatedly reproduce or fix it in an unrelated UI PR without authorization.
+
+Do not change Server, Desktop, shared contracts, or database schemas merely to make unrelated checks pass.
+
+Report genuine regressions separately from known baseline problems.
 
 ## Finish and prepare PRs
 
-Compare the diff with the correct base. Verify authorized paths and run `git diff --check`.
+Compare the diff against the correct base. Check authorized paths and run `git diff --check`.
 
-Update `mobile/docs/` when required. Follow the Lead's PR evidence instructions.
+Update `mobile/docs/` when required and follow Lead evidence instructions.
 
 For multi-part issues, use `Part of #<issue-number>` until the final approved PR.
 
-Report concisely: issue/branch, announcements, files changed, tests, evidence, blockers, and next steps.
+Avoid duplicate PR-body documents unless explicitly required.
+
+Report concisely:
+- Issue and branch.
+- Announcements or requirement changes.
+- Files and features changed.
+- Tests and actual results.
+- Screenshot evidence.
+- Blockers and known limitations.
+- Next action.
 
 This skill supplements the architect guide, contracts, design system, and Tech Spec; it does not replace them.
