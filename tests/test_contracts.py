@@ -74,7 +74,27 @@ class TestContracts(unittest.TestCase):
         cur_server.execute("PRAGMA table_info(quiz_questions);")
         self.assertIn("synonyms_json", [r[1] for r in cur_server.fetchall()])
         cur_server.execute("PRAGMA table_info(materials);")
-        self.assertNotIn("extracted_text", [r[1] for r in cur_server.fetchall()], "lesson text lives in material_chunks only")
+        material_cols = [r[1] for r in cur_server.fetchall()]
+        self.assertNotIn("extracted_text", material_cols, "lesson text lives in material_chunks only")
+        self.assertIn("uploaded_by", material_cols)
+        material_fks = cur_server.execute("PRAGMA foreign_key_list(materials);").fetchall()
+        self.assertTrue(any(row[2] == "users" and row[3] == "uploaded_by" and row[4] == "id"
+                            and row[6] == "RESTRICT" for row in material_fks),
+                        "materials.uploaded_by must reference users(id) with ON DELETE RESTRICT")
+
+        # School data uses the same audit timestamp pair. Append-only and internal tables are explicit exceptions.
+        cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+        for table in server_tables:
+            columns = {row[1] for row in cur_server.execute(f"PRAGMA table_info({table})")}
+            if table in {"hub_meta"}:
+                self.assertNotIn("created_at", columns, table)
+                self.assertNotIn("updated_at", columns, table)
+            elif table in {"sessions", "ai_chat_messages", "sync_revisions"}:
+                self.assertIn("created_at", columns, table)
+                self.assertNotIn("updated_at", columns, table)
+            else:
+                self.assertIn("created_at", columns, table)
+                self.assertIn("updated_at", columns, table)
         conn_server.close()
 
         # Test client offline schema
@@ -118,6 +138,18 @@ class TestContracts(unittest.TestCase):
         cur_client.execute("PRAGMA table_info(materials);")
         mat_cols = [r[1] for r in cur_client.fetchall()]
         self.assertIn("local_file_path", mat_cols)
+        self.assertNotIn("uploaded_by", mat_cols, "uploader identity stays server-side")
+        for table in client_tables:
+            columns = {row[1] for row in cur_client.execute(f"PRAGMA table_info({table})")}
+            if table == "sync_state":
+                self.assertNotIn("created_at", columns, table)
+                self.assertIn("updated_at", columns, table)
+            elif table == "ai_chat_messages":
+                self.assertIn("created_at", columns, table)
+                self.assertNotIn("updated_at", columns, table)
+            else:
+                self.assertIn("created_at", columns, table)
+                self.assertIn("updated_at", columns, table)
         conn_client.close()
 
 

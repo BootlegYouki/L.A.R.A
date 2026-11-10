@@ -76,6 +76,7 @@ class HubState:
         self.topics = {}
         self.private_comments = {}
         self.co_teachers = {}                    # classroom_id -> set of co-teacher user ids
+        self.classroom_teacher_rows = {}          # (classroom_id, teacher_id) -> stored relation row
         self.ledger = []
         self.seq = 0
         self.hub_id = new_id()
@@ -97,7 +98,7 @@ class HubState:
         self.classrooms[classroom["id"]] = classroom
         self.log("classrooms", classroom["id"], classroom["id"])
         enr = {"id": new_id(), "classroom_id": classroom["id"], "student_id": pupil["id"],
-               "status": "ACTIVE", "joined_at": t, "updated_at": t}
+               "status": "ACTIVE", "joined_at": t, "created_at": t, "updated_at": t}
         self.enrollments[enr["id"]] = enr
         self.log("enrollments", enr["id"], classroom["id"], pupil["id"])
         ann = {"id": new_id(), "classroom_id": classroom["id"],
@@ -108,18 +109,22 @@ class HubState:
         self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "m1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
+               "uploaded_by": teacher["id"],
                "file_size_bytes": 2048, "download_url": "/api/materials/m1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
         self.log("materials", mat["id"], classroom["id"])
         self.chunks[mat["id"]] = [
             {"id": new_id(), "material_id": mat["id"], "order_index": 1, "heading": "Ang Ecosystem",
-             "text": "Ang ecosystem ay binubuo ng mga buhay at walang buhay na bagay na magkakaugnay."},
+             "text": "Ang ecosystem ay binubuo ng mga buhay at walang buhay na bagay na magkakaugnay.",
+             "created_at": t, "updated_at": t},
             {"id": new_id(), "material_id": mat["id"], "order_index": 2, "heading": "Photosynthesis",
-             "text": "Gumagawa ng sariling pagkain ang mga halaman gamit ang sikat ng araw, tubig at hangin."},
+             "text": "Gumagawa ng sariling pagkain ang mga halaman gamit ang sikat ng araw, tubig at hangin.",
+             "created_at": t, "updated_at": t},
         ]
         vid = {"id": "m2000000-0000-4000-8000-000000000002", "classroom_id": classroom["id"],
                "title": "Video: Food Chain", "file_type": "VIDEO", "file_size_bytes": MOCK_VIDEO_SIZE,
+               "uploaded_by": teacher["id"],
                "download_url": "/api/materials/m2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
@@ -557,7 +562,8 @@ def classroom_join(req):
     if not enr or enr["status"] in ("REJECTED", "REMOVED"):
         # A rejected or removed learner may ask again; the teacher decides again.
         if not enr:
-            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"], "joined_at": t}
+            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"],
+                   "joined_at": t, "created_at": t}
             STATE.enrollments[enr["id"]] = enr
         enr["status"], enr["updated_at"] = "PENDING", t
         STATE.log("enrollments", enr["id"], c["id"], req.user["id"])
@@ -639,6 +645,11 @@ def co_teacher_add(req):
         raise ApiError(404, "NOT_FOUND", "No teacher with that ID")
     if t["id"] != c["teacher_id"]:
         STATE.co_teachers.setdefault(c["id"], set()).add(t["id"])
+        added_at = now_ms()
+        STATE.classroom_teacher_rows[(c["id"], t["id"])] = {
+            "classroom_id": c["id"], "teacher_id": t["id"], "added_at": added_at,
+            "created_at": added_at, "updated_at": added_at,
+        }
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
     # Marks the class as newly visible to the added teacher, so their next pull includes its older rows.
@@ -650,6 +661,7 @@ def co_teacher_add(req):
 def co_teacher_remove(req):
     c = owned_classroom(req, req.groups[0], owner_only=True)
     STATE.co_teachers.get(c["id"], set()).discard(req.groups[1])
+    STATE.classroom_teacher_rows.pop((c["id"], req.groups[1]), None)
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
     # A copy addressed to the removed teacher, who no longer sees the class but must learn they left it.
@@ -693,7 +705,7 @@ def sync_pull(req):
         elif table == "classrooms" and eid in STATE.classrooms:
             out["classrooms"].append(public_classroom(STATE.classrooms[eid], req.user))
         elif table == "enrollments" and eid in STATE.enrollments:
-            out["enrollments"].append(STATE.enrollments[eid])
+            out["enrollments"].append({k: v for k, v in STATE.enrollments[eid].items() if k != "created_at"})
         elif table == "topics" and eid in STATE.topics:
             out["topics"].append(STATE.topics[eid])
         elif table == "private_comments" and eid in STATE.private_comments:
@@ -703,13 +715,15 @@ def sync_pull(req):
         elif table == "announcement_comments" and eid in STATE.comments:
             out["comments"].append(STATE.comments[eid])
         elif table == "materials" and eid in STATE.materials:
-            out["materials"].append(STATE.materials[eid])
+            out["materials"].append({k: v for k, v in STATE.materials[eid].items() if k != "uploaded_by"})
         elif table == "material_chunks":
-            out["material_chunks"] += [c for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
+            out["material_chunks"] += [{k: v for k, v in c.items() if k not in ("created_at", "updated_at")}
+                                        for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
         elif table == "assignments" and eid in STATE.assignments:
             out["assignments"].append(STATE.assignments[eid])
         elif table == "assignment_submissions" and eid in STATE.submissions:
-            out["submissions"].append(STATE.submissions[eid])
+            out["submissions"].append({k: v for k, v in STATE.submissions[eid].items()
+                                        if k not in ("created_at", "_file_sha256")})
         elif table == "quizzes" and eid in STATE.quizzes:
             q = STATE.quizzes[eid]
             if q["status"] != "DRAFT" or teacher:
@@ -909,7 +923,8 @@ def topic_delete(req):
 # ---- materials
 @route("PATCH", r"/api/materials/([^/]+)", role="TEACHER")
 def material_patch(req):
-    return patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    material = patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    return {k: v for k, v in material.items() if k != "uploaded_by"}
 
 
 @route("DELETE", r"/api/materials/([^/]+)", role="TEACHER")
@@ -931,6 +946,7 @@ def material_create(req):
         raise ApiError(413, "FILE_TOO_LARGE", "Max 250MB")
     t, mid = now_ms(), new_id()
     m = {"id": mid, "classroom_id": f["classroom_id"], "title": f["title"], "file_type": f["file_type"],
+         "uploaded_by": req.user["id"],
          "file_size_bytes": len(data), "download_url": f"/api/materials/{mid}/download",
          "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
          "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
@@ -939,10 +955,11 @@ def material_create(req):
     STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
         chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
-                 "heading": f["title"], "text": data.decode("utf-8", "replace")[:500]}
+                 "heading": f["title"], "text": data.decode("utf-8", "replace")[:500],
+                 "created_at": t, "updated_at": t}
         STATE.chunks[mid] = [chunk]
         STATE.log("material_chunks", chunk["id"], f["classroom_id"])
-    return m
+    return {k: v for k, v in m.items() if k != "uploaded_by"}
 
 
 @route("GET", r"/api/materials/([^/]+)/download")
@@ -995,7 +1012,8 @@ def material_chunks(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
     member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
-    return STATE.chunks.get(req.groups[0], [])
+    return [{k: v for k, v in chunk.items() if k not in ("created_at", "updated_at")}
+            for chunk in STATE.chunks.get(req.groups[0], [])]
 
 
 @route("GET", r"/api/materials/([^/]+)/stream")
@@ -1100,14 +1118,15 @@ def submission_create(req):
                      if s["assignment_id"] == asg["id"] and s["student_id"] == req.user["id"]), None)
     if (existing and existing["id"] == fields["submission_id"]
             and existing.get("_file_sha256") == file_hash):
-        return existing
+        return {k: v for k, v in existing.items() if k not in ("created_at", "_file_sha256")}
     if existing and existing.get("score") is not None:
         raise ApiError(409, "ALREADY_GRADED", "This submission has already been graded")
     if (asg.get("due_date") is not None and not asg.get("allow_late", False)
             and effective_time > asg["due_date"]):
         raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
-                       "file_type": "IMAGE", "score": None, "teacher_feedback": None}
+                       "file_type": "IMAGE", "score": None, "teacher_feedback": None,
+                       "created_at": received_at}
     if existing and existing["id"] != fields["submission_id"]:
         old_id = existing["id"]
         STATE.submissions.pop(old_id, None)
@@ -1119,7 +1138,7 @@ def submission_create(req):
     STATE.submissions[sub["id"]] = sub
     STATE.submission_files[sub["id"]] = files["file"]
     STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
-    return sub
+    return {k: v for k, v in sub.items() if k not in ("created_at", "_file_sha256")}
 
 
 @route("GET", r"/api/assignments/([^/]+)/submissions", role="TEACHER")
@@ -1128,7 +1147,8 @@ def submissions_list(req):
     if not asg:
         raise ApiError(404, "NOT_FOUND", "Assignment not found")
     owned_classroom(req, asg["classroom_id"])
-    return [s for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
+    return [{k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
+            for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
 
 
 @route("PATCH", r"/api/submissions/([^/]+)", role="TEACHER")
@@ -1143,7 +1163,7 @@ def submission_grade(req):
             s[k] = b[k]
     s["updated_at"] = now_ms()
     STATE.log("assignment_submissions", s["id"], STATE.assignments[s["assignment_id"]]["classroom_id"], s["student_id"])
-    return s
+    return {k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
 
 
 @route("GET", r"/api/submissions/([^/]+)/file")
@@ -1248,7 +1268,7 @@ def quiz_begin(req):
     if not att:
         t = now_ms()
         att = {"id": new_id(), "quiz_id": quiz["id"], "student_id": req.user["id"], "status": "IN_PROGRESS",
-               "started_at": t, "submitted_at": None, "score": None, "total_points": None,
+               "started_at": t, "created_at": t, "submitted_at": None, "score": None, "total_points": None,
                "answers": [], "updated_at": t}
         STATE.attempts[att["id"]] = att
         STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], req.user["id"])
@@ -1272,7 +1292,8 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
     score, total = grade(quiz, answers)
     t = now_ms()
     if not att:
-        att = {"id": new_id(), "quiz_id": quiz_id, "student_id": user["id"], "started_at": started_at}
+        att = {"id": new_id(), "quiz_id": quiz_id, "student_id": user["id"],
+               "started_at": started_at, "created_at": started_at}
         STATE.attempts[att["id"]] = att
     att.update(status="SUBMITTED", submitted_at=submitted_at, score=score, total_points=total,
                answers=answers, updated_at=t)
