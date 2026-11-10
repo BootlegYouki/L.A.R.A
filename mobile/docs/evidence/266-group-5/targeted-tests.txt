@@ -1,0 +1,83 @@
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set DIRNAME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if "C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\" == "" set DIRNAME=.
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_BASE_NAME=gradlew
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_HOME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>for %i in ("C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\") do set APP_HOME=%~fi
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set APP_HOME=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if defined JAVA_HOME goto findJavaFromJavaHome
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set JAVA_EXE=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if exist "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" goto execute
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>set CLASSPATH=C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>"C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" -Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain testDebugUnitTest --tests *Homework* --tests *DocumentCornersTest
+.\gradlew.bat : Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp
+At line:2 char:77
++ ... C_MOCK='1'; .\gradlew.bat testDebugUnitTest --tests '*Homework*' --te ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Picked up JAVA_....tmpdir=C:\Temp:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:kaptDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp
+
+--- Failed to create image decoder with message 'incomplete input'
+
+BUILD SUCCESSFUL in 15s
+31 actionable tasks: 12 executed, 19 up-to-date
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if 0 EQU 0 goto mainEnd
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile>if "Windows_NT" == "Windows_NT" endlocal

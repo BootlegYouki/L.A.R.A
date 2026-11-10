@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,12 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
     val labels = listOf(R.string.scan_top_left, R.string.scan_top_right, R.string.scan_bottom_right, R.string.scan_bottom_left)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-        Text(stringResource(if (preview == null) R.string.scan_review else R.string.scan_preview), style = MaterialTheme.typography.headlineMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            IconButton(onClick = cancel, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
+                Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.settings_back))
+            }
+            Text(stringResource(if (preview == null) R.string.scan_review else R.string.scan_preview), style = MaterialTheme.typography.titleLarge)
+        }
         Text(stringResource(when {
             !available -> R.string.scan_unavailable
             preview != null && detected -> R.string.scan_check_preview

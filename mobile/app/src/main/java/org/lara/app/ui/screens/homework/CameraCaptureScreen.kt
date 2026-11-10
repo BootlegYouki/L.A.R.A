@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -67,7 +68,12 @@ fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-        Text(stringResource(R.string.homework_camera_title), style = MaterialTheme.typography.headlineMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            IconButton(onClick = close, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
+                Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.settings_back))
+            }
+            Text(stringResource(R.string.homework_camera_title), style = MaterialTheme.typography.titleLarge)
+        }
         if (granted) Box(Modifier.fillMaxWidth().height(320.dp).clipToBounds().background(LaraColors.TextPrimary), contentAlignment = Alignment.Center) {
             AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
             Canvas(Modifier.fillMaxSize().padding(LaraSpacing.S5)) {
