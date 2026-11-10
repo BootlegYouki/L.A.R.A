@@ -9,12 +9,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextOverflow
 import org.lara.app.R
 import org.lara.app.ui.navigation.ShellDestination
@@ -36,8 +38,7 @@ fun BottomNavBar(
     modifier: Modifier = Modifier,
 ) {
     val labelLineHeight = with(LocalDensity.current) { MaterialTheme.typography.labelMedium.lineHeight.toDp() }
-    val labelLines = if (LocalDensity.current.fontScale > 1f) 2 else 1
-    val barHeight = maxOf(68.dp, labelLineHeight * labelLines + 52.dp)
+    val barHeight = maxOf(68.dp, labelLineHeight + 52.dp)
     NavigationBar(
         modifier = modifier.height(barHeight),
         containerColor = LaraColors.Surface,
@@ -59,7 +60,20 @@ fun BottomNavBar(
                 onClick = { onSelect(destination) },
                 modifier = Modifier.height(barHeight),
                 icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(destination.label), maxLines = labelLines, overflow = TextOverflow.Ellipsis) },
+                label = {
+                    val label = stringResource(destination.label)
+                    val style = MaterialTheme.typography.labelMedium
+                    var fontSize by remember(label, LocalDensity.current, LocalConfiguration.current.screenWidthDp) {
+                        mutableStateOf(style.fontSize)
+                    }
+                    // Compose 1.7 lacks TextAutoSize; shrink only overflowing labels in bounded steps.
+                    Text(label, style = style, fontSize = fontSize, maxLines = 1, softWrap = false,
+                        overflow = TextOverflow.Clip, onTextLayout = { layout ->
+                            if (layout.didOverflowWidth && fontSize > 8.sp) {
+                                fontSize = (fontSize.value - 0.5f).coerceAtLeast(8f).sp
+                            }
+                        })
+                },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = tint,
                     selectedTextColor = tint,

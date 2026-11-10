@@ -113,10 +113,12 @@ private fun RoleNavGraph(
                     DropdownMenu(expanded, { expanded = false }, containerColor = LaraColors.Surface) {
                         listOf(ShellDestination.QUIZZES, ShellDestination.AI_TUTOR).forEach { destination ->
                             DropdownMenuItem(text = { Text(stringResource(destination.label),
-                                color = if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.TextPrimary) },
+                                color = if (!state.allows(destination)) androidx.compose.ui.graphics.Color.Unspecified
+                                    else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.TextPrimary) },
                                 leadingIcon = { Icon(painterResource(if (destination == ShellDestination.AI_TUTOR)
                                     R.drawable.ic_sparkle_regular else R.drawable.ic_exam_regular), null,
-                                    tint = if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.PrimaryDark) },
+                                    tint = if (!state.allows(destination)) LocalContentColor.current
+                                        else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.PrimaryDark) },
                                 enabled = state.allows(destination), modifier = Modifier.heightIn(min = MinTouchTarget),
                                 onClick = { expanded = false; controller.navigate(destination.route) { launchSingleTop = true } })
                         }

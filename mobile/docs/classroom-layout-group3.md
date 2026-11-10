@@ -31,10 +31,12 @@ The learner People view iterates only the class's teacher IDs and resolves only 
 - The topic selector has All topics for clearing the filter and selects immediately. The entry is a labeled funnel button above the existing classwork list. Untopiced/orphaned work remains visible under No topic.
 - Teacher People reuses existing approval and management cards, including pending requests and removal controls. Posting forms and new authoring actions belong to Group 4 and were not added.
 - Assignment instructions and material readers keep their existing behavior. Teacher assignments and quizzes are not newly implemented by this UI pass.
-- At enlarged text the bottom bar grows and labels may wrap across two lines; targets remain at least 52dp. The topic selector and class actions scroll instead of truncating options.
+- After review, labels stay on one line and shrink only when needed; targets remain at least 52dp. Compose Foundation 1.7.6 lacks native TextAutoSize, so onTextLayout reduces overflowing labels in bounded 0.5sp steps without upgrading dependencies. The topic selector and class actions scroll instead of truncating options.
 
 ## Verification and review evidence
 
 See [the comparison and result index](evidence/266-group-3/README.md) and [PR #279](https://github.com/BootlegYouki/L.A.R.A/pull/279). Evidence distinguishes live mock/real-Hub data from explicitly labeled local presentation fixtures.
 
 The full Gradle gate is blocked by the same schema-parity failure on untouched `staging`: contract PR #273 added `enrollments.created_at`, while Room's version-3 export has no such column. A separate detached baseline build reproduces it. This UI-only task leaves the schema and parity test intact; a separate mobile schema update is required before the gate can be green.
+
+Review fixes for PR #279: locked Tutor text/icon now inherit Material disabled colors; enabled Tutor remains AiDark. See [updated actual-200% phone evidence and targeted checks](evidence/266-group-3/review-fixes/README.md). Known issues #122 and #276 were not investigated or modified.

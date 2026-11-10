@@ -4,6 +4,8 @@ Part of #266. Captured on 10 November 2026 using a USB-connected Infinix X6731, 
 
 BEFORE is untouched `staging` `0199e34`, rebuilt in a detached worktree. AFTER is that base plus the uncommitted Group 3 changes. [Source/APK hashes](source-manifest.txt) identify the tested files. These captures precede the publication commit; publication was subsequently authorized as a draft PR only.
 
+The [review-fix evidence](review-fixes/README.md) supersedes the original two-line 200% tab labels and purple locked-Tutor captures below. Original captures remain as historical evidence.
+
 ## Reference / BEFORE / AFTER
 
 The populated AFTER examples use the mock Hub. The [real-Hub folder](after/realhub) separately shows the existing routes on the actual Rust Hub built from `staging`; that fresh Hub has no posted classwork.

@@ -208,6 +208,16 @@ class ClassTabsDeviceTest {
                 val bounds = android.graphics.Rect().also(node::getBoundsInScreen)
                 assertTrue(bounds.height() >= 52 * context.resources.displayMetrics.density)
             }
+            val classwork = nodes().first { it.text?.toString() == "Classwork" }
+            val locationsKey = AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY
+            assertTrue(classwork.refreshWithExtraData(locationsKey, android.os.Bundle().apply {
+                putInt(AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_START_INDEX, 0)
+                putInt(AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_LENGTH, "Classwork".length)
+            }))
+            val letters = requireNotNull(classwork.extras.getParcelableArray(locationsKey))
+                .map { requireNotNull(it as? android.graphics.RectF) }
+            assertEquals("Every Classwork character must remain visible", "Classwork".length, letters.size)
+            assertTrue("Classwork must stay on one line", letters.all { kotlin.math.abs(it.top - letters.first().top) < 1f })
             click("Classwork"); click("Filter by topic"); capture("fixture-filter-font200")
             click("All topics")
             show(empty = true); click("Stream"); capture("fixture-empty-stream")
