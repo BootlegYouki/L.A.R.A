@@ -35,6 +35,6 @@ The learner People view iterates only the class's teacher IDs and resolves only 
 
 ## Verification and review evidence
 
-See [the comparison and result index](evidence/266-group-3/README.md) and [the prepared PR text](evidence/266-group-3/pr-draft.md). Evidence distinguishes live mock/real-Hub data from explicitly labeled local presentation fixtures.
+See [the comparison and result index](evidence/266-group-3/README.md) and [PR #279](https://github.com/BootlegYouki/L.A.R.A/pull/279). Evidence distinguishes live mock/real-Hub data from explicitly labeled local presentation fixtures.
 
 The full Gradle gate is blocked by the same schema-parity failure on untouched `staging`: contract PR #273 added `enrollments.created_at`, while Room's version-3 export has no such column. A separate detached baseline build reproduces it. This UI-only task leaves the schema and parity test intact; a separate mobile schema update is required before the gate can be green.

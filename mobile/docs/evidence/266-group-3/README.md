@@ -65,4 +65,4 @@ The live check requires the Science 4 synthetic class. `tabsRole=learner|teacher
 
 Spoken TalkBack traversal, a 3–4 GB memory profile, WAN-unplugged classroom router/discovery, real-Hub topic authoring/populated content, and unrelated camera/video/quiz execution were not repeated. The Infinix is real hardware but this is not a budget-memory qualification. Lint retains 43 warnings. Existing quiz/tutor screens remain their prior implementations; no new quiz or chat UI was built.
 
-See [implementation and design deviations](../../classroom-layout-group3.md) and [prepared PR draft](pr-draft.md).
+See [implementation and design deviations](../../classroom-layout-group3.md) and [PR #279](https://github.com/BootlegYouki/L.A.R.A/pull/279).
