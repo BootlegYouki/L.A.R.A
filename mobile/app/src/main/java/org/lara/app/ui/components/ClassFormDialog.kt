@@ -38,7 +38,7 @@ fun ClassFormDialog(
 ) {
     val render: @Composable () -> Unit = {
         Scaffold(Modifier.fillMaxSize(), containerColor = LaraColors.Surface, topBar = {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
+            Surface(color = LaraColors.Primary, contentColor = LaraColors.Surface) {
                 Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S1),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                     IconButton(onClick = onDismiss, enabled = canDismiss, modifier = Modifier.size(MinTouchTarget)) {

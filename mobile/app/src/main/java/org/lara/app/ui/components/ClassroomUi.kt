@@ -20,7 +20,7 @@ val LocalClassChrome = staticCompositionLocalOf<ClassChrome?> { null }
 @Composable
 fun ClassroomTopBar(title: String, section: String? = null, back: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}) {
-    Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
+    Surface(color = LaraColors.Primary, contentColor = LaraColors.Surface) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 64.dp).padding(horizontal = LaraSpacing.S3),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             if (back != null) IconButton(onClick = back, modifier = Modifier.size(MinTouchTarget)) {
@@ -29,7 +29,7 @@ fun ClassroomTopBar(title: String, section: String? = null, back: (() -> Unit)? 
             }
             Column(Modifier.weight(1f).padding(vertical = LaraSpacing.S3)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                if (!section.isNullOrBlank()) Text(section, style = MaterialTheme.typography.bodyMedium, color = LaraColors.PrimaryLight)
+                if (!section.isNullOrBlank()) Text(section, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextPrimary)
             }
             actions()
             SettingsAction()
@@ -50,7 +50,7 @@ fun ClassroomCard(name: String, section: String?, teacher: String?, status: Stri
     Surface(onClick = open, enabled = ready, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).laraShadow(),
         shape = LaraShapes.large, color = LaraColors.Surface, border = BorderStroke(1.dp, LaraColors.Border)) {
         Column(Modifier.padding(LaraSpacing.S5), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.medium) {
+            Surface(color = LaraColors.Primary, contentColor = LaraColors.Surface, shape = LaraShapes.medium) {
                 Box(Modifier.size(PrimaryTouchTarget), contentAlignment = Alignment.Center) {
                     Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(32.dp))
                 }

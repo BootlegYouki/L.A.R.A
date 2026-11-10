@@ -47,7 +47,7 @@ fun BottomNavBar(
     ) {
         listOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE).forEach { destination ->
             val active = destination == selected
-            val tint = LaraColors.PrimaryDark
+            val tint = LaraColors.InfoDark
             val icon = when (destination) {
                 ShellDestination.STREAM -> if (active) R.drawable.ic_chats_fill else R.drawable.ic_chats_regular
                 ShellDestination.CLASSWORK -> if (active) R.drawable.ic_books_fill else R.drawable.ic_books_regular
@@ -77,8 +77,8 @@ fun BottomNavBar(
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = tint,
                     selectedTextColor = tint,
-                    indicatorColor = LaraColors.PrimaryLight,
-                    unselectedIconColor = tint,
+                    indicatorColor = LaraColors.InfoLight,
+                    unselectedIconColor = LaraColors.TextSecondary,
                     unselectedTextColor = LaraColors.TextSecondary,
                     disabledIconColor = LaraColors.TextSecondary,
                     disabledTextColor = LaraColors.TextSecondary,

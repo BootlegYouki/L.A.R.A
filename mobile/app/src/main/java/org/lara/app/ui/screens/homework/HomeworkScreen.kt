@@ -100,6 +100,12 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         submission != null -> R.drawable.ic_warning_circle
         else -> R.drawable.ic_info
     }
+    val (statusFill, statusInk) = when (status) {
+        R.string.homework_turned_in -> LaraColors.PrimaryLight to LaraColors.PrimaryDark
+        R.string.homework_queued -> LaraColors.WarningLight to LaraColors.WarningDark
+        R.string.homework_rejected -> LaraColors.DangerLight to LaraColors.DangerDark
+        else -> LaraColors.InfoLight to LaraColors.InfoDark
+    }
     @Composable fun WorkContent(expanded: Boolean) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
@@ -109,9 +115,11 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 Icon(painterResource(if (expanded) R.drawable.ic_caret_down else R.drawable.ic_caret_up),
                     stringResource(if (expanded) R.string.homework_close_work else R.string.homework_open_work), Modifier.size(24.dp))
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.Top) {
-                Icon(painterResource(statusIcon), null, Modifier.size(24.dp), tint = LaraColors.TextSecondary)
-                Text(stringResource(status), style = MaterialTheme.typography.bodyMedium)
+            Surface(color = statusFill, contentColor = statusInk, shape = LaraShapes.small) {
+                Row(Modifier.padding(LaraSpacing.S2), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.Top) {
+                    Icon(painterResource(statusIcon), null, Modifier.size(24.dp))
+                    Text(stringResource(status), style = MaterialTheme.typography.bodyMedium)
+                }
             }
             if (expanded) {
                 PhotoPreview(path, container.homeworkPhotos)
