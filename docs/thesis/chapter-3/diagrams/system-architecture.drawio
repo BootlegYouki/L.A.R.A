@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-10T00:00:00.000Z" agent="" version="32.6.10" type="device">
+  <diagram id="system-architecture" name="system-architecture">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1050" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="9" value="Wi-Fi / LAN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="3" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Wi-Fi / LAN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="REST :8080 / WS :8081; discovery" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;startArrow=block;endArrow=block;startFill=1;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="5" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="export / backup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="2" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="remote transport" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="8" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="optional encrypted relay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;fontColor=#233746;fontSize=12;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="7" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2" value="Hub PC&#10;Rust + Axum REST :8080&#10;WebSocket :8081&#10;SQLite + Hub files&#10;llama-server FIFO queue&#10;mDNS + UDP beacon :8888&#10;USB export / backup&#10;optional cloudflared" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="330" width="390" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Mobile&#10;Kotlin + Compose&#10;Room local SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="110" width="300" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Desktop&#10;Tauri + React&#10;local SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="110" width="300" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Classroom Wi-Fi router / LAN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="70" width="390" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="USB storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="690" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="Optional cloudflared&#10;Tunnel to the Hub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="690" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Remote client&#10;(saved Hub URL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="870" width="300" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

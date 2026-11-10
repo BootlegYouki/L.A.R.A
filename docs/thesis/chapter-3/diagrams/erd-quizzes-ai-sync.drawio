@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-10T00:00:00.000Z" agent="" version="32.6.10" type="device">
+  <diagram id="erd-quizzes-ai-sync" name="erd-quizzes-ai-sync">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1340" pageHeight="1355" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="4" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="5" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="7" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="7" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="7" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526777;endArrow=ERone;startArrow=ERmany;startFill=0;endFill=0;" edge="1" parent="1" source="7" target="9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2" value="&lt;b&gt;quizzes&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK classroom_id → classrooms.id&lt;br&gt;topic_id (not an FK)&lt;br&gt;title, instructions, time_limit_minutes&lt;br&gt;shuffle_questions, release_scores_immediately, scores_released_at&lt;br&gt;status, started_at, created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="35" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="&lt;b&gt;classrooms (reference)&lt;/b&gt;&lt;br&gt;Parent table PK: id&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="35" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="&lt;b&gt;quiz_questions&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK quiz_id → quizzes.id&lt;br&gt;order_index, question_text, question_type, options_json&lt;br&gt;points, image_path, correct_answer, synonyms_json&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="&lt;b&gt;quiz_attempts&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK quiz_id → quizzes.id&lt;br&gt;FK student_id → users.id&lt;br&gt;status, started_at, submitted_at, answers_json&lt;br&gt;score, total_points, created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="290" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="&lt;b&gt;users (reference)&lt;/b&gt;&lt;br&gt;Parent table PK: id&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="545" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="&lt;b&gt;ai_chat_messages&lt;/b&gt;&lt;br&gt;PK id&lt;br&gt;FK classroom_id → classrooms.id&lt;br&gt;FK student_id → users.id&lt;br&gt;FK material_id → materials.id&lt;br&gt;FK chunk_id → material_chunks.id&lt;br&gt;role, language, content, created_at&lt;br&gt;updated_at not defined (append-only)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="545" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="&lt;b&gt;materials (reference)&lt;/b&gt;&lt;br&gt;Parent table PK: id&lt;br&gt;created_at, updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="9" value="&lt;b&gt;material_chunks (reference)&lt;/b&gt;&lt;br&gt;Parent table PK: id&lt;br&gt;created_at; updated_at not defined" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="800" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="&lt;b&gt;sync_revisions&lt;/b&gt;&lt;br&gt;PK seq&lt;br&gt;classroom_id, student_id (nullable scope)&lt;br&gt;entity_table, entity_id, action&lt;br&gt;created_at (append-only); updated_at not defined" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1055" width="600" height="215" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="&lt;b&gt;hub_meta&lt;/b&gt;&lt;br&gt;PK key&lt;br&gt;value&lt;br&gt;timestamps not defined" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#526777;fontColor=#152a38;fontSize=14;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1055" width="600" height="215" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
