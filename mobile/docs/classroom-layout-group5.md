@@ -1,15 +1,5 @@
 # Classroom layout, Group 5
 
-## Palette implementation checkpoint
-
-The user requested implementing the emerald/sky/amber concept before PR #280 merges. Mobile now uses emerald primary #059669, bright completion green #10B981, sky-blue actions/navigation #2563EB, amber #F59E0B with #D97706 alert icons, and the requested light-slate canvas/border/text values. Readable darker text and light-container variants accompany those colors. PrimaryDark #047857 keeps small success text legible. Secondary text uses #64748B on the #F8FAFC subtle surface, and AI retains its dedicated purple tokens.
-
-Color.kt owns the values. Theme.kt maps Material secondary to sky blue. Class headers use emerald, class navigation and resource icons use blue, and homework status surfaces distinguish completed, queued and rejected work with an icon and text. This user-requested mobile palette differs from the current shared design-system tokens and requires Lead re-review/reconciliation, recorded on PR #280. The Lead was notified to hold merge for the palette revision.
-
-The isolated app and instrumentation build passed on 11 November. A contrast regression test was added. At this checkpoint, the new palette's unit/lint run, physical normal/empty/offline/200% screenshots, final CI run and PR-body cleanup are pending. Earlier review evidence applies to the previous palette.
-
-The Lead approved the earlier icon/thumbnail/replacement fixes and real-Hub evidence at df5532d. They explicitly accepted #276 as a staging-wide failure for this PR and assigned the stale opt-in video test to separate issue #281. Those baseline fixes stay in their own follow-ups.
-
 ## Current review follow-up — 11 November 2026
 
 Work continues on `feat/266-mobile-classroom-layout-part-5`, PR #280. The Lead's action-icon corrections are implemented. The original white submitted thumbnail was an all-white test fixture; the updated fixture has a visible label and leaf shape. Mock and real-staging-Hub upload/receipt checks passed on Xiaomi 2311DRK48G / Android 16, including 200% text. The real Hub was built from staging `88f12b9`. Its assignment-authoring route returns 501, so only the assignment itself was seeded in a disposable database; class creation and enrollment used the real APIs.

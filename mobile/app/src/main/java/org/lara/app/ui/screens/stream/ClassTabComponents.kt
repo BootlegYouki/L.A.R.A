@@ -23,12 +23,12 @@ import org.lara.app.ui.theme.*
 
 @Composable
 internal fun ClassBanner(classroom: Classroom) {
-    Surface(color = LaraColors.Primary, contentColor = LaraColors.Surface, shape = LaraShapes.medium) {
+    Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface, shape = LaraShapes.medium) {
         Row(Modifier.fillMaxWidth().heightIn(min = 144.dp).padding(LaraSpacing.S6),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 Text(classroom.name, style = MaterialTheme.typography.headlineLarge)
-                Text(classroom.section, style = MaterialTheme.typography.titleMedium, color = LaraColors.TextPrimary)
+                Text(classroom.section, style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryLight)
             }
             Surface(color = LaraColors.Surface.copy(alpha = 0.2f), shape = CircleShape) {
                 Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.padding(LaraSpacing.S4).size(40.dp))
@@ -41,7 +41,7 @@ internal fun ClassBanner(classroom: Classroom) {
 internal fun TopicFilter(topics: List<Topic>, selected: String?, select: (String?) -> Unit, close: () -> Unit) {
     Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Scaffold(Modifier.fillMaxSize(), containerColor = LaraColors.Surface, topBar = {
-            Surface(color = LaraColors.Primary, contentColor = LaraColors.Surface) {
+            Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
                 Row(Modifier.fillMaxWidth().statusBarsPadding().padding(LaraSpacing.S3),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                     IconButton(onClick = close, modifier = Modifier.size(MinTouchTarget)) {

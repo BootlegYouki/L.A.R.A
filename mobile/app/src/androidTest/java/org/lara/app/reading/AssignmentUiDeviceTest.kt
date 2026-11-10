@@ -157,7 +157,6 @@ class AssignmentUiDeviceTest {
                 if (phase != "before" && reason != null) scrollTo(context.getString(if (reason == "LATE_SUBMISSION") org.lara.app.R.string.homework_rejected_late else org.lara.app.R.string.homework_rejected_graded))
                 capture("state-${reason ?: status}")
             }
-            if (InstrumentationRegistry.getArguments().getString("assignmentReviewOnly") == "true") return@use
             if (phase != "before") {
                 click("Add work"); click("Take a new photo")
             } else click("Take a new photo")

@@ -169,7 +169,7 @@ fun DiscoveryScreen(model: DiscoveryViewModel, onBack: () -> Unit) {
 private fun HubBeaconPill(beacon: HubBeacon) {
     val (label, dot) = when (beacon) {
         HubBeacon.SEARCHING -> R.string.discovery_beacon_searching to LaraColors.Warning
-        HubBeacon.CONNECTED -> R.string.discovery_beacon_connected to LaraColors.PrimaryDark
+        HubBeacon.CONNECTED -> R.string.discovery_beacon_connected to LaraColors.Success
         HubBeacon.NOT_CONNECTED -> R.string.discovery_beacon_disconnected to LaraColors.TextMuted
     }
     Surface(

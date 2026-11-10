@@ -36,7 +36,7 @@ fun DiscoveryBanner(message: Int, warning: Boolean, success: Boolean) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(22.dp),
-                tint = if (warning) LaraColors.WarningIcon else ink)
+                tint = if (warning) LaraColors.WarningDark else ink)
             Text(buildAnnotatedString {
                 val colon = text.indexOf(':')
                 if (colon >= 0) {

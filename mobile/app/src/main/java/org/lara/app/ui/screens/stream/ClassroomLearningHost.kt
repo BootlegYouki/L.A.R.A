@@ -162,7 +162,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
                         color = LaraColors.Surface, shape = LaraShapes.medium) {
                         Row(Modifier.padding(LaraSpacing.S4), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                            Icon(painterResource(R.drawable.ic_exam_regular), null, Modifier.size(24.dp), tint = LaraColors.InfoDark)
+                            Icon(painterResource(R.drawable.ic_exam_regular), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
                             Column(Modifier.weight(1f)) {
                                 Text(assignment.title, style = MaterialTheme.typography.titleMedium)
                                 Text(stringResource(R.string.homework_open), color = LaraColors.TextSecondary)
