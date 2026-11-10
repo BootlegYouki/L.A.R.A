@@ -75,7 +75,8 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
     val clipboard = LocalClipboardManager.current
     val enabled = online && !state.busy
     BackHandler { if (form != null) form = null else close() }
-    Scaffold(containerColor = LaraColors.Canvas, topBar = {
+    Scaffold(containerColor = LaraColors.Canvas,
+        contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets, topBar = {
         if (!embedded) org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.classes_manage), selected?.name, close)
     }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S3),
@@ -89,7 +90,9 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     }
                 }
             }
-            if (!online) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
+            if (!online) {
+                if (!embedded) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
+            }
             else state.error?.let { message -> item { DiscoveryBanner(message, warning = true, success = false) } }
             if (!embedded) item { Button(enabled = enabled, onClick = { name = ""; section = ""; form = "create" },
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_create)) } }

@@ -15,6 +15,14 @@
     <string name="nav_quizzes">Quizzes</string>
     <string name="nav_ai_tutor">AI Tutor</string>
     <string name="nav_people">People</string>
+    <string name="class_actions">Class actions</string>
+    <string name="reading_filter_topics">Filter by topic</string>
+    <string name="reading_all_topics">All topics</string>
+    <string name="reading_no_topic">No topic</string>
+    <string name="reading_work_count">Work items: %1$d</string>
+    <string name="reading_work_empty_title">No classwork yet</string>
+    <string name="reading_work_empty">Work will appear here when your teacher adds it. Choose All topics to see all saved classwork.</string>
+    <string name="reading_teacher">Teacher</string>
     <string name="nav_grades">Grades</string>
     <string name="teacher_classroom">Teacher classroom</string>
     <string name="learner_classroom">Your classroom</string>
@@ -185,7 +193,6 @@
     <string name="reading_handouts_empty_title">Your lessons, in one place</string>
     <string name="reading_stream_empty_title">Welcome to your class</string>
     <string name="reading_classes_empty_title">Your classroom travels with you</string>
-    <string name="reading_handout_count">Handouts: %1$d</string>
     <string name="reading_not_sent">Not sent</string>
     <string name="reading_class_announcement">Class announcement</string>
     <string name="reading_comments">Class comments (%1$d)</string>
@@ -212,7 +219,6 @@
     <string name="reading_page">Page %1$d of %2$d</string>
     <string name="reading_lesson_text">Lesson text</string>
     <string name="reading_no_text">This file has no extracted lesson text. The AI tutor is not available for it.</string>
-    <string name="reading_handouts">Handouts</string>
     <string name="reading_zoom_in">Zoom in</string>
     <string name="reading_zoom_out">Zoom out</string>
     <string name="reading_zoom_state">Zoom: %1$d%%</string>

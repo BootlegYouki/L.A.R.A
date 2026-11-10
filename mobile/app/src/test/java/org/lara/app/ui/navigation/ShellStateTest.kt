@@ -10,7 +10,7 @@ class ShellStateTest {
         ShellRole.entries.forEach { role ->
             val state = ShellState(role, isHubReachable = false, hasInProgressAttempt = true)
             assertFalse(state.allows(ShellDestination.AI_TUTOR))
-            listOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.QUIZZES)
+            listOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE, ShellDestination.QUIZZES)
                 .forEach { assertTrue(state.allows(it)) }
         }
     }

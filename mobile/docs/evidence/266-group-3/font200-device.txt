@@ -1,0 +1,11 @@
+Original Android font_scale: 0.85
+Android font_scale under test: 2.0
+
+org.lara.app.reading.ClassTabsDeviceTest:.
+
+Time: 20.977
+
+OK (1 test)
+
+
+Restored Android font_scale: 0.85

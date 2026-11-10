@@ -36,6 +36,7 @@ private val ShellDestination.route: Any
     get() = when (this) {
         ShellDestination.STREAM -> Stream
         ShellDestination.CLASSWORK -> Classwork
+        ShellDestination.PEOPLE -> People
         ShellDestination.QUIZZES -> Quizzes
         ShellDestination.AI_TUTOR -> Tutor
     }
@@ -83,7 +84,7 @@ private fun RoleNavGraph(
         entry?.destination?.hasRoute<Classwork>() == true -> ShellDestination.CLASSWORK
         entry?.destination?.hasRoute<Quizzes>() == true -> ShellDestination.QUIZZES
         entry?.destination?.hasRoute<Tutor>() == true -> ShellDestination.AI_TUTOR
-        entry?.destination?.hasRoute<People>() == true -> null
+        entry?.destination?.hasRoute<People>() == true -> ShellDestination.PEOPLE
         entry?.destination?.hasRoute<Grades>() == true -> null
         else -> ShellDestination.STREAM
     }
@@ -103,14 +104,39 @@ private fun RoleNavGraph(
             val classroom = org.lara.app.ui.components.LocalClassChrome.current
             org.lara.app.ui.components.ClassroomTopBar(classroom?.name
                 ?: stringResource(if (teacher) R.string.teacher_classroom else R.string.learner_classroom),
-                classroom?.section, classroom?.back)
+                classroom?.section, classroom?.back) {
+                var expanded by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { expanded = true }, modifier = Modifier.size(MinTouchTarget)) {
+                        Icon(painterResource(R.drawable.ic_dots_three_vertical), stringResource(R.string.class_actions))
+                    }
+                    DropdownMenu(expanded, { expanded = false }, containerColor = LaraColors.Surface) {
+                        listOf(ShellDestination.QUIZZES, ShellDestination.AI_TUTOR).forEach { destination ->
+                            DropdownMenuItem(text = { Text(stringResource(destination.label),
+                                color = if (!state.allows(destination)) androidx.compose.ui.graphics.Color.Unspecified
+                                    else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.TextPrimary) },
+                                leadingIcon = { Icon(painterResource(if (destination == ShellDestination.AI_TUTOR)
+                                    R.drawable.ic_sparkle_regular else R.drawable.ic_exam_regular), null,
+                                    tint = if (!state.allows(destination)) LocalContentColor.current
+                                        else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.PrimaryDark) },
+                                enabled = state.allows(destination), modifier = Modifier.heightIn(min = MinTouchTarget),
+                                onClick = { expanded = false; controller.navigate(destination.route) { launchSingleTop = true } })
+                        }
+                        if (state.hasInProgressAttempt) DropdownMenuItem(
+                            text = { Text(stringResource(R.string.ai_quiz_locked)) }, onClick = {}, enabled = false)
+                        if (teacher) DropdownMenuItem(text = { Text(stringResource(R.string.nav_grades)) },
+                            modifier = Modifier.heightIn(min = MinTouchTarget),
+                            onClick = { expanded = false; controller.navigate(Grades) { launchSingleTop = true } })
+                    }
+                }
+            }
         },
         bottomBar = {
             if (!keyboardOpen) Column(Modifier.navigationBarsPadding()) {
                 if (state.hasInProgressAttempt) {
                     Text(stringResource(R.string.ai_quiz_locked), Modifier.padding(LaraSpacing.S4))
                 }
-                BottomNavBar(selected, state.hasInProgressAttempt, onSelect = { destination ->
+                BottomNavBar(selected, onSelect = { destination ->
                     if (state.allows(destination)) {
                         controller.navigate(destination.route) {
                             popUpTo(controller.graph.startDestinationId) { saveState = true }
@@ -133,17 +159,9 @@ private fun RoleNavGraph(
                 }
             }
             if (!teacher) learnerClassActions()
-            if (teacher) {
-                if (selected != null) Box(if (keyboardOpen) Modifier.height(0.dp).clipToBounds() else Modifier) {
+            if (teacher && selected == ShellDestination.PEOPLE) {
+                Box(if (keyboardOpen) Modifier.height(0.dp).clipToBounds() else Modifier) {
                     approvalActions()
-                }
-                if (!keyboardOpen) Row(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    OutlinedButton(onClick = { controller.navigate(People) { launchSingleTop = true } }, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.nav_people))
-                    }
-                    OutlinedButton(onClick = { controller.navigate(Grades) { launchSingleTop = true } }, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.nav_grades))
-                    }
                 }
             }
             NavHost(controller, startDestination = Stream, modifier = Modifier.weight(1f)) {
@@ -151,11 +169,11 @@ private fun RoleNavGraph(
                 composable<Classwork> { TabContent(ShellDestination.CLASSWORK, state, content) }
                 composable<Quizzes> { TabContent(ShellDestination.QUIZZES, state, content) }
                 composable<Tutor> { TabContent(ShellDestination.AI_TUTOR, state, content) }
+                composable<People> {
+                    if (teacher && peopleContent != null) peopleContent { controller.popBackStack() }
+                    else TabContent(ShellDestination.PEOPLE, state, content)
+                }
                 if (teacher) {
-                    composable<People> {
-                        if (peopleContent != null) peopleContent { controller.popBackStack() }
-                        else ManagementPlaceholder(R.string.nav_people, state.isLoading)
-                    }
                     composable<Grades> { ManagementPlaceholder(R.string.nav_grades, state.isLoading) }
                 }
             }
