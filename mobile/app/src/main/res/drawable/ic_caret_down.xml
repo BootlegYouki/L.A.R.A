@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phosphor Regular, exported from bundled Phosphor.woff2 (MIT). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="256" android:viewportHeight="256">
+    <path android:fillColor="#FF000000" android:pathData="M213.75 101.75 133.75 181.75Q132.5 182.75 131.125 183.375Q129.75 184.0 128.0 184.0Q126.25 184.0 124.875 183.375Q123.5 182.75 122.25 181.75L42.25 101.75Q41.25 100.5 40.625 99.125Q40.0 97.75 40.0 96.0Q40.0 92.75 42.375 90.375Q44.75 88.0 48.0 88.0Q49.75 88.0 51.125 88.625Q52.5 89.25 53.75 90.25L128.0 164.75L202.25 90.25Q203.5 89.25 204.875 88.625Q206.25 88.0 208.0 88.0Q211.25 88.0 213.625 90.375Q216.0 92.75 216.0 96.0Q216.0 97.75 215.375 99.125Q214.75 100.5 213.75 101.75Z" />
+</vector>

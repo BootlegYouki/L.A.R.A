@@ -1,5 +1,15 @@
 # Classroom layout, Group 5
 
+## Current review follow-up — 11 November 2026
+
+Work continues on `feat/266-mobile-classroom-layout-part-5`, PR #280. The Lead's action-icon corrections are implemented. The original white submitted thumbnail was an all-white test fixture; the updated fixture has a visible label and leaf shape. Mock and real-staging-Hub upload/receipt checks passed on Xiaomi 2311DRK48G / Android 16, including 200% text. The real Hub was built from staging `88f12b9`. Its assignment-authoring route returns 501, so only the assignment itself was seeded in a disposable database; class creation and enrollment used the real APIs.
+
+The requested secondary-color polish uses existing `InfoLight`, `InfoDark` and `InfoBorder` tokens for the points badge and Add work button. Turn in keeps the primary green. This is a documented single-screen deviation from the original neutral points text and outlined action. No theme tokens, API, database or submission behavior change.
+
+The user-requested UI UX Pro Max guidance was installed outside the repository and consulted for contextual Phosphor icons, accessible labels, consistent spacing and token-driven surfaces. L.A.R.A's design system, Classroom references and 52/56dp targets remain authoritative.
+
+[Updated evidence and limitations](evidence/266-group-5/review-2026-11-11/README.md). Earlier preparation/publication notes below describe the original checkpoint.
+
 Part of #266. Branch: `feat/266-mobile-classroom-layout-part-5`. Base: `origin/staging` `88f12b929f62102095759d2e20d5dbc4c89b3e71` (Group 3 PR #279 merged). No open PR overlapped this work at startup. Groups 1-3 are merged. Group 5 implementation and evidence were subsequently authorized for commit, push and a Draft PR targeting staging. Only the separately authorized skill update was committed and pushed as `69f514d`.
 
 The latest available Announcements (#238 and #242), issue #266 and PR #279's review decisions were recovered. The Lead still requires screen-state evidence and a real-staging-Hub main-flow check before opening a PR. #276's schema-parity failure and #122's unfinished server authoring are accepted baselines, not investigated or changed here. The user-edited `.agents/skills/lara-mobile/SKILL.md` was reviewed without changes and committed separately as `69f514d` (`docs(mobile): refine mobile skill verification workflow`). It is included on the Group 5 branch; no implementation or evidence file was staged with it.
@@ -12,6 +22,14 @@ The latest available Announcements (#238 and #242), issue #266 and PR #279's rev
 - `AssignmentUiDeviceTest.kt`: opt-in tests confined to `org.lara.app.group5`; synthetic Room states, real camera capture, image-import processing, selector launch, confirmation cancellation, target sizing, offline queue persistence and an actual mock-Hub receipt. The live check shares the application's container with WorkManager, just as production does.
 
 No ViewModel, repository, worker, navigation graph, schema, contract, API, permission declaration or dependency changed. `HomeworkScreen` remains called by the existing learner Classwork assignment row. The existing class shell still owns its header, offline banner and bottom navigation.
+
+## Lead review follow-up
+
+The Add work sources use bundled Phosphor Regular `camera` and `image` icons. Your work uses `caret-up` to open and `caret-down` to close. These vectors are exported from the repository's bundled font, with the same coordinate transform as existing drawables.
+
+The white area in the original `live-mock-submitted.png` is the test's entirely white synthetic source image. The live fixture now draws a labelled page and leaf shape, and asserts that the synced local file still decodes. Updated device evidence shows the visible submitted image.
+
+Add work remains available after an ungraded submission is Turned in. Choosing a photo creates a draft only. Confirming Turn in replaces the existing submission using its current ID, then queues that replacement. It does not create a second submission. `HomeworkRepositoryTest.resubmissionUsesTheExistingIdentity` covers this behavior. Graded work stays read-only, and no Unsubmit action is introduced.
 
 ## Persistence and failure behavior
 

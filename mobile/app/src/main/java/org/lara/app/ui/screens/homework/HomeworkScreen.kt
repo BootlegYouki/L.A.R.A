@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -105,7 +106,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             TextButton(onClick = { workOpen = !workOpen }, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.homework_your_work), style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f), color = LaraColors.TextPrimary)
-                Icon(painterResource(if (expanded) R.drawable.ic_arrow_left else R.drawable.ic_corners_out),
+                Icon(painterResource(if (expanded) R.drawable.ic_caret_down else R.drawable.ic_caret_up),
                     stringResource(if (expanded) R.string.homework_close_work else R.string.homework_open_work), Modifier.size(24.dp))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.Top) {
@@ -129,6 +130,8 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             if (error) Text(stringResource(R.string.homework_failed), color = LaraColors.DangerDark)
             if (submission?.score == null) {
                 OutlinedButton(onClick = { adding = true }, enabled = !busy, shape = CircleShape,
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = LaraColors.InfoLight, contentColor = LaraColors.InfoDark),
+                    border = BorderStroke(1.dp, LaraColors.InfoBorder),
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                     Text(stringResource(R.string.homework_add_work))
                 }
@@ -148,7 +151,11 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             Text(stringResource(R.string.homework_due, DateFormat.getDateTimeInstance().format(Date(assignment.dueDate))),
                 color = LaraColors.TextSecondary)
             Text(assignment.title, style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.homework_points, assignment.maxPoints), style = MaterialTheme.typography.titleMedium)
+            Surface(color = LaraColors.InfoLight, contentColor = LaraColors.InfoDark, shape = LaraShapes.small,
+                border = BorderStroke(1.dp, LaraColors.InfoBorder)) {
+                Text(stringResource(R.string.homework_points, assignment.maxPoints), style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S2))
+            }
             HorizontalDivider(color = LaraColors.Border)
             Text(assignment.instructions, style = MaterialTheme.typography.bodyLarge)
         }
@@ -167,13 +174,13 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             Text(stringResource(R.string.homework_add_work), style = MaterialTheme.typography.titleLarge)
             TextButton(onClick = { adding = false; workOpen = false; camera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_corners_out), null, Modifier.size(24.dp))
+                Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 Text(stringResource(if (path.isNullOrEmpty()) R.string.homework_take_photo else R.string.homework_retake))
             }
             TextButton(onClick = { adding = false; gallery.launch("image/*") }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp))
+                Icon(painterResource(R.drawable.ic_image), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 Text(stringResource(R.string.homework_choose_photo))
             }

@@ -1,5 +1,7 @@
 # Group 5 phone evidence
 
+[11 November review fixes, final accent screenshots and real-staging-Hub verification](review-2026-11-11/README.md) supersede the original touched-screen captures and pending-Hub notes below.
+
 Part of #266. Base: `origin/staging` **88f12b9**. Implementation on `feat/266-mobile-classroom-layout-part-5`. Genuine, unedited screenshots from the USB-connected **Infinix X6731, Android 14**, 10 November 2026. All tests use a separate **org.lara.app.group5** installation and synthetic accounts/data. The normal installed app was not replaced or cleared.
 
 BEFORE images were captured from the staging production UI before installation of the redesign. The baseline fixture test was corrected to update the same Room instance observed by the screen; the final baseline run passed. AFTER uses the same states and production components. `after/live-mock-*` uses synchronized mock-Hub data and an actual upload/receipt; all other state images are explicitly synthetic Room fixtures with the Hub set to unreachable port 9. They are not claims of real-Hub or classroom-router verification. The mock's seeded Filipino assignment content is lesson data; all UI additions are English resources.

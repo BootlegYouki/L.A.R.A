@@ -1,6 +1,7 @@
 package org.lara.app.reading
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityNodeInfo
@@ -219,9 +220,19 @@ class AssignmentUiDeviceTest {
                     })
                 } } }
                 waitFor("Your work"); capture("live-mock-assignment")
+                click("Your work"); capture("live-work-empty")
+                click("Add work"); waitFor("Choose a photo"); capture("live-add-work")
+                instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
+                waitFor("Add work"); click("Your work")
                 val source = File(context.cacheDir, "synthetic-gallery.jpg")
                 val bitmap = Bitmap.createBitmap(480, 640, Bitmap.Config.ARGB_8888)
-                android.graphics.Canvas(bitmap).drawColor(android.graphics.Color.WHITE)
+                android.graphics.Canvas(bitmap).apply {
+                    drawColor(android.graphics.Color.WHITE)
+                    val paint = android.graphics.Paint().apply { color = android.graphics.Color.BLACK; textSize = 28f }
+                    drawText("SYNTHETIC HOMEWORK", 24f, 64f, paint)
+                    drawText("Leaf observation", 24f, 112f, paint)
+                    drawOval(100f, 180f, 360f, 520f, paint)
+                }
                 source.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 80, it) }; bitmap.recycle()
                 scenario.onActivity {
                     androidx.lifecycle.ViewModelProvider(requireNotNull(screenOwner))["homework-${user.id}-${assignment.id}", org.lara.app.ui.screens.homework.HomeworkViewModel::class.java]
@@ -241,6 +252,8 @@ class AssignmentUiDeviceTest {
                 assertEquals("SYNCED", result?.syncStatus)
                 assertNotNull(result?.receivedAt)
                 assertTrue(File(requireNotNull(result).filePath).isFile)
+                val submittedPhoto = requireNotNull(BitmapFactory.decodeFile(result.filePath)) { "Synced photo remains decodable" }
+                submittedPhoto.recycle()
             }
         } finally { scope.coroutineContext[kotlinx.coroutines.Job]?.cancel() }
     }
