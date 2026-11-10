@@ -1,0 +1,21 @@
+Base: 0199e345fb5ea211ad568e996d33cdbafca4455c
+Branch: feat/266-mobile-classroom-layout-part-3
+Uncommitted working sources; SHA-256:
+6ae24b1d5397b2c0bd3b029dc42d854e9e7100b0f23974a75c0ef9dd7d046a5e  mobile/app/src/androidTest/java/org/lara/app/reading/ClassTabsDeviceTest.kt
+44ac18e80681bc3090b0bbf6c35a9d679c44797fea824181e840eb1a2c788de3  mobile/app/src/main/java/org/lara/app/ui/components/BottomNavBar.kt
+2f0e048fe034f13a021c55aff2a2deb5c3bdd38eeba032ed57f91f611971ee4c  mobile/app/src/main/java/org/lara/app/ui/components/ClassroomUi.kt
+94ad7d450415296770c62ae11acff8ec58a31ea33bdc5c9654fc665648c77052  mobile/app/src/main/java/org/lara/app/ui/navigation/RoleNavGraphs.kt
+9ac3abf69944884db0cd8a4f42e3cc680980d8c14cd2ef2aaff115498ae9f107  mobile/app/src/main/java/org/lara/app/ui/navigation/ShellState.kt
+9d46c960adbdb814db4e11b5c64ca6ae83bca203f8c6b5404023140bfc045fd8  mobile/app/src/main/java/org/lara/app/ui/screens/stream/ClassTabComponents.kt
+d29ce349347fe6beec36c6a843c5a11855ad5a9046f64699a709dfc125457656  mobile/app/src/main/java/org/lara/app/ui/screens/stream/ClassroomLearningHost.kt
+51eccaf982408f3c530fe8225c17eef874d909b8ae8420087d67b99c5a61f750  mobile/app/src/main/java/org/lara/app/ui/screens/teacher/TeacherClassroomNavigation.kt
+51591406d014cbdd41790611080bcfa9d340625a46277f8bb4f5ae2dfb910253  mobile/app/src/main/java/org/lara/app/ui/screens/teacher/classes/ClassManagementHost.kt
+39968126012af547026cdc6d8cf715931a74f0b074d88717e15763472982615e  mobile/app/src/main/res/drawable/ic_dots_three_vertical.xml
+292f77418cf7fc2c90bb95eedf1c9d1f0799137b74e15879155483ca79949bba  mobile/app/src/main/res/drawable/ic_funnel.xml
+402d741365ea56d76230f231c5ea1192cde4984749cee5426117ff694d4ee0b8  mobile/app/src/main/res/drawable/ic_users_fill.xml
+799a11ceada8b1cca998e2553dcf90a78afae4f16a0cf930ef00fbe8ed96c248  mobile/app/src/main/res/drawable/ic_users_regular.xml
+43338cea83aba8c90374fd1d8ddacd80667f411b8ca525b52c76d4e8b1797cdb  mobile/app/src/main/res/values/strings.xml
+b13df2b32b263b263d09472a1f5a117d4f5f9b6920da22d7975823bf255313ac  mobile/app/src/test/java/org/lara/app/ui/navigation/ShellStateTest.kt
+7923aac3485735a3f110cab39235cf793b27d5871130317466373bb3038e8edc  mobile\app\build\group3-verified\app.apk
+a7edfc55376e17bfbcb365dfbe1a3459bcc6b8c189529b9bbf76d8775e5ff0da  mobile\app\build\group3-verified\tests.apk
+4e214da9cedcafcf238a0132aed6132e357f2c63e0124365784cb5e5a9ec38c9  mobile\app\build\outputs\apk\debug\app-arm64-v8a-debug.apk

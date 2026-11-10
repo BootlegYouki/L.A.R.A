@@ -1,0 +1,2 @@
+Real staging Hub: teacher and learner authenticated, synthetic class created, learner approved.
+Real Hub topic creation HTTP 404 (topic selection verified with Room fixtures).

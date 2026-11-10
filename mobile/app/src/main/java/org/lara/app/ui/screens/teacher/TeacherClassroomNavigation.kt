@@ -44,7 +44,7 @@ fun TeacherClassroomNavigation(container: AppContainer, userId: String, shell: S
         }
     } else CompositionLocalProvider(LocalClassChrome provides ClassChrome(selected.name, selected.section) { selectedId = null }) {
         LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", teacherApprovalActions = {
-            TeacherApprovalPanel(container, userId, session, expired, selectedClassId = selected.id)
+            TeacherApprovalPanel(container, userId, session, expired, selectedClassId = selected.id, showManagementEntry = false)
         }, content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id) },
             teacherPeopleContent = { close ->
                 org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,

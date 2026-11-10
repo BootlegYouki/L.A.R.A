@@ -1,0 +1,289 @@
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\AndroidManifest.xml:12: Warning: Attribute enableOnBackInvokedCallback is only used in API level 33 and higher (current min is 26) [UnusedAttribute]
+        android:enableOnBackInvokedCallback="true"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedAttribute":
+   This check finds attributes set in XML files that were introduced in a
+   version newer than the oldest version targeted by your application (with
+   the minSdkVersion attribute).
+
+   This is not an error; the application will simply ignore the attribute.
+   However, if the attribute is important to the appearance or functionality
+   of your application, you should consider finding an alternative way to
+   achieve the same result with only available attributes, and then you can
+   optionally create a copy of the layout in a layout-vNN folder which will be
+   used on API NN or higher where you can take advantage of the newer
+   attribute.
+
+   Note: This check does not only apply to attributes. For example, some tags
+   can be unused too, such as the new <tag> element in layouts introduced in
+   API 21.
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:56: Warning: A newer version of androidx.compose:compose-bom than 2024.12.01 is available: 2026.09.00 [GradleDependency]
+    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:57: Warning: A newer version of androidx.activity:activity-compose than 1.9.3 is available: 1.13.0 [GradleDependency]
+    implementation("androidx.activity:activity-compose:1.9.3")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:61: Warning: A newer version of androidx.navigation:navigation-compose than 2.8.5 is available: 2.10.2 [GradleDependency]
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:62: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.8.3 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:63: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.3 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:64: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-ktx than 2.8.3 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:67: Warning: A newer version of androidx.media3:media3-exoplayer than 1.5.1 is available: 1.11.1 [GradleDependency]
+    implementation("androidx.media3:media3-exoplayer:1.5.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:68: Warning: A newer version of androidx.media3:media3-ui than 1.5.1 is available: 1.11.1 [GradleDependency]
+    implementation("androidx.media3:media3-ui:1.5.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:69: Warning: A newer version of androidx.media3:media3-datasource-okhttp than 1.5.1 is available: 1.11.1 [GradleDependency]
+    implementation("androidx.media3:media3-datasource-okhttp:1.5.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:70: Warning: A newer version of androidx.work:work-runtime-ktx than 2.10.0 is available: 2.12.0 [GradleDependency]
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:71: Warning: A newer version of androidx.camera:camera-core than 1.4.1 is available: 1.6.2 [GradleDependency]
+    implementation("androidx.camera:camera-core:1.4.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:72: Warning: A newer version of androidx.camera:camera-camera2 than 1.4.1 is available: 1.6.2 [GradleDependency]
+    implementation("androidx.camera:camera-camera2:1.4.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:73: Warning: A newer version of androidx.camera:camera-lifecycle than 1.4.1 is available: 1.6.2 [GradleDependency]
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:74: Warning: A newer version of androidx.camera:camera-view than 1.4.1 is available: 1.6.2 [GradleDependency]
+    implementation("androidx.camera:camera-view:1.4.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:75: Warning: A newer version of androidx.exifinterface:exifinterface than 1.3.7 is available: 1.4.2 [GradleDependency]
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:77: Warning: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.5 [GradleDependency]
+    implementation("androidx.room:room-runtime:2.6.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:78: Warning: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.5 [GradleDependency]
+    implementation("androidx.room:room-ktx:2.6.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:79: Warning: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.5 [GradleDependency]
+    kapt("androidx.room:room-compiler:2.6.1")
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:81: Warning: A newer version of androidx.work:work-testing than 2.10.0 is available: 2.12.0 [GradleDependency]
+    testImplementation("androidx.work:work-testing:2.10.0")
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:86: Warning: A newer version of androidx.test:core than 1.6.1 is available: 1.7.0 [GradleDependency]
+    testImplementation("androidx.test:core:1.6.1")
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:87: Warning: A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0 [GradleDependency]
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:88: Warning: A newer version of androidx.test:runner than 1.6.2 is available: 1.7.0 [GradleDependency]
+    androidTestImplementation("androidx.test:runner:1.6.2")
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:89: Warning: A newer version of androidx.test:core than 1.6.1 is available: 1.7.0 [GradleDependency]
+    androidTestImplementation("androidx.test:core:1.6.1")
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:83: Warning: Formatting %d followed by words ("seconds"): This should probably be a plural rather than a string [PluralsCandidate]
+    <string name="auth_retry_seconds">Try again in %1$d seconds.</string>
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "PluralsCandidate":
+   This lint check looks for potential errors in internationalization where
+   you have translated a message which involves a quantity and it looks like
+   other parts of the string may need grammatical changes.
+
+   For example, rather than something like this:
+     <string name="try_again">Try again in %d seconds.</string>
+   you should be using a plural:
+      <plurals name="try_again">
+           <item quantity="one">Try again in %d second</item>
+           <item quantity="other">Try again in %d seconds</item>
+       </plurals>
+   This will ensure that in other languages the right set of translations are
+   provided for the different quantity classes.
+
+   (This check depends on some heuristics, so it may not accurately determine
+   whether a string really should be a quantity. You can use tools:ignore to
+   filter out false positives.
+
+   https://developer.android.com/guide/topics/resources/string-resource.html#Plurals
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\xml\network_security_config.xml:7: Warning: Insecure Base Configuration [InsecureBaseConfiguration]
+    <base-config cleartextTrafficPermitted="true" />
+                                            ~~~~
+
+   Explanation for issues of type "InsecureBaseConfiguration":
+   Permitting cleartext traffic could allow eavesdroppers to intercept data
+   sent by your app, which impacts the privacy of your users. Consider only
+   allowing encrypted traffic by setting the cleartextTrafficPermitted tag to
+   false.
+
+   https://goo.gle/InsecureBaseConfiguration
+   https://developer.android.com/preview/features/security-config.html
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\AndroidManifest.xml:11: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+        android:allowBackup="false"
+                             ~~~~~
+
+   Explanation for issues of type "DataExtractionRules":
+   Before Android 12, the attributes android:allowBackup and
+   android:fullBackupContent were used to configure all forms of backup,
+   including cloud backups, device-to-device transfers and adb backup.
+
+   In Android 12 and higher, these attributes have been deprecated and will
+   only apply to cloud backups. You should instead use the attribute
+   android:dataExtractionRules, specifying an @xml resource that configures
+   which files to back up, for cloud backups and for device-to-device
+   transfers, separately. If your minSdkVersion supports older versions,
+   you'll still want to specify an android:fullBackupContent resource if the
+   default behavior is not right for your app.
+
+   https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   https://goo.gle/DataExtractionRules
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\drawable\ic_corners_in.xml:4: Warning: Very long vector path (1156 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]
+    <path android:fillColor="#FF000000" android:pathData="M152.0 96.0V48.0Q152.0 44.75 154.375 42.375Q156.75 40.0 160.0 40.0Q163.25 40.0 165.625 42.375Q168.0 44.75 168.0 48.0V88.0H208.0Q211.25 88.0 213.625 90.375Q216.0 92.75 216.0 96.0Q216.0 99.25 213.625 101.625Q211.25 104.0 208.0 104.0H160.0Q156.75 104.0 154.375 101.625Q152.0 99.25 152.0 96.0ZM96.0 152.0H48.0Q44.75 152.0 42.375 154.375Q40.0 156.75 40.0 160.0Q40.0 163.25 42.375 165.625Q44.75 168.0 48.0 168.0H88.0V208.0Q88.0 211.25 90.375 213.625Q92.75 216.0 96.0 216.0Q99.25 216.0 101.625 213.625Q104.0 211.25 104.0 208.0V160.0Q104.0 156.75 101.625 154.375Q99.25 152.0 96.0 152.0ZM208.0 152.0H160.0Q156.75 152.0 154.375 154.375Q152.0 156.75 152.0 160.0V208.0Q152.0 211.25 154.375 213.625Q156.75 216.0 160.0 216.0Q163.25 216.0 165.625 213.625Q168.0 211.25 168.0 208.0V168.0H208.0Q211.25 168.0 213.625 165.625Q216.0 163.25 216.0 160.0Q216.0 156.75 213.625 154.375Q211.25 152.0 208.0 152.0ZM96.0 40.0Q92.75 40.0 90.375 42.375Q88.0 44.75 88.0 48.0V88.0H48.0Q44.75 88.0 42.375 90.375Q40.0 92.75 40.0 96.0Q40.0 99.25 42.375 101.625Q44.75 104.0 48.0 104.0H96.0Q99.25 104.0 101.625 101.625Q104.0 99.25 104.0 96.0V48.0Q104.0 44.75 101.625 42.375Q99.25 40.0 96.0 40.0Z" />
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\drawable\ic_corners_out.xml:4: Warning: Very long vector path (1136 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]
+    <path android:fillColor="#FF000000" android:pathData="M216.0 48.0V88.0Q216.0 91.25 213.625 93.625Q211.25 96.0 208.0 96.0Q204.75 96.0 202.375 93.625Q200.0 91.25 200.0 88.0V56.0H168.0Q164.75 56.0 162.375 53.625Q160.0 51.25 160.0 48.0Q160.0 44.75 162.375 42.375Q164.75 40.0 168.0 40.0H208.0Q211.25 40.0 213.625 42.375Q216.0 44.75 216.0 48.0ZM88.0 200.0H56.0V168.0Q56.0 164.75 53.625 162.375Q51.25 160.0 48.0 160.0Q44.75 160.0 42.375 162.375Q40.0 164.75 40.0 168.0V208.0Q40.0 211.25 42.375 213.625Q44.75 216.0 48.0 216.0H88.0Q91.25 216.0 93.625 213.625Q96.0 211.25 96.0 208.0Q96.0 204.75 93.625 202.375Q91.25 200.0 88.0 200.0ZM208.0 160.0Q204.75 160.0 202.375 162.375Q200.0 164.75 200.0 168.0V200.0H168.0Q164.75 200.0 162.375 202.375Q160.0 204.75 160.0 208.0Q160.0 211.25 162.375 213.625Q164.75 216.0 168.0 216.0H208.0Q211.25 216.0 213.625 213.625Q216.0 211.25 216.0 208.0V168.0Q216.0 164.75 213.625 162.375Q211.25 160.0 208.0 160.0ZM88.0 40.0H48.0Q44.75 40.0 42.375 42.375Q40.0 44.75 40.0 48.0V88.0Q40.0 91.25 42.375 93.625Q44.75 96.0 48.0 96.0Q51.25 96.0 53.625 93.625Q56.0 91.25 56.0 88.0V56.0H88.0Q91.25 56.0 93.625 53.625Q96.0 51.25 96.0 48.0Q96.0 44.75 93.625 42.375Q91.25 40.0 88.0 40.0Z" />
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\drawable\ic_download.xml:4: Warning: Very long vector path (939 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]
+    <path android:fillColor="#FF000000" android:pathData="M224.0 144.0V208.0Q224.0 211.25 221.625 213.625Q219.25 216.0 216.0 216.0H40.0Q36.75 216.0 34.375 213.625Q32.0 211.25 32.0 208.0V144.0Q32.0 140.75 34.375 138.375Q36.75 136.0 40.0 136.0Q43.25 136.0 45.625 138.375Q48.0 140.75 48.0 144.0V200.0H208.0V144.0Q208.0 140.75 210.375 138.375Q212.75 136.0 216.0 136.0Q219.25 136.0 221.625 138.375Q224.0 140.75 224.0 144.0ZM122.25 149.75Q123.5 150.75 124.875 151.375Q126.25 152.0 128.0 152.0Q129.75 152.0 131.125 151.375Q132.5 150.75 133.75 149.75L173.75 109.75Q174.75 108.5 175.375 107.125Q176.0 105.75 176.0 104.0Q176.0 100.75 173.625 98.375Q171.25 96.0 168.0 96.0Q166.25 96.0 164.875 96.625Q163.5 97.25 162.25 98.25L136.0 124.75V32.0Q136.0 28.75 133.625 26.375Q131.25 24.0 128.0 24.0Q124.75 24.0 122.375 26.375Q120.0 28.75 120.0 32.0V124.75L93.75 98.25Q92.5 97.25 91.125 96.625Q89.75 96.0 88.0 96.0Q84.75 96.0 82.375 98.375Q80.0 100.75 80.0 104.0Q80.0 105.75 80.625 107.125Q81.25 108.5 82.25 109.75Z" />
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\drawable\ic_gear.xml:4: Warning: Very long vector path (5099 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]
+    <path android:fillColor="#FF000000" android:pathData="M128.0 80.0Q108.0 80.0 94.0 94.0Q80.0 108.0 80.0 128.0Q80.0 148.0 94.0 162.0Q108.0 176.0 128.0 176.0Q148.0 176.0 162.0 162.0Q176.0 148.0 176.0 128.0Q176.0 108.25 161.875 94.125Q147.75 80.0 128.0 80.0ZM128.0 160.0Q114.75 160.0 105.375 150.625Q96.0 141.25 96.0 128.0Q96.0 114.75 105.375 105.375Q114.75 96.0 128.0 96.0Q141.25 96.0 150.625 105.375Q160.0 114.75 160.0 128.0Q160.0 141.25 150.625 150.625Q141.25 160.0 128.0 160.0ZM216.0 130.25Q216.0 128.0 216.0 125.75L231.0 107.25Q231.75 106.25 232.25 105.0Q232.75 103.75 232.75 102.25Q232.75 101.75 232.625 101.125Q232.5 100.5 232.5 100.0V100.25Q230.5 92.75 227.625 86.125Q224.75 79.5 221.25 73.5L221.5 74.0Q220.5 72.25 219.0 71.25Q217.5 70.25 215.5 70.0L191.75 67.25Q190.25 65.75 188.75 64.25L186.0 40.5Q185.75 38.5 184.75 37.0Q183.75 35.5 182.0 34.5Q176.5 31.25 170.0 28.5Q163.5 25.75 156.5 23.75H155.75Q155.25 23.5 154.75 23.5Q154.25 23.5 153.75 23.5Q152.25 23.5 151.0 23.875Q149.75 24.25 148.75 25.25L130.25 40.0Q128.0 40.0 125.75 40.0L107.25 25.0Q106.25 24.25 105.0 23.75Q103.75 23.25 102.25 23.25Q101.75 23.25 101.125 23.375Q100.5 23.5 100.0 23.75H100.25Q92.75 25.75 86.125 28.5Q79.5 31.25 73.5 34.75L74.0 34.5Q72.25 35.5 71.25 37.0Q70.25 38.5 70.0 40.5L67.25 64.25Q65.75 65.75 64.25 67.25L40.5 70.0Q38.5 70.25 37.0 71.25Q35.5 72.25 34.5 74.0Q31.25 79.5 28.5 86.0Q25.75 92.5 23.75 99.5V100.25Q23.5 100.75 23.5 101.25Q23.5 101.75 23.5 102.25Q23.5 103.75 23.875 105.0Q24.25 106.25 25.25 107.25L40.0 125.75Q40.0 128.0 40.0 130.25L25.0 148.75Q24.25 149.75 23.75 151.0Q23.25 152.25 23.25 153.75Q23.25 154.25 23.375 154.875Q23.5 155.5 23.75 156.0V155.75Q25.75 163.25 28.5 169.875Q31.25 176.5 34.75 182.5L34.5 182.0Q35.5 183.75 37.0 184.75Q38.5 185.75 40.5 186.0L64.25 188.75Q65.75 190.25 67.25 191.75L70.0 215.5Q70.25 217.5 71.25 219.0Q72.25 220.5 74.0 221.5Q79.5 224.75 86.0 227.5Q92.5 230.25 99.5 232.25H100.25Q100.75 232.5 101.25 232.5Q101.75 232.5 102.25 232.5Q103.75 232.5 105.0 232.125Q106.25 231.75 107.25 230.75L125.75 216.0Q128.0 216.0 130.25 216.0L148.75 231.0Q149.75 231.75 151.0 232.25Q152.25 232.75 153.75 232.75Q154.25 232.75 154.875 232.625Q155.5 232.5 156.0 232.5H155.75Q163.25 230.5 169.875 227.625Q176.5 224.75 182.5 221.25L182.0 221.5Q183.75 220.5 184.75 219.0Q185.75 217.5 186.0 215.5L188.75 191.75Q190.25 190.25 191.75 188.75L215.5 186.0Q217.5 185.75 219.0 184.75Q220.5 183.75 221.5 182.0Q224.75 176.5 227.5 170.0Q230.25 163.5 232.25 156.5V155.75Q232.5 155.25 232.5 154.75Q232.5 154.25 232.5 153.75Q232.5 152.25 232.125 151.0Q231.75 149.75 230.75 148.75ZM200.0 123.75Q200.0 124.75 200.0 125.75Q200.0 126.75 200.0 128.0Q200.0 129.25 200.0 130.375Q200.0 131.5 200.0 132.5V132.25Q200.0 132.5 200.0 132.625Q200.0 132.75 200.0 132.75Q200.0 134.25 200.375 135.5Q200.75 136.75 201.75 137.75L215.75 155.5Q214.5 160.0 212.875 163.75Q211.25 167.5 209.25 171.0L209.5 170.5L187.0 173.0Q185.5 173.25 184.125 174.0Q182.75 174.75 182.0 175.75Q180.5 177.5 179.0 179.0Q177.5 180.5 175.75 181.75V182.0Q174.75 182.75 174.0 184.125Q173.25 185.5 173.0 187.0L170.5 209.5Q167.5 211.25 163.875 212.75Q160.25 214.25 156.25 215.5L155.5 215.75L137.75 201.5Q136.75 200.75 135.5 200.25Q134.25 199.75 133.0 199.75Q132.75 199.75 132.75 199.75Q132.75 199.75 132.75 199.75H132.5Q131.5 200.0 130.375 200.0Q129.25 200.0 128.0 200.0Q127.0 200.0 125.875 200.0Q124.75 200.0 123.5 199.75H123.75Q123.5 199.75 123.375 199.75Q123.25 199.75 123.25 199.75Q121.75 199.75 120.5 200.25Q119.25 200.75 118.25 201.5L100.5 215.75Q96.0 214.5 92.25 212.875Q88.5 211.25 85.0 209.25L85.5 209.5L83.0 187.0Q82.75 185.5 82.0 184.125Q81.25 182.75 80.25 182.0Q78.5 180.5 77.0 179.0Q75.5 177.5 74.25 175.75H74.0Q73.25 174.75 71.875 174.0Q70.5 173.25 69.0 173.0L46.5 170.5Q44.75 167.5 43.25 163.75Q41.75 160.0 40.5 156.25L40.25 155.5L54.5 137.75Q55.25 136.75 55.75 135.5Q56.25 134.25 56.25 132.75Q56.25 132.75 56.25 132.625Q56.25 132.5 56.25 132.25V132.5Q56.0 131.5 56.0 130.375Q56.0 129.25 56.0 128.0Q56.0 127.0 56.0 125.75Q56.0 124.5 56.25 123.5V123.75Q56.25 123.5 56.25 123.375Q56.25 123.25 56.25 123.25Q56.25 121.75 55.75 120.5Q55.25 119.25 54.5 118.25L40.25 100.5Q41.5 96.0 43.125 92.25Q44.75 88.5 46.75 85.0L46.5 85.5L69.0 83.0Q70.5 82.75 71.875 82.0Q73.25 81.25 74.0 80.25Q75.5 78.5 77.0 77.0Q78.5 75.5 80.25 74.25V74.0Q81.25 73.25 82.0 71.875Q82.75 70.5 83.0 69.0L85.5 46.5Q88.5 44.75 92.25 43.25Q96.0 41.75 99.75 40.5L100.5 40.25L118.25 54.5Q119.25 55.25 120.5 55.75Q121.75 56.25 123.25 56.25Q123.25 56.25 123.375 56.25Q123.5 56.25 123.75 56.25H123.5Q124.5 56.0 125.625 56.0Q126.75 56.0 128.0 56.0Q129.0 56.0 130.25 56.0Q131.5 56.0 132.5 56.25H132.25Q132.5 56.25 132.625 56.25Q132.75 56.25 132.75 56.25Q134.25 56.25 135.5 55.75Q136.75 55.25 137.75 54.5L155.5 40.25Q160.0 41.5 163.75 43.125Q167.5 44.75 171.0 46.75L170.5 46.5L173.0 69.0Q173.25 70.5 174.0 71.875Q174.75 73.25 175.75 74.0Q177.5 75.5 179.0 77.0Q180.5 78.5 181.75 80.25H182.0Q182.75 81.25 184.125 82.0Q185.5 82.75 187.0 83.0L209.5 85.5Q211.25 88.5 212.75 92.125Q214.25 95.75 215.5 99.75L215.75 100.5L201.5 118.25Q200.75 119.25 200.25 120.5Q199.75 121.75 199.75 123.25Q199.75 123.25 199.75 123.375Q199.75 123.5 199.75 123.75Z" />
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\drawable\ic_trash.xml:4: Warning: Very long vector path (1068 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]
+    <path android:fillColor="#FF000000" android:pathData="M216.0 48.0H176.0V40.0Q176.0 30.0 169.0 23.0Q162.0 16.0 152.0 16.0H104.0Q94.0 16.0 87.0 23.0Q80.0 30.0 80.0 40.0V48.0H40.0Q36.75 48.0 34.375 50.375Q32.0 52.75 32.0 56.0Q32.0 59.25 34.375 61.625Q36.75 64.0 40.0 64.0H48.0V208.0Q48.0 214.75 52.625 219.375Q57.25 224.0 64.0 224.0H192.0Q198.75 224.0 203.375 219.375Q208.0 214.75 208.0 208.0V64.0H216.0Q219.25 64.0 221.625 61.625Q224.0 59.25 224.0 56.0Q224.0 52.75 221.625 50.375Q219.25 48.0 216.0 48.0ZM96.0 40.0Q96.0 36.75 98.375 34.375Q100.75 32.0 104.0 32.0H152.0Q155.25 32.0 157.625 34.375Q160.0 36.75 160.0 40.0V48.0H96.0ZM192.0 208.0H64.0V64.0H192.0ZM112.0 104.0V168.0Q112.0 171.25 109.625 173.625Q107.25 176.0 104.0 176.0Q100.75 176.0 98.375 173.625Q96.0 171.25 96.0 168.0V104.0Q96.0 100.75 98.375 98.375Q100.75 96.0 104.0 96.0Q107.25 96.0 109.625 98.375Q112.0 100.75 112.0 104.0ZM160.0 104.0V168.0Q160.0 171.25 157.625 173.625Q155.25 176.0 152.0 176.0Q148.75 176.0 146.375 173.625Q144.0 171.25 144.0 168.0V104.0Q144.0 100.75 146.375 98.375Q148.75 96.0 152.0 96.0Q155.25 96.0 157.625 98.375Q160.0 100.75 160.0 104.0Z" />
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "VectorPath":
+   Using long vector paths is bad for performance. There are several ways to
+   make the pathData shorter:
+   * Using less precision
+   * Removing some minor details
+   * Using the Android Studio vector conversion tool
+   * Rasterizing the image (converting to PNG)
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\build.gradle.kts:79: Warning: This library supports using KSP instead of kapt, which greatly improves performance. Learn more: https://developer.android.com/studio/build/migrate-to-ksp [KaptUsageInsteadOfKsp]
+    kapt("androidx.room:room-compiler:2.6.1")
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "KaptUsageInsteadOfKsp":
+   KSP is a more efficient replacement for kapt. For libraries that support
+   both, KSP should be used to improve build times.
+
+   https://developer.android.com/studio/build/migrate-to-ksp
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\java\org\lara\app\ui\screens\auth\AuthScreen.kt:28: Information: Prefer mutableLongStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var now by remember { mutableStateOf(android.os.SystemClock.elapsedRealtime()) }
+                          ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AutoboxingStateCreation":
+   Calling mutableStateOf<T>() when T is either backed by a primitive type on
+   the JVM or is a value class results in a state implementation that requires
+   all state values to be boxed. This usually causes an additional allocation
+   for each state write, and adds some additional work to auto-unbox values
+   when reading the value of the state. Instead, prefer to use a specialized
+   primitive state implementation for Int, Long, Float, and Double when the
+   state does not need to track null values and does not override the default
+   SnapshotMutationPolicy. See mutableIntStateOf(), mutableLongStateOf(),
+   mutableFloatStateOf(), and mutableDoubleStateOf() for more information.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.runtime
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:125: Warning: The resource R.string.enrollment_all_classes appears to be unused [UnusedResources]
+    <string name="enrollment_all_classes">All classes</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:210: Warning: The resource R.string.reading_open_handout appears to be unused [UnusedResources]
+    <string name="reading_open_handout">Open handout · downloaded files stay available offline</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:211: Warning: The resource R.string.reading_saved_handout appears to be unused [UnusedResources]
+    <string name="reading_saved_handout">Saved on this device · open handout</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests =true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests =true.
+   ,
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\java\org\lara\app\data\media\DownloadManager.kt:30: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data [UsableSpace]
+    private val availableBytes: () -> Long = { root.usableSpace }) {
+                                                    ~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\java\org\lara\app\data\media\DownloadManager.kt:30: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data [UsableSpace]
+    private val availableBytes: () -> Long = { root.usableSpace }) {
+                                                    ~~~~~~~~~~~
+
+   Explanation for issues of type "UsableSpace":
+   When you need to allocate disk space for large files, consider using the
+   new allocateBytes(FileDescriptor, long) API, which will automatically clear
+   cached files belonging to other apps (as needed) to meet your request.
+
+   When deciding if the device has enough disk space to hold your new data,
+   call getAllocatableBytes(UUID) instead of using getUsableSpace(), since the
+   former will consider any cached data that the system is willing to clear on
+   your behalf.
+
+   Note that these methods require API level 26. If your app is running on
+   older devices, you will probably need to use both APIs, conditionally
+   switching on Build.VERSION.SDK_INT. Lint only looks in the same compilation
+   unit to see if you are already using both APIs, so if it warns even though
+   you are already using the new API, consider moving the calls to the same
+   file or suppressing the warning.
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:63: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
+    <string name="auth_checking">Signing in to your classroom Hub...</string>
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:64: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
+    <string name="auth_restoring">Opening your saved classroom...</string>
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:90: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
+    <string name="enrollment_join_sending">Sending your join request...</string>
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\res\values\strings.xml:155: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
+    <string name="classes_updating">Updating your classes...</string>
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "TypographyEllipsis":
+   You can replace the string "..." with a dedicated ellipsis character,
+   ellipsis character (u2026, &#8230;). This can help make the text more
+   readable.
+
+   https://en.wikipedia.org/wiki/Ellipsis
+
+C:\Users\DJ Rapmasta\Documents\L.A.R.A\mobile\app\src\main\AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]
+    <application
+     ~~~~~~~~~~~
+
+   Explanation for issues of type "MissingApplicationIcon":
+   You should set an icon for the application as whole because there is no
+   default. This attribute must be set as a reference to a drawable resource
+   containing the image (for example @drawable/icon).
+
+   https://developer.android.com/studio/publish/preparing#publishing-configure
+
+0 errors, 43 warnings

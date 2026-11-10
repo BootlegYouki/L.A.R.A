@@ -18,7 +18,8 @@ data class ClassChrome(val name: String, val section: String, val back: () -> Un
 val LocalClassChrome = staticCompositionLocalOf<ClassChrome?> { null }
 
 @Composable
-fun ClassroomTopBar(title: String, section: String? = null, back: (() -> Unit)? = null) {
+fun ClassroomTopBar(title: String, section: String? = null, back: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {}) {
     Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 64.dp).padding(horizontal = LaraSpacing.S3),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -30,6 +31,7 @@ fun ClassroomTopBar(title: String, section: String? = null, back: (() -> Unit)? 
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 if (!section.isNullOrBlank()) Text(section, style = MaterialTheme.typography.bodyMedium, color = LaraColors.PrimaryLight)
             }
+            actions()
             SettingsAction()
         }
     }

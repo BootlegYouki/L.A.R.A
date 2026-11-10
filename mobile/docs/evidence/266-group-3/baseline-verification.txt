@@ -1,0 +1,191 @@
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set DIRNAME=C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if "C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\" == "" set DIRNAME=.
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set APP_BASE_NAME=gradlew
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set APP_HOME=C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>for %i in ("C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\") do set APP_HOME=%~fi
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set APP_HOME=C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if defined JAVA_HOME goto findJavaFromJavaHome
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set JAVA_EXE=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if exist "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" goto execute
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set CLASSPATH=C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\\gradle\wrapper\gradle-wrapper.jar
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>"C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot\/bin/java.exe" -Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -classpath "C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\\gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain -I group3-device.init.gradle assembleDebug assembleDebugAndroidTest testDebugUnitTest --tests org.lara.app.data.SchemaParityTest --continue
+.\gradlew.bat : Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp
+At line:2 char:52
++ ... r=C:\Temp'; .\gradlew.bat -I group3-device.init.gradle assembleDebug  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Picked up JAVA_....tmpdir=C:\Temp:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:mergeDebugResources
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:compressDebugAssets
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:checkDebugAndroidTestAarMetadata
+> Task :app:generateDebugAndroidTestResValues
+> Task :app:mapDebugAndroidTestSourceSetPaths
+> Task :app:checkDebugDuplicateClasses
+> Task :app:generateDebugAndroidTestResources
+> Task :app:mergeLibDexDebug
+> Task :app:processDebugAndroidTestManifest
+> Task :app:mergeDebugAndroidTestShaders
+> Task :app:compileDebugAndroidTestShaders NO-SOURCE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :app:javaPreCompileDebugAndroidTest
+> Task :app:mergeDebugAndroidTestResources
+> Task :app:mergeDebugAndroidTestAssets
+> Task :app:desugarDebugAndroidTestFileDependencies
+> Task :app:mergeDebugAndroidTestJniLibFolders
+> Task :app:validateSigningDebugAndroidTest
+> Task :app:writeDebugAndroidTestSigningConfigVersions
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compressDebugAndroidTestAssets
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:checkDebugAndroidTestDuplicateClasses
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugAndroidTestResources
+> Task :app:mergeLibDexDebugAndroidTest
+> Task :app:mergeExtDexDebugAndroidTest
+> Task :app:processDebugResources
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :app:mergeDebugNativeLibs
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libc++_shared.so, libimage_processing_util_jni.so, libopencv_java4.so, libsurface_util_jni.so.
+
+> Task :app:mergeExtDexDebug
+
+> Task :app:kaptGenerateStubsDebugKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptDebugKotlin
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\app\build\tmp\kapt3\stubs\debug\org\lara\app\data\local\entities\QuizEntity.java:5: warning: classroom_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class QuizEntity {
+             ^
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\app\build\tmp\kapt3\stubs\debug\org\lara\app\data\local\entities\TopicEntity.java:5: warning: classroom_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class TopicEntity {
+             ^
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile\app\build\tmp\kapt3\stubs\debug\org\lara\app\data\local\entities\PrivateCommentEntity.java:5: warning: assignment_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class PrivateCommentEntity {
+             ^
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/DJ%20Rapmasta/AppData/Local/Temp/lara-group3-baseline/mobile/app/src/main/java/org/lara/app/ui/components/ClassFormDialog.kt:77:60 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+> Task :app:kaptGenerateStubsDebugAndroidTestKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptDebugAndroidTestKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:compileDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+
+> Task :app:kaptDebugUnitTestKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:dexBuilderDebugAndroidTest
+> Task :app:mergeDebugAndroidTestGlobalSynthetics
+> Task :app:processDebugAndroidTestJavaRes
+> Task :app:mergeProjectDexDebugAndroidTest
+> Task :app:mergeDebugAndroidTestJavaResource
+> Task :app:packageDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect
+> Task :app:assembleDebugAndroidTest
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp
+
+SchemaParityTest > allSixteenTablesMatchActualContractIncludingConstraints FAILED
+    java.lang.AssertionError at SchemaParityTest.kt:59
+
+2 tests completed, 1 failed
+
+> Task :app:testDebugUnitTest FAILED
+76 actionable tasks: 76 executed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///C:/Users/DJ%20Rapmasta/AppData/Local/Temp/lara-group3-baseline/m
+obile/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 2m 26s
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if 1 EQU 0 goto mainEnd
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>rem the _cmd.exe /c_ return code!
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>set EXIT_CODE=1
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if 1 EQU 0 set EXIT_CODE=1
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>if not "" == "" exit 1
+
+C:\Users\DJ Rapmasta\AppData\Local\Temp\lara-group3-baseline\mobile>exit /b 1

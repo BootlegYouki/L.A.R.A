@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import org.lara.app.R
@@ -26,6 +24,7 @@ internal val ShellDestination.label: Int
     get() = when (this) {
         ShellDestination.STREAM -> R.string.nav_stream
         ShellDestination.CLASSWORK -> R.string.nav_classwork
+        ShellDestination.PEOPLE -> R.string.nav_people
         ShellDestination.QUIZZES -> R.string.nav_quizzes
         ShellDestination.AI_TUTOR -> R.string.nav_ai_tutor
     }
@@ -33,7 +32,6 @@ internal val ShellDestination.label: Int
 @Composable
 fun BottomNavBar(
     selected: ShellDestination?,
-    hasInProgressAttempt: Boolean,
     onSelect: (ShellDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -46,27 +44,22 @@ fun BottomNavBar(
         tonalElevation = 0.dp,
         windowInsets = WindowInsets(0, 0, 0, 0),
     ) {
-        ShellDestination.entries.forEach { destination ->
+        listOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE).forEach { destination ->
             val active = destination == selected
-            val locked = destination == ShellDestination.AI_TUTOR && hasInProgressAttempt
-            val explanation = stringResource(R.string.ai_quiz_locked)
-            val tint = if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark
-                else LaraColors.PrimaryDark
+            val tint = LaraColors.PrimaryDark
             val icon = when (destination) {
                 ShellDestination.STREAM -> if (active) R.drawable.ic_chats_fill else R.drawable.ic_chats_regular
                 ShellDestination.CLASSWORK -> if (active) R.drawable.ic_books_fill else R.drawable.ic_books_regular
+                ShellDestination.PEOPLE -> if (active) R.drawable.ic_users_fill else R.drawable.ic_users_regular
                 ShellDestination.QUIZZES -> if (active) R.drawable.ic_exam_fill else R.drawable.ic_exam_regular
                 ShellDestination.AI_TUTOR -> if (active) R.drawable.ic_sparkle_fill else R.drawable.ic_sparkle_regular
             }
             NavigationBarItem(
                 selected = active,
-                enabled = !locked,
                 onClick = { onSelect(destination) },
-                modifier = Modifier.height(barHeight).semantics {
-                    if (locked) stateDescription = explanation
-                },
+                modifier = Modifier.height(barHeight),
                 icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(destination.label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                label = { Text(stringResource(destination.label), maxLines = labelLines, overflow = TextOverflow.Ellipsis) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = tint,
                     selectedTextColor = tint,

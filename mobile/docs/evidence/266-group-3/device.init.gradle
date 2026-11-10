@@ -1,0 +1,7 @@
+allprojects {
+    afterEvaluate { p ->
+        if (p.plugins.hasPlugin('com.android.application')) {
+            p.android.defaultConfig.applicationId = 'org.lara.app.group3'
+        }
+    }
+}

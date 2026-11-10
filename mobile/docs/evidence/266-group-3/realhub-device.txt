@@ -1,0 +1,6 @@
+
+org.lara.app.reading.ClassTabsDeviceTest:.
+
+Time: 19.974
+
+OK (1 test)
