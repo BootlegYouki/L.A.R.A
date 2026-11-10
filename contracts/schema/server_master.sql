@@ -87,12 +87,14 @@ CREATE TABLE IF NOT EXISTS materials (
     mime_type TEXT,                            -- e.g. application/pdf, video/mp4
     file_path TEXT NOT NULL,                   -- Server local storage path (never sent to clients)
     file_size_bytes INTEGER NOT NULL CHECK(file_size_bytes >= 0),
+    uploaded_by TEXT NOT NULL,                  -- Hub sets this from the bearer token's user (owner or co-teacher); material_chunks inherit it through material_id
     topic_id TEXT,
     assignment_id TEXT,                        -- set when the file is an attachment of an assignment
     announcement_id TEXT,                      -- set when the file is an attachment of an announcement
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE SET NULL,
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE

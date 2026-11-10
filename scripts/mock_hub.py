@@ -109,6 +109,7 @@ class HubState:
         self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "m1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
+               "uploaded_by": teacher["id"],
                "file_size_bytes": 2048, "download_url": "/api/materials/m1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
@@ -123,6 +124,7 @@ class HubState:
         ]
         vid = {"id": "m2000000-0000-4000-8000-000000000002", "classroom_id": classroom["id"],
                "title": "Video: Food Chain", "file_type": "VIDEO", "file_size_bytes": MOCK_VIDEO_SIZE,
+               "uploaded_by": teacher["id"],
                "download_url": "/api/materials/m2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
@@ -713,7 +715,7 @@ def sync_pull(req):
         elif table == "announcement_comments" and eid in STATE.comments:
             out["comments"].append(STATE.comments[eid])
         elif table == "materials" and eid in STATE.materials:
-            out["materials"].append(STATE.materials[eid])
+            out["materials"].append({k: v for k, v in STATE.materials[eid].items() if k != "uploaded_by"})
         elif table == "material_chunks":
             out["material_chunks"] += [{k: v for k, v in c.items() if k not in ("created_at", "updated_at")}
                                         for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
@@ -921,7 +923,8 @@ def topic_delete(req):
 # ---- materials
 @route("PATCH", r"/api/materials/([^/]+)", role="TEACHER")
 def material_patch(req):
-    return patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    material = patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    return {k: v for k, v in material.items() if k != "uploaded_by"}
 
 
 @route("DELETE", r"/api/materials/([^/]+)", role="TEACHER")
@@ -943,6 +946,7 @@ def material_create(req):
         raise ApiError(413, "FILE_TOO_LARGE", "Max 250MB")
     t, mid = now_ms(), new_id()
     m = {"id": mid, "classroom_id": f["classroom_id"], "title": f["title"], "file_type": f["file_type"],
+         "uploaded_by": req.user["id"],
          "file_size_bytes": len(data), "download_url": f"/api/materials/{mid}/download",
          "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
          "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
@@ -955,7 +959,7 @@ def material_create(req):
                  "created_at": t, "updated_at": t}
         STATE.chunks[mid] = [chunk]
         STATE.log("material_chunks", chunk["id"], f["classroom_id"])
-    return m
+    return {k: v for k, v in m.items() if k != "uploaded_by"}
 
 
 @route("GET", r"/api/materials/([^/]+)/download")
