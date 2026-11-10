@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED', 'REMOVED')),
     joined_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE RESTRICT,
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS material_chunks (
     heading TEXT,
     text TEXT NOT NULL,
     token_estimate INTEGER,                    -- lets the prompt builder stay inside the 2048-token window
+    created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE,
     UNIQUE(material_id, order_index)
@@ -134,6 +136,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     file_path TEXT NOT NULL,                   -- Server photo storage path (never sent to clients)
     file_type TEXT NOT NULL DEFAULT 'IMAGE' CHECK(file_type IN ('IMAGE', 'DOCUMENT')),
     submitted_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     received_at INTEGER NOT NULL,
     score INTEGER CHECK(score IS NULL OR score >= 0),
     teacher_feedback TEXT,
@@ -188,6 +191,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'IN_PROGRESS' CHECK(status IN ('IN_PROGRESS', 'SUBMITTED')),
     started_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     submitted_at INTEGER,
     score INTEGER,
     total_points INTEGER,
@@ -199,7 +203,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     UNIQUE(quiz_id, student_id)                -- one attempt per learner per quiz (no retakes in v1)
 );
 
--- 13. Socratic AI Chat History (Hub-assisted conversations)
+-- 13. Socratic AI Chat History (append-only Hub-assisted conversations)
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -221,6 +225,8 @@ CREATE TABLE IF NOT EXISTS classroom_teachers (
     classroom_id TEXT NOT NULL,
     teacher_id TEXT NOT NULL,
     added_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
     PRIMARY KEY (classroom_id, teacher_id),
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE RESTRICT
@@ -252,7 +258,7 @@ CREATE TABLE IF NOT EXISTS private_comments (
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- 14. Delta-Sync Change Ledger
+-- 14. Delta-Sync Change Ledger (append-only)
 -- seq is the sync cursor. It is a strictly increasing integer, NOT a wall-clock time, so a wrong or
 -- corrected Hub clock, two changes in the same millisecond, or a late commit can never make a client miss data.
 -- Insert one row in the SAME transaction as every change a client must see (UPSERT or DELETE).
@@ -266,14 +272,14 @@ CREATE TABLE IF NOT EXISTS sync_revisions (
     created_at INTEGER NOT NULL                -- informational only, never used as the cursor
 );
 
--- 15. Hub identity. hub_id never changes. sync_epoch is incremented on restore-from-backup (and when
+-- 15. Hub identity. Internal key/value state, not school data. hub_id never changes. sync_epoch is incremented on restore-from-backup (and when
 -- old tombstones are pruned) so clients holding a cursor from before that point do a full resync.
 CREATE TABLE IF NOT EXISTS hub_meta (
     key TEXT PRIMARY KEY NOT NULL,             -- 'hub_id', 'sync_epoch'
     value TEXT NOT NULL
 );
 
--- 16. Auth Sessions (opaque bearer tokens issued by POST /api/auth/login)
+-- 16. Auth Sessions (internal expiring auth state; created_at records issuance, no updates are needed)
 CREATE TABLE IF NOT EXISTS sessions (
     token_hash TEXT PRIMARY KEY NOT NULL,      -- SHA-256 of the token; the raw token is never stored
     user_id TEXT NOT NULL,
