@@ -18,3 +18,15 @@ Archived classes move out of the active grid and drawer list into Archived class
 The Windows production build exercised the owner and co-teacher flows against the mock and the real staging Hub at `544557e`, with synthetic teachers including `T-0002`. For each Hub, the archived class reopened after a full Desktop restart with the Hub stopped, and the active class blocked writes. The Settings connection panel showed the manual address once.
 
 `npm run build`, `npm run lint`, the Windows Tauri build, 25 active native tests, 68 shared tests and `verify_invariants.py` passed. The frontend suite passed 95 of 96 tests. The unchanged staging database test expects the new `assignment_submissions.received_at` contract column, which Desktop migrations do not yet create. The local Hub tests used loopback. Physical WAN disconnection is still pending.
+
+## Windows screenshots for PR #283
+
+Captured from the Windows production build at 64ebbbe against a mock Hub with synthetic classes and accounts. The archived class reopened read-only after a full restart with the mock Hub stopped. The active class disabled writes while disconnected.
+
+- [Class settings](screenshots/class-settings-123/rename.png) and [archive confirmation](screenshots/class-settings-123/archive-confirmation.png)
+- [Owner People](screenshots/class-settings-123/owner-people.png), [add co-teacher](screenshots/class-settings-123/add-co-teacher.png), [co-teacher People](screenshots/class-settings-123/co-teacher-people.png), and [remove co-teacher](screenshots/class-settings-123/remove-co-teacher.png)
+- [Empty archive](screenshots/class-settings-123/home-empty-archive.png), [populated archive](screenshots/class-settings-123/home-archived.png), and [read-only archive](screenshots/class-settings-123/archive-read-only.png)
+- [Offline archive](screenshots/class-settings-123/archive-offline.png) and [offline settings](screenshots/class-settings-123/settings-offline.png)
+- [Hub Settings](screenshots/class-settings-123/hub-settings.png)
+
+Desktop CI checks lint and build. The local schema parity test is tracked in #275. The Windows screenshot run used loopback. Physical WAN disconnection is pending.
