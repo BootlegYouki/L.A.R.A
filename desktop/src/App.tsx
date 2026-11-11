@@ -8,13 +8,15 @@ import Sidebar from './components/Sidebar';
 import HubStatusBanner from './components/HubStatusBanner';
 import JoinClassModal from './components/JoinClassModal';
 import CreateClassroomDialog from './components/CreateClassroomDialog';
+import ClassSettingsDialog from './components/ClassSettingsDialog';
+import ClassTeachers from './components/ClassTeachers';
 import TopAppBar from './components/TopAppBar';
 import RosterPage from './pages/RosterPage';
 import SettingsPage from './pages/SettingsPage';
 import { observeHubConnection, type HubConnectionState } from './services/connection';
 import { observeDiscovery, type HubInfo } from './services/discovery';
 import { AuthError, signIn, signOut, refreshClassrooms, forgetAccount, restoreAccount, type Credentials, type CachedAccount, type JoinReceipt, type Classroom } from './services/auth';
-import { joinClass, saveJoinStatus, createClassroom, refreshRoster, decideEnrollment } from './services/classrooms';
+import { joinClass, saveJoinStatus, createClassroom, refreshRoster, decideEnrollment, changeClassroom, type ClassSettingsAction } from './services/classrooms';
 import { observeJoinUpdates } from './services/realtime';
 import {ensureWebSocketPolicy} from './services/websocket-policy';
 import {observeSync} from './services/sync';
@@ -41,6 +43,7 @@ export default function App() {
   const [connection, setConnection] = useState<HubConnectionState>({ status: 'offline', hub: null, persisted: true });
   const [loginVisible, setLoginVisible] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [archiveVisit, setArchiveVisit] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [logoutNotice, setLogoutNotice] = useState<string | null>(null);
@@ -73,6 +76,7 @@ export default function App() {
   const epoch = useRef(0);
   const retryDeadline = useRef(0);
   const hub = connection.hub;
+  const hubName = hubs.find(item => item.ip === hub?.ip && item.http_port === hub.http_port)?.name;
   // Hide the previous Hub's account in the same render as an address change.
   const activeAccount = account && hub && account.hub.ip === hub.ip && account.hub.http_port === hub.http_port ? account : null;
   const accountRef = useRef(activeAccount); accountRef.current = activeAccount;
@@ -287,6 +291,40 @@ export default function App() {
     } catch (error) { if (current === epoch.current && !request.signal.aborted) setCreateError(teacherError(error)); }
     finally { if (current === epoch.current) setCreating(false); }
   }
+  async function submitClassSettings(action: ClassSettingsAction): Promise<string | null> {
+    const target = accountRef.current, id = selectedClass?.id;
+    if (!target || !id || connection.status !== 'connected' || creating || rosterBusy || retryAfter) return t.class_settings_error;
+    const current = epoch.current, request = new AbortController();
+    teacherMutation.current = request;
+    classRequest.current?.abort();
+    setRosterBusy(true);
+    try {
+      const updated = await changeClassroom(target, id, action, request.signal);
+      const latest = accountRef.current;
+      if (current !== epoch.current || request.signal.aborted || latest?.user.id !== target.user.id) return null;
+      const classrooms = latest.classrooms.map(c => {
+        if (c.id !== id) return c;
+        if (updated) return updated;
+        return action.kind === 'remove' ? {...c, co_teacher_ids: c.co_teacher_ids?.filter(id => id !== action.teacherId)} : c;
+      });
+      const next = {...latest, classrooms};
+      publishAccount(next);
+      if (updated?.archived_at != null) {
+        setSelectedId(undefined);
+        setArchiveVisit(visit => visit + 1);
+      }
+      await refresh(next);
+      syncController.current?.trigger();
+      return null;
+    } catch (error) {
+      if (current !== epoch.current || request.signal.aborted) return null;
+      if (action.kind === 'add' && error instanceof AuthError && error.code === 'NOT_FOUND') return t.class_teacher_not_found;
+      const message = teacherError(error);
+      return message === t.auth_request_error || message === t.auth_fields_error ? t.class_settings_error : message;
+    } finally {
+      if (current === epoch.current) setRosterBusy(false);
+    }
+  }
   async function decide(studentId: string, action: 'approve'|'reject'|'remove') {
     if (!activeAccount || activeAccount.user.role !== 'TEACHER' || !selectedClass || connection.status !== 'connected' || creating || rosterBusy || retryAfter) return;
     const target = activeAccount, id = selectedClass.id, current = epoch.current, request = new AbortController(); teacherMutation.current = request;
@@ -346,6 +384,8 @@ export default function App() {
       }
     } finally { if (current === epoch.current) setBusy(false); }
   }
+  const offline = connection.status !== 'connected';
+  const settingsBlocked = offline || creating || rosterBusy || retryAfter > 0;
   const hubPicker = <fieldset disabled={busy || joining || creating || rosterBusy} className="connection-fieldset"><ConnectionPage t={t} hubs={hubs} failed={discoveryFailed} searching={searching} connection={connection} onConnect={(next) => controller.current?.select(next)} /></fieldset>;
   return <div className={`app-shell ${drawerOpen ? '' : 'drawer-rail'}`}>
     <a href="#content" className="skip-link">{t.skip_content}</a>
@@ -359,14 +399,19 @@ export default function App() {
       </div>
     </header>
     <div className="shell-body">
-      <Sidebar user={activeAccount?.user ?? null} classrooms={activeAccount?.classrooms ?? []} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setSettingsOpen(false); setSelectedId(undefined); setAuthError(null); }} onOpen={id => { setSettingsOpen(false); setSelectedId(id); }} onSettings={activeAccount && !loginVisible && !busy && !joining && !creating && !rosterBusy ? () => { setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} />
+      <Sidebar user={activeAccount?.user ?? null} classrooms={activeAccount?.classrooms ?? []} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setSettingsOpen(false); setSelectedId(undefined); setArchiveVisit(0); setAuthError(null); }} onArchived={activeAccount && !loginVisible ? () => { setSettingsOpen(false); setSelectedId(undefined); setArchiveVisit(visit => visit + 1); } : undefined} onOpen={id => { setSettingsOpen(false); setSelectedId(id); }} onSettings={activeAccount && !loginVisible && !busy && !joining && !creating && !rosterBusy ? () => { setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} />
       <main id="content" className="content-sheet" tabIndex={-1}><div className="content-wrap">
         <HubStatusBanner t={t} connection={connection} />
         {logoutNotice && !activeAccount && <p role="status" className="hub-status-banner banner-info">{logoutNotice}</p>}
         {activeAccount&&syncError&&<p className="hub-status-banner banner-warning" role="status">{t.sync_error}</p>}
         {activeAccount && !activeAccount.persistent && <p role="status" className="auth-session-note">{t.auth_session_only}</p>}
         {status === 'error' && <section className="database-error" role="alert"><h2>{t.database_error_title}</h2><p>{t.database_error_body}</p><button type="button" className="control tonal-button" onClick={() => { void loadAccount(hub); }}>{t.retry}</button></section>}
-        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => setSelectedId(undefined)} /><RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} /></> : selectedClass ? <section className="class-overview"><button type="button" className="control text-button" onClick={() => setSelectedId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.home}</button><header className="class-banner"><h1>{selectedClass.name}</h1><p>{selectedClass.section}</p></header><p><i className="ph ph-hard-drive" aria-hidden="true" />{t.class_details_saved}</p></section> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'} />}
+        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => { setArchiveVisit(0); setSelectedId(undefined); }} settings={
+          selectedClass.teacher_id === activeAccount.user.id && selectedClass.archived_at == null &&
+          <ClassSettingsDialog key={selectedClass.id} classroom={selectedClass} offline={offline} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
+        } /><RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} teachers={
+          <ClassTeachers account={activeAccount} classroom={selectedClass} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
+        } roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} /></> : selectedClass ? <section className="class-overview"><button type="button" className="control text-button" onClick={() => setSelectedId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.home}</button><header className="class-banner"><h1>{selectedClass.name}</h1><p>{selectedClass.section}</p></header><p><i className="ph ph-hard-drive" aria-hidden="true" />{t.class_details_saved}</p>{selectedClass.archived_at != null && <p className="hub-status-banner banner-info" role="status">{t.class_archived_read_only}</p>}</section> : <HomePage archiveVisit={archiveVisit} user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'} />}
         {(!settingsOpen || !activeAccount || loginVisible) && <details className="hub-connection-details" open={!activeAccount || undefined}><summary>{t.auth_hub_settings}</summary>{hubPicker}</details>}
         {activeAccount?.user.role === 'TEACHER' && !loginVisible && <CreateClassroomDialog open={createOpen} onOpenChange={setCreateOpen} busy={creating || rosterBusy} offline={connection.status !== 'connected'} error={createError} retryAfter={retryAfter} result={createdClass} onCreate={(name, section) => { void submitCreate(name, section); }} />}
         {activeAccount?.user.role === 'STUDENT' && !loginVisible && <JoinClassModal open={joinOpen} onOpenChange={setJoinOpen} fullName={activeAccount.user.full_name} busy={joining} offline={connection.status !== 'connected'} error={joinError} retryAfter={retryAfter} onJoin={(code) => { void submitJoin(code); }} />}
