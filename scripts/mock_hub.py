@@ -107,10 +107,10 @@ class HubState:
                "allow_comments": True, "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
         self.announcements[ann["id"]] = ann
         self.log("announcements", ann["id"], classroom["id"])
-        mat = {"id": "m1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
+        mat = {"id": "a1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
                "uploaded_by": teacher["id"],
-               "file_size_bytes": 2048, "download_url": "/api/materials/m1000000-0000-4000-8000-000000000001/download",
+               "file_size_bytes": 2048, "download_url": "/api/materials/a1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
         self.log("materials", mat["id"], classroom["id"])
@@ -122,10 +122,10 @@ class HubState:
              "text": "Gumagawa ng sariling pagkain ang mga halaman gamit ang sikat ng araw, tubig at hangin.",
              "created_at": t, "updated_at": t},
         ]
-        vid = {"id": "m2000000-0000-4000-8000-000000000002", "classroom_id": classroom["id"],
+        vid = {"id": "a2000000-0000-4000-8000-000000000002", "classroom_id": classroom["id"],
                "title": "Video: Food Chain", "file_type": "VIDEO", "file_size_bytes": MOCK_VIDEO_SIZE,
                "uploaded_by": teacher["id"],
-               "download_url": "/api/materials/m2000000-0000-4000-8000-000000000002/download",
+               "download_url": "/api/materials/a2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
         self.log("materials", vid["id"], classroom["id"])

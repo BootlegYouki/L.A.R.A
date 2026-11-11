@@ -110,7 +110,7 @@ class TestMockHub(unittest.TestCase):
         self.assertIn("correct_answer", json.dumps(teacher_view))
 
     def test_video_byte_range_streaming(self):
-        status, body, hdrs = call(BASE, "GET", "/api/materials/m2000000-0000-4000-8000-000000000002/stream",
+        status, body, hdrs = call(BASE, "GET", "/api/materials/a2000000-0000-4000-8000-000000000002/stream",
                                   token=self.pupil, headers={"Range": "bytes=0-99"})
         self.assertEqual(status, 206)
         self.assertEqual(len(body), 100)
@@ -118,7 +118,7 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(body[4:8], b"ftyp", "stream must serve a decodable MP4, not filler bytes")
 
     def test_video_download_resumes_with_range_and_if_range(self):
-        path = "/api/materials/m2000000-0000-4000-8000-000000000002/download"
+        path = "/api/materials/a2000000-0000-4000-8000-000000000002/download"
         status, whole, hdrs = call(BASE, "GET", path, token=self.pupil)
         self.assertEqual(status, 200)
         etag = hdrs["ETag"]
@@ -140,7 +140,7 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual((status, hdrs["ETag"]), (412, etag), "a changed file is refused, so the client restarts")
 
     def test_stream_accepts_token_query_for_html5_video(self):
-        status, _, _ = call(BASE, "GET", f"/api/materials/m2000000-0000-4000-8000-000000000002/stream?token={self.pupil}",
+        status, _, _ = call(BASE, "GET", f"/api/materials/a2000000-0000-4000-8000-000000000002/stream?token={self.pupil}",
                             headers={"Range": "bytes=0-9"})
         self.assertEqual(status, 206)
 
@@ -258,7 +258,7 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
         ws = WsClient(WS_HOST, WS, self.pupil)
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r1", "classroom_id": CLASSROOM,
-                 "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Ano ang sagot sa #3?", "language": "FIL"})
+                 "material_id": "a1000000-0000-4000-8000-000000000001", "message": "Ano ang sagot sa #3?", "language": "FIL"})
         err = ws.recv_until("EVENT_ERROR")
         self.assertEqual(err["code"], "QUIZ_IN_PROGRESS")
         ws.close()
@@ -266,7 +266,7 @@ class TestMockHub(unittest.TestCase):
     def test_ai_tutor_streams_when_no_quiz_active(self):
         ws = WsClient(WS_HOST, WS, login(BASE, "123456789012"))
         ws.send({"event": "EVENT_AI_CHAT_REQUEST", "request_id": "r2", "classroom_id": CLASSROOM,
-                 "material_id": "m1000000-0000-4000-8000-000000000001", "message": "Tulong po", "language": "FIL"})
+                 "material_id": "a1000000-0000-4000-8000-000000000001", "message": "Tulong po", "language": "FIL"})
         self.assertEqual(ws.recv_until("EVENT_QUEUE_STATUS")["position"], 2)
         done = False
         for _ in range(40):
