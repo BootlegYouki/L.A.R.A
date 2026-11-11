@@ -115,7 +115,8 @@ const ENTITIES: &[Entity] = &[
             ("id", "uuid!"),
             ("classroom_id", "uuid!"),
             ("title", "string!"),
-            ("file_type", "VIDEO|DOCUMENT|WORKSHEET!"),
+            ("file_type", "string!"),  // Changed from enum to accept any string
+            ("mime_type", "string"),    // Added: Required by VideoPlayer
             ("file_size_bytes", "int!"),
             ("download_url", "url"),
             ("topic_id", "nullable_uuid"),

@@ -80,7 +80,7 @@
 * **Learner Mode (Google Classroom, offline):**
   * Class Code enrollment dialog (`K7M-4QX`) with real-time pending approval status.
   * Home with class cards and "Due soon", a To-do list, and the class Stream with comments (teacher moderation applies).
-  * Classwork grouped by topics: lesson handouts with zoom, videos (stream or Save for Home), assignments with attachments, a photo or file turned in (queued offline), private comments with the teacher, and grades and feedback in My Work.
+  * Classwork grouped by topics: lesson handouts with zoom, **videos with offline "Save for Home" caching** (HTTP 206 streaming with custom Material 3 controls), assignments with attachments, a photo or file turned in (queued offline), private comments with the teacher, and grades and feedback in My Work.
   * Full-screen paperless quiz engine with synchronized timer, instant auto-grading and a result history.
   * Socratic AI drawer with split-screen view (lesson on left, tutor on right), removed while a quiz is open.
 * **Teacher Mode (every teacher feature, the same set as the mobile app; the Hub window is only an admin console):**
