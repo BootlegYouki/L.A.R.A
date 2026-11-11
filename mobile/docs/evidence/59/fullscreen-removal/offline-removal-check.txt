@@ -1,0 +1,9 @@
+LAN saved status confirmed; unrelated private media files counted: 26
+Airplane mode + Wi-Fi disabled + force-stop/cold reopen: local playback and fullscreen rotation reached.
+Offline confirm: specific completed video deleted; Room localFilePath null; other media files unchanged; Save for home and offline state shown.
+Connectivity restored: same material redownloaded; Room path populated; original media file set restored; playback started.
+Restored airplane_mode_on=0
+Restored wifi_on=1
+Restored font_scale=0.85
+Restored user_rotation=0
+Restored accelerometer_rotation=0

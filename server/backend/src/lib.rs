@@ -11,6 +11,7 @@ pub mod models;
 pub mod network;
 pub mod routes;
 pub mod services;
+pub mod storage;
 pub mod websocket;
 
 use std::net::{Ipv4Addr, SocketAddr};
@@ -26,7 +27,9 @@ use tokio::task::JoinHandle;
 use auth::limiter::LoginLimiter;
 use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
+use services::bandwidth::BandwidthLimiter;
 pub use config::HubConfig;
+use storage::Storage;
 use websocket::broker::Broker;
 
 #[derive(Clone)]
@@ -44,12 +47,21 @@ pub struct AppState {
     /// `<data_dir>/releases`: the client installers the captive portal (`routes/portal.rs`) serves.
     /// The installer step (1.4) and the build put the APK and desktop packages here.
     pub releases_dir: Arc<std::path::Path>,
+    /// `<data_dir>/storage`: lesson files and homework (`storage`, step 3.3).
+    pub storage: Arc<Storage>,
+    /// 2.0 MB/s per signed-in user across every file download, per device on the portal
+    /// (`services::bandwidth`, step 3.2).
+    pub bandwidth: Arc<BandwidthLimiter>,
+    /// How many handouts may be read for lesson text at once (`routes::materials`, step 3.1).
+    pub parse_slots: Arc<tokio::sync::Semaphore>,
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum StartError {
     #[error("could not create the data folder {path}: {source}")]
     DataDir { path: PathBuf, source: std::io::Error },
+    #[error("could not prepare the file storage folder: {0}")]
+    Storage(std::io::Error),
     #[error("could not open the database: {0}")]
     Database(#[from] sqlx::Error),
     #[error("could not apply database migrations: {0}")]
@@ -99,6 +111,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     tokio::fs::create_dir_all(&config.data_dir)
         .await
         .map_err(|source| StartError::DataDir { path: config.data_dir.clone(), source })?;
+    let storage = Storage::open(&config.data_dir).await.map_err(StartError::Storage)?;
     let db = db::connect(&config.data_dir).await?;
     db::migrate(&db).await?;
     let meta = db::load_hub_meta(&db).await?;
@@ -112,6 +125,9 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
+        storage: Arc::new(storage),
+        bandwidth: Arc::default(),
+        parse_slots: Arc::new(tokio::sync::Semaphore::new(services::document_parser::PARSE_SLOTS)),
     };
     // Before the listeners open, so no request finds the accounts missing.
     if config.test_seed {

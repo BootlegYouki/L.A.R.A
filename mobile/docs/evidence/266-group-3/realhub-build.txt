@@ -1,0 +1,128 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.14
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+group3-hub-build.cmd :  Downloading crates ...
+At line:15 char:16
++ ... | python -; & .\mobile\group3-hub-build.cmd *> mobile/docs/group3-rea ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Downloading crates ...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  Downloaded adobe-cmap-parser v0.4.1
+  Downloaded adler2 v2.0.1
+  Downloaded aes v0.8.4
+  Downloaded block-padding v0.3.3
+  Downloaded cipher v0.4.4
+  Downloaded constant_time_eq v0.6.1
+  Downloaded cff-parser v0.2.0
+  Downloaded cbc v0.1.2
+  Downloaded core_detect v1.0.0
+  Downloaded crc32fast v1.5.4
+  Downloaded ecb v0.1.2
+  Downloaded euclid v0.20.14
+  Downloaded encoding_rs v0.8.44
+  Downloaded flate2 v1.1.11
+  Downloaded inout v0.1.4
+  Downloaded md-5 v0.10.6
+  Downloaded lopdf v0.42.0
+  Downloaded multiversion_no_op v1.0.0
+  Downloaded nom v8.0.0
+  Downloaded multer v3.1.0
+  Downloaded miniz_oxide v0.9.1
+  Downloaded pdf-extract v0.12.1
+  Downloaded pom v1.1.0
+  Downloaded quick-xml v0.42.0
+  Downloaded rustversion v1.0.23
+  Downloaded postscript v0.14.1
+  Downloaded rangemap v1.8.0
+  Downloaded simd-adler32 v0.3.10
+  Downloaded simdutf8 v0.1.5
+  Downloaded ttf-parser v0.25.1
+  Downloaded type1-encoding-parser v0.1.1
+  Downloaded weezl v0.1.12
+  Downloaded typed-path v0.13.0
+  Downloaded zeroize_derive v1.5.0
+  Downloaded zeroize v1.9.1
+  Downloaded zip v9.5.0
+  Downloaded zlib-rs v0.6.8
+   Compiling windows-sys v0.61.2
+   Compiling rustversion v1.0.23
+   Compiling getrandom v0.4.3
+   Compiling syn v2.0.119
+   Compiling crypto-common v0.1.6
+   Compiling block-padding v0.3.3
+   Compiling crc32fast v1.5.4
+   Compiling libsqlite3-sys v0.37.0
+   Compiling adler2 v2.0.1
+   Compiling simdutf8 v0.1.5
+   Compiling core_detect v1.0.0
+   Compiling multiversion_no_op v1.0.0
+   Compiling simd-adler32 v0.3.10
+   Compiling zlib-rs v0.6.8
+   Compiling tinyvec v1.13.3
+   Compiling digest v0.10.7
+   Compiling inout v0.1.4
+   Compiling miniz_oxide v0.9.1
+   Compiling multer v3.1.0
+   Compiling unicode-normalization v0.1.26
+   Compiling unicode-properties v0.1.4
+   Compiling sha2 v0.10.9
+   Compiling cipher v0.4.4
+   Compiling unicode-bidi v0.3.18
+   Compiling pom v1.1.0
+   Compiling rand v0.10.3
+   Compiling aes v0.8.4
+   Compiling cbc v0.1.2
+   Compiling ecb v0.1.2
+   Compiling phc v0.6.1
+   Compiling md-5 v0.10.6
+   Compiling nom v8.0.0
+   Compiling stringprep v0.1.5
+   Compiling weezl v0.1.12
+   Compiling ttf-parser v0.25.1
+   Compiling rangemap v1.8.0
+   Compiling type1-encoding-parser v0.1.1
+   Compiling encoding_rs v0.8.44
+   Compiling constant_time_eq v0.6.1
+   Compiling password-hash v0.6.1
+   Compiling adobe-cmap-parser v0.4.1
+   Compiling tungstenite v0.30.0
+   Compiling euclid v0.20.14
+   Compiling typed-path v0.13.0
+   Compiling postscript v0.14.1
+   Compiling cff-parser v0.2.0
+   Compiling lara_hub v0.1.0 (C:\Users\DJ Rapmasta\Documents\L.A.R.A\server\backend)
+   Compiling argon2 v0.6.0
+   Compiling uuid v1.29.0
+   Compiling quick-xml v0.42.0
+   Compiling flate2 v1.1.11
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling nu-ansi-term v0.50.3
+   Compiling local-ip-address v0.6.13
+   Compiling tracing-attributes v0.1.31
+   Compiling zeroize_derive v1.5.0
+   Compiling tokio v1.54.1
+   Compiling lopdf v0.42.0
+   Compiling zeroize v1.9.1
+   Compiling zip v9.5.0
+   Compiling tracing v0.1.44
+   Compiling sqlx-core v0.9.0
+   Compiling axum-core v0.5.6
+   Compiling tracing-subscriber v0.3.23
+   Compiling tokio-stream v0.1.19
+   Compiling hyper v1.12.0
+   Compiling tower v0.5.3
+   Compiling tokio-util v0.7.20
+   Compiling tokio-tungstenite v0.30.0
+   Compiling libmdns v0.10.1
+   Compiling sqlx-sqlite v0.9.0
+   Compiling tower-http v0.7.1
+   Compiling pdf-extract v0.12.1
+   Compiling hyper-util v0.1.21
+   Compiling axum v0.8.9
+   Compiling sqlx-macros-core v0.9.0
+   Compiling sqlx-macros v0.9.0
+   Compiling sqlx v0.9.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 04s

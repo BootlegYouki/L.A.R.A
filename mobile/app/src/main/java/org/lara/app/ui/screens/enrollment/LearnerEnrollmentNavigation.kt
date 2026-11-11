@@ -17,6 +17,8 @@ import org.lara.app.domain.enrollment.EnrollmentSessionSource
 import org.lara.app.domain.Cached
 import org.lara.app.ui.navigation.*
 import org.lara.app.ui.theme.*
+import org.lara.app.ui.components.ClassHomeScaffold
+import org.lara.app.ui.components.HomeClass
 
 @Composable
 fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: ShellState,
@@ -47,13 +49,17 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
     }
     BackHandler(enabled = selected != null) { selectedId = null }
     if (selected == null) {
-        Scaffold(containerColor = LaraColors.Canvas, topBar = {
-            org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.app_name))
-        }) { insets ->
+        ClassHomeScaffold(
+            classes = (state.classes as? Cached.Content)?.value.orEmpty().filter { state.openableClass(it.classroom.id) != null }
+                .map { HomeClass(it.classroom.id, it.classroom.name, it.classroom.section) },
+            teacher = false, canAdd = !state.offline && !state.busy, onAdd = model::showJoin,
+            onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id },
+        ) { insets ->
             Box(Modifier.fillMaxSize().padding(insets)) {
                 EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit,
                     onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id }, onCodeChanged = model::onInputChanged,
-                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name })
+                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name }, showJoinAction = false,
+                    learnerName = names.find { it.id == userId }?.name)
             }
         }
     } else {

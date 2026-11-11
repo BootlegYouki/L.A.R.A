@@ -1,0 +1,2 @@
+Final APK: fullscreen entry, portrait/landscape overlay controls, 200% removal confirmation, scrolling to the remaining text, and Cancel exercised.
+Original font scale and rotation restored.

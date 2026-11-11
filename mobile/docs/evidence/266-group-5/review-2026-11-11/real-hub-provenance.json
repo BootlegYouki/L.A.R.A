@@ -1,0 +1,11 @@
+{
+  "staging_commit": "88f12b929f62102095759d2e20d5dbc4c89b3e71",
+  "hub_build": "cargo build --locked --bin lara-hub",
+  "hub_binary_sha256": "8c331abd306a578d015a6cad39cf34ba3e03017f5751ccf1e3284b63db4adf8e",
+  "physical_device": "Xiaomi 2311DRK48G",
+  "android_version": "16",
+  "transport": "ADB reverse over USB, not a WAN-unplugged Wi-Fi run",
+  "fixture": "Synthetic classroom and approved enrollment created via API. Assignment seeded in disposable DB after POST /api/assignments returned 501.",
+  "submission_rows_after_normal_and_200_percent_turn_in": 1,
+  "received_at_present": true
+}

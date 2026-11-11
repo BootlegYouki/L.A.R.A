@@ -1,4 +1,4 @@
-//! The captive download portal (`GET /download`): a bilingual 3-step sideloading guide served
+//! The captive download portal (`GET /download`): an English 3-step sideloading guide served
 //! with no token, plus the bundled page assets and the client installers. Matches the mock's
 //! Sprint 1 flow (200 HTML on `/download`).
 
@@ -27,18 +27,19 @@ async fn root_shows_the_same_portal_page() {
 }
 
 #[tokio::test]
-async fn portal_guide_is_bilingual_and_shows_the_three_steps() {
+async fn portal_guide_is_english_only_and_shows_the_three_steps() {
     let hub = TestHub::start().await;
     let (_, _, body) = hub.get_raw("/download").await;
     let html = String::from_utf8(body).unwrap();
 
-    // English guide copy and its Filipino counterpart (bilingual rule, AGENTS §4).
+    // The three sideload steps.
     assert!(html.contains("Download L.A.R.A. (Android)"));
-    assert!(html.contains("I-download ang L.A.R.A. (Android)"));
-    // The three sideload steps, both languages.
     assert!(html.contains("Allow from this source"));
     assert!(html.contains("Install"));
-    assert!(html.contains("Pindutin"));
+    // The apps are English only (AGENTS.md section 1.4, decided 2026-11-03; #236).
+    for filipino in ["I-download", "Pindutin", "Paano i-install", "silid-aralan", "Kunin ang App", "Laptop o PC"] {
+        assert!(!html.contains(filipino), "the portal still shows Filipino text: {filipino:?}");
+    }
     hub.stop().await;
 }
 
@@ -118,5 +119,22 @@ async fn installer_path_cannot_escape_the_releases_folder() {
         assert_eq!(status, 404, "name {encoded}");
         assert_ne!(body, b"SECRET", "portal leaked a file outside releases for {encoded}");
     }
+    hub.stop().await;
+}
+
+/// Step 3.2: no one is signed in on the portal, so its installers count against 2.0 MB/s per device
+/// address (server TECH_SPEC, Bandwidth). The first 64 KiB go at once, the rest at 2 MB/s.
+#[tokio::test]
+async fn installer_downloads_are_capped_at_2_mb_a_second_per_device() {
+    let hub = TestHub::start().await;
+    tokio::fs::create_dir_all(hub.releases_dir()).await.unwrap();
+    let len = 1_000_000;
+    tokio::fs::write(hub.releases_dir().join("lara-student.apk"), vec![7u8; len]).await.unwrap();
+    let started = std::time::Instant::now();
+    let (status, _, body) = hub.get_raw("/download/lara-student.apk").await;
+    let took = started.elapsed();
+    assert_eq!((status, body.len()), (200, len));
+    let least = std::time::Duration::from_secs_f64((len as f64 - 65_536.0) / 2_000_000.0);
+    assert!(took >= least, "1 MB installer in {took:?}, faster than 2 MB/s");
     hub.stop().await;
 }

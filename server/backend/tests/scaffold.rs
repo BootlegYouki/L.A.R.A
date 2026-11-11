@@ -13,6 +13,24 @@ fn code(body: &Value) -> Option<&str> {
     body["error"]["code"].as_str()
 }
 
+/// Operations whose step has landed, so they answer like the contract instead of 501: whole
+/// areas, plus single routes of areas still partly scaffolded. Paths as in `openapi.yaml`.
+const BUILT_AREAS: [&str; 3] = ["/api/classrooms", "/api/sync/", "/api/admin/"];
+const BUILT_ROUTES: [(&str, &str); 6] = [
+    ("POST", "/api/materials"),                // 3.3
+    ("GET", "/api/materials/{id}/download"),   // 3.3
+    ("GET", "/api/materials/{id}/chunks"),     // 3.1
+    ("GET", "/api/materials/{id}/stream"),     // 3.2 streams a video; 3.3 refuses a non-video (#259)
+    ("POST", "/api/assignments/{id}/submit"),  // 3.3
+    ("GET", "/api/submissions/{id}/file"),     // 3.3
+];
+
+/// `path` is a template (`{id}`) or a mock path with `x` for each parameter.
+fn is_built(method: &Method, path: &str) -> bool {
+    BUILT_AREAS.iter().any(|area| path.starts_with(area))
+        || BUILT_ROUTES.iter().any(|(m, p)| method.as_str() == *m && p.replace("{id}", "x") == path.replace("{id}", "x"))
+}
+
 #[tokio::test]
 async fn unknown_route_is_route_not_found() {
     let hub = TestHub::start().await;
@@ -89,7 +107,7 @@ async fn stub_role_guards_match_the_mock() {
             continue; // an area this Hub has not scaffolded yet (announcements, topics)
         }
         if code(&body) != Some("NOT_IMPLEMENTED") {
-            assert!(path.starts_with("/api/classrooms") || path.starts_with("/api/sync/") || path.starts_with("/api/admin/"), "unexpected implemented route: {method} {path}");
+            assert!(is_built(&method, &path), "unexpected implemented route: {method} {path}");
             assert_ne!(status, 403, "right role was rejected: {method} {path}");
         } else {
             assert_eq!(status, 501, "{method} {path}");
@@ -148,7 +166,7 @@ async fn every_scaffolded_contract_route_is_registered() {
         let role = roles.iter().find(|(m, p, _)| *m == method && *p == path).map_or(Role::Teacher, |(_, _, r)| *r);
         let token = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
         let (status, body) = hub.request(method.clone(), &path, Some(token)).await;
-        if (template.starts_with("/api/classrooms") || template.starts_with("/api/sync/") || template.starts_with("/api/admin/")) && code(&body) != Some("NOT_IMPLEMENTED") {
+        if is_built(&method, &template) && code(&body) != Some("NOT_IMPLEMENTED") {
             assert!(matches!(status, 200 | 400 | 404), "{method} {template}: {status} {body}");
             assert_ne!(code(&body), Some("ROUTE_NOT_FOUND"));
         } else {

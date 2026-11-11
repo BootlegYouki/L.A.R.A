@@ -1,0 +1,8 @@
+org.lara.app.reading.AssignmentUiDeviceTest:.
+
+Time: 35.489
+
+OK (1 test)
+
+
+Original font_scale=0.85; restored after run

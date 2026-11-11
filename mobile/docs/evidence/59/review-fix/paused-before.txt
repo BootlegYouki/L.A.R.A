@@ -1,0 +1,47 @@
+INSTRUMENTATION_STATUS: class=org.lara.app.reading.VideoDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+org.lara.app.reading.VideoDeviceTest:
+INSTRUMENTATION_STATUS: test=ePausedDownloadShowsExactlyOneWorkingResumeAction
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.lara.app.reading.VideoDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Unexpected Cancel download (keep progress) control
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at org.lara.app.reading.VideoDeviceTest.assertDownloadAction(VideoDeviceTest.kt:95)
+	at org.lara.app.reading.VideoDeviceTest.ePausedDownloadShowsExactlyOneWorkingResumeAction(VideoDeviceTest.kt:68)
+
+INSTRUMENTATION_STATUS: stream=
+Error in ePausedDownloadShowsExactlyOneWorkingResumeAction(org.lara.app.reading.VideoDeviceTest):
+java.lang.AssertionError: Unexpected Cancel download (keep progress) control
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at org.lara.app.reading.VideoDeviceTest.assertDownloadAction(VideoDeviceTest.kt:95)
+	at org.lara.app.reading.VideoDeviceTest.ePausedDownloadShowsExactlyOneWorkingResumeAction(VideoDeviceTest.kt:68)
+
+INSTRUMENTATION_STATUS: test=ePausedDownloadShowsExactlyOneWorkingResumeAction
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 1.25
+There was 1 failure:
+1) ePausedDownloadShowsExactlyOneWorkingResumeAction(org.lara.app.reading.VideoDeviceTest)
+java.lang.AssertionError: Unexpected Cancel download (keep progress) control
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at org.lara.app.reading.VideoDeviceTest.assertDownloadAction(VideoDeviceTest.kt:95)
+	at org.lara.app.reading.VideoDeviceTest.ePausedDownloadShowsExactlyOneWorkingResumeAction(VideoDeviceTest.kt:68)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

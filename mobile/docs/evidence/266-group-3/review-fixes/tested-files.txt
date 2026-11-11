@@ -1,0 +1,6 @@
+Base: ff63ad53faedcf1a1e50fff01ae086d2faaea725 plus review fixes. SHA-256 of tested working files:
+765544a157b1e09d93eeca111f7ae25826db829bacb95eedb21427688e1f2750  mobile/app/src/main/java/org/lara/app/ui/components/BottomNavBar.kt
+375713f7ec801664ca88c209afe54ca2f36fd9c6809ef964e26bae594397868b  mobile/app/src/main/java/org/lara/app/ui/navigation/RoleNavGraphs.kt
+8fe1656e45b8aee75391d7d0236396963b82b6762f119ce3836eb5d8c968a718  mobile/app/src/androidTest/java/org/lara/app/reading/ClassTabsDeviceTest.kt
+d7a9fac1930246c371c21a0fb0c264af0a18e05483dce4d4fa9d83ef5637fbae  mobile/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
+4f2a84d97d77c4e33311b0b116b4bb1892038d9ad7bad322e3c0e1ae8b0b4a51  mobile/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk

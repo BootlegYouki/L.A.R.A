@@ -9,10 +9,12 @@ mod backup;
 mod body;
 mod classrooms;
 mod export;
+mod files;
 mod materials;
 mod portal;
 mod quizzes;
 mod sync;
+mod upload;
 
 use axum::extract::Request;
 use axum::http::{header, HeaderValue, Method, Uri};
@@ -45,16 +47,25 @@ pub fn router(app: AppState) -> Router {
         }))
         // The bundled Hub window calls REST on loopback. Other web origins get no CORS access.
         .layer(CorsLayer::new()
-            .allow_origin([
-                HeaderValue::from_static("tauri://localhost"),
-                HeaderValue::from_static("http://tauri.localhost"),
-                HeaderValue::from_static("https://tauri.localhost"),
-                HeaderValue::from_static("http://localhost:5173"),
-                HeaderValue::from_static("http://127.0.0.1:5173"),
-            ])
+            .allow_origin(allowed_origins())
             .allow_methods([Method::GET, Method::POST])
             .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]))
         .with_state(app)
+}
+
+/// The Tauri window's origins, plus the Vite dev server (`npm run dev` in `ui/`) in debug builds
+/// only, so a release Hub never answers CORS for `:5173`.
+fn allowed_origins() -> Vec<HeaderValue> {
+    let mut origins = vec![
+        HeaderValue::from_static("tauri://localhost"),
+        HeaderValue::from_static("http://tauri.localhost"),
+        HeaderValue::from_static("https://tauri.localhost"),
+    ];
+    if cfg!(debug_assertions) {
+        origins.push(HeaderValue::from_static("http://localhost:5173"));
+        origins.push(HeaderValue::from_static("http://127.0.0.1:5173"));
+    }
+    origins
 }
 
 async fn route_not_found(method: Method, uri: Uri) -> ApiError {

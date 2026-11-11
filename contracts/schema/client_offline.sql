@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACTIVE', 'REJECTED', 'REMOVED')),
     joined_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
     UNIQUE(classroom_id, student_id)
@@ -97,6 +98,7 @@ CREATE TABLE IF NOT EXISTS material_chunks (
     heading TEXT,
     text TEXT NOT NULL,
     token_estimate INTEGER,
+    created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE,
     UNIQUE(material_id, order_index)
@@ -125,6 +127,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     file_path TEXT NOT NULL,                   -- local image path on device storage
     file_type TEXT NOT NULL DEFAULT 'IMAGE' CHECK(file_type IN ('IMAGE', 'DOCUMENT')),
     submitted_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     received_at INTEGER,                       -- NULL until the Hub acknowledges the queued upload
     score INTEGER,                             -- graded score received from the Hub
     teacher_feedback TEXT,
@@ -175,6 +178,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     student_id TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'IN_PROGRESS' CHECK(status IN ('IN_PROGRESS', 'SUBMITTED')),
     started_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
     submitted_at INTEGER,
     score INTEGER,                             -- Hub receipt (NULL until graded or while scores are held)
     total_points INTEGER,
@@ -226,7 +230,7 @@ CREATE TABLE IF NOT EXISTS private_comments (
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
 );
 
--- 14. Sync state (CLIENT ONLY key/value). Keys: 'hub_id', 'sync_epoch', 'cursor' (last next_cursor), 'current_user_id'.
+-- 14. Sync state (CLIENT ONLY internal key/value). Keys: 'hub_id', 'sync_epoch', 'cursor' (last next_cursor), 'current_user_id'.
 -- Write 'cursor' in the same transaction that applies the pulled records. If the Hub reports reset=true,
 -- wipe the mirrored tables (never rows still QUEUED_FOR_SYNC or REJECTED) and pull again from cursor 0.
 -- Other keys are client-local bookkeeping only: prefixed with a namespace and ':', never a cursor, never sent to the Hub.

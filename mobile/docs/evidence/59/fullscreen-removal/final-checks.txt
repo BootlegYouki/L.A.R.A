@@ -1,0 +1,7 @@
+git diff --check: PASS (repository Windows line-ending configuration)
+git diff --cached --check: PASS
+No staged files. No commit/push/merge/readiness change.
+HEAD: 65f1b061960a6ac961aa3c32363c5fc59b67ee02
+Branch: feat/59-mobile-3.3-video-offline
+HEAD vs fetched origin feature: 0	0
+Temporary mock stopped; original phone radio/font/rotation settings read back.

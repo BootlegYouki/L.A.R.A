@@ -22,6 +22,8 @@ class LaraApp : Application() {
 }
 
 private class AppServices(context: Context) {
+    val context = context.applicationContext
+    val videoRoot = java.io.File(context.filesDir, "videos")
     val handoutRoot = java.io.File(context.filesDir, "handouts")
     val homeworkRoot = java.io.File(context.filesDir, "homework")
     val accountContainers = java.util.concurrent.ConcurrentHashMap<String, AppContainer>()
@@ -51,6 +53,7 @@ class AppContainer private constructor(private val services: AppServices, privat
     }
     val sync by lazy { org.lara.app.data.sync.SyncRepository(database, org.lara.app.data.sync.HubSyncTransport(enrollmentApi, hubClient)) {
         materialFiles.prune()
+        videoRepository.prune()
     } }
     suspend fun syncUserId(): String? {
         val token = try { sessionTokens.load() } catch (_: Exception) { null } ?: return null
@@ -71,6 +74,18 @@ class AppContainer private constructor(private val services: AppServices, privat
             .joinToString("") { "%02x".format(it) }
         org.lara.app.data.repository.MaterialFiles(database, enrollmentApi, java.io.File(services.handoutRoot, folder), owner)
     }
+    private val videoFolder by lazy {
+        val folder = java.security.MessageDigest.getInstance("SHA-256").digest(requireNotNull(accountId).toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        java.io.File(services.videoRoot, folder)
+    }
+    private val videoRepository by lazy {
+        org.lara.app.data.repository.RoomVideoRepository(database, enrollmentApi, videoFolder, requireNotNull(accountId))
+    }
+    val videos: org.lara.app.domain.VideoRepository get() = videoRepository
+    @androidx.media3.common.util.UnstableApi
+    fun createVideoPlayer(source: org.lara.app.domain.VideoSource) =
+        org.lara.app.data.media.VideoPlayers(services.context, enrollmentApi, requireNotNull(accountId)).create(source)
     val homeworkPhotos: java.io.File by lazy {
         val folder = java.security.MessageDigest.getInstance("SHA-256").digest(requireNotNull(accountId).toByteArray())
             .joinToString("") { "%02x".format(it) }

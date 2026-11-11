@@ -1,0 +1,14 @@
+M .agents/skills/lara-mobile/SKILL.md
+ M mobile/app/src/main/java/org/lara/app/ui/screens/homework/CameraCaptureScreen.kt
+ M mobile/app/src/main/java/org/lara/app/ui/screens/homework/DocumentReviewScreen.kt
+ M mobile/app/src/main/java/org/lara/app/ui/screens/homework/HomeworkScreen.kt
+ M mobile/app/src/main/res/values/strings.xml
+?? mobile/app/src/androidTest/java/org/lara/app/reading/AssignmentUiDeviceTest.kt
+?? mobile/docs/classroom-layout-group5.md
+?? mobile/docs/evidence/266-group-5/
+84	32	.agents/skills/lara-mobile/SKILL.md
+ .../app/ui/screens/homework/CameraCaptureScreen.kt |   8 +-
+ .../ui/screens/homework/DocumentReviewScreen.kt    |   8 +-
+ .../lara/app/ui/screens/homework/HomeworkScreen.kt | 128 ++++++++++++++++-----
+ mobile/app/src/main/res/values/strings.xml         |   6 +
+ 4 files changed, 119 insertions(+), 31 deletions(-)

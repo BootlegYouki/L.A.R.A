@@ -42,7 +42,7 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
 
 @Composable
 fun ClassManagementPage(container: AppContainer, userId: String, reachable: StateFlow<Boolean>, expired: () -> Unit,
-    initialClassId: String? = null, embedded: Boolean = false, close: () -> Unit) {
+    initialClassId: String? = null, embedded: Boolean = false, startCreating: Boolean = false, close: () -> Unit) {
     val latestExpired by rememberUpdatedState(expired)
     val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
         initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
@@ -54,18 +54,18 @@ fun ClassManagementPage(container: AppContainer, userId: String, reachable: Stat
         }
     }
     val online by reachable.collectAsStateWithLifecycle()
-    ClassManagementScreen(model, userId, online, close, embedded)
+    ClassManagementScreen(model, userId, online, close, embedded, startCreating)
 }
 
 @Composable
 private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit,
-    embedded: Boolean = false) {
+    embedded: Boolean = false, startCreating: Boolean = false) {
     val cached by model.classrooms.collectAsStateWithLifecycle()
     val teacherNames by model.teacherNames.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
     val selected = classes.find { it.id == state.selected }
-    var form by rememberSaveable { mutableStateOf<String?>(null) }
+    var form by rememberSaveable { mutableStateOf<String?>(if (startCreating) "create" else null) }
     var name by rememberSaveable { mutableStateOf("") }
     var section by rememberSaveable { mutableStateOf("") }
     var target by rememberSaveable { mutableStateOf("") }
@@ -75,7 +75,8 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
     val clipboard = LocalClipboardManager.current
     val enabled = online && !state.busy
     BackHandler { if (form != null) form = null else close() }
-    Scaffold(containerColor = LaraColors.Canvas, topBar = {
+    Scaffold(containerColor = LaraColors.Canvas,
+        contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets, topBar = {
         if (!embedded) org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.classes_manage), selected?.name, close)
     }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S3),
@@ -89,7 +90,9 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     }
                 }
             }
-            if (!online) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
+            if (!online) {
+                if (!embedded) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
+            }
             else state.error?.let { message -> item { DiscoveryBanner(message, warning = true, success = false) } }
             if (!embedded) item { Button(enabled = enabled, onClick = { name = ""; section = ""; form = "create" },
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_create)) } }
@@ -171,43 +174,37 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
         }
     }
     form?.let { action ->
-        val editing = action in setOf("create", "rename", "add")
-        AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
-            titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
-            shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
-            "create" -> R.string.classes_create; "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
-            "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
-        })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            if (action == "create" && review) {
-                Text(stringResource(R.string.classes_review), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.classes_review_help), color = LaraColors.TextSecondary)
-                ClassInfoCard {
-                    Text(stringResource(R.string.classes_name), style = MaterialTheme.typography.labelLarge)
-                    Text(name.trim())
-                    Text(stringResource(R.string.classes_section), style = MaterialTheme.typography.labelLarge)
-                    Text(section.trim())
-                }
-                OutlinedButton(onClick = { review = false }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.classes_edit)) }
-            } else if (editing) {
-                OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                    label = { Text(stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)) })
-                if (action != "add") OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                    label = { Text(stringResource(R.string.classes_section)) })
-            } else Text(stringResource(when (action) {
-                "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
-            }))
-        } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
-            onClick = {
-                if (action == "create" && !review) review = true else {
-                when(action) {
-                    "create" -> model.create(name, section); "rename" -> model.rename(name, section)
-                    "add" -> model.addTeacher(name); "archive" -> model.archive()
-                    "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
-                }; form = null
-                }
-            }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "create" && !review) R.string.classes_review else if (action == "create") R.string.classes_create else R.string.classes_confirm)) } },
-            dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Text(stringResource(R.string.enrollment_cancel_action))
-            } })
+        if (action == "create") {
+            CreateClassDialog(name, section, review, online, state.busy,
+                { name = it }, { section = it }, { review = true }, { review = false },
+                { model.create(name, section); form = null }, { form = null })
+        } else {
+            val editing = action in setOf("rename", "add")
+            AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
+                titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
+                shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
+                "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
+                "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
+            })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+                if (editing) {
+                    OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
+                        label = { Text(stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)) })
+                    if (action != "add") OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
+                        label = { Text(stringResource(R.string.classes_section)) })
+                } else Text(stringResource(when (action) {
+                    "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
+                }))
+            } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
+                onClick = {
+                    when(action) {
+                        "rename" -> model.rename(name, section)
+                        "add" -> model.addTeacher(name); "archive" -> model.archive()
+                        "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
+                    }; form = null
+                }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_confirm)) } },
+                dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    Text(stringResource(R.string.enrollment_cancel_action))
+                } })
+        }
     }
 }

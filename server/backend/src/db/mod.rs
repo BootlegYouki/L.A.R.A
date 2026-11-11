@@ -1,4 +1,7 @@
+pub mod material_chunks;
+pub mod materials;
 pub mod seed;
+pub mod submissions;
 pub mod sync_revisions;
 pub mod users;
 pub mod classrooms;
@@ -106,6 +109,39 @@ mod tests {
         let tables = expected.iter().filter(|(kind, name, ..)| kind == "table" && name != "sqlite_sequence").count();
         assert_eq!(tables, contract.matches("CREATE TABLE").count());
         assert_eq!(schema_of(&migrated).await, expected);
+    }
+
+    /// A Hub that already holds homework upgrades without losing it: the arrival time it recorded
+    /// as `submitted_at` becomes `received_at` too.
+    #[tokio::test]
+    async fn upgrading_keeps_handed_in_work_and_fills_received_at() {
+        let dir = tempfile::tempdir().unwrap();
+        let pool = connect(dir.path()).await.unwrap();
+        let mut first = sqlx::migrate!("src/db/migrations");
+        first.migrations = first.migrations.iter().filter(|m| m.version == 1).cloned().collect::<Vec<_>>().into();
+        first.run(&pool).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO users (id, lrn_or_id, full_name, role, pin_hash, created_at, updated_at)
+                 VALUES ('t', 'T-0001', 'Teacher', 'TEACHER', 'x', 1, 1), ('s', '123456789012', 'Ana', 'STUDENT', 'x', 1, 1);
+             INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
+                 VALUES ('c', 'Science 4', 'A', 'K7M4QX', 't', 1, 1);
+             INSERT INTO assignments (id, classroom_id, title, due_date, created_at, updated_at) VALUES ('hw', 'c', 'Homework', 9, 1, 1);
+             INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, file_type, submitted_at, score, teacher_feedback, updated_at)
+                 VALUES ('sub', 'hw', 's', 'submissions/a.jpg', 'IMAGE', 5, 8, 'Good', 6);",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        migrate(&pool).await.unwrap();
+        let row: (String, String, i64, i64, Option<i64>, Option<String>, i64) = sqlx::query_as(
+            "SELECT id, file_path, submitted_at, received_at, score, teacher_feedback, updated_at FROM assignment_submissions",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(row, ("sub".into(), "submissions/a.jpg".into(), 5, 5, Some(8), Some("Good".into()), 6));
+        assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
     }
 
     #[tokio::test]

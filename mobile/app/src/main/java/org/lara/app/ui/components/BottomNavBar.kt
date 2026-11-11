@@ -9,14 +9,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import org.lara.app.R
 import org.lara.app.ui.navigation.ShellDestination
 import org.lara.app.ui.theme.LaraColors
@@ -25,6 +26,7 @@ internal val ShellDestination.label: Int
     get() = when (this) {
         ShellDestination.STREAM -> R.string.nav_stream
         ShellDestination.CLASSWORK -> R.string.nav_classwork
+        ShellDestination.PEOPLE -> R.string.nav_people
         ShellDestination.QUIZZES -> R.string.nav_quizzes
         ShellDestination.AI_TUTOR -> R.string.nav_ai_tutor
     }
@@ -32,40 +34,46 @@ internal val ShellDestination.label: Int
 @Composable
 fun BottomNavBar(
     selected: ShellDestination?,
-    hasInProgressAttempt: Boolean,
     onSelect: (ShellDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val labelLineHeight = with(LocalDensity.current) { MaterialTheme.typography.labelMedium.lineHeight.toDp() }
-    val labelLines = if (LocalDensity.current.fontScale > 1f) 2 else 1
-    val barHeight = maxOf(68.dp, labelLineHeight * labelLines + 52.dp)
+    val barHeight = maxOf(68.dp, labelLineHeight + 52.dp)
     NavigationBar(
         modifier = modifier.height(barHeight),
         containerColor = LaraColors.Surface,
         tonalElevation = 0.dp,
         windowInsets = WindowInsets(0, 0, 0, 0),
     ) {
-        ShellDestination.entries.forEach { destination ->
+        listOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE).forEach { destination ->
             val active = destination == selected
-            val locked = destination == ShellDestination.AI_TUTOR && hasInProgressAttempt
-            val explanation = stringResource(R.string.ai_quiz_locked)
-            val tint = if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark
-                else LaraColors.PrimaryDark
+            val tint = LaraColors.PrimaryDark
             val icon = when (destination) {
                 ShellDestination.STREAM -> if (active) R.drawable.ic_chats_fill else R.drawable.ic_chats_regular
                 ShellDestination.CLASSWORK -> if (active) R.drawable.ic_books_fill else R.drawable.ic_books_regular
+                ShellDestination.PEOPLE -> if (active) R.drawable.ic_users_fill else R.drawable.ic_users_regular
                 ShellDestination.QUIZZES -> if (active) R.drawable.ic_exam_fill else R.drawable.ic_exam_regular
                 ShellDestination.AI_TUTOR -> if (active) R.drawable.ic_sparkle_fill else R.drawable.ic_sparkle_regular
             }
             NavigationBarItem(
                 selected = active,
-                enabled = !locked,
                 onClick = { onSelect(destination) },
-                modifier = Modifier.height(barHeight).semantics {
-                    if (locked) stateDescription = explanation
-                },
+                modifier = Modifier.height(barHeight),
                 icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                label = { Text(stringResource(destination.label), maxLines = 2) },
+                label = {
+                    val label = stringResource(destination.label)
+                    val style = MaterialTheme.typography.labelMedium
+                    var fontSize by remember(label, LocalDensity.current, LocalConfiguration.current.screenWidthDp) {
+                        mutableStateOf(style.fontSize)
+                    }
+                    // Compose 1.7 lacks TextAutoSize; shrink only overflowing labels in bounded steps.
+                    Text(label, style = style, fontSize = fontSize, maxLines = 1, softWrap = false,
+                        overflow = TextOverflow.Clip, onTextLayout = { layout ->
+                            if (layout.didOverflowWidth && fontSize > 8.sp) {
+                                fontSize = (fontSize.value - 0.5f).coerceAtLeast(8f).sp
+                            }
+                        })
+                },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = tint,
                     selectedTextColor = tint,

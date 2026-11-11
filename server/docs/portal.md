@@ -1,13 +1,13 @@
 # Captive Download Portal (step 1.3, #3)
 
 ## Purpose
-The page a learner or teacher opens right after joining the classroom Wi-Fi, before they have the app. It serves a bilingual (English and Filipino) 3-step Android sideloading guide and the client installers, with no account and no token. Contract: `GET /download` in `contracts/openapi.yaml` ("HTML portal page or binary application package"). PRD: §3.1 (2) "Captive Distribution Portal with Visual Sideloading Guide".
+The page a learner or teacher opens right after joining the classroom Wi-Fi, before they have the app. It serves an English 3-step Android sideloading guide and the client installers, with no account and no token. Contract: `GET /download` in `contracts/openapi.yaml` ("HTML portal page or binary application package"). PRD: §3.1 (2) "Captive Distribution Portal with Visual Sideloading Guide".
 
 ## Key files and entry points
 | File | What it does |
 |---|---|
 | `backend/src/routes/portal.rs` | `router()`: `GET /` and `GET /download` (the page), `GET /download/assets/{*path}` (bundled CSS and fonts), `GET /download/{file}` (client installers streamed from disk via `tower_http::services::ServeFile`) |
-| `backend/static/portal/index.html` | The bilingual guide. Compiled into the binary with `include_bytes!`, so it renders with no files on disk |
+| `backend/static/portal/index.html` | The English guide. Compiled into the binary with `include_bytes!`, so it renders with no files on disk |
 | `backend/static/portal/assets/fonts.css` | `@font-face` for Nunito (400/700/800/900) and the Phosphor icon glyphs the page uses, all pointing at `/download/assets/web/*`. Bundled |
 | `backend/static/portal/assets/tokens.css` | A copy of `design-system/tokens.css` (design tokens as CSS variables). Bundled |
 | `backend/static/portal/assets/web/*.woff2` | Nunito and Phosphor web fonts, copied from `design-system/assets`. Bundled |
@@ -23,9 +23,9 @@ This *is* the offline path: it runs on the classroom LAN with no internet. Every
 
 ## Gotchas and edge cases
 * **Path traversal:** `safe_file_name` rejects any installer name containing `/`, `\`, a NUL, or that is `.`/`..`/empty, before touching the filesystem. Axum decodes `%2F`/`%5C` into those separators first, so an encoded `../` is caught too. A `tests/portal.rs` case plants a file one level above `releases/` and proves it is never served.
-* **Range resume yes, bandwidth cap not yet.** `ServeFile` gives byte-range resume now; the 2.0 MB/s per-client token bucket is added across all download routes (and the portal) in step 3.2. Until then downloads are not rate-limited.
+* **Range resume, and 2.0 MB/s per device.** `ServeFile` gives byte-range resume. Since step 3.2 each device address gets at most 2.0 MB/s from the portal (no one is signed in here), so a classroom installing the app at once cannot flood the router (`streaming_rate_limit.md`).
 * **`404` is plain text, not the API error envelope.** The portal is unauthenticated and consumed by a browser, not a client parsing JSON, so a miss returns `404 Not found`, not `{"error":{...}}`.
-* **Bilingual by construction:** every learner-facing string in `index.html` appears in English and Filipino. The invariant scanner's forbidden-pattern check runs over this file in CI.
+* **English only:** every learner-facing string in `index.html` is English, as in the apps (`AGENTS.md` section 1.4, decided 2026-11-03). The Filipino lines were removed in #236; `tests/portal.rs` fails if Filipino text comes back. The invariant scanner's forbidden-pattern check runs over this file in CI.
 * **Fonts shipped vs. used:** the page declares Nunito 400/700/800/900 only; a `600` weight falls back, so the HTML avoids `600`.
 
 ## Related

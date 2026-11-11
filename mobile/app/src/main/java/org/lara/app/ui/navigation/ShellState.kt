@@ -2,7 +2,7 @@ package org.lara.app.ui.navigation
 
 enum class ShellRole { STUDENT, TEACHER }
 
-enum class ShellDestination { STREAM, CLASSWORK, QUIZZES, AI_TUTOR }
+enum class ShellDestination { STREAM, CLASSWORK, PEOPLE, QUIZZES, AI_TUTOR }
 
 /** Supplied by authentication and Room-backed feature state; never persisted by navigation. */
 data class ShellState(

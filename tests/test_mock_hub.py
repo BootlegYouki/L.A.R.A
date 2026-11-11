@@ -114,7 +114,30 @@ class TestMockHub(unittest.TestCase):
                                   token=self.pupil, headers={"Range": "bytes=0-99"})
         self.assertEqual(status, 206)
         self.assertEqual(len(body), 100)
-        self.assertEqual(hdrs["Content-Range"], "bytes 0-99/1048576")
+        self.assertTrue(hdrs["Content-Range"].startswith("bytes 0-99/"))
+        self.assertEqual(body[4:8], b"ftyp", "stream must serve a decodable MP4, not filler bytes")
+
+    def test_video_download_resumes_with_range_and_if_range(self):
+        path = "/api/materials/m2000000-0000-4000-8000-000000000002/download"
+        status, whole, hdrs = call(BASE, "GET", path, token=self.pupil)
+        self.assertEqual(status, 200)
+        etag = hdrs["ETag"]
+        status, tail, hdrs = call(BASE, "GET", path, token=self.pupil,
+                                  headers={"Range": "bytes=1000-", "If-Range": etag})
+        self.assertEqual(status, 206)
+        self.assertEqual(tail, whole[1000:])
+        self.assertEqual(hdrs["Content-Range"], f"bytes 1000-{len(whole) - 1}/{len(whole)}")
+        status, again, _ = call(BASE, "GET", path, token=self.pupil,
+                                headers={"Range": "bytes=1000-", "If-Range": '"stale"'})
+        self.assertEqual((status, again), (200, whole), "a changed file restarts from byte 0")
+        status, _, _ = call(BASE, "GET", path, token=self.pupil, headers={"Range": f"bytes={len(whole)}-"})
+        self.assertEqual(status, 416)
+        status, tail, _ = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": etag})
+        self.assertEqual((status, tail), (206, whole[1000:]), "Android/Chrome resume with If-Match")
+        status, _, hdrs = call(BASE, "GET", path, token=self.pupil,
+                               headers={"Range": "bytes=1000-", "If-Match": '"stale"'})
+        self.assertEqual((status, hdrs["ETag"]), (412, etag), "a changed file is refused, so the client restarts")
 
     def test_stream_accepts_token_query_for_html5_video(self):
         status, _, _ = call(BASE, "GET", f"/api/materials/m2000000-0000-4000-8000-000000000002/stream?token={self.pupil}",

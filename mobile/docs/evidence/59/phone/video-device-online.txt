@@ -1,0 +1,5 @@
+Synthetic HTTP fixture, not mock/real Hub.
+Rendered native frame; duration >=19s; seeks 15s then 3s passed.
+Requests=10; all bounded and authorized.
+Cancellation at 32768 bytes; If-Range resume passed.
+Room path and SHA-256=266f335dfe818363e83649b44f653e0dc1e1ca4c580f413ff5f19d03a9bf68d9 passed.

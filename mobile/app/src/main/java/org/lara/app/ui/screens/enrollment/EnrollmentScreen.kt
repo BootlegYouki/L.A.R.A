@@ -48,12 +48,15 @@ fun EnrollmentScreen(
     onOpenClass: (String) -> Unit,
     onCodeChanged: () -> Unit = {},
     teacherNames: Map<String, String> = emptyMap(),
+    showJoinAction: Boolean = true,
+    learnerName: String? = null,
 ) {
     val classes = (state.classes as? Cached.Content)?.value.orEmpty()
     val cachedIds = classes.map { it.classroom.id }.toSet()
     val requests = state.requests.filterNot { it.classroomId in cachedIds }
     val loadingLabel = stringResource(R.string.enrollment_loading)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S3),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = LaraSpacing.S4, end = LaraSpacing.S4,
+        top = LaraSpacing.S4, bottom = PrimaryTouchTarget + LaraSpacing.S8),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         item { Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium) }
         if (state.offline) item {
@@ -69,7 +72,7 @@ fun EnrollmentScreen(
             }
             DiscoveryBanner(message, warning = true, success = false)
         }
-        item {
+        if (showJoinAction) item {
             Button(onClick = onJoin, enabled = !state.offline && !state.busy,
                 colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
@@ -104,7 +107,7 @@ fun EnrollmentScreen(
                 item.status, canOpen = false, onOpen = {})
         }
     }
-    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged)
+    if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged, learnerName)
 }
 
 @Composable

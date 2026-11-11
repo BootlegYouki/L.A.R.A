@@ -1,0 +1,3 @@
+Standalone invariant script: PASSED
+Working-tree and new-source scan: PASSED
+git diff --check: PASSED

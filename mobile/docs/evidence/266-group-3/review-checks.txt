@@ -1,0 +1,6 @@
+PASS: all changed/untracked files belong to mobile/.
+PASS: git diff --check; index unchanged.
+PASS: invariant pattern scan over changed and untracked Kotlin/XML.
+PASS: changed Kotlin string resources resolve.
+PASS: documentation image/file links resolve.
+Physical device settings restored: font_scale 0.85; reverse ports 8080->8080, 8081->8081.

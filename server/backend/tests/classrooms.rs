@@ -688,7 +688,7 @@ async fn removing_a_learner_keeps_their_work_and_sends_the_event_once() {
         .execute(&hub.state().db)
         .await
         .unwrap();
-    sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, score, updated_at) VALUES ('sub', 'hw', ?, 'x.jpg', 2, 9, 2)")
+    sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, received_at, score, updated_at) VALUES ('sub', 'hw', ?, 'x.jpg', 2, 2, 9, 2)")
         .bind(&ana.id)
         .execute(&hub.state().db)
         .await

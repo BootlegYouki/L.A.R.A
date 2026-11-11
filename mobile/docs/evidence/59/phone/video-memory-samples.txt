@@ -1,0 +1,4 @@
+fontScale=1.0 javaAllocated=21802496 nativeAllocated=30307200
+fontScale=2.0 javaAllocated=14959088 nativeAllocated=34252704
+fontScale=1.0 javaAllocated=24833536 nativeAllocated=31086224
+fontScale=2.0 javaAllocated=8581616 nativeAllocated=32954912

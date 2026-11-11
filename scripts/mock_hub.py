@@ -22,6 +22,7 @@ import base64
 import hashlib
 import http.server
 import json
+import os
 import re
 import socket
 import socketserver
@@ -35,7 +36,9 @@ WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 GRACE_MS = 60_000
 CLASS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 ADMIN_ID = "ADMIN-0001"
-MOCK_VIDEO_SIZE = 1024 * 1024
+# A real 30 s H.264 clip so clients can decode, seek and save it, not just count bytes.
+MOCK_VIDEO = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lesson-video.mp4"), "rb").read()
+MOCK_VIDEO_SIZE = len(MOCK_VIDEO)
 
 
 def now_ms():
@@ -64,6 +67,7 @@ class HubState:
         self.comments = {}
         self.materials = {}
         self.chunks = {}
+        self.material_files = {}
         self.assignments = {}
         self.submissions = {}
         self.submission_files = {}
@@ -72,6 +76,7 @@ class HubState:
         self.topics = {}
         self.private_comments = {}
         self.co_teachers = {}                    # classroom_id -> set of co-teacher user ids
+        self.classroom_teacher_rows = {}          # (classroom_id, teacher_id) -> stored relation row
         self.ledger = []
         self.seq = 0
         self.hub_id = new_id()
@@ -93,7 +98,7 @@ class HubState:
         self.classrooms[classroom["id"]] = classroom
         self.log("classrooms", classroom["id"], classroom["id"])
         enr = {"id": new_id(), "classroom_id": classroom["id"], "student_id": pupil["id"],
-               "status": "ACTIVE", "joined_at": t, "updated_at": t}
+               "status": "ACTIVE", "joined_at": t, "created_at": t, "updated_at": t}
         self.enrollments[enr["id"]] = enr
         self.log("enrollments", enr["id"], classroom["id"], pupil["id"])
         ann = {"id": new_id(), "classroom_id": classroom["id"],
@@ -104,18 +109,22 @@ class HubState:
         self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "m1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
+               "uploaded_by": teacher["id"],
                "file_size_bytes": 2048, "download_url": "/api/materials/m1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
         self.log("materials", mat["id"], classroom["id"])
         self.chunks[mat["id"]] = [
             {"id": new_id(), "material_id": mat["id"], "order_index": 1, "heading": "Ang Ecosystem",
-             "text": "Ang ecosystem ay binubuo ng mga buhay at walang buhay na bagay na magkakaugnay."},
+             "text": "Ang ecosystem ay binubuo ng mga buhay at walang buhay na bagay na magkakaugnay.",
+             "created_at": t, "updated_at": t},
             {"id": new_id(), "material_id": mat["id"], "order_index": 2, "heading": "Photosynthesis",
-             "text": "Gumagawa ng sariling pagkain ang mga halaman gamit ang sikat ng araw, tubig at hangin."},
+             "text": "Gumagawa ng sariling pagkain ang mga halaman gamit ang sikat ng araw, tubig at hangin.",
+             "created_at": t, "updated_at": t},
         ]
         vid = {"id": "m2000000-0000-4000-8000-000000000002", "classroom_id": classroom["id"],
                "title": "Video: Food Chain", "file_type": "VIDEO", "file_size_bytes": MOCK_VIDEO_SIZE,
+               "uploaded_by": teacher["id"],
                "download_url": "/api/materials/m2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
@@ -553,7 +562,8 @@ def classroom_join(req):
     if not enr or enr["status"] in ("REJECTED", "REMOVED"):
         # A rejected or removed learner may ask again; the teacher decides again.
         if not enr:
-            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"], "joined_at": t}
+            enr = {"id": new_id(), "classroom_id": c["id"], "student_id": req.user["id"],
+                   "joined_at": t, "created_at": t}
             STATE.enrollments[enr["id"]] = enr
         enr["status"], enr["updated_at"] = "PENDING", t
         STATE.log("enrollments", enr["id"], c["id"], req.user["id"])
@@ -635,6 +645,11 @@ def co_teacher_add(req):
         raise ApiError(404, "NOT_FOUND", "No teacher with that ID")
     if t["id"] != c["teacher_id"]:
         STATE.co_teachers.setdefault(c["id"], set()).add(t["id"])
+        added_at = now_ms()
+        STATE.classroom_teacher_rows[(c["id"], t["id"])] = {
+            "classroom_id": c["id"], "teacher_id": t["id"], "added_at": added_at,
+            "created_at": added_at, "updated_at": added_at,
+        }
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
     # Marks the class as newly visible to the added teacher, so their next pull includes its older rows.
@@ -646,6 +661,7 @@ def co_teacher_add(req):
 def co_teacher_remove(req):
     c = owned_classroom(req, req.groups[0], owner_only=True)
     STATE.co_teachers.get(c["id"], set()).discard(req.groups[1])
+    STATE.classroom_teacher_rows.pop((c["id"], req.groups[1]), None)
     c["updated_at"] = now_ms()
     STATE.log("classrooms", c["id"], c["id"])
     # A copy addressed to the removed teacher, who no longer sees the class but must learn they left it.
@@ -689,7 +705,7 @@ def sync_pull(req):
         elif table == "classrooms" and eid in STATE.classrooms:
             out["classrooms"].append(public_classroom(STATE.classrooms[eid], req.user))
         elif table == "enrollments" and eid in STATE.enrollments:
-            out["enrollments"].append(STATE.enrollments[eid])
+            out["enrollments"].append({k: v for k, v in STATE.enrollments[eid].items() if k != "created_at"})
         elif table == "topics" and eid in STATE.topics:
             out["topics"].append(STATE.topics[eid])
         elif table == "private_comments" and eid in STATE.private_comments:
@@ -699,13 +715,15 @@ def sync_pull(req):
         elif table == "announcement_comments" and eid in STATE.comments:
             out["comments"].append(STATE.comments[eid])
         elif table == "materials" and eid in STATE.materials:
-            out["materials"].append(STATE.materials[eid])
+            out["materials"].append({k: v for k, v in STATE.materials[eid].items() if k != "uploaded_by"})
         elif table == "material_chunks":
-            out["material_chunks"] += [c for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
+            out["material_chunks"] += [{k: v for k, v in c.items() if k not in ("created_at", "updated_at")}
+                                        for cs in STATE.chunks.values() for c in cs if c["id"] == eid]
         elif table == "assignments" and eid in STATE.assignments:
             out["assignments"].append(STATE.assignments[eid])
         elif table == "assignment_submissions" and eid in STATE.submissions:
-            out["submissions"].append(STATE.submissions[eid])
+            out["submissions"].append({k: v for k, v in STATE.submissions[eid].items()
+                                        if k not in ("created_at", "_file_sha256")})
         elif table == "quizzes" and eid in STATE.quizzes:
             q = STATE.quizzes[eid]
             if q["status"] != "DRAFT" or teacher:
@@ -905,7 +923,8 @@ def topic_delete(req):
 # ---- materials
 @route("PATCH", r"/api/materials/([^/]+)", role="TEACHER")
 def material_patch(req):
-    return patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    material = patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    return {k: v for k, v in material.items() if k != "uploaded_by"}
 
 
 @route("DELETE", r"/api/materials/([^/]+)", role="TEACHER")
@@ -927,25 +946,65 @@ def material_create(req):
         raise ApiError(413, "FILE_TOO_LARGE", "Max 250MB")
     t, mid = now_ms(), new_id()
     m = {"id": mid, "classroom_id": f["classroom_id"], "title": f["title"], "file_type": f["file_type"],
+         "uploaded_by": req.user["id"],
          "file_size_bytes": len(data), "download_url": f"/api/materials/{mid}/download",
          "topic_id": f.get("topic_id"), "assignment_id": f.get("assignment_id"),
          "announcement_id": f.get("announcement_id"), "created_at": t, "updated_at": t}
     STATE.materials[mid] = m
+    STATE.material_files[mid] = data
     STATE.log("materials", mid, f["classroom_id"])
     if f["file_type"] != "VIDEO":
         chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
-                 "heading": f["title"], "text": data.decode("utf-8", "replace")[:500]}
+                 "heading": f["title"], "text": data.decode("utf-8", "replace")[:500],
+                 "created_at": t, "updated_at": t}
         STATE.chunks[mid] = [chunk]
         STATE.log("material_chunks", chunk["id"], f["classroom_id"])
-    return m
+    return {k: v for k, v in m.items() if k != "uploaded_by"}
 
 
 @route("GET", r"/api/materials/([^/]+)/download")
 def material_download(req):
+    m = visible_material(req)
+    if m["file_type"] == "VIDEO":
+        return byte_range(req, m, video_bytes(m), len(video_bytes(m)))
+    return Raw(STATE.material_files.get(m["id"], b"%PDF-1.4 mock lesson handout\n"), "application/octet-stream")
+
+
+def visible_material(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
-    member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
-    return Raw(b"%PDF-1.4 mock lesson handout\n", "application/octet-stream")
+    m = STATE.materials[req.groups[0]]
+    member_of(req.user, m["classroom_id"])
+    return m
+
+
+def video_bytes(m):
+    return STATE.material_files.get(m["id"]) or MOCK_VIDEO
+
+
+def byte_range(req, m, data, default_span):
+    """Range per RFC 9110: no header (or a stale If-Range) sends the whole file as 200; a stale If-Match is 412."""
+    size, header = len(data), req.handler.headers.get("Range")
+    etag = f'"{m["id"]}-{m["updated_at"]}"'
+    base = {"Accept-Ranges": "bytes", "ETag": etag}
+    if_match = req.handler.headers.get("If-Match")
+    if if_match and not any(t.strip() in ("*", etag) for t in if_match.split(",")):
+        return Raw(b"", "video/mp4", 412, {"ETag": etag})
+    if_range = req.handler.headers.get("If-Range")
+    if not header or not header.startswith("bytes=") or (if_range and if_range != etag):
+        if default_span >= size:
+            return Raw(data, "video/mp4", 200, base)
+        header = "bytes=0-"
+    lo, _, hi = header[6:].partition("-")
+    try:
+        start = int(lo) if lo else max(size - int(hi), 0)
+        end = int(hi) if hi and lo else min(start + default_span - 1, size - 1)
+    except ValueError:
+        start, end = size, size
+    if start >= size or end < start:
+        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    return Raw(data[start:end + 1], "video/mp4", 206, {**base, "Content-Range": f"bytes {start}-{end}/{size}"})
 
 
 @route("GET", r"/api/materials/([^/]+)/chunks")
@@ -953,22 +1012,16 @@ def material_chunks(req):
     if req.groups[0] not in STATE.materials:
         raise ApiError(404, "NOT_FOUND", "Material not found")
     member_of(req.user, STATE.materials[req.groups[0]]["classroom_id"])
-    return STATE.chunks.get(req.groups[0], [])
+    return [{k: v for k, v in chunk.items() if k not in ("created_at", "updated_at")}
+            for chunk in STATE.chunks.get(req.groups[0], [])]
 
 
 @route("GET", r"/api/materials/([^/]+)/stream")
 def material_stream(req):
-    header = req.handler.headers.get("Range")
-    start, end = 0, min(65535, MOCK_VIDEO_SIZE - 1)
-    if header and header.startswith("bytes="):
-        lo, _, hi = header[6:].partition("-")
-        start = int(lo) if lo else 0
-        end = int(hi) if hi else min(start + 65535, MOCK_VIDEO_SIZE - 1)
-    if start >= MOCK_VIDEO_SIZE:
-        return Raw(b"", "video/mp4", 416, {"Content-Range": f"bytes */{MOCK_VIDEO_SIZE}"})
-    end = min(end, MOCK_VIDEO_SIZE - 1)
-    return Raw(b"0" * (end - start + 1), "video/mp4", 206,
-               {"Accept-Ranges": "bytes", "Content-Range": f"bytes {start}-{end}/{MOCK_VIDEO_SIZE}"})
+    m = visible_material(req)
+    if m["file_type"] != "VIDEO":
+        raise ApiError(404, "NOT_FOUND", "Not a video")
+    return byte_range(req, m, video_bytes(m), 65536)
 
 
 # ---- assignments
@@ -1065,14 +1118,15 @@ def submission_create(req):
                      if s["assignment_id"] == asg["id"] and s["student_id"] == req.user["id"]), None)
     if (existing and existing["id"] == fields["submission_id"]
             and existing.get("_file_sha256") == file_hash):
-        return existing
+        return {k: v for k, v in existing.items() if k not in ("created_at", "_file_sha256")}
     if existing and existing.get("score") is not None:
         raise ApiError(409, "ALREADY_GRADED", "This submission has already been graded")
     if (asg.get("due_date") is not None and not asg.get("allow_late", False)
             and effective_time > asg["due_date"]):
         raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
-                       "file_type": "IMAGE", "score": None, "teacher_feedback": None}
+                       "file_type": "IMAGE", "score": None, "teacher_feedback": None,
+                       "created_at": received_at}
     if existing and existing["id"] != fields["submission_id"]:
         old_id = existing["id"]
         STATE.submissions.pop(old_id, None)
@@ -1084,7 +1138,7 @@ def submission_create(req):
     STATE.submissions[sub["id"]] = sub
     STATE.submission_files[sub["id"]] = files["file"]
     STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
-    return sub
+    return {k: v for k, v in sub.items() if k not in ("created_at", "_file_sha256")}
 
 
 @route("GET", r"/api/assignments/([^/]+)/submissions", role="TEACHER")
@@ -1093,7 +1147,8 @@ def submissions_list(req):
     if not asg:
         raise ApiError(404, "NOT_FOUND", "Assignment not found")
     owned_classroom(req, asg["classroom_id"])
-    return [s for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
+    return [{k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
+            for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
 
 
 @route("PATCH", r"/api/submissions/([^/]+)", role="TEACHER")
@@ -1108,7 +1163,7 @@ def submission_grade(req):
             s[k] = b[k]
     s["updated_at"] = now_ms()
     STATE.log("assignment_submissions", s["id"], STATE.assignments[s["assignment_id"]]["classroom_id"], s["student_id"])
-    return s
+    return {k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
 
 
 @route("GET", r"/api/submissions/([^/]+)/file")
@@ -1213,7 +1268,7 @@ def quiz_begin(req):
     if not att:
         t = now_ms()
         att = {"id": new_id(), "quiz_id": quiz["id"], "student_id": req.user["id"], "status": "IN_PROGRESS",
-               "started_at": t, "submitted_at": None, "score": None, "total_points": None,
+               "started_at": t, "created_at": t, "submitted_at": None, "score": None, "total_points": None,
                "answers": [], "updated_at": t}
         STATE.attempts[att["id"]] = att
         STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], req.user["id"])
@@ -1237,7 +1292,8 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
     score, total = grade(quiz, answers)
     t = now_ms()
     if not att:
-        att = {"id": new_id(), "quiz_id": quiz_id, "student_id": user["id"], "started_at": started_at}
+        att = {"id": new_id(), "quiz_id": quiz_id, "student_id": user["id"],
+               "started_at": started_at, "created_at": started_at}
         STATE.attempts[att["id"]] = att
     att.update(status="SUBMITTED", submitted_at=submitted_at, score=score, total_points=total,
                answers=answers, updated_at=t)
