@@ -19,6 +19,8 @@ pub enum ServerEvent {
     JoinApproval { classroom_id: String, student_id: String, status: EnrollmentStatus, timestamp: i64 },
     #[serde(rename = "EVENT_ANNOUNCEMENT_PUSH")]
     AnnouncementPush { classroom_id: String, announcement_id: String, title: String, timestamp: i64 },
+    #[serde(rename = "EVENT_GRADE_CONFIRMED")]
+    GradeConfirmed { quiz_id: String, attempt_id: String, score: i64, total_points: i64, timestamp: i64 },
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -68,7 +70,7 @@ impl ServerEvent {
     }
 }
 
-/// Frames a client sends. Later steps add `EVENT_AI_CHAT_REQUEST` and `EVENT_QUIZ_SUBMIT`.
+/// Frames a client sends. A later step adds `EVENT_AI_CHAT_REQUEST`.
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event")]
 pub enum ClientEvent {
@@ -77,6 +79,13 @@ pub enum ClientEvent {
         #[serde(default)]
         token: Option<String>,
     },
+    /// A finished quiz (contract `quiz_submit.json`). Its `student_id` is ignored: the connection's user is
+    /// the learner, and the start comes from the Hub's attempt row (TECH_SPEC section 14, Q2).
+    #[serde(rename = "EVENT_QUIZ_SUBMIT")]
+    QuizSubmit { quiz_id: String, submitted_at: i64, answers: Vec<crate::models::quiz::AnswerInput> },
+    /// An `EVENT_QUIZ_SUBMIT` missing a field or with a wrong type: answered with an error, not ignored.
+    #[serde(skip)]
+    InvalidQuizSubmit,
     #[serde(other)]
     Other,
 }
@@ -85,7 +94,8 @@ impl ClientEvent {
     /// `None` means the frame was not JSON. A JSON frame that is not a known event is `Other`.
     pub fn parse(text: &str) -> Option<Self> {
         let value: serde_json::Value = serde_json::from_str(text).ok()?;
-        Some(serde_json::from_value(value).unwrap_or(Self::Other))
+        let quiz_submit = value.get("event").and_then(serde_json::Value::as_str) == Some("EVENT_QUIZ_SUBMIT");
+        Some(serde_json::from_value(value).unwrap_or(if quiz_submit { Self::InvalidQuizSubmit } else { Self::Other }))
     }
 }
 
@@ -145,6 +155,10 @@ mod tests {
                     lrn: "123456789013".into(),
                     timestamp: 1,
                 },
+            ),
+            (
+                "grade_confirmed.json",
+                ServerEvent::GradeConfirmed { quiz_id: "q".into(), attempt_id: "a".into(), score: 1, total_points: 2, timestamp: 1 },
             ),
             (
                 "announcement_push.json",

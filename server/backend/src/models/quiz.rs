@@ -36,6 +36,13 @@ impl QuestionType {
     }
 }
 
+/// One answer in a submission (contract `Answer`).
+#[derive(Clone, Debug, serde::Deserialize, Serialize)]
+pub struct AnswerInput {
+    pub question_id: String,
+    pub selected_option: String,
+}
+
 /// A question as a teacher sent it, already checked (`routes::quizzes`).
 pub struct QuestionInput {
     pub id: Option<String>,
@@ -109,4 +116,17 @@ pub struct StudentQuiz {
     pub time_limit_minutes: i64,
     pub started_at: Option<i64>,
     pub questions: Vec<StudentQuestion>,
+}
+
+/// One learner's line in a teacher's results (contract `/api/quizzes/{id}/results`). Scores appear only once
+/// the attempt is `SUBMITTED`, and they are always the real ones: the teacher sees held scores.
+#[derive(Serialize, sqlx::FromRow)]
+pub struct ResultRow {
+    pub student_id: String,
+    pub full_name: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total_points: Option<i64>,
 }

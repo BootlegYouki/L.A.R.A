@@ -20,6 +20,9 @@ pub struct SyncPushInput {
     pub comments: Vec<CommentPush>,
     #[serde(default)]
     pub private_comments: Vec<PrivateCommentPush>,
+    /// Contract `QuizAttemptPush`, read item by item so one bad item is refused alone (step 4.2).
+    #[serde(default)]
+    pub quiz_attempts: Vec<serde_json::Value>,
 }
 
 #[derive(Deserialize)]

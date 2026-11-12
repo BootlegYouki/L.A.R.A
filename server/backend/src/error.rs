@@ -31,8 +31,10 @@ pub enum ErrorCode {
     CommentsDisabled,
     /// 409: editing a quiz that has started (contract `PATCH /api/quizzes/{id}`, PRD FR-4.8).
     QuizNotDraft,
-    /// 409: beginning a quiz that is not `ACTIVE` (mock code, TECH_SPEC section 14, Q8).
+    /// 409: beginning a quiz that is not `ACTIVE` (contract #291).
     QuizClosed,
+    /// 422: a quiz submitted after its time limit and the 60 s grace (contract `/submit`).
+    TimeLimitExceeded,
     /// Area stubs until their step lands; no client depends on it.
     NotImplemented,
     /// The database failed. The contract has no code for it yet (TECH_SPEC section 14, Q10).
@@ -58,6 +60,7 @@ impl ErrorCode {
             Self::CommentsDisabled => "COMMENTS_DISABLED",
             Self::QuizNotDraft => "QUIZ_NOT_DRAFT",
             Self::QuizClosed => "QUIZ_CLOSED",
+            Self::TimeLimitExceeded => "TIME_LIMIT_EXCEEDED",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
         }
@@ -156,6 +159,10 @@ impl ApiError {
     /// English, unlike the mock's "Sarado na ang pagsusulit": the apps are English only.
     pub fn quiz_closed() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizClosed, "This quiz is closed")
+    }
+
+    pub fn time_limit_exceeded() -> Self {
+        Self::new(StatusCode::UNPROCESSABLE_ENTITY, ErrorCode::TimeLimitExceeded, "The time limit has passed")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {

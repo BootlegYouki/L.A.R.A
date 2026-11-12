@@ -11,7 +11,7 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 
 use super::body::JsonBody;
-use super::{not_implemented_student as student, not_implemented_teacher as teacher};
+use super::not_implemented_teacher as teacher;
 use crate::auth::{require_role, AuthUser, Role};
 use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::{begin_immediate, quizzes};
@@ -30,8 +30,6 @@ pub fn router() -> Router<AppState> {
         .route("/api/quizzes/{id}/start", post(teacher))
         .route("/api/quizzes/{id}/begin", post(begin))
         .route("/api/quizzes/{id}/close", post(teacher))
-        .route("/api/quizzes/{id}/submit", post(student))
-        .route("/api/quizzes/{id}/results", get(teacher))
 }
 
 fn text_list(value: Option<&Value>, key: &str) -> Result<Vec<String>, ApiError> {
