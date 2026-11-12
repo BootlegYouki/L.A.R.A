@@ -3,6 +3,7 @@
 
 pub mod logs;
 pub mod uploads;
+pub mod ws;
 
 use lara_hub::auth::{sessions, Role};
 use lara_hub::db::users;
