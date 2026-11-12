@@ -3,6 +3,10 @@ use sqlx::FromRow;
 
 use super::classroom::Classroom;
 
+/// 2^53 - 1, the largest integer JavaScript and the desktop app store exactly. The desktop refuses a
+/// pulled integer outside `0..=MAX_SAFE_INT` and would stop syncing, so the Hub never stores one.
+pub const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
+
 #[derive(Deserialize)]
 pub struct SyncPullInput {
     pub cursor: i64,

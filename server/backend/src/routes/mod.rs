@@ -13,8 +13,10 @@ mod export;
 mod files;
 mod materials;
 mod portal;
+mod private_comments;
 mod quizzes;
 mod sync;
+mod topics;
 mod upload;
 
 use axum::extract::Request;
@@ -38,8 +40,10 @@ pub fn router(app: AppState) -> Router {
         .merge(export::router())
         .merge(materials::router())
         .merge(portal::router())
+        .merge(private_comments::router())
         .merge(quizzes::router())
         .merge(sync::router())
+        .merge(topics::router())
         // The mock matches method and path together, so a wrong method is also ROUTE_NOT_FOUND.
         .fallback(route_not_found)
         .method_not_allowed_fallback(route_not_found)

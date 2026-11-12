@@ -24,7 +24,7 @@ use crate::services::class_access;
 use crate::storage::{format_of, StorageKind};
 use crate::AppState;
 
-/// `/private-comments` is not here: it gets its own `routes/private_comments.rs` in step 3.5.
+/// `/private-comments` is not here: it is in `routes/private_comments.rs` (step 3.5).
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/assignments", post(create))

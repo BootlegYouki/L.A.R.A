@@ -2,9 +2,11 @@ pub mod announcements;
 pub mod assignments;
 pub mod material_chunks;
 pub mod materials;
+pub mod private_comments;
 pub mod seed;
 pub mod submissions;
 pub mod sync_revisions;
+pub mod topics;
 pub mod users;
 pub mod classrooms;
 
