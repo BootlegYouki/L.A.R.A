@@ -20,7 +20,7 @@ To guarantee assessment integrity, the Socratic AI tutor is strictly forbidden f
 
 1. **Global Time Limit:** Countdowns run on overall quiz duration (e.g., 20 minutes for 15 questions), not per-item timers.
 2. **Synchronized Start:** `POST /api/quizzes/{id}/start` sets `started_at` from the Hub clock and the Hub emits `EVENT_QUIZ_START` (`start_epoch_ms`, `duration_seconds`). Clients compute their offset from `server_time` in `EVENT_HELLO_ACK` and count down on a monotonic clock. Only one quiz per classroom can be `ACTIVE`.
-   * The teacher can close the quiz (`POST /api/quizzes/{id}/close`): the Hub emits `EVENT_QUIZ_CLOSED`, auto-submits and grades every `IN_PROGRESS` attempt, and clients lock input and submit. A learner who finished on time while offline (FR-4.5) is not penalised by the close: their queued work, if on time, replaces the Hub's auto-submit once. Any other stored attempt is never regraded.
+   * The teacher can close the quiz (`POST /api/quizzes/{id}/close`): the Hub emits `EVENT_QUIZ_CLOSED`, auto-submits and grades every `IN_PROGRESS` attempt, and clients lock input and submit. A learner who finished on time while offline (FR-4.5) is not penalised by the close: their queued work, if on time by the Hub's `started_at` and finished before the close, replaces the Hub's auto-submit once. Any other stored attempt is never regraded.
 3. **Visual Countdown Pill:**
    * Green: Remaining time > 5 minutes.
    * Yellow: Remaining time <= 5 minutes.
