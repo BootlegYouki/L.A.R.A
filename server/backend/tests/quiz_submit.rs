@@ -300,3 +300,63 @@ async fn the_websocket_submit_uses_the_same_path() {
     let error = next_event(&mut ana_ws).await;
     assert_eq!((error["event"].as_str(), error["code"].as_str()), (Some("EVENT_ERROR"), Some("BAD_REQUEST")), "a malformed submit is answered");
 }
+
+async fn results(class: &Class, quiz: &str, token: &str) -> (u16, Value) {
+    class.hub.get(&format!("/api/quizzes/{quiz}/results"), Some(token)).await
+}
+
+/// The row for one learner.
+fn row_for<'a>(rows: &'a Value, student: &str) -> &'a Value {
+    rows.as_array().unwrap().iter().find(|r| r["student_id"] == student).expect("a row for every active learner")
+}
+
+#[tokio::test]
+async fn results_show_every_learner() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    let (ana_id, ana) = class.add_learner("123456789013", true).await;
+    let (ben_id, _) = class.add_learner("123456789014", true).await;
+    let (pending_id, _) = class.add_learner("123456789015", false).await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let now = now_ms();
+    submit(&class, &quiz, &class.learner_token, now, now, one_right(&questions)).await;
+    begin(&class, &quiz, &ana).await;
+
+    let (status, rows) = results(&class, &quiz, class.teacher()).await;
+    assert_eq!(status, 200, "{rows}");
+    assert_eq!(rows.as_array().unwrap().len(), 3, "active learners only: {rows}");
+    assert!(rows.as_array().unwrap().iter().all(|r| r["student_id"] != pending_id.as_str()));
+    let juan = row_for(&rows, &class.learner);
+    assert_eq!((juan["status"].as_str(), juan["score"].as_i64(), juan["total_points"].as_i64()), (Some("SUBMITTED"), Some(1), Some(2)));
+    assert_eq!(juan["full_name"], "Learner");
+    let ana_row = row_for(&rows, &ana_id);
+    assert_eq!(ana_row["status"], "IN_PROGRESS");
+    assert!(ana_row.get("score").is_none() && ana_row.get("total_points").is_none(), "{ana_row}");
+    assert_eq!(row_for(&rows, &ben_id)["status"], "NOT_STARTED");
+}
+
+#[tokio::test]
+async fn results_show_held_scores_to_the_teacher() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, false).await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let now = now_ms();
+    let (_, receipt) = submit(&class, &quiz, &class.learner_token, now, now, one_right(&questions)).await;
+    assert!(receipt["score"].is_null());
+    let (status, rows) = results(&class, &quiz, class.teacher()).await;
+    assert_eq!((status, row_for(&rows, &class.learner)["score"].as_i64()), (200, Some(1)), "the teacher always sees the real score");
+}
+
+#[tokio::test]
+async fn only_the_class_teachers_see_results() {
+    let class = Class::start().await;
+    let (quiz, _) = active_quiz(&class, true).await;
+    let (_, other_teacher) = class.other_class().await;
+    assert_eq!(results(&class, &quiz, &class.learner_token).await.0, 403);
+    let (status, body) = results(&class, &quiz, &other_teacher).await;
+    assert_eq!((status, message(&body)), (403, "Not your classroom"));
+    let (status, body) = results(&class, "no-such-quiz", class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Quiz not found"));
+    let co = class.co_teacher("T-0002").await;
+    assert_eq!(results(&class, &quiz, &co).await.0, 200);
+}

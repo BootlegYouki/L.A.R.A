@@ -30,7 +30,6 @@ pub fn router() -> Router<AppState> {
         .route("/api/quizzes/{id}/start", post(teacher))
         .route("/api/quizzes/{id}/begin", post(begin))
         .route("/api/quizzes/{id}/close", post(teacher))
-        .route("/api/quizzes/{id}/results", get(teacher))
 }
 
 fn text_list(value: Option<&Value>, key: &str) -> Result<Vec<String>, ApiError> {

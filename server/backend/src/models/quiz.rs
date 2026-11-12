@@ -117,3 +117,16 @@ pub struct StudentQuiz {
     pub started_at: Option<i64>,
     pub questions: Vec<StudentQuestion>,
 }
+
+/// One learner's line in a teacher's results (contract `/api/quizzes/{id}/results`). Scores appear only once
+/// the attempt is `SUBMITTED`, and they are always the real ones: the teacher sees held scores.
+#[derive(Serialize, sqlx::FromRow)]
+pub struct ResultRow {
+    pub student_id: String,
+    pub full_name: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total_points: Option<i64>,
+}

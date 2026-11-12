@@ -9,7 +9,7 @@ use super::sync_revisions::{record_revision, Action, Scope};
 use crate::auth::AuthUser;
 use crate::services::grading_engine::GradingQuestion;
 use crate::models::quiz::{
-    QuestionInput, QuestionType, QuizInput, StudentQuestion, StudentQuiz, TeacherQuestion, TeacherQuiz,
+    QuestionInput, QuestionType, QuizInput, ResultRow, StudentQuestion, StudentQuiz, TeacherQuestion, TeacherQuiz,
 };
 
 #[derive(FromRow)]
@@ -455,4 +455,22 @@ pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, 
     };
     record_revision(tx, Scope::student(a.classroom_id, a.student_id), "quiz_attempts", &id, Action::Upsert, now_ms).await?;
     Ok(id)
+}
+
+/// One row per `ACTIVE` learner of the class, by name: `NOT_STARTED` without an attempt, the attempt's
+/// status otherwise, and the score only once submitted.
+pub async fn results(conn: &mut SqliteConnection, quiz_id: &str, classroom_id: &str) -> Result<Vec<ResultRow>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT u.id AS student_id, u.full_name, COALESCE(a.status, 'NOT_STARTED') AS status,
+                CASE WHEN a.status = 'SUBMITTED' THEN a.score END AS score,
+                CASE WHEN a.status = 'SUBMITTED' THEN a.total_points END AS total_points
+         FROM enrollments e JOIN users u ON u.id = e.student_id
+         LEFT JOIN quiz_attempts a ON a.quiz_id = ? AND a.student_id = e.student_id
+         WHERE e.classroom_id = ? AND e.status = 'ACTIVE'
+         ORDER BY u.full_name, u.id",
+    )
+    .bind(quiz_id)
+    .bind(classroom_id)
+    .fetch_all(conn)
+    .await
 }
