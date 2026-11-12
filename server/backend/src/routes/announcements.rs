@@ -1,9 +1,10 @@
 //! The class stream (contract `/api/announcements*`, PRD FR-2.1 and FR-2.2, step 3.4). Teachers of
 //! the class post, edit and delete; posting pushes `EVENT_ANNOUNCEMENT_PUSH` to its active learners.
-//! An archived class is read-only.
+//! Class members (its teachers and active learners) read and write comments unless the post has them
+//! turned off. An archived class is read-only.
 
 use axum::extract::{Path, State};
-use axum::routing::{patch, post};
+use axum::routing::{get, patch, post};
 use axum::{Json, Router};
 use serde_json::{json, Value};
 
@@ -12,7 +13,7 @@ use crate::auth::{require_role, AuthUser, Role};
 use crate::db::announcements::{self, AnnouncementChange};
 use crate::db::begin_immediate;
 use crate::error::ApiError;
-use crate::models::sync::Announcement;
+use crate::models::sync::{Announcement, Comment};
 use crate::services::class_access;
 use crate::websocket::events::ServerEvent;
 use crate::AppState;
@@ -21,6 +22,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/announcements", post(create))
         .route("/api/announcements/{id}", patch(update).delete(remove))
+        .route("/api/announcements/{id}/comments", get(comments).post(comment))
 }
 
 fn announcement_not_found() -> ApiError {
@@ -82,4 +84,43 @@ async fn remove(State(app): State<AppState>, user: AuthUser, Path(id): Path<Stri
         app.storage.remove(&file).await;
     }
     Ok(Json(json!({"success": true})))
+}
+
+async fn comments(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Vec<Comment>>, ApiError> {
+    let mut conn = app.db.acquire().await?;
+    let classroom_id = announcements::class_of(&mut conn, &id).await?.ok_or_else(announcement_not_found)?;
+    class_access::require_member(&mut conn, &user, &classroom_id).await?;
+    Ok(Json(announcements::comments(&mut conn, &id).await?))
+}
+
+/// The post is read under the write lock, so a comment on a post deleted a moment ago is 404, never a
+/// foreign-key error. Teachers are members too, and `allow_comments` stops them as well (the mock).
+async fn comment(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Comment>, ApiError> {
+    body.need(&["content"])?;
+    let content = body.non_empty_text("content")?.unwrap_or_default();
+    let mut tx = begin_immediate(&app.db).await?;
+    let announcement = announcements::get(&mut tx, &id).await?.ok_or_else(announcement_not_found)?;
+    class_access::require_member(&mut tx, &user, &announcement.classroom_id).await?;
+    class_access::require_writable(&mut tx, &announcement.classroom_id).await?;
+    if !announcement.allow_comments {
+        return Err(ApiError::comments_disabled());
+    }
+    let comment_id = uuid::Uuid::new_v4().to_string();
+    let comment = announcements::insert_comment(
+        &mut tx,
+        &comment_id,
+        &id,
+        &announcement.classroom_id,
+        &user.id,
+        &content,
+        app.clock.now_ms(),
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(Json(comment))
 }

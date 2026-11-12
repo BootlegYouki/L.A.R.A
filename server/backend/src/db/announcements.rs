@@ -4,7 +4,7 @@
 use sqlx::SqliteConnection;
 
 use super::sync_revisions::{record_revision, Action, Scope};
-use crate::models::sync::Announcement;
+use crate::models::sync::{Announcement, Comment};
 
 pub struct AnnouncementChange {
     pub title: Option<String>,
@@ -57,6 +57,49 @@ pub async fn get(conn: &mut SqliteConnection, id: &str) -> Result<Option<Announc
     .bind(id)
     .fetch_optional(conn)
     .await
+}
+
+/// Oldest first, as the mock lists them.
+pub async fn comments(conn: &mut SqliteConnection, announcement_id: &str) -> Result<Vec<Comment>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT id, announcement_id, author_id, content, created_at, updated_at FROM announcement_comments
+         WHERE announcement_id = ? ORDER BY created_at, id",
+    )
+    .bind(announcement_id)
+    .fetch_all(conn)
+    .await
+}
+
+pub async fn insert_comment(
+    tx: &mut SqliteConnection,
+    id: &str,
+    announcement_id: &str,
+    classroom_id: &str,
+    author_id: &str,
+    content: &str,
+    now_ms: i64,
+) -> Result<Comment, sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)",
+    )
+    .bind(id)
+    .bind(announcement_id)
+    .bind(author_id)
+    .bind(content)
+    .bind(now_ms)
+    .bind(now_ms)
+    .execute(&mut *tx)
+    .await?;
+    record_revision(tx, Scope::class(classroom_id), "announcement_comments", id, Action::Upsert, now_ms).await?;
+    Ok(Comment {
+        id: id.to_owned(),
+        announcement_id: announcement_id.to_owned(),
+        author_id: author_id.to_owned(),
+        content: content.to_owned(),
+        created_at: now_ms,
+        updated_at: now_ms,
+    })
 }
 
 /// Like the mock, every edit bumps `updated_at` and syncs, even one that changes nothing.

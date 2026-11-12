@@ -5,6 +5,7 @@ mod common;
 
 use common::uploads::{material_form, Class, PDF};
 use common::ws::{connect, next, nothing_within};
+use lara_hub::auth::Role;
 use reqwest::Method;
 use serde_json::{json, Value};
 
@@ -33,6 +34,14 @@ async fn patch(class: &Class, id: &str, body: Value, token: &str) -> (u16, Value
 
 async fn delete(class: &Class, id: &str, token: &str) -> (u16, Value) {
     class.hub.request(Method::DELETE, &format!("/api/announcements/{id}"), Some(token)).await
+}
+
+async fn comment_on(class: &Class, announcement: &str, token: &str, content: &str) -> (u16, Value) {
+    class.hub.post_json(&format!("/api/announcements/{announcement}/comments"), &json!({"content": content}), Some(token)).await
+}
+
+async fn comments_of(class: &Class, announcement: &str, token: &str) -> (u16, Value) {
+    class.hub.get(&format!("/api/announcements/{announcement}/comments"), Some(token)).await
 }
 
 async fn pull_from(class: &Class, token: &str, cursor: i64) -> Value {
@@ -138,14 +147,8 @@ async fn delete_takes_comments_and_attachments_with_it() {
     let class = Class::start().await;
     let ann = announce(&class, class.teacher()).await;
     let id = ann["id"].as_str().unwrap().to_owned();
-    // Task 3 replaces this with the comment route.
-    class
-        .exec(
-            "INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at) VALUES ('c-1', ?, ?, 'Opo!', 1, 1)",
-            &[id.as_str(), class.learner.as_str()],
-        )
-        .await;
-    let comment = json!({"id": "c-1"});
+    let (status, comment) = comment_on(&class, &id, &class.learner_token, "Opo!").await;
+    assert_eq!(status, 200, "{comment}");
     let form = material_form(&class.id, "DOCUMENT", PDF).text("announcement_id", id.clone());
     let (status, material) = class.upload("/api/materials", Some(class.teacher()), form).await;
     assert_eq!(status, 200, "{material}");
@@ -213,4 +216,83 @@ async fn outsiders_and_learners_are_refused() {
     let (status, body) = post(&class, class.teacher(), json!({"classroom_id": "no-such-class", "title": "x", "content": "y"})).await;
     assert_eq!((status, message(&body)), (404, "Classroom not found"));
     assert_eq!(class.count("SELECT COUNT(*) FROM announcements").await, 1);
+}
+
+#[tokio::test]
+async fn members_read_and_write_comments() {
+    let class = Class::start().await;
+    let ann = announce(&class, class.teacher()).await;
+    let id = ann["id"].as_str().unwrap();
+    let (status, comment) = comment_on(&class, id, &class.learner_token, "Opo!").await;
+    assert_eq!(status, 200, "{comment}");
+    assert_eq!((comment["author_id"].as_str(), comment["content"].as_str()), (Some(class.learner.as_str()), Some("Opo!")));
+    assert_eq!(comment["announcement_id"], id);
+    assert!(uuid::Uuid::parse_str(comment["id"].as_str().unwrap()).is_ok());
+    let (status, reply) = comment_on(&class, id, class.teacher(), "See you there.").await;
+    assert_eq!(status, 200, "{reply}");
+
+    let (status, listed) = comments_of(&class, id, class.teacher()).await;
+    assert_eq!(status, 200);
+    assert_eq!(listed, json!([comment, reply]), "oldest first");
+    assert_eq!(comments_of(&class, id, &class.learner_token).await.0, 200);
+    let pulled = class.pull(&class.learner_token).await;
+    assert_eq!(pulled["comments"].as_array().unwrap().len(), 2);
+
+    let (status, body) = comment_on(&class, id, &class.learner_token, "  ").await;
+    assert_eq!((status, message(&body)), (400, "content cannot be empty"));
+    let (status, body) = class.hub.post_json(&format!("/api/announcements/{id}/comments"), &json!({}), Some(&class.learner_token)).await;
+    assert_eq!((status, message(&body)), (400, "Missing: content"));
+}
+
+#[tokio::test]
+async fn comments_disabled_refuses_everyone() {
+    let class = Class::start().await;
+    let ann = announce(&class, class.teacher()).await;
+    let id = ann["id"].as_str().unwrap();
+    patch(&class, id, json!({"allow_comments": false}), class.teacher()).await;
+    let (status, body) = comment_on(&class, id, &class.learner_token, "Opo!").await;
+    assert_eq!((status, code(&body), message(&body)), (403, "COMMENTS_DISABLED", "Comments are turned off for this post"));
+    let (status, body) = comment_on(&class, id, class.teacher(), "Note").await;
+    assert_eq!((status, code(&body)), (403, "COMMENTS_DISABLED"), "the mock applies it to teachers too");
+    assert_eq!(comments_of(&class, id, &class.learner_token).await, (200, json!([])));
+}
+
+#[tokio::test]
+async fn non_members_cannot_read_or_write_comments() {
+    let class = Class::start().await;
+    let ann = announce(&class, class.teacher()).await;
+    let id = ann["id"].as_str().unwrap();
+    let outsider = class.hub.seed_user("123456789014", "Outsider", Role::Student, "1234").await;
+    let outsider = class.hub.open_session(outsider).await;
+    let (_, pending) = class.add_learner("123456789013", false).await;
+    let (_, other_teacher) = class.other_class().await;
+    for token in [&outsider, &pending, &other_teacher] {
+        assert_eq!(comments_of(&class, id, token).await.0, 403);
+        assert_eq!(comment_on(&class, id, token, "x").await.0, 403);
+    }
+    assert_eq!(comments_of(&class, "no-such-id", class.teacher()).await.0, 404);
+    assert_eq!(class.count("SELECT COUNT(*) FROM announcement_comments").await, 0);
+}
+
+#[tokio::test]
+async fn comment_on_a_deleted_announcement_is_not_found() {
+    let class = Class::start().await;
+    let ann = announce(&class, class.teacher()).await;
+    let id = ann["id"].as_str().unwrap();
+    delete(&class, id, class.teacher()).await;
+    let (status, body) = comment_on(&class, id, &class.learner_token, "Opo!").await;
+    assert_eq!((status, message(&body)), (404, "Announcement not found"));
+}
+
+#[tokio::test]
+async fn archived_class_comments_are_read_only() {
+    let class = Class::start().await;
+    let ann = announce(&class, class.teacher()).await;
+    let id = ann["id"].as_str().unwrap();
+    comment_on(&class, id, &class.learner_token, "Opo!").await;
+    class.archive().await;
+    let (status, body) = comment_on(&class, id, &class.learner_token, "Again").await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+    let (status, listed) = comments_of(&class, id, &class.learner_token).await;
+    assert_eq!((status, listed.as_array().unwrap().len()), (200, 1));
 }
