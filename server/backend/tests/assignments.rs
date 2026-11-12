@@ -97,7 +97,10 @@ async fn invalid_fields_are_refused() {
         body
     };
     let cases = [
-        (with("max_points", json!(0)), 400, "max_points must be more than 0"),
+        (with("max_points", json!(0)), 400, "max_points must be from 1 to 9007199254740991"),
+        (with("max_points", json!(9_007_199_254_740_992_i64)), 400, "max_points must be from 1 to 9007199254740991"),
+        (with("due_date", json!(-5)), 400, "due_date must be from 0 to 9007199254740991"),
+        (with("due_date", json!(9_007_199_254_740_992_i64)), 400, "due_date must be from 0 to 9007199254740991"),
         (with("max_points", json!("20")), 400, "max_points must be a whole number"),
         (with("due_date", json!(1.5)), 400, "due_date must be a whole number"),
         (with("allow_late", json!("yes")), 400, "allow_late must be true or false"),
@@ -119,7 +122,7 @@ async fn invalid_fields_are_refused() {
     assert_eq!((status, message(&answer)), (404, "Topic not found"), "a topic of another class");
     let asg = worksheet(&class, class.teacher()).await;
     let (status, answer) = patch(&class, asg["id"].as_str().unwrap(), json!({"max_points": -3}), class.teacher()).await;
-    assert_eq!((status, message(&answer)), (400, "max_points must be more than 0"));
+    assert_eq!((status, message(&answer)), (400, "max_points must be from 1 to 9007199254740991"));
     assert_eq!(class.count("SELECT COUNT(*) FROM assignments").await, 1);
 }
 
@@ -226,7 +229,8 @@ async fn score_rules_follow_google_classroom() {
     let asg = worksheet(&class, class.teacher()).await;
     submit(&class, asg["id"].as_str().unwrap(), &class.learner_token, "sub-1", "a").await;
     let cases = [
-        (json!({"score": -1}), "score must be 0 or more"),
+        (json!({"score": -1}), "score must be from 0 to 9007199254740991"),
+        (json!({"score": 9_007_199_254_740_992_i64}), "score must be from 0 to 9007199254740991"),
         (json!({"score": null}), "score must be a whole number"),
         (json!({"score": 17.5}), "score must be a whole number"),
         (json!({"teacher_feedback": 5}), "teacher_feedback must be text"),
@@ -312,4 +316,51 @@ async fn learners_and_other_teachers_cannot_list_or_grade() {
     }
     assert_eq!(submissions_of(&class, "no-such-id", class.teacher()).await.0, 404);
     assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE score IS NULL").await, 1);
+}
+
+/// Review of #54: an archived assignment reaches devices only as a tombstone, so its submissions and
+/// private comments must not be pulled either. Clients refuse a row whose parent is missing (desktop's
+/// foreign keys, mobile's cascade), and would retry that page forever.
+#[tokio::test]
+async fn archiving_hides_its_submissions_and_private_comments_from_every_pull() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    {
+        let db = &class.hub.state().db;
+        let mut tx = lara_hub::db::begin_immediate(db).await.unwrap();
+        sqlx::query(
+            "INSERT INTO private_comments (id, assignment_id, student_id, author_id, content, created_at, updated_at)
+             VALUES ('pc-1', ?, ?, ?, 'May tanong po', 1, 1)",
+        )
+        .bind(id)
+        .bind(&class.learner)
+        .bind(&class.learner)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+        let scope = lara_hub::db::sync_revisions::Scope::student(&class.id, &class.learner);
+        lara_hub::db::sync_revisions::record_revision(&mut tx, scope, "private_comments", "pc-1", lara_hub::db::sync_revisions::Action::Upsert, 1)
+            .await
+            .unwrap();
+        tx.commit().await.unwrap();
+    }
+    let before_grade = class.pull(class.teacher()).await["next_cursor"].as_i64().unwrap();
+    assert_eq!(grade(&class, "sub-1", json!({"score": 18}), class.teacher()).await.0, 200);
+    assert_eq!(delete(&class, id, class.teacher()).await.0, 200);
+
+    let tombstone = json!({"entity_table": "assignments", "entity_id": id});
+    for (who, token, cursor) in [
+        ("teacher from 0", class.teacher(), 0),
+        ("teacher from before the grade", class.teacher(), before_grade),
+        ("learner from 0", class.learner_token.as_str(), 0),
+    ] {
+        let pulled = pull_from(&class, token, cursor).await;
+        assert_eq!(pulled["submissions"], json!([]), "{who}: {pulled}");
+        assert_eq!(pulled["private_comments"], json!([]), "{who}: {pulled}");
+        assert_eq!(pulled["assignments"], json!([]), "{who}");
+        assert!(pulled["deleted"].as_array().unwrap().contains(&tombstone), "{who}: {pulled}");
+    }
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE score = 18").await, 1, "the grade is kept on the Hub");
 }

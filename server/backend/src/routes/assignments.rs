@@ -39,14 +39,6 @@ fn assignment_not_found() -> ApiError {
     ApiError::not_found("Assignment not found")
 }
 
-/// `max_points` has a `CHECK(max_points > 0)` in the schema; refused here as a 400, not a 500.
-fn points(body: &JsonBody) -> Result<Option<i64>, ApiError> {
-    match body.optional_int("max_points")? {
-        Some(points) if points <= 0 => Err(ApiError::bad_request("max_points must be more than 0")),
-        points => Ok(points),
-    }
-}
-
 /// A topic of this class, so classwork never files under another class's topic.
 async fn require_topic(conn: &mut sqlx::SqliteConnection, topic_id: Option<&str>, classroom_id: &str) -> Result<(), ApiError> {
     match topic_id {
@@ -63,8 +55,8 @@ async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> 
     let classroom_id = body.optional_text("classroom_id")?.unwrap_or_default();
     let title = body.non_empty_text("title")?.unwrap_or_default();
     let instructions = body.optional_text("instructions")?.unwrap_or_default();
-    let max_points = points(&body)?.unwrap_or_default();
-    let due_date = body.optional_int("due_date")?.unwrap_or_default();
+    let max_points = body.optional_int_from("max_points", 1)?.unwrap_or_default();
+    let due_date = body.optional_int_from("due_date", 0)?.unwrap_or_default();
     let allow_late = body.optional_bool("allow_late")?.unwrap_or(false);
     let topic_id = body.nullable_text("topic_id")?.flatten();
 
@@ -97,8 +89,8 @@ async fn update(
     let change = AssignmentChange {
         title: body.non_empty_text("title")?,
         instructions: body.optional_text("instructions")?,
-        max_points: points(&body)?,
-        due_date: body.optional_int("due_date")?,
+        max_points: body.optional_int_from("max_points", 1)?,
+        due_date: body.optional_int_from("due_date", 0)?,
         allow_late: body.optional_bool("allow_late")?,
         topic_id: body.nullable_text("topic_id")?,
     };
@@ -137,7 +129,7 @@ async fn list_submissions(
 }
 
 /// Score and feedback (PRD FR-3.5). As in Google Classroom, the score may go above `max_points`; it
-/// may not be negative (schema CHECK) or null: there is no un-grade or return action.
+/// may not be negative (schema CHECK), past `MAX_SAFE_INT` or null: there is no un-grade or return action.
 async fn grade_submission(
     State(app): State<AppState>,
     user: AuthUser,
@@ -145,10 +137,7 @@ async fn grade_submission(
     body: JsonBody,
 ) -> Result<Json<Submission>, ApiError> {
     require_role(&user, Role::Teacher)?;
-    let score = body.optional_int("score")?;
-    if score.is_some_and(|score| score < 0) {
-        return Err(ApiError::bad_request("score must be 0 or more"));
-    }
+    let score = body.optional_int_from("score", 0)?;
     let teacher_feedback = body.optional_text("teacher_feedback")?;
     if score.is_none() && teacher_feedback.is_none() {
         return Err(ApiError::bad_request("Missing: score or teacher_feedback"));

@@ -11,6 +11,10 @@ use crate::AppState;
 
 pub struct JsonBody(pub Map<String, Value>);
 
+/// 2^53 - 1, the largest integer JavaScript and the desktop app store exactly. The desktop refuses a
+/// pulled integer outside `0..=MAX_SAFE_INT` and would stop syncing, so the Hub never stores one.
+pub const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
+
 impl JsonBody {
     pub fn need(&self, keys: &[&str]) -> Result<(), ApiError> {
         let missing: Vec<&str> = keys.iter().copied().filter(|k| !self.0.contains_key(*k)).collect();
@@ -64,6 +68,16 @@ impl JsonBody {
             None => Ok(None),
             Some(Value::Bool(flag)) => Ok(Some(*flag)),
             Some(_) => Err(ApiError::bad_request(format!("{key} must be true or false"))),
+        }
+    }
+
+    /// `optional_int` limited to `min..=MAX_SAFE_INT`.
+    pub fn optional_int_from(&self, key: &str, min: i64) -> Result<Option<i64>, ApiError> {
+        match self.optional_int(key)? {
+            Some(n) if !(min..=MAX_SAFE_INT).contains(&n) => {
+                Err(ApiError::bad_request(format!("{key} must be from {min} to {MAX_SAFE_INT}")))
+            }
+            n => Ok(n),
         }
     }
 
@@ -148,6 +162,18 @@ mod tests {
         assert_eq!(b.non_empty_text("t").unwrap().as_deref(), Some("x"));
         let err = b.optional_text("n").unwrap_err();
         assert_eq!((err.status.as_u16(), err.code.as_str()), (400, "BAD_REQUEST"));
+    }
+
+    #[test]
+    fn bounded_ints_stay_inside_what_clients_can_store() {
+        let b = body(json!({"zero": 0, "neg": -1, "top": 9_007_199_254_740_991_i64, "over": 9_007_199_254_740_992_i64, "s": "1"}));
+        assert_eq!(b.optional_int_from("zero", 0).unwrap(), Some(0));
+        assert_eq!(b.optional_int_from("top", 1).unwrap(), Some(9_007_199_254_740_991));
+        assert_eq!(b.optional_int_from("absent", 0).unwrap(), None);
+        assert_eq!(b.optional_int_from("neg", 0).unwrap_err().message, "neg must be from 0 to 9007199254740991");
+        assert_eq!(b.optional_int_from("over", 0).unwrap_err().message, "over must be from 0 to 9007199254740991");
+        assert_eq!(b.optional_int_from("zero", 1).unwrap_err().message, "zero must be from 1 to 9007199254740991");
+        assert_eq!(b.optional_int_from("s", 0).unwrap_err().message, "s must be a whole number");
     }
 
     #[test]
