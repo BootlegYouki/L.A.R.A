@@ -206,3 +206,15 @@ async fn topic_delete_needs_a_writable_class_you_teach() {
     assert_eq!((status, message(&body)), (403, "This class is archived"));
     assert_eq!(class.count("SELECT COUNT(*) FROM topics").await, 1);
 }
+
+/// Review of #122: a new topic after one moved to the top place must stay inside 0..=2^53-1, or every
+/// desktop of the class would refuse the pull and stop syncing.
+#[tokio::test]
+async fn a_new_topic_never_goes_past_the_largest_place() {
+    let class = Class::start().await;
+    let id = topic(&class, "Unit 1").await["id"].as_str().unwrap().to_owned();
+    let (status, moved) = patch(&class, &id, json!({"order_index": 9_007_199_254_740_991_i64}), class.teacher()).await;
+    assert_eq!((status, moved["order_index"].as_i64()), (200, Some(9_007_199_254_740_991)));
+    let next = topic(&class, "Unit 2").await;
+    assert_eq!(next["order_index"].as_i64(), Some(9_007_199_254_740_991), "capped at the largest place");
+}

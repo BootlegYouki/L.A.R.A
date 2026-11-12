@@ -48,7 +48,7 @@ Every write is the role guard, then one `begin_immediate` transaction (lookup, c
 - **The named learner must be in the class.**
   - The mock accepts any `student_id`. On the Hub, an unknown id would reach the `users` foreign key and answer 500, so it is 404 "Learner not found in this class".
   - A removed or pending learner's thread can still be read, but only an `ACTIVE` learner's thread takes new comments.
-- **`order_index` must be 0 to 9007199254740991,** the desktop's integer range (as for 3.4's numbers).
+- **`order_index` must be 0 to 9007199254740991,** the desktop's integer range (as for 3.4's numbers). A new topic after one moved to the top place gets that same top place instead of 2^53, which every desktop of the class would refuse (review of #122). `a_new_topic_never_goes_past_the_largest_place` covers it.
 - **Quizzes' topic is not in their pull row yet.** `QuizMetadata` has no `topic_id` until the quiz step (4.5). The quiz still gets its revision when its topic is deleted, so the next pull refreshes it.
 
 ## Tests

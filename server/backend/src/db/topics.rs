@@ -6,16 +6,18 @@ use super::sync_revisions::{record_revision, Action, Scope};
 use crate::models::sync::Topic;
 
 /// New topics go last: one past the class's highest `order_index`, read under the same write lock, so
-/// two topics created at once still get different places.
+/// two topics created at once still get different places. Capped at `MAX_SAFE_INT`: after a topic moved
+/// to the top place, 2^53 would make every desktop of the class refuse the pull (review of #122).
 pub async fn insert(tx: &mut SqliteConnection, id: &str, classroom_id: &str, name: &str, now_ms: i64) -> Result<Topic, sqlx::Error> {
     let topic: Topic = sqlx::query_as(
         "INSERT INTO topics (id, classroom_id, name, order_index, created_at, updated_at)
-         VALUES (?, ?, ?, (SELECT 1 + COALESCE(MAX(order_index), 0) FROM topics WHERE classroom_id = ?), ?, ?)
+         VALUES (?, ?, ?, (SELECT MIN(1 + COALESCE(MAX(order_index), 0), ?) FROM topics WHERE classroom_id = ?), ?, ?)
          RETURNING id, classroom_id, name, order_index, updated_at",
     )
     .bind(id)
     .bind(classroom_id)
     .bind(name)
+    .bind(crate::models::sync::MAX_SAFE_INT)
     .bind(classroom_id)
     .bind(now_ms)
     .bind(now_ms)
