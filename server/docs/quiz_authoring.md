@@ -37,7 +37,7 @@ The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`
 
 **Error codes:**
 - 409 `QUIZ_NOT_DRAFT` "A quiz can be edited only before it starts".
-- 409 `QUIZ_CLOSED` "This quiz is closed", for beginning a quiz that is not `ACTIVE`. This is a mock code (TECH_SPEC section 14, Q8), with an English message.
+- 409 `QUIZ_CLOSED` "This quiz is closed", for beginning a quiz that is not `ACTIVE`. Listed in the contract since #291, with an English message.
 
 ## Gotchas and calls beyond the mock
 - **Redaction is enforced twice:** by type (no answer field on the learner structs) and by `tests/redaction.rs`. If a new learner route carries a quiz, add it to that test.

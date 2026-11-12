@@ -31,7 +31,7 @@ pub enum ErrorCode {
     CommentsDisabled,
     /// 409: editing a quiz that has started (contract `PATCH /api/quizzes/{id}`, PRD FR-4.8).
     QuizNotDraft,
-    /// 409: beginning a quiz that is not `ACTIVE` (mock code, TECH_SPEC section 14, Q8).
+    /// 409: beginning a quiz that is not `ACTIVE` (contract #291).
     QuizClosed,
     /// 422: a quiz submitted after its time limit and the 60 s grace (contract `/submit`).
     TimeLimitExceeded,

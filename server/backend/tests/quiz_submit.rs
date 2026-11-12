@@ -382,3 +382,19 @@ async fn forty_learners_are_graded_in_under_two_seconds() {
     assert!(took < std::time::Duration::from_secs(2), "40 submits took {took:?}");
     println!("40 submits graded and stored in {took:?}");
 }
+
+/// Review of #12: a device clock hours behind the Hub must not turn a late finish into an elapsed time of 0.
+/// The device's own duration (its start to its finish) cancels any constant offset.
+#[tokio::test]
+async fn a_device_clock_behind_the_hub_cannot_hide_a_late_finish() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let now = now_ms();
+    let twenty_ago = (now - 20 * 60_000).to_string();
+    class.exec("UPDATE quiz_attempts SET started_at = ?", &[twenty_ago.as_str()]).await;
+    let behind = 3 * 3_600_000;
+    let (status, body) =
+        submit(&class, &quiz, &class.learner_token, now - behind - 20 * 60_000, now - behind, one_right(&questions)).await;
+    assert_eq!((status, code(&body)), (422, "TIME_LIMIT_EXCEEDED"), "20 minutes on a 15-minute quiz, 3 h behind: {body}");
+}

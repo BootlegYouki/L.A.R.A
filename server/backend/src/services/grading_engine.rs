@@ -27,7 +27,10 @@ impl GradingQuestion {
             QuestionType::MultipleChoice | QuestionType::TrueFalse => given == self.correct_answer,
             QuestionType::Identification => {
                 let given = loose(given);
-                given == loose(&self.correct_answer) || self.synonyms.iter().any(|s| loose(s) == given)
+                // A blank answer never scores, even against a blank synonym ("plants, " split by a client), since
+                // auto-submit sends "" for an unanswered item (review of #12).
+                !given.is_empty()
+                    && (given == loose(&self.correct_answer) || self.synonyms.iter().any(|s| loose(s) == given))
             }
         }
     }
@@ -82,6 +85,16 @@ mod tests {
         assert_eq!(grade(&quiz, &[answer("id", "halamann")]), (0, 1));
         let spanish = [question("es", QuestionType::Identification, 1, "mañana", &[])];
         assert_eq!(grade(&spanish, &[answer("es", "MAÑANA")]), (1, 1));
+    }
+
+    /// Review of #12: "plants, " split by a client gives a blank synonym, and auto-submit sends "" for an
+    /// unanswered item; a blank answer must never score.
+    #[test]
+    fn a_blank_answer_never_matches_a_blank_synonym() {
+        let quiz = [question("id", QuestionType::Identification, 1, "Halaman", &["plants", "", "  "])];
+        assert_eq!(grade(&quiz, &[answer("id", "")]), (0, 1));
+        assert_eq!(grade(&quiz, &[answer("id", "   ")]), (0, 1));
+        assert_eq!(grade(&quiz, &[answer("id", "plants")]), (1, 1));
     }
 
     #[test]

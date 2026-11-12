@@ -36,14 +36,19 @@ fn receipt(quiz: &QuizState, quiz_id: &str, student_id: &str, attempt: &AttemptR
     }
 }
 
-/// Grades and stores a learner's finished quiz, once. The order follows the mock's `submit_attempt`: the quiz
-/// (404, and a `DRAFT` is 404 too), membership (403), a stored submission comes back as it is, then the
-/// archived class (403) and the time limit (422).
+/// Grades and stores a learner's finished quiz, once: the quiz (404, and a `DRAFT` is 404 too), membership
+/// (403), a stored submission comes back as it is, then the archived class (403) and the time limit (422).
+/// Unlike the mock's `submit_attempt`, a stored submission returns before the time check, so a retry always
+/// gets its receipt.
 ///
 /// Timing trusts the Hub's clock (`server/AGENTS.md`): the start is the attempt's `started_at` from `/begin`.
 /// Only without an attempt row is the device's start used, and then not before the quiz's own start or
 /// after the Hub's now. The finish is the device's (an offline finish counts, FR-4.5) but never after the
-/// Hub's now, and never before the start.
+/// Hub's now. A device finish before the Hub's start means the device clock is behind: then the elapsed time
+/// is the device's own duration (its start to its finish, so the offset cancels), or for a WebSocket submit,
+/// which is live and carries no start, the time since the Hub's start (review of #12). Clients are expected
+/// to send Hub-synchronized times (mobile and desktop TECH_SPECs); a device clock *ahead* of the Hub on an
+/// offline finish pushed later can still be refused wrongly.
 /// A repeat of work already submitted returns its receipt and sends no event again.
 pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submission) -> Result<GradeReceipt, ApiError> {
     require_role(user, Role::Student)?;
@@ -64,8 +69,15 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
             claimed.max(quiz.started_at.unwrap_or(claimed)).min(now)
         }
     };
-    let finish = s.submitted_at.min(now).max(start);
-    if finish.saturating_sub(start) > quiz.time_limit_minutes * 60_000 + GRACE_MS {
+    let (elapsed, finish) = if s.submitted_at >= start {
+        let finish = s.submitted_at.min(now);
+        (finish - start, finish)
+    } else {
+        let took = s.started_at.map_or(now.saturating_sub(start), |device_start| s.submitted_at.saturating_sub(device_start));
+        let took = took.max(0);
+        (took, start.saturating_add(took).min(now))
+    };
+    if elapsed > quiz.time_limit_minutes * 60_000 + GRACE_MS {
         return Err(ApiError::time_limit_exceeded());
     }
     let key = quizzes::grading_key(&mut tx, quiz_id).await?;
