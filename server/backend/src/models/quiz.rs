@@ -36,6 +36,13 @@ impl QuestionType {
     }
 }
 
+/// One answer in a submission (contract `Answer`).
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct AnswerInput {
+    pub question_id: String,
+    pub selected_option: String,
+}
+
 /// A question as a teacher sent it, already checked (`routes::quizzes`).
 pub struct QuestionInput {
     pub id: Option<String>,
