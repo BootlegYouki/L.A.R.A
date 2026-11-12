@@ -267,10 +267,11 @@ class TestMockHub(unittest.TestCase):
 
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()
-        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
-        started = int(time.time() * 1000) - 20 * 60_000
+        _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
+        # A device claiming an earlier start doesn't help: the Hub times from its own /begin.
         status, body, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/submit", {
-            "started_at": started, "submitted_at": started + 17 * 60_000, "answers": []}, self.pupil)
+            "started_at": begin["started_at"] + 60_000, "submitted_at": begin["started_at"] + 17 * 60_000,
+            "answers": []}, self.pupil)
         self.assertEqual((status, body["error"]["code"]), (422, "TIME_LIMIT_EXCEEDED"))
 
     def test_ai_tutor_locked_while_quiz_in_progress(self):

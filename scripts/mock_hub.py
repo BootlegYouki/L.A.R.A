@@ -1281,13 +1281,17 @@ def quiz_begin(req):
 def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
     quiz = STATE.quizzes.get(quiz_id)
     pupil_quiz_or_404(quiz, user)
-    if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
-        raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
     att = next((a for a in STATE.attempts.values()
                 if a["quiz_id"] == quiz_id and a["student_id"] == user["id"]), None)
     # An attempt the close auto-submitted can be replaced once by on-time work the learner finished offline (FR-4.5).
     if att and att["status"] == "SUBMITTED" and not att.get("auto_closed"):
         return att
+    if att:
+        started_at = att["started_at"]  # the Hub's start from /begin, never the device's
+    if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
+        raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
+    if att and att.get("auto_closed") and submitted_at > quiz.get("closed_at", 0):
+        raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
     if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
         raise ApiError(403, "FORBIDDEN", "This class is archived")
     score, total = grade(quiz, answers)
@@ -1329,7 +1333,7 @@ def quiz_close(req):
     if not quiz:
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
     owned_classroom(req, quiz["classroom_id"])
-    quiz.update(status="CLOSED", updated_at=now_ms())
+    quiz.update(status="CLOSED", closed_at=now_ms(), updated_at=now_ms())
     STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     for att in list(STATE.attempts.values()):
         if att["quiz_id"] == quiz["id"] and att["status"] == "IN_PROGRESS":
