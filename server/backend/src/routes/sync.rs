@@ -3,8 +3,10 @@ use axum::{extract::State, routing::post, Json, Router};
 use super::body::JsonBody;
 use crate::auth::{require_role, AuthUser, Role};
 use crate::db::{self, sync_revisions};
-use crate::error::ApiError;
-use crate::models::sync::{SyncPullInput, SyncPullResponse, SyncPushInput, SyncPushResponse};
+use crate::error::{ApiError, ErrorCode};
+use crate::models::quiz::AnswerInput;
+use crate::models::sync::{SyncPullInput, SyncPullResponse, SyncPushInput, SyncPushResponse, SyncReceipt};
+use crate::services::quiz_submit::{self, Submission};
 use crate::AppState;
 
 pub fn router() -> Router<AppState> {
@@ -35,10 +37,13 @@ async fn push(
     body: JsonBody,
 ) -> Result<Json<SyncPushResponse>, ApiError> {
     require_role(&user, Role::Student)?;
-    // Quiz attempts remain queued until SERVER 4.2 supplies validation and grading.
     let input: SyncPushInput = serde_json::from_value(body.0.into())
         .map_err(|_| ApiError::bad_request("Invalid sync push"))?;
     let mut receipts = Vec::new();
+    // First, in order, as the mock does: a finished quiz is the most time-sensitive item a device queues.
+    for item in &input.quiz_attempts {
+        receipts.push(quiz_attempt(&app, &user, item).await?);
+    }
     for comment in input.comments {
         let mut tx = db::begin_immediate(&app.db).await?;
         let receipt =
@@ -58,4 +63,29 @@ async fn push(
         acknowledged: true,
         receipts,
     }))
+}
+
+/// A queued quiz attempt (contract `QuizAttemptPush`), graded through the same path as the REST submit
+/// (`services::quiz_submit`). A bad item gets its own `REJECTED` receipt with the error code; only a Hub
+/// failure fails the whole push.
+async fn quiz_attempt(app: &AppState, user: &AuthUser, item: &serde_json::Value) -> Result<SyncReceipt, ApiError> {
+    let id = item.get("id").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned();
+    let parsed = (|| {
+        let quiz_id = item.get("quiz_id")?.as_str()?.to_owned();
+        let submission = Submission {
+            started_at: Some(item.get("started_at")?.as_i64()?),
+            submitted_at: item.get("submitted_at")?.as_i64()?,
+            answers: serde_json::from_value::<Vec<AnswerInput>>(item.get("answers")?.clone()).ok()?,
+        };
+        Some((quiz_id, submission))
+    })();
+    let outcome = match parsed {
+        None => Err(ApiError::bad_request("Invalid queued quiz attempt")),
+        Some((quiz_id, submission)) => quiz_submit::submit(app, user, &quiz_id, submission).await.map(|_| ()),
+    };
+    match outcome {
+        Ok(()) => Ok(SyncReceipt { id, status: "SYNCED", reason: None }),
+        Err(error) if error.code == ErrorCode::Internal => Err(error),
+        Err(error) => Ok(SyncReceipt { id, status: "REJECTED", reason: Some(error.code.as_str()) }),
+    }
 }

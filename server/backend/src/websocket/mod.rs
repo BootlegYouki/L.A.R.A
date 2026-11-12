@@ -19,6 +19,7 @@ use tokio_tungstenite::WebSocketStream;
 
 use crate::auth::{sessions, AuthUser};
 use crate::error::ErrorCode;
+use crate::services::quiz_submit::{self, Submission};
 use crate::AppState;
 use broker::Frame;
 use events::{ClientEvent, PresenceState, ServerEvent};
@@ -87,7 +88,7 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
                 _ = shutdown.changed() => break,
                 message = source.next() => match message {
                     Some(Ok(Message::Text(text))) => {
-                        if !handle_frame(text.as_str(), &tx) {
+                        if !handle_frame(&app, &user, text.as_str(), &tx).await {
                             break;
                         }
                     }
@@ -124,7 +125,9 @@ async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> 
         };
         let reply = match ClientEvent::parse(text.as_str()) {
             None => ServerEvent::error(ErrorCode::BadRequest, "Invalid JSON"),
-            Some(ClientEvent::Other) => ServerEvent::error(ErrorCode::Unauthorized, "Send EVENT_HELLO first"),
+            Some(ClientEvent::Other | ClientEvent::QuizSubmit { .. } | ClientEvent::InvalidQuizSubmit) => {
+                ServerEvent::error(ErrorCode::Unauthorized, "Send EVENT_HELLO first")
+            }
             Some(ClientEvent::Hello { token }) => {
                 let lookup = match token.as_deref() {
                     Some(token) => sessions::user_for_token(&app.db, token, app.clock.now_ms()).await,
@@ -149,11 +152,23 @@ async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> 
     None
 }
 
-/// `false` drops the connection: its queue is full or its writer is gone.
-fn handle_frame(text: &str, tx: &mpsc::Sender<Frame>) -> bool {
+/// `false` drops the connection: its queue is full or its writer is gone. A quiz submit goes through the
+/// same path as REST (`services::quiz_submit`); its grade arrives as `EVENT_GRADE_CONFIRMED`, and a refusal
+/// as `EVENT_ERROR` `BAD_REQUEST` with the error code as the message (the mock's; `error.json` has no quiz codes).
+async fn handle_frame(app: &AppState, user: &AuthUser, text: &str, tx: &mpsc::Sender<Frame>) -> bool {
     match ClientEvent::parse(text) {
         None => queue(tx, &ServerEvent::error(ErrorCode::BadRequest, "Invalid JSON")),
-        // Later steps handle AI requests and quiz submits here.
+        Some(ClientEvent::QuizSubmit { quiz_id, submitted_at, answers }) => {
+            let submission = Submission { started_at: None, submitted_at, answers };
+            match quiz_submit::submit(app, user, &quiz_id, submission).await {
+                Ok(_) => true,
+                Err(error) => queue(tx, &ServerEvent::error(ErrorCode::BadRequest, error.code.as_str())),
+            }
+        }
+        Some(ClientEvent::InvalidQuizSubmit) => {
+            queue(tx, &ServerEvent::error(ErrorCode::BadRequest, "Invalid EVENT_QUIZ_SUBMIT"))
+        }
+        // A later step handles AI requests here.
         Some(_) => true,
     }
 }

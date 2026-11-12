@@ -437,8 +437,13 @@ async fn push_validation_ownership_and_quiz_attempts_stay_separate() {
     assert_eq!(status, 200);
     assert_eq!(
         accepted["receipts"].as_array().unwrap().len(),
-        2,
-        "no quiz receipt until SERVER 4.2"
+        3,
+        "quiz attempts get their own receipts since SERVER 4.2"
+    );
+    assert_eq!(
+        accepted["receipts"][0],
+        json!({"id": "unprocessed", "status": "REJECTED", "reason": "BAD_REQUEST"}),
+        "a malformed queued attempt is refused alone"
     );
     let count: i64 = sqlx::query_scalar("SELECT count(*) FROM quiz_attempts")
         .fetch_one(&class.hub.state().db)
@@ -485,6 +490,7 @@ async fn push_validation_ownership_and_quiz_attempts_stay_separate() {
         .as_array()
         .unwrap()
         .iter()
+        .filter(|r| r["id"] != "unprocessed") // the malformed quiz item is BAD_REQUEST, checked above
         .all(|r| r["reason"] == "FORBIDDEN"));
     assert_eq!(
         pull(&class.hub, &ana_token, 0).await["private_comments"],

@@ -210,3 +210,93 @@ async fn who_may_submit() {
     let (status, body) = submit(&class, &quiz, &ben, now, now, one_right(&questions)).await;
     assert_eq!((status, message(&body)), (403, "This class is archived"), "new work in an archived class");
 }
+
+async fn push(class: &Class, token: &str, payload: Value) -> Value {
+    let (status, body) = class.hub.post_json("/api/sync/push", &payload, Some(token)).await;
+    assert_eq!(status, 200, "{body}");
+    body
+}
+
+fn queued(id: &str, quiz: &str, started_at: i64, submitted_at: i64, answers: Value) -> Value {
+    json!({"id": id, "quiz_id": quiz, "started_at": started_at, "submitted_at": submitted_at, "answers": answers})
+}
+
+#[tokio::test]
+async fn a_queued_attempt_is_graded_on_push() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let now = now_ms();
+    let item = queued("6b2b8d0e-0000-4000-8000-000000000001", &quiz, now, now, one_right(&questions));
+    for _ in 0..2 {
+        let body = push(&class, &class.learner_token, json!({"quiz_attempts": [item.clone()]})).await;
+        assert_eq!(body["receipts"], json!([{"id": "6b2b8d0e-0000-4000-8000-000000000001", "status": "SYNCED"}]));
+    }
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE status = 'SUBMITTED' AND score = 1").await, 1);
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 1, "the retry is stored once");
+}
+
+#[tokio::test]
+async fn a_bad_queued_attempt_is_rejected_alone() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    let (draft, _) = draft_quiz(&class, true).await;
+    class.announcement("ann-1").await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let now = now_ms();
+    let payload = json!({
+        "quiz_attempts": [
+            {"id": "a-missing", "quiz_id": quiz, "started_at": now, "submitted_at": now},
+            queued("a-draft", &draft, now, now, json!([])),
+            queued("a-good", &quiz, now, now, one_right(&questions)),
+        ],
+        "comments": [{"id": "c-1", "announcement_id": "ann-1", "content": "Opo", "created_at": 1}],
+    });
+    let body = push(&class, &class.learner_token, payload).await;
+    assert_eq!(
+        body["receipts"],
+        json!([
+            {"id": "a-missing", "status": "REJECTED", "reason": "BAD_REQUEST"},
+            {"id": "a-draft", "status": "REJECTED", "reason": "NOT_FOUND"},
+            {"id": "a-good", "status": "SYNCED"},
+            {"id": "c-1", "status": "SYNCED"},
+        ])
+    );
+
+    let (_, ana) = class.add_learner("123456789013", true).await;
+    begin(&class, &quiz, &ana).await;
+    let late_start = (now - 20 * 60_000).to_string();
+    class.exec("UPDATE quiz_attempts SET started_at = ? WHERE status = 'IN_PROGRESS'", &[late_start.as_str()]).await;
+    let body = push(&class, &ana, json!({"quiz_attempts": [queued("a-late", &quiz, now, now, json!([]))]})).await;
+    assert_eq!(body["receipts"], json!([{"id": "a-late", "status": "REJECTED", "reason": "TIME_LIMIT_EXCEEDED"}]));
+}
+
+#[tokio::test]
+async fn the_websocket_submit_uses_the_same_path() {
+    use futures_util::SinkExt;
+    use tokio_tungstenite::tungstenite::Message;
+
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    begin(&class, &quiz, &class.learner_token).await;
+    let mut learner = connect(&class.hub, &class.learner_token).await;
+    let frame = json!({"event": "EVENT_QUIZ_SUBMIT", "quiz_id": quiz, "student_id": "ignored", "submitted_at": now_ms(),
+                       "answers": one_right(&questions)});
+    learner.send(Message::text(frame.to_string())).await.unwrap();
+    let graded = next_event(&mut learner).await;
+    assert_eq!((graded["event"].as_str(), graded["score"].as_i64()), (Some("EVENT_GRADE_CONFIRMED"), Some(1)), "{graded}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE status = 'SUBMITTED' AND score = 1").await, 1);
+
+    let (_, ana) = class.add_learner("123456789013", true).await;
+    begin(&class, &quiz, &ana).await;
+    let late_start = (now_ms() - 20 * 60_000).to_string();
+    class.exec("UPDATE quiz_attempts SET started_at = ? WHERE status = 'IN_PROGRESS'", &[late_start.as_str()]).await;
+    let mut ana_ws = connect(&class.hub, &ana).await;
+    let late = json!({"event": "EVENT_QUIZ_SUBMIT", "quiz_id": quiz, "student_id": "x", "submitted_at": now_ms(), "answers": []});
+    ana_ws.send(Message::text(late.to_string())).await.unwrap();
+    let error = next_event(&mut ana_ws).await;
+    assert_eq!(error, json!({"event": "EVENT_ERROR", "code": "BAD_REQUEST", "message": "TIME_LIMIT_EXCEEDED"}));
+    ana_ws.send(Message::text(json!({"event": "EVENT_QUIZ_SUBMIT", "quiz_id": quiz}).to_string())).await.unwrap();
+    let error = next_event(&mut ana_ws).await;
+    assert_eq!((error["event"].as_str(), error["code"].as_str()), (Some("EVENT_ERROR"), Some("BAD_REQUEST")), "a malformed submit is answered");
+}
