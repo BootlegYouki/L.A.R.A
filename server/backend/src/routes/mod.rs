@@ -13,6 +13,7 @@ mod export;
 mod files;
 mod materials;
 mod portal;
+mod private_comments;
 mod quizzes;
 mod sync;
 mod topics;
@@ -39,6 +40,7 @@ pub fn router(app: AppState) -> Router {
         .merge(export::router())
         .merge(materials::router())
         .merge(portal::router())
+        .merge(private_comments::router())
         .merge(quizzes::router())
         .merge(sync::router())
         .merge(topics::router())
