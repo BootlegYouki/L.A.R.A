@@ -16,6 +16,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`classroom_enrollment.md`](./classroom_enrollment.md) | Class codes, roster privacy, teacher approval, retries and rejoin rules; acceptance evidence and manual test steps | Sprint 2 (#6) |
 | [`class_management.md`](./class_management.md) | Rename, archive, remove a learner, co-teachers; who can do what, retries, what sync delivers and manual test steps | Sprint 2 (#121) |
 | [`materials_and_submissions.md`](./materials_and_submissions.md) | Lesson file and homework uploads: storage layout, accepted formats, 250 MB cap, access rules, resubmission, downloads with Range and `?token=` | Sprint 3 (#53) |
+| [`announcements_and_grading.md`](./announcements_and_grading.md) | Stream posts, comments and `EVENT_ANNOUNCEMENT_PUSH`; assignment create, edit and archive; the submission list and grading; material rename and delete; tombstones and archived classes | Sprint 3 (#54) |
 | [`document_chunking.md`](./document_chunking.md) | Lesson text from PDF and Word handouts: extraction on upload, 500-token chunks, the chunks route, limits and gotchas | Sprint 3 (#10) |
 | [`streaming_rate_limit.md`](./streaming_rate_limit.md) | Video streaming in byte ranges and the 2.0 MB/s cap per signed-in user (per device on the portal): data flow, limits, decisions, manual check. Upload caps are in `materials_and_submissions.md` | Sprint 3 (#8) |
 | `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |

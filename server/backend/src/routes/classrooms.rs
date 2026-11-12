@@ -151,14 +151,6 @@ async fn decide(
     Ok(Json(json!({"success": true})))
 }
 
-fn optional_text(body: &JsonBody, key: &str) -> Result<Option<String>, ApiError> {
-    match body.0.get(key) {
-        None => Ok(None),
-        Some(Value::String(text)) => Ok(Some(text.clone())),
-        Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
-    }
-}
-
 async fn update(
     State(app): State<AppState>,
     user: AuthUser,
@@ -167,14 +159,10 @@ async fn update(
 ) -> Result<Json<Classroom>, ApiError> {
     let mut tx = begin_immediate(&app.db).await?;
     class_access::require_owner(&mut tx, &user, &id).await?;
-    let archived = match body.0.get("archived") {
-        None => None,
-        Some(Value::Bool(archived)) => Some(*archived),
-        Some(_) => return Err(ApiError::bad_request("archived must be true or false")),
-    };
+    let archived = body.optional_bool("archived")?;
     let change = ClassroomChange {
-        name: optional_text(&body, "name")?,
-        section: optional_text(&body, "section")?,
+        name: body.optional_text("name")?,
+        section: body.optional_text("section")?,
         archived,
     };
     let room = classrooms::update(&mut tx, &id, change, app.clock.now_ms()).await?;

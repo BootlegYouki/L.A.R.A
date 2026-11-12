@@ -27,6 +27,8 @@ pub enum ErrorCode {
     LateSubmission,
     /// 409: a different file for homework the teacher already graded (contract #257).
     AlreadyGraded,
+    /// 403: a comment on a post whose `allow_comments` is false (contract `/api/announcements/{id}/comments`).
+    CommentsDisabled,
     /// Area stubs until their step lands; no client depends on it.
     NotImplemented,
     /// The database failed. The contract has no code for it yet (TECH_SPEC section 14, Q10).
@@ -49,6 +51,7 @@ impl ErrorCode {
             Self::FileTooLarge => "FILE_TOO_LARGE",
             Self::LateSubmission => "LATE_SUBMISSION",
             Self::AlreadyGraded => "ALREADY_GRADED",
+            Self::CommentsDisabled => "COMMENTS_DISABLED",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
         }
@@ -133,6 +136,11 @@ impl ApiError {
     /// The mock's message (`submission_create` in `scripts/mock_hub.py`).
     pub fn already_graded() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::AlreadyGraded, "This submission has already been graded")
+    }
+
+    /// English, unlike the mock's "Naka-off ang komento": the apps are English only (AGENTS.md 1.4).
+    pub fn comments_disabled() -> Self {
+        Self::new(StatusCode::FORBIDDEN, ErrorCode::CommentsDisabled, "Comments are turned off for this post")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {

@@ -1,6 +1,6 @@
 //! Lesson files (contract `/api/materials`). Upload and download are step 3.3, with contract #259's
-//! resumable VIDEO downloads; lesson text chunks are 3.1 and the video stream 3.2. Rename and delete
-//! are still stubs (3.4).
+//! resumable VIDEO downloads; lesson text chunks are 3.1 and the video stream 3.2. Rename, move to a
+//! topic and delete are 3.4 (PRD FR-3.6): teachers of the class, not while it is archived.
 
 use std::sync::Arc;
 
@@ -10,11 +10,12 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::routing::{get, patch, post};
 use axum::{Json, Router};
+use serde_json::{json, Value};
 use tokio::sync::Semaphore;
 
 use super::files::{serve_stored, stored_etag, Ranges};
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
-use super::not_implemented_teacher as teacher;
+use super::body::JsonBody;
 use crate::auth::{require_role, AuthUser, MediaUser, Role};
 use crate::db::begin_immediate;
 use crate::db::material_chunks;
@@ -34,7 +35,7 @@ const EXTRACT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/materials", post(upload).layer(DefaultBodyLimit::max(UPLOAD_BODY_LIMIT)))
-        .route("/api/materials/{id}", patch(teacher).delete(teacher))
+        .route("/api/materials/{id}", patch(rename).delete(remove))
         .route("/api/materials/{id}/download", get(download))
         .route("/api/materials/{id}/chunks", get(chunks))
         .route("/api/materials/{id}/stream", get(stream))
@@ -104,6 +105,45 @@ async fn upload(
     tx.commit().await?;
     stored.keep();
     Ok(Json(material))
+}
+
+fn material_not_found() -> ApiError {
+    ApiError::not_found("Material not found")
+}
+
+async fn rename(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Material>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let title = body.non_empty_text("title")?;
+    let topic_id = body.nullable_text("topic_id")?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let classroom_id = materials::class_of(&mut tx, &id).await?.ok_or_else(material_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    if let Some(Some(topic)) = &topic_id {
+        if !materials::attachment_in_class(&mut tx, Attachment::Topic, topic, &classroom_id).await? {
+            return Err(ApiError::not_found(Attachment::Topic.not_found()));
+        }
+    }
+    let material = materials::update(&mut tx, &id, title, topic_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(material))
+}
+
+/// Materials hold no grades and are really deleted (rules section 4), with their lesson chunks. The
+/// file goes after the commit; one already missing from disk does not stop the delete.
+async fn remove(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let classroom_id = materials::class_of(&mut tx, &id).await?.ok_or_else(material_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    let file = materials::delete(&mut tx, &id, &classroom_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    app.storage.remove(&file).await;
+    Ok(Json(json!({"success": true})))
 }
 
 /// Never fails the upload (#10): no text, an unreadable file, a parser panic or the timeout all give

@@ -34,6 +34,16 @@ pub async fn require_writable(conn: &mut SqliteConnection, classroom_id: &str) -
     Ok(())
 }
 
+/// Every teacher write in step 3.4: a class you teach that is not archived.
+pub async fn require_teacher_writable(
+    conn: &mut SqliteConnection,
+    user: &AuthUser,
+    classroom_id: &str,
+) -> Result<(), ApiError> {
+    require_teacher(conn, user, classroom_id).await?;
+    require_writable(conn, classroom_id).await
+}
+
 pub async fn is_archived(conn: &mut SqliteConnection, classroom_id: &str) -> Result<bool, sqlx::Error> {
     let archived: Option<i64> = sqlx::query_scalar("SELECT archived_at FROM classrooms WHERE id = ?")
         .bind(classroom_id)

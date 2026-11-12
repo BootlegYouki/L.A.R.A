@@ -53,6 +53,15 @@ impl ServerEvent {
         Self::Error { code, message: message.to_owned() }
     }
 
+    pub fn announcement_push(announcement: &crate::models::sync::Announcement, now_ms: i64) -> Self {
+        Self::AnnouncementPush {
+            classroom_id: announcement.classroom_id.clone(),
+            announcement_id: announcement.id.clone(),
+            title: announcement.title.clone(),
+            timestamp: now_ms,
+        }
+    }
+
     pub fn to_frame(&self) -> String {
         // Plain structs of strings and integers cannot fail to serialize.
         serde_json::to_string(self).unwrap_or_default()
@@ -168,6 +177,25 @@ mod tests {
             let frame: Value = serde_json::from_str(&event.to_frame()).unwrap();
             validate(&frame, &contract(name));
         }
+    }
+
+    #[test]
+    fn announcement_push_builds_the_contract_frame() {
+        let announcement = crate::models::sync::Announcement {
+            id: "a".into(),
+            classroom_id: "c".into(),
+            title: "Field Trip".into(),
+            content: "Bring water.".into(),
+            allow_comments: true,
+            created_at: 1,
+            updated_at: 1,
+        };
+        let frame: Value = serde_json::from_str(&ServerEvent::announcement_push(&announcement, 7).to_frame()).unwrap();
+        assert_eq!(
+            frame,
+            serde_json::json!({"event": "EVENT_ANNOUNCEMENT_PUSH", "classroom_id": "c", "announcement_id": "a",
+                               "title": "Field Trip", "timestamp": 7})
+        );
     }
 
     #[test]

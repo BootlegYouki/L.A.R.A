@@ -1,3 +1,5 @@
+pub mod announcements;
+pub mod assignments;
 pub mod material_chunks;
 pub mod materials;
 pub mod seed;

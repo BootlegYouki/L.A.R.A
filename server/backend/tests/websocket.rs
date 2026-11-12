@@ -1,34 +1,14 @@
 mod common;
 
+use common::ws::{connect, next};
 use common::TestHub;
-use futures_util::{SinkExt, StreamExt};
+use futures_util::StreamExt;
 use lara_hub::auth::Role;
 use lara_hub::websocket::{
     broker,
     events::{EnrollmentStatus, ServerEvent},
 };
-use serde_json::{json, Value};
 use std::time::Duration;
-use tokio::net::TcpStream;
-use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
-
-type Socket = WebSocketStream<MaybeTlsStream<TcpStream>>;
-
-async fn next(ws: &mut Socket) -> Value {
-    loop {
-        let frame = tokio::time::timeout(Duration::from_secs(5), ws.next()).await.unwrap().unwrap().unwrap();
-        if let Message::Text(text) = frame {
-            return serde_json::from_str(text.as_str()).unwrap();
-        }
-    }
-}
-
-async fn connect(hub: &TestHub, token: &str) -> Socket {
-    let (mut ws, _) = tokio_tungstenite::connect_async(hub.ws_url()).await.unwrap();
-    ws.send(Message::text(json!({"event":"EVENT_HELLO", "token":token}).to_string())).await.unwrap();
-    assert_eq!(next(&mut ws).await["event"], "EVENT_HELLO_ACK");
-    ws
-}
 
 async fn classroom(hub: &TestHub, teacher: &str) {
     sqlx::query("INSERT INTO classrooms (id,name,section,class_code,teacher_id,created_at,updated_at) VALUES ('c','Science','A','K7M4QX',?,1,1)")

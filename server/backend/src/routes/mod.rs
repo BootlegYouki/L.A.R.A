@@ -3,6 +3,7 @@
 //! will do.
 
 mod admin;
+mod announcements;
 mod assignments;
 mod auth;
 mod backup;
@@ -29,6 +30,7 @@ use crate::AppState;
 pub fn router(app: AppState) -> Router {
     Router::new()
         .merge(admin::router())
+        .merge(announcements::router())
         .merge(assignments::router())
         .merge(auth::router())
         .merge(backup::router())

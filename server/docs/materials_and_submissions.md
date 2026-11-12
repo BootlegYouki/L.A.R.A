@@ -1,6 +1,6 @@
 # Lesson files and homework (step 3.3, #53)
 
-Teachers upload lesson files and post attachments, and learners hand in homework photos and documents. Both go to the Hub disk and are downloaded back over the classroom network. This implements PRD FR-2.4, FR-3.1, FR-3.3 (upload only), FR-3.5 (submit and open the file) and FR-3.8 (attachments) with the contract routes `POST /api/materials`, `GET /api/materials/{id}/download`, `POST /api/assignments/{id}/submit` and `GET /api/submissions/{id}/file`. Text chunking (3.1), the video stream and the 2.0 MB/s cap (3.2), and the submission list and grading (3.4) build on this.
+Teachers upload lesson files and post attachments, and learners hand in homework photos and documents. Both go to the Hub disk and are downloaded back over the classroom network. This implements PRD FR-2.4, FR-3.1, FR-3.3 (upload only), FR-3.5 (submit and open the file) and FR-3.8 (attachments) with the contract routes `POST /api/materials`, `GET /api/materials/{id}/download`, `POST /api/assignments/{id}/submit` and `GET /api/submissions/{id}/file`. Text chunking (3.1), the video stream and the 2.0 MB/s cap (3.2), and the submission list, grading and material rename and delete (3.4, [`announcements_and_grading.md`](./announcements_and_grading.md)) build on this.
 
 ## Key files
 
@@ -99,7 +99,7 @@ These are calls where the contract and mock are silent. Each is listed in the PR
 
 1. Start the Hub (`cargo run --bin lara-hub` in `backend/`).
 2. Sign in a teacher and a learner, create a class, and approve the learner.
-3. Add one row to `assignments`, because the assignment routes are step 3.4.
+3. Create an assignment as the teacher (step 3.4): `curl -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d '{"classroom_id":"'$C'","title":"Worksheet","max_points":20,"due_date":4102444800000}' http://<hub>:8080/api/assignments`.
 4. As the teacher, upload a real PDF and a short MP4:
    ```
    curl -H "Authorization: Bearer $T" -F classroom_id=$C -F title=Lesson -F file_type=DOCUMENT -F file=@lesson.pdf http://<hub>:8080/api/materials

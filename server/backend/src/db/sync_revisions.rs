@@ -226,17 +226,20 @@ async fn load_entity(
         "announcement_comments" => load!(comments, Comment, "SELECT id, announcement_id, author_id, content, created_at, updated_at FROM announcement_comments WHERE id = ?"),
         "materials" => load!(materials, Material, "SELECT id, classroom_id, title, file_type, file_size_bytes, '/api/materials/' || id || '/download' AS download_url, topic_id, assignment_id, announcement_id, updated_at FROM materials WHERE id = ?"),
         "material_chunks" => load!(material_chunks, MaterialChunk, "SELECT id, material_id, order_index, heading, text FROM material_chunks WHERE id = ?"),
+        // An archived assignment reaches devices only as its tombstone (PRD FR-3.6), so its private comments and
+        // submissions stay on the Hub too: clients refuse a row whose assignment they no longer have.
         "assignments" => load!(assignments, Assignment, "SELECT id, classroom_id, title, instructions, max_points, due_date, allow_late, topic_id, updated_at FROM assignments WHERE id = ? AND archived_at IS NULL"),
         "private_comments" => {
             if let Some(row) = sqlx::query_as::<_, PrivateComment>(
                 "SELECT id, assignment_id, student_id, author_id, content, created_at, updated_at FROM private_comments
-                 WHERE id = ? AND (? = 'TEACHER' OR student_id = ?)",
+                 WHERE id = ? AND (? = 'TEACHER' OR student_id = ?) AND assignment_id IN (SELECT id FROM assignments WHERE archived_at IS NULL)",
             ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? { out.private_comments.push(row); }
         }
         "assignment_submissions" => {
             if let Some(row) = sqlx::query_as::<_, Submission>(
                 "SELECT id, assignment_id, student_id, file_type, submitted_at, received_at, score, teacher_feedback, updated_at
-                 FROM assignment_submissions WHERE id = ? AND (? = 'TEACHER' OR student_id = ?)",
+                 FROM assignment_submissions WHERE id = ? AND (? = 'TEACHER' OR student_id = ?)
+                 AND assignment_id IN (SELECT id FROM assignments WHERE archived_at IS NULL)",
             ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? { out.submissions.push(row); }
         }
         "quizzes" => {
