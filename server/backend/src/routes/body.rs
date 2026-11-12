@@ -29,6 +29,53 @@ impl JsonBody {
             _ => None,
         }
     }
+
+    /// Absent is `None`; present must be a string. The mock stores whatever was sent, but a
+    /// wrong type here would fail a CHECK or end up in a client's typed model.
+    pub fn optional_text(&self, key: &str) -> Result<Option<String>, ApiError> {
+        match self.0.get(key) {
+            None => Ok(None),
+            Some(Value::String(text)) => Ok(Some(text.clone())),
+            Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
+        }
+    }
+
+    /// Like `optional_text`, but blank text (after trimming) is refused. The text is kept as sent.
+    pub fn non_empty_text(&self, key: &str) -> Result<Option<String>, ApiError> {
+        let text = self.optional_text(key)?;
+        if text.as_deref().is_some_and(|t| t.trim().is_empty()) {
+            return Err(ApiError::bad_request(format!("{key} cannot be empty")));
+        }
+        Ok(text)
+    }
+
+    /// For a key a PATCH can clear: absent is `None`, `null` is `Some(None)`.
+    pub fn nullable_text(&self, key: &str) -> Result<Option<Option<String>>, ApiError> {
+        match self.0.get(key) {
+            None => Ok(None),
+            Some(Value::Null) => Ok(Some(None)),
+            Some(Value::String(text)) => Ok(Some(Some(text.clone()))),
+            Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
+        }
+    }
+
+    pub fn optional_bool(&self, key: &str) -> Result<Option<bool>, ApiError> {
+        match self.0.get(key) {
+            None => Ok(None),
+            Some(Value::Bool(flag)) => Ok(Some(*flag)),
+            Some(_) => Err(ApiError::bad_request(format!("{key} must be true or false"))),
+        }
+    }
+
+    /// JSON integers only: `1.5`, `"5"` and `null` are refused.
+    pub fn optional_int(&self, key: &str) -> Result<Option<i64>, ApiError> {
+        match self.0.get(key) {
+            None => Ok(None),
+            Some(value) => {
+                value.as_i64().map(Some).ok_or_else(|| ApiError::bad_request(format!("{key} must be a whole number")))
+            }
+        }
+    }
 }
 
 fn parse(raw: &[u8]) -> Result<Map<String, Value>, ApiError> {
@@ -77,6 +124,30 @@ mod tests {
         let err = body(json!({"pin": "1"})).need(&["lrn_or_id", "full_name", "pin"]).unwrap_err();
         assert_eq!((err.status.as_u16(), err.message.as_str()), (400, "Missing: lrn_or_id, full_name"));
         assert!(body(json!({"pin": "1"})).need(&["pin"]).is_ok());
+    }
+
+    #[test]
+    fn typed_readers_refuse_the_wrong_json_type() {
+        let b = body(json!({"t": "x", "flag": true, "n": 5, "half": 1.5, "s5": "5", "gone": null, "blank": "  "}));
+        assert_eq!(b.optional_text("t").unwrap().as_deref(), Some("x"));
+        assert_eq!(b.optional_text("absent").unwrap(), None);
+        assert_eq!(b.optional_text("n").unwrap_err().message, "n must be text");
+        assert_eq!(b.optional_bool("flag").unwrap(), Some(true));
+        assert_eq!(b.optional_bool("absent").unwrap(), None);
+        assert_eq!(b.optional_bool("t").unwrap_err().message, "t must be true or false");
+        assert_eq!(b.optional_int("n").unwrap(), Some(5));
+        assert_eq!(b.optional_int("absent").unwrap(), None);
+        for key in ["half", "s5", "gone"] {
+            assert_eq!(b.optional_int(key).unwrap_err().message, format!("{key} must be a whole number"));
+        }
+        assert_eq!(b.nullable_text("gone").unwrap(), Some(None));
+        assert_eq!(b.nullable_text("t").unwrap(), Some(Some("x".into())));
+        assert_eq!(b.nullable_text("absent").unwrap(), None);
+        assert_eq!(b.nullable_text("n").unwrap_err().message, "n must be text");
+        assert_eq!(b.non_empty_text("blank").unwrap_err().message, "blank cannot be empty");
+        assert_eq!(b.non_empty_text("t").unwrap().as_deref(), Some("x"));
+        let err = b.optional_text("n").unwrap_err();
+        assert_eq!((err.status.as_u16(), err.code.as_str()), (400, "BAD_REQUEST"));
     }
 
     #[test]
