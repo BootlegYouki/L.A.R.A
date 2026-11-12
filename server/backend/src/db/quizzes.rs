@@ -66,22 +66,23 @@ pub async fn insert(
     .bind(now_ms)
     .execute(&mut *tx)
     .await?;
-    insert_questions(tx, id, &input.questions, &HashSet::new(), now_ms).await?;
+    insert_questions(tx, id, &input.questions, HashSet::new(), now_ms).await?;
     record_revision(tx, Scope::class(classroom_id), "quizzes", id, Action::Upsert, now_ms).await?;
     teacher_view(tx, id).await?.ok_or(sqlx::Error::RowNotFound)
 }
 
-/// A question keeps its `id` only when it is one of `keep` (this quiz's own questions); any other id the
-/// client sends would collide with another quiz's question (primary key), so it gets a new one.
+/// A question keeps its `id` only when it is one of `keep` (this quiz's own questions), and only the first
+/// time: any other id the client sends, or the same id sent again (a duplicated question), would collide on
+/// the primary key, so it gets a new one.
 async fn insert_questions(
     tx: &mut SqliteConnection,
     quiz_id: &str,
     questions: &[QuestionInput],
-    keep: &HashSet<String>,
+    mut keep: HashSet<String>,
     now_ms: i64,
 ) -> Result<(), sqlx::Error> {
     for q in questions {
-        let id = q.id.clone().filter(|id| keep.contains(id)).unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let id = q.id.clone().filter(|id| keep.remove(id)).unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         sqlx::query(
             "INSERT INTO quiz_questions (id, quiz_id, order_index, question_text, question_type, options_json, points,
                                          correct_answer, synonyms_json, created_at, updated_at)
@@ -184,7 +185,7 @@ pub async fn replace(
     let own: HashSet<String> =
         sqlx::query_scalar("SELECT id FROM quiz_questions WHERE quiz_id = ?").bind(id).fetch_all(&mut *tx).await?.into_iter().collect();
     sqlx::query("DELETE FROM quiz_questions WHERE quiz_id = ?").bind(id).execute(&mut *tx).await?;
-    insert_questions(tx, id, &input.questions, &own, now_ms).await?;
+    insert_questions(tx, id, &input.questions, own, now_ms).await?;
     record_revision(tx, Scope::class(classroom_id), "quizzes", id, Action::Upsert, now_ms).await?;
     teacher_view(tx, id).await?.ok_or(sqlx::Error::RowNotFound)
 }
@@ -247,6 +248,11 @@ pub async fn student_view(
         .collect();
     if let (true, Some(learner)) = (row.shuffle_questions, learner) {
         shuffle_for(&mut questions, &row.id, learner);
+        // Numbered in the learner's own order: clients sort by `order_index` (mobile's quiz cache), which
+        // would otherwise undo the shuffle. Grading goes by question id (review of #61).
+        for (question, number) in questions.iter_mut().zip(1..) {
+            question.order_index = number;
+        }
     }
     Ok(Some(StudentQuiz {
         id: row.id,

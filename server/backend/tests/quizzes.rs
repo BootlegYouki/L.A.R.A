@@ -270,6 +270,11 @@ async fn shuffle_gives_each_learner_a_stable_order() {
     }
     orders.dedup();
     assert!(orders.len() > 1, "learners get different orders: {orders:?}");
+    // Review of #61: mobile reads questions ORDER BY order_index, so the learner view is numbered in its
+    // own order, or the shuffle would be undone on the phone.
+    let (_, shuffled) = get_quiz(&class, id, &tokens[1]).await;
+    let numbers: Vec<i64> = shuffled["questions"].as_array().unwrap().iter().map(|q| q["order_index"].as_i64().unwrap()).collect();
+    assert_eq!(numbers, [1, 2, 3, 4, 5, 6], "numbered in the learner's order");
     assert_eq!(order(&get_quiz(&class, id, class.teacher()).await.1), ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], "the teacher sees the set order");
 }
 
@@ -383,4 +388,37 @@ async fn only_active_learners_begin() {
     let (status, body) = begin(&class, &id, &ana_token).await;
     assert_eq!((status, message(&body)), (403, "This class is archived"));
     assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 0);
+}
+
+/// Review of #61: a teacher app's "duplicate question" sends one id twice; only the first keeps it.
+#[tokio::test]
+async fn a_question_id_sent_twice_is_kept_once() {
+    let class = Class::start().await;
+    let quiz = draft(&class).await;
+    let id = quiz["id"].as_str().unwrap();
+    let mut copy = quiz["questions"][0].clone();
+    copy.as_object_mut().unwrap().remove("order_index");
+    let body = json!({"title": "Ecosystem", "time_limit_minutes": 15, "questions": [copy.clone(), copy]});
+    let (status, edited) = edit(&class, id, &body, class.teacher()).await;
+    assert_eq!(status, 200, "{edited}");
+    let ids: Vec<&str> = edited["questions"].as_array().unwrap().iter().map(|q| q["id"].as_str().unwrap()).collect();
+    assert_eq!(ids[0], quiz["questions"][0]["id"].as_str().unwrap());
+    assert_ne!(ids[0], ids[1]);
+}
+
+/// Review of #61: step 4.2 adds up the points and checks submit time against limit x 60 000 + 60 000; both
+/// must stay inside 2^53 - 1 so the attempt row reaches the desktop and nothing overflows.
+#[tokio::test]
+async fn totals_stay_inside_what_the_apps_store() {
+    let class = Class::start().await;
+    let mut body = quiz_body(&class.id);
+    body["questions"][0]["points"] = json!(9_007_199_254_740_991_i64);
+    let (status, answer) = create(&class, class.teacher(), &body).await;
+    assert_eq!((status, message(&answer)), (400, "points add up to more than 9007199254740991"));
+    let mut body = quiz_body(&class.id);
+    body["time_limit_minutes"] = json!(150_119_987_579_i64);
+    let (status, answer) = create(&class, class.teacher(), &body).await;
+    assert_eq!((status, message(&answer)), (400, "time_limit_minutes must be from 1 to 150119987578"));
+    body["time_limit_minutes"] = json!(150_119_987_578_i64);
+    assert_eq!(create(&class, class.teacher(), &body).await.0, 200);
 }

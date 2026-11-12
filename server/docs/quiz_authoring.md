@@ -44,12 +44,13 @@ The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`
 - **Answers must be gradeable.** For multiple choice and true/false, `correct_answer` must be one of the `options` (400). Step 4.2 grades by exact match, so any other answer could never be marked right.
 - **Shuffle per learner** (FR-4.1; the mock does not shuffle).
   - With `shuffle_questions` on, each learner gets their own order: a Fisher–Yates shuffle seeded by the FNV-1a hash of `quiz_id:student_id`. It's the same order on every request.
+  - The learner's questions are numbered 1..n (`order_index`) in that order. Clients sort by `order_index` (the mobile quiz cache), so keeping the teacher's numbers would undo the shuffle (review of #61).
   - Teachers see `order_index` order.
   - Grading uses question ids (rules section 4.5), so the order never changes a score.
 - **Question ids and order:**
-  - Another quiz's question id sent on edit gets a new id; it would otherwise hit the primary key and answer 500.
+  - Another quiz's question id sent on edit gets a new id, and so does the second copy of one of this quiz's ids (a duplicated question). Either would otherwise hit the primary key and answer 500.
   - Repeated `order_index` values get 400 (the table has `UNIQUE(quiz_id, order_index)`).
-- **Numbers:** `time_limit_minutes` and `points` are 1 to 2^53−1, and `order_index` is 0 to 2^53−1, the desktop's integer range.
+- **Numbers:** `points` are 1 to 2^53−1, and so is their sum: step 4.2 stores it as `total_points`. `order_index` is 0 to 2^53−1, the desktop's integer range. `time_limit_minutes` is 1 to 150119987578, so 4.2's grace check (limit × 60 000 + 60 000 ms) can never overflow.
 - **`topic_id`** must be a topic of the same class. Deleting a topic clears it on quizzes too (3.5).
 - **`/begin` is idempotent.** A second begin returns the same attempt and sends no second presence event. A learner who has already submitted gets their attempt back; it never reopens. Two begins at once open one attempt.
 - **`/active` with several active quizzes:** the newest by `started_at` wins.

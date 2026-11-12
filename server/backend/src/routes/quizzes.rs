@@ -17,6 +17,7 @@ use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::{begin_immediate, quizzes};
 use crate::error::ApiError;
 use crate::models::quiz::{QuestionInput, QuestionType, QuizInput, StudentQuiz, TeacherQuiz};
+use crate::models::sync::MAX_SAFE_INT;
 use crate::services::class_access;
 use crate::websocket::events::{PresenceState, ServerEvent};
 use crate::AppState;
@@ -75,6 +76,10 @@ fn parse_question(item: &Value, position: i64) -> Result<QuestionInput, ApiError
     })
 }
 
+/// The longest time limit whose grace check (limit x 60 000 + 60 000 ms, step 4.2) stays within
+/// `MAX_SAFE_INT`, so the timing check can never overflow and the duration reaches the desktop.
+const MAX_TIME_LIMIT_MINUTES: i64 = (MAX_SAFE_INT - 60_000) / 60_000;
+
 /// Every check the mock's `quiz_fields` does, plus the ones the database and grading need.
 fn parse_quiz(body: &JsonBody) -> Result<QuizInput, ApiError> {
     body.need(&["title", "time_limit_minutes", "questions"])?;
@@ -89,6 +94,14 @@ fn parse_quiz(body: &JsonBody) -> Result<QuizInput, ApiError> {
         .zip(1..)
         .map(|(item, position)| parse_question(item, position))
         .collect::<Result<Vec<_>, _>>()?;
+    // Step 4.2 stores the sum as `total_points`, which must also fit what the apps store (review of #61).
+    if questions.iter().try_fold(0_i64, |sum, q| sum.checked_add(q.points).filter(|s| *s <= MAX_SAFE_INT)).is_none() {
+        return Err(ApiError::bad_request(format!("points add up to more than {MAX_SAFE_INT}")));
+    }
+    let time_limit_minutes = body.optional_int_from("time_limit_minutes", 1)?.unwrap_or_default();
+    if time_limit_minutes > MAX_TIME_LIMIT_MINUTES {
+        return Err(ApiError::bad_request(format!("time_limit_minutes must be from 1 to {MAX_TIME_LIMIT_MINUTES}")));
+    }
     let mut places = HashSet::new();
     if !questions.iter().all(|q| places.insert(q.order_index)) {
         return Err(ApiError::bad_request("order_index must be different for each question"));
@@ -96,7 +109,7 @@ fn parse_quiz(body: &JsonBody) -> Result<QuizInput, ApiError> {
     Ok(QuizInput {
         title: body.non_empty_text("title")?.unwrap_or_default(),
         instructions: body.nullable_text("instructions")?.flatten(),
-        time_limit_minutes: body.optional_int_from("time_limit_minutes", 1)?.unwrap_or_default(),
+        time_limit_minutes,
         shuffle_questions: body.optional_bool("shuffle_questions")?.unwrap_or(false),
         release_scores_immediately: body.optional_bool("release_scores_immediately")?.unwrap_or(true),
         topic_id: body.nullable_text("topic_id")?,
