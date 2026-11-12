@@ -302,7 +302,7 @@ async fn newly_visible_class_arrives_with_older_rows_for_learner_and_co_teacher_
     class.enroll(&ana_token, &ana_id).await;
     let mut tx = db::begin_immediate(&class.hub.state().db).await.unwrap();
     sqlx::query(
-        "INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at) VALUES (?, ?, 1)",
+        "INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at, created_at, updated_at) VALUES (?, ?, 1, 1, 1)",
     )
     .bind(&class.id)
     .bind(&teacher_id)
@@ -648,7 +648,7 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
     )
     .await
     .unwrap();
-    sqlx::query("INSERT INTO materials (id, classroom_id, title, file_type, file_path, file_size_bytes, created_at, updated_at) VALUES ('material', ?, 'Lesson', 'DOCUMENT', 'secret-disk-path', 12, 1, 1)")
+    sqlx::query("INSERT INTO materials (id, classroom_id, title, file_type, file_path, file_size_bytes, uploaded_by, created_at, updated_at) VALUES ('material', ?1, 'Lesson', 'DOCUMENT', 'secret-disk-path', 12, (SELECT teacher_id FROM classrooms WHERE id = ?1), 1, 1)")
         .bind(&class.id).execute(&mut *tx).await.unwrap();
     record_revision(
         &mut tx,
@@ -660,7 +660,7 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
     )
     .await
     .unwrap();
-    sqlx::query("INSERT INTO material_chunks (id, material_id, order_index, text, updated_at) VALUES ('chunk', 'material', 0, 'Plants need light', 1)")
+    sqlx::query("INSERT INTO material_chunks (id, material_id, order_index, text, created_at, updated_at) VALUES ('chunk', 'material', 0, 'Plants need light', 1, 1)")
         .execute(&mut *tx).await.unwrap();
     record_revision(
         &mut tx,
@@ -690,7 +690,7 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
         .execute(&mut *tx).await.unwrap();
     for (sid, suffix) in [(&class.student, "mine"), (&ana_id, "ana")] {
         let submission = format!("submission-{suffix}");
-        sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, received_at, score, updated_at) VALUES (?, 'assignment', ?, 'secret-disk-path', 1, 1, 8, 1)")
+        sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, created_at, received_at, score, updated_at) VALUES (?, 'assignment', ?, 'secret-disk-path', 1, 1, 1, 8, 1)")
             .bind(&submission).bind(sid).execute(&mut *tx).await.unwrap();
         record_revision(
             &mut tx,
@@ -703,7 +703,7 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
         .await
         .unwrap();
         let attempt = format!("attempt-{suffix}");
-        sqlx::query("INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, submitted_at, score, total_points, updated_at) VALUES (?, 'quiz', ?, 'SUBMITTED', 1, 2, 1, 1, 2)")
+        sqlx::query("INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, created_at, submitted_at, score, total_points, updated_at) VALUES (?, 'quiz', ?, 'SUBMITTED', 1, 1, 2, 1, 1, 2)")
             .bind(&attempt).bind(sid).execute(&mut *tx).await.unwrap();
         record_revision(
             &mut tx,

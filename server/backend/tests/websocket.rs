@@ -37,7 +37,7 @@ async fn classroom(hub: &TestHub, teacher: &str) {
 
 async fn enroll(hub: &TestHub, id: &str, student: &str, status: &str) {
     sqlx::query(
-        "INSERT INTO enrollments (id,classroom_id,student_id,status,joined_at,updated_at) VALUES (?,'c',?,?,1,1)",
+        "INSERT INTO enrollments (id,classroom_id,student_id,status,joined_at,created_at,updated_at) VALUES (?,'c',?,?,1,1,1)",
     )
     .bind(id)
     .bind(student)
@@ -55,7 +55,7 @@ async fn targeted_push_uses_active_membership_and_all_class_teachers() {
     let foreign = hub.seed_user("T-other", "Other", Role::Teacher, "1234").await;
     classroom(&hub, &owner.id).await;
     for teacher in [&owner.id, &co.id] {
-        sqlx::query("INSERT INTO classroom_teachers VALUES ('c',?,1)")
+        sqlx::query("INSERT INTO classroom_teachers VALUES ('c',?,1,1,1)")
             .bind(teacher)
             .execute(&hub.state().db)
             .await

@@ -180,11 +180,13 @@ pub async fn add_co_teacher(
             .await?;
     let teacher_id = teacher_id.ok_or_else(|| ApiError::not_found("No teacher with that ID"))?;
     let added = sqlx::query(
-        "INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at)
-         SELECT id, ?, ? FROM classrooms WHERE id = ? AND teacher_id <> ?
+        "INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at, created_at, updated_at)
+         SELECT id, ?, ?, ?, ? FROM classrooms WHERE id = ? AND teacher_id <> ?
          ON CONFLICT(classroom_id, teacher_id) DO NOTHING",
     )
     .bind(&teacher_id)
+    .bind(now)
+    .bind(now)
     .bind(now)
     .bind(classroom_id)
     .bind(&teacher_id)
@@ -271,12 +273,13 @@ pub async fn join(
         None => {
             let id = uuid::Uuid::new_v4().to_string();
             sqlx::query(
-                "INSERT INTO enrollments (id, classroom_id, student_id, status, joined_at, updated_at)
-                 VALUES (?, ?, ?, 'PENDING', ?, ?)",
+                "INSERT INTO enrollments (id, classroom_id, student_id, status, joined_at, created_at, updated_at)
+                 VALUES (?, ?, ?, 'PENDING', ?, ?, ?)",
             )
             .bind(&id)
             .bind(&classroom_id)
             .bind(student_id)
+            .bind(now)
             .bind(now)
             .bind(now)
             .execute(&mut *conn)

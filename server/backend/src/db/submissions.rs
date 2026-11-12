@@ -9,7 +9,7 @@ use crate::models::sync::Submission;
 /// The stored columns, for `concat!` (query text stays `'static`).
 macro_rules! columns {
     () => {
-        "id, assignment_id, student_id, file_path, file_type, submitted_at, received_at, score, teacher_feedback, updated_at"
+        "id, assignment_id, student_id, file_path, file_type, submitted_at, created_at, received_at, score, teacher_feedback, updated_at"
     };
 }
 
@@ -22,6 +22,9 @@ pub struct StoredSubmission {
     pub file_path: String,
     pub file_type: String,
     pub submitted_at: i64,
+    /// When the learner first handed in work for this assignment; a resubmission under a new id
+    /// keeps it, as the mock does (contract #273). Stays on the Hub.
+    pub created_at: i64,
     pub received_at: i64,
     pub score: Option<i64>,
     pub teacher_feedback: Option<String>,
@@ -113,7 +116,7 @@ pub async fn save(tx: &mut SqliteConnection, row: &StoredSubmission, classroom_i
     sqlx::query(concat!(
         "INSERT INTO assignment_submissions (",
         columns!(),
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET file_path = excluded.file_path, file_type = excluded.file_type,
              submitted_at = excluded.submitted_at, received_at = excluded.received_at, updated_at = excluded.updated_at"
     ))
@@ -123,6 +126,7 @@ pub async fn save(tx: &mut SqliteConnection, row: &StoredSubmission, classroom_i
     .bind(&row.file_path)
     .bind(&row.file_type)
     .bind(row.submitted_at)
+    .bind(row.created_at)
     .bind(row.received_at)
     .bind(row.score)
     .bind(&row.teacher_feedback)

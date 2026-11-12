@@ -7,6 +7,7 @@ The Hub's one authoritative SQLite database. It is created and migrated automati
 | File | What it does |
 |---|---|
 | `backend/src/db/migrations/001_initial_schema.sql` | Byte-for-byte copy of `contracts/schema/server_master.sql` (LF line endings), all 19 tables and their indexes. Never edited once applied; later contract changes are new `00N_*.sql` files |
+| `backend/src/db/migrations/003_audit_fields_and_uploaded_by.sql` | Contract #273 (issue #274): `created_at` on `enrollments`, `material_chunks`, `assignment_submissions` and `quiz_attempts`, `created_at` and `updated_at` on `classroom_teachers`, and `materials.uploaded_by`. Rebuilds each table with the contract's text and backfills from times already stored (see Gotchas) |
 | `backend/src/db/mod.rs` | `connect` (PRAGMAs on the connect options), `migrate`, `begin_immediate` (the write transaction), `load_hub_meta` (`HubMeta { hub_id, sync_epoch }`) |
 | `backend/src/db/sync_revisions.rs` | `record_revision(&mut tx, Scope, table, id, Action, now_ms) -> seq`, pulled forward from #7 (TECH_SPEC Q5). `Scope::global()`, `Scope::class(id)`, `Scope::student(class_id, student_id)`; `Action::Upsert`, `Action::Delete` |
 | `backend/src/lib.rs` | `serve`: connect, migrate, `load_hub_meta`, then `AppState.hub_id` / `sync_epoch` |
@@ -25,12 +26,16 @@ The Hub's one authoritative SQLite database. It is created and migrated automati
 * **Line endings change the checksum:** SQLx compares a checksum of each applied migration. With `core.autocrlf=true`, a Windows checkout would embed CRLF and a Linux one LF, so a `lara.db` (or a backup) from one build would fail to open on the other with `VersionMismatch`. `backend/.gitattributes` pins `src/db/migrations/*.sql` to LF. The parity test strips `\r` from the contract for the same reason.
 * **Editing `001_initial_schema.sql` breaks every existing Hub** (checksum mismatch). A contract change gets a new migration file; the parity test then compares all migrations together against the updated contract.
 * **`sync_epoch` is read once at start.** Restore (step 4.4) bumps it in `hub_meta` and must refresh `AppState` (the Hub restarts its pool on restore anyway).
+* **Rebuilding a table that other tables reference (003):** SQLite rewrites a child's `REFERENCES` clause when its parent is renamed, even with `legacy_alter_table`, while `foreign_keys` is on, and it cannot be turned off inside SQLx's migration transaction. Renaming `materials` alone left `material_chunks` pointing at the old copy, and dropping that copy cascaded into every chunk. 003 renames `materials`, `material_chunks` and `ai_chat_messages` together, recreates all three from the contract (so they point at each other again), copies the rows, then drops the old copies child first. `upgrading_backfills_the_audit_fields_and_keeps_every_row` fails if a chunk or a tutor message's `chunk_id` is lost.
+* **Audit fields stay on the Hub:** `uploaded_by` and the new `created_at` columns are never in a response or a pull (the mock strips them too). A resubmission under a new `submission_id` keeps the first hand-in's `created_at`; a learner who asks to join again keeps their enrollment's `created_at`.
 * **Forward references:** `materials` references `topics` and `assignments`, which are created later in the file. SQLite allows this; foreign keys are checked when rows are written, not when tables are created.
 
 ## Tests
 | Test | Proves |
 |---|---|
 | `db::tests::migrations_reproduce_the_server_master_contract` | `sqlite_master` (tables, indexes, autoindexes, statement text) of a migrated DB equals the contract loaded into a second DB; table count equals the contract's `CREATE TABLE` count (19) |
+| `db::tests::upgrading_backfills_the_audit_fields_and_keeps_every_row` | A Hub on migrations 001-002 with a class, co-teacher, material, chunk, tutor message, submission and quiz attempt upgrades with every row kept, each new column backfilled as #274 lists (`uploaded_by` = class owner), the tutor message still pointing at its chunk, and no broken foreign keys |
+| `tests/audit_fields.rs` | Upload records the signed-in teacher (a co-teacher, not the owner) and never sends it; chunks, enrollments and co-teacher rows record when they were made; a resubmission keeps the first `created_at` |
 | `db::tests::pragmas_hold_on_every_pooled_connection` | `wal`, `foreign_keys = 1`, `busy_timeout = 5000` on two pooled connections |
 | `db::tests::first_run_creates_hub_meta_and_restarts_keep_it` | UUID `hub_id`, epoch 1, same values after reconnect, exactly two rows |
 | `db::tests::write_transaction_rolls_back_unless_committed` | Dropped `begin_immediate` transaction leaves nothing; committed one persists |

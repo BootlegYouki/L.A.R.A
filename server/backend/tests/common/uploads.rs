@@ -100,7 +100,7 @@ impl Class {
     /// Written straight to `classroom_teachers`; the co-teacher routes are step 2.5.
     pub async fn co_teacher(&self, lrn: &str) -> String {
         let (id, token) = self.teacher_token(lrn).await;
-        self.exec("INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at) VALUES (?, ?, 1)", &[self.id.as_str(), id.as_str()]).await;
+        self.exec("INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at, created_at, updated_at) VALUES (?, ?, 1, 1, 1)", &[self.id.as_str(), id.as_str()]).await;
         token
     }
 

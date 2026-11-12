@@ -290,7 +290,7 @@ async fn co_teachers_can_list_read_roster_and_decide_but_foreign_teachers_cannot
     let co_id = co.id.clone();
     let co_token = hub.open_session(co).await;
     let foreign_token = hub.open_session(foreign).await;
-    sqlx::query("INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at) VALUES (?, ?, 1)")
+    sqlx::query("INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at, created_at, updated_at) VALUES (?, ?, 1, 1, 1)")
         .bind(room["id"].as_str().unwrap())
         .bind(&co_id)
         .execute(&hub.state().db)
@@ -688,7 +688,7 @@ async fn removing_a_learner_keeps_their_work_and_sends_the_event_once() {
         .execute(&hub.state().db)
         .await
         .unwrap();
-    sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, received_at, score, updated_at) VALUES ('sub', 'hw', ?, 'x.jpg', 2, 2, 9, 2)")
+    sqlx::query("INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, created_at, received_at, score, updated_at) VALUES ('sub', 'hw', ?, 'x.jpg', 2, 2, 2, 9, 2)")
         .bind(&ana.id)
         .execute(&hub.state().db)
         .await

@@ -144,6 +144,65 @@ mod tests {
         assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
     }
 
+    /// Contract #273 (issue #274): a Hub that already holds classes upgrades with every row kept and
+    /// the new audit columns filled from the times it already recorded. Rebuilding `materials` and
+    /// `material_chunks` must not cascade into their chunks or null the tutor's chunk references.
+    #[tokio::test]
+    async fn upgrading_backfills_the_audit_fields_and_keeps_every_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let pool = connect(dir.path()).await.unwrap();
+        let mut before = sqlx::migrate!("src/db/migrations");
+        before.migrations = before.migrations.iter().filter(|m| m.version <= 2).cloned().collect::<Vec<_>>().into();
+        before.run(&pool).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO users (id, lrn_or_id, full_name, role, pin_hash, created_at, updated_at)
+                 VALUES ('t', 'T-0001', 'Owner', 'TEACHER', 'x', 1, 1), ('t2', 'T-0002', 'Co', 'TEACHER', 'x', 1, 1),
+                        ('s', '123456789012', 'Ana', 'STUDENT', 'x', 1, 1);
+             INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
+                 VALUES ('c', 'Science 4', 'A', 'K7M4QX', 't', 1, 1);
+             INSERT INTO enrollments (id, classroom_id, student_id, status, joined_at, updated_at) VALUES ('e', 'c', 's', 'ACTIVE', 3, 4);
+             INSERT INTO classroom_teachers (classroom_id, teacher_id, added_at) VALUES ('c', 't2', 5);
+             INSERT INTO materials (id, classroom_id, title, file_type, file_path, file_size_bytes, created_at, updated_at)
+                 VALUES ('m', 'c', 'Lesson', 'DOCUMENT', 'materials/a.pdf', 10, 6, 6);
+             INSERT INTO material_chunks (id, material_id, order_index, text, updated_at) VALUES ('ch', 'm', 0, 'Plants', 7);
+             INSERT INTO ai_chat_messages (id, classroom_id, student_id, material_id, chunk_id, role, content, created_at)
+                 VALUES ('ai', 'c', 's', 'm', 'ch', 'TUTOR', 'What do plants need?', 7);
+             INSERT INTO assignments (id, classroom_id, title, due_date, created_at, updated_at) VALUES ('hw', 'c', 'Homework', 9, 1, 1);
+             INSERT INTO assignment_submissions (id, assignment_id, student_id, file_path, submitted_at, received_at, updated_at)
+                 VALUES ('sub', 'hw', 's', 'submissions/a.jpg', 8, 9, 9);
+             INSERT INTO quizzes (id, classroom_id, title, time_limit_minutes, created_at, updated_at) VALUES ('q', 'c', 'Quiz', 15, 1, 1);
+             INSERT INTO quiz_attempts (id, quiz_id, student_id, started_at, updated_at) VALUES ('at', 'q', 's', 10, 10);",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        migrate(&pool).await.unwrap();
+        let one = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&pool);
+        assert_eq!(one("SELECT created_at FROM enrollments WHERE id = 'e'").await.unwrap(), 3, "from joined_at");
+        assert_eq!(one("SELECT created_at FROM material_chunks WHERE id = 'ch'").await.unwrap(), 7, "from updated_at");
+        assert_eq!(one("SELECT created_at FROM assignment_submissions WHERE id = 'sub'").await.unwrap(), 8, "from submitted_at");
+        assert_eq!(one("SELECT created_at FROM quiz_attempts WHERE id = 'at'").await.unwrap(), 10, "from started_at");
+        let teachers: (i64, i64, i64) = sqlx::query_as("SELECT added_at, created_at, updated_at FROM classroom_teachers")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(teachers, (5, 5, 5));
+        let uploader: String = sqlx::query_scalar("SELECT uploaded_by FROM materials WHERE id = 'm'").fetch_one(&pool).await.unwrap();
+        assert_eq!(uploader, "t", "the class owner");
+        let chat: (Option<String>, Option<String>) =
+            sqlx::query_as("SELECT material_id, chunk_id FROM ai_chat_messages WHERE id = 'ai'").fetch_one(&pool).await.unwrap();
+        assert_eq!(chat, (Some("m".into()), Some("ch".into())), "the rebuild must not fire ON DELETE SET NULL");
+        for table in ["enrollments", "classroom_teachers", "materials", "material_chunks", "assignment_submissions", "quiz_attempts"] {
+            let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT count(*) FROM {table}")))
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+            assert_eq!(rows, 1, "{table} kept its row");
+        }
+        assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
+    }
+
     #[tokio::test]
     async fn first_run_creates_hub_meta_and_restarts_keep_it() {
         let dir = tempfile::tempdir().unwrap();
