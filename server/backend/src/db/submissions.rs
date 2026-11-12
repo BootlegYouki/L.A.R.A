@@ -102,6 +102,58 @@ pub async fn by_id(conn: &mut SqliteConnection, id: &str) -> Result<Option<Store
         .await
 }
 
+/// The homework handed in for an assignment, oldest hand-in first (step 3.4).
+pub async fn for_assignment(conn: &mut SqliteConnection, assignment_id: &str) -> Result<Vec<Submission>, sqlx::Error> {
+    let rows: Vec<StoredSubmission> =
+        sqlx::query_as(concat!("SELECT ", columns!(), " FROM assignment_submissions WHERE assignment_id = ? ORDER BY submitted_at, id"))
+            .bind(assignment_id)
+            .fetch_all(conn)
+            .await?;
+    Ok(rows.iter().map(StoredSubmission::public).collect())
+}
+
+/// A submission a teacher may grade, with its class. `None` when there is no such id (a resubmission
+/// under a new id replaced it) or its assignment is archived.
+pub async fn grading_target(conn: &mut SqliteConnection, id: &str) -> Result<Option<(StoredSubmission, String)>, sqlx::Error> {
+    let Some(row) = by_id(&mut *conn, id).await? else { return Ok(None) };
+    let classroom_id = super::assignments::open_class(conn, &row.assignment_id).await?;
+    Ok(classroom_id.map(|classroom_id| (row, classroom_id)))
+}
+
+/// Sets what the teacher sent and keeps the rest; synced to that learner and the class's teachers.
+pub async fn grade(
+    tx: &mut SqliteConnection,
+    row: &StoredSubmission,
+    classroom_id: &str,
+    score: Option<i64>,
+    teacher_feedback: Option<String>,
+    now_ms: i64,
+) -> Result<Submission, sqlx::Error> {
+    let graded = StoredSubmission {
+        score: score.or(row.score),
+        teacher_feedback: teacher_feedback.or_else(|| row.teacher_feedback.clone()),
+        updated_at: now_ms,
+        ..row.clone()
+    };
+    sqlx::query("UPDATE assignment_submissions SET score = ?, teacher_feedback = ?, updated_at = ? WHERE id = ?")
+        .bind(graded.score)
+        .bind(&graded.teacher_feedback)
+        .bind(now_ms)
+        .bind(&graded.id)
+        .execute(&mut *tx)
+        .await?;
+    record_revision(
+        tx,
+        Scope::student(classroom_id, &graded.student_id),
+        "assignment_submissions",
+        &graded.id,
+        Action::Upsert,
+        now_ms,
+    )
+    .await?;
+    Ok(graded.public())
+}
+
 /// Inserts the row, or replaces the file of the existing one (same id), keeping its score and
 /// feedback; records a revision only that learner and the class's teachers pull.
 pub async fn save(tx: &mut SqliteConnection, row: &StoredSubmission, classroom_id: &str) -> Result<Submission, sqlx::Error> {

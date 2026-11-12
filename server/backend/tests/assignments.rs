@@ -184,3 +184,132 @@ async fn assignment_writes_need_a_writable_class_you_teach() {
     let (status, body) = delete(&class, id, class.teacher()).await;
     assert_eq!((status, message(&body)), (403, "This class is archived"));
 }
+
+async fn submissions_of(class: &Class, assignment: &str, token: &str) -> (u16, Value) {
+    class.hub.get(&format!("/api/assignments/{assignment}/submissions"), Some(token)).await
+}
+
+async fn grade(class: &Class, submission: &str, body: Value, token: &str) -> (u16, Value) {
+    class.hub.send_json(Method::PATCH, &format!("/api/submissions/{submission}"), &body, Some(token)).await
+}
+
+#[tokio::test]
+async fn teacher_lists_and_grades_a_submission() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    let handed_in = submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    let (_, ana_token) = class.add_learner("123456789013", true).await;
+
+    let (status, listed) = submissions_of(&class, id, class.teacher()).await;
+    assert_eq!((status, listed.clone()), (200, json!([handed_in])));
+    assert!(listed[0].get("file_path").is_none() && listed[0].get("created_at").is_none(), "{listed}");
+
+    let (status, graded) = grade(&class, "sub-1", json!({"score": 18, "teacher_feedback": "Magaling!"}), class.teacher()).await;
+    assert_eq!(status, 200, "{graded}");
+    assert_eq!((graded["score"].as_i64(), graded["teacher_feedback"].as_str()), (Some(18), Some("Magaling!")));
+    assert_eq!(graded["submitted_at"], handed_in["submitted_at"], "grading never moves the hand-in time");
+    assert!(graded["updated_at"].as_i64() >= handed_in["updated_at"].as_i64());
+    assert_eq!(class.pull(&class.learner_token).await["submissions"], json!([graded]), "the learner sees the grade");
+    assert_eq!(class.pull(&ana_token).await["submissions"], json!([]), "classmates never see it");
+
+    let path = format!("/api/assignments/{id}/submit");
+    let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form("sub-2", &jpeg("b"))).await;
+    assert_eq!((status, body["error"]["code"].as_str()), (409, Some("ALREADY_GRADED")), "graded work is final (3.3)");
+    let (status, regraded) = grade(&class, "sub-1", json!({"score": 19}), class.teacher()).await;
+    assert_eq!((status, regraded["score"].as_i64(), regraded["teacher_feedback"].as_str()), (200, Some(19), Some("Magaling!")));
+}
+
+#[tokio::test]
+async fn score_rules_follow_google_classroom() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    submit(&class, asg["id"].as_str().unwrap(), &class.learner_token, "sub-1", "a").await;
+    let cases = [
+        (json!({"score": -1}), "score must be 0 or more"),
+        (json!({"score": null}), "score must be a whole number"),
+        (json!({"score": 17.5}), "score must be a whole number"),
+        (json!({"teacher_feedback": 5}), "teacher_feedback must be text"),
+        (json!({}), "Missing: score or teacher_feedback"),
+    ];
+    for (body, text) in cases {
+        let (status, answer) = grade(&class, "sub-1", body, class.teacher()).await;
+        assert_eq!((status, message(&answer)), (400, text));
+    }
+    let (status, feedback_only) = grade(&class, "sub-1", json!({"teacher_feedback": "Please redo item 3."}), class.teacher()).await;
+    assert_eq!(status, 200, "{feedback_only}");
+    assert!(feedback_only["score"].is_null(), "feedback alone does not grade");
+    let (status, bonus) = grade(&class, "sub-1", json!({"score": 25}), class.teacher()).await;
+    assert_eq!((status, bonus["score"].as_i64()), (200, Some(25)), "above max_points is allowed, as in Google Classroom");
+}
+
+#[tokio::test]
+async fn grading_a_replaced_submission_id_is_not_found() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    submit(&class, id, &class.learner_token, "sub-2", "b").await;
+    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Submission not found"));
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE id = 'sub-2' AND score IS NULL").await, 1);
+}
+
+#[tokio::test]
+async fn removed_co_teacher_can_no_longer_post_or_grade() {
+    let class = Class::start().await;
+    let co = class.co_teacher("T-0002").await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    assert_eq!(grade(&class, "sub-1", json!({"score": 10}), &co).await.0, 200, "a co-teacher grades");
+    assert_eq!(submissions_of(&class, id, &co).await.0, 200);
+
+    class.exec("DELETE FROM classroom_teachers", &[]).await;
+    assert_eq!(grade(&class, "sub-1", json!({"score": 11}), &co).await.0, 403);
+    assert_eq!(submissions_of(&class, id, &co).await.0, 403);
+    let (status, _) =
+        class.hub.post_json("/api/announcements", &json!({"classroom_id": class.id, "title": "x", "content": "y"}), Some(&co)).await;
+    assert_eq!(status, 403);
+}
+
+#[tokio::test]
+async fn archived_class_can_list_but_not_grade() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    class.archive().await;
+    let (status, listed) = submissions_of(&class, id, class.teacher()).await;
+    assert_eq!((status, listed.as_array().map(Vec::len)), (200, Some(1)));
+    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+}
+
+#[tokio::test]
+async fn archived_assignment_is_hidden_from_grading() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    delete(&class, id, class.teacher()).await;
+    let (status, body) = submissions_of(&class, id, class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Assignment not found"));
+    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Submission not found"));
+}
+
+#[tokio::test]
+async fn learners_and_other_teachers_cannot_list_or_grade() {
+    let class = Class::start().await;
+    let asg = worksheet(&class, class.teacher()).await;
+    let id = asg["id"].as_str().unwrap();
+    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    let (_, other_teacher) = class.other_class().await;
+    for token in [class.learner_token.as_str(), other_teacher.as_str()] {
+        assert_eq!(submissions_of(&class, id, token).await.0, 403);
+        assert_eq!(grade(&class, "sub-1", json!({"score": 20}), token).await.0, 403);
+    }
+    assert_eq!(submissions_of(&class, "no-such-id", class.teacher()).await.0, 404);
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE score IS NULL").await, 1);
+}

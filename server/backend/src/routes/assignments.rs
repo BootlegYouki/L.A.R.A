@@ -12,7 +12,6 @@ use serde_json::{json, Value};
 
 use super::body::JsonBody;
 use super::files::{serve_stored, Ranges};
-use super::not_implemented_teacher as teacher;
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
 use crate::auth::{require_role, AuthUser, MediaUser, Role};
 use crate::db::assignments::{self, AssignmentChange, NewAssignment};
@@ -31,8 +30,8 @@ pub fn router() -> Router<AppState> {
         .route("/api/assignments", post(create))
         .route("/api/assignments/{id}", patch(update).delete(archive))
         .route("/api/assignments/{id}/submit", post(submit).layer(DefaultBodyLimit::max(UPLOAD_BODY_LIMIT)))
-        .route("/api/assignments/{id}/submissions", get(teacher))
-        .route("/api/submissions/{id}", patch(teacher))
+        .route("/api/assignments/{id}/submissions", get(list_submissions))
+        .route("/api/submissions/{id}", patch(grade_submission))
         .route("/api/submissions/{id}/file", get(submission_file))
 }
 
@@ -122,6 +121,45 @@ async fn archive(State(app): State<AppState>, user: AuthUser, Path(id): Path<Str
     assignments::archive(&mut tx, &id, &classroom_id, app.clock.now_ms()).await?;
     tx.commit().await?;
     Ok(Json(json!({"success": true})))
+}
+
+/// The class's teachers, also while the class is archived (reading changes nothing).
+async fn list_submissions(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+) -> Result<Json<Vec<Submission>>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let mut conn = app.db.acquire().await?;
+    let classroom_id = assignments::open_class(&mut conn, &id).await?.ok_or_else(assignment_not_found)?;
+    class_access::require_teacher(&mut conn, &user, &classroom_id).await?;
+    Ok(Json(submissions::for_assignment(&mut conn, &id).await?))
+}
+
+/// Score and feedback (PRD FR-3.5). As in Google Classroom, the score may go above `max_points`; it
+/// may not be negative (schema CHECK) or null: there is no un-grade or return action.
+async fn grade_submission(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Submission>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let score = body.optional_int("score")?;
+    if score.is_some_and(|score| score < 0) {
+        return Err(ApiError::bad_request("score must be 0 or more"));
+    }
+    let teacher_feedback = body.optional_text("teacher_feedback")?;
+    if score.is_none() && teacher_feedback.is_none() {
+        return Err(ApiError::bad_request("Missing: score or teacher_feedback"));
+    }
+    let mut tx = begin_immediate(&app.db).await?;
+    let (row, classroom_id) =
+        submissions::grading_target(&mut tx, &id).await?.ok_or_else(|| ApiError::not_found("Submission not found"))?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    let graded = submissions::grade(&mut tx, &row, &classroom_id, score, teacher_feedback, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(graded))
 }
 
 /// One submission per (assignment, learner), with contract #257's rules in the mock's order
