@@ -91,7 +91,28 @@ Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC
 
 **On Linux, a model that does not fit slows down before it fails.** `llama-server` maps the model file into memory. When RAM runs short, Linux drops model pages (for example to cache a video being streamed) and reads them back from disk on the next token, so replies slow to a crawl. That is why the budget keeps a reserve.
 
+## Hub spec for the AI tutor (DRAFT, #73)
+**Draft until the decision in `docs/benchmarks/ai_model_evaluation.md`.** It holds if REAP-15B passes scoring and the Lead's call on first-token speed (criterion 5). The 4 GB reference PC above cannot run this model. The Lead moved the AI candidate to a 16 GB Hub on 2026-11-01.
+
+| Part | Spec | Why (measured on the 16 GB laptop, `results/v3-qwen3-reap/`) |
+|---|---|---|
+| RAM | **16 GB minimum** | `llama-server` peaks at about 10.5 GB (10,773 MB) with 1 or 2 learners. The budget is below |
+| Memory modules | **Two (dual channel) recommended** | Writing a reply stayed at 11.8 tokens/s from 4 to 12 threads, which points to memory speed as the limit (one module, 25 to 27 GB/s). Inferred, not tested on a two-module machine |
+| CPU | **4 cores or more**; more cores shorten the wait on long lessons | Reading the prompt got about 1.6 times faster from 4 to 12 threads. Long lessons (about 1,500 to 1,775 prompt tokens) wait a median 22 to 25 s for the first token at 4 threads |
+| Disk | About 10 GB free for the model file (9.3 GB), on an SSD | The model is read from disk at start, and again if RAM runs short (see above) |
+| OS | Xubuntu 24.04 | The requirement above |
+| Learners at once | 1 slot meets the PRD's 8 to 15 tokens/s (11.9 per reply). With 2, each reply streams at 4.5 | The slot count is set after the run on the real pilot Hub (the Lead, 2026-10-30) |
+
+**RAM budget on a 16 GB Hub:**
+| | MB |
+|---|---|
+| Installed | 16,384 |
+| Firmware, Xubuntu, the Hub and the reserve (as in the 4 GB table above) | −1,650 |
+| Left for the model | ≈ 14,700 |
+| REAP-15B peak, 1 or 2 learners | 10,773 |
+| **Spare** | **≈ 3,900** |
+
 ## Open items (not built in this step)
-* **The AI model in the installer.** The issue asks the Lead whether the model (about 1.5 GB or more) ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
+* **The AI model in the installer.** The issue asks the Lead whether the model ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The candidate in `docs/benchmarks/ai_model_evaluation.md` is a 9.3 GB file. The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
 * **Client installers for the portal.** `/download` serves `<data_dir>/releases/`. Nothing in this step copies the student APK or the desktop installers there. They come from the mobile and desktop teams' builds and are copied there by hand until a later step owns it.
 * **Fresh-machine timing.** The "under 3 minutes" and "phones are not blocked" checks need a fresh Windows 10/11 PC or VM and a phone on the classroom router. See the PR's "How to test".
