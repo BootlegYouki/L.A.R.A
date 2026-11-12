@@ -1262,7 +1262,7 @@ def quiz_begin(req):
     quiz = STATE.quizzes.get(req.groups[0])
     pupil_quiz_or_404(quiz, req.user)
     if quiz["status"] != "ACTIVE":
-        raise ApiError(409, "QUIZ_CLOSED", "Sarado na ang pagsusulit")
+        raise ApiError(409, "QUIZ_CLOSED", "This quiz is closed")
     att = next((a for a in STATE.attempts.values()
                 if a["quiz_id"] == quiz["id"] and a["student_id"] == req.user["id"]), None)
     if not att:
