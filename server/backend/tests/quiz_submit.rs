@@ -360,3 +360,25 @@ async fn only_the_class_teachers_see_results() {
     let co = class.co_teacher("T-0002").await;
     assert_eq!(results(&class, &quiz, &co).await.0, 200);
 }
+
+/// #12's acceptance: 40 submitted quizzes are graded and stored in under 2 seconds.
+#[tokio::test]
+async fn forty_learners_are_graded_in_under_two_seconds() {
+    let class = Class::start().await;
+    let (quiz, questions) = active_quiz(&class, true).await;
+    let mut tokens = vec![class.learner_token.clone()];
+    for n in 1..40 {
+        tokens.push(class.add_learner(&format!("1234567891{n:02}"), true).await.1);
+    }
+    for token in &tokens {
+        begin(&class, &quiz, token).await;
+    }
+    let now = now_ms();
+    let started = std::time::Instant::now();
+    let replies = futures_util::future::join_all(tokens.iter().map(|t| submit(&class, &quiz, t, now, now, one_right(&questions)))).await;
+    let took = started.elapsed();
+    assert!(replies.iter().all(|(status, _)| *status == 200), "{replies:?}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE status = 'SUBMITTED' AND score = 1").await, 40);
+    assert!(took < std::time::Duration::from_secs(2), "40 submits took {took:?}");
+    println!("40 submits graded and stored in {took:?}");
+}
