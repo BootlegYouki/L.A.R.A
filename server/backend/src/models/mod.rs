@@ -4,3 +4,4 @@
 pub mod user;
 pub mod classroom;
 pub mod sync;
+pub mod quiz;
