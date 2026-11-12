@@ -12,7 +12,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
 | `backend/src/routes/files.rs` | `serve_stored`: `ServeFile` with each route's `Ranges` rule, the `If-Range` check, `nosniff`, and a 404 when the file is gone |
 | `backend/src/routes/materials.rs` | Upload and download handlers |
 | `backend/src/routes/assignments.rs` | Submit and submission-file handlers |
-| `backend/src/db/materials.rs`, `db/submissions.rs` | Rows and their `sync_revisions` entries |
+| `backend/src/db/materials.rs`, `db/submissions.rs` | Rows and their `sync_revisions` entries. A material records `uploaded_by` (the signed-in owner or co-teacher, #274); it is never sent to clients |
 | `backend/src/auth/mod.rs` | `MediaUser`: `AuthUser` that also accepts `?token=`, on the two download routes only |
 | `backend/src/services/class_access.rs` | `require_member`, the mock's `member_of`: class teachers and `ACTIVE` learners |
 | `backend/tests/materials.rs`, `tests/submissions.rs`, `tests/common/uploads.rs` | Real-Hub flows, access rules, cleanup checks, a raw-socket 300 MB upload |

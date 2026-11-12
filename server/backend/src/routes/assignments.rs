@@ -159,6 +159,7 @@ async fn submit(
             file_path: stored.relative.clone(),
             file_type: file_type.to_owned(),
             submitted_at,
+            created_at: received_at,
             received_at,
             score: None,
             teacher_feedback: None,

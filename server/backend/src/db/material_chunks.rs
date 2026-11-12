@@ -18,8 +18,8 @@ pub async fn insert_all(
     for chunk in chunks {
         let id = uuid::Uuid::new_v4().to_string();
         sqlx::query(
-            "INSERT INTO material_chunks (id, material_id, order_index, heading, text, token_estimate, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO material_chunks (id, material_id, order_index, heading, text, token_estimate, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(&id)
         .bind(material_id)
@@ -27,6 +27,7 @@ pub async fn insert_all(
         .bind(&chunk.heading)
         .bind(&chunk.text)
         .bind(chunk.token_estimate)
+        .bind(now_ms)
         .bind(now_ms)
         .execute(&mut *tx)
         .await?;

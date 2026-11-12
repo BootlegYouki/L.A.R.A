@@ -94,6 +94,7 @@ async fn upload(
         mime_type: format.mime(),
         file_path: &stored.relative,
         file_size_bytes: size,
+        uploaded_by: &user.id,
         topic_id: form.field("topic_id"),
         assignment_id: form.field("assignment_id"),
         announcement_id: form.field("announcement_id"),

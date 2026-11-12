@@ -14,6 +14,8 @@ pub struct NewMaterial<'a> {
     /// Relative to `storage/` (`storage::StoredFile::relative`).
     pub file_path: &'a str,
     pub file_size_bytes: i64,
+    /// The signed-in teacher (owner or co-teacher); never sent to clients (contract #273).
+    pub uploaded_by: &'a str,
     pub topic_id: Option<&'a str>,
     pub assignment_id: Option<&'a str>,
     pub announcement_id: Option<&'a str>,
@@ -84,8 +86,8 @@ pub async fn attachment_in_class(
 pub async fn insert(tx: &mut SqliteConnection, new: &NewMaterial<'_>, now_ms: i64) -> Result<Material, sqlx::Error> {
     sqlx::query(
         "INSERT INTO materials (id, classroom_id, title, file_type, mime_type, file_path, file_size_bytes,
-                                topic_id, assignment_id, announcement_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                uploaded_by, topic_id, assignment_id, announcement_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(new.id)
     .bind(new.classroom_id)
@@ -94,6 +96,7 @@ pub async fn insert(tx: &mut SqliteConnection, new: &NewMaterial<'_>, now_ms: i6
     .bind(new.mime_type)
     .bind(new.file_path)
     .bind(new.file_size_bytes)
+    .bind(new.uploaded_by)
     .bind(new.topic_id)
     .bind(new.assignment_id)
     .bind(new.announcement_id)
