@@ -29,9 +29,8 @@ pub fn run() {
             sync::count_queued_work,
             sync::apply_sync_receipts,
             account::forget_account_session,
-            video::update_material_local_path,
-            video::get_app_data_path,
-            video::get_material_by_id
+            video::get_material_by_id,
+            video::download_video_for_offline
         ])
         .plugin(
             tauri_plugin_sql::Builder::default()

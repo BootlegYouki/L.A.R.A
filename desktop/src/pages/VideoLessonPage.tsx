@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc } from '@tauri-apps/api/core';
 import { t } from '../i18n';
 import VideoPlayer from '../components/VideoPlayer';
-// import { videoDownloadManager } from '../services/video_downloader'; // Phase 3: Full download implementation
 import type { HubInfo } from '../services/discovery';
 
 interface Material {
@@ -44,18 +44,32 @@ export default function VideoLessonPage({
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
 
-  // Determine video source: local file or remote stream
+  // Store the initial hub info to use even when disconnected
+  const [initialHub] = useState(hub);
+
+  // Determine video source: local file or remote stream  
   const videoSrc = material?.local_file_path
-    ? `file://${material.local_file_path}`
-    : material && hub && token
-    ? `http://${hub.ip}:${hub.http_port}${material.download_url}?token=${token}`
+    ? convertFileSrc(material.local_file_path, 'asset') // Use Tauri asset protocol
+    : material && initialHub && token
+    ? `http://${initialHub.ip}:${initialHub.http_port}${material.download_url}?token=${token}`
     : '';
+  
+  // Debug log
+  useEffect(() => {
+    if (material) {
+      console.log('Material local_file_path:', material.local_file_path);
+      console.log('Video source:', videoSrc);
+      console.log('Is local file:', !!material.local_file_path);
+    }
+  }, [material, videoSrc]);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadMaterial() {
-      if (!hub) {
+      // Use initialHub (captured when component mounted) instead of current hub
+      // This allows us to query the local database even when Hub is disconnected
+      if (!initialHub) {
         setError(t.video_hub_required);
         setLoading(false);
         return;
@@ -66,7 +80,7 @@ export default function VideoLessonPage({
         setError(null);
 
         const result = await invoke<Material | null>('get_material_by_id', {
-          hub,
+          hub: initialHub,  // Use persisted hub info, not current connection state
           userId,
           materialId,
         });
@@ -98,47 +112,57 @@ export default function VideoLessonPage({
     return () => {
       mounted = false;
     };
-  }, [materialId, hub, userId]);
+  }, [materialId, initialHub, userId]);
 
-  // Download handler
+  // Download handler - secure implementation in Rust
   const handleDownload = async () => {
-    if (!material || !hub || !token) return;
+    if (!material || !hub || downloading) return;
     
     setDownloading(true);
     setDownloadProgress(0);
+    setError(null);
 
     try {
-      console.log('Starting download for:', material.id);
+      console.log('Starting video download:', material.id);
       
-      // TODO: Full implementation with progress tracking
-      // For now, show console log (Phase 3)
-      console.log('Download would save to app data directory');
-      console.log('Material:', {
-        id: material.id,
-        title: material.title,
-        size: material.file_size_bytes,
+      // Call secure Rust download command
+      const absolutePath = await invoke<string>('download_video_for_offline', {
+        hub,
+        userId,
+        materialId: material.id,
+        token, // Pass the token from props
       });
-      console.log('Hub:', `${hub.ip}:${hub.http_port}`);
-      console.log('Using video_downloader service (stubbed)');
+
+      console.log('Download complete, absolute path:', absolutePath);
       
-      // Simulate progress for demonstration
-      for (let i = 0; i <= 100; i += 10) {
-        setDownloadProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 100));
+      // Reload material from database to get the updated local_file_path
+      const updatedMaterial = await invoke<Material | null>('get_material_by_id', {
+        hub: initialHub,  // Use persisted hub info
+        userId,
+        materialId: material.id,
+      });
+
+      console.log('Reloaded material:', updatedMaterial);
+      
+      if (updatedMaterial) {
+        setMaterial(updatedMaterial);
+        console.log('New video source will be:', updatedMaterial.local_file_path ? 
+          `file://${updatedMaterial.local_file_path}` : 'stream');
       }
       
-      // TODO: Actually call videoDownloadManager.downloadVideo()
-      // await videoDownloadManager.downloadVideo(material, hub, token, (progress) => {
-      //   setDownloadProgress(progress.percentage);
-      // });
+      setDownloadProgress(100);
       
-      console.log('Download complete (simulated)');
-      
+      // Reset UI after brief success display
+      setTimeout(() => {
+        setDownloading(false);
+        setDownloadProgress(0);
+      }, 2000);
+
     } catch (err) {
       console.error('Download failed:', err);
-      setError(t.video_download_error);
-    } finally {
+      setError(typeof err === 'string' ? err : t.video_download_error);
       setDownloading(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -249,7 +273,7 @@ export default function VideoLessonPage({
         <h1>{material.title}</h1>
       </div>
 
-      {offline && (
+      {offline && !material.local_file_path && (
         <p role="status" className="hub-status-banner banner-amber">
           <i className="ph ph-wifi-slash" aria-hidden="true" />
           {t.video_offline_not_saved}
@@ -260,11 +284,10 @@ export default function VideoLessonPage({
         <VideoPlayer
           src={videoSrc}
           title={material.title}
-          isLocalFile={!!material.local_file_path}
         />
         
         {/* Save for Home button - only show if not downloaded and online */}
-        {!material.local_file_path && hub && token && !offline && (
+        {!material.local_file_path && hub && !offline && (
           <div className="video-actions" style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
               type="button"

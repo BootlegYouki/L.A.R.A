@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface VideoPlayerProps {
   src: string;
   title: string;
-  isLocalFile?: boolean;
   onError?: (error: Error) => void;
 }
 
-export default function VideoPlayer({ src, title, isLocalFile = false, onError }: VideoPlayerProps) {
+export default function VideoPlayer({ src, title, onError }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -33,12 +32,12 @@ export default function VideoPlayer({ src, title, isLocalFile = false, onError }
   };
 
   // Seek to position (click or drag)
-  const seekToPosition = (clientX: number, element: HTMLDivElement) => {
+  const seekToPosition = useCallback((clientX: number, element: HTMLDivElement) => {
     if (!videoRef.current || !duration) return;
     const rect = element.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     videoRef.current.currentTime = pos * duration;
-  };
+  }, [duration]);
 
   // Mouse down - start seeking
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -69,7 +68,7 @@ export default function VideoPlayer({ src, title, isLocalFile = false, onError }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isSeeking, duration]);
+  }, [isSeeking, seekToPosition]);
 
   // Volume control
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,14 +263,6 @@ export default function VideoPlayer({ src, title, isLocalFile = false, onError }
           </div>
         </div>
       </div>
-
-      {/* Source indicator */}
-      {isLocalFile && (
-        <div className="video-source-badge">
-          <i className="ph ph-download-simple" />
-          <span>Saved on this device</span>
-        </div>
-      )}
     </div>
   );
 }
