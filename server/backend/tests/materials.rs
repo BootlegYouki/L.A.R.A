@@ -297,3 +297,126 @@ async fn downloads_still_work_in_an_archived_class() {
     assert_eq!((status, bytes.as_slice()), (200, PDF));
     class.hub.stop().await;
 }
+
+// ---- step 3.4 (#54): rename and delete
+
+fn lesson_pdf() -> Vec<u8> {
+    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/lesson.pdf")).unwrap()
+}
+
+fn message(body: &Value) -> &str {
+    body["error"]["message"].as_str().unwrap_or("")
+}
+
+async fn rename(class: &Class, id: &str, body: serde_json::Value, token: &str) -> (u16, Value) {
+    class.hub.send_json(reqwest::Method::PATCH, &format!("/api/materials/{id}"), &body, Some(token)).await
+}
+
+async fn remove(class: &Class, id: &str, token: &str) -> (u16, Value) {
+    class.hub.request(reqwest::Method::DELETE, &format!("/api/materials/{id}"), Some(token)).await
+}
+
+async fn pull_from(class: &Class, cursor: i64) -> Value {
+    let body = serde_json::json!({"cursor": cursor});
+    let (status, pulled) = class.hub.post_json("/api/sync/pull", &body, Some(&class.learner_token)).await;
+    assert_eq!(status, 200, "{pulled}");
+    pulled
+}
+
+#[tokio::test]
+async fn material_can_be_attached_renamed_and_deleted() {
+    let class = Class::start().await;
+    class.assignment("asg-1").await;
+    let form = material_form(&class.id, "WORKSHEET", PDF).text("assignment_id", "asg-1");
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), form).await;
+    assert_eq!(status, 200, "{material}");
+    let id = material["id"].as_str().unwrap();
+
+    let (status, renamed) = rename(&class, id, serde_json::json!({"title": "Worksheet 1"}), class.teacher()).await;
+    assert_eq!(status, 200, "{renamed}");
+    assert_eq!((renamed["title"].as_str(), renamed["assignment_id"].as_str()), (Some("Worksheet 1"), Some("asg-1")));
+    assert_eq!(renamed["download_url"], material["download_url"]);
+    assert!(renamed.get("uploaded_by").is_none() && renamed.get("file_path").is_none(), "{renamed}");
+    let cursor = class.pull(&class.learner_token).await["next_cursor"].as_i64().unwrap();
+
+    let (status, body) = remove(&class, id, class.teacher()).await;
+    assert_eq!((status, body), (200, serde_json::json!({"success": true})));
+    let deleted = pull_from(&class, cursor).await["deleted"].clone();
+    assert!(deleted.as_array().unwrap().contains(&serde_json::json!({"entity_table": "materials", "entity_id": id})), "{deleted}");
+    assert!(class.files_in("materials").is_empty(), "the file is removed from disk");
+    let (status, _, _) = class.hub.get_file(&format!("/api/materials/{id}/download"), Some(&class.learner_token), None).await;
+    assert_eq!(status, 404);
+}
+
+#[tokio::test]
+async fn renaming_files_a_material_under_a_topic_and_back() {
+    let class = Class::start().await;
+    class.topic("t-1").await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    let id = material["id"].as_str().unwrap();
+    let (status, moved) = rename(&class, id, serde_json::json!({"topic_id": "t-1"}), class.teacher()).await;
+    assert_eq!((status, moved["topic_id"].as_str(), moved["title"].as_str()), (200, Some("t-1"), Some("Lesson 1")));
+    let (status, back) = rename(&class, id, serde_json::json!({"topic_id": null}), class.teacher()).await;
+    assert_eq!((status, back["topic_id"].is_null()), (200, true));
+    let (status, body) = rename(&class, id, serde_json::json!({"topic_id": "no-such-topic"}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Topic not found"));
+    let (status, body) = rename(&class, id, serde_json::json!({"title": ""}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (400, "title cannot be empty"));
+}
+
+#[tokio::test]
+async fn deleting_a_pdf_removes_its_chunks() {
+    let class = Class::start().await;
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "DOCUMENT", &lesson_pdf())).await;
+    assert_eq!(status, 200, "{material}");
+    let first = class.pull(&class.learner_token).await;
+    let chunk_ids: Vec<Value> = first["material_chunks"].as_array().unwrap().iter().map(|c| c["id"].clone()).collect();
+    assert!(chunk_ids.len() >= 3, "{first}");
+
+    let (status, _) = remove(&class, material["id"].as_str().unwrap(), class.teacher()).await;
+    assert_eq!(status, 200);
+    assert_eq!(class.count("SELECT COUNT(*) FROM material_chunks").await, 0);
+    let deleted = pull_from(&class, first["next_cursor"].as_i64().unwrap()).await["deleted"].clone();
+    for chunk in chunk_ids {
+        let entry = serde_json::json!({"entity_table": "material_chunks", "entity_id": chunk});
+        assert!(deleted.as_array().unwrap().contains(&entry), "{entry} not in {deleted}");
+    }
+}
+
+#[tokio::test]
+async fn deleting_a_material_with_a_missing_file_still_succeeds() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    for name in class.files_in("materials") {
+        std::fs::remove_file(class.hub.state().storage.root().join("materials").join(name)).unwrap();
+    }
+    let (status, body) = remove(&class, material["id"].as_str().unwrap(), class.teacher()).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM sync_revisions WHERE entity_table = 'materials' AND action = 'DELETE'").await, 1);
+}
+
+#[tokio::test]
+async fn material_edits_need_a_writable_class_you_teach() {
+    let class = Class::start().await;
+    let material = upload_pdf(&class, class.teacher()).await;
+    let id = material["id"].as_str().unwrap();
+    let (_, other_teacher) = class.other_class().await;
+    let rename_body = serde_json::json!({"title": "x"});
+    for token in [class.learner_token.as_str(), other_teacher.as_str()] {
+        assert_eq!(rename(&class, id, rename_body.clone(), token).await.0, 403);
+        assert_eq!(remove(&class, id, token).await.0, 403);
+    }
+    let (status, body) = rename(&class, "no-such-id", rename_body.clone(), class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Material not found"));
+    let (status, body) = remove(&class, "no-such-id", class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Material not found"));
+    let co = class.co_teacher("T-0002").await;
+    assert_eq!(rename(&class, id, serde_json::json!({"title": "By the co-teacher"}), &co).await.0, 200);
+
+    class.archive().await;
+    let (status, body) = rename(&class, id, rename_body, class.teacher()).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+    let (status, body) = remove(&class, id, class.teacher()).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+    assert_eq!(class.files_in("materials").len(), 1, "nothing removed");
+}

@@ -122,3 +122,46 @@ pub async fn insert(tx: &mut SqliteConnection, new: &NewMaterial<'_>, now_ms: i6
 pub async fn file_of(conn: &mut SqliteConnection, id: &str) -> Result<Option<MaterialFile>, sqlx::Error> {
     sqlx::query_as("SELECT classroom_id, file_path, file_type, mime_type FROM materials WHERE id = ?").bind(id).fetch_optional(conn).await
 }
+
+pub async fn class_of(conn: &mut SqliteConnection, id: &str) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar("SELECT classroom_id FROM materials WHERE id = ?").bind(id).fetch_optional(conn).await
+}
+
+/// Rename or move to a topic (`topic_id: Some(None)` takes it out of its topic). Step 3.4.
+pub async fn update(
+    tx: &mut SqliteConnection,
+    id: &str,
+    title: Option<String>,
+    topic_id: Option<Option<String>>,
+    now_ms: i64,
+) -> Result<Material, sqlx::Error> {
+    let material: Material = sqlx::query_as(
+        "UPDATE materials SET title = COALESCE(?, title), topic_id = CASE WHEN ? THEN ? ELSE topic_id END, updated_at = ?
+         WHERE id = ?
+         RETURNING id, classroom_id, title, file_type, file_size_bytes, '/api/materials/' || id || '/download' AS download_url,
+                   topic_id, assignment_id, announcement_id, updated_at",
+    )
+    .bind(title)
+    .bind(topic_id.is_some())
+    .bind(topic_id.flatten())
+    .bind(now_ms)
+    .bind(id)
+    .fetch_one(&mut *tx)
+    .await?;
+    record_revision(tx, Scope::class(&material.classroom_id), "materials", id, Action::Upsert, now_ms).await?;
+    Ok(material)
+}
+
+/// Deletes the material; `ON DELETE CASCADE` takes its lesson chunks, so each chunk gets a `DELETE`
+/// revision too. Returns the stored file for the caller to remove after commit. Step 3.4.
+pub async fn delete(tx: &mut SqliteConnection, id: &str, classroom_id: &str, now_ms: i64) -> Result<String, sqlx::Error> {
+    let file_path: String = sqlx::query_scalar("SELECT file_path FROM materials WHERE id = ?").bind(id).fetch_one(&mut *tx).await?;
+    let chunks: Vec<String> =
+        sqlx::query_scalar("SELECT id FROM material_chunks WHERE material_id = ?").bind(id).fetch_all(&mut *tx).await?;
+    for chunk in &chunks {
+        record_revision(tx, Scope::class(classroom_id), "material_chunks", chunk, Action::Delete, now_ms).await?;
+    }
+    record_revision(tx, Scope::class(classroom_id), "materials", id, Action::Delete, now_ms).await?;
+    sqlx::query("DELETE FROM materials WHERE id = ?").bind(id).execute(&mut *tx).await?;
+    Ok(file_path)
+}
