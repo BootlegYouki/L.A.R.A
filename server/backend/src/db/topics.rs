@@ -50,3 +50,28 @@ pub async fn update(
     record_revision(tx, Scope::class(&topic.classroom_id), "topics", id, Action::Upsert, now_ms).await?;
     Ok(topic)
 }
+
+/// Deletes the topic and keeps its work (PRD FR-3.7). Materials, open assignments and quizzes lose the
+/// topic with an `UPSERT` revision each, so devices unfile them; quizzes need the explicit UPDATE because
+/// `quizzes.topic_id` has no foreign key (#177). Archived assignments get no revision: their latest one
+/// must stay the `DELETE` tombstone, or a device that missed the archive would never drop them
+/// (`load_entity` skips archived assignments). Their `topic_id` is cleared by `ON DELETE SET NULL`.
+pub async fn delete(tx: &mut SqliteConnection, id: &str, classroom_id: &str, now_ms: i64) -> Result<(), sqlx::Error> {
+    const UNFILE: [(&str, &str); 3] = [
+        ("materials", "UPDATE materials SET topic_id = NULL, updated_at = ? WHERE topic_id = ? RETURNING id"),
+        (
+            "assignments",
+            "UPDATE assignments SET topic_id = NULL, updated_at = ? WHERE topic_id = ? AND archived_at IS NULL RETURNING id",
+        ),
+        ("quizzes", "UPDATE quizzes SET topic_id = NULL, updated_at = ? WHERE topic_id = ? RETURNING id"),
+    ];
+    for (table, sql) in UNFILE {
+        let ids: Vec<String> = sqlx::query_scalar(sqlx::AssertSqlSafe(sql)).bind(now_ms).bind(id).fetch_all(&mut *tx).await?;
+        for row in &ids {
+            record_revision(tx, Scope::class(classroom_id), table, row, Action::Upsert, now_ms).await?;
+        }
+    }
+    sqlx::query("DELETE FROM topics WHERE id = ?").bind(id).execute(&mut *tx).await?;
+    record_revision(tx, Scope::class(classroom_id), "topics", id, Action::Delete, now_ms).await?;
+    Ok(())
+}

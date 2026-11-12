@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::uploads::Class;
+use common::uploads::{material_form, Class, PDF};
 use reqwest::Method;
 use serde_json::{json, Value};
 
@@ -117,4 +117,92 @@ async fn topics_created_together_get_distinct_places() {
     let mut places = [a.1["order_index"].as_i64().unwrap(), b.1["order_index"].as_i64().unwrap()];
     places.sort_unstable();
     assert_eq!(places, [1, 2]);
+}
+
+async fn delete(class: &Class, id: &str, token: &str) -> (u16, Value) {
+    class.hub.request(Method::DELETE, &format!("/api/topics/{id}"), Some(token)).await
+}
+
+/// Files an assignment, a lesson file and a quiz under the topic; returns (assignment, material) ids.
+async fn file_work_under(class: &Class, topic: &str) -> (String, String) {
+    class.assignment("asg-1").await;
+    let (status, body) = class.hub.send_json(Method::PATCH, "/api/assignments/asg-1", &json!({"topic_id": topic}), Some(class.teacher())).await;
+    assert_eq!(status, 200, "{body}");
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "DOCUMENT", PDF)).await;
+    assert_eq!(status, 200, "{material}");
+    let material = material["id"].as_str().unwrap().to_owned();
+    let (status, body) =
+        class.hub.send_json(Method::PATCH, &format!("/api/materials/{material}"), &json!({"topic_id": topic}), Some(class.teacher())).await;
+    assert_eq!(status, 200, "{body}");
+    class
+        .exec(
+            "INSERT INTO quizzes (id, classroom_id, title, time_limit_minutes, topic_id, created_at, updated_at) VALUES ('quiz-1', ?, 'Quiz', 15, ?, 1, 1)",
+            &[class.id.as_str(), topic],
+        )
+        .await;
+    ("asg-1".to_owned(), material)
+}
+
+#[tokio::test]
+async fn deleting_a_topic_keeps_its_work() {
+    let class = Class::start().await;
+    let id = topic(&class, "Unit 1").await["id"].as_str().unwrap().to_owned();
+    let (assignment, material) = file_work_under(&class, &id).await;
+    let cursor = class.pull(&class.learner_token).await["next_cursor"].as_i64().unwrap();
+
+    let (status, body) = delete(&class, &id, class.teacher()).await;
+    assert_eq!((status, body), (200, json!({"success": true})));
+    let after = pull_from(&class, &class.learner_token, cursor).await;
+    assert!(after["deleted"].as_array().unwrap().contains(&json!({"entity_table": "topics", "entity_id": id})), "{after}");
+    let asg = after["assignments"].as_array().unwrap().iter().find(|a| a["id"] == assignment.as_str()).expect("the assignment is re-sent");
+    assert!(asg["topic_id"].is_null(), "{asg}");
+    let mat = after["materials"].as_array().unwrap().iter().find(|m| m["id"] == material.as_str()).expect("the material is re-sent");
+    assert!(mat["topic_id"].is_null(), "{mat}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE id = 'quiz-1' AND topic_id IS NULL").await, 1, "quizzes have no foreign key (#177)");
+    assert_eq!(class.count("SELECT COUNT(*) FROM sync_revisions WHERE entity_table = 'quizzes' AND entity_id = 'quiz-1'").await, 1);
+    assert_eq!(class.count("SELECT (SELECT COUNT(*) FROM assignments) + (SELECT COUNT(*) FROM materials) + (SELECT COUNT(*) FROM quizzes)").await, 3, "the work stays");
+}
+
+#[tokio::test]
+async fn deleting_a_topic_never_brings_back_an_archived_assignment() {
+    let class = Class::start().await;
+    let id = topic(&class, "Unit 1").await["id"].as_str().unwrap().to_owned();
+    class.assignment("asg-a").await;
+    let (status, _) = class.hub.send_json(Method::PATCH, "/api/assignments/asg-a", &json!({"topic_id": id}), Some(class.teacher())).await;
+    assert_eq!(status, 200);
+    let before_archive = class.pull(&class.learner_token).await["next_cursor"].as_i64().unwrap();
+    let (status, _) = class.hub.request(Method::DELETE, "/api/assignments/asg-a", Some(class.teacher())).await;
+    assert_eq!(status, 200);
+
+    assert_eq!(delete(&class, &id, class.teacher()).await.0, 200);
+    let after = pull_from(&class, &class.learner_token, before_archive).await;
+    assert!(
+        after["deleted"].as_array().unwrap().contains(&json!({"entity_table": "assignments", "entity_id": "asg-a"})),
+        "a device that missed the archive still gets the tombstone: {after}"
+    );
+    assert_eq!(after["assignments"], json!([]));
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignments WHERE id = 'asg-a' AND topic_id IS NULL AND archived_at IS NOT NULL").await, 1);
+}
+
+#[tokio::test]
+async fn deleting_twice_is_not_found() {
+    let class = Class::start().await;
+    let id = topic(&class, "Unit 1").await["id"].as_str().unwrap().to_owned();
+    assert_eq!(delete(&class, &id, class.teacher()).await.0, 200);
+    let (status, body) = delete(&class, &id, class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Topic not found"));
+    assert_eq!(class.count("SELECT COUNT(*) FROM sync_revisions WHERE entity_table = 'topics' AND action = 'DELETE'").await, 1);
+}
+
+#[tokio::test]
+async fn topic_delete_needs_a_writable_class_you_teach() {
+    let class = Class::start().await;
+    let id = topic(&class, "Unit 1").await["id"].as_str().unwrap().to_owned();
+    let (_, other_teacher) = class.other_class().await;
+    assert_eq!(delete(&class, &id, &class.learner_token).await.0, 403);
+    assert_eq!(delete(&class, &id, &other_teacher).await.0, 403);
+    class.archive().await;
+    let (status, body) = delete(&class, &id, class.teacher()).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+    assert_eq!(class.count("SELECT COUNT(*) FROM topics").await, 1);
 }

@@ -4,6 +4,7 @@
 use axum::extract::{Path, State};
 use axum::routing::{patch, post};
 use axum::{Json, Router};
+use serde_json::{json, Value};
 
 use super::body::JsonBody;
 use crate::auth::{require_role, AuthUser, Role};
@@ -17,7 +18,7 @@ use crate::AppState;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/topics", post(create))
-        .route("/api/topics/{id}", patch(update))
+        .route("/api/topics/{id}", patch(update).delete(remove))
 }
 
 fn topic_not_found() -> ApiError {
@@ -52,4 +53,15 @@ async fn update(
     let topic = topics::update(&mut tx, &id, name, order_index, app.clock.now_ms()).await?;
     tx.commit().await?;
     Ok(Json(topic))
+}
+
+/// "Deleting a topic keeps its work" (PRD FR-3.7): see `topics::delete`.
+async fn remove(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let classroom_id = topics::class_of(&mut tx, &id).await?.ok_or_else(topic_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    topics::delete(&mut tx, &id, &classroom_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(json!({"success": true})))
 }
