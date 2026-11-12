@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::Value;
@@ -23,7 +23,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/quizzes", post(create))
         .route("/api/quizzes/active", get(stub))
-        .route("/api/quizzes/{id}", get(stub).patch(teacher))
+        .route("/api/quizzes/{id}", get(stub).patch(update))
         .route("/api/quizzes/{id}/start", post(teacher))
         .route("/api/quizzes/{id}/begin", post(student))
         .route("/api/quizzes/{id}/close", post(teacher))
@@ -122,6 +122,31 @@ async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> 
     require_topic(&mut tx, &input, &classroom_id).await?;
     let id = uuid::Uuid::new_v4().to_string();
     let quiz = quizzes::insert(&mut tx, &id, &classroom_id, &input, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(quiz))
+}
+
+fn quiz_not_found() -> ApiError {
+    ApiError::not_found("Quiz not found")
+}
+
+/// Replaces a draft (PRD FR-4.8). The mock's order: 404, 403, then 409 once it has started, then the body.
+async fn update(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<TeacherQuiz>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let (classroom_id, status) = quizzes::meta(&mut tx, &id).await?.ok_or_else(quiz_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    if status != "DRAFT" {
+        return Err(ApiError::quiz_not_draft());
+    }
+    let input = parse_quiz(&body)?;
+    require_topic(&mut tx, &input, &classroom_id).await?;
+    let quiz = quizzes::replace(&mut tx, &id, &classroom_id, &input, app.clock.now_ms()).await?;
     tx.commit().await?;
     Ok(Json(quiz))
 }

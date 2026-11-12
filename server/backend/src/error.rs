@@ -29,6 +29,8 @@ pub enum ErrorCode {
     AlreadyGraded,
     /// 403: a comment on a post whose `allow_comments` is false (contract `/api/announcements/{id}/comments`).
     CommentsDisabled,
+    /// 409: editing a quiz that has started (contract `PATCH /api/quizzes/{id}`, PRD FR-4.8).
+    QuizNotDraft,
     /// Area stubs until their step lands; no client depends on it.
     NotImplemented,
     /// The database failed. The contract has no code for it yet (TECH_SPEC section 14, Q10).
@@ -52,6 +54,7 @@ impl ErrorCode {
             Self::LateSubmission => "LATE_SUBMISSION",
             Self::AlreadyGraded => "ALREADY_GRADED",
             Self::CommentsDisabled => "COMMENTS_DISABLED",
+            Self::QuizNotDraft => "QUIZ_NOT_DRAFT",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
         }
@@ -141,6 +144,10 @@ impl ApiError {
     /// English, unlike the mock's "Naka-off ang komento": the apps are English only (AGENTS.md 1.4).
     pub fn comments_disabled() -> Self {
         Self::new(StatusCode::FORBIDDEN, ErrorCode::CommentsDisabled, "Comments are turned off for this post")
+    }
+
+    pub fn quiz_not_draft() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotDraft, "A quiz can be edited only before it starts")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {

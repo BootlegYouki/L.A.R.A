@@ -116,12 +116,88 @@ async fn quiz_writes_need_a_writable_class_you_teach() {
     assert_eq!((status, message(&body)), (403, "This class is archived"));
 }
 
-// Used by later tasks' tests.
-#[allow(dead_code)]
-async fn send(class: &Class, method: Method, path: &str, body: &Value, token: &str) -> (u16, Value) {
-    class.hub.send_json(method, path, body, Some(token)).await
+async fn edit(class: &Class, id: &str, body: &Value, token: &str) -> (u16, Value) {
+    class.hub.send_json(Method::PATCH, &format!("/api/quizzes/{id}"), body, Some(token)).await
 }
-#[allow(dead_code)]
-fn unused() -> fn(&Value) -> &str {
-    code
+
+/// Starting is step 4.1; until then tests set the status straight in the row.
+async fn set_status(class: &Class, id: &str, status: &str) {
+    class.exec("UPDATE quizzes SET status = ?, started_at = 1000 WHERE id = ?", &[status, id]).await;
+}
+
+#[tokio::test]
+async fn quiz_can_be_edited_only_while_it_is_a_draft() {
+    let class = Class::start().await;
+    let quiz = draft(&class).await;
+    let id = quiz["id"].as_str().unwrap();
+    let mut body = quiz_body(&class.id);
+    body["title"] = json!("Ecosystem 2");
+    let (status, edited) = edit(&class, id, &body, class.teacher()).await;
+    assert_eq!((status, edited["title"].as_str()), (200, Some("Ecosystem 2")), "{edited}");
+    assert_eq!(edited["status"], "DRAFT");
+    set_status(&class, id, "ACTIVE").await;
+    let (status, answer) = edit(&class, id, &quiz_body(&class.id), class.teacher()).await;
+    assert_eq!((status, code(&answer), message(&answer)), (409, "QUIZ_NOT_DRAFT", "A quiz can be edited only before it starts"));
+}
+
+#[tokio::test]
+async fn editing_replaces_the_questions() {
+    let class = Class::start().await;
+    let quiz = draft(&class).await;
+    let id = quiz["id"].as_str().unwrap();
+    let kept = quiz["questions"][0]["id"].as_str().unwrap().to_owned();
+    let other = draft(&class).await;
+    let borrowed = other["questions"][0]["id"].as_str().unwrap().to_owned();
+    let body = json!({
+        "title": "Ecosystem", "time_limit_minutes": 20,
+        "questions": [
+            {"id": kept, "question_text": "Gumagawa ng pagkain ang halaman.", "question_type": "MULTIPLE_CHOICE",
+             "options": ["Photosynthesis", "Evaporation"], "correct_answer": "Photosynthesis"},
+            {"question_text": "Totoo ba?", "question_type": "TRUE_FALSE", "options": ["True", "False"], "correct_answer": "True"},
+            {"id": borrowed, "question_text": "Ano ang araw?", "question_type": "IDENTIFICATION", "correct_answer": "Bituin"},
+        ],
+    });
+    let (status, edited) = edit(&class, id, &body, class.teacher()).await;
+    assert_eq!(status, 200, "{edited}");
+    let ids: Vec<&str> = edited["questions"].as_array().unwrap().iter().map(|q| q["id"].as_str().unwrap()).collect();
+    assert_eq!(ids.len(), 3);
+    assert_eq!(ids[0], kept, "a question of this quiz keeps its id");
+    assert!(ids[2] != borrowed && uuid::Uuid::parse_str(ids[2]).is_ok(), "another quiz's id is not reused");
+    assert_eq!(edited["time_limit_minutes"], 20);
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_questions").await, 5, "3 here and the other quiz's 2");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_questions WHERE correct_answer = 'Halaman' AND quiz_id IN (SELECT id FROM quizzes WHERE title = 'Ecosystem' AND time_limit_minutes = 20)").await, 0, "the dropped question is gone");
+}
+
+#[tokio::test]
+async fn a_started_quiz_cannot_be_edited() {
+    let class = Class::start().await;
+    for status in ["ACTIVE", "CLOSED"] {
+        let quiz = draft(&class).await;
+        let id = quiz["id"].as_str().unwrap();
+        set_status(&class, id, status).await;
+        let mut body = quiz_body(&class.id);
+        body["title"] = json!("Changed");
+        body["questions"] = json!([{"question_text": "x", "question_type": "IDENTIFICATION", "correct_answer": "y"}]);
+        let (got, answer) = edit(&class, id, &body, class.teacher()).await;
+        assert_eq!((got, code(&answer)), (409, "QUIZ_NOT_DRAFT"), "{status}");
+        assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE title = 'Changed'").await, 0, "{status}");
+    }
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_questions").await, 4, "no question changed");
+}
+
+#[tokio::test]
+async fn edit_needs_a_quiz_you_teach() {
+    let class = Class::start().await;
+    let id = draft(&class).await["id"].as_str().unwrap().to_owned();
+    let (_, other_teacher) = class.other_class().await;
+    let (status, body) = edit(&class, "no-such-quiz", &quiz_body(&class.id), class.teacher()).await;
+    assert_eq!((status, message(&body)), (404, "Quiz not found"));
+    assert_eq!(edit(&class, &id, &quiz_body(&class.id), &class.learner_token).await.0, 403);
+    let (status, body) = edit(&class, &id, &quiz_body(&class.id), &other_teacher).await;
+    assert_eq!((status, message(&body)), (403, "Not your classroom"));
+    let (status, body) = edit(&class, &id, &json!({"title": "x"}), class.teacher()).await;
+    assert_eq!((status, message(&body)), (400, "Missing: time_limit_minutes, questions"));
+    class.archive().await;
+    let (status, body) = edit(&class, &id, &quiz_body(&class.id), class.teacher()).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
 }

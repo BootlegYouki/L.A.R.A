@@ -147,3 +147,41 @@ pub async fn teacher_view(conn: &mut SqliteConnection, id: &str) -> Result<Optio
             .collect(),
     }))
 }
+
+/// The quiz's class and status, for the route's checks.
+pub async fn meta(conn: &mut SqliteConnection, id: &str) -> Result<Option<(String, String)>, sqlx::Error> {
+    sqlx::query_as("SELECT classroom_id, status FROM quizzes WHERE id = ?").bind(id).fetch_optional(conn).await
+}
+
+/// Replaces a draft's settings and questions (contract `PATCH /api/quizzes/{id}`). The caller has
+/// checked it is still `DRAFT`, so no attempt can point at a question that goes away.
+pub async fn replace(
+    tx: &mut SqliteConnection,
+    id: &str,
+    classroom_id: &str,
+    input: &QuizInput,
+    now_ms: i64,
+) -> Result<TeacherQuiz, sqlx::Error> {
+    sqlx::query(
+        "UPDATE quizzes SET title = ?, instructions = ?, time_limit_minutes = ?, shuffle_questions = ?,
+             release_scores_immediately = ?, topic_id = CASE WHEN ? THEN ? ELSE topic_id END, updated_at = ?
+         WHERE id = ?",
+    )
+    .bind(&input.title)
+    .bind(&input.instructions)
+    .bind(input.time_limit_minutes)
+    .bind(input.shuffle_questions)
+    .bind(input.release_scores_immediately)
+    .bind(input.topic_id.is_some())
+    .bind(input.topic_id.clone().flatten())
+    .bind(now_ms)
+    .bind(id)
+    .execute(&mut *tx)
+    .await?;
+    let own: HashSet<String> =
+        sqlx::query_scalar("SELECT id FROM quiz_questions WHERE quiz_id = ?").bind(id).fetch_all(&mut *tx).await?.into_iter().collect();
+    sqlx::query("DELETE FROM quiz_questions WHERE quiz_id = ?").bind(id).execute(&mut *tx).await?;
+    insert_questions(tx, id, &input.questions, &own, now_ms).await?;
+    record_revision(tx, Scope::class(classroom_id), "quizzes", id, Action::Upsert, now_ms).await?;
+    teacher_view(tx, id).await?.ok_or(sqlx::Error::RowNotFound)
+}
