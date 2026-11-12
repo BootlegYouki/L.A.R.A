@@ -309,3 +309,78 @@ async fn outsiders_cannot_read_a_quiz() {
     assert_eq!(class.hub.get("/api/quizzes/active", Some(&outsider)).await.0, 404, "no active quiz in their classes");
     assert_eq!(get_quiz(&class, "no-such-quiz", class.teacher()).await.0, 404);
 }
+
+async fn begin(class: &Class, id: &str, token: &str) -> (u16, Value) {
+    class.hub.post_json(&format!("/api/quizzes/{id}/begin"), &json!({}), Some(token)).await
+}
+
+/// An `ACTIVE` quiz in the class (starting it is step 4.1).
+async fn active_quiz(class: &Class) -> String {
+    let id = draft(class).await["id"].as_str().unwrap().to_owned();
+    set_status(class, &id, "ACTIVE").await;
+    id
+}
+
+#[tokio::test]
+async fn begin_opens_one_in_progress_attempt() {
+    let class = Class::start().await;
+    let id = active_quiz(&class).await;
+    let mut teacher = common::ws::connect(&class.hub, class.teacher()).await;
+    let (status, first) = begin(&class, &id, &class.learner_token).await;
+    assert_eq!(status, 200, "{first}");
+    assert!(uuid::Uuid::parse_str(first["attempt_id"].as_str().unwrap()).is_ok(), "{first}");
+    assert!(first["started_at"].as_i64().unwrap() > 0);
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE status = 'IN_PROGRESS'").await, 1);
+
+    let mut presence = common::ws::next(&mut teacher).await;
+    while presence["state"] == "ONLINE" || presence["state"] == "OFFLINE" {
+        presence = common::ws::next(&mut teacher).await;
+    }
+    assert_eq!(
+        (presence["event"].as_str(), presence["state"].as_str(), presence["student_id"].as_str(), presence["classroom_id"].as_str()),
+        (Some("EVENT_PRESENCE"), Some("ANSWERING_QUIZ"), Some(class.learner.as_str()), Some(class.id.as_str()))
+    );
+    let (status, again) = begin(&class, &id, &class.learner_token).await;
+    assert_eq!((status, again), (200, first), "the same attempt comes back");
+    common::ws::nothing_within(&mut teacher, 300).await;
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 1);
+}
+
+#[tokio::test]
+async fn begin_twice_at_once_opens_one_attempt() {
+    let class = Class::start().await;
+    let id = active_quiz(&class).await;
+    let (a, b) = tokio::join!(begin(&class, &id, &class.learner_token), begin(&class, &id, &class.learner_token));
+    assert_eq!((a.0, b.0), (200, 200), "{a:?} {b:?}");
+    assert_eq!(a.1["attempt_id"], b.1["attempt_id"]);
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 1);
+}
+
+#[tokio::test]
+async fn only_active_learners_begin() {
+    let class = Class::start().await;
+    let draft_id = draft(&class).await["id"].as_str().unwrap().to_owned();
+    let (status, body) = begin(&class, &draft_id, &class.learner_token).await;
+    assert_eq!((status, message(&body)), (404, "Quiz not found"));
+    set_status(&class, &draft_id, "CLOSED").await;
+    let (status, body) = begin(&class, &draft_id, &class.learner_token).await;
+    assert_eq!((status, code(&body), message(&body)), (409, "QUIZ_CLOSED", "This quiz is closed"));
+
+    let id = active_quiz(&class).await;
+    let (_, pending) = class.add_learner("123456789013", false).await;
+    assert_eq!(begin(&class, &id, &pending).await.0, 403);
+    assert_eq!(begin(&class, &id, class.teacher()).await.0, 403);
+    assert_eq!(begin(&class, "no-such-quiz", &class.learner_token).await.0, 404);
+
+    let path = format!("/api/classrooms/{}/remove", class.id);
+    let (status, body) = class.hub.post_json(&path, &json!({"student_id": class.learner}), Some(class.teacher())).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(begin(&class, &id, &class.learner_token).await.0, 403, "a removed learner cannot begin");
+
+    let (ana, ana_token) = class.add_learner("123456789014", true).await;
+    let _ = ana;
+    class.archive().await;
+    let (status, body) = begin(&class, &id, &ana_token).await;
+    assert_eq!((status, message(&body)), (403, "This class is archived"));
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 0);
+}

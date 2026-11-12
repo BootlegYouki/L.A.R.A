@@ -294,3 +294,40 @@ pub async fn active_for(conn: &mut SqliteConnection, user: &AuthUser) -> Result<
     .fetch_optional(conn)
     .await
 }
+
+/// The learner's attempt, opened on their first `/begin`: `(attempt_id, started_at, newly_opened)`. One
+/// attempt per learner per quiz (`UNIQUE(quiz_id, student_id)`, PRD FR-4.1); a repeat, even after
+/// submitting, gets the stored one back. The `IN_PROGRESS` row is what the AI lockout checks
+/// (rules/quiz-and-anti-cheat.md section 1); pull sends only submitted attempts.
+pub async fn begin(
+    tx: &mut SqliteConnection,
+    quiz_id: &str,
+    classroom_id: &str,
+    student_id: &str,
+    now_ms: i64,
+) -> Result<(String, i64, bool), sqlx::Error> {
+    let existing: Option<(String, i64)> =
+        sqlx::query_as("SELECT id, started_at FROM quiz_attempts WHERE quiz_id = ? AND student_id = ?")
+            .bind(quiz_id)
+            .bind(student_id)
+            .fetch_optional(&mut *tx)
+            .await?;
+    if let Some((id, started_at)) = existing {
+        return Ok((id, started_at, false));
+    }
+    let id = uuid::Uuid::new_v4().to_string();
+    sqlx::query(
+        "INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, created_at, answers_json, updated_at)
+         VALUES (?, ?, ?, 'IN_PROGRESS', ?, ?, '[]', ?)",
+    )
+    .bind(&id)
+    .bind(quiz_id)
+    .bind(student_id)
+    .bind(now_ms)
+    .bind(now_ms)
+    .bind(now_ms)
+    .execute(&mut *tx)
+    .await?;
+    record_revision(tx, Scope::student(classroom_id, student_id), "quiz_attempts", &id, Action::Upsert, now_ms).await?;
+    Ok((id, now_ms, true))
+}

@@ -8,7 +8,7 @@ use axum::extract::{Path, State};
 use axum::routing::{get, post};
 use axum::response::{IntoResponse, Response};
 use axum::{Json, Router};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use super::body::JsonBody;
 use super::{not_implemented_student as student, not_implemented_teacher as teacher};
@@ -18,6 +18,7 @@ use crate::db::{begin_immediate, quizzes};
 use crate::error::ApiError;
 use crate::models::quiz::{QuestionInput, QuestionType, QuizInput, StudentQuiz, TeacherQuiz};
 use crate::services::class_access;
+use crate::websocket::events::{PresenceState, ServerEvent};
 use crate::AppState;
 
 pub fn router() -> Router<AppState> {
@@ -26,7 +27,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/quizzes/active", get(active))
         .route("/api/quizzes/{id}", get(read).patch(update))
         .route("/api/quizzes/{id}/start", post(teacher))
-        .route("/api/quizzes/{id}/begin", post(student))
+        .route("/api/quizzes/{id}/begin", post(begin))
         .route("/api/quizzes/{id}/close", post(teacher))
         .route("/api/quizzes/{id}/submit", post(student))
         .route("/api/quizzes/{id}/results", get(teacher))
@@ -177,4 +178,36 @@ async fn active(State(app): State<AppState>, user: AuthUser) -> Result<Json<Stud
     let id = quizzes::active_for(&mut conn, &user).await?.ok_or_else(no_active)?;
     let learner = (user.role == Role::Student).then_some(user.id.as_str());
     Ok(Json(quizzes::student_view(&mut conn, &id, learner).await?.ok_or_else(no_active)?))
+}
+
+/// Opens the learner's attempt on an `ACTIVE` quiz, which starts the AI lockout (PRD FR-4.3), and tells
+/// the class teachers the learner is answering. The mock's order: 404 (missing or `DRAFT`), 403 (not an
+/// `ACTIVE` member), then 409 `QUIZ_CLOSED`. A repeat answers the same attempt and sends no second event.
+async fn begin(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Student)?;
+    let now = app.clock.now_ms();
+    let mut tx = begin_immediate(&app.db).await?;
+    let (classroom_id, status) = quizzes::meta(&mut tx, &id).await?.ok_or_else(quiz_not_found)?;
+    if status == "DRAFT" {
+        return Err(quiz_not_found());
+    }
+    class_access::require_member(&mut tx, &user, &classroom_id).await?;
+    class_access::require_writable(&mut tx, &classroom_id).await?;
+    if status != "ACTIVE" {
+        return Err(ApiError::quiz_closed());
+    }
+    let (attempt_id, started_at, opened) = quizzes::begin(&mut tx, &id, &classroom_id, &user.id, now).await?;
+    tx.commit().await?;
+    if opened {
+        let event = ServerEvent::Presence {
+            classroom_id: classroom_id.clone(),
+            student_id: user.id.clone(),
+            state: PresenceState::AnsweringQuiz,
+            timestamp: now,
+        };
+        if let Err(error) = app.broker.send_to_teacher(&app.db, &classroom_id, &event).await {
+            tracing::warn!(%error, "quiz presence push failed");
+        }
+    }
+    Ok(Json(json!({"attempt_id": attempt_id, "started_at": started_at})))
 }

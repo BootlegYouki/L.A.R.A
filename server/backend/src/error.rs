@@ -31,6 +31,8 @@ pub enum ErrorCode {
     CommentsDisabled,
     /// 409: editing a quiz that has started (contract `PATCH /api/quizzes/{id}`, PRD FR-4.8).
     QuizNotDraft,
+    /// 409: beginning a quiz that is not `ACTIVE` (mock code, TECH_SPEC section 14, Q8).
+    QuizClosed,
     /// Area stubs until their step lands; no client depends on it.
     NotImplemented,
     /// The database failed. The contract has no code for it yet (TECH_SPEC section 14, Q10).
@@ -55,6 +57,7 @@ impl ErrorCode {
             Self::AlreadyGraded => "ALREADY_GRADED",
             Self::CommentsDisabled => "COMMENTS_DISABLED",
             Self::QuizNotDraft => "QUIZ_NOT_DRAFT",
+            Self::QuizClosed => "QUIZ_CLOSED",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
         }
@@ -148,6 +151,11 @@ impl ApiError {
 
     pub fn quiz_not_draft() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotDraft, "A quiz can be edited only before it starts")
+    }
+
+    /// English, unlike the mock's "Sarado na ang pagsusulit": the apps are English only.
+    pub fn quiz_closed() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::QuizClosed, "This quiz is closed")
     }
 
     pub fn route_not_found(method: &Method, path: &str) -> Self {
