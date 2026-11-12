@@ -78,12 +78,6 @@ async fn route_not_found(method: Method, uri: Uri) -> ApiError {
     ApiError::route_not_found(&method, uri.path())
 }
 
-/// Stub for a route any signed-in user may call: 401 without a valid token, as the real route
-/// will answer.
-async fn not_implemented_signed_in(_user: AuthUser, method: Method, uri: Uri) -> ApiError {
-    ApiError::not_implemented(&method, uri.path())
-}
-
 /// Stubs for routes with a role in the mock (`@route(..., role=...)`): 401, then the mock's 403.
 async fn not_implemented_teacher(user: AuthUser, method: Method, uri: Uri) -> ApiError {
     stub_for(&user, Role::Teacher, &method, &uri)

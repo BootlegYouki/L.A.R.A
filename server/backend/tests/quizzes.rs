@@ -201,3 +201,111 @@ async fn edit_needs_a_quiz_you_teach() {
     let (status, body) = edit(&class, &id, &quiz_body(&class.id), class.teacher()).await;
     assert_eq!((status, message(&body)), (403, "This class is archived"));
 }
+
+async fn get_quiz(class: &Class, id: &str, token: &str) -> (u16, Value) {
+    class.hub.get(&format!("/api/quizzes/{id}"), Some(token)).await
+}
+
+fn keys(value: &Value) -> Vec<String> {
+    let mut keys: Vec<String> = value.as_object().unwrap().keys().cloned().collect();
+    keys.sort_unstable();
+    keys
+}
+
+#[tokio::test]
+async fn drafts_are_invisible_to_learners() {
+    let class = Class::start().await;
+    let id = draft(&class).await["id"].as_str().unwrap().to_owned();
+    let (status, body) = get_quiz(&class, &id, &class.learner_token).await;
+    assert_eq!((status, message(&body)), (404, "Quiz not found"));
+    let (status, body) = class.hub.get("/api/quizzes/active", Some(&class.learner_token)).await;
+    assert_eq!((status, message(&body)), (404, "No active quiz"));
+}
+
+#[tokio::test]
+async fn learners_get_the_quiz_without_answers() {
+    let class = Class::start().await;
+    let id = draft(&class).await["id"].as_str().unwrap().to_owned();
+    set_status(&class, &id, "ACTIVE").await;
+    let (status, quiz) = get_quiz(&class, &id, &class.learner_token).await;
+    assert_eq!(status, 200, "{quiz}");
+    assert_eq!(keys(&quiz), ["classroom_id", "id", "questions", "started_at", "time_limit_minutes", "title"]);
+    assert_eq!(quiz["started_at"], 1000);
+    for question in quiz["questions"].as_array().unwrap() {
+        assert_eq!(keys(question), ["id", "options", "order_index", "points", "question_text", "question_type"]);
+    }
+    let (status, active) = class.hub.get("/api/quizzes/active", Some(&class.learner_token)).await;
+    assert_eq!((status, active.clone()), (200, quiz), "/active sends the same payload");
+    let (status, teacher_view) = get_quiz(&class, &id, class.teacher()).await;
+    assert_eq!(status, 200);
+    assert!(teacher_view.to_string().contains("correct_answer"), "the teacher sees the key");
+    assert_eq!(teacher_view["status"], "ACTIVE");
+}
+
+#[tokio::test]
+async fn shuffle_gives_each_learner_a_stable_order() {
+    let class = Class::start().await;
+    let mut body = quiz_body(&class.id);
+    body["shuffle_questions"] = json!(true);
+    body["questions"] = json!((1..=6)
+        .map(|n| json!({"question_text": format!("Q{n}"), "question_type": "IDENTIFICATION", "correct_answer": format!("A{n}")}))
+        .collect::<Vec<_>>());
+    let (status, quiz) = create(&class, class.teacher(), &body).await;
+    assert_eq!(status, 200, "{quiz}");
+    let id = quiz["id"].as_str().unwrap();
+    set_status(&class, id, "ACTIVE").await;
+    let order = |q: &Value| q["questions"].as_array().unwrap().iter().map(|x| x["question_text"].as_str().unwrap().to_owned()).collect::<Vec<_>>();
+    let mut tokens = vec![class.learner_token.clone()];
+    for lrn in ["123456789013", "123456789014", "123456789015"] {
+        tokens.push(class.add_learner(lrn, true).await.1);
+    }
+    let mut orders = Vec::new();
+    for token in &tokens {
+        let first = order(&get_quiz(&class, id, token).await.1);
+        assert_eq!(order(&get_quiz(&class, id, token).await.1), first, "stable for one learner");
+        let mut sorted = first.clone();
+        sorted.sort();
+        assert_eq!(sorted, ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], "the same questions");
+        orders.push(first);
+    }
+    orders.dedup();
+    assert!(orders.len() > 1, "learners get different orders: {orders:?}");
+    assert_eq!(order(&get_quiz(&class, id, class.teacher()).await.1), ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], "the teacher sees the set order");
+}
+
+#[tokio::test]
+async fn active_picks_the_newest_quiz_of_the_learners_classes() {
+    let class = Class::start().await;
+    let (other, other_teacher) = class.other_class().await;
+    class
+        .exec(
+            "INSERT INTO enrollments (id, classroom_id, student_id, status, joined_at, created_at, updated_at) VALUES ('e-2', ?, ?, 'ACTIVE', 1, 1, 1)",
+            &[other.as_str(), class.learner.as_str()],
+        )
+        .await;
+    let older = draft(&class).await["id"].as_str().unwrap().to_owned();
+    let (status, newer) = create(&class, &other_teacher, &quiz_body(&other)).await;
+    assert_eq!(status, 200, "{newer}");
+    let newer = newer["id"].as_str().unwrap().to_owned();
+    class.exec("UPDATE quizzes SET status = 'ACTIVE', started_at = 1 WHERE id = ?", &[older.as_str()]).await;
+    class.exec("UPDATE quizzes SET status = 'ACTIVE', started_at = 2 WHERE id = ?", &[newer.as_str()]).await;
+    let (status, active) = class.hub.get("/api/quizzes/active", Some(&class.learner_token)).await;
+    assert_eq!((status, active["id"].as_str()), (200, Some(newer.as_str())));
+}
+
+#[tokio::test]
+async fn outsiders_cannot_read_a_quiz() {
+    let class = Class::start().await;
+    let id = draft(&class).await["id"].as_str().unwrap().to_owned();
+    set_status(&class, &id, "ACTIVE").await;
+    let outsider = class.hub.seed_user("123456789098", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.open_session(outsider).await;
+    let (_, other_teacher) = class.other_class().await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "1234").await;
+    let admin = class.hub.open_session(admin).await;
+    for token in [&outsider, &other_teacher, &admin] {
+        assert_eq!(get_quiz(&class, &id, token).await.0, 403);
+    }
+    assert_eq!(class.hub.get("/api/quizzes/active", Some(&outsider)).await.0, 404, "no active quiz in their classes");
+    assert_eq!(get_quiz(&class, "no-such-quiz", class.teacher()).await.0, 404);
+}

@@ -6,24 +6,25 @@ use std::collections::HashSet;
 
 use axum::extract::{Path, State};
 use axum::routing::{get, post};
+use axum::response::{IntoResponse, Response};
 use axum::{Json, Router};
 use serde_json::Value;
 
 use super::body::JsonBody;
-use super::{not_implemented_signed_in as stub, not_implemented_student as student, not_implemented_teacher as teacher};
+use super::{not_implemented_student as student, not_implemented_teacher as teacher};
 use crate::auth::{require_role, AuthUser, Role};
 use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::{begin_immediate, quizzes};
 use crate::error::ApiError;
-use crate::models::quiz::{QuestionInput, QuestionType, QuizInput, TeacherQuiz};
+use crate::models::quiz::{QuestionInput, QuestionType, QuizInput, StudentQuiz, TeacherQuiz};
 use crate::services::class_access;
 use crate::AppState;
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/quizzes", post(create))
-        .route("/api/quizzes/active", get(stub))
-        .route("/api/quizzes/{id}", get(stub).patch(update))
+        .route("/api/quizzes/active", get(active))
+        .route("/api/quizzes/{id}", get(read).patch(update))
         .route("/api/quizzes/{id}/start", post(teacher))
         .route("/api/quizzes/{id}/begin", post(student))
         .route("/api/quizzes/{id}/close", post(teacher))
@@ -149,4 +150,31 @@ async fn update(
     let quiz = quizzes::replace(&mut tx, &id, &classroom_id, &input, app.clock.now_ms()).await?;
     tx.commit().await?;
     Ok(Json(quiz))
+}
+
+/// The teacher of the class gets the whole quiz with its key. Anyone else goes through the learner path:
+/// a `DRAFT` is 404 (before the member check, as in the mock), then members only, then the redacted view.
+async fn read(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Response, ApiError> {
+    let mut conn = app.db.acquire().await?;
+    let (classroom_id, status) = quizzes::meta(&mut conn, &id).await?.ok_or_else(quiz_not_found)?;
+    if user.role == Role::Teacher {
+        class_access::require_teacher(&mut conn, &user, &classroom_id).await?;
+        let quiz = quizzes::teacher_view(&mut conn, &id).await?.ok_or_else(quiz_not_found)?;
+        return Ok(Json(quiz).into_response());
+    }
+    if status == "DRAFT" {
+        return Err(quiz_not_found());
+    }
+    class_access::require_member(&mut conn, &user, &classroom_id).await?;
+    let quiz = quizzes::student_view(&mut conn, &id, Some(&user.id)).await?.ok_or_else(quiz_not_found)?;
+    Ok(Json(quiz).into_response())
+}
+
+/// Always the learner view, for teachers too (the mock's `student_quiz`).
+async fn active(State(app): State<AppState>, user: AuthUser) -> Result<Json<StudentQuiz>, ApiError> {
+    let mut conn = app.db.acquire().await?;
+    let no_active = || ApiError::not_found("No active quiz");
+    let id = quizzes::active_for(&mut conn, &user).await?.ok_or_else(no_active)?;
+    let learner = (user.role == Role::Student).then_some(user.id.as_str());
+    Ok(Json(quizzes::student_view(&mut conn, &id, learner).await?.ok_or_else(no_active)?))
 }

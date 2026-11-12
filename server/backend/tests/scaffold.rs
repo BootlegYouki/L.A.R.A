@@ -21,9 +21,11 @@ const BUILT_AREAS: [&str; 8] = [
     "/api/classrooms", "/api/sync/", "/api/admin/", "/api/materials", "/api/assignments", "/api/submissions",
     "/api/announcements", "/api/topics",
 ];
-const BUILT_ROUTES: [(&str, &str); 2] = [
+const BUILT_ROUTES: [(&str, &str); 4] = [
     ("POST", "/api/quizzes"),       // 4.5
     ("PATCH", "/api/quizzes/{id}"), // 4.5
+    ("GET", "/api/quizzes/{id}"),   // 4.5
+    ("GET", "/api/quizzes/active"), // 4.5
 ];
 
 /// `path` is a template (`{id}`) or a mock path with `x` for each parameter.

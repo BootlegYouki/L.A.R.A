@@ -88,3 +88,25 @@ pub struct TeacherQuiz {
     pub status: String,
     pub started_at: Option<i64>,
 }
+
+/// Learner view of a question (contract `StudentQuestion`). Has no answer field by design.
+#[derive(Serialize)]
+pub struct StudentQuestion {
+    pub id: String,
+    pub order_index: i64,
+    pub question_text: String,
+    pub question_type: QuestionType,
+    pub options: Vec<String>,
+    pub points: i64,
+}
+
+/// Learner view of a quiz (contract `StudentQuizResponse`).
+#[derive(Serialize)]
+pub struct StudentQuiz {
+    pub id: String,
+    pub classroom_id: String,
+    pub title: String,
+    pub time_limit_minutes: i64,
+    pub started_at: Option<i64>,
+    pub questions: Vec<StudentQuestion>,
+}
