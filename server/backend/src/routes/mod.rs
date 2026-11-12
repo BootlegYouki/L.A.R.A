@@ -14,6 +14,7 @@ mod files;
 mod materials;
 mod portal;
 mod private_comments;
+mod quiz_submit;
 mod quizzes;
 mod sync;
 mod topics;
@@ -41,6 +42,7 @@ pub fn router(app: AppState) -> Router {
         .merge(materials::router())
         .merge(portal::router())
         .merge(private_comments::router())
+        .merge(quiz_submit::router())
         .merge(quizzes::router())
         .merge(sync::router())
         .merge(topics::router())
@@ -81,10 +83,6 @@ async fn route_not_found(method: Method, uri: Uri) -> ApiError {
 /// Stubs for routes with a role in the mock (`@route(..., role=...)`): 401, then the mock's 403.
 async fn not_implemented_teacher(user: AuthUser, method: Method, uri: Uri) -> ApiError {
     stub_for(&user, Role::Teacher, &method, &uri)
-}
-
-async fn not_implemented_student(user: AuthUser, method: Method, uri: Uri) -> ApiError {
-    stub_for(&user, Role::Student, &method, &uri)
 }
 
 async fn not_implemented_admin(user: AuthUser, method: Method, uri: Uri) -> ApiError {

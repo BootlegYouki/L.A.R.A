@@ -37,7 +37,7 @@ impl QuestionType {
 }
 
 /// One answer in a submission (contract `Answer`).
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize, Serialize)]
 pub struct AnswerInput {
     pub question_id: String,
     pub selected_option: String,

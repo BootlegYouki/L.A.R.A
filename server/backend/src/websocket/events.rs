@@ -19,6 +19,8 @@ pub enum ServerEvent {
     JoinApproval { classroom_id: String, student_id: String, status: EnrollmentStatus, timestamp: i64 },
     #[serde(rename = "EVENT_ANNOUNCEMENT_PUSH")]
     AnnouncementPush { classroom_id: String, announcement_id: String, title: String, timestamp: i64 },
+    #[serde(rename = "EVENT_GRADE_CONFIRMED")]
+    GradeConfirmed { quiz_id: String, attempt_id: String, score: i64, total_points: i64, timestamp: i64 },
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -145,6 +147,10 @@ mod tests {
                     lrn: "123456789013".into(),
                     timestamp: 1,
                 },
+            ),
+            (
+                "grade_confirmed.json",
+                ServerEvent::GradeConfirmed { quiz_id: "q".into(), attempt_id: "a".into(), score: 1, total_points: 2, timestamp: 1 },
             ),
             (
                 "announcement_push.json",

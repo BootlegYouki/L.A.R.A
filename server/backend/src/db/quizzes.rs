@@ -7,6 +7,7 @@ use sqlx::{FromRow, SqliteConnection};
 
 use super::sync_revisions::{record_revision, Action, Scope};
 use crate::auth::AuthUser;
+use crate::services::grading_engine::GradingQuestion;
 use crate::models::quiz::{
     QuestionInput, QuestionType, QuizInput, StudentQuestion, StudentQuiz, TeacherQuestion, TeacherQuiz,
 };
@@ -336,4 +337,122 @@ pub async fn begin(
     .await?;
     record_revision(tx, Scope::student(classroom_id, student_id), "quiz_attempts", &id, Action::Upsert, now_ms).await?;
     Ok((id, now_ms, true))
+}
+
+/// What submit needs to know about the quiz.
+#[derive(FromRow)]
+pub struct QuizState {
+    pub classroom_id: String,
+    pub status: String,
+    pub started_at: Option<i64>,
+    pub time_limit_minutes: i64,
+    pub release_scores_immediately: bool,
+}
+
+pub async fn quiz_state(conn: &mut SqliteConnection, id: &str) -> Result<Option<QuizState>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT classroom_id, status, started_at, time_limit_minutes, release_scores_immediately FROM quizzes WHERE id = ?",
+    )
+    .bind(id)
+    .fetch_optional(conn)
+    .await
+}
+
+/// The learner's attempt on a quiz, if any.
+#[derive(FromRow)]
+pub struct AttemptRow {
+    pub id: String,
+    pub status: String,
+    pub started_at: i64,
+    pub submitted_at: Option<i64>,
+    pub score: Option<i64>,
+    pub total_points: Option<i64>,
+}
+
+pub async fn attempt_for(conn: &mut SqliteConnection, quiz_id: &str, student_id: &str) -> Result<Option<AttemptRow>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT id, status, started_at, submitted_at, score, total_points FROM quiz_attempts WHERE quiz_id = ? AND student_id = ?",
+    )
+    .bind(quiz_id)
+    .bind(student_id)
+    .fetch_optional(conn)
+    .await
+}
+
+/// The answer key, for grading on the Hub only.
+pub async fn grading_key(conn: &mut SqliteConnection, quiz_id: &str) -> Result<Vec<GradingQuestion>, sqlx::Error> {
+    let rows: Vec<(String, String, i64, String, Option<String>)> = sqlx::query_as(
+        "SELECT id, question_type, points, correct_answer, synonyms_json FROM quiz_questions WHERE quiz_id = ? ORDER BY order_index",
+    )
+    .bind(quiz_id)
+    .fetch_all(conn)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|(id, kind, points, correct_answer, synonyms)| GradingQuestion {
+            id,
+            question_type: QuestionType::parse(&kind).unwrap_or(QuestionType::Identification),
+            points,
+            correct_answer,
+            synonyms: json_list(synonyms.as_deref()),
+        })
+        .collect())
+}
+
+/// A graded submission, as the attempt row. Updates the `IN_PROGRESS` row `/begin` made, or inserts one
+/// (a learner who never reached `/begin`); either way one row per learner and quiz. Returns the attempt id.
+pub struct GradedAttempt<'a> {
+    pub existing: Option<&'a str>,
+    pub quiz_id: &'a str,
+    pub classroom_id: &'a str,
+    pub student_id: &'a str,
+    pub started_at: i64,
+    pub submitted_at: i64,
+    pub score: i64,
+    pub total_points: i64,
+    pub answers_json: &'a str,
+}
+
+pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, now_ms: i64) -> Result<String, sqlx::Error> {
+    let id = match a.existing {
+        Some(id) => {
+            sqlx::query(
+                "UPDATE quiz_attempts SET status = 'SUBMITTED', submitted_at = ?, score = ?, total_points = ?, answers_json = ?,
+                     updated_at = ?
+                 WHERE id = ?",
+            )
+            .bind(a.submitted_at)
+            .bind(a.score)
+            .bind(a.total_points)
+            .bind(a.answers_json)
+            .bind(now_ms)
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+            id.to_owned()
+        }
+        None => {
+            let id = uuid::Uuid::new_v4().to_string();
+            sqlx::query(
+                "INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, created_at, submitted_at, score,
+                                            total_points, answers_json, updated_at)
+                 VALUES (?, ?, ?, 'SUBMITTED', ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&id)
+            .bind(a.quiz_id)
+            .bind(a.student_id)
+            .bind(a.started_at)
+            .bind(a.started_at)
+            .bind(a.submitted_at)
+            .bind(a.score)
+            .bind(a.total_points)
+            .bind(a.answers_json)
+            .bind(now_ms)
+            .execute(&mut *tx)
+            .await?;
+            id
+        }
+    };
+    record_revision(tx, Scope::student(a.classroom_id, a.student_id), "quiz_attempts", &id, Action::Upsert, now_ms).await?;
+    Ok(id)
 }
