@@ -5,6 +5,7 @@ pub mod materials;
 pub mod seed;
 pub mod submissions;
 pub mod sync_revisions;
+pub mod topics;
 pub mod users;
 pub mod classrooms;
 

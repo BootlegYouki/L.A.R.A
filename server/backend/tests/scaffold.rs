@@ -17,9 +17,9 @@ fn code(body: &Value) -> Option<&str> {
 /// areas, plus single routes of areas still partly scaffolded. Paths as in `openapi.yaml`.
 /// Materials, assignments, submissions and announcements are whole since 3.4 (#54); assignment
 /// `/private-comments` is 3.5 and still unregistered.
-const BUILT_AREAS: [&str; 7] = [
+const BUILT_AREAS: [&str; 8] = [
     "/api/classrooms", "/api/sync/", "/api/admin/", "/api/materials", "/api/assignments", "/api/submissions",
-    "/api/announcements",
+    "/api/announcements", "/api/topics",
 ];
 const BUILT_ROUTES: [(&str, &str); 0] = [];
 
@@ -102,7 +102,7 @@ async fn stub_role_guards_match_the_mock() {
         let right = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
         let (status, body) = hub.request(method.clone(), &path, Some(right)).await;
         if code(&body) == Some("ROUTE_NOT_FOUND") {
-            continue; // an area this Hub has not scaffolded yet (topics, private comments)
+            continue; // an area this Hub has not scaffolded yet
         }
         if code(&body) != Some("NOT_IMPLEMENTED") {
             assert!(is_built(&method, &path), "unexpected implemented route: {method} {path}");
