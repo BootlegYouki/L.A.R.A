@@ -245,12 +245,33 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(seen[0]["quiz_id"], quiz["id"], "a teacher's pull says which quiz each score belongs to")
         self.assertTrue(seen[0]["student_id"], "and which learner")
 
+    def test_on_time_offline_work_replaces_the_close_auto_submit_once(self):
+        quiz = self.make_active_quiz()
+        _, full, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.teacher)
+        ids = [q["id"] for q in full["questions"]]
+        _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
+        finished = int(time.time() * 1000)
+        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)
+        queued = {"id": "qa-offline", "quiz_id": quiz["id"], "started_at": begin["started_at"], "submitted_at": finished,
+                  "answers": [{"question_id": ids[0], "selected_option": "Photosynthesis"}]}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"quiz_attempts": [queued]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED")
+        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
+        mine = [a for a in pull["quiz_attempts"] if a["quiz_id"] == quiz["id"]]
+        self.assertEqual(mine[0]["score"], 1, "the on-time offline answers replace the empty auto-submit")
+        again = {**queued, "id": "qa-again", "answers": [{"question_id": ids[1], "selected_option": "plants"}]}
+        call(BASE, "POST", "/api/sync/push", {"quiz_attempts": [again]}, self.pupil)
+        _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
+        mine = [a for a in pull["quiz_attempts"] if a["quiz_id"] == quiz["id"]]
+        self.assertEqual(mine[0]["score"], 1, "only once: after that the stored work is never regraded")
+
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()
-        call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
-        started = int(time.time() * 1000) - 20 * 60_000
+        _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
+        # A device claiming an earlier start doesn't help: the Hub times from its own /begin.
         status, body, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/submit", {
-            "started_at": started, "submitted_at": started + 17 * 60_000, "answers": []}, self.pupil)
+            "started_at": begin["started_at"] + 60_000, "submitted_at": begin["started_at"] + 17 * 60_000,
+            "answers": []}, self.pupil)
         self.assertEqual((status, body["error"]["code"]), (422, "TIME_LIMIT_EXCEEDED"))
 
     def test_ai_tutor_locked_while_quiz_in_progress(self):

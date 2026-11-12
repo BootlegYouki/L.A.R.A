@@ -1188,7 +1188,7 @@ paths:
 
   /api/quizzes/{id}/close:
     post:
-      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted. Closing also releases held scores (release_scores_immediately false) - each learner gets EVENT_GRADE_CONFIRMED and the score on the next pull.
+      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted. An auto-submitted attempt can be replaced once by the learner's own on-time work pushed later (finished offline before the close, with submitted_at - started_at <= limit + 60 s, timed from the Hub's started_at); every other stored attempt is never regraded. Closing also releases held scores (release_scores_immediately false) - each learner gets EVENT_GRADE_CONFIRMED and the score on the next pull.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
