@@ -15,15 +15,13 @@ fn code(body: &Value) -> Option<&str> {
 
 /// Operations whose step has landed, so they answer like the contract instead of 501: whole
 /// areas, plus single routes of areas still partly scaffolded. Paths as in `openapi.yaml`.
-const BUILT_AREAS: [&str; 3] = ["/api/classrooms", "/api/sync/", "/api/admin/"];
-const BUILT_ROUTES: [(&str, &str); 6] = [
-    ("POST", "/api/materials"),                // 3.3
-    ("GET", "/api/materials/{id}/download"),   // 3.3
-    ("GET", "/api/materials/{id}/chunks"),     // 3.1
-    ("GET", "/api/materials/{id}/stream"),     // 3.2 streams a video; 3.3 refuses a non-video (#259)
-    ("POST", "/api/assignments/{id}/submit"),  // 3.3
-    ("GET", "/api/submissions/{id}/file"),     // 3.3
+/// Materials, assignments, submissions and announcements are whole since 3.4 (#54); assignment
+/// `/private-comments` is 3.5 and still unregistered.
+const BUILT_AREAS: [&str; 7] = [
+    "/api/classrooms", "/api/sync/", "/api/admin/", "/api/materials", "/api/assignments", "/api/submissions",
+    "/api/announcements",
 ];
+const BUILT_ROUTES: [(&str, &str); 0] = [];
 
 /// `path` is a template (`{id}`) or a mock path with `x` for each parameter.
 fn is_built(method: &Method, path: &str) -> bool {
@@ -104,7 +102,7 @@ async fn stub_role_guards_match_the_mock() {
         let right = &tokens.iter().find(|(r, _)| *r == role).unwrap().1;
         let (status, body) = hub.request(method.clone(), &path, Some(right)).await;
         if code(&body) == Some("ROUTE_NOT_FOUND") {
-            continue; // an area this Hub has not scaffolded yet (announcements, topics)
+            continue; // an area this Hub has not scaffolded yet (topics, private comments)
         }
         if code(&body) != Some("NOT_IMPLEMENTED") {
             assert!(is_built(&method, &path), "unexpected implemented route: {method} {path}");
@@ -125,9 +123,9 @@ async fn stub_role_guards_match_the_mock() {
 /// Every contract operation in the scaffolded areas is registered (501 or a role's 403, not 404).
 #[tokio::test]
 async fn every_scaffolded_contract_route_is_registered() {
-    const AREAS: [&str; 10] = [
+    const AREAS: [&str; 11] = [
         "/api/admin/", "/api/classrooms", "/api/sync/", "/api/materials", "/api/assignments",
-        "/api/submissions", "/api/quizzes", "/api/export/", "/api/backup", "/api/restore",
+        "/api/submissions", "/api/quizzes", "/api/export/", "/api/backup", "/api/restore", "/api/announcements",
     ];
     let openapi = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../contracts/openapi.yaml")).unwrap();
     let mut operations = Vec::new();
