@@ -557,5 +557,94 @@ class DeclineRows(unittest.TestCase):
         self.assertNotIn("PROVISIONAL", report, "the `-` in socratic_shape is not an unscored cell")
 
 
+
+class CrossCheck(unittest.TestCase):
+    """The Lead, #73, 2026-11-09: a third, labelled sheet compared only with the two human scores. It is made
+    after both human sheets, stays out of the pass rates and never settles a disagreement."""
+
+    HEADER = "reply_id,no_direct_answer,grounded,socratic_shape,language\n"
+
+    def folder(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        folder = Path(tmp.name)
+        base = {"lesson_id": "S", "language": "EN", "input_language": "en", "category": "on_lesson",
+                "covered_by_lesson": True, "grounded_chunk_ids": ["s0"], "message": "m", "expected_answer": ["x"]}
+        data = {"version": 3, "lessons": {"S": lesson(chunk("s0", 0, None, "text", 100))},
+                "prompts": [{**base, "id": "A"}, {**base, "id": "B"}]}
+        (folder / "prompts.json").write_text(json.dumps(data), encoding="utf-8")
+        (folder / "runs.json").write_text(json.dumps({
+            "prompt_set_version": 3, "llama_server_version": "test", "settings": {},
+            "hardware": {"cpu": "c", "logical_cpus": 1, "ram_bytes": 1, "os": "o"},
+            "models": {"m": {"file": "m.gguf"}},
+            "runs": {"m@2": {"model": "m", "slots": 2, "peak_ram_bytes": 1, "throughput_tps": 1, "errors": 0}}}), encoding="utf-8")
+        with open(folder / "replies.jsonl", "w", encoding="utf-8") as f:
+            for pid in ("A", "B"):
+                f.write(json.dumps({"model": "m", "slots": 2, "prompt_id": pid, "reply": f"reply {pid}", "error": None,
+                                    "ttft_ms": 1000, "tokens_per_second": 1.0}) + "\n")
+        (folder / "blind_key.json").write_text(json.dumps({
+            "R0001": {"model": "m", "prompt_id": "A", "reply": "reply A", "slots": [2]},
+            "R0002": {"model": "m", "prompt_id": "B", "reply": "reply B", "slots": [2]}}), encoding="utf-8")
+        (folder / "score_a.csv").write_text(self.HEADER + "R0001,P,P,P,P\nR0002,F,P,P,P\n", encoding="utf-8")
+        (folder / "score_b.csv").write_text(self.HEADER + "R0001,P,P,P,P\nR0002,P,P,P,P\n", encoding="utf-8")
+        (folder / "score_claude.csv").write_text(self.HEADER + "R0001,P,F,P,P\nR0002,P,P,P,F\n", encoding="utf-8")
+        return folder
+
+    def report(self, folder, cross_check=True):
+        args = ["--prompts", str(folder / "prompts.json"), "report", "--out", str(folder),
+                "--scores", str(folder / "score_a.csv"), str(folder / "score_b.csv")]
+        if cross_check:
+            args += ["--cross-check", str(folder / "score_claude.csv")]
+        with mock.patch("builtins.print"):
+            run_eval.main(args)
+        return (folder / "report.md").read_text(encoding="utf-8")
+
+    def rows(self, folder):
+        with open(folder / "cross_check.csv", encoding="utf-8-sig", newline="") as f:
+            return list(csv.DictReader(f))
+
+    def test_it_never_changes_a_pass_rate(self):
+        folder = self.folder()
+        without = self.report(folder, cross_check=False)
+        self.assertFalse((folder / "cross_check.csv").exists(), "only written when asked")
+        self.assertNotIn("Automated cross-check", without)
+        with_it = self.report(folder)
+        self.assertEqual(with_it.split("## Automated cross-check")[0].rstrip("\n"), without.rstrip("\n"))
+
+    def test_it_lists_the_cells_where_it_differs_from_the_final_human_verdict(self):
+        folder = self.folder()
+        self.report(folder)
+        self.assertEqual([(r["reply_id"], r["criterion"], r["final"], r["cross_check"]) for r in self.rows(folder)],
+                         [("R0001", "grounded", "P", "F"), ("R0002", "language", "P", "F")])
+
+    def test_it_never_settles_a_disagreement_the_humans_have_not_settled(self):
+        folder = self.folder()
+        report = self.report(folder)
+        self.assertNotIn(("R0002", "no_direct_answer"), {(r["reply_id"], r["criterion"]) for r in self.rows(folder)})
+        self.assertIn("agrees with the final human verdict on 5/7 (71%) cells", report)
+        self.assertIn("1 cell not compared: the two scorers still disagree", report)
+        with open(folder / "disagreements.csv", encoding="utf-8-sig", newline="") as f:
+            self.assertEqual([r["final"] for r in csv.DictReader(f)], [""], "the cross-check fills nothing in")
+
+    def test_a_settled_disagreement_is_compared_with_its_final_verdict(self):
+        folder = self.folder()
+        self.report(folder)
+        path = folder / "disagreements.csv"
+        text = path.read_text(encoding="utf-8-sig")
+        self.assertIn("R0002,B,no_direct_answer,F,P,", text)
+        path.write_text(text.replace("R0002,B,no_direct_answer,F,P,", "R0002,B,no_direct_answer,F,P,F"), encoding="utf-8-sig")
+        report = self.report(folder)
+        self.assertIn(("R0002", "no_direct_answer", "F", "P"),
+                      {(r["reply_id"], r["criterion"], r["final"], r["cross_check"]) for r in self.rows(folder)})
+        self.assertIn("agrees with the final human verdict on 5/8 (62%) cells", report)
+
+    def test_it_waits_until_both_human_sheets_are_complete(self):
+        folder = self.folder()
+        (folder / "score_b.csv").write_text(self.HEADER + "R0001,P,P,P,P\nR0002,,,,\n", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            self.report(folder)
+        self.assertFalse((folder / "cross_check.csv").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

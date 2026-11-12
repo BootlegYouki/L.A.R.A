@@ -789,6 +789,8 @@ def cmd_report(args):
         w.writeheader()
         w.writerows(disputes)
     unsettled = sum(1 for d in disputes if _verdict(d["final"]) is None)
+    if args.cross_check and unscored:
+        sys.exit(f"--cross-check waits until both human sheets are complete: {unscored} criterion cells are unscored")
 
     reply_ids = {(e["model"], e["prompt_id"], e["reply"]): rid for rid, e in blind.items()}
     run_rows = {}
@@ -900,8 +902,50 @@ def cmd_report(args):
             cells.append(_pct(sum(hits), len(hits)))
         L.append(f"| {model} | " + " | ".join(cells) + " |")
 
+    if args.cross_check:
+        L += _cross_check(Path(args.cross_check), blind, prompts, final, out)
+
     (out / "report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"wrote {out / 'report.md'}; {len(disputes)} disagreements ({unsettled} unsettled) in {disagreements_path}")
+
+
+def _cross_check(path, blind, prompts, final, out):
+    """The Lead's conditions (#73, 2026-11-09): a third sheet, scored blind after both human sheets, compared
+    only with the final human verdict. It is in no pass rate and settles nothing: a cell the two scorers still
+    disagree on is not compared. Writes the cells where it differs to `cross_check.csv`."""
+    sheet = _read_scores(path)
+    compared = matched = not_settled = unscored = 0
+    differs = []
+    for rid in blind:
+        for c in CRITERIA:
+            if not applies(prompts[blind[rid]["prompt_id"]], c):
+                continue
+            human = final.get((rid, c))
+            if human is None:
+                not_settled += 1
+                continue
+            mine = sheet.get(rid, {}).get(c)
+            if mine is None:
+                unscored += 1
+                continue
+            compared += 1
+            matched += mine == human
+            if mine != human:
+                differs.append({"reply_id": rid, "prompt_id": blind[rid]["prompt_id"], "criterion": c,
+                                "final": "P" if human else "F", "cross_check": "P" if mine else "F"})
+    with open(out / "cross_check.csv", "w", newline="", encoding="utf-8-sig") as f:
+        w = csv.DictWriter(f, fieldnames=["reply_id", "prompt_id", "criterion", "final", "cross_check"])
+        w.writeheader()
+        w.writerows(differs)
+    lines = ["", "## Automated cross-check (not a score)", "",
+             f"`{path.name}` was scored by Claude on the same blind sheet, after both human sheets were done. It is "
+             "not in any pass rate above and settles no disagreement (the Lead, #73, 2026-11-09).", "",
+             f"* It agrees with the final human verdict on {_pct(matched, compared)} cells.",
+             f"* {not_settled} cell{'' if not_settled == 1 else 's'} not compared: the two scorers still disagree."]
+    if unscored:
+        lines.append(f"* {unscored} cell{'' if unscored == 1 else 's'} left blank on the cross-check sheet.")
+    lines.append(f"* The {len(differs)} cells where it differs are listed in `cross_check.csv`.")
+    return lines
 
 
 def cmd_validate(args):
@@ -953,6 +997,9 @@ def main(argv=None):
     report = sub.add_parser("report", help="merge two score sheets into report.md")
     report.add_argument("--out", required=True)
     report.add_argument("--scores", nargs=2, required=True, metavar="CSV")
+    report.add_argument("--cross-check", metavar="CSV",
+                        help="a third, labelled sheet (score_claude.csv) compared with the final human verdicts; "
+                             "never in a pass rate")
 
     args = parser.parse_args(argv)
     {"validate": cmd_validate, "run": cmd_run, "sheets": cmd_sheets, "report": cmd_report}[args.command](args)
