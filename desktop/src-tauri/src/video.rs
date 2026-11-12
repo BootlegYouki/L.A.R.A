@@ -1,9 +1,31 @@
 use crate::account::{self, Accounts};
 use crate::discovery::HubInfo;
 use sqlx::Row;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use std::fs;
 use std::io::Write;
+
+#[tauri::command]
+pub async fn check_partial_download(
+    app: AppHandle,
+    material_id: String,
+) -> Result<bool, String> {
+    // Validate material_id is a valid UUID
+    if uuid::Uuid::parse_str(&material_id).is_err() {
+        return Ok(false);
+    }
+
+    // Get app data directory
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    
+    let videos_dir = app_data_dir.join("videos");
+    let part_path = videos_dir.join(format!("{}.part", material_id));
+    
+    Ok(part_path.exists() && part_path.metadata().map(|m| m.len()).unwrap_or(0) > 0)
+}
 
 #[tauri::command]
 pub async fn get_material_by_id(
@@ -95,11 +117,18 @@ pub async fn download_video_for_offline(
     material_id: String,
     token: String,
 ) -> Result<String, String> {
+    use futures_util::StreamExt;
+    
     let _guard = accounts.0.lock().await;
     let user_id = user_id.to_ascii_lowercase();
     accounts
         .require_sync_selection(&hub, &user_id)
         .map_err(|e| e.to_string())?;
+
+    // Validate material_id is a valid UUID before using in file path
+    if uuid::Uuid::parse_str(&material_id).is_err() {
+        return Err("Invalid material ID: not a valid UUID".to_string());
+    }
 
     // Get app data directory (secure, controlled by Tauri)
     let app_data_dir = app
@@ -120,7 +149,7 @@ pub async fn download_video_for_offline(
         .map_err(|e| e.to_string())?;
 
     let material_row = sqlx::query(
-        "SELECT id, mime_type FROM materials WHERE id = ?1"
+        "SELECT id, mime_type, file_size_bytes FROM materials WHERE id = ?1"
     )
     .bind(&material_id)
     .fetch_one(&mut db)
@@ -128,6 +157,7 @@ pub async fn download_video_for_offline(
     .map_err(|e| format!("Material not found: {}", e))?;
     
     let mime_type: String = material_row.get("mime_type");
+    let expected_size: i64 = material_row.get("file_size_bytes");
     
     // Determine file extension from mime_type
     let extension = match mime_type.as_str() {
@@ -137,32 +167,40 @@ pub async fn download_video_for_offline(
         _ => "mp4", // fallback
     };
     
-    // Secure file path (inside app data directory only)
+    // Secure file paths (inside app data directory only)
     let filename = format!("{}.{}", material_id, extension);
-    let file_path = videos_dir.join(&filename);
+    let temp_path = videos_dir.join(format!("{}.part", material_id));
+    let final_path = videos_dir.join(&filename);
     
-    // Build download URL
-    let download_url = format!(
-        "http://{}:{}/api/materials/{}/download",
-        hub.ip, hub.http_port, material_id
-    );
+    // Build download URL using Hub's base URL (works for LAN and Remote/Suspension Mode)
+    let base_url = format!("http://{}:{}", hub.ip, hub.http_port);
+    let download_url = format!("{}/api/materials/{}/download", base_url, material_id);
     
     drop(_guard); // Release the lock before making HTTP requests
     
     // HTTP client for download
     let client = reqwest::Client::new();
     
-    // Check if file already exists - delete it to start fresh
-    // This avoids 416 Range Not Satisfiable errors on re-download
-    if file_path.exists() {
-        fs::remove_file(&file_path)
-            .map_err(|e| format!("Failed to remove existing file: {}", e))?;
-    }
+    // Check if partial file exists for resume
+    let mut start_byte = if temp_path.exists() {
+        temp_path.metadata()
+            .map(|m| m.len())
+            .unwrap_or(0)
+    } else {
+        0
+    };
     
-    // Build request - fresh download without Range header
-    let request = client
+    // Build request with Range header if resuming
+    let mut request = client
         .get(&download_url)
         .query(&[("token", &token)]);
+    
+    if start_byte > 0 {
+        // Resume from where we left off, with If-Range for safety
+        request = request
+            .header("Range", format!("bytes={}-", start_byte))
+            .header("If-Range", format!("\"{}-{}\"", material_id, expected_size));
+    }
     
     // Execute request
     let response = request
@@ -170,23 +208,104 @@ pub async fn download_video_for_offline(
         .await
         .map_err(|e| format!("Download request failed: {}", e))?;
     
-    // Accept both 200 OK (full download) and 206 Partial Content (resume)
-    if !response.status().is_success() {
-        return Err(format!("Download failed with status: {}", response.status()));
+    // Check status: 200 (full), 206 (partial), or 416 (restart needed)
+    let status = response.status();
+    let is_partial = status == reqwest::StatusCode::PARTIAL_CONTENT;
+    
+    if status == reqwest::StatusCode::RANGE_NOT_SATISFIABLE {
+        // File changed on server or range invalid, delete .part and restart
+        if temp_path.exists() {
+            fs::remove_file(&temp_path)
+                .map_err(|e| format!("Failed to remove stale partial file: {}", e))?;
+        }
+        return Err("Range not satisfiable, please retry download".to_string());
     }
     
-    // Create new file (we deleted existing file above)
-    let mut file = fs::File::create(&file_path)
-        .map_err(|e| format!("Failed to create file: {}", e))?;
+    if !status.is_success() {
+        return Err(format!("Download failed with status: {}", status));
+    }
     
-    // Stream and write bytes
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Failed to read response: {}", e))?;
+    // Open file for writing (append if got 206, create fresh if got 200)
+    // Note: The real Hub's /download route supports Range headers per contract.
+    // If Hub responds 206 Partial Content, we resume from .part file.
+    // If Hub responds 200 OK (doesn't support Range), we restart cleanly to avoid corruption.
+    let mut file = if start_byte > 0 && is_partial {
+        // Got 206 Partial Content - Hub is resuming, append to existing .part
+        fs::OpenOptions::new()
+            .append(true)
+            .open(&temp_path)
+            .map_err(|e| format!("Failed to open partial file: {}", e))?
+    } else {
+        // Got 200 OK - Hub sent full file, start fresh (delete .part if exists)
+        if temp_path.exists() {
+            fs::remove_file(&temp_path)
+                .map_err(|e| format!("Failed to remove existing partial file: {}", e))?;
+        }
+        // Reset counter since we're starting fresh
+        start_byte = 0;
+        fs::File::create(&temp_path)
+            .map_err(|e| format!("Failed to create file: {}", e))?
+    };
     
-    file.write_all(&bytes)
-        .map_err(|e| format!("Failed to write file: {}", e))?;
+    // Stream bytes to disk (chunk by chunk, not all in RAM)
+    let mut stream = response.bytes_stream();
+    let mut total_downloaded = start_byte;
+    let mut last_progress_emit = start_byte;
+    
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result
+            .map_err(|e| format!("Failed to read chunk: {}", e))?;
+        
+        // Check if we're about to exceed expected size
+        if total_downloaded + chunk.len() as u64 > expected_size as u64 {
+            return Err(format!(
+                "Download exceeded expected size: {} + {} > {}",
+                total_downloaded, chunk.len(), expected_size
+            ));
+        }
+        
+        file.write_all(&chunk)
+            .map_err(|e| format!("Failed to write chunk: {}", e))?;
+        
+        total_downloaded += chunk.len() as u64;
+        
+        // Emit progress event every 50KB or at completion
+        if total_downloaded - last_progress_emit >= 51200 || total_downloaded == expected_size as u64 {
+            let percentage = ((total_downloaded as f64 / expected_size as f64) * 100.0) as u8;
+            let _ = app.emit("download-progress", serde_json::json!({
+                "materialId": material_id,
+                "downloaded": total_downloaded,
+                "total": expected_size,
+                "percentage": percentage
+            }));
+            last_progress_emit = total_downloaded;
+        }
+    }
+    
+    // Flush to ensure all bytes are written
+    file.flush()
+        .map_err(|e| format!("Failed to flush file: {}", e))?;
+    
+    // Verify file size matches expected
+    let downloaded_size = temp_path.metadata()
+        .map(|m| m.len())
+        .unwrap_or(0);
+    
+    if downloaded_size != expected_size as u64 {
+        return Err(format!(
+            "Download incomplete: expected {} bytes, got {}",
+            expected_size, downloaded_size
+        ));
+    }
+    
+    // Download complete, rename .part to final name
+    if final_path.exists() {
+        fs::remove_file(&final_path)
+            .map_err(|e| format!("Failed to remove old final file: {}", e))?;
+    }
+    
+    fs::rename(&temp_path, &final_path)
+        .map_err(|e| format!("Failed to rename to final file: {}", e))?;
     
     // Update database with local path (relative, using forward slashes for cross-platform)
     let relative_path = format!("videos/{}", filename);
@@ -200,6 +319,6 @@ pub async fn download_video_for_offline(
     .await
     .map_err(|e| format!("Failed to update database: {}", e))?;
     
-    // Return absolute path for the video player (file_path already has correct separators)
-    Ok(file_path.display().to_string())
+    // Return absolute path for the video player (final_path already has correct separators)
+    Ok(final_path.display().to_string())
 }

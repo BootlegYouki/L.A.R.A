@@ -2094,6 +2094,7 @@ dependencies = [
 name = "lara-desktop"
 version = "0.1.0"
 dependencies = [
+ "futures-util",
  "keyring",
  "mdns-sd",
  "regex",

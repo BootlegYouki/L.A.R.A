@@ -30,7 +30,8 @@ pub fn run() {
             sync::apply_sync_receipts,
             account::forget_account_session,
             video::get_material_by_id,
-            video::download_video_for_offline
+            video::download_video_for_offline,
+            video::check_partial_download
         ])
         .plugin(
             tauri_plugin_sql::Builder::default()

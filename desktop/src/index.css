@@ -258,3 +258,29 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .volume-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; border: none; }
 .video-source-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; border-radius: 9999px; background: var(--color-lara-success-light); color: var(--color-lara-success-dark); font-size: 0.8125rem; font-weight: 800; }
 .video-source-badge i { font-size: 1rem; }
+
+/* Video lesson page styles */
+.video-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.video-actions .control {
+  min-width: 200px;
+}
+
+.video-download-banner {
+  margin-top: 16px;
+  text-align: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { t } from '../i18n';
 import VideoPlayer from '../components/VideoPlayer';
@@ -43,9 +44,39 @@ export default function VideoLessonPage({
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [hasPartialDownload, setHasPartialDownload] = useState(false);
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Store the initial hub info to use even when disconnected
   const [initialHub] = useState(hub);
+
+  // Listen for download progress events
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    const setupListener = async () => {
+      unlisten = await listen<{
+        materialId: string;
+        downloaded: number;
+        total: number;
+        percentage: number;
+      }>('download-progress', (event) => {
+        // Only update progress for this material
+        if (event.payload.materialId === materialId) {
+          setDownloadProgress(event.payload.percentage);
+        }
+      });
+    };
+
+    void setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [materialId]);
 
   // Determine video source: local file or remote stream  
   const videoSrc = material?.local_file_path
@@ -96,6 +127,24 @@ export default function VideoLessonPage({
         } else {
           setMaterial(result);
           setError(null);
+          
+          // Check if there's a partial download (.part file)
+          if (!result.local_file_path && initialHub) {
+            try {
+              const hasPartial = await invoke<boolean>('check_partial_download', {
+                hub: initialHub,
+                userId,
+                materialId,
+              });
+              if (mounted) {
+                setHasPartialDownload(hasPartial);
+              }
+            } catch (err) {
+              console.error('Failed to check partial download:', err);
+              // Non-fatal error, just assume no partial
+              if (mounted) setHasPartialDownload(false);
+            }
+          }
         }
       } catch (err) {
         if (!mounted) return;
@@ -120,7 +169,7 @@ export default function VideoLessonPage({
     
     setDownloading(true);
     setDownloadProgress(0);
-    setError(null);
+    setDownloadError(null); // Clear any previous download errors
 
     try {
       console.log('Starting video download:', material.id);
@@ -135,22 +184,16 @@ export default function VideoLessonPage({
 
       console.log('Download complete, absolute path:', absolutePath);
       
-      // Reload material from database to get the updated local_file_path
-      const updatedMaterial = await invoke<Material | null>('get_material_by_id', {
-        hub: initialHub,  // Use persisted hub info
-        userId,
-        materialId: material.id,
-      });
-
-      console.log('Reloaded material:', updatedMaterial);
-      
-      if (updatedMaterial) {
-        setMaterial(updatedMaterial);
-        console.log('New video source will be:', updatedMaterial.local_file_path ? 
-          `file://${updatedMaterial.local_file_path}` : 'stream');
-      }
-      
+      // Ensure progress shows 100% at completion
       setDownloadProgress(100);
+      
+      // DON'T reload material here - it would change videoSrc and interrupt playback
+      // The database is already updated with local_file_path by the Rust command
+      // Next time the user opens this video, it will load from disk automatically
+      
+      // Just update our local state
+      setHasPartialDownload(false);
+      setDownloadComplete(true); // Show success banner
       
       // Reset UI after brief success display
       setTimeout(() => {
@@ -160,7 +203,21 @@ export default function VideoLessonPage({
 
     } catch (err) {
       console.error('Download failed:', err);
-      setError(typeof err === 'string' ? err : t.video_download_error);
+      
+      // Set download-specific error (not the page error)
+      const errorMsg = typeof err === 'string' ? err : t.video_download_error;
+      
+      // Check if it's a connection error (Hub disconnected)
+      if (errorMsg.includes('Failed to read chunk') || 
+          errorMsg.includes('error decoding') ||
+          errorMsg.includes('connection') ||
+          errorMsg.includes('stream')) {
+        setDownloadError(t.video_download_interrupted);
+        // Keep hasPartialDownload as true so button shows "Resume Download"
+      } else {
+        setDownloadError(errorMsg);
+      }
+      
       setDownloading(false);
       setDownloadProgress(0);
     }
@@ -286,20 +343,34 @@ export default function VideoLessonPage({
           title={material.title}
         />
         
-        {/* Save for Home button - only show if not downloaded and online */}
-        {!material.local_file_path && hub && !offline && (
-          <div className="video-actions" style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        {/* Download error banner - show when download fails */}
+        {downloadError && (
+          <div className="hub-status-banner banner-amber video-download-banner">
+            <i className="ph ph-warning" aria-hidden="true" />
+            {downloadError}
+          </div>
+        )}
+        
+        {/* Save for Home button - only show if not downloaded and online and download not complete */}
+        {!material.local_file_path && !downloadComplete && hub && !offline && (
+          <div className="video-actions">
             <button
               type="button"
               className="control tonal-button"
               onClick={handleDownload}
               disabled={downloading}
-              style={{ minWidth: '200px' }}
             >
               {downloading ? (
                 <>
-                  <i className="ph ph-circle-notch" style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" />
-                  {t.video_downloading} {downloadProgress}%
+                  <i className="ph ph-circle-notch spin-animation" aria-hidden="true" />
+                  {downloadProgress > 0 && downloadProgress < 100
+                    ? `${t.video_downloading} ${downloadProgress}%`
+                    : t.video_downloading}
+                </>
+              ) : hasPartialDownload ? (
+                <>
+                  <i className="ph ph-download-simple" aria-hidden="true" />
+                  {t.video_resume_download}
                 </>
               ) : (
                 <>
@@ -311,9 +382,9 @@ export default function VideoLessonPage({
           </div>
         )}
         
-        {/* Downloaded indicator */}
-        {material.local_file_path && (
-          <div className="hub-status-banner banner-info" style={{ marginTop: '16px', textAlign: 'center' }}>
+        {/* Downloaded indicator - show if already saved OR just completed download */}
+        {(material.local_file_path || downloadComplete) && (
+          <div className="hub-status-banner banner-info video-download-banner">
             <i className="ph ph-check-circle" aria-hidden="true" />
             {t.video_download_complete}
           </div>
