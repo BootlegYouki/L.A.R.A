@@ -1,5 +1,6 @@
 //! Assignments (contract `/api/assignments`, `/api/submissions`). Homework submit and the
-//! submission file are step 3.3; create, edit, archive, the submission list and grading are 3.4.
+//! submission file are step 3.3; create, edit, archive, the submission list and grading are 3.4
+//! (PRD FR-3.5, FR-3.6). Teacher writes need a class the teacher teaches that is not archived.
 
 use axum::extract::multipart::MultipartRejection;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, Request, State};
@@ -7,15 +8,19 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::routing::{get, patch, post};
 use axum::{Json, Router};
+use serde_json::{json, Value};
 
+use super::body::JsonBody;
 use super::files::{serve_stored, Ranges};
 use super::not_implemented_teacher as teacher;
 use super::upload::{read_form, storage_error, UPLOAD_BODY_LIMIT};
 use crate::auth::{require_role, AuthUser, MediaUser, Role};
+use crate::db::assignments::{self, AssignmentChange, NewAssignment};
 use crate::db::begin_immediate;
+use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::submissions::{self, StoredSubmission};
 use crate::error::ApiError;
-use crate::models::sync::Submission;
+use crate::models::sync::{Assignment, Submission};
 use crate::services::class_access;
 use crate::storage::{format_of, StorageKind};
 use crate::AppState;
@@ -23,8 +28,8 @@ use crate::AppState;
 /// `/private-comments` is not here: it gets its own `routes/private_comments.rs` in step 3.5.
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/assignments", post(teacher))
-        .route("/api/assignments/{id}", patch(teacher).delete(teacher))
+        .route("/api/assignments", post(create))
+        .route("/api/assignments/{id}", patch(update).delete(archive))
         .route("/api/assignments/{id}/submit", post(submit).layer(DefaultBodyLimit::max(UPLOAD_BODY_LIMIT)))
         .route("/api/assignments/{id}/submissions", get(teacher))
         .route("/api/submissions/{id}", patch(teacher))
@@ -33,6 +38,90 @@ pub fn router() -> Router<AppState> {
 
 fn assignment_not_found() -> ApiError {
     ApiError::not_found("Assignment not found")
+}
+
+/// `max_points` has a `CHECK(max_points > 0)` in the schema; refused here as a 400, not a 500.
+fn points(body: &JsonBody) -> Result<Option<i64>, ApiError> {
+    match body.optional_int("max_points")? {
+        Some(points) if points <= 0 => Err(ApiError::bad_request("max_points must be more than 0")),
+        points => Ok(points),
+    }
+}
+
+/// A topic of this class, so classwork never files under another class's topic.
+async fn require_topic(conn: &mut sqlx::SqliteConnection, topic_id: Option<&str>, classroom_id: &str) -> Result<(), ApiError> {
+    match topic_id {
+        Some(topic) if !attachment_in_class(conn, Attachment::Topic, topic, classroom_id).await? => {
+            Err(ApiError::not_found(Attachment::Topic.not_found()))
+        }
+        _ => Ok(()),
+    }
+}
+
+async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> Result<Json<Assignment>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    body.need(&["classroom_id", "title", "max_points", "due_date"])?;
+    let classroom_id = body.optional_text("classroom_id")?.unwrap_or_default();
+    let title = body.non_empty_text("title")?.unwrap_or_default();
+    let instructions = body.optional_text("instructions")?.unwrap_or_default();
+    let max_points = points(&body)?.unwrap_or_default();
+    let due_date = body.optional_int("due_date")?.unwrap_or_default();
+    let allow_late = body.optional_bool("allow_late")?.unwrap_or(false);
+    let topic_id = body.nullable_text("topic_id")?.flatten();
+
+    let mut tx = begin_immediate(&app.db).await?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    require_topic(&mut tx, topic_id.as_deref(), &classroom_id).await?;
+    let id = uuid::Uuid::new_v4().to_string();
+    let new = NewAssignment {
+        id: &id,
+        classroom_id: &classroom_id,
+        title: &title,
+        instructions: &instructions,
+        max_points,
+        due_date,
+        allow_late,
+        topic_id: topic_id.as_deref(),
+    };
+    let assignment = assignments::insert(&mut tx, &new, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(assignment))
+}
+
+async fn update(
+    State(app): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<String>,
+    body: JsonBody,
+) -> Result<Json<Assignment>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let change = AssignmentChange {
+        title: body.non_empty_text("title")?,
+        instructions: body.optional_text("instructions")?,
+        max_points: points(&body)?,
+        due_date: body.optional_int("due_date")?,
+        allow_late: body.optional_bool("allow_late")?,
+        topic_id: body.nullable_text("topic_id")?,
+    };
+    let mut tx = begin_immediate(&app.db).await?;
+    let classroom_id = assignments::open_class(&mut tx, &id).await?.ok_or_else(assignment_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    require_topic(&mut tx, change.topic_id.clone().flatten().as_deref(), &classroom_id).await?;
+    let assignment = assignments::update(&mut tx, &id, change, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(assignment))
+}
+
+/// "Delete" for the teacher; the Hub archives (PRD FR-3.6). An already archived assignment is 404,
+/// so a retry writes no second tombstone.
+async fn archive(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let mut tx = begin_immediate(&app.db).await?;
+    let classroom_id = assignments::open_class(&mut tx, &id).await?.ok_or_else(assignment_not_found)?;
+    class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
+    assignments::archive(&mut tx, &id, &classroom_id, app.clock.now_ms()).await?;
+    tx.commit().await?;
+    Ok(Json(json!({"success": true})))
 }
 
 /// One submission per (assignment, learner), with contract #257's rules in the mock's order
@@ -62,7 +151,7 @@ async fn submit(
     {
         let mut conn = app.db.acquire().await?;
         let classroom_id =
-            submissions::assignment_class(&mut conn, &assignment_id).await?.ok_or_else(assignment_not_found)?;
+            assignments::open_class(&mut conn, &assignment_id).await?.ok_or_else(assignment_not_found)?;
         class_access::require_member(&mut conn, &user, &classroom_id).await?;
         if class_access::is_archived(&mut conn, &classroom_id).await?
             && submissions::for_learner(&mut conn, &assignment_id, &user.id).await?.is_none()

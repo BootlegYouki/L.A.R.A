@@ -75,15 +75,7 @@ impl OpenAssignment {
     }
 }
 
-/// The class of an assignment learners can still hand work in to (archived counts as missing).
-pub async fn assignment_class(conn: &mut SqliteConnection, assignment_id: &str) -> Result<Option<String>, sqlx::Error> {
-    sqlx::query_scalar("SELECT classroom_id FROM assignments WHERE id = ? AND archived_at IS NULL")
-        .bind(assignment_id)
-        .fetch_optional(conn)
-        .await
-}
-
-/// Like [`assignment_class`], with the deadline.
+/// Like `assignments::open_class`, with the deadline.
 pub async fn open_assignment(conn: &mut SqliteConnection, assignment_id: &str) -> Result<Option<OpenAssignment>, sqlx::Error> {
     sqlx::query_as("SELECT classroom_id, due_date, allow_late FROM assignments WHERE id = ? AND archived_at IS NULL")
         .bind(assignment_id)
