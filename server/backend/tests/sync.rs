@@ -125,12 +125,22 @@ fn cursor(body: &Value) -> i64 {
     body["next_cursor"].as_i64().unwrap()
 }
 
+/// Bug #290: pushed comment ids must be UUIDs. The tests name them by label; each label maps to a fixed UUID.
+fn uid(label: &str) -> String {
+    let mut hash: u128 = 0x6c62272e07bb014262b821756295c58d;
+    for byte in label.bytes() {
+        hash ^= u128::from(byte);
+        hash = hash.wrapping_mul(0x0000000001000000000000000000013B);
+    }
+    uuid::Uuid::from_u128(hash).hyphenated().to_string()
+}
+
 fn comment(id: &str) -> Value {
-    json!({"id":id, "announcement_id":"post-0", "content":"My draft", "created_at":10})
+    json!({"id":uid(id), "announcement_id":"post-0", "content":"My draft", "created_at":10})
 }
 
 fn private(id: &str) -> Value {
-    json!({"id":id, "assignment_id":"assignment", "content":"Help with step one", "created_at":10})
+    json!({"id":uid(id), "assignment_id":"assignment", "content":"Help with step one", "created_at":10})
 }
 
 #[tokio::test]
@@ -382,7 +392,7 @@ async fn push_failure_keeps_earlier_items_and_retry_does_not_duplicate_them() {
     let class = Class::start().await;
     class.announcements(1, 1).await;
     class.assignment().await;
-    sqlx::query("CREATE TRIGGER fail_third BEFORE INSERT ON sync_revisions WHEN NEW.entity_id = 'third' BEGIN SELECT RAISE(ABORT, 'injected revision failure'); END")
+    sqlx::query(sqlx::AssertSqlSafe(format!("CREATE TRIGGER fail_third BEFORE INSERT ON sync_revisions WHEN NEW.entity_id = '{}' BEGIN SELECT RAISE(ABORT, 'injected revision failure'); END", uid("third"))))
         .execute(&class.hub.state().db).await.unwrap();
     let payload = json!({"comments":[comment("first"),comment("second")], "private_comments":[private("third")]});
     let (status, error) = class
@@ -391,7 +401,7 @@ async fn push_failure_keeps_earlier_items_and_retry_does_not_duplicate_them() {
         .await;
     assert_eq!(status, 500, "{error}");
     assert_eq!(error["error"]["code"], "INTERNAL_ERROR");
-    let counts: (i64, i64, i64) = sqlx::query_as("SELECT (SELECT count(*) FROM announcement_comments), (SELECT count(*) FROM private_comments), (SELECT count(*) FROM sync_revisions WHERE entity_id IN ('first','second','third'))")
+    let counts: (i64, i64, i64) = sqlx::query_as(sqlx::AssertSqlSafe(format!("SELECT (SELECT count(*) FROM announcement_comments), (SELECT count(*) FROM private_comments), (SELECT count(*) FROM sync_revisions WHERE entity_id IN ('{}','{}','{}'))", uid("first"), uid("second"), uid("third"))))
         .fetch_one(&class.hub.state().db).await.unwrap();
     assert_eq!(counts, (2, 0, 2));
     sqlx::query("DROP TRIGGER fail_third")
@@ -405,17 +415,20 @@ async fn push_failure_keeps_earlier_items_and_retry_does_not_duplicate_them() {
     assert_eq!(status, 200, "{response}");
     assert_eq!(
         response["receipts"],
-        json!([{"id":"first","status":"SYNCED"},{"id":"second","status":"SYNCED"},{"id":"third","status":"SYNCED"}])
+        json!([{"id":uid("first"),"status":"SYNCED"},{"id":uid("second"),"status":"SYNCED"},{"id":uid("third"),"status":"SYNCED"}])
     );
-    let ledger: i64 = sqlx::query_scalar(
-        "SELECT count(*) FROM sync_revisions WHERE entity_id IN ('first','second','third')",
-    )
+    let ledger: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "SELECT count(*) FROM sync_revisions WHERE entity_id IN ('{}','{}','{}')",
+        uid("first"),
+        uid("second"),
+        uid("third")
+    )))
     .fetch_one(&class.hub.state().db)
     .await
     .unwrap();
     assert_eq!(ledger, 3);
     let private_scope: (String, String) = sqlx::query_as(
-        "SELECT classroom_id, student_id FROM sync_revisions WHERE entity_id = 'third'",
+        sqlx::AssertSqlSafe(format!("SELECT classroom_id, student_id FROM sync_revisions WHERE entity_id = '{}'", uid("third"))),
     )
     .fetch_one(&class.hub.state().db)
     .await
@@ -993,7 +1006,7 @@ async fn pushes_to_an_archived_class_are_refused_but_a_retry_of_saved_work_is_no
         assert_eq!(receipt["status"], "REJECTED");
         assert_eq!(receipt["reason"], "FORBIDDEN");
     }
-    let edited = json!({"comments":[{"id":"saved","announcement_id":"post-0","content":"Changed","created_at":10}]});
+    let edited = json!({"comments":[{"id":uid("saved"),"announcement_id":"post-0","content":"Changed","created_at":10}]});
     let (_, refused) = class.hub.post_json("/api/sync/push", &edited, Some(&class.token)).await;
     assert_eq!(refused["receipts"][0]["reason"], "FORBIDDEN", "an edit is a write");
     let count: i64 = sqlx::query_scalar("SELECT count(*) FROM announcement_comments WHERE content = 'My draft'")

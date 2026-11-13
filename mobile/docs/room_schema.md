@@ -1,5 +1,32 @@
 # Room offline mirror (MOBILE 1.3, Issue #41)
 
+## Audit timestamps, Issue #276
+
+Room v4 matches the audit fields from contract #273. `AuditTimestampMigration`
+upgrades v3 by rebuilding only enrollments, material_chunks, assignment_submissions
+and quiz_attempts inside Room's migration transaction. It copies every existing
+column and restores each index and foreign key. No default is added to created_at.
+
+| Table | Legacy created_at backfill |
+| --- | --- |
+| enrollments | joined_at |
+| material_chunks | updated_at |
+| assignment_submissions | submitted_at |
+| quiz_attempts | started_at |
+
+Entity constructors supply timestamps for local creation. SyncStore supplies the
+first pull snapshot time for newly mirrored rows and retains the saved value on
+later pulls. Roster refreshes retain an existing enrollment's creation time, and
+homework replacement retains the original row's creation time while submitted_at
+advances. DTOs follow the existing API, which does not send these audit fields.
+
+LaraDatabase.create registers the complete v1→v2→v3→v4 migration chain. Existing
+queue state, rejection reasons, grades, received_at, photo references, quiz answers,
+session metadata and sync cursors are copied intact. The migration test opens a
+real v3 fixture through that normal entry point, and the existing v1/v2 tests also
+exercise the longer chain. SchemaParityTest checks exported schema 4.json against
+the current client_offline.sql.
+
 The local database is the source of truth for cached classroom reads. No DAO or
 Room repository depends on a Hub client, network state, discovery, or a token.
 This change does not connect new classroom screens or implement synchronization.
@@ -46,7 +73,7 @@ Room warns about three unindexed foreign keys already present in the contract
 
 ## Entry points and data flow
 
-`data/local/LaraDatabase.kt` registers all entities at version 2, exports the
+`data/local/LaraDatabase.kt` registers all entities at version 4, exports the
 schema, uses private `lara.db` storage and WAL, and also exposes the later auth/sync DAOs. It has no
 main-thread queries or destructive migration fallback. The existing manual
 `LaraApp.AppContainer` scopes repositories to the selected account's database; shared services remain application-owned. `AccountDatabases` retains the original lara.db for its owner and uses private hashed filenames for other accounts, preserving separate mirrors/cursors rather than clearing work on sign-out. No dependency injection framework is introduced. See settings.md for the 2.6 account-switch policy.

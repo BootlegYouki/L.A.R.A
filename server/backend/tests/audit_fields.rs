@@ -79,14 +79,14 @@ async fn a_resubmission_keeps_when_the_work_was_first_handed_in() {
     let submit = |id: &'static str, tag: &'static str| {
         class.upload("/api/assignments/asg-1/submit", Some(&class.learner_token), submission_form(id, &jpeg(tag)))
     };
-    let (status, first) = submit("sub-1", "a").await;
+    let (status, first) = submit("c1000000-0000-4000-8000-000000000001", "a").await;
     assert_eq!(status, 200, "{first}");
     assert!(first.get("created_at").is_none(), "{first}");
     let received = first["received_at"].as_i64().unwrap();
     assert_eq!(times(&class, "SELECT created_at, received_at FROM assignment_submissions").await, [(received, received)]);
 
     tokio::time::sleep(std::time::Duration::from_millis(5)).await;
-    let (status, second): (u16, Value) = submit("sub-2", "b").await;
+    let (status, second): (u16, Value) = submit("c1000000-0000-4000-8000-000000000002", "b").await;
     assert_eq!(status, 200, "{second}");
     let rows = times(&class, "SELECT created_at, received_at FROM assignment_submissions").await;
     assert_eq!(rows.len(), 1);

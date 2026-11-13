@@ -17,9 +17,30 @@ Learners see only ACTIVE classes and their own enrollment, submissions, attempts
 
 When a page reaches a visibility revision addressed to the caller, it also loads that class's older revisions at or before the requested cursor. Those records are delivered in their current visible state. This snapshot is included with the visibility revision because the scalar cursor cannot page backwards. A newly visible class can therefore exceed the ordinary 500-revision page bound. Clients apply the response and cursor in one local transaction. A later page does not repeat the snapshot unless another visibility change occurs.
 
-Push is learner-only. Each stream or private comment has its own `BEGIN IMMEDIATE` transaction: check current enrollment and row ownership, store the comment, record its revision, commit, then collect its receipt. A row cannot move to a different parent or overwrite another author's row. An identical retry returns `SYNCED` without another write. Expected validation failures return individual `REJECTED` receipts (`FORBIDDEN` or `COMMENTS_DISABLED`). An unexpected database failure returns HTTP 500; the failing item's changes roll back and earlier committed items survive. The client retries the whole request using the same IDs.
+Push is learner-only. Each stream or private comment has its own `BEGIN IMMEDIATE` transaction: check current enrollment and row ownership, store the comment, record its revision, commit, then collect its receipt. A row cannot move to a different parent or overwrite another author's row. An identical retry returns `SYNCED` without another write. Expected validation failures return individual `REJECTED` receipts (`BAD_REQUEST`, `FORBIDDEN` or `COMMENTS_DISABLED`). An unexpected database failure returns HTTP 500; the failing item's changes roll back and earlier committed items survive. The client retries the whole request using the same IDs.
 
-Quiz attempts in push are intentionally left unprocessed, without receipts, until SERVER 4.2 supplies validation and grading. Homework files use the existing multipart submission route, outside this issue.
+Quiz attempts in push are graded first, one receipt each, through the quiz submit path (step 4.2, [`quiz_grading.md`](./quiz_grading.md)). Homework files use the multipart submission route.
+
+## Sync-safe values (bug #290)
+The desktop app checks every row it pulls (`desktop/src-tauri/src/sync.rs` `valid`). If one row fails, it refuses the whole page and keeps its cursor, so it fails the same way on every retry, and everyone who pulls that row stops syncing. So the Hub never stores a value the desktop refuses:
+
+| Value | Rule (the desktop's) | Where the Hub enforces it |
+|---|---|---|
+| An id a client made: stream comment, private comment, homework `submission_id` | A lowercase hyphenated UUID, not the nil UUID (`models::sync::is_client_uuid`) | Push: a `REJECTED` `BAD_REQUEST` receipt for that item alone. Homework: 400 "submission_id must be a UUID" |
+| A pushed comment's `created_at` | 0 to 2^53−1 (`MAX_SAFE_INT`) | Push: `REJECTED` `BAD_REQUEST` |
+| A homework `turned_in_at` (stored as `submitted_at`) | 0 to 2^53−1 | 400 "turned_in_at must be from 0 to 9007199254740991" |
+| Text a client pulls | At most 1,000,000 bytes, counted in UTF-8 (`MAX_TEXT_BYTES`) | Push: `REJECTED` `BAD_REQUEST`. REST: the `JsonBody` text readers, class create and the admin's teacher form answer 400 "`<field>` is too long" |
+
+- **Ids must be lowercase.** The desktop accepts any letter case but lowercases every id it pulls. An uppercase copy of another row's id would then collide with that row: the page is refused, or the original comment is overwritten. Both apps make lowercase ids (review of #290).
+- Upload form text fields (a material's title, a homework form) are already capped at 4 KB by `read_form`.
+- Numbers on REST (due dates, points, scores, order) were capped in #54, #122 and #61.
+- `tests/sync_safe_values.rs` covers:
+  - both push kinds, including an uppercase copy of an id;
+  - the homework id and `turned_in_at`;
+  - 17 cases across the REST routes that store pulled text.
+- Topic and announcement rename, quiz edit and admin setup read text through the same readers but aren't in the route table.
+- **A chunk with no heading** is sent without the `heading` key (bug #302). The desktop accepts a missing heading but refuses `null`. A blank material title on upload is 400, so new chunks always have one.
+- **A Hub database made before this fix** may already hold label ids or out-of-range values. Rehearse on a fresh database.
 
 ## Reset and offline behavior
 

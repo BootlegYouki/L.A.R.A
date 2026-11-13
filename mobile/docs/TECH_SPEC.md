@@ -141,6 +141,13 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 ## 7. Data and Offline Behavior
 Source of truth: `contracts/schema/client_offline.sql` and `rules/database-and-sync.md`. Details in `mobile/docs/room_schema.md` and `sync_worker.md`.
 
+Room v4 adds required local `created_at` audit fields to enrollments, material chunks,
+homework submissions and quiz attempts for #276 / contract #273. The v3→v4 migration
+backfills from joined_at, updated_at, submitted_at and started_at respectively,
+rebuilds the four tables with their original constraints/indexes, and preserves
+queued work and account/sync metadata. Sync, roster refresh and homework replacement
+retain existing creation times. These audit fields are local and are not added to DTOs.
+
 * **Storage:** one entity per table in `data/local/entities/`, same names and nullability; `sync_state` rows `hub_id`, `sync_epoch`, `cursor`, `current_user_id`. Mobile 2.6 keeps a private Room mirror/cursor per account: the original lara.db remains with its owner and other accounts use hashed filenames. No saved work is cleared to change accounts. A schema test fails on drift. Never a `correct_answer`, `pin_hash`, other LRN or server `file_path` field in any entity or DTO.
 * **`sync_status`:** a row is created `QUEUED_FOR_SYNC` on the client with a UUID v4 generated on the device. It becomes `SYNCED` only from a push receipt (or submit response). A refused row becomes `REJECTED` with `sync_reject_reason` on the same row, stays visible and is never retried automatically or silently deleted; the UI uses a kind explanation. Room version 2 migrates legacy rejection receipts, and version 3 adds nullable homework `received_at` in place. Homework uploads send the queued `submitted_at` as `turned_in_at`, preserving the original Turn in time across retries. Both migrations preserve queued work. Rows are never deleted by sign-out; sign-out warns with the queued count.
 * **Cursor:** integer `next_cursor` from `SyncRepository.pull`, stored in `sync_state` in the same `@Transaction` as the applied rows, tombstones and `users`. On any exception the transaction rolls back and the old cursor stays. Loop while `has_more`. `server_time` only feeds the clock offset.

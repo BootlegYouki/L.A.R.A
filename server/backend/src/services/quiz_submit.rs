@@ -15,6 +15,10 @@ use crate::AppState;
 /// Network grace on top of the time limit (rules/quiz-and-anti-cheat.md section 3, rule 5).
 const GRACE_MS: i64 = 60_000;
 
+/// How long after the close on-time work may still finish and replace the close's auto-submit: the same
+/// network grace, so a device that auto-submits on `EVENT_QUIZ_CLOSED` counts (contract #294).
+pub const CLOSE_GRACE_MS: i64 = 60_000;
+
 pub struct Submission {
     /// The device's start; used only when the learner has no attempt row (never reached `/begin`).
     pub started_at: Option<i64>,
@@ -39,7 +43,9 @@ fn receipt(quiz: &QuizState, quiz_id: &str, student_id: &str, attempt: &AttemptR
 /// Grades and stores a learner's finished quiz, once: the quiz (404, and a `DRAFT` is 404 too), membership
 /// (403), a stored submission comes back as it is, then the archived class (403) and the time limit (422).
 /// Unlike the mock's `submit_attempt`, a stored submission returns before the time check, so a retry always
-/// gets its receipt.
+/// gets its receipt. The one exception is the close's auto-submit: the learner's own work replaces it once,
+/// if it is on time and finished no later than `CLOSE_GRACE_MS` after the close (contract #293, #294). The
+/// same close limit holds for a learner with no attempt row, unlike the mock (review of #11).
 ///
 /// Timing trusts the Hub's clock (`server/AGENTS.md`): the start is the attempt's `started_at` from `/begin`.
 /// Only without an attempt row is the device's start used, and then not before the quiz's own start or
@@ -58,7 +64,7 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
     let quiz = quizzes::quiz_state(&mut tx, quiz_id).await?.filter(|q| q.status != "DRAFT").ok_or_else(not_found)?;
     class_access::require_member(&mut tx, user, &quiz.classroom_id).await?;
     let attempt = quizzes::attempt_for(&mut tx, quiz_id, &user.id).await?;
-    if let Some(done) = attempt.as_ref().filter(|a| a.status == "SUBMITTED") {
+    if let Some(done) = attempt.as_ref().filter(|a| a.status == "SUBMITTED" && !a.auto_submitted) {
         return Ok(receipt(&quiz, quiz_id, &user.id, done));
     }
     class_access::require_writable(&mut tx, &quiz.classroom_id).await?;
@@ -80,6 +86,12 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
     if elapsed > quiz.time_limit_minutes * 60_000 + GRACE_MS {
         return Err(ApiError::time_limit_exceeded());
     }
+    // Only work that is not stored yet reaches here: a replacement of the close's auto-submit, or a learner
+    // who never reached `/begin`. Neither counts if it finished more than the grace after the close; for the
+    // second, the close auto-submitted nothing, so this is the only limit (review of #11).
+    if quiz.closed_at.is_some_and(|closed| finish > closed.saturating_add(CLOSE_GRACE_MS)) {
+        return Err(ApiError::time_limit_exceeded());
+    }
     let key = quizzes::grading_key(&mut tx, quiz_id).await?;
     let (score, total_points) = grading_engine::grade(&key, &s.answers);
     let answers_json = serde_json::to_string(&s.answers).unwrap_or_else(|_| "[]".into());
@@ -95,6 +107,7 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
             score,
             total_points,
             answers_json: &answers_json,
+            auto_submitted: false,
         },
         now,
     )
@@ -108,8 +121,10 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
         submitted_at: Some(finish),
         score: Some(score),
         total_points: Some(total_points),
+        auto_submitted: false,
     };
-    if quiz.release_scores_immediately {
+    // A closed quiz has released its scores, so a replacement of the close's auto-submit is confirmed too.
+    if quiz.release_scores_immediately || quiz.status == "CLOSED" {
         let graded = ServerEvent::GradeConfirmed {
             quiz_id: quiz_id.to_owned(),
             attempt_id: stored.id.clone(),

@@ -44,7 +44,7 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
             val binding = db.syncStateDao().get("queued_hub:assignment_submissions:$id")?.value
             require(binding == null || binding == hub)
             db.homeworkDao().save(AssignmentSubmissionEntity(id, assignmentId, userId, file.path,
-                submittedAt = now, score = old?.score, teacherFeedback = old?.teacherFeedback, updatedAt = now))
+                submittedAt = now, score = old?.score, teacherFeedback = old?.teacherFeedback, updatedAt = now, createdAt = old?.createdAt ?: now))
             db.syncStateDao().put(SyncStateEntity("queued_hub:assignment_submissions:$id", hub, now))
         }
         previous?.takeIf { it != file.path && it.isNotEmpty() }?.let { path ->

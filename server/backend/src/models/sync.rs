@@ -7,6 +7,18 @@ use super::classroom::Classroom;
 /// pulled integer outside `0..=MAX_SAFE_INT` and would stop syncing, so the Hub never stores one.
 pub const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
 
+/// The longest text a client applies from a pull: the desktop refuses a longer string and, with it, the
+/// whole page (`desktop/src-tauri/src/sync.rs` `valid`, "string"). Bug #290.
+pub const MAX_TEXT_BYTES: usize = 1_000_000;
+
+/// An id a client made (a comment, a private comment, a homework submission) must be one the desktop
+/// accepts in a pull (`desktop/src-tauri/src/account.rs` `uuid`): a hyphenated UUID, never the nil UUID.
+/// Bug #290. Lowercase only (review of #290): the desktop lowercases every id it pulls, so an uppercase copy
+/// of another row's id would collide with that row there. Both apps make lowercase ids.
+pub fn is_client_uuid(id: &str) -> bool {
+    uuid::Uuid::parse_str(id).is_ok_and(|v| v.hyphenated().to_string() == id && !v.is_nil())
+}
+
 #[derive(Deserialize)]
 pub struct SyncPullInput {
     pub cursor: i64,
@@ -120,6 +132,9 @@ pub struct MaterialChunk {
     pub id: String,
     pub material_id: String,
     pub order_index: i64,
+    /// Left out when a chunk has none (bug #302): the desktop accepts a missing heading but refuses a null
+    /// one, and the whole pulled page with it. The contract makes `heading` optional.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub heading: Option<String>,
     pub text: String,
 }
@@ -215,4 +230,25 @@ pub struct SyncReceipt {
     pub status: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<&'static str>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_client_uuid_matches_the_desktop() {
+        assert!(is_client_uuid("a1000000-0000-4000-8000-0000000000ab"));
+        for refused in [
+            "A1000000-0000-4000-8000-0000000000AB",
+            "00000000-0000-0000-0000-000000000000",
+            "a1000000000040008000000000000001",
+            "{a1000000-0000-4000-8000-000000000001}",
+            "urn:uuid:a1000000-0000-4000-8000-000000000001",
+            "sub-1",
+            "",
+        ] {
+            assert!(!is_client_uuid(refused), "{refused}");
+        }
+    }
 }

@@ -6,7 +6,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{json, Value};
 
-use super::body::JsonBody;
+use super::body::{within_text_cap, JsonBody};
 use crate::auth::pin::is_valid_pin;
 use crate::auth::sessions;
 use crate::auth::{is_hub_pc, require_role, AuthUser, Role, ADMIN_ID};
@@ -37,6 +37,8 @@ async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> 
         .ok_or_else(|| ApiError::bad_request("lrn_or_id must be text"))?;
     let full_name = body.text("full_name").filter(|s| !s.trim().is_empty())
         .ok_or_else(|| ApiError::bad_request("full_name must be text"))?;
+    // Every client pulls `users` (bug #290).
+    within_text_cap("full_name", &full_name)?;
     let pin = body.text("pin").filter(|p| is_valid_pin(p))
         .ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
     let pin_hash = app.pins.hash(&pin).await?;
@@ -83,6 +85,7 @@ async fn setup(
     }
     let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
     let full_name = body.text("full_name").ok_or_else(|| ApiError::bad_request("full_name must be text"))?;
+    within_text_cap("full_name", &full_name)?;
 
     let pin_hash = app.pins.hash(&pin).await?;
     let now = app.clock.now_ms();

@@ -59,7 +59,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 | `POST /api/materials` | Owner or co-teacher of `classroom_id` | Learner 403 `Teacher only`; other teacher 403; unknown class 404; archived class 403 `This class is archived`; `topic_id`/`assignment_id`/`announcement_id` not in that class (or an archived assignment) 404 |
 | `GET /api/materials/{id}/download` | Class teachers and `ACTIVE` learners, also in an archived class | No or bad token 401; anyone else 403 `Not your class`; unknown id 404 |
 | `GET /api/materials/{id}/stream` | The same members, for a VIDEO only | As `/download`; a material that is not a video 404 `Not a video` (#259). Streaming itself is step 3.2 (`streaming_rate_limit.md`) |
-| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403; graded work 409 `ALREADY_GRADED`; late work 409 `LATE_SUBMISSION`; a `turned_in_at` that is not an integer 400 |
+| `POST /api/assignments/{id}/submit` | `ACTIVE` learners of the class | Teacher 403 `Learners only`; non-member 403 (checked before the body is read); 400 "submission_id must be a UUID" and "turned_in_at must be from 0 to 9007199254740991" (#290); unknown or archived assignment 404; archived class 403 except a retry of stored work (checked before the body is read when the learner has nothing stored); a `submission_id` used for other work 403; graded work 409 `ALREADY_GRADED`; late work 409 `LATE_SUBMISSION`; a `turned_in_at` that is not an integer 400 |
 | `GET /api/submissions/{id}/file` | The owning learner and the class's teachers | Classmate 403 `Not your submission`; other teacher or admin 403; unknown id 404 |
 
 ## Gotchas
@@ -76,7 +76,7 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 These are calls where the contract and mock are silent. Each is listed in the PR.
 
 1. **Formats, from the file's bytes:** as in Data flow step 2. An unsupported file gets 400 `BAD_REQUEST`, since the contract has no code for it. Two calls follow PRD FR-3.1 and FR-3.3 strictly: an iPhone `.mov` video is refused (MP4 or WebM only), and so is any ZIP that is not a Word document.
-2. **Placeholder bytes in the mock tests:** settled by the Lead in #257, which gave those flows real `%PDF` and JPEG headers. `submission_id` is not required to be a UUID, so `sub-1` works.
+2. **Placeholder bytes in the mock tests:** settled by the Lead in #257, which gave those flows real `%PDF` and JPEG headers. Since #290, `submission_id` must be a lowercase UUID (400 "submission_id must be a UUID"), because every teacher's desktop pulls it. A label such as `sub-1` is refused, and the mock's flows still use labels (raised with the Lead in the #290 PR).
 3. **Homework cap (TECH_SPEC Q10):** the same 250 MB as materials.
 4. **Archived class:** uploads and new homework get 403. A retry of a stored submission (same id, learner and assignment) gets 200 with the stored row, unchanged, following #235's sync-push rule.
 5. **Submission id clash:** an id that already names another learner's or assignment's work gets 403. The mock would overwrite it.

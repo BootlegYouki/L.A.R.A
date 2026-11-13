@@ -22,7 +22,7 @@ When a teacher uploads a PDF or Word handout, the Hub extracts its text, splits 
 3. **Split into blocks.**
    - **Word:** each `w:p` is a block with the text of its `w:t` runs. A tab or line break inside a run is a space. A paragraph styled `Title` or `Heading…` is a heading. Table cells are ordinary paragraphs. Headers, footers and footnotes are other parts of the ZIP, so they are not read.
    - **PDF:** blank lines separate blocks. A block that is one line of 2 to 60 characters, with no closing punctuation and no lowercase start, is a heading. Bare page numbers and "Page N of M" are dropped. A hyphen at a line end joins the split word; other line breaks are spaces. `pdf-extract` puts a blank line at some ordinary wraps, so a block that starts lowercase continues the block before it unless that one ended a sentence.
-4. **Chunk.** A heading closes the open chunk and names the next ones; text before the first heading takes the material's title, as the mock does. Whole paragraphs fill a chunk up to 500 tokens. A longer paragraph splits at sentence ends (`.`, `?`, `!` before a space), and a longer sentence by words. `order_index` starts at 1. At most 1,000 chunks per material.
+4. **Chunk.** A heading closes the open chunk and names the next ones; text before the first heading takes the material's title, as the mock does. The upload refuses a blank title (400 "title cannot be empty", bug #302), so every new chunk has a heading. Whole paragraphs fill a chunk up to 500 tokens. A longer paragraph splits at sentence ends (`.`, `?`, `!` before a space), and a longer sentence by words. `order_index` starts at 1. At most 1,000 chunks per material.
 5. **Commit.** The chunks are inserted in the material's own transaction, each with a class-wide `sync_revisions` row, so they reach phones with the material in the next pull.
 6. **Serve.** `GET /api/materials/{id}/chunks` answers class teachers and `ACTIVE` learners (also in an archived class) with `MaterialChunk` objects in `order_index` order. Bearer token only: `?token=` is for the media routes.
 
@@ -53,7 +53,7 @@ Measured on a release build (Windows laptop, 2026-11-09): a 24-page Chrome-print
 
 1. **TXT:** the Tech Spec listed PDF, DOCX and TXT, but the Hub refuses `.txt` uploads since #53. Extract PDF and DOCX only?
 2. **Limits:** 1,000 chunks per material and a 20-second extraction limit. Past the cap the material keeps the chunks made so far; after a timeout it gets none.
-3. **Heading fallback:** text before the first heading takes the material's title as its heading, as the mock does.
+3. **Heading fallback:** text before the first heading takes the material's title as its heading, as the mock does. A chunk with no heading (stored before #302) is sent without the `heading` key, never as `null`: the desktop refuses a null heading and the whole pulled page with it.
 4. **No backfill:** materials uploaded before 3.1 keep zero chunks until uploaded again.
 5. **PDF size limit:** PDFs over 50 MB are not read (uploads allow 250 MB). Handouts with a text layer are rarely more than a few MB; most files past the limit are scans with no text anyway.
 
