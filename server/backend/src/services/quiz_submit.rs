@@ -95,6 +95,7 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
             score,
             total_points,
             answers_json: &answers_json,
+            auto_submitted: false,
         },
         now,
     )

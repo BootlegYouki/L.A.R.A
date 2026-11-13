@@ -6,7 +6,6 @@ use axum::routing::post;
 use axum::{Json, Router};
 use serde_json::{json, Value};
 
-use super::not_implemented_teacher as teacher;
 use crate::auth::{require_role, AuthUser, Role};
 use crate::db::{begin_immediate, quizzes};
 use crate::error::ApiError;
@@ -18,7 +17,7 @@ use crate::AppState;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/quizzes/{id}/start", post(start))
-        .route("/api/quizzes/{id}/close", post(teacher))
+        .route("/api/quizzes/{id}/close", post(close))
 }
 
 fn quiz_not_found() -> ApiError {
@@ -46,4 +45,27 @@ async fn start(State(app): State<AppState>, user: AuthUser, Path(id): Path<Strin
     let event = ServerEvent::QuizStart { quiz_id: id, title: quiz.title, start_epoch_ms: now, duration_seconds };
     quiz_hub::announce_start(&app, &quiz.classroom_id, &event).await;
     Ok(Json(json!({"started_at": now, "duration_seconds": duration_seconds})))
+}
+
+/// Closes an `ACTIVE` quiz (contract #293, #294): auto-submits every `IN_PROGRESS` attempt, releases held
+/// scores, then sends the grade and close events. A `DRAFT` is 409 `QUIZ_NOT_STARTED`; an already `CLOSED`
+/// quiz answers 200 with no change and no events, so a retry is safe. An archived class may still close:
+/// closing ends work, and refusing would leave learners locked out of the AI tutor.
+async fn close(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    let now = app.clock.now_ms();
+    let mut tx = begin_immediate(&app.db).await?;
+    let quiz = quizzes::quiz_state(&mut tx, &id).await?.ok_or_else(quiz_not_found)?;
+    class_access::require_teacher(&mut tx, &user, &quiz.classroom_id).await?;
+    match quiz.status.as_str() {
+        "DRAFT" => return Err(ApiError::quiz_not_started()),
+        "CLOSED" => return Ok(Json(json!({"success": true}))),
+        _ => {}
+    }
+    let key = quizzes::grading_key(&mut tx, &id).await?;
+    let released = quizzes::close(&mut tx, &id, &quiz, &key, now).await?;
+    tx.commit().await?;
+
+    quiz_hub::announce_close(&app, &quiz.classroom_id, &id, &released, now).await;
+    Ok(Json(json!({"success": true})))
 }

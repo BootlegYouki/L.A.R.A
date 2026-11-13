@@ -157,3 +157,162 @@ async fn forty_learners_get_the_start_within_300_ms() {
     assert!(spread <= Duration::from_millis(300), "40 starts arrived {spread:?} apart");
     println!("40 learners got EVENT_QUIZ_START within {spread:?}");
 }
+
+async fn close(class: &Class, quiz: &str, token: &str) -> (u16, Value) {
+    class.hub.post_json(&format!("/api/quizzes/{quiz}/close"), &json!({}), Some(token)).await
+}
+
+async fn submit(class: &Class, quiz: &str, token: &str, started_at: i64, submitted_at: i64, answers: Value) -> (u16, Value) {
+    let body = json!({"started_at": started_at, "submitted_at": submitted_at, "answers": answers});
+    class.hub.post_json(&format!("/api/quizzes/{quiz}/submit"), &body, Some(token)).await
+}
+
+async fn pull_from(class: &Class, token: &str, cursor: i64) -> Value {
+    let (status, body) = class.hub.post_json("/api/sync/pull", &json!({"cursor": cursor}), Some(token)).await;
+    assert_eq!(status, 200, "{body}");
+    body
+}
+
+/// One right (MC) and one wrong (ID) answer: score 1 of 2.
+fn one_right(questions: &[String; 2]) -> Value {
+    json!([{"question_id": questions[0], "selected_option": "Photosynthesis"}, {"question_id": questions[1], "selected_option": "Karne"}])
+}
+
+/// A started quiz: (quiz id, question ids).
+async fn started_quiz(class: &Class, release: bool) -> (String, [String; 2]) {
+    let (quiz, questions) = draft_quiz(class, "Ecosystem", release).await;
+    let (status, body) = start(class, &quiz, class.teacher()).await;
+    assert_eq!(status, 200, "{body}");
+    (quiz, questions)
+}
+
+#[tokio::test]
+async fn closing_auto_submits_unfinished_attempts() {
+    let class = Class::start().await;
+    let (_, ana) = class.add_learner("123456789013", true).await;
+    let (quiz, questions) = started_quiz(&class, true).await;
+    assert_eq!(begin(&class, &quiz, &class.learner_token).await.0, 200);
+    assert_eq!(begin(&class, &quiz, &ana).await.0, 200);
+    let now = now_ms();
+    let (status, receipt) = submit(&class, &quiz, &ana, now, now, one_right(&questions)).await;
+    assert_eq!((status, receipt["score"].as_i64()), (200, Some(1)), "{receipt}");
+    let mut juan_ws = connect(&class.hub, &class.learner_token).await;
+    let mut ana_ws = connect(&class.hub, &ana).await;
+
+    let (status, body) = close(&class, &quiz, class.teacher()).await;
+    assert_eq!((status, body), (200, json!({"success": true})));
+    let closed_at = class.count("SELECT closed_at FROM quizzes WHERE status = 'CLOSED' AND scores_released_at IS NULL").await;
+    assert_eq!(
+        class
+            .count(
+                "SELECT COUNT(*) FROM quiz_attempts WHERE student_id = (SELECT id FROM users WHERE lrn_or_id = '123456789012')
+                 AND status = 'SUBMITTED' AND score = 0 AND total_points = 2 AND auto_submitted = 1
+                 AND submitted_at = (SELECT closed_at FROM quizzes)"
+            )
+            .await,
+        1,
+        "Juan's unfinished attempt is auto-submitted at the close"
+    );
+    assert_eq!(
+        class
+            .count(
+                "SELECT COUNT(*) FROM quiz_attempts WHERE student_id <> (SELECT id FROM users WHERE lrn_or_id = '123456789012')
+                 AND score = 1 AND auto_submitted = 0"
+            )
+            .await,
+        1,
+        "Ana's submission is left as it was"
+    );
+    let closed = json!({"event": "EVENT_QUIZ_CLOSED", "quiz_id": quiz, "timestamp": closed_at});
+    assert_eq!(next_event(&mut juan_ws).await, closed);
+    assert_eq!(next_event(&mut ana_ws).await, closed);
+    nothing_within(&mut juan_ws, 300).await;
+    nothing_within(&mut ana_ws, 300).await;
+
+    assert_eq!(class.pull(&class.learner_token).await["quiz_attempts"][0]["score"], 0);
+    let (status, rows) = class.hub.get(&format!("/api/quizzes/{quiz}/results"), Some(class.teacher())).await;
+    assert_eq!(status, 200, "{rows}");
+    let states: Vec<&str> = rows.as_array().unwrap().iter().map(|r| r["status"].as_str().unwrap()).collect();
+    assert_eq!(states, ["SUBMITTED", "SUBMITTED"]);
+}
+
+#[tokio::test]
+async fn closing_releases_held_scores() {
+    let class = Class::start().await;
+    let (quiz, questions) = started_quiz(&class, false).await;
+    assert_eq!(begin(&class, &quiz, &class.learner_token).await.0, 200);
+    let now = now_ms();
+    let (status, receipt) = submit(&class, &quiz, &class.learner_token, now, now, one_right(&questions)).await;
+    assert_eq!(status, 200, "{receipt}");
+    assert!(receipt["score"].is_null(), "{receipt}");
+    let before = pull_from(&class, &class.learner_token, 0).await;
+    assert!(before["quiz_attempts"][0]["score"].is_null());
+    let cursor = before["next_cursor"].as_i64().unwrap();
+    let mut learner = connect(&class.hub, &class.learner_token).await;
+
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    let closed_at = class.count("SELECT closed_at FROM quizzes").await;
+    assert_eq!(
+        next_event(&mut learner).await,
+        json!({"event": "EVENT_GRADE_CONFIRMED", "quiz_id": quiz, "attempt_id": receipt["attempt_id"], "score": 1,
+               "total_points": 2, "timestamp": closed_at})
+    );
+    assert_eq!(next_event(&mut learner).await["event"], "EVENT_QUIZ_CLOSED");
+
+    let after = pull_from(&class, &class.learner_token, cursor).await;
+    let released: Vec<&Value> =
+        after["quiz_attempts"].as_array().unwrap().iter().filter(|a| a["attempt_id"] == receipt["attempt_id"]).collect();
+    assert_eq!(released.len(), 1, "the close writes a new revision, so a learner who pulled null gets the score: {after}");
+    assert_eq!(released[0]["score"], 1);
+    assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE scores_released_at = closed_at").await, 1);
+    let teacher = pull_from(&class, class.teacher(), 0).await;
+    let seen = teacher["quiz_attempts"].as_array().unwrap().iter().find(|a| a["attempt_id"] == receipt["attempt_id"]).cloned().unwrap();
+    assert_eq!((seen["quiz_id"].as_str(), seen["student_id"].as_str()), (Some(quiz.as_str()), Some(class.learner.as_str())));
+}
+
+#[tokio::test]
+async fn closing_again_changes_nothing() {
+    let class = Class::start().await;
+    let (quiz, _) = started_quiz(&class, false).await;
+    assert_eq!(begin(&class, &quiz, &class.learner_token).await.0, 200);
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    let closed_at = class.count("SELECT closed_at FROM quizzes").await;
+    let seq = class.count("SELECT MAX(seq) FROM sync_revisions").await;
+    let mut learner = connect(&class.hub, &class.learner_token).await;
+
+    let (status, body) = close(&class, &quiz, class.teacher()).await;
+    assert_eq!((status, body), (200, json!({"success": true})));
+    nothing_within(&mut learner, 300).await;
+    assert_eq!(class.count("SELECT closed_at FROM quizzes").await, closed_at);
+    assert_eq!(class.count("SELECT MAX(seq) FROM sync_revisions").await, seq, "a retry writes nothing");
+}
+
+#[tokio::test]
+async fn a_draft_cannot_be_closed() {
+    let class = Class::start().await;
+    let (quiz, _) = draft_quiz(&class, "Ecosystem", true).await;
+    let (status, body) = close(&class, &quiz, class.teacher()).await;
+    assert_eq!((status, code(&body), message(&body)), (409, "QUIZ_NOT_STARTED", "Start the quiz before closing it"));
+    assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE status = 'DRAFT' AND closed_at IS NULL").await, 1);
+}
+
+#[tokio::test]
+async fn who_may_close() {
+    let class = Class::start().await;
+    let (quiz, _) = started_quiz(&class, true).await;
+    let (status, body) = close(&class, &quiz, &class.learner_token).await;
+    assert_eq!((status, code(&body)), (403, "FORBIDDEN"), "a learner");
+    let (_, stranger) = class.other_class().await;
+    let (status, body) = close(&class, &quiz, &stranger).await;
+    assert_eq!((status, code(&body)), (403, "FORBIDDEN"), "a teacher of another class");
+    let unknown = uuid::Uuid::new_v4().to_string();
+    let (status, body) = close(&class, &unknown, class.teacher()).await;
+    assert_eq!((status, code(&body), message(&body)), (404, "NOT_FOUND", "Quiz not found"));
+
+    // Closing ends work, so an archived class may still close: refusing would leave learners locked out of the tutor.
+    class.archive().await;
+    let co = class.co_teacher("T-0002").await;
+    let (status, body) = close(&class, &quiz, &co).await;
+    assert_eq!((status, body), (200, json!({"success": true})), "a co-teacher, in an archived class");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE status = 'CLOSED'").await, 1);
+}

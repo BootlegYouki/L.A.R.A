@@ -7,9 +7,9 @@ use sqlx::{FromRow, SqliteConnection};
 
 use super::sync_revisions::{record_revision, Action, Scope};
 use crate::auth::AuthUser;
-use crate::services::grading_engine::GradingQuestion;
+use crate::services::grading_engine::{grade, GradingQuestion};
 use crate::models::quiz::{
-    QuestionInput, QuestionType, QuizInput, ResultRow, StudentQuestion, StudentQuiz, TeacherQuestion, TeacherQuiz,
+    AnswerInput, QuestionInput, QuestionType, QuizInput, ResultRow, StudentQuestion, StudentQuiz, TeacherQuestion, TeacherQuiz,
 };
 
 #[derive(FromRow)]
@@ -434,6 +434,8 @@ pub struct GradedAttempt<'a> {
     pub score: i64,
     pub total_points: i64,
     pub answers_json: &'a str,
+    /// True only for the close's auto-submit, which on-time work may replace once (contract #293).
+    pub auto_submitted: bool,
 }
 
 pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, now_ms: i64) -> Result<String, sqlx::Error> {
@@ -441,13 +443,14 @@ pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, 
         Some(id) => {
             sqlx::query(
                 "UPDATE quiz_attempts SET status = 'SUBMITTED', submitted_at = ?, score = ?, total_points = ?, answers_json = ?,
-                     updated_at = ?
+                     auto_submitted = ?, updated_at = ?
                  WHERE id = ?",
             )
             .bind(a.submitted_at)
             .bind(a.score)
             .bind(a.total_points)
             .bind(a.answers_json)
+            .bind(a.auto_submitted)
             .bind(now_ms)
             .bind(id)
             .execute(&mut *tx)
@@ -458,8 +461,8 @@ pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, 
             let id = uuid::Uuid::new_v4().to_string();
             sqlx::query(
                 "INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, created_at, submitted_at, score,
-                                            total_points, answers_json, updated_at)
-                 VALUES (?, ?, ?, 'SUBMITTED', ?, ?, ?, ?, ?, ?, ?)",
+                                            total_points, answers_json, auto_submitted, updated_at)
+                 VALUES (?, ?, ?, 'SUBMITTED', ?, ?, ?, ?, ?, ?, ?, ?)",
             )
             .bind(&id)
             .bind(a.quiz_id)
@@ -470,6 +473,7 @@ pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, 
             .bind(a.score)
             .bind(a.total_points)
             .bind(a.answers_json)
+            .bind(a.auto_submitted)
             .bind(now_ms)
             .execute(&mut *tx)
             .await?;
@@ -478,6 +482,84 @@ pub async fn store_submission(tx: &mut SqliteConnection, a: &GradedAttempt<'_>, 
     };
     record_revision(tx, Scope::student(a.classroom_id, a.student_id), "quiz_attempts", &id, Action::Upsert, now_ms).await?;
     Ok(id)
+}
+
+/// A held score the close released, for its `EVENT_GRADE_CONFIRMED`.
+pub struct ReleasedScore {
+    pub student_id: String,
+    pub attempt_id: String,
+    pub score: i64,
+    pub total_points: i64,
+}
+
+/// Closes the quiz at the Hub's now (contract #293, #294; `rules/quiz-and-anti-cheat.md` sections 2 and 4):
+/// marks it `CLOSED` with `closed_at` (and `scores_released_at` when scores were held, TECH_SPEC Q16),
+/// auto-submits each `IN_PROGRESS` attempt graded from its stored answers, and gives each attempt submitted
+/// before the close a new revision when scores were held, so a learner who pulled `score: null` gets the
+/// score. Returns those released scores; auto-submitted attempts are never among them.
+pub async fn close(
+    tx: &mut SqliteConnection,
+    quiz_id: &str,
+    quiz: &QuizState,
+    key: &[GradingQuestion],
+    now_ms: i64,
+) -> Result<Vec<ReleasedScore>, sqlx::Error> {
+    let held = !quiz.release_scores_immediately;
+    sqlx::query(
+        "UPDATE quizzes SET status = 'CLOSED', closed_at = ?, scores_released_at = CASE WHEN ? THEN ? ELSE scores_released_at END,
+             updated_at = ?
+         WHERE id = ?",
+    )
+    .bind(now_ms)
+    .bind(held)
+    .bind(now_ms)
+    .bind(now_ms)
+    .bind(quiz_id)
+    .execute(&mut *tx)
+    .await?;
+    record_revision(tx, Scope::class(&quiz.classroom_id), "quizzes", quiz_id, Action::Upsert, now_ms).await?;
+
+    let unfinished: Vec<(String, String, i64, String)> = sqlx::query_as(
+        "SELECT id, student_id, started_at, answers_json FROM quiz_attempts WHERE quiz_id = ? AND status = 'IN_PROGRESS'",
+    )
+    .bind(quiz_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    for (id, student_id, started_at, answers_json) in unfinished {
+        let answers: Vec<AnswerInput> = serde_json::from_str(&answers_json).unwrap_or_default();
+        let (score, total_points) = grade(key, &answers);
+        let attempt = GradedAttempt {
+            existing: Some(&id),
+            quiz_id,
+            classroom_id: &quiz.classroom_id,
+            student_id: &student_id,
+            started_at,
+            submitted_at: now_ms,
+            score,
+            total_points,
+            answers_json: &answers_json,
+            auto_submitted: true,
+        };
+        store_submission(tx, &attempt, now_ms).await?;
+    }
+
+    if !held {
+        return Ok(Vec::new());
+    }
+    let submitted: Vec<(String, String, i64, i64)> = sqlx::query_as(
+        "SELECT student_id, id, score, total_points FROM quiz_attempts
+         WHERE quiz_id = ? AND status = 'SUBMITTED' AND auto_submitted = 0",
+    )
+    .bind(quiz_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    let mut released = Vec::with_capacity(submitted.len());
+    for (student_id, attempt_id, score, total_points) in submitted {
+        record_revision(tx, Scope::student(&quiz.classroom_id, &student_id), "quiz_attempts", &attempt_id, Action::Upsert, now_ms)
+            .await?;
+        released.push(ReleasedScore { student_id, attempt_id, score, total_points });
+    }
+    Ok(released)
 }
 
 /// One row per `ACTIVE` learner of the class, by name: `NOT_STARTED` without an attempt, the attempt's
