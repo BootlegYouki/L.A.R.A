@@ -30,13 +30,7 @@ pub fn router() -> Router<AppState> {
 async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> Result<Json<Classroom>, ApiError> {
     require_role(&user, Role::Teacher)?;
     body.need(&["name", "section"])?;
-    let text = |key: &str| {
-        body.0
-            .get(key)
-            .and_then(Value::as_str)
-            .map(str::to_owned)
-            .ok_or_else(|| ApiError::bad_request(format!("{key} must be text")))
-    };
+    let text = |key: &str| body.optional_text(key)?.ok_or_else(|| ApiError::bad_request(format!("{key} must be text")));
     let name = text("name")?;
     let section = text("section")?;
     let now = app.clock.now_ms();

@@ -4,7 +4,9 @@
 
 mod common;
 
-use common::uploads::{jpeg, submission_form, Class};
+use common::uploads::{jpeg, material_form, submission_form, Class, PDF};
+use lara_hub::auth::Role;
+use reqwest::Method;
 use serde_json::{json, Value};
 
 const ANNOUNCEMENT: &str = "a1000000-0000-4000-8000-000000000001";
@@ -93,4 +95,74 @@ async fn a_homework_submission_id_must_be_a_uuid() {
     let good = uuid::Uuid::new_v4().to_string();
     let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form(&good, &jpeg("a"))).await;
     assert_eq!(status, 200, "{body}");
+}
+
+/// 1,000,001 bytes: 500,000 two-byte letters and one more. The cap counts bytes, not characters.
+fn too_long() -> String {
+    "é".repeat(MAX_TEXT_BYTES / 2) + "x"
+}
+
+/// Every REST route that stores text clients pull refuses text over the desktop's limit.
+#[tokio::test]
+async fn rest_text_over_the_cap_is_refused_on_every_route() {
+    let class = Class::start().await;
+    class.announcement(ANNOUNCEMENT).await;
+    class.assignment(ASSIGNMENT).await;
+    let submission = uuid::Uuid::new_v4().to_string();
+    let path = format!("/api/assignments/{ASSIGNMENT}/submit");
+    let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form(&submission, &jpeg("a"))).await;
+    assert_eq!(status, 200, "{body}");
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "DOCUMENT", PDF)).await;
+    assert_eq!(status, 200, "{material}");
+    let material = material["id"].as_str().unwrap().to_owned();
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let admin = class.hub.open_session(admin).await;
+    let long = too_long();
+    let question =
+        |text: &str| json!({"question_text": text, "question_type": "TRUE_FALSE", "options": ["True", "False"], "correct_answer": "True"});
+    let quiz = |title: &str, instructions: &str, text: &str| {
+        json!({"classroom_id": class.id, "title": title, "instructions": instructions, "time_limit_minutes": 5, "questions": [question(text)]})
+    };
+    let teacher = class.teacher().to_owned();
+    let learner = class.learner_token.clone();
+    let cases: Vec<(Method, String, Value, &str, &str)> = vec![
+        (Method::POST, "/api/classrooms".into(), json!({"name": long, "section": "A"}), "name", &teacher),
+        (Method::POST, "/api/classrooms".into(), json!({"name": "Science", "section": long}), "section", &teacher),
+        (Method::PATCH, format!("/api/classrooms/{}", class.id), json!({"name": long}), "name", &teacher),
+        (Method::POST, "/api/announcements".into(), json!({"classroom_id": class.id, "title": long, "content": "x"}), "title", &teacher),
+        (Method::POST, "/api/announcements".into(), json!({"classroom_id": class.id, "title": "x", "content": long}), "content", &teacher),
+        (Method::PATCH, format!("/api/announcements/{ANNOUNCEMENT}"), json!({"content": long}), "content", &teacher),
+        (Method::POST, format!("/api/announcements/{ANNOUNCEMENT}/comments"), json!({"content": long}), "content", &learner),
+        (Method::POST, format!("/api/assignments/{ASSIGNMENT}/private-comments"), json!({"content": long}), "content", &learner),
+        (Method::POST, "/api/topics".into(), json!({"classroom_id": class.id, "name": long}), "name", &teacher),
+        (
+            Method::POST,
+            "/api/assignments".into(),
+            json!({"classroom_id": class.id, "title": long, "max_points": 10, "due_date": 4_102_444_800_000_i64}),
+            "title",
+            &teacher,
+        ),
+        (Method::PATCH, format!("/api/assignments/{ASSIGNMENT}"), json!({"instructions": long}), "instructions", &teacher),
+        (Method::PATCH, format!("/api/submissions/{submission}"), json!({"score": 5, "teacher_feedback": long}), "teacher_feedback", &teacher),
+        (Method::PATCH, format!("/api/materials/{material}"), json!({"title": long}), "title", &teacher),
+        (Method::POST, "/api/quizzes".into(), quiz(&long, "x", "x"), "title", &teacher),
+        (Method::POST, "/api/quizzes".into(), quiz("x", &long, "x"), "instructions", &teacher),
+        (Method::POST, "/api/quizzes".into(), quiz("x", "x", &long), "question_text", &teacher),
+        (
+            Method::POST,
+            "/api/admin/users".into(),
+            json!({"lrn_or_id": "T-0100", "full_name": long, "role": "TEACHER", "pin": "1234"}),
+            "full_name",
+            &admin,
+        ),
+    ];
+    for (method, path, body, field, token) in cases {
+        let (status, reply) = class.hub.send_json(method.clone(), &path, &body, Some(token)).await;
+        let message = reply["error"]["message"].as_str().unwrap_or("").to_owned();
+        assert_eq!((status, message), (400, format!("{field} is too long")), "{method} {path}");
+    }
+    let marker = "é".repeat(1000);
+    for token in [&teacher, &learner] {
+        assert!(!class.pull(token).await.to_string().contains(&marker), "no over-long text reaches a pull");
+    }
 }
