@@ -5,6 +5,7 @@
 pub mod broker;
 pub mod events;
 pub mod presence;
+pub mod quiz_hub;
 
 use std::time::Duration;
 

@@ -1,6 +1,6 @@
 //! Quizzes (contract `/api/quizzes*`, PRD FR-4.1, FR-4.3, FR-4.8). Step 4.5 builds authoring, the
-//! learner's view and `/begin`; steps 4.1 and 4.2 move start/close/results to `quiz_control.rs` and
-//! submit to `quiz_submit.rs`.
+//! learner's view and `/begin`. Starting and closing are in `quiz_control.rs` (4.1), submit and results in
+//! `quiz_submit.rs` (4.2).
 
 use std::collections::HashSet;
 
@@ -11,7 +11,6 @@ use axum::{Json, Router};
 use serde_json::{json, Value};
 
 use super::body::JsonBody;
-use super::not_implemented_teacher as teacher;
 use crate::auth::{require_role, AuthUser, Role};
 use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::{begin_immediate, quizzes};
@@ -27,9 +26,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/quizzes", post(create))
         .route("/api/quizzes/active", get(active))
         .route("/api/quizzes/{id}", get(read).patch(update))
-        .route("/api/quizzes/{id}/start", post(teacher))
         .route("/api/quizzes/{id}/begin", post(begin))
-        .route("/api/quizzes/{id}/close", post(teacher))
 }
 
 fn text_list(value: Option<&Value>, key: &str) -> Result<Vec<String>, ApiError> {

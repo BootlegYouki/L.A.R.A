@@ -111,7 +111,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `record_revision`, `pull_page` | fn (`db::sync_revisions`) | Write one revision in the caller's transaction; read one visible page after a cursor |
 | `Broker` | struct | `send_to_user`, `send_to_classroom_students`, `send_to_teacher` (owner and co-teachers) |
 | `ServerEvent`, `ClientEvent` | enum | Every frame, tagged `event` = `EVENT_*` |
-| `Presence`, `QuizHub` | struct | `EVENT_PRESENCE`; quiz start/close fan-out and close-time auto-submit |
+| `Presence`, `quiz_hub` | struct, module | `EVENT_PRESENCE`; quiz start/close fan-out (the close's auto-submit is `db::quizzes::close`) |
 | `grading_engine::grade` | fn | Pure scoring by `question_id` |
 | `Storage` | struct | Paths and streamed writes under `data_dir/storage` |
 | `document_parser::extract_chunks` | fn | PDF/DOCX → ordered `material_chunks` (3.1; TXT is not an accepted upload since #53, see [`document_chunking.md`](./document_chunking.md)) |
@@ -147,14 +147,14 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
 | `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10); 409 `ALREADY_GRADED`, `LATE_SUBMISSION` (#257) | Old file kept until the new one commits; identical retry returns the stored row |
 | `/api/quizzes`, `/active`, `/{id}` GET/PATCH, `/begin` | `routes/quizzes.rs` | 404; 409 `QUIZ_NOT_DRAFT`; 409 `QUIZ_CLOSED` (Q8) | Begin returns the existing attempt |
-| `/api/quizzes/{id}/start`, `/close`, `/results` | `routes/quiz_control.rs`, `quiz_hub.rs` | Non-draft or second active quiz (Q1) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits |
-| `/api/quizzes/{id}/submit` | `routes/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt |
+| `/api/quizzes/{id}/start`, `/close` | `routes/quiz_control.rs`, `websocket/quiz_hub.rs` | 404; 409 `QUIZ_NOT_DRAFT`, `QUIZ_ALREADY_ACTIVE` on start; 409 `QUIZ_NOT_STARTED` on close (Q1, #294) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits; closing again is 200 with no change |
+| `/api/quizzes/{id}/submit`, `/results` | `routes/quiz_submit.rs`, `services/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt, except the close's auto-submit, which on-time work replaces once |
 | `/api/export/class-record` | `routes/export.rs`, `GradebookExporter` | 404; caller (Q6); USB missing (Q10) | Temp name, renamed on the drive |
 | `/api/backup`, `/api/restore` | `routes/backup.rs`, `BackupManager` | Checksum mismatch (Q10) | DB swapped only after verification; `sync_epoch` bumped |
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | `websocket/mod.rs` | Bad token: close `4401`; frame before hello: `EVENT_ERROR` `UNAUTHORIZED` | No hello in 10 s: close |
 | `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH` | routes → `Broker` | — | Missed event: next pull |
-| `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED` | `quiz_hub.rs`, `quiz_submit.rs` | Grade event not sent while scores are held | Status and score in next pull |
-| `EVENT_QUIZ_SUBMIT` (in) | `quiz_hub.rs` → REST submit path | `EVENT_ERROR` (Q2); frame `student_id` ignored | Client uses REST or push |
+| `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED` | `websocket/quiz_hub.rs`, `services/quiz_submit.rs` | Grade event not sent while scores are held; the close sends it for each released score | Status and score in next pull |
+| `EVENT_QUIZ_SUBMIT` (in) | `websocket/mod.rs` → `services/quiz_submit.rs` (the REST and push path) | `EVENT_ERROR` (Q2); frame `student_id` ignored | Client uses REST or push |
 | `EVENT_PRESENCE` | `presence.rs` | — | `OFFLINE` on close or drop |
 | `EVENT_AI_CHAT_REQUEST` (in), `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `ai_stream.rs`, `ai/*` | `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL`, `AI_NOT_AVAILABLE` | Queued request removed; slot cancelled |
 | `EVENT_ERROR` | `websocket/events.rs` | Only the codes in `error.json` | — |
@@ -342,7 +342,7 @@ python3 scripts/mock_hub.py               # reference behavior
 
 ## 14. Open Questions
 Raised with the Lead; none is guessed in code. Until answered, the Hub matches `scripts/mock_hub.py`. A **Call** is the Server team's answer for the PR #36 review; a call that needs a `contract-change` is built only after that PR merges, and the Hub matches the mock until then.
-1. **Quiz start:** which code for starting a non-`DRAFT` quiz or a second `ACTIVE` one? The mock allows both; the unique index makes the real Hub fail. **Call:** 409 `QUIZ_NOT_DRAFT` for a non-`DRAFT` quiz; 409 `QUIZ_IN_PROGRESS` for a second `ACTIVE` quiz in the class, message naming the active one. No new code; a `contract-change` documents both on `/start` and updates the mock. Needed before 4.1.
+1. **Quiz start:** which code for starting a non-`DRAFT` quiz or a second `ACTIVE` one? The mock allows both; the unique index makes the real Hub fail. **Call:** 409 `QUIZ_NOT_DRAFT` for a non-`DRAFT` quiz; 409 `QUIZ_IN_PROGRESS` for a second `ACTIVE` quiz in the class, message naming the active one. No new code; a `contract-change` documents both on `/start` and updates the mock. Needed before 4.1. **Status (2026-11-13):** settled by contract #294 and built in 4.1 (#11), with one change to the call. A second `ACTIVE` quiz gets a new code, 409 `QUIZ_ALREADY_ACTIVE` `Close "<title>" before starting another quiz`, so that `QUIZ_IN_PROGRESS` stays the AI lockout's. A non-`DRAFT` quiz gets 409 `QUIZ_NOT_DRAFT` "This quiz has already been started". `/close` on a `DRAFT` is 409 `QUIZ_NOT_STARTED`, and `/close` on a `CLOSED` quiz is 200 with no change and no events. See [`quiz_control.md`](./quiz_control.md).
 2. **`EVENT_ERROR` has no `TIME_LIMIT_EXCEEDED`** (the mock sends `BAD_REQUEST`). `EVENT_QUIZ_SUBMIT` has no `started_at`; we use the Hub's attempt row and ignore its `student_id`.
 3. **Sync visibility: resolved by contract-change #218 and implemented in #7.** When a learner is approved or a teacher is added as co-teacher after their cursor, `pull_page` includes that class's current older rows with the visibility revision. Removed learners still receive their own enrollment, and removed co-teachers receive the class row without their ID. `GradeReceipt` in pull includes `student_id` and `quiz_id`. See [`delta_sync.md`](./delta_sync.md) for paging and verification.
 4. **Step numbers vs `Depends on`:** confirm section 10's order or renumber. **Call:** keep section 10's order and the step numbers as labels (renumbering breaks issue and PR links); correct the `Depends on` lines of #6, #10, #8, #11 and #12 to match.
@@ -357,8 +357,8 @@ Raised with the Lead; none is guessed in code. Until answered, the Hub matches `
 13. **Hub window layout:** no section 9 anatomy or showcase entry covers its screens, and staging's `rules/ui-and-accessibility.md` §1 says layout is not free design.
 14. **Python suite against the real Hub:** `tests/test_mock_hub.py` starts the mock itself. A `LARA_HUB_URL` switch in `tests/hub_client.py` would prove parity.
 15. **WebSocket replay (decided in #213):** the Hub does not replay events; `last_event_id` was removed from the contract. After every reconnect clients run `POST /api/sync/pull` and `GET /api/quizzes/active`. Presence, queue status and AI tokens are not recovered; the learner asks the tutor again.
-16. **`quizzes.scores_released_at`** says "teacher releases"; the rules make closing the only release. We plan to set it at close when scores were held.
-17. **Time-limit start:** the mock trusts the client's `started_at`. We plan to use the Hub's `quiz_attempts.started_at` (from `begin`), else `quizzes.started_at`.
+16. **`quizzes.scores_released_at`** says "teacher releases"; the rules make closing the only release. We plan to set it at close when scores were held. **Status (2026-11-13):** built in 4.1 (#11): `/close` sets it when scores were held.
+17. **Time-limit start:** the mock trusts the client's `started_at`. We plan to use the Hub's `quiz_attempts.started_at` (from `begin`), else `quizzes.started_at`. **Status:** built in 4.2 (#12); contract #293 times the close's replace-once rule from the Hub's start too.
 
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons come from `design-system/assets/`): sections 3, 4

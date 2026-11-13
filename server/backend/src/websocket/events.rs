@@ -21,6 +21,10 @@ pub enum ServerEvent {
     AnnouncementPush { classroom_id: String, announcement_id: String, title: String, timestamp: i64 },
     #[serde(rename = "EVENT_GRADE_CONFIRMED")]
     GradeConfirmed { quiz_id: String, attempt_id: String, score: i64, total_points: i64, timestamp: i64 },
+    #[serde(rename = "EVENT_QUIZ_START")]
+    QuizStart { quiz_id: String, title: String, start_epoch_ms: i64, duration_seconds: i64 },
+    #[serde(rename = "EVENT_QUIZ_CLOSED")]
+    QuizClosed { quiz_id: String, timestamp: i64 },
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]

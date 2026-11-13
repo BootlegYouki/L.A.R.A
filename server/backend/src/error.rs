@@ -33,6 +33,10 @@ pub enum ErrorCode {
     QuizNotDraft,
     /// 409: beginning a quiz that is not `ACTIVE` (contract #291).
     QuizClosed,
+    /// 409: starting a quiz while another quiz in the class is `ACTIVE` (contract #294).
+    QuizAlreadyActive,
+    /// 409: closing a quiz that is still a `DRAFT` (contract #294).
+    QuizNotStarted,
     /// 422: a quiz submitted after its time limit and the 60 s grace (contract `/submit`).
     TimeLimitExceeded,
     /// Area stubs until their step lands; no client depends on it.
@@ -60,6 +64,8 @@ impl ErrorCode {
             Self::CommentsDisabled => "COMMENTS_DISABLED",
             Self::QuizNotDraft => "QUIZ_NOT_DRAFT",
             Self::QuizClosed => "QUIZ_CLOSED",
+            Self::QuizAlreadyActive => "QUIZ_ALREADY_ACTIVE",
+            Self::QuizNotStarted => "QUIZ_NOT_STARTED",
             Self::TimeLimitExceeded => "TIME_LIMIT_EXCEEDED",
             Self::NotImplemented => "NOT_IMPLEMENTED",
             Self::Internal => "INTERNAL_ERROR",
@@ -159,6 +165,21 @@ impl ApiError {
     /// English, unlike the mock's "Sarado na ang pagsusulit": the apps are English only.
     pub fn quiz_closed() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizClosed, "This quiz is closed")
+    }
+
+    /// Starting a quiz that is no longer a `DRAFT` (contract #294, the mock's message).
+    pub fn quiz_already_started() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotDraft, "This quiz has already been started")
+    }
+
+    /// One `ACTIVE` quiz per class (`uq_one_active_quiz_per_classroom`); the message names the running one.
+    pub fn quiz_already_active(title: &str) -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::QuizAlreadyActive, format!("Close \"{title}\" before starting another quiz"))
+    }
+
+    /// Closing a `DRAFT`: a closed draft would reach learners with no start time (contract #294).
+    pub fn quiz_not_started() -> Self {
+        Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotStarted, "Start the quiz before closing it")
     }
 
     pub fn time_limit_exceeded() -> Self {
