@@ -14,6 +14,7 @@ mod files;
 mod materials;
 mod portal;
 mod private_comments;
+mod quiz_control;
 mod quiz_submit;
 mod quizzes;
 mod sync;
@@ -42,6 +43,7 @@ pub fn router(app: AppState) -> Router {
         .merge(materials::router())
         .merge(portal::router())
         .merge(private_comments::router())
+        .merge(quiz_control::router())
         .merge(quiz_submit::router())
         .merge(quizzes::router())
         .merge(sync::router())

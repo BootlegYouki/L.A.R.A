@@ -339,23 +339,46 @@ pub async fn begin(
     Ok((id, now_ms, true))
 }
 
-/// What submit needs to know about the quiz.
+/// What submit, start and close need to know about the quiz.
 #[derive(FromRow)]
 pub struct QuizState {
     pub classroom_id: String,
+    pub title: String,
     pub status: String,
     pub started_at: Option<i64>,
+    pub closed_at: Option<i64>,
     pub time_limit_minutes: i64,
     pub release_scores_immediately: bool,
 }
 
 pub async fn quiz_state(conn: &mut SqliteConnection, id: &str) -> Result<Option<QuizState>, sqlx::Error> {
     sqlx::query_as(
-        "SELECT classroom_id, status, started_at, time_limit_minutes, release_scores_immediately FROM quizzes WHERE id = ?",
+        "SELECT classroom_id, title, status, started_at, closed_at, time_limit_minutes, release_scores_immediately
+         FROM quizzes WHERE id = ?",
     )
     .bind(id)
     .fetch_optional(conn)
     .await
+}
+
+/// The title of the class's `ACTIVE` quiz, if one is running (one per class, `uq_one_active_quiz_per_classroom`).
+pub async fn active_in_class(conn: &mut SqliteConnection, classroom_id: &str) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar("SELECT title FROM quizzes WHERE classroom_id = ? AND status = 'ACTIVE'")
+        .bind(classroom_id)
+        .fetch_optional(conn)
+        .await
+}
+
+/// Starts a quiz at the Hub's now, with a class-wide revision so the pull sends it `ACTIVE`.
+pub async fn start(tx: &mut SqliteConnection, quiz_id: &str, classroom_id: &str, now_ms: i64) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE quizzes SET status = 'ACTIVE', started_at = ?, updated_at = ? WHERE id = ?")
+        .bind(now_ms)
+        .bind(now_ms)
+        .bind(quiz_id)
+        .execute(&mut *tx)
+        .await?;
+    record_revision(tx, Scope::class(classroom_id), "quizzes", quiz_id, Action::Upsert, now_ms).await?;
+    Ok(())
 }
 
 /// The learner's attempt on a quiz, if any.
