@@ -178,7 +178,6 @@
     <string name="classes_teacher_warning">Remove this co-teacher from the class?</string>
     <string name="classes_confirm">Confirm</string>
     <string name="classes_people">People</string>
-    <string name="classes_manage_help">Create a class, share its code and manage your classroom people.</string>
     <string name="classes_code">Class code</string>
     <string name="classes_code_help">Share this code with learners. Their join requests still need your approval.</string>
     <string name="classes_owner_role">Class owner</string>

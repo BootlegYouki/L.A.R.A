@@ -49,7 +49,7 @@ fun SettingsScreen(state: SettingsState, reachable: Boolean, version: String,
             HorizontalDivider(color = LaraColors.Border)
             if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = LaraColors.PrimaryDark,
                 trackColor = LaraColors.Border)
-            ClassroomActionRow(stringResource(R.string.settings_sign_out), icon = R.drawable.ic_arrow_left,
+            ClassroomActionRow(stringResource(R.string.settings_sign_out), icon = R.drawable.ic_sign_out,
                 enabled = !state.busy && !state.loading, destructive = true, onClick = onSignOut)
         }
     }

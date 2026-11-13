@@ -132,14 +132,14 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                 }
                 if (settingsTab && row.canManage(userId, true)) item {
                     ClassInfoCard {
-                    ClassroomActionRow(stringResource(R.string.classes_edit), icon = R.drawable.ic_gear,
+                    ClassroomActionRow(stringResource(R.string.classes_edit), icon = R.drawable.ic_pencil_simple,
                         enabled = enabled, onClick = { name = row.name; section = row.section; form = "rename" })
                     HorizontalDivider(color = LaraColors.Border)
                     ClassroomActionRow(stringResource(R.string.classes_add_teacher), icon = R.drawable.ic_users_regular,
                         enabled = enabled, onClick = { name = ""; form = "add" })
                     HorizontalDivider(color = LaraColors.Border)
                     ClassroomActionRow(stringResource(R.string.classes_archive), stringResource(R.string.classes_archive_help),
-                        R.drawable.ic_books_regular, enabled = enabled, onClick = { form = "archive" })
+                        R.drawable.ic_archive, enabled = enabled, onClick = { form = "archive" })
                     }
                 }
                 if (!settingsTab || !row.canManage(userId, true)) {
