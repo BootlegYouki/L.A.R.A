@@ -879,7 +879,9 @@ def cmd_report(args):
                  f"{run['throughput_tps']} | {peak} | {run['errors']} |")
 
     L += ["", "## First token by lesson length", "",
-          "Criterion 5 is judged on the `all` rows: first token under 10 s for 95% of replies with 2 learners at once.", "",
+          "Criterion 5 is judged on the `short` rows (the Lead, #73, 2026-11-13): first token under 10 s for 95% of "
+          "replies with 2 learners at once. The `long` rows are a known limit, recorded with their times: the Hub "
+          "reads the whole lesson part before it writes, and sending less lesson text can be tried after the defense.", "",
           "| Model | Slots | Lessons | Replies | TTFT median (ms) | TTFT p95 (ms) | Under 10 s |",
           "|---|---|---|---|---|---|---|"]
     for (model, slots), rows in sorted(run_rows.items()):

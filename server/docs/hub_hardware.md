@@ -92,7 +92,7 @@ Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC
 **On Linux, a model that does not fit slows down before it fails.** `llama-server` maps the model file into memory. When RAM runs short, Linux drops model pages (for example to cache a video being streamed) and reads them back from disk on the next token, so replies slow to a crawl. That is why the budget keeps a reserve.
 
 ## Hub spec for the AI tutor (DRAFT, #73)
-**Draft until the decision in `docs/benchmarks/ai_model_evaluation.md`.** It holds if REAP-15B passes scoring and the Lead's call on first-token speed (criterion 5). The 4 GB reference PC above cannot run this model. The Lead moved the AI candidate to a 16 GB Hub on 2026-11-01.
+**Draft until the decision in `docs/benchmarks/ai_model_evaluation.md`.** It holds if REAP-15B passes scoring. First-token speed (criterion 5) passes on short lessons, as the Lead ruled on 2026-11-13, and the long-lesson wait is a known limit. The 4 GB reference PC above cannot run this model. The Lead moved the AI candidate to a 16 GB Hub on 2026-11-01.
 
 | Part | Spec | Why (measured on the 16 GB laptop, `results/v3-qwen3-reap/`) |
 |---|---|---|

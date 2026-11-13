@@ -6,15 +6,14 @@
 > - The REAP-15B run on prompt set version 3 is done, and its speed and RAM below are measured on a **simulated** Hub, a 16 GB laptop.
 > - The two blind score sheets are with the scorers: the Lead is scorer A and @OpenYaji scorer B, due Fri 13 Nov.
 > - No model is chosen and `MODEL_PATH` is not set.
-> - Speed fails criterion 5 on the full set (below); the Lead's call on it is pending on #73.
+> - Speed passes criterion 5 on short lessons, which is how the Lead ruled it is judged (#73, 2026-11-13). The long-lesson wait is a known limit (below).
 
 ## What is still needed before a decision
 The plan the Lead froze on #73 (2026-11-03), with the English-only rules of 2026-11-01 and 2026-11-05 (#233):
 1. **Two scorers** fill `score_scorer_a.csv` and `score_scorer_b.csv` alone, following `server/ai_eval/SCORING.md`. Scorers must not open `replies.jsonl`, `blind_key.json`, `runs.json` or `logs/`, which name the model.
 2. **Merge** with `report`. Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the pass-rate tables into "Results: quality" below.
 3. **Cross-check** (allowed by the Lead on 2026-11-09). Only after both human sheets are done, Claude scores `score_claude.csv` on the same blind sheet, and `report --cross-check` adds its own section. It is in no pass rate and settles no disagreement.
-4. **Criterion 5:** the Lead decides how to treat the long-lesson first-token times (below).
-5. **Decide** against the pass mark in #73. Then write the Hub spec in `server/docs/hub_hardware.md`, and record `MODEL_PATH` and `server/docs/slm_inference_queue.md`.
+4. **Decide** against the pass mark in #73. Then write the Hub spec in `server/docs/hub_hardware.md`, and record `MODEL_PATH` and `server/docs/slm_inference_queue.md`.
 
 ## Candidate: Qwen3-30B-A3B-Instruct-2507 REAP-15B (prompt set version 3)
 **Why this model.**
@@ -46,16 +45,18 @@ The plan the Lead froze on #73 (2026-11-03), with the English-only rules of 2026
 - **"All learners"** includes the time spent reading prompts, so it is lower than the per-reply figure.
 
 ### First token by lesson length (criterion 5)
-The Lead's mark (#73, 2026-11-04): the first token arrives in under 10 s for 95% of replies with 2 learners at once, judged on the full set, with short and long lessons also shown on their own.
+The Lead's mark (#73, 2026-11-04): the first token arrives in under 10 s for 95% of replies with 2 learners at once.
+- **On 2026-11-13 the Lead ruled it is judged on short lessons** (option (b) below), and the long-lesson wait is recorded as a known limit.
+- The full set is still shown, with short and long lessons on their own.
 
 | Learners | Lessons | Replies | Median | p95 | Under 10 s |
 |---|---|---|---|---|---|
 | 1 | short | 64 | 3.6 s | 5.2 s | 64/64 (100%) |
 | 1 | long | 14 | 22.0 s | 32.2 s | 2/14 (14%) |
 | 1 | all | 78 | 3.9 s | 27.0 s | 66/78 (85%) |
-| 2 | short | 64 | 3.7 s | 5.7 s | 64/64 (100%) |
-| 2 | long | 14 | 25.3 s | 31.7 s | 1/14 (7%) |
-| 2 | **all** | 78 | 4.2 s | 29.4 s | **65/78 (83%): fails the 95% mark** |
+| 2 | **short** | 64 | 3.7 s | 5.7 s | **64/64 (100%): passes criterion 5** |
+| 2 | long | 14 | 25.3 s | 31.7 s | 1/14 (7%): known limit |
+| 2 | all | 78 | 4.2 s | 29.4 s | 65/78 (83%) |
 
 **Why long lessons are slow.**
 - Their prompts are 1,508 to 1,775 tokens, and the model reads the whole prompt before it writes the first word.
@@ -64,16 +65,24 @@ The Lead's mark (#73, 2026-11-04): the first token arrives in under 10 s for 95%
   - Writing stayed at 11.8 tokens/s per reply for 1 learner at every thread count. That suggests memory speed caps writing: one memory module, measured at 25 to 27 GB/s from 4 threads up. This is inferred; it was not tested on a two-module machine.
 - So a second memory module would likely help writing more than this wait. More cores help reading, but even 1.6 times faster would leave the long-lesson median at about 15 s, which is an estimate.
 
-**The Lead's call (pending):** the frozen plan runs the two-module test only if the 15B fails on speed, and it fails on the full set. Asked on #73 whether to:
+**The Lead's call (#73, 2026-11-13): option (b).** The frozen plan ran the two-module test only if the 15B failed on speed, and it failed on the full set. So the Lead was asked to choose one of:
 - (a) run the two-module test anyway;
-- (b) judge criterion 5 on short lessons and record the long-lesson wait as a known limit; or
+- (b) judge criterion 5 on short lessons and record the long-lesson wait as a known limit;
 - (c) send less lesson text per question, which means a new run.
+
+The Lead chose (b). Criterion 5 passes on short lessons: 64 of 64 replies under 10 s with 2 learners, a p95 of 5.7 s.
+
+**Known limit: long lessons.**
+- A question on one of the two long lessons (L18, L19: prompts of 1,508 to 1,775 tokens) waits a median of **25.3 s** for its first word with 2 learners at once.
+- The p95 is 31.7 s, and only 1 of 14 replies is under 10 s.
+- With 1 learner the median is 22.0 s, and 2 of 14 are under 10 s.
+- (c), sending less lesson text per question, can be tried after the defense if the pilot needs it.
 
 ## Results: quality (pending)
 _From `report` once both sheets are back: the pass rate per criterion for 1 and 2 learners, the agreement between the two scorers, the settled disagreements, the Filipino and Taglish table (its "Answered instead" column is the rate the Lead asked for), and the cross-check in its own section._
 
 ## Decision (pending)
-_No Hub model is chosen yet. Write it here with its numbers once quality is scored and the Lead has ruled on criterion 5. If REAP-15B passes, record `MODEL_PATH=models/Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf` and the Hub spec. If it fails scoring, the next step the Lead set is the 30B model on a 32 GB Hub._
+_No Hub model is chosen yet. Write it here with its numbers once quality is scored (criterion 5 is settled above). If REAP-15B passes, record `MODEL_PATH=models/Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf` and the Hub spec. If it fails scoring, the next step the Lead set is the 30B model on a 32 GB Hub._
 
 ## Earlier candidates (prompt set version 1, the 4 GB reference PC)
 Stage 1 (PR #171) and stage 2 ran small models against the original reference school PC: Linux, 4 cores, 4 GB RAM. The Lead's English-only change and side test on 2026-11-01 replaced this plan, and none of these were scored. They are kept as the record of why the small models were dropped.

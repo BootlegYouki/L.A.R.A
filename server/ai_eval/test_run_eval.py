@@ -483,8 +483,15 @@ class ReportSpeedSplit(unittest.TestCase):
     def test_long_lessons_are_shown_on_their_own(self):
         self.assertIn("| m | 2 | long | 2 | 35000 | 40000 | 0/2 (0%) |", self.report())
 
-    def test_the_full_set_row_is_what_criterion_5_is_judged_on(self):
+    def test_the_full_set_row_is_still_shown(self):
         self.assertIn("| m | 2 | all | 5 | 12000 | 40000 | 2/5 (40%) |", self.report())
+
+    def test_criterion_5_is_judged_on_short_lessons_and_long_ones_are_a_known_limit(self):
+        """The Lead, #73, 2026-11-13: option (b)."""
+        report = self.report()
+        self.assertIn("Criterion 5 is judged on the `short` rows", report)
+        self.assertNotIn("Criterion 5 is judged on the `all` rows", report)
+        self.assertIn("The `long` rows are a known limit", report)
 
     def test_the_report_has_no_filipino_column_any_more(self):
         self.assertNotIn("| FIL |", self.report())
