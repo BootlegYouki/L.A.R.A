@@ -21,6 +21,7 @@ data class EnrollmentEntity(
     @ColumnInfo(name = "status", defaultValue = "'PENDING'") val status: String = "PENDING",
     @ColumnInfo(name = "joined_at") val joinedAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    @ColumnInfo(name = "created_at") val createdAt: Long = joinedAt,
 )
  {
     init {

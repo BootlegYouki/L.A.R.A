@@ -85,7 +85,8 @@ class SyncStore(private val db: LaraDatabase) {
                         row.coTeacherIds?.let { json.encodeToString(it) }, row.archivedAt, old?.createdAt ?: snapshot, snapshot)
                 },
                 enrollments = enrollments.map { EnrollmentEntity(it.id, it.classroomId, it.studentId,
-                    it.status, it.joinedAt ?: it.updatedAt, it.updatedAt) },
+                    it.status, it.joinedAt ?: it.updatedAt, it.updatedAt,
+                    createdAt = dao.enrollment(it.classroomId, it.studentId)?.createdAt ?: snapshot) },
                 announcements = page.announcements.map { it.toEntity() },
                 announcementComments = page.comments.map { AnnouncementCommentEntity(it.id, it.announcementId,
                     it.authorId, it.content, it.createdAt, it.updatedAt ?: it.createdAt, "SYNCED") },
@@ -96,7 +97,8 @@ class SyncStore(private val db: LaraDatabase) {
                         old?.createdAt ?: row.updatedAt, row.updatedAt)
                 },
                 materialChunks = page.materialChunks.map { MaterialChunkEntity(it.id, it.materialId, it.orderIndex,
-                    it.heading, it.text, updatedAt = snapshot) },
+                    it.heading, it.text, updatedAt = snapshot,
+                    createdAt = dao.materialChunk(it.id)?.createdAt ?: snapshot) },
                 assignments = page.assignments.map { row ->
                     val old = dao.assignment(row.id)
                     AssignmentEntity(row.id, row.classroomId, row.title, row.instructions ?: "", row.dueDate,
@@ -107,7 +109,7 @@ class SyncStore(private val db: LaraDatabase) {
                     // Empty local path means this metadata has no downloaded attachment.
                     AssignmentSubmissionEntity(row.id, row.assignmentId, row.studentId, old?.filePath ?: "",
                         row.fileType, row.submittedAt, row.score, row.teacherFeedback, row.updatedAt ?: snapshot, "SYNCED",
-                        receivedAt = row.receivedAt)
+                        receivedAt = row.receivedAt, createdAt = old?.createdAt ?: snapshot)
                 },
                 quizzes = page.quizzes.map { row ->
                     val old = dao.quiz(row.id)

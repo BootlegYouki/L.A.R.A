@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.lara.app.data.SchemaParityTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-13T17:00:08" hostname="MacBook-Pro-Tamz.local" time="0.132">
+  <properties/>
+  <testcase name="parityAssertionDetectsRemovedColumn" classname="org.lara.app.data.SchemaParityTest" time="0.039"/>
+  <testcase name="allSixteenTablesMatchActualContractIncludingConstraints" classname="org.lara.app.data.SchemaParityTest" time="0.093"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

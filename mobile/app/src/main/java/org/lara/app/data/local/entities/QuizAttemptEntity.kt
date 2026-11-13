@@ -27,6 +27,7 @@ data class QuizAttemptEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_status", defaultValue = "'QUEUED_FOR_SYNC'") val syncStatus: String = "QUEUED_FOR_SYNC",
     @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
+    @ColumnInfo(name = "created_at") val createdAt: Long = startedAt,
 )
  {
     init {

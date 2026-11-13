@@ -21,4 +21,5 @@ data class MaterialChunkEntity(
     @ColumnInfo(name = "text") val text: String,
     @ColumnInfo(name = "token_estimate") val tokenEstimate: Long? = null,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    @ColumnInfo(name = "created_at") val createdAt: Long = updatedAt,
 )

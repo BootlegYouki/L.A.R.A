@@ -11,6 +11,7 @@ import org.junit.Test
 import org.junit.Assert.*
 import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.local.RejectedUploadMigration
+import org.lara.app.data.local.AuditTimestampMigration
 import org.lara.app.data.local.HomeworkReceiptMigration
 import java.util.UUID
 
@@ -61,7 +62,7 @@ abstract class RejectedUploadMigrationTests {
             receipt("announcement_comments", "edited", "37273d43b387471ffebd9c9166f44ecb6ab0f10637ac08f80724601656a7ec8b")
             state("upload_receipt:announcement_comments:malformed", "not json")
             old.close()
-            fun open() = Room.databaseBuilder(context, LaraDatabase::class.java, name).addMigrations(RejectedUploadMigration, HomeworkReceiptMigration).build()
+            fun open() = Room.databaseBuilder(context, LaraDatabase::class.java, name).addMigrations(RejectedUploadMigration, HomeworkReceiptMigration, AuditTimestampMigration).build()
             var migrated = open(); upgraded = migrated
             assertEquals("REJECTED", migrated.syncDao().comment("comment")?.syncStatus)
             assertEquals("COMMENTS_DISABLED", migrated.syncDao().comment("comment")?.syncRejectReason)
@@ -69,11 +70,13 @@ abstract class RejectedUploadMigrationTests {
             assertEquals("COMMENTS_DISABLED", migrated.syncDao().privateComment("private")?.syncRejectReason)
             assertEquals("REJECTED", migrated.syncDao().attempt("attempt")?.syncStatus)
             assertEquals("COMMENTS_DISABLED", migrated.syncDao().attempt("attempt")?.syncRejectReason)
+            assertEquals(1L, migrated.syncDao().attempt("attempt")?.createdAt)
             assertEquals("New edit", migrated.syncDao().comment("edited")?.content)
             assertEquals("QUEUED_FOR_SYNC", migrated.syncDao().comment("edited")?.syncStatus)
             assertNull(migrated.syncDao().comment("edited")?.syncRejectReason)
             assertEquals("/local/keep.jpg", migrated.syncDao().submission("photo")?.filePath)
             assertEquals("QUEUED_FOR_SYNC", migrated.syncDao().submission("photo")?.syncStatus)
+            assertEquals(2L, migrated.syncDao().submission("photo")?.createdAt)
             assertNull(migrated.syncDao().submission("photo")?.receivedAt)
             assertNull(migrated.syncDao().submission("photo")?.syncRejectReason)
             assertEquals("42", migrated.syncStateDao().get("cursor")?.value)

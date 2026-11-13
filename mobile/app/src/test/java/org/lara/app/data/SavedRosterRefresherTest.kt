@@ -51,6 +51,7 @@ class SavedRosterRefresherTest {
         assertEquals("ACTIVE", saved.enrollment.status)
         assertEquals("New name", saved.user?.fullName)
         assertEquals(1L, saved.enrollment.joinedAt)
+        assertEquals(1L, saved.enrollment.createdAt)
         assertTrue(saved.enrollment.updatedAt > 1)
     }
     @Test fun newPendingRowAndProfileAreInsertedWithoutSync() = runBlocking {
@@ -58,6 +59,7 @@ class SavedRosterRefresherTest {
         SavedRosterRefresher(db, remote(listOf(row("new-server-id", "new-learner", EnrollmentStatus.PENDING))), "teacher").refresh("class")
         val saved = db.rosterDao().observeByClassroom("class").first().single { it.enrollment.studentId == "new-learner" }
         assertEquals("new-server-id", saved.enrollment.id)
+        assertEquals(saved.enrollment.updatedAt, saved.enrollment.createdAt)
         assertEquals("synthetic", saved.user?.lrnOrId)
         assertNull(db.syncStateDao().get("cursor"))
     }
