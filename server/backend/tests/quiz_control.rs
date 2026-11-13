@@ -407,3 +407,25 @@ async fn a_teacher_still_cannot_submit_after_the_close() {
     let (status, body) = submit(&class, &quiz, class.teacher(), now, now, one_right(&questions)).await;
     assert_eq!((status, code(&body), message(&body)), (403, "FORBIDDEN", "Learners only"));
 }
+
+/// Review of #11: a learner who never reached `/begin` has no attempt, so the close auto-submits nothing for
+/// them. Their work must meet the same close limit as a replacement, or two learners who both finished after
+/// the close would be graded two ways. Work they finished before the close still counts (FR-4.5).
+#[tokio::test]
+async fn a_learner_who_never_began_cannot_submit_long_after_the_close() {
+    let class = Class::start().await;
+    let (_, ana) = class.add_learner("123456789013", true).await;
+    let (quiz, questions) = started_quiz(&class, true).await;
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    let now = now_ms();
+    let (started, closed) = (now - 20 * 60_000, now - 10 * 60_000);
+    let (started_text, closed_text) = (started.to_string(), closed.to_string());
+    class.exec("UPDATE quizzes SET started_at = ?, closed_at = ?", &[started_text.as_str(), closed_text.as_str()]).await;
+
+    let (status, body) = submit(&class, &quiz, &class.learner_token, now - 5 * 60_000, now, one_right(&questions)).await;
+    assert_eq!((status, code(&body)), (422, "TIME_LIMIT_EXCEEDED"), "finished 10 minutes after the close: {body}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts").await, 0);
+
+    let (status, receipt) = submit(&class, &quiz, &ana, closed - 6 * 60_000, closed - 60_000, one_right(&questions)).await;
+    assert_eq!((status, receipt["score"].as_i64()), (200, Some(1)), "finished before the close: {receipt}");
+}

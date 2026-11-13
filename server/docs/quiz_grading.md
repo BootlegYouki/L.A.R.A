@@ -63,11 +63,11 @@ The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/qu
 ## Who may do what
 | Action | Who |
 |---|---|
-| Submit (REST, push, WebSocket) | `ACTIVE` learners of the class. A `DRAFT` is 404. An archived class is 403 for new work, but a stored submission's receipt still comes back |
+| Submit (REST, push, WebSocket) | `ACTIVE` learners of the class. A `DRAFT` is 404. An archived class is 403 for new work, but a stored submission's receipt still comes back. Replacing the close's auto-submit is new work, so it is 403 there |
 | Results | The class's teachers. One row per `ACTIVE` learner (`NOT_STARTED`, `IN_PROGRESS` or `SUBMITTED`), by name, with real scores only once submitted |
 
 ## Gotchas
-- **A `CLOSED` quiz still accepts an on-time submission** that was queued offline (FR-4.5, as in the mock). The timing check decides.
+- **A `CLOSED` quiz still accepts an on-time submission** that was queued offline (FR-4.5, as in the mock). It must pass the time check, and it must have finished no later than 60 s after `closed_at` (`CLOSE_GRACE_MS`, contract #294). That close limit holds both for a replacement of the close's auto-submit and for a learner who never reached `/begin` (review of #11; the mock checks only the replacement).
 - **One attempt per learner per quiz:** two submits at once are serialized by the write lock and give the same attempt.
 - **Closing (step 4.1) is in [`quiz_control.md`](./quiz_control.md).** It auto-submits through `db::quizzes::store_submission`, not `submit`: `submit` is learner-only, runs the time check and sends presence. It writes a new revision for each released held score, so a learner who pulled `score: null` gets the score. The Lead settled FR-4.4 against FR-4.5 (#11, contract #293 and #294): the close auto-submits, and on-time work replaces that once.
 - **For step 5.1, the AI lockout:** a learner whose submit was refused (422) keeps an `IN_PROGRESS` attempt. A lockout that ends only at `SUBMITTED` keeps the tutor off until the teacher closes the quiz, or forever if they never do. Lock only while the quiz is `ACTIVE`, or within the time limit plus grace.

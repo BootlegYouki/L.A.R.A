@@ -111,7 +111,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `record_revision`, `pull_page` | fn (`db::sync_revisions`) | Write one revision in the caller's transaction; read one visible page after a cursor |
 | `Broker` | struct | `send_to_user`, `send_to_classroom_students`, `send_to_teacher` (owner and co-teachers) |
 | `ServerEvent`, `ClientEvent` | enum | Every frame, tagged `event` = `EVENT_*` |
-| `Presence`, `QuizHub` | struct | `EVENT_PRESENCE`; quiz start/close fan-out and close-time auto-submit |
+| `Presence`, `quiz_hub` | struct, module | `EVENT_PRESENCE`; quiz start/close fan-out (the close's auto-submit is `db::quizzes::close`) |
 | `grading_engine::grade` | fn | Pure scoring by `question_id` |
 | `Storage` | struct | Paths and streamed writes under `data_dir/storage` |
 | `document_parser::extract_chunks` | fn | PDF/DOCX → ordered `material_chunks` (3.1; TXT is not an accepted upload since #53, see [`document_chunking.md`](./document_chunking.md)) |
@@ -147,14 +147,14 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/assignments/{id}/private-comments` | `routes/private_comments.rs` | 400 teacher without `student_id`; 404 | Client id makes retry idempotent |
 | `/api/assignments/{id}/submit`, `/api/submissions/{id}`, `/file` | `routes/assignments.rs`, `storage/*` | 400 missing `submission_id` or file; 404; size cap (Q10); 409 `ALREADY_GRADED`, `LATE_SUBMISSION` (#257) | Old file kept until the new one commits; identical retry returns the stored row |
 | `/api/quizzes`, `/active`, `/{id}` GET/PATCH, `/begin` | `routes/quizzes.rs` | 404; 409 `QUIZ_NOT_DRAFT`; 409 `QUIZ_CLOSED` (Q8) | Begin returns the existing attempt |
-| `/api/quizzes/{id}/start`, `/close`, `/results` | `routes/quiz_control.rs`, `quiz_hub.rs` | Non-draft or second active quiz (Q1) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits |
-| `/api/quizzes/{id}/submit` | `routes/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt |
+| `/api/quizzes/{id}/start`, `/close` | `routes/quiz_control.rs`, `websocket/quiz_hub.rs` | 404; 409 `QUIZ_NOT_DRAFT`, `QUIZ_ALREADY_ACTIVE` on start; 409 `QUIZ_NOT_STARTED` on close (Q1, #294) | Close auto-submits all `IN_PROGRESS` in one transaction, then emits; closing again is 200 with no change |
+| `/api/quizzes/{id}/submit`, `/results` | `routes/quiz_submit.rs`, `services/quiz_submit.rs`, `grading_engine` | 422 `TIME_LIMIT_EXCEEDED`; 404 | Already submitted returns the stored receipt, except the close's auto-submit, which on-time work replaces once |
 | `/api/export/class-record` | `routes/export.rs`, `GradebookExporter` | 404; caller (Q6); USB missing (Q10) | Temp name, renamed on the drive |
 | `/api/backup`, `/api/restore` | `routes/backup.rs`, `BackupManager` | Checksum mismatch (Q10) | DB swapped only after verification; `sync_epoch` bumped |
 | `EVENT_HELLO` / `EVENT_HELLO_ACK` | `websocket/mod.rs` | Bad token: close `4401`; frame before hello: `EVENT_ERROR` `UNAUTHORIZED` | No hello in 10 s: close |
 | `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH` | routes → `Broker` | — | Missed event: next pull |
-| `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED` | `quiz_hub.rs`, `quiz_submit.rs` | Grade event not sent while scores are held | Status and score in next pull |
-| `EVENT_QUIZ_SUBMIT` (in) | `quiz_hub.rs` → REST submit path | `EVENT_ERROR` (Q2); frame `student_id` ignored | Client uses REST or push |
+| `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED` | `websocket/quiz_hub.rs`, `services/quiz_submit.rs` | Grade event not sent while scores are held; the close sends it for each released score | Status and score in next pull |
+| `EVENT_QUIZ_SUBMIT` (in) | `websocket/mod.rs` → `services/quiz_submit.rs` (the REST and push path) | `EVENT_ERROR` (Q2); frame `student_id` ignored | Client uses REST or push |
 | `EVENT_PRESENCE` | `presence.rs` | — | `OFFLINE` on close or drop |
 | `EVENT_AI_CHAT_REQUEST` (in), `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `ai_stream.rs`, `ai/*` | `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL`, `AI_NOT_AVAILABLE` | Queued request removed; slot cancelled |
 | `EVENT_ERROR` | `websocket/events.rs` | Only the codes in `error.json` | — |

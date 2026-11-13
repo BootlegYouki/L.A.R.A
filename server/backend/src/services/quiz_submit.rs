@@ -44,7 +44,8 @@ fn receipt(quiz: &QuizState, quiz_id: &str, student_id: &str, attempt: &AttemptR
 /// (403), a stored submission comes back as it is, then the archived class (403) and the time limit (422).
 /// Unlike the mock's `submit_attempt`, a stored submission returns before the time check, so a retry always
 /// gets its receipt. The one exception is the close's auto-submit: the learner's own work replaces it once,
-/// if it is on time and finished no later than `CLOSE_GRACE_MS` after the close (contract #293, #294).
+/// if it is on time and finished no later than `CLOSE_GRACE_MS` after the close (contract #293, #294). The
+/// same close limit holds for a learner with no attempt row, unlike the mock (review of #11).
 ///
 /// Timing trusts the Hub's clock (`server/AGENTS.md`): the start is the attempt's `started_at` from `/begin`.
 /// Only without an attempt row is the device's start used, and then not before the quiz's own start or
@@ -85,8 +86,10 @@ pub async fn submit(app: &AppState, user: &AuthUser, quiz_id: &str, s: Submissio
     if elapsed > quiz.time_limit_minutes * 60_000 + GRACE_MS {
         return Err(ApiError::time_limit_exceeded());
     }
-    let replaces_auto_submit = attempt.as_ref().is_some_and(|a| a.auto_submitted);
-    if replaces_auto_submit && quiz.closed_at.is_some_and(|closed| finish > closed.saturating_add(CLOSE_GRACE_MS)) {
+    // Only work that is not stored yet reaches here: a replacement of the close's auto-submit, or a learner
+    // who never reached `/begin`. Neither counts if it finished more than the grace after the close; for the
+    // second, the close auto-submitted nothing, so this is the only limit (review of #11).
+    if quiz.closed_at.is_some_and(|closed| finish > closed.saturating_add(CLOSE_GRACE_MS)) {
         return Err(ApiError::time_limit_exceeded());
     }
     let key = quizzes::grading_key(&mut tx, quiz_id).await?;

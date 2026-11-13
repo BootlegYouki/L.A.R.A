@@ -23,7 +23,6 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | [`quiz_authoring.md`](./quiz_authoring.md) | Quiz create and draft-only edit, the learner's answer-free view with per-learner shuffle, `/active`, `/begin` and the redaction test | Sprint 4 (#61) |
 | [`quiz_grading.md`](./quiz_grading.md) | One submit path for REST, the offline push and the WebSocket; Hub-clock timing; grading rules; held scores; teacher results | Sprint 4 (#12) |
 | [`quiz_control.md`](./quiz_control.md) | Starting a quiz for the whole class at one Hub instant; closing it, with auto-submit and score release; on-time work replacing the auto-submit once | Sprint 4 (#11) |
-| `quiz_engine.md` | Start and close flow, attempt lifecycle, time validation, grading, score release | Sprint 4 |
 | `slm_inference_queue.md` | `llama-server` flags, slots, FIFO queue, guardrails, measured tokens per second | Sprint 5 |
 | [`hub_hardware.md`](./hub_hardware.md) | Installer (`.exe`/`.deb`), firewall rules and the LAN port check; pilot machine CPU and RAM, measured capacity | Sprint 1 (#20) and 5 |
 
