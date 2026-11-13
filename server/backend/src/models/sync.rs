@@ -12,10 +12,11 @@ pub const MAX_SAFE_INT: i64 = 9_007_199_254_740_991;
 pub const MAX_TEXT_BYTES: usize = 1_000_000;
 
 /// An id a client made (a comment, a private comment, a homework submission) must be one the desktop
-/// accepts in a pull: a hyphenated UUID in any letter case, never the nil UUID
-/// (`desktop/src-tauri/src/account.rs` `uuid`). Bug #290. Kept as sent, so receipts match the client's row.
+/// accepts in a pull (`desktop/src-tauri/src/account.rs` `uuid`): a hyphenated UUID, never the nil UUID.
+/// Bug #290. Lowercase only (review of #290): the desktop lowercases every id it pulls, so an uppercase copy
+/// of another row's id would collide with that row there. Both apps make lowercase ids.
 pub fn is_client_uuid(id: &str) -> bool {
-    uuid::Uuid::parse_str(id).is_ok_and(|v| v.hyphenated().to_string().eq_ignore_ascii_case(id) && !v.is_nil())
+    uuid::Uuid::parse_str(id).is_ok_and(|v| v.hyphenated().to_string() == id && !v.is_nil())
 }
 
 #[derive(Deserialize)]
@@ -234,9 +235,9 @@ mod tests {
 
     #[test]
     fn is_client_uuid_matches_the_desktop() {
-        assert!(is_client_uuid("a1000000-0000-4000-8000-000000000001"));
-        assert!(is_client_uuid("A1000000-0000-4000-8000-0000000000AB"));
+        assert!(is_client_uuid("a1000000-0000-4000-8000-0000000000ab"));
         for refused in [
+            "A1000000-0000-4000-8000-0000000000AB",
             "00000000-0000-0000-0000-000000000000",
             "a1000000000040008000000000000001",
             "{a1000000-0000-4000-8000-000000000001}",

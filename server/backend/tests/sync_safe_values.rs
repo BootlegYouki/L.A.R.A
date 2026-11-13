@@ -4,7 +4,7 @@
 
 mod common;
 
-use common::uploads::{jpeg, material_form, submission_form, Class, PDF};
+use common::uploads::{jpeg, material_form, submission_form, submission_form_at, Class, PDF};
 use lara_hub::auth::Role;
 use reqwest::Method;
 use serde_json::{json, Value};
@@ -28,9 +28,11 @@ fn statuses(receipts: &[Value]) -> Vec<(String, String)> {
         .collect()
 }
 
-/// Four bad items, then a good one at every limit: the uppercase id is still a UUID the desktop accepts.
+/// Six bad items, then a good one at every limit. An uppercase id is refused (review of #290): the desktop
+/// lowercases ids, so an uppercase copy of another row's id would collide with it there.
 fn items(parent_key: &str, parent: &str) -> (Vec<Value>, String) {
-    let good = uuid::Uuid::new_v4().hyphenated().to_string().to_uppercase();
+    let good = uuid::Uuid::new_v4().hyphenated().to_string();
+    let upper = uuid::Uuid::new_v4().hyphenated().to_string().to_uppercase();
     let item = |id: &str, created_at: Value, content: String| {
         json!({"id": id, parent_key: parent, "content": content, "created_at": created_at})
     };
@@ -42,6 +44,7 @@ fn items(parent_key: &str, parent: &str) -> (Vec<Value>, String) {
             item(&fresh(), json!(-1), "x".into()),
             item(&fresh(), json!(MAX_SAFE_INT + 1), "x".into()),
             item(&fresh(), json!(1), "é".repeat(MAX_TEXT_BYTES / 2) + "x"),
+            item(&upper, json!(1), "x".into()),
             item(&good, json!(MAX_SAFE_INT), "é".repeat(MAX_TEXT_BYTES / 2)),
         ],
         good,
@@ -50,7 +53,7 @@ fn items(parent_key: &str, parent: &str) -> (Vec<Value>, String) {
 
 fn expected() -> Vec<(String, String)> {
     let rejected = ("REJECTED".to_owned(), "BAD_REQUEST".to_owned());
-    let mut all = vec![rejected; 5];
+    let mut all = vec![rejected; 6];
     all.push(("SYNCED".to_owned(), String::new()));
     all
 }
@@ -165,4 +168,41 @@ async fn rest_text_over_the_cap_is_refused_on_every_route() {
     for token in [&teacher, &learner] {
         assert!(!class.pull(token).await.to_string().contains(&marker), "no over-long text reaches a pull");
     }
+}
+
+/// Review of #290: a learner who pushes an uppercase copy of a classmate's comment id must not get a second
+/// row. The desktop lowercases ids, so the two would collide in its pull, or the copy would overwrite the
+/// classmate's comment there.
+#[tokio::test]
+async fn an_uppercase_copy_of_a_comment_id_is_refused() {
+    let class = Class::start().await;
+    class.announcement(ANNOUNCEMENT).await;
+    let id = uuid::Uuid::new_v4().to_string();
+    let comment = |id: &str| json!({"comments": [{"id": id, "announcement_id": ANNOUNCEMENT, "content": "Opo", "created_at": 1}]});
+    assert_eq!(statuses(&push(&class, comment(&id)).await), [("SYNCED".to_owned(), String::new())]);
+    let receipts = push(&class, comment(&id.to_uppercase())).await;
+    assert_eq!(statuses(&receipts), [("REJECTED".to_owned(), "BAD_REQUEST".to_owned())]);
+    assert_eq!(class.count("SELECT COUNT(*) FROM announcement_comments").await, 1);
+}
+
+/// Review of #290: the learner's Turn in time is stored as `submitted_at`, which every teacher pulls.
+#[tokio::test]
+async fn a_homework_turned_in_at_must_be_a_safe_whole_number() {
+    let class = Class::start().await;
+    class.assignment(ASSIGNMENT).await;
+    let path = format!("/api/assignments/{ASSIGNMENT}/submit");
+    for bad in ["-1", "9007199254740992"] {
+        let id = uuid::Uuid::new_v4().to_string();
+        let (status, body) =
+            class.upload(&path, Some(&class.learner_token), submission_form_at(&id, &jpeg("a"), bad)).await;
+        assert_eq!(
+            (status, body["error"]["message"].as_str()),
+            (400, Some("turned_in_at must be from 0 to 9007199254740991")),
+            "{bad}"
+        );
+    }
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions").await, 0);
+    let id = uuid::Uuid::new_v4().to_string();
+    let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form_at(&id, &jpeg("a"), "0")).await;
+    assert_eq!((status, body["submitted_at"].as_i64()), (200, Some(0)), "{body}");
 }

@@ -19,7 +19,7 @@ use crate::db::begin_immediate;
 use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::submissions::{self, StoredSubmission};
 use crate::error::ApiError;
-use crate::models::sync::{is_client_uuid, Assignment, Submission};
+use crate::models::sync::{is_client_uuid, Assignment, Submission, MAX_SAFE_INT};
 use crate::services::class_access;
 use crate::storage::{format_of, StorageKind};
 use crate::AppState;
@@ -204,6 +204,10 @@ async fn submit(
                 .map_err(|_| ApiError::bad_request("turned_in_at must be an integer epoch-millisecond timestamp"))?,
         ),
     };
+    // It becomes `submitted_at`, which every teacher pulls (review of #290).
+    if turned_in_at.is_some_and(|pressed| !(0..=MAX_SAFE_INT).contains(&pressed)) {
+        return Err(ApiError::bad_request(format!("turned_in_at must be from 0 to {MAX_SAFE_INT}")));
+    }
     let Some(file_type) = file.format.and_then(|f| f.submission_type()) else {
         return Err(ApiError::bad_request("File must be a photo (JPEG or PNG), PDF or Word document"));
     };

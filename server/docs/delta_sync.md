@@ -26,14 +26,20 @@ The desktop app checks every row it pulls (`desktop/src-tauri/src/sync.rs` `vali
 
 | Value | Rule (the desktop's) | Where the Hub enforces it |
 |---|---|---|
-| An id a client made: stream comment, private comment, homework `submission_id` | A hyphenated UUID in any letter case, not the nil UUID (`models::sync::is_client_uuid`) | Push: a `REJECTED` `BAD_REQUEST` receipt for that item alone. Homework: 400 "submission_id must be a UUID" |
+| An id a client made: stream comment, private comment, homework `submission_id` | A lowercase hyphenated UUID, not the nil UUID (`models::sync::is_client_uuid`) | Push: a `REJECTED` `BAD_REQUEST` receipt for that item alone. Homework: 400 "submission_id must be a UUID" |
 | A pushed comment's `created_at` | 0 to 2^53−1 (`MAX_SAFE_INT`) | Push: `REJECTED` `BAD_REQUEST` |
+| A homework `turned_in_at` (stored as `submitted_at`) | 0 to 2^53−1 | 400 "turned_in_at must be from 0 to 9007199254740991" |
 | Text a client pulls | At most 1,000,000 bytes, counted in UTF-8 (`MAX_TEXT_BYTES`) | Push: `REJECTED` `BAD_REQUEST`. REST: the `JsonBody` text readers, class create and the admin's teacher form answer 400 "`<field>` is too long" |
 
-- Ids are stored as sent, letter case included, so the receipt and the client's own row match.
+- **Ids must be lowercase.** The desktop accepts any letter case but lowercases every id it pulls. An uppercase copy of another row's id would then collide with that row: the page is refused, or the original comment is overwritten. Both apps make lowercase ids (review of #290).
 - Upload form text fields (a material's title, a homework form) are already capped at 4 KB by `read_form`.
 - Numbers on REST (due dates, points, scores, order) were capped in #54, #122 and #61.
-- `tests/sync_safe_values.rs` covers both push kinds, the homework id and every REST route that stores pulled text.
+- `tests/sync_safe_values.rs` covers:
+  - both push kinds, including an uppercase copy of an id;
+  - the homework id and `turned_in_at`;
+  - 17 cases across the REST routes that store pulled text.
+- Topic and announcement rename, quiz edit and admin setup read text through the same readers but aren't in the route table.
+- **A Hub database made before this fix** may already hold label ids or out-of-range values. Rehearse on a fresh database.
 
 ## Reset and offline behavior
 
