@@ -15,6 +15,7 @@ interface Material {
   file_size_bytes: number;
   download_url: string;
   local_file_path: string | null;
+  local_video_url?: string | null;
   topic_id: string | null;
   assignment_id: string | null;
   announcement_id: string | null;
@@ -80,7 +81,7 @@ export default function VideoLessonPage({
 
   // Determine video source: local file or remote stream  
   const videoSrc = material?.local_file_path
-    ? convertFileSrc(material.local_file_path, 'asset') // Use Tauri asset protocol
+    ? material.local_video_url ?? convertFileSrc(material.local_file_path, 'asset')
     : material && initialHub && token
     ? `http://${initialHub.ip}:${initialHub.http_port}${material.download_url}?token=${token}`
     : '';

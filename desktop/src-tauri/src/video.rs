@@ -5,6 +5,45 @@ use tauri::{AppHandle, Emitter, Manager};
 use std::fs;
 use std::io::Write;
 
+async fn local_video_url(
+    app: AppHandle,
+    hub: HubInfo,
+    user_id: String,
+    path: std::path::PathBuf,
+) -> Result<String, String> {
+    use axum::{extract::Request, http::StatusCode, response::IntoResponse, routing::get, Router};
+    use tower::ServiceExt;
+    use tower_http::services::ServeFile;
+
+    let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))
+        .await
+        .map_err(|_| "Could not open offline video".to_string())?;
+    let address = listener.local_addr().map_err(|_| "Missing video address".to_string())?;
+    let route = format!("/{}", uuid::Uuid::new_v4());
+    let router = Router::new().route(&route, get(move |request: Request| {
+        let (app, hub, user_id, path) = (app.clone(), hub.clone(), user_id.clone(), path.clone());
+        async move {
+            let accounts = app.state::<Accounts>();
+            let guard = accounts.0.lock().await;
+            if accounts.require_sync_selection(&hub, &user_id).is_err() {
+                return StatusCode::NOT_FOUND.into_response();
+            }
+            drop(guard);
+            match ServeFile::new(path).oneshot(request).await {
+                Ok(response) => response.into_response(),
+                Err(_) => StatusCode::NOT_FOUND.into_response(),
+            }
+        }
+    }));
+    tauri::async_runtime::spawn(async move {
+        let _ = axum::serve(listener, router)
+            .with_graceful_shutdown(tokio::time::sleep(std::time::Duration::from_secs(7200)))
+            .await;
+    });
+    Ok(format!("http://{address}{route}"))
+}
+
+
 #[tauri::command]
 pub async fn check_partial_download(
     app: AppHandle,
@@ -62,7 +101,8 @@ pub async fn get_material_by_id(
     .await
     .map_err(|e| format!("Failed to fetch material: {}", e))?;
 
-    Ok(row.map(|r| {
+    let Some(r) = row else { return Ok(None) };
+    {
         let relative_path: Option<String> = r.get("local_file_path");
         
         let absolute_path = relative_path.and_then(|relative| {
@@ -74,7 +114,16 @@ pub async fn get_material_by_id(
                 .then(|| path.to_string_lossy().into_owned())
         });
 
-        serde_json::json!({
+        let local_video_url = if cfg!(target_os = "linux") && r.get::<String, _>("file_type") == "VIDEO" {
+            match &absolute_path {
+                Some(path) => Some(local_video_url(app.clone(), hub, user_id, path.into()).await?),
+                None => None,
+            }
+        } else {
+            None
+        };
+
+        Ok(Some(serde_json::json!({
             "id": r.get::<String, _>("id"),
             "classroom_id": r.get::<String, _>("classroom_id"),
             "title": r.get::<String, _>("title"),
@@ -82,14 +131,15 @@ pub async fn get_material_by_id(
             "mime_type": r.get::<String, _>("mime_type"),
             "file_size_bytes": r.get::<i64, _>("file_size_bytes"),
             "download_url": r.get::<String, _>("download_url"),
+            "local_video_url": local_video_url,
             "local_file_path": absolute_path, // Return absolute path for playback
             "topic_id": r.get::<Option<String>, _>("topic_id"),
             "assignment_id": r.get::<Option<String>, _>("assignment_id"),
             "announcement_id": r.get::<Option<String>, _>("announcement_id"),
             "created_at": r.get::<i64, _>("created_at"),
             "updated_at": r.get::<i64, _>("updated_at"),
-        })
-    }))
+        })))
+    }
 }
 
 #[tauri::command]

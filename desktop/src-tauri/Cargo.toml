@@ -21,6 +21,9 @@ tokio = { version = "1", features = ["net", "sync", "time", "macros"] }
 tauri-plugin-http = "2"
 reqwest = { version = "0.12", features = ["stream"] }
 futures-util = "0.3"
+axum = "0.8"
+tower-http = { version = "0.6", features = ["fs"] }
+tower = { version = "0.5", features = ["util"] }
 
 sqlx = { version = "0.8.6", default-features = false, features = ["sqlite", "runtime-tokio", "migrate"] }
 sha2 = "0.10"
