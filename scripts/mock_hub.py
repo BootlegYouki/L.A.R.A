@@ -1248,6 +1248,12 @@ def quiz_start(req):
     if not quiz:
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
     owned_classroom(req, quiz["classroom_id"])
+    if quiz["status"] != "DRAFT":
+        raise ApiError(409, "QUIZ_NOT_DRAFT", "This quiz has already been started")
+    active = next((q for q in STATE.quizzes.values()
+                   if q["classroom_id"] == quiz["classroom_id"] and q["status"] == "ACTIVE"), None)
+    if active:
+        raise ApiError(409, "QUIZ_ALREADY_ACTIVE", f"Close \"{active['title']}\" before starting another quiz")
     t = now_ms()
     quiz.update(status="ACTIVE", started_at=t, updated_at=t)
     STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
@@ -1290,7 +1296,7 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
         started_at = att["started_at"]  # the Hub's start from /begin, never the device's
     if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
-    if att and att.get("auto_submitted") and submitted_at > quiz.get("closed_at", 0):
+    if att and att.get("auto_submitted") and submitted_at > quiz.get("closed_at", 0) + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
     if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
         raise ApiError(403, "FORBIDDEN", "This class is archived")
@@ -1333,6 +1339,10 @@ def quiz_close(req):
     if not quiz:
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
     owned_classroom(req, quiz["classroom_id"])
+    if quiz["status"] == "CLOSED":
+        return {"ok": True}  # retry-safe: no change, no events
+    if quiz["status"] == "DRAFT":
+        raise ApiError(409, "QUIZ_NOT_STARTED", "Start the quiz before closing it")
     quiz.update(status="CLOSED", closed_at=now_ms(), updated_at=now_ms())
     STATE.log("quizzes", quiz["id"], quiz["classroom_id"])
     for att in list(STATE.attempts.values()):

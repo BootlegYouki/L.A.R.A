@@ -1147,7 +1147,7 @@ paths:
 
   /api/quizzes/{id}/start:
     post:
-      summary: Activate the quiz and broadcast EVENT_QUIZ_START (teacher)
+      summary: Activate a DRAFT quiz and broadcast EVENT_QUIZ_START (teacher). Answers 409 QUIZ_NOT_DRAFT if it was already started, and 409 QUIZ_ALREADY_ACTIVE (the message names it) while another quiz in the class is ACTIVE - one active quiz per class.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1188,7 +1188,7 @@ paths:
 
   /api/quizzes/{id}/close:
     post:
-      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted. An auto-submitted attempt can be replaced once by the learner's own on-time work pushed later (finished offline before the close, with submitted_at - started_at <= limit + 60 s, timed from the Hub's started_at); every other stored attempt is never regraded. Closing also releases held scores (release_scores_immediately false) - each learner gets EVENT_GRADE_CONFIRMED and the score on the next pull.
+      summary: Close the quiz and broadcast EVENT_QUIZ_CLOSED (teacher). Unsubmitted attempts are auto-submitted. An auto-submitted attempt can be replaced once by the learner's own on-time work pushed later (submitted_at <= closed_at + 60 s, the same network grace as the time limit, so a device that auto-submits on EVENT_QUIZ_CLOSED counts; and submitted_at - started_at <= limit + 60 s, timed from the Hub's started_at); every other stored attempt is never regraded. Closing also releases held scores (release_scores_immediately false) - each learner gets EVENT_GRADE_CONFIRMED and the score on the next pull. Closing a DRAFT answers 409 QUIZ_NOT_STARTED; closing a CLOSED quiz answers 200 with no change and no events, so a retry is safe.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1388,7 +1388,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, QUIZ_NOT_DRAFT, QUIZ_CLOSED, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, QUIZ_NOT_DRAFT, QUIZ_NOT_STARTED, QUIZ_ALREADY_ACTIVE, QUIZ_CLOSED, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:

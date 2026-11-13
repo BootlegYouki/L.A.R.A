@@ -250,8 +250,9 @@ class TestMockHub(unittest.TestCase):
         _, full, _ = call(BASE, "GET", f"/api/quizzes/{quiz['id']}", token=self.teacher)
         ids = [q["id"] for q in full["questions"]]
         _, begin, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/begin", token=self.pupil)
-        finished = int(time.time() * 1000)
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)
+        # An online device auto-submits on EVENT_QUIZ_CLOSED a moment after the close: within the 60 s grace.
+        finished = int(time.time() * 1000) + 5_000
         queued = {"id": "qa-offline", "quiz_id": quiz["id"], "started_at": begin["started_at"], "submitted_at": finished,
                   "answers": [{"question_id": ids[0], "selected_option": "Photosynthesis"}]}
         _, res, _ = call(BASE, "POST", "/api/sync/push", {"quiz_attempts": [queued]}, self.pupil)
@@ -264,6 +265,19 @@ class TestMockHub(unittest.TestCase):
         _, pull, _ = call(BASE, "POST", "/api/sync/pull", {"cursor": 0}, self.pupil)
         mine = [a for a in pull["quiz_attempts"] if a["quiz_id"] == quiz["id"]]
         self.assertEqual(mine[0]["score"], 1, "only once: after that the stored work is never regraded")
+
+    def test_start_and_close_refuse_the_wrong_state(self):
+        quiz = self.make_active_quiz()
+        status, body, _ = call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (409, "QUIZ_NOT_DRAFT"))
+        _, draft, _ = call(BASE, "POST", "/api/quizzes", QUIZ, self.teacher)
+        status, body, _ = call(BASE, "POST", f"/api/quizzes/{draft['id']}/start", token=self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (409, "QUIZ_ALREADY_ACTIVE"), "one active quiz per class")
+        status, body, _ = call(BASE, "POST", f"/api/quizzes/{draft['id']}/close", token=self.teacher)
+        self.assertEqual((status, body["error"]["code"]), (409, "QUIZ_NOT_STARTED"))
+        self.assertEqual(call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)[0], 200)
+        self.assertEqual(call(BASE, "POST", f"/api/quizzes/{quiz['id']}/close", token=self.teacher)[0], 200,
+                         "closing again is a safe retry")
 
     def test_submit_after_time_limit_is_rejected(self):
         quiz = self.make_active_quiz()

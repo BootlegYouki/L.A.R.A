@@ -28,6 +28,6 @@ Contract changes are **never** part of a feature PR. They go first, in their own
 
 ## Rules every contract must follow
 * `snake_case` JSON keys; epoch **milliseconds** for timestamps; UUID v4 strings for ids; `UPPER_SNAKE` enum values.
-* Errors use `{"error": {"code", "message"}}` with stable codes (for example `UNAUTHORIZED`, `FORBIDDEN`, `CLASS_CODE_INVALID`, `QUIZ_IN_PROGRESS`, `TIME_LIMIT_EXCEEDED`, `COMMENTS_DISABLED`, `FILE_TOO_LARGE`, `QUIZ_NOT_DRAFT`, `QUIZ_CLOSED`, `ADMIN_EXISTS`).
+* Errors use `{"error": {"code", "message"}}` with stable codes (for example `UNAUTHORIZED`, `FORBIDDEN`, `CLASS_CODE_INVALID`, `QUIZ_IN_PROGRESS`, `TIME_LIMIT_EXCEEDED`, `COMMENTS_DISABLED`, `FILE_TOO_LARGE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_STARTED`, `QUIZ_ALREADY_ACTIVE`, `QUIZ_CLOSED`, `ADMIN_EXISTS`).
 * Student-facing shapes never include `correct_answer`. Client-facing shapes never include `pin_hash`, another person's LRN or server file paths.
 * The sync cursor is an integer sequence, never a timestamp.
