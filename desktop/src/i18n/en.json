@@ -1,4 +1,7 @@
 {
+  "video_test_title": "Video player test",
+  "video_test_help": "Open the mock Hub lesson to test video playback.",
+  "video_test_open": "Open video player",
   "app_title": "L.A.R.A.",
   "home": "Home",
   "skip_content": "Skip to content",

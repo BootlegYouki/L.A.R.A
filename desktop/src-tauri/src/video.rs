@@ -171,6 +171,7 @@ pub async fn download_video_for_offline(
     let filename = format!("{}.{}", material_id, extension);
     let temp_path = videos_dir.join(format!("{}.part", material_id));
     let final_path = videos_dir.join(&filename);
+    let etag_path = temp_path.with_extension("part.etag");
     
     // Build download URL using Hub's base URL (works for LAN and Remote/Suspension Mode)
     let base_url = format!("http://{}:{}", hub.ip, hub.http_port);
@@ -181,27 +182,20 @@ pub async fn download_video_for_offline(
     // HTTP client for download
     let client = reqwest::Client::new();
     
-    // Check if partial file exists for resume
-    let mut start_byte = if temp_path.exists() {
-        temp_path.metadata()
-            .map(|m| m.len())
-            .unwrap_or(0)
-    } else {
-        0
-    };
-    
-    // Build request with Range header if resuming
-    let mut request = client
-        .get(&download_url)
-        .query(&[("token", &token)]);
-    
-    if start_byte > 0 {
-        // Resume from where we left off, with If-Range for safety
-        request = request
-            .header("Range", format!("bytes={}-", start_byte))
-            .header("If-Range", format!("\"{}-{}\"", material_id, expected_size));
+    let saved_etag = fs::read(&etag_path).ok()
+        .and_then(|bytes| reqwest::header::HeaderValue::from_bytes(&bytes).ok())
+        .filter(|tag| tag.as_bytes().starts_with(b"\"") && tag.as_bytes().ends_with(b"\""));
+    let mut start_byte = 0;
+    let mut request = client.get(&download_url).query(&[("token", &token)]);
+    if let Some(tag) = &saved_etag {
+        start_byte = temp_path.metadata().map(|metadata| metadata.len()).unwrap_or(0);
+        if start_byte > 0 {
+            request = request
+                .header(reqwest::header::RANGE, format!("bytes={start_byte}-"))
+                .header(reqwest::header::IF_RANGE, tag);
+        }
     }
-    
+
     // Execute request
     let response = request
         .send()
@@ -221,32 +215,35 @@ pub async fn download_video_for_offline(
         return Err("Range not satisfiable, please retry download".to_string());
     }
     
-    if !status.is_success() {
-        return Err(format!("Download failed with status: {}", status));
+    if status != reqwest::StatusCode::OK && !is_partial {
+        return Err(format!("Download failed with status: {status}"));
     }
-    
-    // Open file for writing (append if got 206, create fresh if got 200)
-    // Note: The real Hub's /download route supports Range headers per contract.
-    // If Hub responds 206 Partial Content, we resume from .part file.
-    // If Hub responds 200 OK (doesn't support Range), we restart cleanly to avoid corruption.
-    let mut file = if start_byte > 0 && is_partial {
-        // Got 206 Partial Content - Hub is resuming, append to existing .part
-        fs::OpenOptions::new()
-            .append(true)
-            .open(&temp_path)
-            .map_err(|e| format!("Failed to open partial file: {}", e))?
-    } else {
-        // Got 200 OK - Hub sent full file, start fresh (delete .part if exists)
-        if temp_path.exists() {
-            fs::remove_file(&temp_path)
-                .map_err(|e| format!("Failed to remove existing partial file: {}", e))?;
+
+    let mut file = if is_partial {
+        let expected_range = format!("bytes {start_byte}-{}/{expected_size}", expected_size - 1);
+        if start_byte == 0
+            || response.headers().get(reqwest::header::ETAG) != saved_etag.as_ref()
+            || response.headers().get(reqwest::header::CONTENT_RANGE)
+                .and_then(|value| value.to_str().ok()) != Some(expected_range.as_str())
+        {
+            return Err("Hub returned an unexpected partial video".to_string());
         }
-        // Reset counter since we're starting fresh
+        fs::OpenOptions::new().append(true).open(&temp_path)
+    } else {
         start_byte = 0;
-        fs::File::create(&temp_path)
-            .map_err(|e| format!("Failed to create file: {}", e))?
-    };
-    
+        let file = fs::File::create(&temp_path)
+            .map_err(|e| format!("Failed to create partial file: {e}"))?;
+        if let Some(tag) = response.headers().get(reqwest::header::ETAG) {
+            fs::write(&etag_path, tag.as_bytes())
+                .map_err(|e| format!("Failed to save video ETag: {e}"))?;
+        } else if let Err(error) = fs::remove_file(&etag_path) {
+            if error.kind() != std::io::ErrorKind::NotFound {
+                return Err(format!("Failed to clear video ETag: {error}"));
+            }
+        }
+        Ok(file)
+    }.map_err(|e| format!("Failed to open partial file: {e}"))?;
+
     // Stream bytes to disk (chunk by chunk, not all in RAM)
     let mut stream = response.bytes_stream();
     let mut total_downloaded = start_byte;
@@ -298,6 +295,8 @@ pub async fn download_video_for_offline(
         ));
     }
     
+    drop(file);
+
     // Download complete, rename .part to final name
     if final_path.exists() {
         fs::remove_file(&final_path)
@@ -307,6 +306,8 @@ pub async fn download_video_for_offline(
     fs::rename(&temp_path, &final_path)
         .map_err(|e| format!("Failed to rename to final file: {}", e))?;
     
+    let _ = fs::remove_file(&etag_path);
+
     // Update database with local path (relative, using forward slashes for cross-platform)
     let relative_path = format!("videos/{}", filename);
     
