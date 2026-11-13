@@ -1296,7 +1296,8 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
         started_at = att["started_at"]  # the Hub's start from /begin, never the device's
     if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
-    if att and att.get("auto_submitted") and submitted_at > quiz.get("closed_at", 0) + GRACE_MS:
+    # Also for a learner who never reached /begin: the close auto-submitted nothing for them (#298 decision 8).
+    if (not att or att.get("auto_submitted")) and quiz.get("closed_at") and submitted_at > quiz["closed_at"] + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
     if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
         raise ApiError(403, "FORBIDDEN", "This class is archived")
@@ -1340,7 +1341,7 @@ def quiz_close(req):
         raise ApiError(404, "NOT_FOUND", "Quiz not found")
     owned_classroom(req, quiz["classroom_id"])
     if quiz["status"] == "CLOSED":
-        return {"ok": True}  # retry-safe: no change, no events
+        return {"success": True}  # retry-safe: no change, no events
     if quiz["status"] == "DRAFT":
         raise ApiError(409, "QUIZ_NOT_STARTED", "Start the quiz before closing it")
     quiz.update(status="CLOSED", closed_at=now_ms(), updated_at=now_ms())
