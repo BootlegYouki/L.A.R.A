@@ -8,7 +8,7 @@ A learner's finished quiz is graded on the Hub the moment it arrives, and stored
 
 The learner gets a receipt and `EVENT_GRADE_CONFIRMED` unless the teacher holds scores (FR-4.7). The teacher sees one results row per learner.
 
-The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/quizzes/{id}/results`, `quiz_attempts` in `POST /api/sync/push`, `EVENT_QUIZ_SUBMIT` and `EVENT_GRADE_CONFIRMED`. Starting and closing a quiz (`/start`, `/close`) are step 4.1.
+The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/quizzes/{id}/results`, `quiz_attempts` in `POST /api/sync/push`, `EVENT_QUIZ_SUBMIT` and `EVENT_GRADE_CONFIRMED`. Starting and closing a quiz (`/start`, `/close`) are step 4.1, in [`quiz_control.md`](./quiz_control.md).
 
 ## Key files
 | File | Purpose |
@@ -74,7 +74,7 @@ The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/qu
 - **Speed:** 40 submits at once grade and store in about 0.2 s in a debug build (`forty_learners_are_graded_in_under_two_seconds`; the target is 2 s).
 
 ## Manual check (WAN unplugged)
-Until 4.1 adds `/start`, set a quiz `ACTIVE` in `lara.db` (`UPDATE quizzes SET status='ACTIVE', started_at=<now ms> WHERE id=...`).
+As teacher `T-0001`, start the quiz first (`POST /api/quizzes/{id}/start`, step 4.1).
 1. As learner `123456789012`, begin the quiz and submit one right and one wrong answer. The receipt shows `score: 1, total_points: 2`, and the learner's app gets `EVENT_GRADE_CONFIRMED`.
 2. Submit again with all answers right. The same receipt comes back, still 1.
 3. As the teacher, open `/api/quizzes/{id}/results`. Every learner is listed, and the submitted one shows 1 of 2.

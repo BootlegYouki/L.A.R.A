@@ -3,7 +3,7 @@
 ## Purpose
 Teachers write quizzes with answer keys (PRD FR-4.1) and can change them only while they are drafts (FR-4.8). Learners only ever receive the quiz without its answers. A learner's `/begin` opens their `IN_PROGRESS` attempt, which the AI lockout keys on (FR-4.3, enforced in steps 5.1 and 5.2).
 
-The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`, `GET /api/quizzes/active` and `POST /api/quizzes/{id}/begin`. Starting and closing (`/start`, `/close`, step 4.1), submitting and grading (`/submit`, `/results`, step 4.2) are still 501 stubs.
+The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`, `GET /api/quizzes/active` and `POST /api/quizzes/{id}/begin`. Starting and closing (`/start`, `/close`) are step 4.1, in [`quiz_control.md`](./quiz_control.md). Submitting and grading (`/submit`, `/results`) are step 4.2, in [`quiz_grading.md`](./quiz_grading.md).
 
 ## Key files
 | File | Purpose |
@@ -57,8 +57,7 @@ The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`
 - **`QuizMetadata` in the pull has no `topic_id` yet.** The pull's quiz item in the contract has none.
 
 ## Manual check (WAN unplugged)
-Until step 4.1 adds `/start`, set a quiz `ACTIVE` in `lara.db` by hand (`UPDATE quizzes SET status='ACTIVE', started_at=<now ms> WHERE id=...`).
 1. As teacher `T-0001`, create a quiz with a multiple-choice and an identification question. It comes back `DRAFT`, with the answers.
-2. Edit its title: 200. Set it `ACTIVE` and edit again: 409 "A quiz can be edited only before it starts".
+2. Edit its title: 200. Start it (`POST /api/quizzes/{id}/start`) and edit again: 409 "A quiz can be edited only before it starts".
 3. As learner `123456789012`, open `/api/quizzes/active` and `/api/quizzes/{id}`. There is no `correct_answer` or `synonyms` anywhere.
 4. Begin it twice. You get the same `attempt_id` both times. A teacher connected over WebSocket sees `ANSWERING_QUIZ` once.
