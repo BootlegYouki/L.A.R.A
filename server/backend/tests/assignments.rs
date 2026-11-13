@@ -131,8 +131,8 @@ async fn delete_archives_and_keeps_grades() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
-    class.exec("UPDATE assignment_submissions SET score = 18 WHERE id = 'sub-1'", &[]).await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
+    class.exec("UPDATE assignment_submissions SET score = 18 WHERE id = 'c1000000-0000-4000-8000-000000000001'", &[]).await;
     let cursor = class.pull(&class.learner_token).await["next_cursor"].as_i64().unwrap();
 
     let (status, body) = delete(&class, id, class.teacher()).await;
@@ -140,7 +140,7 @@ async fn delete_archives_and_keeps_grades() {
     let after = pull_from(&class, &class.learner_token, cursor).await;
     assert!(after["deleted"].as_array().unwrap().contains(&json!({"entity_table": "assignments", "entity_id": id})), "{after}");
     assert_eq!(class.count("SELECT COUNT(*) FROM assignments WHERE archived_at IS NOT NULL AND archived_at = updated_at").await, 1);
-    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE id = 'sub-1' AND score = 18").await, 1, "grades are kept");
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE id = 'c1000000-0000-4000-8000-000000000001' AND score = 18").await, 1, "grades are kept");
     let (status, body) = patch(&class, id, json!({"title": "x"}), class.teacher()).await;
     assert_eq!((status, message(&body)), (404, "Assignment not found"));
 }
@@ -201,14 +201,14 @@ async fn teacher_lists_and_grades_a_submission() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    let handed_in = submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    let handed_in = submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     let (_, ana_token) = class.add_learner("123456789013", true).await;
 
     let (status, listed) = submissions_of(&class, id, class.teacher()).await;
     assert_eq!((status, listed.clone()), (200, json!([handed_in])));
     assert!(listed[0].get("file_path").is_none() && listed[0].get("created_at").is_none(), "{listed}");
 
-    let (status, graded) = grade(&class, "sub-1", json!({"score": 18, "teacher_feedback": "Magaling!"}), class.teacher()).await;
+    let (status, graded) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 18, "teacher_feedback": "Magaling!"}), class.teacher()).await;
     assert_eq!(status, 200, "{graded}");
     assert_eq!((graded["score"].as_i64(), graded["teacher_feedback"].as_str()), (Some(18), Some("Magaling!")));
     assert_eq!(graded["submitted_at"], handed_in["submitted_at"], "grading never moves the hand-in time");
@@ -217,9 +217,9 @@ async fn teacher_lists_and_grades_a_submission() {
     assert_eq!(class.pull(&ana_token).await["submissions"], json!([]), "classmates never see it");
 
     let path = format!("/api/assignments/{id}/submit");
-    let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form("sub-2", &jpeg("b"))).await;
+    let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form("c2000000-0000-4000-8000-000000000002", &jpeg("b"))).await;
     assert_eq!((status, body["error"]["code"].as_str()), (409, Some("ALREADY_GRADED")), "graded work is final (3.3)");
-    let (status, regraded) = grade(&class, "sub-1", json!({"score": 19}), class.teacher()).await;
+    let (status, regraded) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 19}), class.teacher()).await;
     assert_eq!((status, regraded["score"].as_i64(), regraded["teacher_feedback"].as_str()), (200, Some(19), Some("Magaling!")));
 }
 
@@ -227,7 +227,7 @@ async fn teacher_lists_and_grades_a_submission() {
 async fn score_rules_follow_google_classroom() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
-    submit(&class, asg["id"].as_str().unwrap(), &class.learner_token, "sub-1", "a").await;
+    submit(&class, asg["id"].as_str().unwrap(), &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     let cases = [
         (json!({"score": -1}), "score must be from 0 to 9007199254740991"),
         (json!({"score": 9_007_199_254_740_992_i64}), "score must be from 0 to 9007199254740991"),
@@ -237,13 +237,13 @@ async fn score_rules_follow_google_classroom() {
         (json!({}), "Missing: score or teacher_feedback"),
     ];
     for (body, text) in cases {
-        let (status, answer) = grade(&class, "sub-1", body, class.teacher()).await;
+        let (status, answer) = grade(&class, "c1000000-0000-4000-8000-000000000001", body, class.teacher()).await;
         assert_eq!((status, message(&answer)), (400, text));
     }
-    let (status, feedback_only) = grade(&class, "sub-1", json!({"teacher_feedback": "Please redo item 3."}), class.teacher()).await;
+    let (status, feedback_only) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"teacher_feedback": "Please redo item 3."}), class.teacher()).await;
     assert_eq!(status, 200, "{feedback_only}");
     assert!(feedback_only["score"].is_null(), "feedback alone does not grade");
-    let (status, bonus) = grade(&class, "sub-1", json!({"score": 25}), class.teacher()).await;
+    let (status, bonus) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 25}), class.teacher()).await;
     assert_eq!((status, bonus["score"].as_i64()), (200, Some(25)), "above max_points is allowed, as in Google Classroom");
 }
 
@@ -252,11 +252,11 @@ async fn grading_a_replaced_submission_id_is_not_found() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
-    submit(&class, id, &class.learner_token, "sub-2", "b").await;
-    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000002", "b").await;
+    let (status, body) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 10}), class.teacher()).await;
     assert_eq!((status, message(&body)), (404, "Submission not found"));
-    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE id = 'sub-2' AND score IS NULL").await, 1);
+    assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE id = 'c1000000-0000-4000-8000-000000000002' AND score IS NULL").await, 1);
 }
 
 #[tokio::test]
@@ -265,12 +265,12 @@ async fn removed_co_teacher_can_no_longer_post_or_grade() {
     let co = class.co_teacher("T-0002").await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
-    assert_eq!(grade(&class, "sub-1", json!({"score": 10}), &co).await.0, 200, "a co-teacher grades");
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
+    assert_eq!(grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 10}), &co).await.0, 200, "a co-teacher grades");
     assert_eq!(submissions_of(&class, id, &co).await.0, 200);
 
     class.exec("DELETE FROM classroom_teachers", &[]).await;
-    assert_eq!(grade(&class, "sub-1", json!({"score": 11}), &co).await.0, 403);
+    assert_eq!(grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 11}), &co).await.0, 403);
     assert_eq!(submissions_of(&class, id, &co).await.0, 403);
     let (status, _) =
         class.hub.post_json("/api/announcements", &json!({"classroom_id": class.id, "title": "x", "content": "y"}), Some(&co)).await;
@@ -282,11 +282,11 @@ async fn archived_class_can_list_but_not_grade() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     class.archive().await;
     let (status, listed) = submissions_of(&class, id, class.teacher()).await;
     assert_eq!((status, listed.as_array().map(Vec::len)), (200, Some(1)));
-    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    let (status, body) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 10}), class.teacher()).await;
     assert_eq!((status, message(&body)), (403, "This class is archived"));
 }
 
@@ -295,11 +295,11 @@ async fn archived_assignment_is_hidden_from_grading() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     delete(&class, id, class.teacher()).await;
     let (status, body) = submissions_of(&class, id, class.teacher()).await;
     assert_eq!((status, message(&body)), (404, "Assignment not found"));
-    let (status, body) = grade(&class, "sub-1", json!({"score": 10}), class.teacher()).await;
+    let (status, body) = grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 10}), class.teacher()).await;
     assert_eq!((status, message(&body)), (404, "Submission not found"));
 }
 
@@ -308,11 +308,11 @@ async fn learners_and_other_teachers_cannot_list_or_grade() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     let (_, other_teacher) = class.other_class().await;
     for token in [class.learner_token.as_str(), other_teacher.as_str()] {
         assert_eq!(submissions_of(&class, id, token).await.0, 403);
-        assert_eq!(grade(&class, "sub-1", json!({"score": 20}), token).await.0, 403);
+        assert_eq!(grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 20}), token).await.0, 403);
     }
     assert_eq!(submissions_of(&class, "no-such-id", class.teacher()).await.0, 404);
     assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE score IS NULL").await, 1);
@@ -326,7 +326,7 @@ async fn archiving_hides_its_submissions_and_private_comments_from_every_pull() 
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     let id = asg["id"].as_str().unwrap();
-    submit(&class, id, &class.learner_token, "sub-1", "a").await;
+    submit(&class, id, &class.learner_token, "c1000000-0000-4000-8000-000000000001", "a").await;
     {
         let db = &class.hub.state().db;
         let mut tx = lara_hub::db::begin_immediate(db).await.unwrap();
@@ -347,7 +347,7 @@ async fn archiving_hides_its_submissions_and_private_comments_from_every_pull() 
         tx.commit().await.unwrap();
     }
     let before_grade = class.pull(class.teacher()).await["next_cursor"].as_i64().unwrap();
-    assert_eq!(grade(&class, "sub-1", json!({"score": 18}), class.teacher()).await.0, 200);
+    assert_eq!(grade(&class, "c1000000-0000-4000-8000-000000000001", json!({"score": 18}), class.teacher()).await.0, 200);
     assert_eq!(delete(&class, id, class.teacher()).await.0, 200);
 
     let tombstone = json!({"entity_table": "assignments", "entity_id": id});

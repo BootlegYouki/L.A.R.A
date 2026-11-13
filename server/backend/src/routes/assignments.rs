@@ -19,7 +19,7 @@ use crate::db::begin_immediate;
 use crate::db::materials::{attachment_in_class, Attachment};
 use crate::db::submissions::{self, StoredSubmission};
 use crate::error::ApiError;
-use crate::models::sync::{Assignment, Submission};
+use crate::models::sync::{is_client_uuid, Assignment, Submission};
 use crate::services::class_access;
 use crate::storage::{format_of, StorageKind};
 use crate::AppState;
@@ -190,6 +190,10 @@ async fn submit(
     let Some(submission_id) = form.field("submission_id").map(str::to_owned) else {
         return Err(ApiError::bad_request("Missing: submission_id"));
     };
+    // Bug #290: the id is the learner's device's, and every teacher's desktop pulls it.
+    if !is_client_uuid(&submission_id) {
+        return Err(ApiError::bad_request("submission_id must be a UUID"));
+    }
     let file = form.take_file()?;
     let turned_in_at = match form.field("turned_in_at") {
         None => None,

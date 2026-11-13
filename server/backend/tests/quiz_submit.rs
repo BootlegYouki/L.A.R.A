@@ -250,7 +250,7 @@ async fn a_bad_queued_attempt_is_rejected_alone() {
             queued("a-draft", &draft, now, now, json!([])),
             queued("a-good", &quiz, now, now, one_right(&questions)),
         ],
-        "comments": [{"id": "c-1", "announcement_id": "ann-1", "content": "Opo", "created_at": 1}],
+        "comments": [{"id": "e2000000-0000-4000-8000-000000000001", "announcement_id": "ann-1", "content": "Opo", "created_at": 1}],
     });
     let body = push(&class, &class.learner_token, payload).await;
     assert_eq!(
@@ -259,7 +259,7 @@ async fn a_bad_queued_attempt_is_rejected_alone() {
             {"id": "a-missing", "status": "REJECTED", "reason": "BAD_REQUEST"},
             {"id": "a-draft", "status": "REJECTED", "reason": "NOT_FOUND"},
             {"id": "a-good", "status": "SYNCED"},
-            {"id": "c-1", "status": "SYNCED"},
+            {"id": "e2000000-0000-4000-8000-000000000001", "status": "SYNCED"},
         ])
     );
 

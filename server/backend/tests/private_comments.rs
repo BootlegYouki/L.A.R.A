@@ -141,13 +141,13 @@ async fn an_archived_assignment_has_no_thread() {
 #[tokio::test]
 async fn pushing_the_same_queued_comment_twice_stores_it_once() {
     let (class, _, _) = class_with_assignment().await;
-    let queued = json!({"private_comments": [{"id": "q-1", "assignment_id": "asg-1", "content": "Offline tanong", "created_at": 5}]});
+    let queued = json!({"private_comments": [{"id": "e1000000-0000-4000-8000-000000000001", "assignment_id": "asg-1", "content": "Offline tanong", "created_at": 5}]});
     for _ in 0..2 {
         let (status, body) = class.hub.post_json("/api/sync/push", &queued, Some(&class.learner_token)).await;
         assert_eq!(status, 200, "{body}");
         assert_eq!(body["receipts"][0]["status"], "SYNCED", "{body}");
     }
-    assert_eq!(class.count("SELECT COUNT(*) FROM private_comments WHERE id = 'q-1'").await, 1);
+    assert_eq!(class.count("SELECT COUNT(*) FROM private_comments WHERE id = 'e1000000-0000-4000-8000-000000000001'").await, 1);
     let (status, listed) = thread(&class, &class.learner_token, None).await;
     assert_eq!((status, listed.as_array().map(Vec::len)), (200, Some(1)));
     assert_eq!(listed[0]["content"], "Offline tanong");
