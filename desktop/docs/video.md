@@ -735,3 +735,11 @@ The contract (`contracts/openapi.yaml`) specifies that `/api/materials/{id}/down
 - Tech lead feedback fixes (Issue #30)
 - Resume support implementation
 - Mock hub vs real Hub behavior differences
+
+## Windows interruption check
+
+The Windows development build played the test lesson against a local mock Hub. The Hub interrupted the download after 200,000 bytes. The retry returned HTTP 206 with Content-Range bytes 200000-798155/798156. The saved indicator appeared, and playback advanced with the mock Hub stopped.
+
+[Online](screenshots/284-online.png) · [Saved](screenshots/284-saved.png) · [Offline](screenshots/284-offline.png)
+
+The staging Hub's automated range test passed separately. A physical Wi-Fi interruption against the real Hub and Linux playback remain unverified.

@@ -213,7 +213,8 @@ export default function VideoLessonPage({
           errorMsg.includes('connection') ||
           errorMsg.includes('stream')) {
         setDownloadError(t.video_download_interrupted);
-        // Keep hasPartialDownload as true so button shows "Resume Download"
+        const partial = await invoke<boolean>('check_partial_download', { materialId: material.id }).catch(() => false);
+        setHasPartialDownload(partial);
       } else {
         setDownloadError(errorMsg);
       }
