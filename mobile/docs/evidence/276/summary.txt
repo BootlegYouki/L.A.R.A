@@ -1,0 +1,4 @@
+Debug {'tests': 203, 'failures': 0, 'errors': 0, 'skipped': 6}
+Release {'tests': 203, 'failures': 0, 'errors': 0, 'skipped': 6}
+Python contract/mock suite: 71 tests, OK
+Lint: 0 errors, 46 warnings

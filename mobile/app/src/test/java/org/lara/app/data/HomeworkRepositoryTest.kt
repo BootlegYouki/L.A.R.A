@@ -108,11 +108,13 @@ class HomeworkRepositoryTest {
     @Test fun resubmissionUsesTheExistingIdentity(): Unit = runBlocking {
         repository.turnIn("assignment", photo())
         val id = db.homeworkDao().find("assignment", "learner")?.id
+        val createdAt = db.homeworkDao().find("assignment", "learner")?.createdAt
         repository.uploadQueued()
         val replacement = photo()
         repository.turnIn("assignment", replacement)
         assertEquals(id, db.homeworkDao().find("assignment", "learner")?.id)
         assertEquals(replacement.path, db.homeworkDao().find("assignment", "learner")?.filePath)
+        assertEquals(createdAt, db.homeworkDao().find("assignment", "learner")?.createdAt)
     }
 
     @Test fun pullKeepsQueuedPhotoBeforeAdoptingAnotherDevicesCanonicalId(): Unit = runBlocking {

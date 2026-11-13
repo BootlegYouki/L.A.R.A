@@ -47,7 +47,7 @@ class SavedRosterRefresher(private val database: LaraDatabase, private val remot
             val enrollments = rows.map { row ->
                 val old = dao.savedEnrollment(classroomId, row.studentId)
                 EnrollmentEntity(row.enrollmentId, classroomId, row.studentId, row.status.name,
-                    row.joinedAt ?: old?.joinedAt ?: now, now)
+                    row.joinedAt ?: old?.joinedAt ?: now, now, createdAt = old?.createdAt ?: now)
             }
             database.cacheDao().upsertBatch(CacheBatch(users = users, enrollments = enrollments))
         }

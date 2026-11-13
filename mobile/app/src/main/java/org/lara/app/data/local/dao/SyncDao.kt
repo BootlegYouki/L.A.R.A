@@ -12,6 +12,7 @@ interface SyncDao {
     suspend fun enrollment(classroomId: String, studentId: String): EnrollmentEntity?
     @Query("SELECT * FROM announcements WHERE id=:id") suspend fun announcement(id: String): AnnouncementEntity?
     @Query("SELECT * FROM materials WHERE id=:id") suspend fun material(id: String): MaterialEntity?
+    @Query("SELECT * FROM material_chunks WHERE id=:id") suspend fun materialChunk(id: String): MaterialChunkEntity?
     @Query("SELECT * FROM assignments WHERE id=:id") suspend fun assignment(id: String): AssignmentEntity?
     @Query("SELECT * FROM quizzes WHERE id=:id") suspend fun quiz(id: String): QuizEntity?
     @Query("SELECT * FROM quiz_attempts WHERE id=:id") suspend fun attempt(id: String): QuizAttemptEntity?

@@ -32,6 +32,33 @@ abstract class SyncBehaviorTests {
     }
     @After fun close() { db.close() }
     private fun page(cursor: Long = 1, more: Boolean = false) = SyncPullResponseDto(100, "hub", 1, cursor, more, false)
+    @Test fun repeatedPullsKeepLocalCreationTimestamps(): Unit = runBlocking {
+        db.cacheDao().upsertBatch(CacheBatch(
+            materials = listOf(MaterialEntity("material", "class", "Lesson", "DOCUMENT", fileSizeBytes = 5,
+                createdAt = 1, updatedAt = 1)),
+            assignments = listOf(AssignmentEntity("assignment", "class", "Work", dueDate = 1000,
+                createdAt = 1, updatedAt = 1)),
+        ))
+        val first = page().copy(
+            enrollments = listOf(EnrollmentDto("enrollment", "class", "learner", "ACTIVE", 10, 5)),
+            materialChunks = listOf(MaterialChunkDto("chunk", "material", 0, "Synthetic lesson")),
+            submissions = listOf(SubmissionDto("submission", "assignment", "learner", "IMAGE", 20)),
+        )
+        val store = SyncStore(db)
+        store.apply("learner", store.request("learner"), first)
+        assertEquals(100L, db.syncDao().enrollment("class", "learner")?.createdAt)
+        assertEquals(100L, db.syncDao().materialChunk("chunk")?.createdAt)
+        assertEquals(100L, db.syncDao().submission("submission")?.createdAt)
+        val later = first.copy(serverTime = 500, nextCursor = 2,
+            materialChunks = listOf(first.materialChunks.single().copy(text = "Edited lesson")),
+            submissions = listOf(first.submissions.single().copy(submittedAt = 30, updatedAt = 500)))
+        store.apply("learner", store.request("learner"), later)
+        assertEquals(100L, db.syncDao().enrollment("class", "learner")?.createdAt)
+        assertEquals(100L, db.syncDao().materialChunk("chunk")?.createdAt)
+        assertEquals(100L, db.syncDao().submission("submission")?.createdAt)
+        assertEquals("Edited lesson", db.syncDao().materialChunk("chunk")?.text)
+        assertEquals(30L, db.syncDao().submission("submission")?.submittedAt)
+    }
     private suspend fun queue(id: String = "comment") = db.cacheDao().upsertBatch(CacheBatch(announcementComments=listOf(
         AnnouncementCommentEntity(id, "post", "learner", "Local work", 2, 2, "QUEUED_FOR_SYNC"))))
     private suspend fun cursor() = db.syncStateDao().get("cursor")?.value
