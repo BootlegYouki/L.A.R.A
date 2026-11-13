@@ -65,31 +65,15 @@ pub async fn get_material_by_id(
     Ok(row.map(|r| {
         let relative_path: Option<String> = r.get("local_file_path");
         
-        // Convert relative path to absolute path if it exists
-        let absolute_path = relative_path.and_then(|rel_path| {
-            if rel_path.is_empty() {
-                None
-            } else {
-                // Get app data dir and construct absolute path
-                // The rel_path uses forward slashes (cross-platform), but join() will convert to OS-specific
-                let app_data = app.path().app_data_dir().ok()?;
-                
-                // Split by forward slashes and rejoin with OS-specific separator
-                let parts: Vec<&str> = rel_path.split('/').collect();
-                let mut abs_path = app_data;
-                for part in parts {
-                    abs_path = abs_path.join(part);
-                }
-                
-                // Verify file exists
-                if abs_path.exists() {
-                    Some(abs_path.display().to_string())
-                } else {
-                    None
-                }
-            }
+        let absolute_path = relative_path.and_then(|relative| {
+            let video_root = app.path().app_data_dir().ok()?.join("videos");
+            let path = app.path().app_data_dir().ok()?.join(relative);
+            let resolved = path.canonicalize().ok()?;
+            let root = video_root.canonicalize().ok()?;
+            (resolved.starts_with(root) && resolved.is_file())
+                .then(|| path.to_string_lossy().into_owned())
         });
-        
+
         serde_json::json!({
             "id": r.get::<String, _>("id"),
             "classroom_id": r.get::<String, _>("classroom_id"),

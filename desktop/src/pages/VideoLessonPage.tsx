@@ -85,15 +85,6 @@ export default function VideoLessonPage({
     ? `http://${initialHub.ip}:${initialHub.http_port}${material.download_url}?token=${token}`
     : '';
   
-  // Debug log
-  useEffect(() => {
-    if (material) {
-      console.log('Material local_file_path:', material.local_file_path);
-      console.log('Video source:', videoSrc);
-      console.log('Is local file:', !!material.local_file_path);
-    }
-  }, [material, videoSrc]);
-
   useEffect(() => {
     let mounted = true;
 
@@ -175,14 +166,13 @@ export default function VideoLessonPage({
       console.log('Starting video download:', material.id);
       
       // Call secure Rust download command
-      const absolutePath = await invoke<string>('download_video_for_offline', {
+      await invoke<string>('download_video_for_offline', {
         hub,
         userId,
         materialId: material.id,
         token, // Pass the token from props
       });
 
-      console.log('Download complete, absolute path:', absolutePath);
       
       // Ensure progress shows 100% at completion
       setDownloadProgress(100);
