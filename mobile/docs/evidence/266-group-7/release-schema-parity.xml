@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.lara.app.data.SchemaParityTest" tests="2" skipped="0" failures="1" errors="0" timestamp="2026-11-13T02:28:58" hostname="MacBook-Pro-Tamz.local" time="0.241">
+  <properties/>
+  <testcase name="parityAssertionDetectsRemovedColumn" classname="org.lara.app.data.SchemaParityTest" time="0.159"/>
+  <testcase name="allSixteenTablesMatchActualContractIncludingConstraints" classname="org.lara.app.data.SchemaParityTest" time="0.082">
+    <failure message="java.lang.AssertionError: enrollments exported fields expected:&lt;{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], created_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}&gt; but was:&lt;{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}&gt;" type="java.lang.AssertionError">java.lang.AssertionError: enrollments exported fields expected:&lt;{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], created_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}&gt; but was:&lt;{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.lara.app.data.SchemaParityTest.assertExportedFields(SchemaParityTest.kt:59)
+	at org.lara.app.data.SchemaParityTest.allSixteenTablesMatchActualContractIncludingConstraints(SchemaParityTest.kt:93)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.robolectric.RobolectricTestRunner$HelperTestRunner$1.evaluate(RobolectricTestRunner.java:502)
+	at org.robolectric.internal.SandboxTestRunner$2.lambda$evaluate$2(SandboxTestRunner.java:285)
+	at org.robolectric.internal.bytecode.Sandbox.lambda$runOnMainThread$0(Sandbox.java:104)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

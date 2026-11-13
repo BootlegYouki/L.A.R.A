@@ -1,0 +1,9 @@
+{
+  "mobile/app/src/main/java/org/lara/app/ui/components/ClassFormDialog.kt": "e5b8caa1dc294da89675923b3e169625b246152978f59966cb4b6d8d51b23639",
+  "mobile/app/src/main/java/org/lara/app/ui/navigation/RoleNavGraphs.kt": "f575c8f5c0881602f2e9dfd8378335bf00b97001a44ac20cc492410bad6c189b",
+  "mobile/app/src/main/java/org/lara/app/ui/screens/settings/SettingsScreen.kt": "bcfecf8ae37ec58379cb55378d595cbd8aeecc2d56102e56048966f54fc224e4",
+  "mobile/app/src/main/java/org/lara/app/ui/screens/teacher/classes/ClassManagementHost.kt": "5a60ca18729bf73ee3ebaf0d83f7e167e3dee432a1d1199aaca0424d9317fdb3",
+  "mobile/app/src/main/res/values/strings.xml": "dddfc61b7c120bcf722d10f33dce037263333768e6307d6d8cae8f4a0e427b0a",
+  "mobile/app/src/main/java/org/lara/app/ui/components/ClassroomActionRow.kt": "9d2ddd7248bd99074ba695fa2c1bbf7683f45865cdf49683401bfdab6ce9476b",
+  "mobile/app/src/androidTest/java/org/lara/app/reading/ClassMenuDeviceTest.kt": "06b5cd52999a70c12327dd8eefe24d8bcbf09579f6727b1583f22076633c81c0"
+}

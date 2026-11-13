@@ -110,7 +110,8 @@ private fun RoleNavGraph(
                     IconButton(onClick = { expanded = true }, modifier = Modifier.size(MinTouchTarget)) {
                         Icon(painterResource(R.drawable.ic_dots_three_vertical), stringResource(R.string.class_actions))
                     }
-                    DropdownMenu(expanded, { expanded = false }, containerColor = LaraColors.Surface) {
+                    DropdownMenu(expanded, { expanded = false }, containerColor = LaraColors.Surface,
+                        shape = LaraShapes.large) {
                         listOf(ShellDestination.QUIZZES, ShellDestination.AI_TUTOR).forEach { destination ->
                             DropdownMenuItem(text = { Text(stringResource(destination.label),
                                 color = if (!state.allows(destination)) androidx.compose.ui.graphics.Color.Unspecified
@@ -124,7 +125,10 @@ private fun RoleNavGraph(
                         }
                         if (state.hasInProgressAttempt) DropdownMenuItem(
                             text = { Text(stringResource(R.string.ai_quiz_locked)) }, onClick = {}, enabled = false)
-                        if (teacher) DropdownMenuItem(text = { Text(stringResource(R.string.nav_grades)) },
+                        if (teacher) HorizontalDivider(color = LaraColors.Border)
+                        if (teacher) DropdownMenuItem(
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_exam_regular), null, tint = LaraColors.PrimaryDark) },
+                            text = { Text(stringResource(R.string.nav_grades)) },
                             modifier = Modifier.heightIn(min = MinTouchTarget),
                             onClick = { expanded = false; controller.navigate(Grades) { launchSingleTop = true } })
                     }

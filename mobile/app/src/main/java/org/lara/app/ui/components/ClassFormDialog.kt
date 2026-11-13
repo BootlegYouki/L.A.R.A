@@ -46,7 +46,8 @@ fun ClassFormDialog(
                     }
                     Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                     Button(onClick = onAction, enabled = enabled, modifier = Modifier.heightIn(min = PrimaryTouchTarget),
-                        colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryLight, contentColor = LaraColors.PrimaryDark)) {
+                        colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryLight, contentColor = LaraColors.PrimaryDark,
+                            disabledContainerColor = LaraColors.Border, disabledContentColor = LaraColors.TextMuted)) {
                         Text(action)
                     }
                 }

@@ -310,4 +310,8 @@
     <string name="homework_points">Points: %1$d</string>
     <string name="homework_confirm_title">Turn in your work?</string>
     <string name="homework_confirm_photo">Your photo will be saved on this device and sent when the classroom Hub is reachable.</string>
+    <string name="classes_details">Class details</string>
+    <string name="classes_save">Save</string>
+    <string name="classes_archive_help">Make this class read-only for everyone. Materials, work and grades are kept.</string>
+    <string name="classes_add_action">Add</string>
 </resources>

@@ -1,0 +1,8 @@
+
+org.lara.app.reading.ClassMenuDeviceTest:.
+
+Time: 26.973
+
+OK (1 test)
+
+
