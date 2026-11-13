@@ -1284,13 +1284,13 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
     att = next((a for a in STATE.attempts.values()
                 if a["quiz_id"] == quiz_id and a["student_id"] == user["id"]), None)
     # An attempt the close auto-submitted can be replaced once by on-time work the learner finished offline (FR-4.5).
-    if att and att["status"] == "SUBMITTED" and not att.get("auto_closed"):
+    if att and att["status"] == "SUBMITTED" and not att.get("auto_submitted"):
         return att
     if att:
         started_at = att["started_at"]  # the Hub's start from /begin, never the device's
     if submitted_at - started_at > quiz["time_limit_minutes"] * 60_000 + GRACE_MS:
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
-    if att and att.get("auto_closed") and submitted_at > quiz.get("closed_at", 0):
+    if att and att.get("auto_submitted") and submitted_at > quiz.get("closed_at", 0):
         raise ApiError(422, "TIME_LIMIT_EXCEEDED", "The time limit has passed")
     if STATE.classrooms[quiz["classroom_id"]].get("archived_at"):
         raise ApiError(403, "FORBIDDEN", "This class is archived")
@@ -1301,7 +1301,7 @@ def submit_attempt(user, quiz_id, started_at, submitted_at, answers):
                "started_at": started_at, "created_at": started_at}
         STATE.attempts[att["id"]] = att
     att.update(status="SUBMITTED", submitted_at=submitted_at, score=score, total_points=total,
-               answers=answers, updated_at=t, auto_closed=False)
+               answers=answers, updated_at=t, auto_submitted=False)
     STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], user["id"])
     if quiz["release_scores_immediately"] or quiz["status"] == "CLOSED":
         STATE.broadcast({"event": "EVENT_GRADE_CONFIRMED", "quiz_id": quiz_id, "attempt_id": att["id"],
@@ -1339,7 +1339,7 @@ def quiz_close(req):
         if att["quiz_id"] == quiz["id"] and att["status"] == "IN_PROGRESS":
             score, total = grade(quiz, att["answers"])
             att.update(status="SUBMITTED", submitted_at=now_ms(), score=score, total_points=total, updated_at=now_ms(),
-                       auto_closed=True)
+                       auto_submitted=True)
             STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], att["student_id"])
         elif att["quiz_id"] == quiz["id"] and not quiz["release_scores_immediately"]:
             STATE.log("quiz_attempts", att["id"], quiz["classroom_id"], att["student_id"])

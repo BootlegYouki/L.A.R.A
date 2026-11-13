@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     scores_released_at INTEGER,                -- set when the teacher releases held scores
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'ACTIVE', 'CLOSED')),
     started_at INTEGER,                        -- authoritative server epoch ms when the teacher started the quiz
+    closed_at INTEGER,                         -- server epoch ms when the teacher closed it; queued work replacing an auto-submit must finish before this
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -198,6 +199,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     score INTEGER,
     total_points INTEGER,
     answers_json TEXT NOT NULL DEFAULT '[]',   -- JSON array of {question_id, selected_option}
+    auto_submitted INTEGER NOT NULL DEFAULT 0 CHECK(auto_submitted IN (0, 1)),  -- 1 when /close submitted it; back to 0 once on-time queued work replaces it (once only)
     updated_at INTEGER NOT NULL,
     CHECK(status = 'IN_PROGRESS' OR (submitted_at IS NOT NULL AND score IS NOT NULL AND total_points IS NOT NULL)),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
