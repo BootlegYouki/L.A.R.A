@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -26,6 +28,9 @@ import org.lara.app.domain.Cached
 import org.lara.app.domain.enrollment.ClassCode
 import org.lara.app.ui.theme.*
 import org.lara.app.ui.components.DiscoveryBanner
+import org.lara.app.ui.components.ClassroomActionRow
+import org.lara.app.ui.components.ClassFormDialog
+import org.lara.app.ui.components.classFormInputScroll
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
@@ -79,17 +84,8 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
         contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets, topBar = {
         if (!embedded) org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.classes_manage), selected?.name, close)
     }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S3),
+        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            if (!embedded) item {
-                Surface(color = LaraColors.PrimaryLight, shape = LaraShapes.large) {
-                    Column(Modifier.fillMaxWidth().padding(LaraSpacing.S6), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                        Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(LaraSpacing.S12), tint = LaraColors.PrimaryDark)
-                        Text(stringResource(R.string.classes_manage), style = MaterialTheme.typography.headlineMedium, color = LaraColors.PrimaryDark)
-                        Text(stringResource(R.string.classes_manage_help), color = LaraColors.TextSecondary)
-                    }
-                }
-            }
             if (!online) {
                 if (!embedded) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
             }
@@ -107,8 +103,11 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
             selected?.let { row ->
                 if (!embedded) item {
                     ClassInfoCard {
-                    Text(row.name, style = MaterialTheme.typography.headlineSmall, color = LaraColors.PrimaryDark)
-                    Text(row.section, color = LaraColors.TextSecondary)
+                    Text(stringResource(R.string.classes_details), style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryDark)
+                    Text(stringResource(R.string.classes_name), style = MaterialTheme.typography.labelLarge)
+                    Text(row.name, style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.classes_section), style = MaterialTheme.typography.labelLarge)
+                    Text(row.section, style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
                     val code = ClassCode.canonicalOrNull(row.classCode)?.let { it.take(3) + "-" + it.drop(3) }.orEmpty()
                     Surface(shape = LaraShapes.medium, color = LaraColors.PrimaryLight) {
                         Column(Modifier.fillMaxWidth().padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -133,14 +132,14 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                 }
                 if (settingsTab && row.canManage(userId, true)) item {
                     ClassInfoCard {
-                    Button(enabled = enabled, onClick = { name = row.name; section = row.section; form = "rename" },
-                        modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_rename)) }
-                    OutlinedButton(enabled = enabled, onClick = { form = "archive" }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.classes_archive))
-                    }
-                    OutlinedButton(enabled = enabled, onClick = { name = ""; form = "add" }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.classes_add_teacher))
-                    }
+                    ClassroomActionRow(stringResource(R.string.classes_edit), icon = R.drawable.ic_pencil_simple,
+                        enabled = enabled, onClick = { name = row.name; section = row.section; form = "rename" })
+                    HorizontalDivider(color = LaraColors.Border)
+                    ClassroomActionRow(stringResource(R.string.classes_add_teacher), icon = R.drawable.ic_users_regular,
+                        enabled = enabled, onClick = { name = ""; form = "add" })
+                    HorizontalDivider(color = LaraColors.Border)
+                    ClassroomActionRow(stringResource(R.string.classes_archive), stringResource(R.string.classes_archive_help),
+                        R.drawable.ic_archive, enabled = enabled, onClick = { form = "archive" })
                     }
                 }
                 if (!settingsTab || !row.canManage(userId, true)) {
@@ -178,30 +177,48 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
             CreateClassDialog(name, section, review, online, state.busy,
                 { name = it }, { section = it }, { review = true }, { review = false },
                 { model.create(name, section); form = null }, { form = null })
+        } else if (action == "rename" || action == "add") {
+            ClassFormDialog(title = stringResource(if (action == "rename") R.string.classes_rename else R.string.classes_add_teacher),
+                action = stringResource(if (action == "rename") R.string.classes_save else R.string.classes_add_action),
+                enabled = enabled && name.isNotBlank() && (action == "add" || section.isNotBlank()),
+                onAction = { if (action == "rename") model.rename(name, section) else model.addTeacher(name); form = null },
+                onDismiss = { form = null }) {
+                if (!online) DiscoveryBanner(R.string.classes_offline, warning = true, success = false)
+                Text(stringResource(if (action == "rename") R.string.classes_details else R.string.classes_teachers),
+                    style = MaterialTheme.typography.titleMedium)
+                Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    val label = stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)
+                    Text(label, style = MaterialTheme.typography.labelLarge)
+                    OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+                        .classFormInputScroll().semantics { contentDescription = label }, shape = LaraShapes.medium)
+                }
+                if (action == "rename") Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    val label = stringResource(R.string.classes_section)
+                    Text(label, style = MaterialTheme.typography.labelLarge)
+                    OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+                        .classFormInputScroll().semantics { contentDescription = label }, shape = LaraShapes.medium)
+                }
+            }
         } else {
-            val editing = action in setOf("rename", "add")
             AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
                 titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
                 shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
-                "rename" -> R.string.classes_rename; "add" -> R.string.classes_add_teacher
                 "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
             })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-                if (editing) {
-                    OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                        label = { Text(stringResource(if (action == "add") R.string.classes_teacher_id else R.string.classes_name)) })
-                    if (action != "add") OutlinedTextField(section, { section = it }, modifier = Modifier.fillMaxWidth(), shape = LaraShapes.medium,
-                        label = { Text(stringResource(R.string.classes_section)) })
-                } else Text(stringResource(when (action) {
+                Text(stringResource(when (action) {
                     "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
                 }))
-            } }, confirmButton = { TextButton(enabled = enabled && (!editing || name.isNotBlank() && (action == "add" || section.isNotBlank())),
+                selected?.takeIf { action == "archive" }?.let { classroom ->
+                    Text(classroom.name, style = MaterialTheme.typography.titleMedium, color = LaraColors.TextPrimary)
+                    Text(classroom.section, style = MaterialTheme.typography.bodyLarge)
+                }
+            } }, confirmButton = { TextButton(enabled = enabled,
                 onClick = {
                     when(action) {
-                        "rename" -> model.rename(name, section)
-                        "add" -> model.addTeacher(name); "archive" -> model.archive()
+                        "archive" -> model.archive()
                         "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
                     }; form = null
-                }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_confirm)) } },
+                }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "archive") R.string.classes_archive else R.string.classes_confirm)) } },
                 dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                     Text(stringResource(R.string.enrollment_cancel_action))
                 } })

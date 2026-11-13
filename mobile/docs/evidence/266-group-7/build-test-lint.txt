@@ -1,0 +1,203 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:buildKotlinToolingMetadata
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:processDebugResources
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:mergeReleaseResources
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:processReleaseManifestForPackage
+> Task :app:processReleaseResources
+
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptDebugUnitTestKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:kaptGenerateStubsReleaseKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptReleaseKotlin
+/Users/Nash/Documents/L.A.R.A/mobile/app/build/tmp/kapt3/stubs/release/org/lara/app/data/local/entities/QuizEntity.java:5: warning: classroom_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class QuizEntity {
+             ^
+/Users/Nash/Documents/L.A.R.A/mobile/app/build/tmp/kapt3/stubs/release/org/lara/app/data/local/entities/TopicEntity.java:5: warning: classroom_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class TopicEntity {
+             ^
+/Users/Nash/Documents/L.A.R.A/mobile/app/build/tmp/kapt3/stubs/release/org/lara/app/data/local/entities/PrivateCommentEntity.java:5: warning: assignment_id column references a foreign key but it is not part of an index. This may trigger full table scans whenever parent table is modified so you are highly advised to create an index that covers this column.
+public final class PrivateCommentEntity {
+             ^
+
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:compileReleaseKotlin
+> Task :app:testDebugUnitTest
+
+> Task :app:compileReleaseKotlin
+w: file:///Users/Nash/Documents/L.A.R.A/mobile/app/src/main/java/org/lara/app/ui/components/ClassFormDialog.kt:77:60 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+--- Failed to create image decoder with message 'unimplemented'
+
+> Task :app:testDebugUnitTest
+
+HomeworkRepositoryTest > pullKeepsQueuedPhotoBeforeAdoptingAnotherDevicesCanonicalId FAILED
+    org.junit.ComparisonFailure at HomeworkRepositoryTest.kt:118
+
+HomeworkRepositoryTest > resubmissionUsesTheExistingIdentity FAILED
+    org.junit.ComparisonFailure at HomeworkRepositoryTest.kt:108
+
+SchemaParityTest > allSixteenTablesMatchActualContractIncludingConstraints FAILED
+    java.lang.AssertionError at SchemaParityTest.kt:59
+
+StreamReadingTest > handoutDownloadsWithBearerAndReopensWithoutTheHub FAILED
+    java.lang.AssertionError at StreamReadingTest.kt:52
+
+StreamReadingTest > renamingMaterialKeepsItsFileAndTombstonesRemoveOnlyUnreferencedFiles FAILED
+    java.lang.AssertionError at StreamReadingTest.kt:86
+
+201 tests completed, 5 failed, 6 skipped
+
+> Task :app:testDebugUnitTest FAILED
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest
+> Task :app:javaPreCompileRelease
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:bundleReleaseClassesToCompileJar
+> Task :app:bundleReleaseClassesToRuntimeJar
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:packageReleaseUnitTestForUnitTest
+> Task :app:generateReleaseUnitTestConfig
+> Task :app:processReleaseJavaRes
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:extractProguardFiles
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+
+> Task :app:kaptGenerateStubsReleaseUnitTestKotlin
+w: Kapt currently doesn't support language version 2.0+. Falling back to 1.9.
+
+> Task :app:kaptReleaseUnitTestKotlin
+warning: The following options were not recognized by any processor: '[room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:compileReleaseUnitTestKotlin
+> Task :app:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processReleaseUnitTestJavaRes
+> Task :app:lintAnalyzeDebug
+
+--- Failed to create image decoder with message 'unimplemented'
+
+> Task :app:testReleaseUnitTest
+
+HomeworkRepositoryTest > pullKeepsQueuedPhotoBeforeAdoptingAnotherDevicesCanonicalId FAILED
+    org.junit.ComparisonFailure at HomeworkRepositoryTest.kt:118
+
+HomeworkRepositoryTest > resubmissionUsesTheExistingIdentity FAILED
+    org.junit.ComparisonFailure at HomeworkRepositoryTest.kt:108
+
+SchemaParityTest > allSixteenTablesMatchActualContractIncludingConstraints FAILED
+    java.lang.AssertionError at SchemaParityTest.kt:59
+
+StreamReadingTest > handoutDownloadsWithBearerAndReopensWithoutTheHub FAILED
+    java.lang.AssertionError at StreamReadingTest.kt:52
+
+StreamReadingTest > renamingMaterialKeepsItsFileAndTombstonesRemoveOnlyUnreferencedFiles FAILED
+    java.lang.AssertionError at StreamReadingTest.kt:86
+
+201 tests completed, 5 failed, 6 skipped
+
+> Task :app:testReleaseUnitTest FAILED
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///Users/Nash/Documents/L.A.R.A/mobile/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+> Task :app:lint
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///Users/Nash/Documents/L.A.R.A/mobile/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:testReleaseUnitTest'.
+> There were failing tests. See the report at: file:///Users/Nash/Documents/L.A.R.A/mobile/app/build/reports/tests/testReleaseUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights.
+==============================================================================
+
+BUILD FAILED in 4m 17s
+90 actionable tasks: 57 executed, 33 up-to-date

@@ -178,7 +178,6 @@
     <string name="classes_teacher_warning">Remove this co-teacher from the class?</string>
     <string name="classes_confirm">Confirm</string>
     <string name="classes_people">People</string>
-    <string name="classes_manage_help">Create a class, share its code and manage your classroom people.</string>
     <string name="classes_code">Class code</string>
     <string name="classes_code_help">Share this code with learners. Their join requests still need your approval.</string>
     <string name="classes_owner_role">Class owner</string>
@@ -310,4 +309,8 @@
     <string name="homework_points">Points: %1$d</string>
     <string name="homework_confirm_title">Turn in your work?</string>
     <string name="homework_confirm_photo">Your photo will be saved on this device and sent when the classroom Hub is reachable.</string>
+    <string name="classes_details">Class details</string>
+    <string name="classes_save">Save</string>
+    <string name="classes_archive_help">Make this class read-only for everyone. Materials, work and grades are kept.</string>
+    <string name="classes_add_action">Add</string>
 </resources>

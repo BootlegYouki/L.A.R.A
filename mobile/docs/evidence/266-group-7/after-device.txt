@@ -1,0 +1,9 @@
+
+org.lara.app.reading.ClassMenuDeviceTest:..
+org.lara.app.settings.SettingsScreenDeviceTest:..
+
+Time: 39.255
+
+OK (4 tests)
+
+
