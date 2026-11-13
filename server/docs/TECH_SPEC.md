@@ -137,7 +137,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `/api/classrooms` (GET, POST), `/join` | `routes/classrooms.rs` | 404 `CLASS_CODE_INVALID` | Join returns the existing enrollment |
 | `/api/classrooms/{id}` PATCH, `/remove`, `/teachers`, `/teachers/{teacher_id}`, `/roster`, `/approve`, `/reject` | `routes/classrooms.rs`, `services/class_access.rs` | 403 not owner; 404 enrollment or teacher; archived class (Q9) | Events after commit; pull recovers |
 | `/api/sync/pull` | `routes/sync.rs`, `db/sync_revisions.rs` | `reset: true` on `hub_id`/`sync_epoch` mismatch | Read only; client keeps its cursor |
-| `/api/sync/push` | `routes/sync.rs` | Per item `REJECTED`: `TIME_LIMIT_EXCEEDED`, `FORBIDDEN`, `COMMENTS_DISABLED`, `NOT_FOUND` | One transaction per item; a committed id answers `SYNCED` again |
+| `/api/sync/push` | `routes/sync.rs` | Per item `REJECTED`: `BAD_REQUEST` (including a value the desktop could not pull, #290), `TIME_LIMIT_EXCEEDED`, `FORBIDDEN`, `COMMENTS_DISABLED`, `NOT_FOUND` | One transaction per item; a committed id answers `SYNCED` again |
 | `/api/topics`, `/api/topics/{id}` | `routes/topics.rs` | 404 | Delete clears `topic_id` in the same transaction |
 | `/api/announcements`, `/{id}`, `/{id}/comments` | `routes/announcements.rs` | 403 `COMMENTS_DISABLED`; 404 | Push after commit |
 | `POST /api/materials` | `routes/materials.rs`, `storage/*`, `document_parser` | 413 `FILE_TOO_LARGE` over 250 MB | Temp file deleted; nothing committed |

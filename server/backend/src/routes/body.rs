@@ -7,10 +7,19 @@ use axum::extract::{FromRequest, Request};
 use serde_json::{Map, Value};
 
 use crate::error::ApiError;
-use crate::models::sync::MAX_SAFE_INT;
+use crate::models::sync::{MAX_SAFE_INT, MAX_TEXT_BYTES};
 use crate::AppState;
 
 pub struct JsonBody(pub Map<String, Value>);
+
+/// Bug #290: text a client pulls must fit the desktop's limit (1,000,000 bytes, `MAX_TEXT_BYTES`), or one
+/// row stops sync for everyone who pulls it. Every text reader below goes through this.
+pub fn within_text_cap(key: &str, text: &str) -> Result<(), ApiError> {
+    if text.len() > MAX_TEXT_BYTES {
+        return Err(ApiError::bad_request(format!("{key} is too long")));
+    }
+    Ok(())
+}
 
 impl JsonBody {
     pub fn need(&self, keys: &[&str]) -> Result<(), ApiError> {
@@ -31,12 +40,12 @@ impl JsonBody {
         }
     }
 
-    /// Absent is `None`; present must be a string. The mock stores whatever was sent, but a
-    /// wrong type here would fail a CHECK or end up in a client's typed model.
+    /// Absent is `None`; present must be a string of at most `MAX_TEXT_BYTES`. The mock stores whatever was
+    /// sent, but a wrong type here would fail a CHECK or end up in a client's typed model.
     pub fn optional_text(&self, key: &str) -> Result<Option<String>, ApiError> {
         match self.0.get(key) {
             None => Ok(None),
-            Some(Value::String(text)) => Ok(Some(text.clone())),
+            Some(Value::String(text)) => within_text_cap(key, text).map(|()| Some(text.clone())),
             Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
         }
     }
@@ -55,7 +64,7 @@ impl JsonBody {
         match self.0.get(key) {
             None => Ok(None),
             Some(Value::Null) => Ok(Some(None)),
-            Some(Value::String(text)) => Ok(Some(Some(text.clone()))),
+            Some(Value::String(text)) => within_text_cap(key, text).map(|()| Some(Some(text.clone()))),
             Some(_) => Err(ApiError::bad_request(format!("{key} must be text"))),
         }
     }
@@ -115,6 +124,20 @@ mod tests {
 
     fn body(value: serde_json::Value) -> JsonBody {
         JsonBody(value.as_object().unwrap().clone())
+    }
+
+    /// Bug #290: the cap counts UTF-8 bytes, the desktop's measure, not characters.
+    #[test]
+    fn text_readers_refuse_text_over_the_cap() {
+        let at_cap = "é".repeat(MAX_TEXT_BYTES / 2);
+        let over = format!("{at_cap}x");
+        let b = body(json!({"ok": at_cap, "long": over}));
+        assert_eq!(b.optional_text("ok").unwrap().map(|t| t.len()), Some(MAX_TEXT_BYTES));
+        assert_eq!(b.non_empty_text("ok").unwrap().map(|t| t.len()), Some(MAX_TEXT_BYTES));
+        assert!(matches!(b.nullable_text("ok"), Ok(Some(Some(_)))));
+        for result in [b.optional_text("long").map(|_| ()), b.non_empty_text("long").map(|_| ()), b.nullable_text("long").map(|_| ())] {
+            assert_eq!(result.unwrap_err().message, "long is too long");
+        }
     }
 
     #[test]
