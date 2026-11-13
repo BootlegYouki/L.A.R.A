@@ -1,0 +1,16 @@
+{
+  "before_count": 36,
+  "before_hashes_unchanged": true,
+  "capture_counts": {
+    "final-after": 45,
+    "final-font200": 40,
+    "final-landscape200": 40,
+    "final-pin-normal": 2,
+    "final-pin-font200": 2,
+    "final-pin-landscape200": 2
+  },
+  "final_captures": 131,
+  "head": "2a861ba",
+  "branch": "mobile/266-group8-lara-screens",
+  "staged_diff_empty": true
+}

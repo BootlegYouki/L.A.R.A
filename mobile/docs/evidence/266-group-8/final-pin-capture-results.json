@@ -1,0 +1,34 @@
+{
+  "original": {
+    "font_scale": "0.85",
+    "accelerometer_rotation": "0",
+    "user_rotation": "0",
+    "stay_on_while_plugged_in": "0"
+  },
+  "runs": {
+    "final-pin-normal": {
+      "passed": true,
+      "captures": 2,
+      "font_scale": "0.85",
+      "rotation": "0"
+    },
+    "final-pin-font200": {
+      "passed": true,
+      "captures": 2,
+      "font_scale": "2.0",
+      "rotation": "0"
+    },
+    "final-pin-landscape200": {
+      "passed": true,
+      "captures": 2,
+      "font_scale": "2.0",
+      "rotation": "1"
+    }
+  },
+  "restored": {
+    "font_scale": "0.85",
+    "accelerometer_rotation": "0",
+    "user_rotation": "0",
+    "stay_on_while_plugged_in": "0"
+  }
+}

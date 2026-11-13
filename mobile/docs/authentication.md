@@ -13,12 +13,12 @@ New sessions use the saved Sprint 1.2 Hub endpoint. Find classroom Hub opens the
 - `data/remote/TokenStore.kt`: Android Keystore AES-GCM encryption; only ciphertext and IV are stored in private preferences. Backup remains disabled. The approved Tech Spec section 14 decision supersedes the issue's older EncryptedSharedPreferences wording.
 - `data/local/dao/AuthDao.kt`: profile/current-user writes in one Room transaction. No schema/table/column change.
 - `data/repository/AuthRepository.kt`: network authentication, Room profile cache, encrypted session binding to Hub/user, offline restoration.
-- `ui/screens/auth/`: login/learner registration, 56dp keypad, transient PIN state, ViewModel request state, session host.
+- `ui/screens/auth/`: login/learner registration, masked numeric-password system keyboard fields, transient PIN state, ViewModel request state, session host.
 - `MainActivity.kt`: starts `AuthHost`; authenticated state feeds the existing 2.1 shell.
 
 ## Safety and boundaries
 
-PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English resources. Password boxes are read-only masked views of keypad position.
+PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English resources. Both forms use a standard Android text field with `KeyboardType.NumberPassword`, password semantics, ASCII digit filtering and a four-digit limit. ID/LRN → name (registration only) → PIN follows Next/Tab focus order. Done/Enter submits only when the same busy/rate-limit/form gate as the button allows it; Back dismisses the keyboard. The 56dp action footer returns when the keyboard closes. In landscape, the app bar also hides while the keyboard is open to leave space for enlarged field text. PIN state also clears on mode changes. No app-rendered keypad remains.
 
 The session host collects Sprint 1.3 `QuizRepository.hasInProgressAttempt(userId)`, starting locked until Room emits. Learner AI stays unavailable during any cached active attempt. The role shell reads its offline state independently of auth; a public portal probe supplies only reachability, never authentication or authorization.
 

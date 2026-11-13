@@ -1,0 +1,10 @@
+222daccbb5cfcea0fdbd274691011b380c48e789c2988d7292e30dad0b156c52  mobile/app/src/androidTest/java/org/lara/app/reading/Group8UiDeviceTest.kt
+b4d21aba2702bb2eb15cd4424026394dc715997ed2b076fb3147e535a8998daf  mobile/app/src/main/java/org/lara/app/ui/components/ClassroomDetailHeader.kt
+f993beca3e0ad1a2f327001830100ac7ccfb5f1d4f780f41670c408747882d14  mobile/app/src/main/java/org/lara/app/ui/screens/auth/AuthHost.kt
+1ad61a4b7d7273b50ea38dc4997b005bf106c131cd9a520b614a493e723e033d  mobile/app/src/main/java/org/lara/app/ui/screens/auth/AuthScreen.kt
+8c824167f46d9e5acb905d1a57b08cae0989b6b7c471f8b63cba46ca12b2d9a8  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/MaterialReader.kt
+eaf0b2ab37f8d30da71e08b3fb8c5a0dab770d8d27fda0ad06d1aa114f5b0ab1  mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoPlayerScreen.kt
+9fd3474b6dcb67ebfffe2a74d62b707ef3b602e2a045b7966f4544914d2e9254  mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryScreen.kt
+e799610cb32e71934833495d8c5502eab79d9e26f866a54affa158bc2a103cc5  mobile/app/src/main/java/org/lara/app/ui/screens/teacher/ApprovalSheet.kt
+e9410fe3f57266c28ee4df81beeb3bf5d16906257905847891ae6d635697944f  mobile/app/src/main/res/drawable/ic_broadcast.xml
+62b182ab00ed79ec0a8c06e3fa8f3053695b1cc71326291357618ad01d38d4af  mobile/app/src/main/res/values/strings.xml

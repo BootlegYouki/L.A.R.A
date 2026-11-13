@@ -1,0 +1,16 @@
+{
+  "base": "2a861ba",
+  "overlay": [
+    "mobile/app/src/main/java/org/lara/app/ui/screens/auth/AuthHost.kt",
+    "mobile/app/src/main/java/org/lara/app/ui/screens/auth/AuthScreen.kt",
+    "mobile/app/src/main/java/org/lara/app/ui/screens/classwork/MaterialReader.kt",
+    "mobile/app/src/main/java/org/lara/app/ui/screens/classwork/VideoPlayerScreen.kt",
+    "mobile/app/src/main/java/org/lara/app/ui/screens/discovery/DiscoveryScreen.kt",
+    "mobile/app/src/main/java/org/lara/app/ui/screens/teacher/ApprovalSheet.kt",
+    "mobile/app/src/main/res/values/strings.xml",
+    "mobile/app/src/main/java/org/lara/app/ui/components/ClassroomDetailHeader.kt",
+    "mobile/app/src/main/res/drawable/ic_backspace.xml",
+    "mobile/app/src/main/res/drawable/ic_broadcast.xml"
+  ],
+  "note": "After untouched staging auth check passed, these production UI files were copied into the temporary comparison workspace. Standard application ID; no device init override."
+}

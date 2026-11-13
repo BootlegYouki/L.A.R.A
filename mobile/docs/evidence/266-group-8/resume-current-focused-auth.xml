@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.lara.app.ui.screens.auth.AuthViewModelTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-13T09:59:30" hostname="MacBook-Pro-Tamz.local" time="6.564">
+  <properties/>
+  <testcase name="registrationTrimsBeforeValidationAndRejectsContractLengthViolations" classname="org.lara.app.ui.screens.auth.AuthViewModelTest" time="6.355"/>
+  <testcase name="retryAfterBlocksManualAndAutomaticRetriesUntilTheWaitEnds" classname="org.lara.app.ui.screens.auth.AuthViewModelTest" time="0.209"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

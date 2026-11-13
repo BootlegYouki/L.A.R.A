@@ -32,6 +32,10 @@ import org.lara.app.R
 import org.lara.app.domain.Cached
 import org.lara.app.domain.model.Material
 import org.lara.app.ui.screens.stream.ReadingSkeleton
+import org.lara.app.ui.components.ClassroomDetailHeader
+import org.lara.app.ui.components.DiscoveryBanner
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
 import org.lara.app.ui.theme.*
 import java.io.File
 import kotlin.math.sqrt
@@ -103,44 +107,58 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
     }
     val bitmap = raster?.bitmap
     DisposableEffect(bitmap) { onDispose { bitmap?.recycle() } }
-    Column(Modifier.fillMaxSize().padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-            Text(material.title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = close, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.reading_close)) }
-        }
-        if (loading) ReadingSkeleton()
-        if (failed || renderFailed) {
-            Text(stringResource(if (chunks.isNotEmpty()) R.string.reading_showing_text
-                else if (renderFailed) R.string.reading_file_unreadable else R.string.reading_file_unavailable),
-                color = LaraColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = { retry++ }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.reading_retry)) }
-        }
-        if (visual && raster == null && !loading && !failed && !renderFailed) ReadingSkeleton()
-        raster?.let { image ->
-            if (material.mimeType == "application/pdf") {
-                Text(stringResource(R.string.reading_page, page + 1, image.pages), style = MaterialTheme.typography.titleMedium)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    OutlinedButton(onClick = { page-- }, enabled = page > 0, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.reading_previous))
-                    }
-                    OutlinedButton(onClick = { page++ }, enabled = page + 1 < image.pages, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.reading_next))
+    Column(Modifier.fillMaxSize()) {
+        ClassroomDetailHeader(material.title, R.string.reading_close, close)
+        BoxWithConstraints(Modifier.weight(1f)) {
+            val viewerHeight = (maxHeight - MinTouchTarget * 2).coerceAtLeast(PrimaryTouchTarget * 3)
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
+                verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                if (loading) ReadingSkeleton()
+                if (failed || renderFailed) {
+                    DiscoveryBanner(if (chunks.isNotEmpty()) R.string.reading_showing_text
+                        else if (renderFailed) R.string.reading_file_unreadable else R.string.reading_file_unavailable,
+                        warning = chunks.isEmpty(), success = false)
+                    OutlinedButton(onClick = { retry++ }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Text(stringResource(R.string.reading_retry))
                     }
                 }
-            }
-            ZoomableHandout(image.bitmap, material.title, Modifier.weight(1f).fillMaxWidth())
-        }
-        if (raster == null && !loading) {
-            if (cached == Cached.Loading) ReadingSkeleton()
-            else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                Text(stringResource(R.string.reading_lesson_text), style = MaterialTheme.typography.titleMedium)
-                chunks.forEach { chunk ->
-                    chunk.heading?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
-                    Text(chunk.text, style = MaterialTheme.typography.bodyLarge)
+                if (file != null) Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(R.drawable.ic_check_circle), null, Modifier.size(LaraSpacing.S6), tint = LaraColors.PrimaryDark)
+                    Text(stringResource(R.string.reading_saved_device_badge), style = MaterialTheme.typography.bodyLarge,
+                        color = LaraColors.PrimaryDark)
                 }
-                if (chunks.isEmpty()) Text(stringResource(R.string.reading_no_text))
+                if (visual && raster == null && !loading && !failed && !renderFailed) ReadingSkeleton()
+                raster?.let { image ->
+                    if (material.mimeType == "application/pdf") {
+                        Text(stringResource(R.string.reading_page, page + 1, image.pages), style = MaterialTheme.typography.titleMedium)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                            OutlinedButton(onClick = { page-- }, enabled = page > 0,
+                                modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
+                                Text(stringResource(R.string.reading_previous))
+                            }
+                            OutlinedButton(onClick = { page++ }, enabled = page + 1 < image.pages,
+                                modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
+                                Text(stringResource(R.string.reading_next))
+                            }
+                        }
+                    }
+                    ZoomableHandout(image.bitmap, material.title, Modifier.fillMaxWidth().height(viewerHeight))
+                }
+                if (raster == null && !loading) {
+                    if (cached == Cached.Loading) ReadingSkeleton()
+                    else {
+                        Text(stringResource(R.string.reading_lesson_text), style = MaterialTheme.typography.titleMedium)
+                        chunks.forEach { chunk ->
+                            chunk.heading?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+                            Text(chunk.text, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        if (chunks.isEmpty()) Text(stringResource(R.string.reading_no_text), style = MaterialTheme.typography.bodyLarge)
+                    }
+                } else if (chunks.isEmpty() && !loading) Text(stringResource(R.string.reading_no_text),
+                    style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
             }
-        } else if (chunks.isEmpty() && !loading) Text(stringResource(R.string.reading_no_text), style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
@@ -161,10 +179,10 @@ private fun ZoomableHandout(bitmap: Bitmap, title: String, modifier: Modifier) {
         offset = bounded(offset + pan)
     }
     Column(modifier) {
-        Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             TextButton(onClick = { scale = (scale / 1.5f).coerceAtLeast(1f); offset = bounded(offset) },
-                modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.reading_zoom_out)) }
-            TextButton(onClick = { scale = (scale * 1.5f).coerceAtMost(4f) }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.reading_zoom_out)) }
+            TextButton(onClick = { scale = (scale * 1.5f).coerceAtMost(4f) }, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.reading_zoom_in))
             }
         }

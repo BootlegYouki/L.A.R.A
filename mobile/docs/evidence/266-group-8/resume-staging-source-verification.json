@@ -1,0 +1,12 @@
+{
+  "base": "2a861ba",
+  "tracked_files_compared": 235,
+  "differing_paths": [],
+  "extra_main_sources": [],
+  "java_home": "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home",
+  "workers": 1,
+  "app_id": "org.lara.app",
+  "unit_init": "unit.init.gradle",
+  "tests": "org.lara.app.ui.screens.auth.AuthViewModelTest",
+  "test_source_changed": false
+}

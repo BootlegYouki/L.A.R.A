@@ -33,11 +33,11 @@ fun AuthHost(container: AppContainer) {
     var discovery by remember { mutableStateOf(false) }
     var settings by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = discovery) { discovery = false }
-    Scaffold(containerColor = LaraColors.Canvas) { insets ->
+    Scaffold(containerColor = LaraColors.Canvas, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { insets ->
         if(state.user == null) Box(Modifier.fillMaxSize().padding(insets)) {
             when {
                 state.restoring -> Column(
-                    Modifier.padding(LaraSpacing.S4),
+                    Modifier.safeDrawingPadding().padding(LaraSpacing.S4),
                     verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
                 ) {
                     Text(stringResource(R.string.auth_restoring))

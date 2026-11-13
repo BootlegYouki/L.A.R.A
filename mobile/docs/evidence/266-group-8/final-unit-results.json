@@ -1,0 +1,54 @@
+{
+  "Debug": {
+    "tests": 201,
+    "failures": 1,
+    "skipped": 6,
+    "errors": 0,
+    "passed": 194,
+    "failure_details": [
+      {
+        "suite": "org.lara.app.data.SchemaParityTest",
+        "test": "allSixteenTablesMatchActualContractIncludingConstraints",
+        "message": "java.lang.AssertionError: enrollments exported fields expected:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], created_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}> but was:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}>"
+      }
+    ],
+    "auth": [
+      {
+        "name": "registrationTrimsBeforeValidationAndRejectsContractLengthViolations",
+        "seconds": "0.059",
+        "passed": true
+      },
+      {
+        "name": "retryAfterBlocksManualAndAutomaticRetriesUntilTheWaitEnds",
+        "seconds": "0.175",
+        "passed": true
+      }
+    ]
+  },
+  "Release": {
+    "tests": 201,
+    "failures": 1,
+    "skipped": 6,
+    "errors": 0,
+    "passed": 194,
+    "failure_details": [
+      {
+        "suite": "org.lara.app.data.SchemaParityTest",
+        "test": "allSixteenTablesMatchActualContractIncludingConstraints",
+        "message": "java.lang.AssertionError: enrollments exported fields expected:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], created_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}> but was:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}>"
+      }
+    ],
+    "auth": [
+      {
+        "name": "registrationTrimsBeforeValidationAndRejectsContractLengthViolations",
+        "seconds": "0.057",
+        "passed": true
+      },
+      {
+        "name": "retryAfterBlocksManualAndAutomaticRetriesUntilTheWaitEnds",
+        "seconds": "0.175",
+        "passed": true
+      }
+    ]
+  }
+}

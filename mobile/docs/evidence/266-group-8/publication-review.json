@@ -1,0 +1,16 @@
+{
+  "reviewed_against": "2a861ba",
+  "current_staging": "316d747",
+  "upstream_mobile_diff": [],
+  "protected_diff_paths": [],
+  "scope": "UI presentation and authorized native PIN input interactions only",
+  "validation_preserved": "ASCII four-digit PIN; ID/name bounds; ViewModel validation and Retry-After; transient PIN state and clearing",
+  "communication_and_persistence": "existing callbacks and service code retained; no auth API, transport, token-store, database, sync or offline persistence changes",
+  "real_hub": "Not performed; not required for this UI-only scope under the updated Tech Lead instruction",
+  "skills": "Local skill installation files, scripts, caches and configuration excluded; not removed from workspace",
+  "group4_feature_issues": [
+    60,
+    127
+  ],
+  "group6_feature_issue": 129
+}
