@@ -46,7 +46,7 @@ No database tables, events or contract routes are touched by this step.
 * **Uninstall can delete the school's data.** Tauri's uninstaller offers a "Delete the application data" checkbox (off by default) that removes the app data folder, which holds `lara.db`. Tell admins to leave it unchecked and to back up first (4.4).
 * **WebView2:** the default Tauri mode downloads WebView2 during install, which fails offline. `offlineInstaller` embeds it (about 127 MB larger) and runs it only when the PC lacks WebView2 (Windows 10 before 2021 updates). Windows 11 already has it.
 * **Visual C++ runtime:** Rust links it dynamically by default, and a fresh Windows PC may lack `VCRUNTIME140.dll`. `.cargo/config.toml` links it statically. The file applies when cargo runs inside `src-tauri/`, which is what `tauri build` does.
-* **`.deb` dependencies:** the `.deb` declares `libwebkit2gtk-4.1-0` and `libgtk-3-0`. Ubuntu 22.04+ desktop has both. On a PC without them, `apt` would need the internet, so use the AppImage there: it carries its own libraries. The AppImage has no post-install step, so open the ports with the dashboard's fix (5.3) or by hand.
+* **`.deb` dependencies:** the `.deb` declares `libwebkit2gtk-4.1-0` and `libgtk-3-0`. Ubuntu 24.04 and Xubuntu 24.04 install both. Lubuntu 24.04 lacks `libwebkit2gtk-4.1-0`, and every 22.04 flavour ships only `libwebkit2gtk-4.0-37` (checked against the official desktop image manifests, 2026-10-31). On a PC without them, `apt` would need the internet, so use the AppImage there: it carries its own libraries. The AppImage has no post-install step, so open the ports with the dashboard's fix (5.3) or by hand.
 * **`postinst.sh` must stay LF.** `src-tauri/.gitattributes` pins `linux/*` to LF; the test checks for `\r`.
 * **Installer wizard language:** the NSIS wizard and Hub window use English. The Hub window has no language toggle; its strings live in `ui/src/i18n/en.json` (#226).
 
@@ -55,17 +55,19 @@ No database tables, events or contract routes are touched by this step.
 
 **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card.
 
+**Requirement (the Lead, 2026-10-30 and 2026-10-31): the Hub PC runs Xubuntu 24.04,** a light desktop on which the `.deb` installs offline. On a 4 GB PC, Ubuntu's default GNOME desktop leaves no room for any model (below). The fallback is the AppImage, on Lubuntu or any 22.04 release, which lack the WebKitGTK the `.deb` needs (see "`.deb` dependencies" above).
+
 **RAM budget on the reference PC:**
 | | MB | Source |
 |---|---|---|
 | Installed | 4096 | Reference PC |
 | Firmware and integrated graphics | −250 | Estimate. A 4 GB PC usually shows Linux 3.7 to 3.9 GB (`MemTotal`) |
-| Linux with a light desktop (Xubuntu or Lubuntu), idle | −600 | Estimate. Ubuntu's default GNOME desktop uses about 1.2 GB |
+| Linux with a light desktop (Xubuntu 24.04), idle | −600 | Estimate. Ubuntu's default GNOME desktop uses about 1.2 GB |
 | Hub: backend and window | −350 | Measured on Windows (`lara-hub-window` release build, idle, 2026-10-30): backend 31 MB; the window's WebView2 processes 183 MB private, 358 MB working set. Linux draws the window with WebKitGTK instead. The backend grows as features land; the load test (6.1, #17) measures it under 40 learners |
 | Reserve | −450 | Judgment. Files and videos the Hub serves fill the page cache, which competes with the model for RAM |
 | **Left for the model (`llama-server`)** | **≈ 2450** | At the chosen slot count |
 
-With Ubuntu's default GNOME desktop the budget drops to about **1.8 GB**, and none of the four measured models fits. A light desktop on the Hub PC matters as much as the model choice. Measure the real figures on the pilot PC with `free -m` while the Hub runs with no `llama-server`.
+With Ubuntu's default GNOME desktop the budget drops to about **1.8 GB**, and none of the four measured models fits, which is why the light desktop is a requirement. Measure the real figures on the pilot PC with `free -m` while the Hub runs with no `llama-server`.
 
 **Machine the evaluation ran on:**
 | | |
@@ -89,7 +91,28 @@ Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC
 
 **On Linux, a model that does not fit slows down before it fails.** `llama-server` maps the model file into memory. When RAM runs short, Linux drops model pages (for example to cache a video being streamed) and reads them back from disk on the next token, so replies slow to a crawl. That is why the budget keeps a reserve.
 
+## Hub spec for the AI tutor (DRAFT, #73)
+**Draft until the decision in `docs/benchmarks/ai_model_evaluation.md`.** It holds if REAP-15B passes scoring. First-token speed (criterion 5) passes on short lessons, as the Lead ruled on 2026-11-13, and the long-lesson wait is a known limit. The 4 GB reference PC above cannot run this model. The Lead moved the AI candidate to a 16 GB Hub on 2026-11-01.
+
+| Part | Spec | Why (measured on the 16 GB laptop, `results/v3-qwen3-reap/`) |
+|---|---|---|
+| RAM | **16 GB minimum** | `llama-server` peaks at about 10.5 GB (10,773 MB) with 1 or 2 learners. The budget is below |
+| Memory modules | **Two (dual channel) recommended** | Writing a reply stayed at 11.8 tokens/s from 4 to 12 threads, which points to memory speed as the limit (one module, 25 to 27 GB/s). Inferred, not tested on a two-module machine |
+| CPU | **4 cores or more**; more cores shorten the wait on long lessons | Reading the prompt got about 1.6 times faster from 4 to 12 threads. Long lessons (about 1,500 to 1,775 prompt tokens) wait a median 22 to 25 s for the first token at 4 threads |
+| Disk | About 10 GB free for the model file (9.3 GB), on an SSD | The model is read from disk at start, and again if RAM runs short (see above) |
+| OS | Xubuntu 24.04 | The requirement above |
+| Learners at once | 1 slot meets the PRD's 8 to 15 tokens/s (11.9 per reply). With 2, each reply streams at 4.5 | The slot count is set after the run on the real pilot Hub (the Lead, 2026-10-30) |
+
+**RAM budget on a 16 GB Hub:**
+| | MB |
+|---|---|
+| Installed | 16,384 |
+| Firmware, Xubuntu, the Hub and the reserve (as in the 4 GB table above) | −1,650 |
+| Left for the model | ≈ 14,700 |
+| REAP-15B peak, 1 or 2 learners | 10,773 |
+| **Spare** | **≈ 3,900** |
+
 ## Open items (not built in this step)
-* **The AI model in the installer.** The issue asks the Lead whether the model (about 1.5 GB or more) ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
+* **The AI model in the installer.** The issue asks the Lead whether the model ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The candidate in `docs/benchmarks/ai_model_evaluation.md` is a 9.3 GB file. The model is not chosen yet (1.5, #73). Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
 * **Client installers for the portal.** `/download` serves `<data_dir>/releases/`. Nothing in this step copies the student APK or the desktop installers there. They come from the mobile and desktop teams' builds and are copied there by hand until a later step owns it.
 * **Fresh-machine timing.** The "under 3 minutes" and "phones are not blocked" checks need a fresh Windows 10/11 PC or VM and a phone on the classroom router. See the PR's "How to test".
