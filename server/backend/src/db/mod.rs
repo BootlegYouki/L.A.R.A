@@ -208,6 +208,77 @@ mod tests {
         assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
     }
 
+    /// Contract #294 (for #11): a Hub that already holds quizzes upgrades with every quiz, question and
+    /// attempt kept. Rebuilding `quizzes` must not cascade into its questions and attempts, a quiz already
+    /// `CLOSED` gets `closed_at` from `updated_at`, and nothing counts as auto-submitted.
+    #[tokio::test]
+    async fn upgrading_adds_the_close_columns_and_keeps_every_quiz_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let pool = connect(dir.path()).await.unwrap();
+        let mut before = sqlx::migrate!("src/db/migrations");
+        before.migrations = before.migrations.iter().filter(|m| m.version <= 3).cloned().collect::<Vec<_>>().into();
+        before.run(&pool).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO users (id, lrn_or_id, full_name, role, pin_hash, created_at, updated_at)
+                 VALUES ('t', 'T-0001', 'Owner', 'TEACHER', 'x', 1, 1), ('s', '123456789012', 'Ana', 'STUDENT', 'x', 1, 1);
+             INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
+                 VALUES ('c', 'Science 4', 'A', 'K7M4QX', 't', 1, 1);
+             INSERT INTO quizzes (id, classroom_id, title, time_limit_minutes, status, started_at, created_at, updated_at)
+                 VALUES ('done', 'c', 'Closed quiz', 15, 'CLOSED', 2, 1, 20), ('live', 'c', 'Live quiz', 10, 'ACTIVE', 30, 25, 30);
+             INSERT INTO quiz_questions (id, quiz_id, order_index, question_text, question_type, options_json, points,
+                                         correct_answer, synonyms_json, created_at, updated_at)
+                 VALUES ('q1', 'done', 0, 'Plants need?', 'IDENTIFICATION', NULL, 2, 'sunlight', '[\"light\"]', 1, 1),
+                        ('q2', 'live', 0, 'Is water wet?', 'TRUE_FALSE', '[\"True\",\"False\"]', 1, 'True', NULL, 25, 25);
+             INSERT INTO quiz_attempts (id, quiz_id, student_id, status, started_at, created_at, submitted_at, score,
+                                        total_points, answers_json, updated_at)
+                 VALUES ('a1', 'done', 's', 'SUBMITTED', 3, 3, 9, 2, 2, '[{\"question_id\":\"q1\",\"selected_option\":\"light\"}]', 9),
+                        ('a2', 'live', 's', 'IN_PROGRESS', 31, 31, NULL, NULL, NULL, '[]', 31);",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        migrate(&pool).await.unwrap();
+        let quizzes: Vec<(String, String, Option<i64>, i64)> =
+            sqlx::query_as("SELECT id, status, closed_at, updated_at FROM quizzes ORDER BY id").fetch_all(&pool).await.unwrap();
+        assert_eq!(
+            quizzes,
+            vec![("done".into(), "CLOSED".into(), Some(20), 20), ("live".into(), "ACTIVE".into(), None, 30)],
+            "closed_at only for a quiz already closed"
+        );
+        let questions: Vec<(String, String, Option<String>)> =
+            sqlx::query_as("SELECT id, correct_answer, synonyms_json FROM quiz_questions ORDER BY id").fetch_all(&pool).await.unwrap();
+        assert_eq!(
+            questions,
+            vec![("q1".into(), "sunlight".into(), Some("[\"light\"]".into())), ("q2".into(), "True".into(), None)],
+            "the rebuild must not cascade into the questions"
+        );
+        let attempts: Vec<(String, String, Option<i64>, String, i64)> =
+            sqlx::query_as("SELECT id, status, score, answers_json, auto_submitted FROM quiz_attempts ORDER BY id")
+                .fetch_all(&pool)
+                .await
+                .unwrap();
+        assert_eq!(
+            attempts,
+            vec![
+                ("a1".into(), "SUBMITTED".into(), Some(2), "[{\"question_id\":\"q1\",\"selected_option\":\"light\"}]".into(), 0),
+                ("a2".into(), "IN_PROGRESS".into(), None, "[]".into(), 0),
+            ],
+            "every attempt kept, none auto-submitted"
+        );
+        assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
+        let second_active = sqlx::query(
+            "INSERT INTO quizzes (id, classroom_id, title, time_limit_minutes, status, created_at, updated_at)
+             VALUES ('other', 'c', 'Another', 5, 'ACTIVE', 40, 40)",
+        )
+        .execute(&pool)
+        .await;
+        assert!(second_active.is_err(), "uq_one_active_quiz_per_classroom must be back after the rebuild");
+        sqlx::query("DELETE FROM quizzes WHERE id = 'done'").execute(&pool).await.unwrap();
+        let left: i64 = sqlx::query_scalar("SELECT count(*) FROM quiz_questions WHERE quiz_id = 'done'").fetch_one(&pool).await.unwrap();
+        assert_eq!(left, 0, "the new children cascade from the new quizzes table");
+    }
+
     #[tokio::test]
     async fn first_run_creates_hub_meta_and_restarts_keep_it() {
         let dir = tempfile::tempdir().unwrap();
