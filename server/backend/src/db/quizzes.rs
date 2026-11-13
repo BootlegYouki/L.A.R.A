@@ -390,11 +390,14 @@ pub struct AttemptRow {
     pub submitted_at: Option<i64>,
     pub score: Option<i64>,
     pub total_points: Option<i64>,
+    /// Submitted by the close, not the learner: on-time work may replace it once (contract #293).
+    pub auto_submitted: bool,
 }
 
 pub async fn attempt_for(conn: &mut SqliteConnection, quiz_id: &str, student_id: &str) -> Result<Option<AttemptRow>, sqlx::Error> {
     sqlx::query_as(
-        "SELECT id, status, started_at, submitted_at, score, total_points FROM quiz_attempts WHERE quiz_id = ? AND student_id = ?",
+        "SELECT id, status, started_at, submitted_at, score, total_points, auto_submitted
+         FROM quiz_attempts WHERE quiz_id = ? AND student_id = ?",
     )
     .bind(quiz_id)
     .bind(student_id)

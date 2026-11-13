@@ -316,3 +316,94 @@ async fn who_may_close() {
     assert_eq!((status, body), (200, json!({"success": true})), "a co-teacher, in an archived class");
     assert_eq!(class.count("SELECT COUNT(*) FROM quizzes WHERE status = 'CLOSED'").await, 1);
 }
+
+async fn push(class: &Class, token: &str, attempt: Value) -> Value {
+    let (status, body) = class.hub.post_json("/api/sync/push", &json!({"quiz_attempts": [attempt]}), Some(token)).await;
+    assert_eq!(status, 200, "{body}");
+    body["receipts"][0].clone()
+}
+
+fn queued(id: &str, quiz: &str, started_at: i64, submitted_at: i64, answers: Value) -> Value {
+    json!({"id": id, "quiz_id": quiz, "started_at": started_at, "submitted_at": submitted_at, "answers": answers})
+}
+
+/// Contract #293 (the mock's `test_on_time_offline_work_replaces_the_close_auto_submit_once`). A held quiz,
+/// so the grade event on the replacement comes from the quiz being `CLOSED`.
+#[tokio::test]
+async fn on_time_offline_work_replaces_the_close_auto_submit_once() {
+    let class = Class::start().await;
+    let (quiz, questions) = started_quiz(&class, false).await;
+    let (_, begun) = begin(&class, &quiz, &class.learner_token).await;
+    let started_at = begun["started_at"].as_i64().unwrap();
+    let finished = now_ms();
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    assert_eq!(class.pull(&class.learner_token).await["quiz_attempts"][0]["score"], 0, "the auto-submit");
+    let mut learner = connect(&class.hub, &class.learner_token).await;
+
+    let mc_right = json!([{"question_id": questions[0], "selected_option": "Photosynthesis"}]);
+    let receipt = push(&class, &class.learner_token, queued("qa-offline", &quiz, started_at, finished, mc_right)).await;
+    assert_eq!(receipt["status"], "SYNCED", "{receipt}");
+    assert_eq!(class.pull(&class.learner_token).await["quiz_attempts"][0]["score"], 1, "the on-time answers replace it");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE score = 1 AND auto_submitted = 0").await, 1);
+    let graded = next_event(&mut learner).await;
+    assert_eq!((graded["event"].as_str(), graded["score"].as_i64()), (Some("EVENT_GRADE_CONFIRMED"), Some(1)), "{graded}");
+
+    let all_right = json!([{"question_id": questions[0], "selected_option": "Photosynthesis"}, {"question_id": questions[1], "selected_option": "plants"}]);
+    let again = push(&class, &class.learner_token, queued("qa-again", &quiz, started_at, finished, all_right)).await;
+    assert_eq!(again["status"], "SYNCED", "{again}");
+    assert_eq!(class.pull(&class.learner_token).await["quiz_attempts"][0]["score"], 1, "only once: never regraded after that");
+    nothing_within(&mut learner, 300).await;
+}
+
+/// The Lead's answer on #11 (contract #294): a device that auto-submits on `EVENT_QUIZ_CLOSED` finishes a
+/// little after the close, and up to 60 s after it still counts.
+#[tokio::test]
+async fn a_device_answering_at_the_close_keeps_its_answers() {
+    let class = Class::start().await;
+    let (_, ana) = class.add_learner("123456789013", true).await;
+    let (quiz, questions) = started_quiz(&class, true).await;
+    assert_eq!(begin(&class, &quiz, &class.learner_token).await.0, 200);
+    assert_eq!(begin(&class, &quiz, &ana).await.0, 200);
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    // Move the start and the close into the past, so a finish 61 s after the close is not capped at the Hub's now.
+    let now = now_ms();
+    let (started, closed) = (now - 5 * 60_000, now - 2 * 60_000);
+    let (started_text, closed_text) = (started.to_string(), closed.to_string());
+    class.exec("UPDATE quiz_attempts SET started_at = ?", &[started_text.as_str()]).await;
+    class.exec("UPDATE quizzes SET started_at = ?, closed_at = ?", &[started_text.as_str(), closed_text.as_str()]).await;
+
+    let (status, receipt) = submit(&class, &quiz, &class.learner_token, started, closed + 5_000, one_right(&questions)).await;
+    assert_eq!((status, receipt["score"].as_i64()), (200, Some(1)), "5 s after the close: {receipt}");
+    let (status, body) = submit(&class, &quiz, &ana, started, closed + 61_000, one_right(&questions)).await;
+    assert_eq!((status, code(&body)), (422, "TIME_LIMIT_EXCEEDED"), "61 s after the close: {body}");
+    assert_eq!(
+        class.count("SELECT COUNT(*) FROM quiz_attempts WHERE student_id <> (SELECT id FROM users WHERE lrn_or_id = '123456789012') AND score = 0 AND auto_submitted = 1").await,
+        1,
+        "Ana keeps the auto-submit"
+    );
+}
+
+#[tokio::test]
+async fn late_work_cannot_replace_the_close_auto_submit() {
+    let class = Class::start().await;
+    let (quiz, questions) = started_quiz(&class, true).await;
+    assert_eq!(begin(&class, &quiz, &class.learner_token).await.0, 200);
+    let twenty_ago = now_ms() - 20 * 60_000;
+    let twenty_text = twenty_ago.to_string();
+    class.exec("UPDATE quiz_attempts SET started_at = ?", &[twenty_text.as_str()]).await;
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+
+    let receipt = push(&class, &class.learner_token, queued("qa-late", &quiz, twenty_ago, now_ms() - 1_000, one_right(&questions))).await;
+    assert_eq!((receipt["status"].as_str(), receipt["reason"].as_str()), (Some("REJECTED"), Some("TIME_LIMIT_EXCEEDED")), "{receipt}");
+    assert_eq!(class.count("SELECT COUNT(*) FROM quiz_attempts WHERE score = 0 AND auto_submitted = 1").await, 1);
+}
+
+#[tokio::test]
+async fn a_teacher_still_cannot_submit_after_the_close() {
+    let class = Class::start().await;
+    let (quiz, questions) = started_quiz(&class, true).await;
+    assert_eq!(close(&class, &quiz, class.teacher()).await.0, 200);
+    let now = now_ms();
+    let (status, body) = submit(&class, &quiz, class.teacher(), now, now, one_right(&questions)).await;
+    assert_eq!((status, code(&body), message(&body)), (403, "FORBIDDEN", "Learners only"));
+}
