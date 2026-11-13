@@ -132,6 +132,9 @@ pub struct MaterialChunk {
     pub id: String,
     pub material_id: String,
     pub order_index: i64,
+    /// Left out when a chunk has none (bug #302): the desktop accepts a missing heading but refuses a null
+    /// one, and the whole pulled page with it. The contract makes `heading` optional.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub heading: Option<String>,
     pub text: String,
 }

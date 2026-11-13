@@ -4,8 +4,10 @@
 
 mod common;
 
-use common::uploads::{jpeg, material_form, submission_form, submission_form_at, Class, PDF};
+use common::uploads::{file_part, jpeg, material_form, submission_form, submission_form_at, Class, PDF};
 use lara_hub::auth::Role;
+use lara_hub::db::sync_revisions::{record_revision, Action, Scope};
+use reqwest::multipart::Form;
 use reqwest::Method;
 use serde_json::{json, Value};
 
@@ -205,4 +207,53 @@ async fn a_homework_turned_in_at_must_be_a_safe_whole_number() {
     let id = uuid::Uuid::new_v4().to_string();
     let (status, body) = class.upload(&path, Some(&class.learner_token), submission_form_at(&id, &jpeg("a"), "0")).await;
     assert_eq!((status, body["submitted_at"].as_i64()), (200, Some(0)), "{body}");
+}
+
+/// Bug #302: a handout's title names the lesson text before its first heading. A blank title left those
+/// chunks with no heading, which the pull sent as `null`. The rename route already refuses a blank title.
+#[tokio::test]
+async fn a_handout_with_a_blank_title_is_refused() {
+    let class = Class::start().await;
+    for blank in ["", "   "] {
+        let form = Form::new()
+            .text("classroom_id", class.id.clone())
+            .text("title", blank)
+            .text("file_type", "DOCUMENT")
+            .part("file", file_part("lesson.pdf", PDF));
+        let (status, body) = class.upload("/api/materials", Some(class.teacher()), form).await;
+        assert_eq!((status, body["error"]["message"].as_str()), (400, Some("title cannot be empty")), "{blank:?}");
+    }
+    assert_eq!(class.count("SELECT COUNT(*) FROM materials").await, 0);
+    assert!(class.files_in("tmp").is_empty());
+}
+
+/// Bug #302: a chunk with no heading (stored before this fix) is sent without the key. The desktop accepts a
+/// missing `heading` but refuses a `null` one, and the whole page with it; the contract makes it optional.
+#[tokio::test]
+async fn a_chunk_with_no_heading_is_sent_without_one() {
+    let class = Class::start().await;
+    let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "DOCUMENT", PDF)).await;
+    assert_eq!(status, 200, "{material}");
+    let material = material["id"].as_str().unwrap().to_owned();
+    let chunk = uuid::Uuid::new_v4().to_string();
+    let mut tx = lara_hub::db::begin_immediate(&class.hub.state().db).await.unwrap();
+    sqlx::query(
+        "INSERT INTO material_chunks (id, material_id, order_index, heading, text, created_at, updated_at)
+         VALUES (?, ?, 999, NULL, 'Plants make their own food.', 1, 1)",
+    )
+    .bind(&chunk)
+    .bind(&material)
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+    record_revision(&mut tx, Scope::class(&class.id), "material_chunks", &chunk, Action::Upsert, 1).await.unwrap();
+    tx.commit().await.unwrap();
+
+    let pulled = class.pull(&class.learner_token).await;
+    let row = pulled["material_chunks"].as_array().unwrap().iter().find(|c| c["id"] == chunk.as_str()).cloned().unwrap();
+    assert!(row.get("heading").is_none(), "the pull leaves the heading out: {row}");
+    let (status, chunks) = class.hub.get(&format!("/api/materials/{material}/chunks"), Some(&class.learner_token)).await;
+    assert_eq!(status, 200, "{chunks}");
+    let listed = chunks.as_array().unwrap().iter().find(|c| c["id"] == chunk.as_str()).cloned().unwrap();
+    assert!(listed.get("heading").is_none(), "so does the chunk list: {listed}");
 }
