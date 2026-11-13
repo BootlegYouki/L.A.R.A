@@ -53,6 +53,11 @@ async fn upload(
     let fields = ["classroom_id", "title", "file_type", "topic_id", "assignment_id", "announcement_id"];
     let mut form = read_form(&app.storage, &headers, multipart, &fields).await?;
     form.need(&["classroom_id", "title", "file_type"])?;
+    // The title names the text before the file's first heading; a blank one left those chunks with no heading
+    // (bug #302). The rename route refuses a blank title too.
+    if form.fields["title"].trim().is_empty() {
+        return Err(ApiError::bad_request("title cannot be empty"));
+    }
     let file = form.take_file()?;
     let file_type = form.fields["file_type"].as_str();
     if !FILE_TYPES.contains(&file_type) {

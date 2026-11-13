@@ -39,6 +39,7 @@ The desktop app checks every row it pulls (`desktop/src-tauri/src/sync.rs` `vali
   - the homework id and `turned_in_at`;
   - 17 cases across the REST routes that store pulled text.
 - Topic and announcement rename, quiz edit and admin setup read text through the same readers but aren't in the route table.
+- **A chunk with no heading** is sent without the `heading` key (bug #302). The desktop accepts a missing heading but refuses `null`. A blank material title on upload is 400, so new chunks always have one.
 - **A Hub database made before this fix** may already hold label ids or out-of-range values. Rehearse on a fresh database.
 
 ## Reset and offline behavior
