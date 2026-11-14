@@ -184,3 +184,103 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .class-teacher-list { list-style: none; margin: 0; padding: 0; }
 .class-teacher-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-bottom: 1px solid var(--color-lara-border); }
 .class-teacher-list small { display: block; }
+
+/* Video Lesson Page */
+.video-lesson-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.video-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.video-header .back-button {
+  flex-shrink: 0;
+}
+
+.video-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+  line-height: 40px;
+}
+
+.video-title-skeleton {
+  height: 40px;
+  width: 400px;
+  border-radius: 8px;
+}
+
+.video-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.video-skeleton {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+}
+
+/* Video Player Styles */
+.video-player-container { position: relative; width: 100%; max-width: 100%; background: #000; border-radius: 16px; overflow: hidden; }
+.video-wrapper { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+.video-element { width: 100%; height: 100%; display: block; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.video-controls { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent); padding: 48px 16px 16px; opacity: 0; transition: opacity 0.3s ease; }
+.video-wrapper:hover .video-controls, .video-controls:focus-within { opacity: 1; }
+.progress-container { position: relative; width: 100%; height: 12px; margin-bottom: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.2); cursor: pointer; user-select: none; -webkit-user-select: none; }
+.progress-container:active { cursor: grabbing; }
+.progress-track { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+.buffered-range { position: absolute; top: 0; bottom: 0; background: rgba(255, 255, 255, 0.4); border-radius: 6px; }
+.progress-bar { position: absolute; top: 0; left: 0; bottom: 0; background: var(--color-lara-primary); border-radius: 6px; transition: width 0.1s linear; }
+.controls-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.controls-left, .controls-right { display: flex; align-items: center; gap: 12px; }
+.control-button { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: white; font-size: 20px; cursor: pointer; transition: background 0.2s; }
+.control-button:hover { background: rgba(255, 255, 255, 0.2); }
+.control-button:active { transform: scale(0.95); }
+.time-display { color: white; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.volume-slider { width: 80px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); -webkit-appearance: none; appearance: none; outline: none; }
+.volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
+.volume-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; border: none; }
+.video-source-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; border-radius: 9999px; background: var(--color-lara-success-light); color: var(--color-lara-success-dark); font-size: 0.8125rem; font-weight: 800; }
+.video-source-badge i { font-size: 1rem; }
+
+/* Video lesson page styles */
+.video-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.video-actions .control {
+  min-width: 200px;
+}
+
+.video-download-banner {
+  margin-top: 16px;
+  text-align: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}

@@ -1,6 +1,7 @@
 mod account;
 mod discovery;
 mod sync;
+mod video;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn run() {
@@ -27,7 +28,10 @@ pub fn run() {
             sync::read_sync_queue,
             sync::count_queued_work,
             sync::apply_sync_receipts,
-            account::forget_account_session
+            account::forget_account_session,
+            video::get_material_by_id,
+            video::download_video_for_offline,
+            video::check_partial_download
         ])
         .plugin(
             tauri_plugin_sql::Builder::default()
