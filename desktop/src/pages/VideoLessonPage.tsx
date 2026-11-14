@@ -80,8 +80,10 @@ export default function VideoLessonPage({
   }, [materialId]);
 
   // Determine video source: local file or remote stream  
-  const videoSrc = material?.local_file_path
-    ? material.local_video_url ?? convertFileSrc(material.local_file_path, 'asset')
+  const [savedMaterial, setSavedMaterial] = useState<Material | null>(null);
+  const local = material?.local_file_path ? material : (savedMaterial?.id === materialId && savedMaterial?.local_file_path ? savedMaterial : null);
+  const videoSrc = local?.local_file_path && (offline || material?.local_file_path)
+    ? local.local_video_url ?? convertFileSrc(local.local_file_path, 'asset')
     : material && initialHub && token
     ? `http://${initialHub.ip}:${initialHub.http_port}${material.download_url}?token=${token}`
     : '';
@@ -182,6 +184,11 @@ export default function VideoLessonPage({
       // The database is already updated with local_file_path by the Rust command
       // Next time the user opens this video, it will load from disk automatically
       
+      const saved = await invoke<Material | null>('get_material_by_id', {
+        hub, userId, materialId: material.id,
+      });
+      setSavedMaterial(saved);
+
       // Just update our local state
       setHasPartialDownload(false);
       setDownloadComplete(true); // Show success banner
@@ -272,7 +279,7 @@ export default function VideoLessonPage({
   }
 
   // Offline state with no local file
-  if (offline && !material.local_file_path) {
+  if (offline && !local) {
     return (
       <div className="video-lesson-page">
         <div className="video-header">
@@ -322,7 +329,7 @@ export default function VideoLessonPage({
         <h1>{material.title}</h1>
       </div>
 
-      {offline && !material.local_file_path && (
+      {offline && !local && (
         <p role="status" className="hub-status-banner banner-amber">
           <i className="ph ph-wifi-slash" aria-hidden="true" />
           {t.video_offline_not_saved}
