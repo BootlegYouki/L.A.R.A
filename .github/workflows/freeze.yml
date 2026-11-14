@@ -1,0 +1,34 @@
+name: Defense Freeze
+
+# Discussion #297: features stop Wed 18 Nov, then only bug fixes, UI changes and tests until the defense.
+on:
+  pull_request:
+    branches:
+      - staging
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  freeze-guard:
+    name: Freeze Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the PR fits the freeze window
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+        run: |
+          # shortcut: dates are checked when the PR changes, not at merge time; re-run the check before merging.
+          today="${FREEZE_TODAY:-$(TZ=Asia/Manila date +%F)}"
+          has() { [[ " $LABELS " == *" $1 "* ]]; }
+          fix() { has type:bug || has scope:ui || has type:test || has type:doc; }
+          if [[ "$today" > "2026-11-23" ]]; then echo "Freeze over."; exit 0; fi
+          if [[ "$today" == "2026-11-22" || "$today" == "2026-11-23" ]]; then
+            echo "::error::No merges into staging on Sun 22 and Mon 23 Nov (#297). Hold this PR until after the defense."; exit 1
+          fi
+          if fix; then echo "Allowed: bug fix, UI change, test or docs."; exit 0; fi
+          if [[ "$today" < "2026-11-19" ]] && has freeze-exception; then echo "Allowed: in-progress work on the #297 list."; exit 0; fi
+          echo "::error::Freeze (#297): only bug fixes, UI changes and tests merge now. Label this PR type:bug, scope:ui or type:test (connectivity and real-Hub tests). Until Wed 18 Nov, the Lead may add freeze-exception to work on the #297 finish list. New features wait until after the defense."
+          exit 1
