@@ -47,6 +47,9 @@ import org.lara.app.AppContainer
 import org.lara.app.R
 import org.lara.app.domain.*
 import org.lara.app.ui.theme.*
+import org.lara.app.ui.components.ClassroomDetailHeader
+import org.lara.app.ui.components.ClassroomSurface
+import org.lara.app.ui.components.DiscoveryBanner
 
 @UnstableApi
 @Composable
@@ -94,53 +97,50 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
         dismissButton = { TextButton(onClick = { confirmRemoval = false }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
             Text(stringResource(R.string.video_remove_cancel))
         } })
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
-        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-        if (!fullscreen) {
-            TextButton(onClick = close, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_arrow_left), null, Modifier.size(24.dp))
-                Spacer(Modifier.width(LaraSpacing.S2))
-                Text(stringResource(R.string.video_back))
-            }
-            Text(material?.title ?: stringResource(R.string.video_title), style = MaterialTheme.typography.titleLarge)
-            if (state.loading) {
-                Text(stringResource(R.string.video_buffering))
-                Spacer(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(LaraColors.Border, LaraShapes.medium))
-            }
-            state.problem?.let { problem ->
-                if (problem == VideoProblem.UNAVAILABLE) {
-                    Surface(Modifier.size(80.dp), color = LaraColors.PrimaryLight, shape = CircleShape) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(painterResource(R.drawable.ic_play), null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
+    Column(Modifier.fillMaxSize()) {
+        if (!fullscreen) ClassroomDetailHeader(material?.title ?: stringResource(R.string.video_title), R.string.video_back, close)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+            if (!fullscreen) {
+                if (state.loading) {
+                    Text(stringResource(R.string.video_buffering))
+                    Spacer(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(LaraColors.Border, LaraShapes.medium))
+                }
+                state.problem?.let { problem ->
+                    if (problem == VideoProblem.UNAVAILABLE) {
+                        Surface(Modifier.size(80.dp), color = LaraColors.PrimaryLight, shape = CircleShape) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(painterResource(R.drawable.ic_play), null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
+                            }
                         }
+                        Text(stringResource(R.string.video_empty_title), style = MaterialTheme.typography.titleMedium)
                     }
-                    Text(stringResource(R.string.video_empty_title), style = MaterialTheme.typography.titleMedium)
-                }
-                VideoMessage(problemText(problem))
-                OutlinedButton(onClick = model::load, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                    Text(stringResource(R.string.video_retry))
-                }
-            }
-        }
-        state.source?.let { source ->
-            VideoPlayback(source, container::createVideoPlayer, playback, fullscreen,
-                onFullscreen = { fullscreen = it }, onRetry = model::load)
-        }
-        if (!fullscreen) {
-            if (state.source is VideoSource.Local) {
-                Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(painterResource(R.drawable.ic_check_circle), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                    Text(stringResource(R.string.video_local), color = LaraColors.PrimaryDark)
-                }
-                OutlinedButton(onClick = { confirmRemoval = true }, enabled = !state.removing,
-                    modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                    Icon(painterResource(R.drawable.ic_trash), null, Modifier.size(24.dp))
-                    Spacer(Modifier.width(LaraSpacing.S2))
-                    Text(stringResource(R.string.video_remove))
+                    VideoMessage(problemText(problem))
+                    OutlinedButton(onClick = model::load, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Text(stringResource(R.string.video_retry))
+                    }
                 }
             }
-            if (state.removing) Text(stringResource(R.string.video_removing))
-            else DownloadControls(download, model::save, model::pause)
+            state.source?.let { source ->
+                VideoPlayback(source, container::createVideoPlayer, playback, fullscreen,
+                    onFullscreen = { fullscreen = it }, onRetry = model::load)
+            }
+            if (!fullscreen) {
+                if (state.source is VideoSource.Local) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_check_circle), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+                        Text(stringResource(R.string.video_local), color = LaraColors.PrimaryDark)
+                    }
+                    OutlinedButton(onClick = { confirmRemoval = true }, enabled = !state.removing,
+                        modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                        Icon(painterResource(R.drawable.ic_trash), null, Modifier.size(24.dp))
+                        Spacer(Modifier.width(LaraSpacing.S2))
+                        Text(stringResource(R.string.video_remove))
+                    }
+                }
+                if (state.removing) Text(stringResource(R.string.video_removing))
+                else DownloadControls(download, model::save, model::pause)
+            }
         }
     }
 }
@@ -373,40 +373,40 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
 
 @Composable
 internal fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () -> Unit) {
-    val downloading = state.phase == DownloadPhase.DOWNLOADING
-    val percent = if (state.total > 0) (state.bytes * 100 / state.total).toInt() else 0
-    if (downloading || state.phase == DownloadPhase.PAUSED || state.phase == DownloadPhase.COMPLETE) {
-        val label = when (state.phase) {
-            DownloadPhase.DOWNLOADING -> R.string.video_downloading
-            DownloadPhase.COMPLETE -> R.string.video_downloaded
-            else -> R.string.video_paused
+    ClassroomSurface {
+        Text(stringResource(R.string.video_home_title), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.video_home_help), style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
+        val downloading = state.phase == DownloadPhase.DOWNLOADING
+        val percent = if (state.total > 0) (state.bytes * 100 / state.total).toInt() else 0
+        if (downloading || state.phase == DownloadPhase.PAUSED || state.phase == DownloadPhase.COMPLETE) {
+            val label = when (state.phase) {
+                DownloadPhase.DOWNLOADING -> R.string.video_downloading
+                DownloadPhase.COMPLETE -> R.string.video_downloaded
+                else -> R.string.video_paused
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(if (state.phase == DownloadPhase.COMPLETE) R.drawable.ic_check_circle else R.drawable.ic_download),
+                    null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+                Text(stringResource(label), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            }
+            Text(stringResource(R.string.video_progress, percent), style = MaterialTheme.typography.bodyLarge)
+            LinearProgressIndicator(progress = { percent / 100f }, color = LaraColors.Primary, trackColor = LaraColors.Border,
+                modifier = Modifier.fillMaxWidth().height(LaraSpacing.S3).clip(LaraShapes.large))
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(if (state.phase == DownloadPhase.COMPLETE) R.drawable.ic_check_circle else R.drawable.ic_download),
-                null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-            Text(stringResource(label), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        }
-        Text(stringResource(R.string.video_progress, percent), style = MaterialTheme.typography.bodyMedium)
-        LinearProgressIndicator(progress = { percent / 100f }, color = LaraColors.Primary, trackColor = LaraColors.Border,
-            modifier = Modifier.fillMaxWidth().height(LaraSpacing.S3).clip(LaraShapes.large))
-    }
-    if (state.phase == DownloadPhase.FAILED) Text(stringResource(R.string.video_download_failed), style = MaterialTheme.typography.titleMedium)
-    state.problem?.let { VideoMessage(problemText(it)) }
-    if (state.phase != DownloadPhase.COMPLETE) {
-        Button(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-            Text(stringResource(if (downloading) R.string.video_cancel
-                else if (state.phase == DownloadPhase.PAUSED || state.bytes > 0) R.string.video_resume else R.string.video_save))
+        if (state.phase == DownloadPhase.FAILED) Text(stringResource(R.string.video_download_failed), style = MaterialTheme.typography.titleMedium)
+        state.problem?.let { VideoMessage(problemText(it)) }
+        if (state.phase != DownloadPhase.COMPLETE) {
+            Button(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                Text(stringResource(if (downloading) R.string.video_cancel
+                    else if (state.phase == DownloadPhase.PAUSED || state.bytes > 0) R.string.video_resume else R.string.video_save))
+            }
         }
     }
 }
 
 @Composable
 private fun VideoMessage(message: Int) {
-    Row(Modifier.fillMaxWidth().background(LaraColors.WarningLight, LaraShapes.medium).padding(LaraSpacing.S3),
-        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-        Icon(painterResource(R.drawable.ic_warning_circle), null, Modifier.size(24.dp), tint = LaraColors.WarningDark)
-        Text(stringResource(message), color = LaraColors.WarningDark, style = MaterialTheme.typography.bodyMedium)
-    }
+    DiscoveryBanner(message, warning = true, success = false)
 }
 
 private fun problemText(problem: VideoProblem): Int = when (problem) {

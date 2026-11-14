@@ -1,0 +1,1693 @@
+[
+  {
+    "suite": {
+      "name": "org.lara.app.data.AuthIntegrationTest",
+      "tests": "7",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:40",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "13.869"
+    },
+    "tests": [
+      {
+        "name": "registrationSendsName",
+        "time": "13.366",
+        "failure": null
+      },
+      {
+        "name": "wrongPinAndRateLimitPreserveExistingCache",
+        "time": "0.154",
+        "failure": null
+      },
+      {
+        "name": "teacherLoginUsesReturnedTeacherRole",
+        "time": "0.071",
+        "failure": null
+      },
+      {
+        "name": "rejectedAdminNeverReachesRoomOrTokenStorage",
+        "time": "0.063",
+        "failure": null
+      },
+      {
+        "name": "redirectsAreNotFollowed",
+        "time": "0.04",
+        "failure": null
+      },
+      {
+        "name": "loginPersistsProfileAndRestoresAfterHubStopsEvenWhenTokenExpired",
+        "time": "0.08",
+        "failure": null
+      },
+      {
+        "name": "sameUserCanReauthenticateAfterHubAddressChangesButDifferentUserCannot",
+        "time": "0.095",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.DocumentCornersTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:54",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.002"
+    },
+    "tests": [
+      {
+        "name": "rejectsCrossedCollapsedAndOutOfBoundsCorners",
+        "time": "0.002",
+        "failure": null
+      },
+      {
+        "name": "acceptsFullPageAndPerspectiveCorners",
+        "time": "0.0",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.EnrollmentNoticePersistenceTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:54",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.457"
+    },
+    "tests": [
+      {
+        "name": "noticesAreScopedByAccountAndHubAndMalformedEntriesAreIgnored",
+        "time": "0.247",
+        "failure": null
+      },
+      {
+        "name": "pendingSurvivesReopenWithoutInventingAnEnrollment",
+        "time": "0.109",
+        "failure": null
+      },
+      {
+        "name": "restrictiveStatusSurvivesReopenAndPreservesClassTitle",
+        "time": "0.101",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.EnrollmentRoomTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:54",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.222"
+    },
+    "tests": [
+      {
+        "name": "anotherLearnersEnrollmentIsNeverShown",
+        "time": "0.152",
+        "failure": null
+      },
+      {
+        "name": "authoritativeEnrollmentUnlocksAndRemainsReadableWithoutAnyNetwork",
+        "time": "0.07",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.HomeworkMockTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:55",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.046"
+    },
+    "tests": [
+      {
+        "name": "queuedPhotoReachesTheMockAndSurvivesASubsequentPull",
+        "time": "0.046",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.HomeworkPhotoTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:35:55",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "8.314"
+    },
+    "tests": [
+      {
+        "name": "transparentGalleryImagesKeepBlackInkOnWhitePaper",
+        "time": "7.188",
+        "failure": null
+      },
+      {
+        "name": "reviewSourceIsLosslessAndFinalPhotoKeepsTheByteLimit",
+        "time": "0.676",
+        "failure": null
+      },
+      {
+        "name": "scalesCorrectsOrientationAndDeletesOnlyThePrivateSource",
+        "time": "0.369",
+        "failure": null
+      },
+      {
+        "name": "malformedImageCreatesNoCompressedFileAndKeepsTheSourceForRecovery",
+        "time": "0.081",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.HomeworkReceiptMigrationTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:03",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.197"
+    },
+    "tests": [
+      {
+        "name": "versionTwoKeepsQueuedPhotosAndSession",
+        "time": "0.197",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.HomeworkRepositoryTest",
+      "tests": "9",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:03",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "1.167"
+    },
+    "tests": [
+      {
+        "name": "discardingAnOldDraftCannotDeleteAQueuedAttachment",
+        "time": "0.113",
+        "failure": null
+      },
+      {
+        "name": "lateAndGradedRejectionsKeepWorkWithoutRetrying",
+        "time": "0.205",
+        "failure": null
+      },
+      {
+        "name": "refusesUnownedFilesAndRemovedLearners",
+        "time": "0.152",
+        "failure": null
+      },
+      {
+        "name": "pullKeepsQueuedPhotoBeforeAdoptingAnotherDevicesCanonicalId",
+        "time": "0.12",
+        "failure": null
+      },
+      {
+        "name": "forbiddenReceiptKeepsTheFileAndReason",
+        "time": "0.098",
+        "failure": null
+      },
+      {
+        "name": "aMissingFileDoesNotBlockOtherQueuedHomework",
+        "time": "0.127",
+        "failure": null
+      },
+      {
+        "name": "queuesDurablyAndRetriesWithTheSameId",
+        "time": "0.139",
+        "failure": null
+      },
+      {
+        "name": "resubmissionUsesTheExistingIdentity",
+        "time": "0.12",
+        "failure": null
+      },
+      {
+        "name": "refusesToUploadWorkBoundToAnotherHub",
+        "time": "0.091",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.HomeworkTransportTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:04",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.654"
+    },
+    "tests": [
+      {
+        "name": "neverFollowsRedirects",
+        "time": "0.54",
+        "failure": null
+      },
+      {
+        "name": "rejectsReceiptsForAnotherLearner",
+        "time": "0.086",
+        "failure": null
+      },
+      {
+        "name": "streamsMultipartAndAcceptsTheHubsCanonicalSubmissionId",
+        "time": "0.028",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.ManagedClassArchiveTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:05",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.108"
+    },
+    "tests": [
+      {
+        "name": "archivedClassRemainsReadableInManagementAndNeverBecomesEditable",
+        "time": "0.108",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.RoomBehaviorTest",
+      "tests": "11",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:05",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "1.219"
+    },
+    "tests": [
+      {
+        "name": "missingRosterUserIsAllowedAndLaterResolves",
+        "time": "0.095",
+        "failure": null
+      },
+      {
+        "name": "quizLockoutIsPerLearnerAndPendingAttemptSurvivesRefresh",
+        "time": "0.1",
+        "failure": null
+      },
+      {
+        "name": "classworkAndCachedFilePathsRemainAvailableWithoutNetwork",
+        "time": "0.125",
+        "failure": null
+      },
+      {
+        "name": "entityChecksRejectInvalidValuesBeforeWrites",
+        "time": "0.049",
+        "failure": null
+      },
+      {
+        "name": "fileDatabasePersistsCursorAndRecordsAcrossReopen",
+        "time": "0.119",
+        "failure": null
+      },
+      {
+        "name": "batchRollsBackDataAndCursorOnForeignKeyFailure",
+        "time": "0.099",
+        "failure": null
+      },
+      {
+        "name": "streamStateFlowStartsLoadingAndUpdatesFromLocalWrites",
+        "time": "0.109",
+        "failure": null
+      },
+      {
+        "name": "uniqueKeysRollBackEntireBatch",
+        "time": "0.105",
+        "failure": null
+      },
+      {
+        "name": "completeContractGraphPersistsAllSixteenTables",
+        "time": "0.142",
+        "failure": null
+      },
+      {
+        "name": "repositoryQueuesCommentWithoutHubAndProtectsItFromRefreshAndDelete",
+        "time": "0.171",
+        "failure": null
+      },
+      {
+        "name": "deleteBatchRemovesSyncedCommentsAndCascadesMaterialChunks",
+        "time": "0.103",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.SavedRosterRefresherTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:06",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.863"
+    },
+    "tests": [
+      {
+        "name": "staleActorCannotSaveARosterAfterAccountChanges",
+        "time": "0.133",
+        "failure": null
+      },
+      {
+        "name": "conflictingEnrollmentIdentityRollsBackNamesAndStatuses",
+        "time": "0.102",
+        "failure": null
+      },
+      {
+        "name": "savedStatusAndIdentityUseTheRosterEnrollmentId",
+        "time": "0.122",
+        "failure": null
+      },
+      {
+        "name": "newPendingRowAndProfileAreInsertedWithoutSync",
+        "time": "0.091",
+        "failure": null
+      },
+      {
+        "name": "freshTeacherClassComesFromRestBeforeAnyRoster",
+        "time": "0.297",
+        "failure": null
+      },
+      {
+        "name": "failedRequestLeavesCachedPendingRosterReadable",
+        "time": "0.114",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.SchemaParityTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "1",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:07",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.334"
+    },
+    "tests": [
+      {
+        "name": "parityAssertionDetectsRemovedColumn",
+        "time": "0.188",
+        "failure": null
+      },
+      {
+        "name": "allSixteenTablesMatchActualContractIncludingConstraints",
+        "time": "0.146",
+        "failure": "java.lang.AssertionError: enrollments exported fields expected:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], created_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}> but was:<{id=[TEXT, 1, null, 1], classroom_id=[TEXT, 1, null, 0], student_id=[TEXT, 1, null, 0], status=[TEXT, 1, 'PENDING', 0], joined_at=[INTEGER, 1, null, 0], updated_at=[INTEGER, 1, null, 0]}>"
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.StreamReadingTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:08",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "1.808"
+    },
+    "tests": [
+      {
+        "name": "disabledCommentsNeverEnterTheQueueAndEnabledOnesKeepTheirIdentity",
+        "time": "0.275",
+        "failure": null
+      },
+      {
+        "name": "interruptedTransferLeavesNoPartialFileOrSavedPath",
+        "time": "0.302",
+        "failure": null
+      },
+      {
+        "name": "oversizeResponseIsRejectedBeforeTheBodyIsRead",
+        "time": "0.276",
+        "failure": null
+      },
+      {
+        "name": "redirectsAreNotFollowedAndFailedDownloadHasNoCachedPath",
+        "time": "0.228",
+        "failure": null
+      },
+      {
+        "name": "handoutDownloadsWithBearerAndReopensWithoutTheHub",
+        "time": "0.288",
+        "failure": null
+      },
+      {
+        "name": "renamingMaterialKeepsItsFileAndTombstonesRemoveOnlyUnreferencedFiles",
+        "time": "0.436",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.SyncDtoTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:09",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.207"
+    },
+    "tests": [
+      {
+        "name": "pushUsesWireFieldsAndOmitsLocalStateAndAuthor",
+        "time": "0.115",
+        "failure": null
+      },
+      {
+        "name": "heldScoresAndRejectedReceiptsSurviveSerialization",
+        "time": "0.021",
+        "failure": null
+      },
+      {
+        "name": "publicUserMappingKeepsNullableIdentityAndRejectsAdmin",
+        "time": "0.02",
+        "failure": null
+      },
+      {
+        "name": "minimalPullPreservesSequenceAndEmptyCollections",
+        "time": "0.044",
+        "failure": null
+      },
+      {
+        "name": "announcementMappingUsesContractBooleanDefault",
+        "time": "0.006",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.TeacherClassApiTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.104"
+    },
+    "tests": [
+      {
+        "name": "typedCommandsSerializeContractFieldsAndRejectWrongAccountBeforeSending",
+        "time": "0.104",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.TeacherClassMockTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.079"
+    },
+    "tests": [
+      {
+        "name": "createdClassCanBeJoinedAndRemovalRevokesLearnerAfterSync",
+        "time": "0.079",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.TeacherClassPolicyTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.014"
+    },
+    "tests": [
+      {
+        "name": "onlyOwnerCanEditSettingsButBothTeachersCanRemoveLearners",
+        "time": "0.009",
+        "failure": null
+      },
+      {
+        "name": "archiveMakesAllClassCommandsReadOnly",
+        "time": "0.003",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.TeacherClassTransportTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.095"
+    },
+    "tests": [
+      {
+        "name": "commandsUseContractRoutesAndNeverFollowRedirects",
+        "time": "0.095",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.ClassManagementRepositoryTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.111"
+    },
+    "tests": [
+      {
+        "name": "teacherClassesUseAuthenticatedRestGet",
+        "time": "0.02",
+        "failure": null
+      },
+      {
+        "name": "rosterAndBothDecisionsFollowContractWithBearerAndOnlyStudentReference",
+        "time": "0.044",
+        "failure": null
+      },
+      {
+        "name": "unsafeClassPathNeverSendsCredentials",
+        "time": "0.007",
+        "failure": null
+      },
+      {
+        "name": "rosterWithoutEnrollmentIdIsRejected",
+        "time": "0.016",
+        "failure": null
+      },
+      {
+        "name": "joinRequestDecodingRequiresAllContractFieldsAndRedactsSensitiveValues",
+        "time": "0.009",
+        "failure": null
+      },
+      {
+        "name": "forbiddenDecisionRemainsFailureForRollback",
+        "time": "0.013",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.EnrollmentApiTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.075"
+    },
+    "tests": [
+      {
+        "name": "redirectedJoinDoesNotForwardBearerToken",
+        "time": "0.023",
+        "failure": null
+      },
+      {
+        "name": "joinUsesOnlyCanonicalCodeAndBearerHeader",
+        "time": "0.015",
+        "failure": null
+      },
+      {
+        "name": "expiredForeignAndWrongHubSessionsNeverSendCredentials",
+        "time": "0.009",
+        "failure": null
+      },
+      {
+        "name": "invalidCodePreservesServerErrorCode",
+        "time": "0.013",
+        "failure": null
+      },
+      {
+        "name": "classroomListRecoversServerReportedPendingState",
+        "time": "0.014",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.HubUrlPolicyTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.018"
+    },
+    "tests": [
+      {
+        "name": "secureUrlsAllowValidHostsWithoutDnsResolution",
+        "time": "0.004",
+        "failure": null
+      },
+      {
+        "name": "cleartextRejectsOutsideBoundariesPublicHostsAndLookalikes",
+        "time": "0.007",
+        "failure": null
+      },
+      {
+        "name": "cleartextAllowsOnlyApprovedIpv4RangesIncludingTheirBoundaries",
+        "time": "0.004",
+        "failure": null
+      },
+      {
+        "name": "malformedUrlsUnsupportedSchemesAndAmbiguousAuthoritiesFailClosed",
+        "time": "0.002",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.MockTeacherApprovalFlowTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.085"
+    },
+    "tests": [
+      {
+        "name": "freshTeacherRestAndCanonicalLearnerSyncApproveAndSurviveReopen",
+        "time": "0.085",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.RealtimeClientTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:10",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "3.518"
+    },
+    "tests": [
+      {
+        "name": "firstFrameAuthenticatesAndOnlyOwnPostHandshakeApprovalIsPublished",
+        "time": "1.265",
+        "failure": null
+      },
+      {
+        "name": "unauthorizedCloseStopsReconnectsAndReportsSessionExpiry",
+        "time": "0.252",
+        "failure": null
+      },
+      {
+        "name": "temporaryHandshakeFailureReconnectsThenAuthenticates",
+        "time": "1.943",
+        "failure": null
+      },
+      {
+        "name": "retryBackoffIsBoundedAndMalformedEventsAreIgnored",
+        "time": "0.049",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.discovery.DiscoveryLogicTest",
+      "tests": "5",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:14",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.074"
+    },
+    "tests": [
+      {
+        "name": "manualInputValidatesOctetsPortsAndPolicy",
+        "time": "0.018",
+        "failure": null
+      },
+      {
+        "name": "deduplicatesSourcesAndExpiresWithoutSleeping",
+        "time": "0.011",
+        "failure": null
+      },
+      {
+        "name": "malformedTruncatedAndDisallowedBeaconsAreIgnored",
+        "time": "0.039",
+        "failure": null
+      },
+      {
+        "name": "parsesContractBeaconAndIgnoresFutureMetadata",
+        "time": "0.002",
+        "failure": null
+      },
+      {
+        "name": "discoveredEndpointsUseTheSameSecurityBoundary",
+        "time": "0.001",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.data.remote.discovery.HubProbeTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:14",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.073"
+    },
+    "tests": [
+      {
+        "name": "checksExistingPortalAndAlwaysReleasesConnection",
+        "time": "0.012",
+        "failure": null
+      },
+      {
+        "name": "redirectsErrorsAndNonPortalResponsesNeverCountAsSuccess",
+        "time": "0.061",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.domain.enrollment.ClassCodeTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:14",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.002"
+    },
+    "tests": [
+      {
+        "name": "draftsRemainEditableUntilSixCharactersHaveBeenEntered",
+        "time": "0.001",
+        "failure": null
+      },
+      {
+        "name": "ambiguousCharactersAndMalformedCodesAreRejected",
+        "time": "0.0",
+        "failure": null
+      },
+      {
+        "name": "displayHyphenNeverReachesTheRequest",
+        "time": "0.0",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.media.DownloadManagerTest",
+      "tests": "13",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:14",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "1.334"
+    },
+    "tests": [
+      {
+        "name": "changedValidatorNeverAppendsNewRepresentation",
+        "time": "0.377",
+        "failure": null
+      },
+      {
+        "name": "truncatedResponseRetainsOnlyReceivedBytes",
+        "time": "0.093",
+        "failure": null
+      },
+      {
+        "name": "completePartialFinalizesWithoutAnotherRequest",
+        "time": "0.061",
+        "failure": null
+      },
+      {
+        "name": "corruptFileIsNotFinalized",
+        "time": "0.075",
+        "failure": null
+      },
+      {
+        "name": "cancellationClosesABlockedBodyPromptly",
+        "time": "0.028",
+        "failure": null
+      },
+      {
+        "name": "insufficientDiskSpaceStopsBeforeRequest",
+        "time": "0.015",
+        "failure": null
+      },
+      {
+        "name": "boundedRangesProgressAndAtomicCompletion",
+        "time": "0.039",
+        "failure": null
+      },
+      {
+        "name": "mismatchedRangeDoesNotWriteBytes",
+        "time": "0.19",
+        "failure": null
+      },
+      {
+        "name": "interruptionSurvivesManagerRecreationAndUsesIfRange",
+        "time": "0.053",
+        "failure": null
+      },
+      {
+        "name": "unwritableValidatorIsAStorageError",
+        "time": "0.035",
+        "failure": null
+      },
+      {
+        "name": "ignoredResumeRangeRestartsInsteadOfAppending",
+        "time": "0.061",
+        "failure": null
+      },
+      {
+        "name": "unsatisfiableRangeDiscardsIncompatiblePartial",
+        "time": "0.036",
+        "failure": null
+      },
+      {
+        "name": "cancellationKeepsExactByteCountAndClosesResponse",
+        "time": "0.179",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.media.VideoIntegrationTest",
+      "tests": "13",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:15",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "4.294"
+    },
+    "tests": [
+      {
+        "name": "continuousReadAndForwardBackwardSeekUseBoundedAuthenticatedRanges",
+        "time": "0.641",
+        "failure": null
+      },
+      {
+        "name": "missingLocalFileClearsStalePathAndSelectsHub",
+        "time": "0.139",
+        "failure": null
+      },
+      {
+        "name": "redirectNeverForwardsCredentials",
+        "time": "0.333",
+        "failure": null
+      },
+      {
+        "name": "foreignAccountAndExpiredTokenCannotStream",
+        "time": "0.275",
+        "failure": null
+      },
+      {
+        "name": "savingUpdatesRoomAndOfflineSelectionDoesNotNeedAuth",
+        "time": "0.714",
+        "failure": null
+      },
+      {
+        "name": "materialChangeDuringTransferPreventsRoomReceipt",
+        "time": "0.25",
+        "failure": null
+      },
+      {
+        "name": "invalidRangeResponseFailsBeforeReadingVideo",
+        "time": "0.115",
+        "failure": null
+      },
+      {
+        "name": "removalRejectsForeignPathsWithoutDeletingAnything",
+        "time": "0.118",
+        "failure": null
+      },
+      {
+        "name": "unauthorizedResponseUsesSignInState",
+        "time": "0.294",
+        "failure": null
+      },
+      {
+        "name": "offlineRemoveClearsOnlyThisVideoAndCanDownloadAgain",
+        "time": "0.459",
+        "failure": null
+      },
+      {
+        "name": "tombstoneCleanupRemovesSavedAndPartialFiles",
+        "time": "0.331",
+        "failure": null
+      },
+      {
+        "name": "deletionFailureKeepsCompletedVideoAndRoomReceipt",
+        "time": "0.333",
+        "failure": null
+      },
+      {
+        "name": "duplicateSaveAndConcurrentPruneKeepOneCompletedFile",
+        "time": "0.29",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.media.VideoMockIntegrationTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:20",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.195"
+    },
+    "tests": [
+      {
+        "name": "actualMobileDataSourceReadsMockRangesAndRejectsPlaceholderDownload",
+        "time": "0.195",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.media.VideoViewModelTest",
+      "tests": "8",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:20",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.384"
+    },
+    "tests": [
+      {
+        "name": "wifiFailureRetriesThenCompletesWithoutDuplicateJobs",
+        "time": "0.312",
+        "failure": null
+      },
+      {
+        "name": "stopReleasesTransferAndStartResumesOnlyRequestedSave",
+        "time": "0.011",
+        "failure": null
+      },
+      {
+        "name": "cancelledTransportExceptionLeavesPausedBytesWithoutProblem",
+        "time": "0.014",
+        "failure": null
+      },
+      {
+        "name": "pauseCancelsTransferAndStopsRetries",
+        "time": "0.006",
+        "failure": null
+      },
+      {
+        "name": "invalidFileDoesNotEnterAutomaticRetryLoop",
+        "time": "0.006",
+        "failure": null
+      },
+      {
+        "name": "removalStorageFailureKeepsSavedSourceVisible",
+        "time": "0.008",
+        "failure": null
+      },
+      {
+        "name": "removeWaitsForCancelledTransferAndBlocksConcurrentSave",
+        "time": "0.016",
+        "failure": null
+      },
+      {
+        "name": "cancelledTransferCannotReportFailureOrOverwriteResumedProgress",
+        "time": "0.011",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.settings.AccountCacheTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:20",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.542"
+    },
+    "tests": [
+      {
+        "name": "legacyCacheStaysPrivateAcrossSwitch",
+        "time": "0.29",
+        "failure": null
+      },
+      {
+        "name": "firstAccountsNeverShareAMirror",
+        "time": "0.1",
+        "failure": null
+      },
+      {
+        "name": "unownedDataIsNotClaimed",
+        "time": "0.152",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.settings.LogoutTransportTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:21",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.016"
+    },
+    "tests": [
+      {
+        "name": "logoutUsesBearerAndDoesNotFollowRedirects",
+        "time": "0.016",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.settings.SettingsBehaviorTest",
+      "tests": "4",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:21",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.628"
+    },
+    "tests": [
+      {
+        "name": "confirmedOfflineSignOutKeepsQueueFilesProfileAndCursor",
+        "time": "0.339",
+        "failure": null
+      },
+      {
+        "name": "newQueuedItemsRequireANewConfirmation",
+        "time": "0.092",
+        "failure": null
+      },
+      {
+        "name": "emptyQueueSignsOutAndWrongHubNeverReceivesToken",
+        "time": "0.085",
+        "failure": null
+      },
+      {
+        "name": "allFourOwnQueueTypesRequireConfirmationWithoutClearingAnything",
+        "time": "0.111",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.settings.SettingsMockIntegrationTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:22",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.051"
+    },
+    "tests": [
+      {
+        "name": "logoutAndSwitchKeepAccountCaches",
+        "time": "0.051",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.settings.SettingsViewModelTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:22",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.232"
+    },
+    "tests": [
+      {
+        "name": "changingHubKeepsItsIntentWhenNewWorkRequiresConfirmationAgain",
+        "time": "0.148",
+        "failure": null
+      },
+      {
+        "name": "cancelingHubChangeCannotRedirectALaterNormalSignOut",
+        "time": "0.084",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.sync.HubReachabilityTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:22",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.027"
+    },
+    "tests": [
+      {
+        "name": "networkChangesProbeImmediatelyInsteadOfWaitingForPeriodicPoll",
+        "time": "0.027",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.sync.MockSyncIntegrationTest",
+      "tests": "1",
+      "skipped": "1",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:22",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.063"
+    },
+    "tests": [
+      {
+        "name": "actualMockPullQueueApprovalAndAnnouncementEventPersistIntoRoom",
+        "time": "0.063",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.sync.RejectedUploadMigrationTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:22",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.496"
+    },
+    "tests": [
+      {
+        "name": "realVersionOneDatabaseMigratesReceiptsWithoutLosingOrRejectingEditedWork",
+        "time": "0.496",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.sync.SyncBehaviorTest",
+      "tests": "27",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:23",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "3.974"
+    },
+    "tests": [
+      {
+        "name": "unknownGradeReceiptIsRetainedWithoutInventingAttemptIdentity",
+        "time": "0.324",
+        "failure": null
+      },
+      {
+        "name": "privateCommentAndQuizRejectionsPersistOnTheirRowsAndNeverRetry",
+        "time": "0.275",
+        "failure": null
+      },
+      {
+        "name": "newlyApprovedClassRescansOlderRecordsWithoutWipingQueuedWork",
+        "time": "0.143",
+        "failure": null
+      },
+      {
+        "name": "lateRejectionCannotRejectANewerEdit",
+        "time": "0.091",
+        "failure": null
+      },
+      {
+        "name": "pageUsersRecordsAndCursorCommitAtomicallyAndLearnerLrnsAreStripped",
+        "time": "0.112",
+        "failure": null
+      },
+      {
+        "name": "oldReceiptCannotAcknowledgeAnEditMadeWhileUploading",
+        "time": "0.079",
+        "failure": null
+      },
+      {
+        "name": "foreignOwnersAndUnfinishedQuizAttemptsAreNeverUploaded",
+        "time": "0.084",
+        "failure": null
+      },
+      {
+        "name": "failedResetRollsBackTheWipeAndQueueBinding",
+        "time": "0.084",
+        "failure": null
+      },
+      {
+        "name": "restActiveNoticeAndLegacyMetadataCannotGrantClassAccessWithoutSyncedEnrollment",
+        "time": "0.095",
+        "failure": null
+      },
+      {
+        "name": "hasMoreUsesCommittedSequenceAndNeverServerClock",
+        "time": "0.091",
+        "failure": null
+      },
+      {
+        "name": "syncApprovalSuppliesCanonicalAccessAndReconcilesPendingNoticeWithoutLosingQueuedWork",
+        "time": "0.185",
+        "failure": null
+      },
+      {
+        "name": "nameOnlyPullPreservesPreviouslySavedTeacherRosterIdentifier",
+        "time": "0.237",
+        "failure": null
+      },
+      {
+        "name": "syncedCommentTombstoneAndUnsupportedEntityAreHandledWithoutCursorLoss",
+        "time": "0.16",
+        "failure": null
+      },
+      {
+        "name": "resetPreservesAllQueuedWorkAndParentsAndBindsItToOldHub",
+        "time": "0.13",
+        "failure": null
+      },
+      {
+        "name": "unacknowledgedAndUnknownReceiptsNeverMarkWorkSynced",
+        "time": "0.108",
+        "failure": null
+      },
+      {
+        "name": "onlyReceiptedRowsBecomeSyncedAndRejectionReasonPersists",
+        "time": "0.104",
+        "failure": null
+      },
+      {
+        "name": "deferredTombstoneRunsAfterTheQueuedCommentIsAcknowledged",
+        "time": "0.191",
+        "failure": null
+      },
+      {
+        "name": "stalePageAndNonAdvancingPaginationAreRejected",
+        "time": "0.143",
+        "failure": null
+      },
+      {
+        "name": "slowRestSnapshotCannotOverwriteNewerSyncMembership",
+        "time": "0.119",
+        "failure": null
+      },
+      {
+        "name": "droppedResponseDoesNotChangeDatabase",
+        "time": "0.078",
+        "failure": null
+      },
+      {
+        "name": "openingAnUpgradedDatabaseClearsOnlyLegacyRestAccessAndPreservesQueuedWork",
+        "time": "0.156",
+        "failure": null
+      },
+      {
+        "name": "rejectedWorkAndAllItsParentsSurvivePullResetAndTombstonesWithoutRetry",
+        "time": "0.21",
+        "failure": null
+      },
+      {
+        "name": "rejectedFirstPageDoesNotStarveLaterQueuedRows",
+        "time": "0.2",
+        "failure": null
+      },
+      {
+        "name": "invalidChildRollsBackEarlierUpsertsAndCursor",
+        "time": "0.163",
+        "failure": null
+      },
+      {
+        "name": "tombstoneDoesNotCascadeAwayQueuedComments",
+        "time": "0.081",
+        "failure": null
+      },
+      {
+        "name": "officialSubmissionGradesDoNotOverwriteQueuedPhotoOrItsLocalPath",
+        "time": "0.105",
+        "failure": null
+      },
+      {
+        "name": "nameOnlyPullPreservesAuthenticatedIdentifierAndUpdatesName",
+        "time": "0.222",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.sync.SyncSchedulerTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:27",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.907"
+    },
+    "tests": [
+      {
+        "name": "lanWorkDoesNotRequireInternetValidationAndUsesBatteryGuardAndBackoff",
+        "time": "0.17",
+        "failure": null
+      },
+      {
+        "name": "reconnectWorkStartsWithoutWaitingForAnOfflineRetryChain",
+        "time": "0.737",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.navigation.ShellStateTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:27",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.005"
+    },
+    "tests": [
+      {
+        "name": "submittedAttemptAllowsTutorAgain",
+        "time": "0.004",
+        "failure": null
+      },
+      {
+        "name": "activeAttemptBlocksOnlyTutorForBothRolesEvenOffline",
+        "time": "0.0",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.auth.AuthViewModelTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:28",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.644"
+    },
+    "tests": [
+      {
+        "name": "registrationTrimsBeforeValidationAndRejectsContractLengthViolations",
+        "time": "0.35",
+        "failure": null
+      },
+      {
+        "name": "retryAfterBlocksManualAndAutomaticRetriesUntilTheWaitEnds",
+        "time": "0.294",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.discovery.DiscoveryFeedbackTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:28",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.001"
+    },
+    "tests": [
+      {
+        "name": "lostConnectionAndInterruptedScanningDoNotReportSearching",
+        "time": "0.001",
+        "failure": null
+      },
+      {
+        "name": "onlySuccessfulProbeReportsConnected",
+        "time": "0.0",
+        "failure": null
+      },
+      {
+        "name": "discoveryAloneNeverReportsConnected",
+        "time": "0.0",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.discovery.DiscoveryViewModelTest",
+      "tests": "2",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:28",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.026"
+    },
+    "tests": [
+      {
+        "name": "invalidEntryAndCancelledCheckNeverReportSuccess",
+        "time": "0.011",
+        "failure": null
+      },
+      {
+        "name": "lifecycleAndReconnectionKeepOneSubscriptionAndClearStaleResults",
+        "time": "0.015",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.enrollment.ClassCodeInputTest",
+      "tests": "3",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:28",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.047"
+    },
+    "tests": [
+      {
+        "name": "groupedAndUngroupedEditsDisplayIdenticallyWithoutRewritingTheirInput",
+        "time": "0.045",
+        "failure": null
+      },
+      {
+        "name": "allMappingsStayInBoundsIncludingInvalidAndEmptyDrafts",
+        "time": "0.001",
+        "failure": null
+      },
+      {
+        "name": "rawHyphenDoesNotShiftTheFollowingDigit",
+        "time": "0.0",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.enrollment.EnrollmentViewModelTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:28",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.352"
+    },
+    "tests": [
+      {
+        "name": "approvalNoticeAloneCannotOpenClassAndPendingBlocksAnOldActiveRow",
+        "time": "0.046",
+        "failure": null
+      },
+      {
+        "name": "wrongCodeKeepsDialogOpenWithFriendlyError",
+        "time": "0.062",
+        "failure": null
+      },
+      {
+        "name": "approvalRefreshUnlocksOnlyAfterCanonicalMembershipArrives",
+        "time": "0.073",
+        "failure": null
+      },
+      {
+        "name": "offlineJoinNeverCallsHubAndSavedActiveClassRemainsReadable",
+        "time": "0.05",
+        "failure": null
+      },
+      {
+        "name": "joinShowsPendingAndRequestsRefreshWithoutInventingRoomMembership",
+        "time": "0.069",
+        "failure": null
+      },
+      {
+        "name": "removalBlocksOldActiveCacheAndRemainsBlockedAfterModelRecreation",
+        "time": "0.05",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.teacher.RosterViewModelTest",
+      "tests": "6",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:29",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.234"
+    },
+    "tests": [
+      {
+        "name": "offlineActionsDoNotSendOrChangeSavedRoster",
+        "time": "0.056",
+        "failure": null
+      },
+      {
+        "name": "matchingJoinEventOpensSheetButForeignClassDoesNot",
+        "time": "0.034",
+        "failure": null
+      },
+      {
+        "name": "stoppingAndRestartingDoesNotDuplicateEventSubscriptions",
+        "time": "0.035",
+        "failure": null
+      },
+      {
+        "name": "successfulDecisionStaysOptimisticUntilRoomConfirmsWithoutWritingFakeRows",
+        "time": "0.039",
+        "failure": null
+      },
+      {
+        "name": "failedDecisionRollsBackOptimisticCountAndPreventsDuplicateRequests",
+        "time": "0.034",
+        "failure": null
+      },
+      {
+        "name": "joinDuringRefreshSchedulesAnotherPullRatherThanLosingTheRequest",
+        "time": "0.036",
+        "failure": null
+      }
+    ]
+  },
+  {
+    "suite": {
+      "name": "org.lara.app.ui.screens.teacher.TeacherClassVisibilityTest",
+      "tests": "1",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-11-13T09:36:29",
+      "hostname": "MacBook-Pro-Tamz.local",
+      "time": "0.001"
+    },
+    "tests": [
+      {
+        "name": "onlyOwnedOrCoTaughtUnarchivedClassesExposeApprovalControls",
+        "time": "0.001",
+        "failure": null
+      }
+    ]
+  }
+]

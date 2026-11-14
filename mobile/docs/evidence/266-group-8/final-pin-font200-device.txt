@@ -1,0 +1,6 @@
+
+org.lara.app.reading.Group8UiDeviceTest:.
+
+Time: 9.428
+
+OK (1 test)

@@ -1,0 +1,3 @@
+final-after {'passed': True, 'tests': 6, 'captures': 45, 'font_scale': '0.85', 'rotation': '0'}
+final-font200 {'passed': True, 'tests': 4, 'captures': 40, 'font_scale': '2.0', 'rotation': '0'}
+final-landscape200 {'passed': True, 'tests': 4, 'captures': 40, 'font_scale': '2.0', 'rotation': '1'}

@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import org.lara.app.R
 import org.lara.app.domain.Cached
 import org.lara.app.ui.components.DiscoveryBanner
+import org.lara.app.ui.screens.teacher.classes.ClassPersonCard
 import org.lara.app.ui.theme.*
 
 @Composable
@@ -36,7 +37,8 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
         Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                item { Text(stringResource(R.string.approval_title), style = MaterialTheme.typography.headlineSmall) }
+                item { Text(stringResource(R.string.approval_title), style = MaterialTheme.typography.headlineMedium) }
+                item { Text(stringResource(R.string.approval_review_help), style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary) }
                 item {
                     if (state.offline) DiscoveryBanner(R.string.approval_offline, warning = true, success = false)
                     else if (state.error != null) DiscoveryBanner(when (state.error) {
@@ -48,10 +50,12 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                 if (state.roster == Cached.Loading) item { ApprovalLoadingSkeleton() }
                 else if (state.pending.isEmpty()) item { Text(stringResource(R.string.approval_empty)) }
                 items(state.pending.take(1), key = { it.enrollment.id }) { member ->
-                    org.lara.app.ui.components.ClassroomSurface {
-                        Text(member.user?.fullName ?: stringResource(R.string.approval_learner),
-                            style = MaterialTheme.typography.titleMedium)
+                    ClassPersonCard(member.user?.fullName ?: stringResource(R.string.approval_learner), stringResource(R.string.classes_pending)) {
                         member.user?.lrnOrId?.let { Text(stringResource(R.string.approval_lrn, it)) }
+                        if (member.enrollment.studentId in state.busy) {
+                            LinearProgressIndicator(Modifier.fillMaxWidth(), color = LaraColors.PrimaryDark, trackColor = LaraColors.Border)
+                            Text(stringResource(R.string.approval_updating), style = MaterialTheme.typography.bodyLarge)
+                        }
                         val enabled = !state.offline && member.enrollment.studentId !in state.busy && member.user != null
                         // Vertical actions keep controls usable with large font sizes.
                         Button(onClick = { onDecision(member.enrollment.studentId, true) }, enabled = enabled,

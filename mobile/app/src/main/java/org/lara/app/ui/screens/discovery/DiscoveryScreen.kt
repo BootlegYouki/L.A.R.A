@@ -1,6 +1,11 @@
 package org.lara.app.ui.screens.discovery
 
 import org.lara.app.ui.components.DiscoveryBanner
+import org.lara.app.ui.components.ClassroomTopBar
+import org.lara.app.ui.components.ClassroomSurface
+import org.lara.app.ui.components.classFormInputScroll
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.imePadding
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -81,6 +86,7 @@ fun DiscoveryScreen(model: DiscoveryViewModel, onBack: () -> Unit) {
     val result by model.result.collectAsStateWithLifecycle()
     val connecting by model.connecting.collectAsStateWithLifecycle()
     var input by rememberSaveable { mutableStateOf("") }
+    val keyboard = LocalSoftwareKeyboardController.current
     val message = when {
         connecting -> R.string.discovery_checking
         result == ConnectionResult.UNREACHABLE -> R.string.discovery_unreachable
@@ -94,73 +100,67 @@ fun DiscoveryScreen(model: DiscoveryViewModel, onBack: () -> Unit) {
     val warning = !connecting && result != ConnectionResult.RESPONDING &&
         (result == ConnectionResult.UNREACHABLE || !state.wifiAvailable || state.warning)
     val success = !connecting && result == ConnectionResult.RESPONDING
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(LaraSpacing.S3),
-        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
-    ) {
-        item { Text(stringResource(R.string.discovery_title), style = MaterialTheme.typography.headlineMedium) }
-        item { HubBeaconPill(hubBeacon(state, result, connecting)) }
-        if (warning || success || connecting || state.scanning || hubs.isNotEmpty()) {
-            item { DiscoveryBanner(message, warning, success) }
-        }
-        item {
-            Text(stringResource(R.string.discovery_results), style = MaterialTheme.typography.labelLarge)
-        }
-        if (hubs.isEmpty()) {
-            item { Text(stringResource(R.string.discovery_empty), style = MaterialTheme.typography.bodyLarge) }
-            if (state.scanning) {
-                items(2) {
-                    Surface(
-                        color = LaraColors.Border, shape = LaraShapes.large,
+    Scaffold(Modifier.imePadding(), containerColor = LaraColors.Canvas, topBar = {
+        ClassroomTopBar(stringResource(R.string.discovery_title), back = onBack)
+    }) { insets ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(insets),
+            contentPadding = PaddingValues(LaraSpacing.S4),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
+        ) {
+            item { HubBeaconPill(hubBeacon(state, result, connecting)) }
+            if (warning || success || connecting || state.scanning || hubs.isNotEmpty()) {
+                item { DiscoveryBanner(message, warning, success) }
+            }
+
+            item {
+                ClassroomSurface {
+                    Text(stringResource(R.string.discovery_manual), style = MaterialTheme.typography.labelLarge)
+                    ManualHubInput(input, { input = it.take(32); model.clearResult() },
+                        result == ConnectionResult.INVALID_ADDRESS, connecting) { model.connect(input) }
+                    Button(
+                        onClick = { keyboard?.hide(); model.connect(input) }, enabled = !connecting,
                         modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
-                    ) {
-                        Text(stringResource(R.string.discovery_scanning), modifier = Modifier.padding(LaraSpacing.S4))
+                        colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
+                    ) { Text(stringResource(R.string.discovery_connect)) }
+                }
+            }
+            item {
+                Text(stringResource(R.string.discovery_results), style = MaterialTheme.typography.titleMedium)
+            }
+            if (hubs.isEmpty()) {
+                if (!state.scanning) item { Text(stringResource(R.string.discovery_empty), style = MaterialTheme.typography.bodyLarge) }
+                if (state.scanning) {
+                    items(2) {
+                        Surface(
+                            color = LaraColors.Border, shape = LaraShapes.large,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
+                        ) {
+                            Text(stringResource(R.string.discovery_scanning), modifier = Modifier.padding(LaraSpacing.S4))
+                        }
                     }
                 }
             }
-        }
-        items(hubs, key = { it.key }) { hub ->
-            OutlinedButton(
-                onClick = { model.connect(hub) }, enabled = !connecting,
-                shape = LaraShapes.large,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
-                modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
-            ) {
-                Column(Modifier.fillMaxWidth().padding(LaraSpacing.S3)) {
-                    Text(hub.name, style = MaterialTheme.typography.labelLarge)
-                    Text(stringResource(R.string.discovery_hub_address, hub.ip, hub.httpPort))
+            items(hubs, key = { it.key }) { hub ->
+                OutlinedButton(
+                    onClick = { model.connect(hub) }, enabled = !connecting,
+                    shape = LaraShapes.large,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(LaraSpacing.S3)) {
+                        Text(hub.name, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.discovery_hub_address, hub.ip, hub.httpPort))
+                    }
                 }
             }
-        }
-        item {
-            OutlinedButton(
-                onClick = model::retry,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
-                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
-            ) { Text(stringResource(R.string.discovery_retry)) }
-        }
-        item {
-            Column(
-                Modifier.padding(top = LaraSpacing.S2),
-                verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
-            ) {
-                Text(stringResource(R.string.discovery_manual), style = MaterialTheme.typography.labelLarge)
-                ManualHubInput(input, { input = it.take(32); model.clearResult() },
-                    result == ConnectionResult.INVALID_ADDRESS, connecting) { model.connect(input) }
-                Button(
-                    onClick = { model.connect(input) }, enabled = !connecting,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
-                    colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
-                ) { Text(stringResource(R.string.discovery_connect)) }
+            item {
+                OutlinedButton(
+                    onClick = model::retry,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+                ) { Text(stringResource(R.string.discovery_retry)) }
             }
-        }
-        item {
-            OutlinedButton(
-                onClick = onBack,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = LaraColors.PrimaryDark),
-                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
-            ) { Text(stringResource(R.string.back_action)) }
         }
     }
 }
@@ -216,7 +216,7 @@ private fun ManualHubInput(
                 disabledContainerColor = LaraColors.SurfaceSubtle,
             ),
             modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
-                .border(2.dp, when {
+                .classFormInputScroll().border(2.dp, when {
                     invalid -> LaraColors.Danger
                     focused -> LaraColors.Primary
                     else -> LaraColors.Border
