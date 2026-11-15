@@ -4,8 +4,8 @@
 
 > **Status: PROVISIONAL, scoring pending.**
 > - The REAP-15B run on prompt set version 3 is done, and its speed and RAM below are measured on a **simulated** Hub, a 16 GB laptop.
-> - The two blind score sheets are with the scorers: the Lead is scorer A and @OpenYaji scorer B, due Fri 13 Nov.
-> - No model is chosen and `MODEL_PATH` is not set.
+> - Scorer A (@dotjaypg) returned their sheet on 2026-11-14 with all 106 replies scored. Scorer B (@OpenYaji) is still scoring. Results are due in #304 by Tue 17 Nov.
+> - **The model is chosen** (the Lead, #304, 2026-11-14): REAP-15B stays the tutor model for the pilot and the defense, on a 16 GB Hub. The pass rates are reported below as scored. See "Decision".
 > - Speed passes criterion 5 on short lessons, which is how the Lead ruled it is judged (#73, 2026-11-13). The long-lesson wait is a known limit (below).
 
 ## What is still needed before a decision
@@ -13,13 +13,13 @@ The plan the Lead froze on #73 (2026-11-03), with the English-only rules of 2026
 1. **Two scorers** fill `score_scorer_a.csv` and `score_scorer_b.csv` alone, following `server/ai_eval/SCORING.md`. Scorers must not open `replies.jsonl`, `blind_key.json`, `runs.json` or `logs/`, which name the model.
 2. **Merge** with `report`. Settle disagreements in `disagreements.csv`; the Lead decides any that stay split. Paste the pass-rate tables into "Results: quality" below.
 3. **Cross-check** (allowed by the Lead on 2026-11-09). Only after both human sheets are done, Claude scores `score_claude.csv` on the same blind sheet, and `report --cross-check` adds its own section. It is in no pass rate and settles no disagreement.
-4. **Decide** against the pass mark in #73. Then write the Hub spec in `server/docs/hub_hardware.md`, and record `MODEL_PATH` and `server/docs/slm_inference_queue.md`.
+4. **Report** the pass rates against the pass mark in #73, as scored, in "Results: quality" and "Decision". The model, the Hub spec in `server/docs/hub_hardware.md`, `MODEL_PATH` and `server/docs/slm_inference_queue.md` follow the Lead's decision of 2026-11-14.
 
 ## Candidate: Qwen3-30B-A3B-Instruct-2507 REAP-15B (prompt set version 3)
 **Why this model.**
 - On 2026-11-01 the Lead made the tutor English-only for the pilot. In the Lead's side test, the 1 to 3B models (stage 1 and 2, under "Earlier candidates") either refused everything or leaked the answer.
 - The Lead then picked this 15B mixture-of-experts model (about 3B parameters active per token) for a **16 GB Hub**.
-- It needs about 11 GB of RAM, so a 4 GB or 8 GB PC cannot load it. On 2026-11-02 the Lead put the 30B model for a 32 GB Hub on hold, to be tried only if this one fails scoring.
+- It needs about 11 GB of RAM, so a 4 GB or 8 GB PC cannot load it. On 2026-11-14 the Lead set the Hub budget at 16 GB, which also caps the model size.
 
 ### Setup
 | Setting | Value |
@@ -81,8 +81,21 @@ The Lead chose (b). Criterion 5 passes on short lessons: 64 of 64 replies under 
 ## Results: quality (pending)
 _From `report` once both sheets are back: the pass rate per criterion for 1 and 2 learners, the agreement between the two scorers, the settled disagreements, the Filipino and Taglish table (its "Answered instead" column is the rate the Lead asked for), and the cross-check in its own section._
 
-## Decision (pending)
-_No Hub model is chosen yet. Write it here with its numbers once quality is scored (criterion 5 is settled above). If REAP-15B passes, record `MODEL_PATH=models/Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf` and the Hub spec. If it fails scoring, the next step the Lead set is the 30B model on a 32 GB Hub._
+### Prompt behavior on the sheet (counted, not scored)
+Scorer A's notes raised these. The figures are counts of reply text on the 106-reply blind sheet, not verdicts, and they come from the run as it is. The fixes are in #311, after the defense. This run is scored under the current rules, so both sheets stay comparable.
+- **The decline template is overused.** "I can't give you the answer itself, but I will help you find it!" appears in 82 of 106 replies (59 of 78 at each learner count), including ordinary lesson questions.
+- **Repeats.** 46 replies fall into two groups of identical text, so 44 are word-for-word repeats: 33 are the same template line ending in "What is the first step?", and 13 are the bare decline line.
+- **The English-only decline misfires both ways.** Only 9 of the 43 replies to Filipino or Taglish messages are the exact rule 6 line. 4 replies to English messages use it (R0036, R0049, R0071, R0085).
+
+## Decision
+**The Lead decided on 2026-11-14 (#304):**
+- **Model:** Qwen3-30B-A3B-Instruct-2507 REAP-15B, Q4_K_M, stays the tutor model for the pilot and the defense, and the AI stays on.
+- **`MODEL_PATH=models/Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf`**
+- **Hub:** the budget is 16 GB, so there is no 32 GB Hub and no 30B model. This replaces the 32 GB step in #73's "If the 15B fails" plan. The spec is in `server/docs/hub_hardware.md` ("Hub spec for the AI tutor").
+- **Speed:** criterion 5 passes on short lessons; the long-lesson wait is a known limit (above).
+- **Learners at once:** still set after the run on the real pilot Hub (the Lead, 2026-10-30). One learner meets the PRD's 8 to 15 tokens/s; two do not (4.5 each).
+
+**Quality (pending scorer B):** _the pass rates go here as scored, against the pass mark in #73. As the Lead framed it, write them up as: the model shows potential; the remaining failures are mostly prompt behavior (above); and the model size is limited by the Hub hardware budget._
 
 ## Earlier candidates (prompt set version 1, the 4 GB reference PC)
 Stage 1 (PR #171) and stage 2 ran small models against the original reference school PC: Linux, 4 cores, 4 GB RAM. The Lead's English-only change and side test on 2026-11-01 replaced this plan, and none of these were scored. They are kept as the record of why the small models were dropped.
