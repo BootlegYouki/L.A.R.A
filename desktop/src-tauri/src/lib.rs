@@ -56,6 +56,12 @@ pub fn run() {
                             sql: include_str!("../migrations/003_submission_received_at.sql"),
                             kind: MigrationKind::Up,
                         },
+                        Migration {
+                            version: 4,
+                            description: "audit_created_at",
+                            sql: include_str!("../migrations/004_audit_created_at.sql"),
+                            kind: MigrationKind::Up,
+                        },
                     ],
                 )
                 .build(),

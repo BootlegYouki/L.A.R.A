@@ -10,6 +10,7 @@ import { savedClassesQuery } from '../src/services/db';
 const migration = readFileSync(new URL('../src-tauri/migrations/001_client_offline.sql', import.meta.url), 'utf8');
 const upgrade = readFileSync(new URL('../src-tauri/migrations/002_sync_rejections.sql', import.meta.url), 'utf8');
 const receiptMigration = readFileSync(new URL('../src-tauri/migrations/003_submission_received_at.sql', import.meta.url), 'utf8');
+const auditMigration = readFileSync(new URL('../src-tauri/migrations/004_audit_created_at.sql', import.meta.url), 'utf8');
 const contract = readFileSync(new URL('../../contracts/schema/client_offline.sql', import.meta.url), 'utf8');
 
 describe('client database', () => {
@@ -32,7 +33,8 @@ describe('client database', () => {
       db.exec(migration);
       db.exec(upgrade);
       db.exec(receiptMigration);
-      db.exec('PRAGMA user_version = 3');
+      db.exec(auditMigration);
+      db.exec('PRAGMA user_version = 4');
     }
     return db;
   }
@@ -66,7 +68,7 @@ describe('client database', () => {
     expect(reopened.prepare("SELECT sync_status FROM announcement_comments WHERE id = 'comment-1'").get())
       .toMatchObject({ sync_status: 'QUEUED_FOR_SYNC' });
     expect(reopened.prepare('PRAGMA foreign_keys').get()).toMatchObject({ foreign_keys: 1 });
-    expect(() => reopened.exec("INSERT INTO enrollments VALUES ('bad', 'missing', 'learner-1', 'ACTIVE', 1, 1)")).toThrow();
+    expect(() => reopened.exec("INSERT INTO enrollments VALUES ('bad', 'missing', 'learner-1', 'ACTIVE', 1, 1, 1)")).toThrow();
   });
 
   it('does not show another account’s cached classes or pending/removed enrollments', () => {
@@ -74,10 +76,10 @@ describe('client database', () => {
     for (const id of ['active', 'pending', 'removed', 'other']) {
       local.prepare('INSERT INTO classrooms VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, ?)').run(id, id, 'A', id, 'teacher', 1, 1);
     }
-    local.prepare("INSERT INTO enrollments VALUES ('e1', 'active', 'learner', 'ACTIVE', 1, 1)").run();
-    local.prepare("INSERT INTO enrollments VALUES ('e2', 'pending', 'learner', 'PENDING', 1, 1)").run();
-    local.prepare("INSERT INTO enrollments VALUES ('e3', 'removed', 'learner', 'REMOVED', 1, 1)").run();
-    local.prepare("INSERT INTO enrollments VALUES ('e4', 'other', 'someone-else', 'ACTIVE', 1, 1)").run();
+    local.prepare("INSERT INTO enrollments VALUES ('e1', 'active', 'learner', 'ACTIVE', 1, 1, 1)").run();
+    local.prepare("INSERT INTO enrollments VALUES ('e2', 'pending', 'learner', 'PENDING', 1, 1, 1)").run();
+    local.prepare("INSERT INTO enrollments VALUES ('e3', 'removed', 'learner', 'REMOVED', 1, 1, 1)").run();
+    local.prepare("INSERT INTO enrollments VALUES ('e4', 'other', 'someone-else', 'ACTIVE', 1, 1, 1)").run();
     expect(local.prepare(savedClassesQuery).all()).toEqual([]);
     local.exec("INSERT INTO sync_state VALUES ('current_user_id', 'learner', 1)");
     expect(local.prepare(savedClassesQuery).all().map((row) => row.id)).toEqual(['active']);
@@ -112,6 +114,12 @@ it('upgrades queued rows without clearing them and stores contracted rejection r
     local.exec(upgrade);
     local.exec('COMMIT');
     local.exec(receiptMigration);
+    local.exec(auditMigration);
+    // Verify backfill: created_at should equal the source timestamp
+    expect(local.prepare("SELECT created_at,submitted_at FROM assignment_submissions WHERE id='s'").get())
+      .toMatchObject({created_at:1,submitted_at:1});
+    expect(local.prepare("SELECT created_at,started_at FROM quiz_attempts WHERE id='attempt'").get())
+      .toMatchObject({created_at:1,started_at:1});
     expect(local.prepare("SELECT file_path,sync_status,received_at FROM assignment_submissions WHERE id='s'").get())
       .toMatchObject({file_path:'photo.jpg',sync_status:'QUEUED_FOR_SYNC',received_at:null});
     expect(local.prepare("SELECT answers_json,sync_status FROM quiz_attempts WHERE id='attempt'").get()).toMatchObject({answers_json:'[1]',sync_status:'QUEUED_FOR_SYNC'});
