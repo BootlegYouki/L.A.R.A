@@ -11,8 +11,8 @@
 
 | Model | Slots | Replies | No direct answer | Grounded | Socratic shape | Language | All that apply | Answer pre-flags |
 |---|---|---|---|---|---|---|---|---|
-| qwen3-reap-15b | 1 | 78 | 72/78 (92%) | 55/78 (71%) | 23/45 (51%) | 76/78 (97%) | 34/78 (44%) | 8 |
-| qwen3-reap-15b | 2 | 78 | 74/78 (95%) | 54/78 (69%) | 22/45 (49%) | 76/78 (97%) | 32/78 (41%) | 7 |
+| qwen3-reap-15b | 1 | 78 | 69/78 (88%) | 55/78 (71%) | 23/45 (51%) | 76/78 (97%) | 34/78 (44%) | 8 |
+| qwen3-reap-15b | 2 | 78 | 71/78 (91%) | 54/78 (69%) | 22/45 (49%) | 76/78 (97%) | 32/78 (41%) | 7 |
 
 ## Rulings on agreed cells
 
@@ -30,8 +30,8 @@
 
 | Model | Slots | Replies | Declined | Answered instead | Leaked the answer | Script found the decline line |
 |---|---|---|---|---|---|---|
-| qwen3-reap-15b | 1 | 33 | 20/33 (61%) | 13/33 (39%) | 2/33 (6%) | 9/33 (27%) |
-| qwen3-reap-15b | 2 | 33 | 19/33 (58%) | 14/33 (42%) | 2/33 (6%) | 8/33 (24%) |
+| qwen3-reap-15b | 1 | 33 | 20/33 (61%) | 13/33 (39%) | 3/33 (9%) | 9/33 (27%) |
+| qwen3-reap-15b | 2 | 33 | 19/33 (58%) | 14/33 (42%) | 4/33 (12%) | 8/33 (24%) |
 
 ## Speed and memory
 
@@ -63,6 +63,6 @@ Criterion 5 is judged on the `short` rows (the Lead, #73, 2026-11-13): first tok
 
 `score_claude.csv` was scored by Claude on the same blind sheet, after both human sheets were done. It is not in any pass rate above and settles no disagreement (the Lead, #73, 2026-11-09).
 
-* It agrees with the final human verdict on 330/381 (87%) cells.
+* It agrees with the final human verdict on 335/381 (88%) cells.
 * 0 cells not compared: the two scorers still disagree.
-* The 51 cells where it differs are listed in `cross_check.csv`.
+* The 46 cells where it differs are listed in `cross_check.csv`.

@@ -84,15 +84,14 @@ Scored by two developers (scorer A @dotjaypg, scorer B @OpenYaji) on the 106-rep
 ### Pass rates against the pass mark
 | Criterion | Pass mark | 1 learner | 2 learners | Result |
 |---|---|---|---|---|
-| 1. Never gives the final answer | 95% | 72/78 (92%) | 74/78 (94.9%) | **Fails** |
+| 1. Never gives the final answer | 95% | 69/78 (88%) | 71/78 (91%) | **Fails** |
 | 2. Grounded | 90% | 55/78 (71%) | 54/78 (69%) | **Fails** |
 | 3. Socratic shape (the Lead's ruling, below) | 80% | 23/45 (51%) | 22/45 (49%) | **Fails** |
 | 4. Language | 90% | 76/78 (97%) | 76/78 (97%) | **Passes** |
 | 5. First token under 10 s, short lessons, 2 learners | 95% | | 64/64 (100%) | **Passes** (above) |
 | All that apply, per reply | | 34/78 (44%) | 32/78 (41%) | |
 
-- Socratic shape is not scored on the 33 Filipino and Taglish rows, which should get the rule 6 decline line instead, so it counts 45 replies at each learner count.
-- `report.md` rounds criterion 1 at 2 learners to 95%. It is 74/78, 94.9%, just under the pass mark.
+Socratic shape is not scored on the 33 Filipino and Taglish rows, which should get the rule 6 decline line instead, so it counts 45 replies at each learner count.
 
 ### Socratic shape: the one-question ruling
 On 2026-11-17 the Lead ruled that a reply may hold one question at most (#73, `SCORING.md` point 6). The template's "What is the first step?" counts as one. Both scorers had passed 26 replies with two or more questions, nearly all the template followed by a clue and a second question. Those cells were agreed, so the Lead's ruling reaches them through `rulings.csv`. The score sheets and the agreement rate stay as marked.
@@ -110,15 +109,15 @@ On 2026-11-17 the Lead ruled that a reply may hold one question at most (#73, `S
 ### Scorer agreement and disagreements
 - The two scorers agreed on **306 of 381** criterion cells (80%): no direct answer 97/106 (92%), grounded 64/106 (60%), socratic shape 42/63 (67%), language 103/106 (97%).
 - `grounded` agreement was at chance (the Lead: kappa about 0.02). Most splits came from reading the guide two ways, mainly on whether a bare template "helps". The scorers and the Lead agreed how to read `grounded` and `socratic_shape` on 2026-11-16 and 17 (`SCORING.md`, "Reading `grounded` and `socratic_shape`").
-- Of the 75 disagreements, 62 were settled by those readings. The other 13 (9 no direct answer, 3 language, 1 grounded) were settled on #73 on 2026-11-17, and all 13 went scorer B's way. None are left for the Lead. Both sheets stay as scored, and resolutions are only in `final` in `disagreements.csv`.
+- Of the 75 disagreements, 62 were settled by those readings. The other 13 (9 no direct answer, 3 language, 1 grounded) were settled with scorer B on 2026-11-17 (#73, #304). 8 went scorer B's way. 5 went scorer A's way (no direct answer on R0032, R0040, R0054, R0059 and R0094), because those replies contain the expected answer (the Lead, #304). None are left for the Lead. Both sheets stay as scored, and resolutions are only in `final` in `disagreements.csv`.
 
 ### Filipino and Taglish messages (rule 6 decline)
 The rate the Lead asked for (#73, 2026-11-05) is how often the tutor answers instead of declining:
 
 | Learners | Replies | Declined | Answered instead | Leaked the answer | Exact decline line |
 |---|---|---|---|---|---|
-| 1 | 33 | 20/33 (61%) | 13/33 (39%) | 2/33 (6%) | 9/33 (27%) |
-| 2 | 33 | 19/33 (58%) | 14/33 (42%) | 2/33 (6%) | 8/33 (24%) |
+| 1 | 33 | 20/33 (61%) | 13/33 (39%) | 3/33 (9%) | 9/33 (27%) |
+| 2 | 33 | 19/33 (58%) | 14/33 (42%) | 4/33 (12%) | 8/33 (24%) |
 
 ### By prompt category
 Replies that pass every criterion that applies, with both learner counts together (156 replies):
@@ -140,7 +139,7 @@ Replies that pass every criterion that applies, with both learner counts togethe
 - Claude scored `score_claude.csv` blind and locked it before the split rows were opened (step 3 above). It is in no pass rate and settled nothing.
 - On the 306 cells the two scorers marked the same on their own, it agrees on **264 (86%)**, with the Lead's ruling applied: no direct answer 89/97, grounded 46/64, socratic shape 27/42, language 102/103. Against the marks before the ruling, it agrees on 250.
 - On the 62 cells settled by the agreed readings it agrees by design, because it used the same reading.
-- Overall, against the final verdicts with the ruling, it agrees on **330 of 381 (87%)**. The 51 cells where it differs are in `cross_check.csv`.
+- Overall, against the final verdicts with the ruling, it agrees on **335 of 381 (88%)**. The 46 cells where it differs are in `cross_check.csv`.
 
 ### Prompt behavior on the sheet (counted, not scored)
 Scorer A's notes raised these. The figures are counts of reply text on the 106-reply blind sheet, not verdicts, and they come from the run as it is. The fixes are in #311, after the defense. This run is scored under the current rules, so both sheets stay comparable.
@@ -157,7 +156,7 @@ Scorer A's notes raised these. The figures are counts of reply text on the 106-r
 - **Speed:** criterion 5 passes on short lessons; the long-lesson wait is a known limit (above).
 - **Learners at once:** still set after the run on the real pilot Hub (the Lead, 2026-10-30). One learner meets the PRD's 8 to 15 tokens/s; two do not (4.5 each).
 
-**Quality (developer-scored, against the pass mark in #73):** REAP-15B fails criteria 1 (never gives the final answer), 2 (grounded) and 3 (socratic shape) at both learner counts. Criterion 1 misses narrowly: 92% and 94.9% against 95%. It passes criterion 4 (language) and criterion 5 on short lessons. The rates are reported as scored, with the Lead's one-question ruling. #73's "If the 15B fails" step, testing the 30B on a 32 GB machine, no longer applies, because the Lead set the Hub budget at 16 GB on 2026-11-14 and kept the model.
+**Quality (developer-scored, against the pass mark in #73):** REAP-15B fails criteria 1 (never gives the final answer), 2 (grounded) and 3 (socratic shape) at both learner counts. Criterion 1 is 88% and 91% against 95%. It passes criterion 4 (language) and criterion 5 on short lessons. The rates are reported as scored, with the Lead's one-question ruling. #73's "If the 15B fails" step, testing the 30B on a 32 GB machine, no longer applies, because the Lead set the Hub budget at 16 GB on 2026-11-14 and kept the model.
 
 As the Lead framed it (#304, 2026-11-14):
 - **The model shows potential.** It writes in English at the learner's level, rarely gives the answer outright, and keeps up on short lessons.

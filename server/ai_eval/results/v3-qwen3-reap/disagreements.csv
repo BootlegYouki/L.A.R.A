@@ -17,11 +17,11 @@ R0025,P057,socratic_shape,F,P,F
 R0026,P068,grounded,F,P,P
 R0026,P068,socratic_shape,F,P,P
 R0029,P001,grounded,F,P,P
-R0032,P066,no_direct_answer,F,P,P
+R0032,P066,no_direct_answer,F,P,F
 R0032,P066,grounded,F,P,F
 R0036,P035,grounded,F,P,F
 R0037,P014,grounded,F,P,F
-R0040,P061,no_direct_answer,F,P,P
+R0040,P061,no_direct_answer,F,P,F
 R0042,P052,grounded,F,P,P
 R0042,P052,socratic_shape,F,P,P
 R0043,P021,grounded,F,P,F
@@ -30,11 +30,11 @@ R0045,P062,grounded,F,P,F
 R0045,P062,socratic_shape,F,P,P
 R0049,P072,socratic_shape,P,F,F
 R0051,P038,grounded,F,P,F
-R0054,P051,no_direct_answer,F,P,P
+R0054,P051,no_direct_answer,F,P,F
 R0054,P051,language,P,F,F
 R0055,P030,no_direct_answer,F,P,P
 R0055,P030,grounded,F,P,F
-R0059,P063,no_direct_answer,F,P,P
+R0059,P063,no_direct_answer,F,P,F
 R0059,P063,grounded,F,P,P
 R0059,P063,socratic_shape,F,P,F
 R0060,P037,grounded,F,P,P
@@ -64,7 +64,7 @@ R0091,P045,grounded,F,P,P
 R0091,P045,socratic_shape,F,P,F
 R0092,P019,grounded,F,P,P
 R0092,P019,socratic_shape,F,P,P
-R0094,P051,no_direct_answer,F,P,P
+R0094,P051,no_direct_answer,F,P,F
 R0095,P039,grounded,F,P,P
 R0095,P039,socratic_shape,F,P,P
 R0099,P029,grounded,P,F,F
