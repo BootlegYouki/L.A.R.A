@@ -1,0 +1,900 @@
+{
+  "R0001": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P018",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\nThink about whether each subject is singular or plural, and remember: a singular subject needs a verb with -s, while a plural subject uses a verb without -s.  \n\nNow, ask yourself: Is \"My brother\" a singular or plural subject?",
+    "slots": [
+      2
+    ]
+  },
+  "R0002": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P015",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0003": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P053",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0004": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P027",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0005": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P030",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nNow, think about this: How does the quantity supplied change when the price of a product changes?",
+    "slots": [
+      1
+    ]
+  },
+  "R0006": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P073",
+    "reply": "You're on the right idea! Let's check: start at 8, then count on 5 numbers — 9, 10, 11, 12, 13. So 8 + 5 = 13.  \n\nNow, think: what is the next step when you add numbers like this?",
+    "slots": [
+      1
+    ]
+  },
+  "R0007": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P054",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0008": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P001",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nStart at 8, then count on 5 more numbers — what’s the next number after 8?",
+    "slots": [
+      2
+    ]
+  },
+  "R0009": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P013",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nPantangi po ba o pambalana?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0010": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P031",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about the lesson: Does a virus grow on its own, like plants or people?",
+    "slots": [
+      2
+    ]
+  },
+  "R0011": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P023",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Think about the type of movement described in the lesson for the formation of the Philippine Trench.*\n\nWhat kind of boundary is it when one plate moves under another?",
+    "slots": [
+      2
+    ]
+  },
+  "R0012": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P014",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      2
+    ]
+  },
+  "R0013": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P069",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Remember, a 15% discount means the sale price is less than the original cost.  \n*Leading question:* How much is 15% of 400 pesos?",
+    "slots": [
+      2
+    ]
+  },
+  "R0014": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P044",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue: Think about finding the least common denominator (LCD) for 5 and 2.*  \nWhat is the smallest number that both 5 and 2 divide into evenly?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0015": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P036",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0016": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P038",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue:* Remember, the lesson mentions that \"Si Emilio Jacinto ang tinaguriang Utak ng Katipunan.\"  \n*Leading question:* What does \"Utak ng Katipunan\" refer to in the lesson?",
+    "slots": [
+      2
+    ]
+  },
+  "R0017": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P070",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: to find how much you save, you multiply the discount rate by the original price.",
+    "slots": [
+      1
+    ]
+  },
+  "R0018": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P059",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0019": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P003",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about finding the smallest number that both 4 and 8 can divide into evenly — that’s your least common denominator. What number works for both?",
+    "slots": [
+      2
+    ]
+  },
+  "R0020": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P056",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: When you factor the equation, the numbers you find should add up to 7 and multiply to 10. Try thinking about what those numbers should be. What are the two numbers that multiply to 10 and add to 7?",
+    "slots": [
+      2
+    ]
+  },
+  "R0021": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P074",
+    "reply": "Try thinking: what is the smallest number that both 2 and 3 can divide into evenly? Think of multiplying them, or counting by 2s and 3s. What number do you see?",
+    "slots": [
+      2
+    ]
+  },
+  "R0022": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P061",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n**Clue:** Think about what each one does in the ecosystem — one makes food, the other eats it.\n\n**Leading question:** Which organism creates energy or food for others to use?",
+    "slots": [
+      2
+    ]
+  },
+  "R0023": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P047",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Remember, \"demand\" is about how much people want something, and it changes when the price changes.  \n\n*Leading question:* When the price of something goes up, what usually happens to how much people want it?",
+    "slots": [
+      2
+    ]
+  },
+  "R0024": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P010",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0025": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P057",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0026": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P068",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0027": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P060",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: When two subjects are joined by \"and\", the verb should be plural. So think about how to apply that rule to number 3.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0028": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P016",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0029": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P001",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nTry this: Start at 8, then count on 5 numbers — 9, 10, 11, 12, 13. What do you get when you count on 5 from 8?",
+    "slots": [
+      1
+    ]
+  },
+  "R0030": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P074",
+    "reply": "Try thinking: what is the smallest number that both 2 and 3 can divide into evenly? Think of a number that is a multiple of both. What is it?",
+    "slots": [
+      1
+    ]
+  },
+  "R0031": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P046",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0032": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P066",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Mutualism is when two organisms help each other in a relationship.  \n*Leading question:* Can you think of a situation where two organisms both benefit by working together in an ecosystem?",
+    "slots": [
+      2
+    ]
+  },
+  "R0033": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P004",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: A plural subject takes a plural verb, which has no -s. So, think about whether \"the children\" is a singular or plural subject.",
+    "slots": [
+      2
+    ]
+  },
+  "R0034": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P020",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0035": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P076",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1
+    ]
+  },
+  "R0036": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P035",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0037": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P014",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue: Think about finding the least common denominator (LCD) for 2 and 3.*  \n*Leading question: What is the smallest number that both 2 and 3 divide into evenly?*",
+    "slots": [
+      1
+    ]
+  },
+  "R0038": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P017",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0039": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P069",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\nThink about how a 15% discount affects the cost — does it mean the sale price is less than 400 pesos? If so, how much is taken off?",
+    "slots": [
+      1
+    ]
+  },
+  "R0040": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P061",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n**Small clue:** Think about who makes their own food — that’s the producer.  \n**Leading question:** Which organisms are able to create their own food, and which ones must eat other organisms to survive?",
+    "slots": [
+      1
+    ]
+  },
+  "R0041": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P023",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Think about the type of movement described in the lesson text for the formation of the Philippine Trench.*\n\nWhat kind of boundary is it when one plate moves under another?",
+    "slots": [
+      1
+    ]
+  },
+  "R0042": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P052",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0043": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P021",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*(Clue: Think about the name mentioned in the lesson text related to Maria Clara.)*  \n*(Leading question: Which person in the text is described as being connected to Ibarra?)*",
+    "slots": [
+      2
+    ]
+  },
+  "R0044": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P073",
+    "reply": "You're on the right idea! You counted 8, then 9, 10, 11, 12 — that’s 5 numbers, not 4. Let’s try again: start at 8 and count on 5 numbers. What’s the last number you reach?",
+    "slots": [
+      2
+    ]
+  },
+  "R0045": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P062",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0046": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P006",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about two numbers that multiply to 6 and add up to -5. Can you find them?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0047": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P009",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nFirst, add all the numbers: 8, 6, 9, 7, and 10. What do they add up to?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0048": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P031",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about the lesson: Does a virus grow on its own, like a plant or a person?",
+    "slots": [
+      1
+    ]
+  },
+  "R0049": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P072",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0050": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P032",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0051": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P038",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about the lesson text: it mentions that \"Si Emilio Jacinto ang tinaguriang Utak ng Katipunan.\" What does this clue suggest about the Utak of Katipunan?",
+    "slots": [
+      1
+    ]
+  },
+  "R0052": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P067",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nUse cross products: multiply the diagonal numbers. What do you get when you multiply 3 and 20?",
+    "slots": [
+      1
+    ]
+  },
+  "R0053": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P004",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: A plural subject takes a plural verb — which means no -s at the end. So, think about whether \"children\" is a singular or plural subject.",
+    "slots": [
+      1
+    ]
+  },
+  "R0054": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P051",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Remember, \"Go foods\" are about things like **kanin, tinapay, kamote** — think about what they might mean.  \n\n*Leading question:* What do you think \"kanin\" and \"tinapay\" could be related to in everyday life?",
+    "slots": [
+      1
+    ]
+  },
+  "R0055": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P030",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Remember, the law of supply is about how quantity supplied changes when the price changes.*\n\n*Leading question: How does the quantity supplied change when the price of a product increases or decreases?*",
+    "slots": [
+      2
+    ]
+  },
+  "R0056": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P008",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1
+    ]
+  },
+  "R0057": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P067",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\nRemember: In a proportion like 3/4 = x/20, you can use cross products. Multiply the numbers on the diagonal — what do you get when you multiply 3 and 20?",
+    "slots": [
+      2
+    ]
+  },
+  "R0058": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P077",
+    "reply": "The rice plant comes first — what is the next organism in the chain after the rice plant?",
+    "slots": [
+      1
+    ]
+  },
+  "R0059": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P063",
+    "reply": "Mushrooms grow on old logs because they act as decomposers, breaking down the dead material and softening the wood over time.  \n\nWhat happens to the old log after the mushrooms finish their work?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0060": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P037",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0061": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P064",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0062": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P071",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step in using cross products to check if two ratios are equal?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0063": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P065",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0064": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P078",
+    "reply": "You're on the right start, but remember: you need to use 25% as a decimal. What is 25% written as a decimal?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0065": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P025",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0066": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P021",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*(Clue: Think about the name mentioned in the lesson text related to Maria Clara.)*  \n*(Leading question: Which name in the text is connected to Maria Clara?)*",
+    "slots": [
+      1
+    ]
+  },
+  "R0067": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P066",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Think about how two organisms can help each other in a relationship.  \n*Leading question:* In mutualism, do both organisms benefit, or does only one?",
+    "slots": [
+      1
+    ]
+  },
+  "R0068": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P022",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0069": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P012",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Remember, living things grow, need food, and can have young ones. Non-living things can move, but only when pushed.*\n\n*Leading question: Does a cloud, like a cloud of air or a cloud in the sky, grow or have young ones?*",
+    "slots": [
+      2
+    ]
+  },
+  "R0070": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P028",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0071": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P033",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0072": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P075",
+    "reply": "Not multiply — let’s go back to the lesson. Speed is distance divided by time. So what do you do with 180 km and 3 hours?",
+    "slots": [
+      1
+    ]
+  },
+  "R0073": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P008",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\nRemember, the formula is I = Prt — so think about what you need to multiply first: the principal, the rate, and the time.",
+    "slots": [
+      2
+    ]
+  },
+  "R0074": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P070",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: to find how much you save, multiply the discount rate by the original price.",
+    "slots": [
+      2
+    ]
+  },
+  "R0075": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P076",
+    "reply": "Good. Now, remember the formula: I = P × r × t. You have P = 10,000, r = 0.05, and t = 3. What is the next step?",
+    "slots": [
+      2
+    ]
+  },
+  "R0076": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P024",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about the first part of the lesson: what does \"pagsasabi ng totoo at paggawa ng tama\" mean in simple terms?",
+    "slots": [
+      2
+    ]
+  },
+  "R0077": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P005",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0078": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P075",
+    "reply": "Not multiply — think about the lesson: speed is distance divided by time. So what should you do with 180 km and 3 hours?",
+    "slots": [
+      2
+    ]
+  },
+  "R0079": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P043",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0080": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P055",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      2
+    ]
+  },
+  "R0081": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P049",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0082": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P042",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0083": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P055",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nSmall clue: The least common denominator of 2 and 3 is 6.  \nLeading question: What does 1/2 become when renamed with a denominator of 6?",
+    "slots": [
+      1
+    ]
+  },
+  "R0084": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P034",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0085": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P041",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0086": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P003",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about finding the smallest number that both 4 and 8 can divide into evenly — that’s your least common denominator. What do you think it might be?",
+    "slots": [
+      1
+    ]
+  },
+  "R0087": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P040",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0088": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P024",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1
+    ]
+  },
+  "R0089": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P002",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0090": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P011",
+    "reply": "I can only help in English. Please ask your question again in English.",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0091": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P045",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0092": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P019",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0093": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P077",
+    "reply": "The rice plant comes first — what is the next organism in the chain after it?",
+    "slots": [
+      2
+    ]
+  },
+  "R0094": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P051",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\n*Clue:* Remember, \"Go foods\" are about things like **kanin, tinapay, kamote** — think about what they might represent.  \n\n*Leading question:* What kind of word or idea might \"kanin\" suggest in this context?",
+    "slots": [
+      2
+    ]
+  },
+  "R0095": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P039",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0096": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P048",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Think about the part of the lesson where water vapor is described as turning into something small and then coming together.*  \n*Leading question: What happens to the water vapor when it cools and forms tiny droplets?*",
+    "slots": [
+      2
+    ]
+  },
+  "R0097": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P007",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nThink about how the quantity demanded changes when the price changes — does it go up or down?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0098": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P058",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?  \n\nRemember, speed = distance ÷ time. The bus traveled 180 km in 3 hours—what should you do first to find its speed?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0099": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P029",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0100": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P047",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1
+    ]
+  },
+  "R0101": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P018",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1
+    ]
+  },
+  "R0102": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P056",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nRemember: When factoring, the numbers you find should multiply to the constant term (10) and add to the coefficient of x (7). Try thinking about what two numbers do that.",
+    "slots": [
+      1
+    ]
+  },
+  "R0103": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P048",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Remember, the process starts after the water vapor rises into the air.*  \n*Leading question: What happens to the water vapor when it gets cold in the sky?*",
+    "slots": [
+      1
+    ]
+  },
+  "R0104": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P050",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\nAt a divergent boundary, plates move apart — what do you think happens when they move apart?",
+    "slots": [
+      1,
+      2
+    ]
+  },
+  "R0105": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P012",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?\n\n*Clue: Remember, living things grow, can have young ones, and can move on their own. Non-living things can move only when something pushes them.*\n\n*Leading question: Does a cloud move on its own, or does something else have to push it?*",
+    "slots": [
+      1
+    ]
+  },
+  "R0106": {
+    "model": "qwen3-reap-15b",
+    "prompt_id": "P026",
+    "reply": "I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?",
+    "slots": [
+      1,
+      2
+    ]
+  }
+}

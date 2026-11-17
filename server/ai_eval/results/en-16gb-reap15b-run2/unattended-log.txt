@@ -1,0 +1,19 @@
+﻿2026-11-02 11:38:39  Started. Keep-awake accepted: True. Available RAM: 1 GB
+2026-11-02 11:38:39  KEEP THE LID OPEN: closing it would still put the laptop to sleep.
+2026-11-02 11:38:39  VS Code closes in about a minute. Unsaved files come back when it reopens.
+2026-11-02 11:39:38  Stopped Oracle
+2026-11-02 11:39:44  Closed Brave, Android Studio and Telegram
+2026-11-02 11:39:44  Asked Steam to quit
+2026-11-02 11:39:44  Asked OneDrive to quit
+2026-11-02 11:39:49  Closed the Claude desktop app
+2026-11-02 11:39:49  Asked VS Code to close
+2026-11-02 11:39:50  VS Code is closed
+2026-11-02 11:40:06  Available RAM before the test: 6.4 GB
+2026-11-02 11:40:06  Official prompt at 1, 2, 4 and 6 learners (about 20 minutes).
+2026-11-02 12:01:57  Official prompt run finished with exit code 0. Available RAM: 10.5 GB
+2026-11-02 12:01:57  Side test: English-only copy of the prompt at 1 learner (about 5 minutes).
+2026-11-02 12:07:00  Side test finished with exit code 0.
+2026-11-02 12:07:00  The laptop entered standby 0 times during the tests (should be 0).
+2026-11-02 12:07:59  Started Oracle again
+2026-11-02 12:07:59  Started OneDrive again
+2026-11-02 12:07:59  Reopened VS Code. Open the conversation again in Claude Code and say: run finished
