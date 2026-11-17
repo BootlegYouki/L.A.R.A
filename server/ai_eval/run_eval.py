@@ -789,6 +789,9 @@ def cmd_report(args):
         w.writeheader()
         w.writerows(disputes)
     unsettled = sum(1 for d in disputes if _verdict(d["final"]) is None)
+    split = {(d["reply_id"], d["criterion"]) for d in disputes}
+    marked = dict(final)
+    rulings = _apply_rulings(out, final, split)
     if args.cross_check and unscored:
         sys.exit(f"--cross-check waits until both human sheets are complete: {unscored} criterion cells are unscored")
 
@@ -825,25 +828,13 @@ def cmd_report(args):
     for (model, slots), rows in sorted(run_rows.items()):
         if model not in scored:
             continue
-        counts = {c: [0, 0] for c in (*CRITERIA, "all")}
-        flags = 0
-        for row in rows:
-            if row["error"]:
-                continue
-            rid = reply_ids.get((model, row["prompt_id"], row["reply"].strip()))
-            scored_here = [c for c in CRITERIA if applies(prompts[row["prompt_id"]], c)]
-            verdicts = [final.get((rid, c)) for c in scored_here]
-            for c, v in zip(scored_here, verdicts):
-                if v is not None:
-                    counts[c][1] += 1
-                    counts[c][0] += v
-            if None not in verdicts:
-                counts["all"][1] += 1
-                counts["all"][0] += all(verdicts)
-                by_model.setdefault(model, []).append((prompts[row["prompt_id"]], all(verdicts)))
-            flags += bool(answer_flags(row["reply"], prompts[row["prompt_id"]]["expected_answer"]))
+        counts = _pass_counts(rows, model, prompts, reply_ids, final, by_model)
+        flags = sum(bool(answer_flags(row["reply"], prompts[row["prompt_id"]]["expected_answer"]))
+                    for row in rows if not row["error"])
         L.append(f"| {model} | {slots} | {len(rows)} | " + " | ".join(_pct(*counts[c]) for c in (*CRITERIA, "all"))
                  + f" | {flags} |")
+    if rulings:
+        L += _rulings_section(rulings, run_rows, scored, prompts, reply_ids, marked)
 
     # The number the Lead asked for (#73, 2026-11-05): how often a Filipino or Taglish message is answered
     # instead of declined. On these rows `grounded` passes only for the decline line (SCORING.md).
@@ -909,6 +900,80 @@ def cmd_report(args):
 
     (out / "report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"wrote {out / 'report.md'}; {len(disputes)} disagreements ({unsettled} unsettled) in {disagreements_path}")
+
+
+def _pass_counts(rows, model, prompts, reply_ids, final, by_model=None):
+    """[passed, judged] per criterion and for all that apply, over one run's replies."""
+    counts = {c: [0, 0] for c in (*CRITERIA, "all")}
+    for row in rows:
+        if row["error"]:
+            continue
+        rid = reply_ids.get((model, row["prompt_id"], row["reply"].strip()))
+        scored_here = [c for c in CRITERIA if applies(prompts[row["prompt_id"]], c)]
+        verdicts = [final.get((rid, c)) for c in scored_here]
+        for c, v in zip(scored_here, verdicts):
+            if v is not None:
+                counts[c][1] += 1
+                counts[c][0] += v
+        if None not in verdicts:
+            counts["all"][1] += 1
+            counts["all"][0] += all(verdicts)
+            if by_model is not None:
+                by_model.setdefault(model, []).append((prompts[row["prompt_id"]], all(verdicts)))
+    return counts
+
+
+def _apply_rulings(out, final, split):
+    """The Lead, #73, 2026-11-17: a rule set after scoring reaches cells both scorers marked the same through
+    `rulings.csv` (reply_id, criterion, ruling, reason). The sheets stay as marked. A split cell is settled in
+    `disagreements.csv` instead. Changes `final` in place and returns the rulings."""
+    path = Path(out) / "rulings.csv"
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
+    for row in rows:
+        key = (row["reply_id"], row["criterion"])
+        ruling = _verdict(row["ruling"])
+        if None in row:
+            sys.exit(f"rulings.csv: {key} has more fields than the header; quote a reason that holds a comma")
+        if key in split:
+            sys.exit(f"rulings.csv: {key} is split between the scorers; settle it in `final` in disagreements.csv")
+        if key not in final:
+            sys.exit(f"rulings.csv: {key} is not a cell both scorers marked")
+        if ruling is None or ruling == final[key]:
+            sys.exit(f"rulings.csv: {key} must be P or F and differ from the agreed mark")
+        final[key] = ruling
+    return rows
+
+
+def _rulings_section(rulings, run_rows, scored, prompts, reply_ids, marked):
+    reasons = list(dict.fromkeys(r["reason"] for r in rulings))
+    criteria = [c for c in CRITERIA if any(r["criterion"] == c for r in rulings)]
+    L = ["", "## Rulings on agreed cells", "",
+         f"`rulings.csv` holds {len(rulings)} cells both scorers marked the same that a rule set after scoring "
+         "changes (the Lead, #73, 2026-11-17). The score sheets and the agreement rate stay as marked. The pass rates "
+         "above, and the cross-check, use the rulings.", ""]
+    columns = ["As marked", "With the rulings"] + ([f"Only: {r}" for r in reasons] if len(reasons) > 1 else [])
+    L += ["| Model | Slots | Criterion | " + " | ".join(columns) + " |", "|---|---|---|" + "---|" * len(columns)]
+    variants = [marked, _ruled(marked, rulings)] + (
+        [_ruled(marked, [r for r in rulings if r["reason"] == reason]) for reason in reasons] if len(reasons) > 1 else [])
+    for (model, slots), rows in sorted(run_rows.items()):
+        if model not in scored:
+            continue
+        counts = [_pass_counts(rows, model, prompts, reply_ids, v) for v in variants]
+        for c in criteria:
+            L.append(f"| {model} | {slots} | {c} | " + " | ".join(_pct(*n[c]) for n in counts) + " |")
+    L.append("")
+    for reason in reasons:
+        group = [r for r in rulings if r["reason"] == reason]
+        how = ", ".join(sorted({f"{r['criterion']} → {r['ruling'].strip().upper()}" for r in group}))
+        L.append(f"* {reason} ({len(group)}, {how}): " + " ".join(r["reply_id"] for r in group))
+    return L
+
+
+def _ruled(marked, rulings):
+    return {**marked, **{(r["reply_id"], r["criterion"]): _verdict(r["ruling"]) for r in rulings}}
 
 
 def _cross_check(path, blind, prompts, final, out):

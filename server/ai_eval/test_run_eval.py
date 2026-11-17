@@ -565,9 +565,9 @@ class DeclineRows(unittest.TestCase):
 
 
 
-class CrossCheck(unittest.TestCase):
-    """The Lead, #73, 2026-11-09: a third, labelled sheet compared only with the two human scores. It is made
-    after both human sheets, stays out of the pass rates and never settles a disagreement."""
+class ReportFolder(unittest.TestCase):
+    """Two on_lesson prompts with both human sheets and a cross-check sheet. The scorers split on one cell
+    (R0002 no_direct_answer) and agree on the other seven."""
 
     HEADER = "reply_id,no_direct_answer,grounded,socratic_shape,language\n"
 
@@ -610,6 +610,11 @@ class CrossCheck(unittest.TestCase):
         with open(folder / "cross_check.csv", encoding="utf-8-sig", newline="") as f:
             return list(csv.DictReader(f))
 
+
+class CrossCheck(ReportFolder):
+    """The Lead, #73, 2026-11-09: a third, labelled sheet compared only with the two human scores. It is made
+    after both human sheets, stays out of the pass rates and never settles a disagreement."""
+
     def test_it_never_changes_a_pass_rate(self):
         folder = self.folder()
         without = self.report(folder, cross_check=False)
@@ -651,6 +656,70 @@ class CrossCheck(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.report(folder)
         self.assertFalse((folder / "cross_check.csv").exists())
+
+
+class Rulings(ReportFolder):
+    """The Lead, #73, 2026-11-17, option (b): a rule set after scoring is applied to cells both scorers marked
+    the same, through `rulings.csv`. The sheets and the agreement rate stay as marked; the pass rates use the
+    ruling, and the report lists the ruled cells with the rate as marked beside it."""
+
+    def rule(self, folder, *rows):
+        (folder / "rulings.csv").write_text("reply_id,criterion,ruling,reason\n" + "".join(f"{r}\n" for r in rows),
+                                            encoding="utf-8")
+
+    def test_without_rulings_there_is_no_rulings_section(self):
+        self.assertNotIn("## Rulings", self.report(self.folder(), cross_check=False))
+
+    def test_a_ruling_changes_the_pass_rate_but_not_the_sheets_or_the_agreement_rate(self):
+        folder = self.folder()
+        sheet = (folder / "score_a.csv").read_text(encoding="utf-8")
+        self.rule(folder, "R0001,socratic_shape,F,two questions")
+        report = self.report(folder, cross_check=False)
+        self.assertIn("| m | 2 | 2 | 1/1 (100%) | 2/2 (100%) | 1/2 (50%) | 2/2 (100%) | 0/1 (0%) | 0 |", report)
+        self.assertIn("socratic_shape 2/2 (100%)", report, "agreement still comes from the sheets")
+        self.assertEqual((folder / "score_a.csv").read_text(encoding="utf-8"), sheet)
+
+    def test_the_report_lists_the_ruled_cells_with_the_rate_as_marked_and_per_reason(self):
+        folder = self.folder()
+        self.rule(folder, "R0001,socratic_shape,F,two questions", "R0002,socratic_shape,F,new rule")
+        report = self.report(folder, cross_check=False)
+        self.assertIn("| Model | Slots | Criterion | As marked | With the rulings | Only: two questions | Only: new rule |",
+                      report)
+        self.assertIn("| m | 2 | socratic_shape | 2/2 (100%) | 0/2 (0%) | 1/2 (50%) | 1/2 (50%) |", report)
+        self.assertIn("* two questions (1, socratic_shape → F): R0001", report)
+        self.assertIn("* new rule (1, socratic_shape → F): R0002", report)
+
+    def test_the_cross_check_is_compared_with_the_ruled_verdict(self):
+        folder = self.folder()
+        self.rule(folder, "R0001,grounded,F,ruled")
+        self.report(folder)
+        self.assertNotIn(("R0001", "grounded"), {(r["reply_id"], r["criterion"]) for r in self.rows(folder)})
+
+    def test_a_ruling_on_a_split_cell_is_refused_because_that_goes_in_final(self):
+        folder = self.folder()
+        self.rule(folder, "R0002,no_direct_answer,F,ruled")
+        with self.assertRaises(SystemExit) as raised:
+            self.report(folder, cross_check=False)
+        self.assertIn("disagreements.csv", str(raised.exception))
+
+    def test_a_ruling_that_matches_the_agreed_mark_is_refused(self):
+        folder = self.folder()
+        self.rule(folder, "R0001,grounded,P,ruled")
+        with self.assertRaises(SystemExit):
+            self.report(folder, cross_check=False)
+
+    def test_a_row_with_more_fields_than_the_header_is_refused_instead_of_cutting_the_reason(self):
+        folder = self.folder()
+        self.rule(folder, "R0001,grounded,F,tutoring rows, broke the guide")
+        with self.assertRaises(SystemExit) as raised:
+            self.report(folder, cross_check=False)
+        self.assertIn("quote", str(raised.exception))
+
+    def test_a_ruling_on_a_cell_that_is_not_scored_is_refused(self):
+        folder = self.folder()
+        self.rule(folder, "R0009,grounded,F,ruled")
+        with self.assertRaises(SystemExit):
+            self.report(folder, cross_check=False)
 
 
 if __name__ == "__main__":
