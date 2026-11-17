@@ -91,7 +91,7 @@
   "auth_name_invalid": "Enter your full name (1 to 100 characters).",
   "auth_sign_in_help": "Use your learner LRN or teacher ID and your four-digit PIN.",
   "auth_sign_in": "Sign in",
-  "auth_working": "Please wait\u00e2\u20ac\u00a6",
+  "auth_working": "Please wait\u2026",
   "auth_need_hub": "Select a Hub address to sign in or create an account.",
   "auth_have_account": "Already have an account? Sign in",
   "auth_cache_error": "Your saved account could not be opened. Your saved work has not been cleared.",
