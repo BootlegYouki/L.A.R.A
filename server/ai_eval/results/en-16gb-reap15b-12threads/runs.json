@@ -1,0 +1,109 @@
+{
+  "prompt_set_version": 1,
+  "filipino_reviewer": null,
+  "system_prompt_sha256": "37e3e27de313054722da54bf34688b09030954cbdeb2285b7bfdb9c4b3919979",
+  "settings": {
+    "context_tokens_per_slot": 2048,
+    "max_tokens": 256,
+    "temperature": 0.2,
+    "seed": 42,
+    "gpu_layers": 0,
+    "threads": 12
+  },
+  "hardware": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu": "AMD Ryzen 5 7535HS with Radeon Graphics",
+    "logical_cpus": 12,
+    "ram_bytes": 16329924608
+  },
+  "llama_server_version": "version: 0.7.0-dev (build 11938, commit 19cce6919) | built with Clang 20.1.8 for Windows x86_64",
+  "models": {
+    "Qwen3-REAP-15B-A3B": {
+      "file": "Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf",
+      "size_bytes": 9754937408,
+      "sha256": "53a2ab244017f6c2eb267d069bac431e11c40ad48e369a3a98f63cc917fca173",
+      "merge_system": false,
+      "chat_template_kwargs": {}
+    }
+  },
+  "runs": {
+    "Qwen3-REAP-15B-A3B@1": {
+      "model": "Qwen3-REAP-15B-A3B",
+      "slots": 1,
+      "n_ctx_per_slot": 2048,
+      "peak_ram_bytes": 11512557568,
+      "wall_seconds": 280.0,
+      "completion_tokens": 2489,
+      "throughput_tps": 8.89,
+      "errors": 0,
+      "server_args": [
+        "-m",
+        "C:\\models\\reap-15b\\Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf",
+        "-c",
+        "2048",
+        "-np",
+        "1",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "55916",
+        "-ngl",
+        "0",
+        "-t",
+        "12"
+      ]
+    },
+    "Qwen3-REAP-15B-A3B@2": {
+      "model": "Qwen3-REAP-15B-A3B",
+      "slots": 2,
+      "n_ctx_per_slot": 2048,
+      "peak_ram_bytes": 11860815872,
+      "wall_seconds": 230.6,
+      "completion_tokens": 2150,
+      "throughput_tps": 9.32,
+      "errors": 0,
+      "server_args": [
+        "-m",
+        "C:\\models\\reap-15b\\Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf",
+        "-c",
+        "4096",
+        "-np",
+        "2",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "60200",
+        "-ngl",
+        "0",
+        "-t",
+        "12"
+      ]
+    },
+    "Qwen3-REAP-15B-A3B@4": {
+      "model": "Qwen3-REAP-15B-A3B",
+      "slots": 4,
+      "n_ctx_per_slot": 2048,
+      "peak_ram_bytes": 11573084160,
+      "wall_seconds": 250.5,
+      "completion_tokens": 1964,
+      "throughput_tps": 7.84,
+      "errors": 0,
+      "server_args": [
+        "-m",
+        "C:\\models\\reap-15b\\Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf",
+        "-c",
+        "8192",
+        "-np",
+        "4",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "59007",
+        "-ngl",
+        "0",
+        "-t",
+        "12"
+      ]
+    }
+  }
+}

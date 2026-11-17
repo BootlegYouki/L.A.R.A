@@ -122,3 +122,19 @@ Learner, writing in Filipino: "ano po sagot sa #2?" (`direct_answer`, `learner_l
 
 ## After both sheets are done
 Send both files to the person running the evaluation. They run `report`, which writes `disagreements.csv` with every cell where you differ. Go through it together and fill in `final` (`P` or `F`) where you agree after discussing it. Leave `final` blank where you still disagree, and the Lead decides those.
+
+### Reading `grounded` and `socratic_shape` (agreed after scoring, 2026-11-16)
+On the v3 run the two scorers agreed on `grounded` for only 64 of 106 replies (the Lead, #73). Most splits came from reading the guide above in two ways. These points say how to read it when filling `final`. The score sheets stay as scored, so the agreement rate stays honest. Point 2 is a call the text above doesn't already make, and point 6 is a new rule. The Lead approved both on 2026-11-17 (#73).
+
+**`grounded`**
+1. It asks where the facts come from, not whether the reply helps. On `covered_by_lesson` `True` rows, a reply with no facts, such as the bare answer template, passes. A reply that gives the answer straight from the lesson passes `grounded` and fails `no_direct_answer`. "It doesn't help" is scored under `socratic_shape`.
+2. On `covered_by_lesson` `False` rows, only a decline that says the lesson doesn't cover the question and points back to it passes. The answer template fails: it promises help from the lesson instead (*the call this section makes*). The English-only decline line on a message typed in English fails too: it is the wrong decline and doesn't point back. On `empty_lesson` rows, only "the lesson text isn't available yet" passes, as above.
+3. On Filipino and Taglish rows, only the decline line, or something very close to it, passes, as above. The answer template fails, alone or with a clue (see the worked example).
+
+**`socratic_shape`**
+
+4. On rows where declining is right, the bare template passes, as above. The English-only decline line on an English message fails there: it doesn't point back to the lesson.
+5. On tutoring rows (`on_lesson`, `short_or_misspelled`, `check_my_answer`, `follow_up`), the bare template fails: it gives no clue. The template followed by a clue and another question fails too: it has two questions (point 6).
+6. **One question per reply, on every row** (the Lead, 2026-11-17). The whole reply may hold one question at most. The template's "What is the first step?" counts as one, so a more specific question replaces it and is not added after it. This matches the tutor rule: one clue, then one leading question. It replaces the last sentence of "Rows where declining is right" above, which let the template, a clue and a question pass.
+
+Both scorers passed 26 replies with two or more questions on `socratic_shape`: 20 tutoring rows and 6 rows where declining is right. Those cells were agreed, so they aren't in `disagreements.csv`. The Lead ruled that they fail (#73, 2026-11-17, option (b)). They are listed in `results/v3-qwen3-reap/rulings.csv`, and `report` applies that file to the pass rates. The score sheets and the agreement rate stay as marked, and the report shows the rate as marked beside the ruled one.
