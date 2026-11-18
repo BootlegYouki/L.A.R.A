@@ -19,3 +19,12 @@ it('opens cached classwork offline and routes a video through its actual materia
   expect(open).toHaveBeenCalledWith('lesson');
   expect(invoke).toHaveBeenCalledWith('read_class_content',{hub:account.hub,userId:'teacher',classroomId:'class'});
 });
+
+it('shows the read-only notice when a learner opens an archived class', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[]});
+  const learner: CachedAccount = {...account,user:{...account.user,role:'STUDENT'}};
+  await act(async () => {renderer=create(createElement(ClassPage,{account:learner,classroom:{...room,archived_at:1},offline:true,onVideo:vi.fn()}));});
+  expect(renderer.root.findByProps({role:'status',className:'hub-status-banner banner-info'}).children)
+    .toContain('This class is archived and read-only.');
+});

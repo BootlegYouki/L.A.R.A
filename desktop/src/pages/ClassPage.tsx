@@ -39,6 +39,7 @@ export default function ClassPage({account, classroom, offline, people, onVideo}
   </section>;
   return <section className="class-page">
     <header className="class-banner"><h1>{classroom.name}</h1><p>{classroom.section}</p></header>
+    {classroom.archived_at != null && <p className="hub-status-banner banner-info" role="status">{t.class_archived_read_only}</p>}
     <div className="class-tabs" role="tablist" aria-label={t.class_tabs}>
       {[['stream', t.stream], ['classwork', t.classwork], ...(people ? [['people', t.people]] : [])].map(([id,label]) =>
         <button key={id} id={'tab-'+id} type="button" role="tab" aria-selected={tab === id} aria-controls={'panel-'+id} tabIndex={tab === id ? 0 : -1}
