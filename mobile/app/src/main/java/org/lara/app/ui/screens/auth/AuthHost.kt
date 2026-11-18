@@ -30,9 +30,8 @@ fun AuthHost(container: AppContainer) {
         initializer { AuthViewModel(container.auth, container.endpoints) }
     })
     val state by model.state.collectAsStateWithLifecycle()
-    var discovery by remember { mutableStateOf(false) }
+    var discovery by remember { mutableStateOf(container.endpoints.load() == null) }
     var settings by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = discovery) { discovery = false }
     Scaffold(containerColor = LaraColors.Canvas, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { insets ->
         if(state.user == null) Box(Modifier.fillMaxSize().padding(insets)) {
             when {
@@ -46,14 +45,6 @@ fun AuthHost(container: AppContainer) {
                             .background(LaraColors.SurfaceSubtle, LaraShapes.medium))
                     }
                 }
-                discovery -> {
-                    val scan: DiscoveryViewModel = viewModel(factory = viewModelFactory {
-                        initializer { DiscoveryViewModel(container.discovery) }
-                    })
-                    val result by scan.result.collectAsStateWithLifecycle()
-                    LaunchedEffect(result) { if(result == ConnectionResult.RESPONDING) discovery = false }
-                    DiscoveryScreen(scan, onBack = { discovery = false })
-                }
                 settings && state.previousUser != null -> {
                     val userId = requireNotNull(state.previousUser).id
                     val expectedSession = state.sessionVersion
@@ -65,8 +56,22 @@ fun AuthHost(container: AppContainer) {
                         onChangeHub = { settings = false; discovery = true; model.signedOut(expectedSession) },
                         onBack = { settings = false })
                 }
-                else -> AuthScreen(state, model::submit, onDiscovery = { discovery = true },
-                    onSettings = if (state.previousUser != null) { { settings = true } } else null)
+                else -> {
+                    val endpoint = remember(discovery) { container.endpoints.load() }
+                    val reachability = remember(endpoint) { container.auth.reachability(endpoint, container.syncScheduler.networkChanges) }
+                    val reachable by reachability.collectAsStateWithLifecycle<Boolean?>(initialValue = null)
+                    AuthScreen(state, model::submit, onDiscovery = { discovery = true },
+                        onSettings = if (state.previousUser != null) { { settings = true } } else null,
+                        hub = endpoint?.let { "${it.ip}:${it.httpPort}" }, hubReachable = reachable)
+                }
+            }
+            if (discovery && !state.restoring && !settings) {
+                val scan: DiscoveryViewModel = viewModel(factory = viewModelFactory {
+                    initializer { DiscoveryViewModel(container.discovery) }
+                })
+                val result by scan.result.collectAsStateWithLifecycle()
+                LaunchedEffect(result) { if(result == ConnectionResult.RESPONDING) discovery = false }
+                DiscoveryScreen(scan, onDismiss = { discovery = false })
             }
         }
     }
@@ -98,7 +103,7 @@ fun AuthHost(container: AppContainer) {
                     LaunchedEffect(result) { if (result == ConnectionResult.RESPONDING) {
                         discovery = false; settings = false; model.signedOut(sessionVersion)
                     } }
-                    DiscoveryScreen(scan, onBack = { discovery = false })
+                    DiscoveryScreen(scan, onDismiss = { discovery = false })
                 } else if (settings) {
                     SettingsHost(active, user.id, reachable, onSignedOut = { settings = false; model.signedOut(sessionVersion) },
                         onChangeHub = { settings = false; discovery = true; model.signedOut(sessionVersion) }, onBack = { settings = false })

@@ -68,6 +68,7 @@ class EnrollmentViewModel(
         }
         if (!mutable.value.offline) viewModelScope.launch { refresh(EnrollmentRefreshHint.Foreground) }
     }
+    suspend fun reload() = refresh(EnrollmentRefreshHint.Foreground)
     fun stop() { foreground = false; eventJob?.cancel(); eventJob = null }
     fun showJoin() { mutable.update { it.copy(showJoinDialog = true, error = null) } }
     fun onInputChanged() { if (!mutable.value.busy) mutable.update { it.copy(error = null) } }

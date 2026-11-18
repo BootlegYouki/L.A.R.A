@@ -40,7 +40,7 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
 
-Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001` (the Hub admin, not a teacher).
+Seed accounts for the mock hub (PIN `123456`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001` (the Hub admin, not a teacher).
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.

@@ -34,4 +34,7 @@ interface RosterDao {
     @Transaction
     @Query("SELECT * FROM enrollments WHERE classroom_id = :classroomId ORDER BY joined_at, id")
     fun observeByClassroom(classroomId: String): Flow<List<RosterRow>>
+
+    @Query("SELECT COUNT(*) FROM enrollments WHERE status = 'PENDING' AND classroom_id IN (:classroomIds)")
+    fun observePendingCount(classroomIds: List<String>): Flow<Int>
 }

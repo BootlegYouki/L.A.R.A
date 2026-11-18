@@ -58,7 +58,7 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
             detected -> R.string.scan_detected
             else -> R.string.scan_manual
         }))
-        if (bitmap == null) org.lara.app.ui.screens.stream.ReadingSkeleton()
+        if (bitmap == null) org.lara.app.ui.components.LoadingSpinner(inline = true)
         else Box(Modifier.fillMaxWidth().height(320.dp)) {
             Image(bitmap.asImageBitmap(), stringResource(R.string.homework_photo_description),
                 Modifier.fillMaxSize().padding(if (preview == null && available) MinTouchTarget / 2 else 0.dp), contentScale = ContentScale.Fit)

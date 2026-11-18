@@ -1,8 +1,16 @@
 package org.lara.app.ui.screens.enrollment
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,10 +66,6 @@ fun EnrollmentScreen(
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = LaraSpacing.S4, end = LaraSpacing.S4,
         top = LaraSpacing.S4, bottom = PrimaryTouchTarget + LaraSpacing.S8),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-        item { Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium) }
-        if (state.offline) item {
-            DiscoveryBanner(R.string.enrollment_join_offline, warning = true, success = false)
-        }
         if (!state.offline && !state.showJoinDialog && state.error != null) item {
             val message = when(state.error) {
                 JoinClassError.SESSION_EXPIRED -> R.string.enrollment_session_expired
@@ -72,7 +76,8 @@ fun EnrollmentScreen(
             }
             DiscoveryBanner(message, warning = true, success = false)
         }
-        if (showJoinAction) item {
+        val empty = state.classes != Cached.Loading && classes.isEmpty() && requests.isEmpty()
+        if (showJoinAction && !empty) item {
             Button(onClick = onJoin, enabled = !state.offline && !state.busy,
                 colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
@@ -85,11 +90,16 @@ fun EnrollmentScreen(
                 .semantics { contentDescription = loadingLabel }) }
         } else if (classes.isEmpty() && requests.isEmpty()) {
             item {
-                Surface(color = LaraColors.Surface, shape = LaraShapes.large) {
-                    Column(Modifier.fillMaxWidth().padding(LaraSpacing.S6), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                        Icon(painterResource(R.drawable.ic_books_regular), null, tint = LaraColors.PrimaryDark)
-                        Text(stringResource(R.string.enrollment_empty), style = MaterialTheme.typography.titleMedium)
-                        Text(stringResource(R.string.enrollment_empty_help), color = LaraColors.TextSecondary)
+                Column(Modifier.fillParentMaxHeight(0.9f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3, Alignment.CenterVertically)) {
+                    Box(Modifier.size(96.dp).background(LaraColors.PrimaryLight, CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(painterResource(R.drawable.ic_books_regular), null, tint = LaraColors.PrimaryDark, modifier = Modifier.size(48.dp))
+                    }
+                    Text(stringResource(R.string.enrollment_empty), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.enrollment_empty_help), color = LaraColors.TextSecondary, textAlign = TextAlign.Center)
+                    TextButton(onClick = onJoin, enabled = !state.offline && !state.busy,
+                        modifier = Modifier.heightIn(min = PrimaryTouchTarget)) {
+                        Text(stringResource(R.string.enrollment_join_title))
                     }
                 }
             }
@@ -118,5 +128,8 @@ private fun EnrollmentCard(title: String, section: String?, status: EnrollmentSt
         EnrollmentStatus.REJECTED -> R.string.enrollment_rejected
         EnrollmentStatus.REMOVED -> R.string.enrollment_removed
     }
-    org.lara.app.ui.components.ClassroomCard(title, section, teacher, stringResource(label), canOpen, onOpen)
+    val context = LocalContext.current
+    val message = stringResource(label)
+    org.lara.app.ui.components.ClassroomCard(title, section, teacher, message, canOpen,
+        if (canOpen) onOpen else { { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() } })
 }

@@ -1,9 +1,27 @@
 package org.lara.app.ui.screens.stream
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import android.provider.Settings
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import org.lara.app.ui.screens.classwork.preloadMaterial
+import kotlinx.coroutines.launch
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +32,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -24,7 +44,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.lara.app.AppContainer
 import org.lara.app.R
-import org.lara.app.domain.CommentAuthor
 import org.lara.app.domain.Cached
 import org.lara.app.domain.model.*
 import org.lara.app.ui.navigation.*
@@ -34,12 +53,14 @@ import org.lara.app.ui.theme.*
 import org.lara.app.ui.screens.teacher.classes.teacherIds
 import org.lara.app.ui.screens.teacher.PostAnnouncement
 import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.Date
+
 
 @Composable
 fun ClassroomLearningHost(container: AppContainer, userId: String, destination: ShellDestination,
-    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null,
-    teacherHubReachable: Boolean? = null) {
+    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null, teacherHubReachable: Boolean? = null) {
     if (destination !in setOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE)) {
         ShellPlaceholder(destination); return
     }
@@ -49,7 +70,7 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
     var choice by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     val classes = (cached as? Cached.Content)?.value.orEmpty()
     val selected = classes.find { it.id == (fixedClassId ?: teacherClassId ?: choice) } ?: if (fixedClassId == null) classes.firstOrNull() else null
-    if (cached == Cached.Loading) { ReadingSkeleton(); return }
+    if (cached == Cached.Loading) { org.lara.app.ui.components.LoadingSpinner(); return }
     if (selected == null) { ReadingEmpty(R.string.reading_no_classes); return }
     Column(Modifier.fillMaxSize()) {
         if (fixedClassId == null) {
@@ -74,16 +95,16 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination,
-    teacherHubReachable: Boolean?) {
+private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination, teacherHubReachable: Boolean?) {
     val scope = rememberCoroutineScope()
     val streamFlow = remember(classroom.id) { container.stream.stream(classroom.id, scope) }
     val workFlow = remember(classroom.id) { container.classwork.classwork(classroom.id, scope) }
     val posts by streamFlow.collectAsStateWithLifecycle()
     val work by workFlow.collectAsStateWithLifecycle()
     val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
+    val reload: suspend () -> Unit = { container.sync.synchronize(userId) }
     if (destination == ShellDestination.PEOPLE) {
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
+        org.lara.app.ui.components.PullRefresh(reload) { LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             item { Text(stringResource(R.string.classes_teachers), style = MaterialTheme.typography.headlineMedium)
                 HorizontalDivider(color = LaraColors.Border) }
@@ -92,173 +113,167 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
                     names.find { it.id == id && it.role == "TEACHER" }?.name ?: stringResource(R.string.reading_teacher),
                     stringResource(if (id == classroom.teacherId) R.string.classes_owner_role else R.string.classes_co_role))
             }
-        }
+        } }
         return
     }
-    val model: StreamViewModel = viewModel(key = "stream-$userId-${classroom.id}", factory = viewModelFactory {
-        initializer { StreamViewModel(container.stream, userId) }
-    })
-    val action by model.action.collectAsStateWithLifecycle()
     var opened by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     var openedAssignment by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
     val selectedAssignment = assignments.find { it.id == openedAssignment }
-    if (selectedAssignment != null) {
-        key(selectedAssignment.id) {
-            org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null }
-        }
-        return
+    val fullScreen = org.lara.app.ui.components.LocalFullScreenOverlay.current
+    if (selectedAssignment != null && fullScreen != null) {
+        BackHandler { openedAssignment = null }
+        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+        // The overlay is drawn by the scaffold, so hand it this screen's owners or its ViewModel loses the saved-state registry.
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
+        DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val materials = (work as? Cached.Content)?.value?.materials.orEmpty()
+    // Fetch the file and draw its preview first, then open the page, so nothing pops in afterwards.
+    var preparing by remember { mutableStateOf(false) }
+    val openMaterial = { id: String ->
+        val m = materials.find { it.id == id }
+        if (!preparing && m != null) {
+            if (m.fileType == "VIDEO") opened = id
+            else { preparing = true; scope.launch { try { preloadMaterial(container, m) } finally { preparing = false }; opened = id } }
+        }
+    }
+    var openedPost by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
+    val selectedPost = (posts as? Cached.Content)?.value.orEmpty().find { it.id == openedPost }
+    if (selectedPost != null && fullScreen != null) {
+        BackHandler { openedPost = null }
+        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
+            ClassDiscussion(container, userId, selectedPost, classroom.archivedAt != null, reload, { openedPost = null }) {
+                materials.filter { it.announcementId == selectedPost.id }.forEach { material -> MaterialRow(material) { openMaterial(material.id) } }
+            } } } }
+        DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
+    }
     val selected = materials.find { it.id == opened }
     if (selected != null) {
-        key(selected.id) {
+        val page: @Composable () -> Unit = { key(selected.id) {
             if (selected.fileType == "VIDEO") VideoPlayerScreen(container, userId, selected.id) { opened = null }
             else MaterialReader(container, selected) { opened = null }
-        }
+        } }
+        if (fullScreen != null) {
+            val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+            val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
+            DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
+        } else page()
         return
     }
-    if (posts == Cached.Loading || work == Cached.Loading) { ReadingSkeleton(); return }
+    if (posts == Cached.Loading || work == Cached.Loading) { org.lara.app.ui.components.LoadingSpinner(); return }
     val announcements = (posts as? Cached.Content)?.value.orEmpty()
     val topics = (work as? Cached.Content)?.value?.topics.orEmpty()
-    var selectedTopic by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
-    val topic = selectedTopic?.takeIf { id -> topics.any { it.id == id } }
-    var filtering by rememberSaveable(classroom.id) { mutableStateOf(false) }
-    if (filtering) TopicFilter(topics, topic, { selectedTopic = it; filtering = false }, { filtering = false })
     val canCompose = teacherHubReachable != null && destination == ShellDestination.STREAM &&
         userId in classroom.teacherIds() && classroom.archivedAt == null
     Box(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(
-            start = LaraSpacing.S4, top = LaraSpacing.S4, end = LaraSpacing.S4,
-            bottom = LaraSpacing.S4 + if (canCompose) PrimaryTouchTarget + LaraSpacing.S4 else 0.dp),
-            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            if (destination == ShellDestination.STREAM) {
-                item { ClassBanner(classroom) }
-                if (announcements.isEmpty()) item { ReadingEmpty(R.string.reading_stream_empty) }
-                items(announcements, key = { it.id }) { post ->
-                    AnnouncementCard(container, post, userId, names, action, model,
-                        materials.filter { it.announcementId == post.id }) { opened = it.id }
-                }
-            } else {
-                item {
-                    OutlinedButton(onClick = { filtering = true }, modifier = Modifier.heightIn(min = MinTouchTarget), shape = CircleShape) {
-                        Icon(painterResource(R.drawable.ic_funnel), null, Modifier.size(24.dp))
-                        Spacer(Modifier.width(LaraSpacing.S2))
-                        Text(stringResource(R.string.reading_filter_topics))
+    org.lara.app.ui.components.PullRefresh(reload) { LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(start = LaraSpacing.S4, top = LaraSpacing.S4, end = LaraSpacing.S4, bottom = LaraSpacing.S4 + if (canCompose) PrimaryTouchTarget + LaraSpacing.S4 else 0.dp),
+        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+        if (destination == ShellDestination.STREAM) {
+            // Classwork also shows up here as posts, like Classroom. 
+            val learner = userId !in classroom.teacherIds()
+            val feed = announcements.map { post -> Triple(post.createdAt, post.id, @Composable {
+                AnnouncementCard(post, materials.filter { it.announcementId == post.id }, { openedPost = post.id }) { openMaterial(it.id) }
+            }) } + materials.filter { it.announcementId == null && it.assignmentId == null }.map { m ->
+                Triple(m.createdAt, m.id, @Composable {
+                    WorkPostCard(if (m.fileType == "VIDEO") R.drawable.ic_play else R.drawable.ic_books_regular,
+                        stringResource(R.string.stream_new_material, m.title), m.createdAt) { openMaterial(m.id) }
+                })
+            } + (if (learner) assignments else emptyList()).map { a ->
+                Triple(a.createdAt, a.id, @Composable {
+                    WorkPostCard(R.drawable.ic_exam_regular, stringResource(R.string.stream_new_assignment, a.title), a.createdAt) { openedAssignment = a.id }
+                })
+            }
+            if (feed.isEmpty()) item { ReadingEmpty(R.string.reading_stream_empty) }
+            items(feed.sortedByDescending { it.first }, key = { it.second }) { it.third() }
+        } else {
+            val learner = userId !in classroom.teacherIds()
+            val handouts = materials.filter { it.assignmentId == null }
+            val allAssignments = if (learner) assignments else emptyList()
+            // Items without a topic are grouped by the month they were posted, newest month first.
+            fun month(millis: Long) = SimpleDateFormat("yyyy-MM", Locale.US).format(Date(millis))
+            fun monthName(key: String) = SimpleDateFormat("MMMM", Locale.getDefault()).format(SimpleDateFormat("yyyy-MM", Locale.US).parse(key)!!)
+            val topicIds = (handouts.mapNotNull { it.topicId } + allAssignments.mapNotNull { it.topicId }).toSet()
+            val months = (handouts.filter { it.topicId == null }.map { month(it.createdAt) } +
+                allAssignments.filter { it.topicId == null }.map { month(it.createdAt) }).toSet().sortedDescending()
+            val ordered = (topics.map { it.id }.filter { it in topicIds } + topicIds.filter { id -> topics.none { it.id == id } }).map { "t$it" } + months.map { "m$it" }
+            val shown = ordered
+            if (shown.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
+            shown.forEach { section ->
+                val isTopic = section.startsWith("t")
+                val key = section.drop(1)
+                val rowAssignments = allAssignments.filter { if (isTopic) it.topicId == key else it.topicId == null && month(it.createdAt) == key }
+                val rowMaterials = handouts.filter { if (isTopic) it.topicId == key else it.topicId == null && month(it.createdAt) == key }
+                item(key = "section-$section") {
+                    Column(Modifier.padding(top = LaraSpacing.S2), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                        Text(if (isTopic) topics.find { it.id == key }?.name ?: stringResource(R.string.reading_no_topic) else monthName(key),
+                            style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryDark)
+                        HorizontalDivider(color = LaraColors.Border)
                     }
                 }
-                val learner = userId !in classroom.teacherIds()
-                val handouts = materials.filter { it.assignmentId == null && it.announcementId == null }
-                val groups = handouts.groupBy { it.topicId }
-                val assignmentGroups = (if (learner) assignments else emptyList()).groupBy { it.topicId }
-                val ids = groups.keys + assignmentGroups.keys
-                val ordered = (topics.map { it.id }.filter { it in ids } + ids.filter { id -> topics.none { it.id == id } })
-                    .filter { topic == null || it == topic }
-                if (ordered.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
-                ordered.forEach { topicId ->
-                    item(key = "topic-${topicId ?: "none"}") {
-                        Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                            Text(topics.find { it.id == topicId }?.name ?: stringResource(R.string.reading_no_topic),
-                                style = MaterialTheme.typography.headlineMedium, color = LaraColors.PrimaryDark)
-                            Text(stringResource(R.string.reading_work_count, groups[topicId].orEmpty().size + assignmentGroups[topicId].orEmpty().size),
-                                style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                            HorizontalDivider(thickness = 2.dp, color = LaraColors.Primary)
-                        }
-                    }
-                    items(assignmentGroups[topicId].orEmpty(), key = { "assignment-${it.id}" }) { assignment ->
-                        Surface(onClick = { openedAssignment = assignment.id }, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
-                            color = LaraColors.Surface, shape = LaraShapes.medium) {
-                            Row(Modifier.padding(LaraSpacing.S4), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                                Icon(painterResource(R.drawable.ic_exam_regular), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                                Column(Modifier.weight(1f)) {
-                                    Text(assignment.title, style = MaterialTheme.typography.titleMedium)
-                                    Text(stringResource(R.string.homework_open), color = LaraColors.TextSecondary)
-                                }
-                            }
-                        }
-                    }
-                    items(groups[topicId].orEmpty(), key = { it.id }) { material -> MaterialRow(material) { opened = material.id } }
+                items(rowAssignments, key = { "assignment-${it.id}" }) { assignment ->
+                    ClassworkRow(R.drawable.ic_exam_regular, assignment.title,
+                        stringResource(R.string.classwork_due, shortDate(assignment.dueDate)), false) { openedAssignment = assignment.id }
                 }
+                items(rowMaterials, key = { it.id }) { material -> MaterialRow(material) {
+                    val thread = material.announcementId?.takeIf { id -> announcements.any { it.id == id } }
+                    if (thread != null) openedPost = thread else openMaterial(material.id)
+                } }
             }
         }
+    } }
         if (canCompose) PostAnnouncement(container, userId, classroom, teacherHubReachable == true,
             Modifier.align(Alignment.BottomEnd).padding(LaraSpacing.S4))
     }
 }
 
+/** Stream card for a handout or assignment; same look as an announcement, without a comment line. */
 @Composable
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun AnnouncementCard(container: AppContainer, post: Announcement, userId: String,
-    names: List<CommentAuthor>, action: CommentAction, model: StreamViewModel,
-    attachments: List<Material>, onOpen: (Material) -> Unit) {
-    val scope = rememberCoroutineScope()
-    val flow = remember(post.id) { container.stream.comments(post.id, scope) }
-    val cached by flow.collectAsStateWithLifecycle()
-    val comments = (cached as? Cached.Content)?.value.orEmpty()
-    var expanded by rememberSaveable(post.id) { mutableStateOf(false) }
-    var draft by rememberSaveable(post.id, userId) { mutableStateOf("") }
-    Surface(color = LaraColors.SurfaceSubtle, contentColor = LaraColors.TextPrimary, shape = LaraShapes.medium) {
-        Column(Modifier.fillMaxWidth().padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+private fun WorkPostCard(icon: Int, title: String, createdAt: Long, open: () -> Unit) {
+    Surface(onClick = open, color = LaraColors.Surface, contentColor = LaraColors.TextPrimary, shape = LaraShapes.medium,
+        border = BorderStroke(1.dp, LaraColors.Border)) {
+        Row(Modifier.fillMaxWidth().padding(LaraSpacing.S3), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+            Surface(Modifier.size(40.dp), color = LaraColors.InfoLight, shape = CircleShape) {
+                Box(contentAlignment = Alignment.Center) { Icon(painterResource(icon), null, Modifier.size(20.dp), tint = LaraColors.InfoDark) }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 2)
+                Text(DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(createdAt)),
+                    style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnnouncementCard(post: Announcement, attachments: List<Material>, openPost: () -> Unit, onOpen: (Material) -> Unit) {
+    Surface(onClick = openPost, color = LaraColors.Surface, contentColor = LaraColors.TextPrimary, shape = LaraShapes.medium,
+        border = BorderStroke(1.dp, LaraColors.Border)) {
+        Column(Modifier.fillMaxWidth().padding(LaraSpacing.S3), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                Surface(color = LaraColors.PrimaryLight, shape = CircleShape) {
-                    Icon(painterResource(R.drawable.ic_info), null, Modifier.padding(LaraSpacing.S3), tint = LaraColors.PrimaryDark)
+                Surface(Modifier.size(40.dp), color = LaraColors.PrimaryLight, shape = CircleShape) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(painterResource(R.drawable.ic_info), null, Modifier.size(20.dp), tint = LaraColors.PrimaryDark)
+                    }
                 }
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.reading_class_announcement), style = MaterialTheme.typography.titleMedium)
-                    Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(post.createdAt)),
-                        style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                    ReadingStatus("SYNCED")
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
+                    Text(post.title, style = MaterialTheme.typography.bodyLarge)
+                    Text(DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(post.createdAt)),
+                        style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
                 }
             }
-            Text(post.title, style = MaterialTheme.typography.titleLarge)
-            Text(post.content, style = MaterialTheme.typography.bodyLarge)
-            attachments.forEach { material -> MaterialRow(material) { onOpen(material) } }
+            if (post.content.isNotBlank()) Text(post.content, style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            attachments.forEach { MaterialRow(it) { onOpen(it) } }
             HorizontalDivider(color = LaraColors.Border)
-            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Text(stringResource(if (expanded) R.string.reading_hide_comments else R.string.reading_comments, comments.size))
-            }
-            if (!post.allowComments) Text(stringResource(R.string.reading_comments_disabled), color = LaraColors.TextSecondary)
-            if (expanded) {
-                if (cached == Cached.Loading) ReadingSkeleton()
-                else if (comments.isEmpty()) Text(stringResource(R.string.reading_comments_empty))
-                comments.forEach { comment ->
-                    val author = names.find { it.id == comment.authorId }
-                    val name = when {
-                        comment.authorId == userId -> stringResource(R.string.reading_you)
-                        author == null -> stringResource(R.string.reading_class_member)
-                        author.role == "STUDENT" -> author.name.trim().substringBefore(' ')
-                        else -> author.name
-                    }
-                    Column(Modifier.fillMaxWidth().background(LaraColors.Surface, LaraShapes.medium).padding(LaraSpacing.S3),
-                        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                        Text(name, style = MaterialTheme.typography.titleSmall)
-                        Text(comment.content)
-                        ReadingStatus(comment.syncStatus)
-                        if (comment.syncStatus == "REJECTED") Text(stringResource(R.string.reading_rejected),
-                            style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                    }
-                }
-                if (post.allowComments) {
-                    val composer = remember { BringIntoViewRequester() }
-                    var focused by remember { mutableStateOf(false) }
-                    val keyboardHeight = WindowInsets.ime.getBottom(LocalDensity.current)
-                    LaunchedEffect(keyboardHeight, focused) { if (focused) composer.bringIntoView() }
-                    Column(Modifier.fillMaxWidth().bringIntoViewRequester(composer),
-                        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                    OutlinedTextField(value = draft, onValueChange = { draft = it }, label = { Text(stringResource(R.string.reading_add_comment)) },
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { focus ->
-                            focused = focus.isFocused
-                        }, shape = LaraShapes.extraLarge,
-                        enabled = post.id !in action.sending, minLines = 2)
-                    if (post.id in action.failed) Text(stringResource(R.string.reading_comment_failed), color = LaraColors.DangerDark)
-                    Button(onClick = { model.send(post.id, draft) { draft = "" } },
-                        enabled = draft.isNotBlank() && post.id !in action.sending,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-                        Text(stringResource(R.string.reading_send))
-                    }
-                    }
-                }
+            Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(onClick = openPost),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(24.dp))
+                Text(stringResource(R.string.class_comments_hint), color = LaraColors.TextSecondary)
             }
         }
     }
@@ -266,48 +281,28 @@ private fun AnnouncementCard(container: AppContainer, post: Announcement, userId
 
 @Composable
 private fun MaterialRow(material: Material, open: () -> Unit) {
-    Surface(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).laraShadow(),
-        color = LaraColors.Surface, contentColor = LaraColors.TextPrimary, shape = LaraShapes.large,
-        border = BorderStroke(1.dp, LaraColors.Border)) {
-        Row(Modifier.padding(LaraSpacing.S4), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
-            verticalAlignment = Alignment.CenterVertically) {
-            Surface(color = LaraColors.InfoLight, shape = LaraShapes.medium) {
-                Icon(painterResource(if (material.fileType == "VIDEO") R.drawable.ic_play else R.drawable.ic_books_regular), null, Modifier.padding(LaraSpacing.S3).size(24.dp),
-                    tint = LaraColors.InfoDark)
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                Text(material.title, style = MaterialTheme.typography.titleMedium)
-                Surface(color = if (material.localFilePath == null) LaraColors.InfoLight else LaraColors.PrimaryLight,
-                    shape = LaraShapes.small) {
-                    Text(stringResource(if (material.localFilePath == null) R.string.reading_save_home_badge else R.string.reading_saved_device_badge),
-                        Modifier.padding(horizontal = LaraSpacing.S2, vertical = LaraSpacing.S1),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (material.localFilePath == null) LaraColors.InfoDark else LaraColors.PrimaryDark)
-                }
-                Text(stringResource(R.string.reading_open), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-            }
-            if (material.localFilePath != null) Icon(painterResource(R.drawable.ic_check_circle), null,
-                Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+    ClassworkRow(if (material.fileType == "VIDEO") R.drawable.ic_play else R.drawable.ic_books_regular, material.title,
+        stringResource(R.string.classwork_posted, shortDate(material.createdAt)), material.localFilePath != null, open)
+}
+
+/** Flat Google Classroom list row: tinted circle icon, title, one grey line, check when kept on this device. */
+@Composable
+private fun ClassworkRow(icon: Int, title: String, subtitle: String, saved: Boolean, open: () -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget).clickable(onClick = open),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+        Surface(Modifier.size(44.dp), color = LaraColors.InfoLight, shape = CircleShape) {
+            Box(contentAlignment = Alignment.Center) { Icon(painterResource(icon), null, Modifier.size(22.dp), tint = LaraColors.InfoDark) }
         }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
+        }
+        if (saved) Icon(painterResource(R.drawable.ic_check_circle), stringResource(R.string.reading_saved_device_badge),
+            Modifier.size(20.dp), tint = LaraColors.PrimaryDark)
     }
 }
 
-@Composable
-private fun ReadingStatus(status: String) {
-    val queued = status == "QUEUED_FOR_SYNC"
-    val rejected = status == "REJECTED"
-    val tone = if (rejected) LaraColors.DangerDark else if (queued) LaraColors.WarningDark else LaraColors.PrimaryDark
-    val fill = if (rejected) LaraColors.DangerLight else if (queued) LaraColors.WarningLight else LaraColors.PrimaryLight
-    Surface(color = fill, contentColor = tone, shape = CircleShape) {
-        Row(Modifier.padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S1),
-            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(if (queued || rejected) R.drawable.ic_warning_circle else R.drawable.ic_check_circle),
-                null, Modifier.size(20.dp))
-            Text(stringResource(if (queued) R.string.reading_queued else if (rejected) R.string.reading_not_sent else R.string.reading_saved),
-                style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
+private fun shortDate(millis: Long): String = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(millis))
 
 @Composable
 internal fun ReadingEmpty(message: Int) {
@@ -323,13 +318,5 @@ internal fun ReadingEmpty(message: Int) {
             else if (message == R.string.reading_stream_empty) R.string.reading_stream_empty_title else R.string.reading_classes_empty_title),
             style = MaterialTheme.typography.titleMedium)
         Text(stringResource(message), style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
-    }
-}
-
-@Composable
-internal fun ReadingSkeleton() {
-    Column(Modifier.fillMaxWidth().padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-        Text(stringResource(R.string.reading_loading))
-        repeat(3) { Spacer(Modifier.fillMaxWidth().height(LaraSpacing.S12).background(LaraColors.SurfaceSubtle, LaraShapes.medium)) }
     }
 }

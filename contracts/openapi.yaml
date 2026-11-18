@@ -62,7 +62,7 @@ paths:
                   example: "Juan dela Cruz"
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Account created and session opened
@@ -77,7 +77,7 @@ paths:
 
   /api/auth/login:
     post:
-      summary: Log in with LRN/ID and 4-digit PIN
+      summary: Log in with LRN/ID and 6-digit PIN
       description: |
         Rate limit per lrn_or_id: after 5 wrong PINs within 60 seconds, every further attempt for that
         lrn_or_id (even with the right PIN) answers 429 TOO_MANY_ATTEMPTS with a Retry-After header (whole
@@ -99,7 +99,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Session opened
@@ -149,7 +149,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Signed-in admin session
@@ -193,7 +193,7 @@ paths:
                   enum: ["TEACHER", "STUDENT"]
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Created user
@@ -205,6 +205,9 @@ paths:
   /api/admin/users/{id}/reset-pin:
     post:
       summary: Reset a user PIN (admin)
+      description: |
+        The new PIN is exactly 6 digits. Accounts created with the old 4-digit PIN are not migrated: they cannot
+        sign in until the admin resets them here to a 6-digit PIN.
       tags: [admin]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -218,7 +221,7 @@ paths:
               properties:
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
@@ -287,7 +290,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [status, classroom_id]
+                required: [status, classroom_id, section, teacher_name]
                 properties:
                   status:
                     type: string
@@ -295,6 +298,12 @@ paths:
                   classroom_id:
                     type: string
                     format: uuid
+                  section:
+                    type: string
+                    description: The class section, so a PENDING class card can show it before the first sync after approval.
+                  teacher_name:
+                    type: string
+                    description: Full name of the owning teacher only (never their LRN/ID), for the same reason as section.
         "404":
           $ref: "#/components/responses/Error"
 
@@ -464,6 +473,7 @@ paths:
   /api/sync/push:
     post:
       summary: Delta-sync push for queued offline work (quiz attempts, stream comments, private comments)
+      description: Teachers and active learners may push class comments. Only learners may push quiz attempts or private comments. Comment retries retain their client UUID and return a receipt; foreign authors and nonmembers are rejected.
       tags: [sync]
       requestBody:
         required: true
@@ -675,6 +685,7 @@ paths:
   # ---------------------------------------------------------------- MATERIALS
   /api/materials:
     post:
+      description: A standalone material is linked to a classroom announcement thread. When neither assignment_id nor announcement_id is supplied, the Hub creates an announcement with the material title and empty content atomically with the material. Attachments use the linked announcement comments; assignment attachments retain private assignment comments. An explicit announcement_id must belong to the same class. Existing standalone materials must receive a linked thread before syncing to clients.
       summary: Upload a lesson file, or an attachment for an assignment or announcement (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
       tags: [materials]
       requestBody:

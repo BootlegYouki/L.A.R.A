@@ -28,7 +28,12 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
                 .forEach { it.delete() }
         } finally { mutex.unlock() }
     }
-    suspend fun open(id: String): File = mutex.withLock { withContext(Dispatchers.IO) {
+    suspend fun remove(id: String) = mutex.withLock { withContext(Dispatchers.IO + kotlinx.coroutines.NonCancellable) {
+        val path = db.classworkDao().material(id)?.localFilePath ?: return@withContext
+        if (db.classworkDao().clearFile(id, path) == 1) File(path).delete()
+    } }
+    /** [save] false is a preview only: the file is fetched for viewing but not recorded as saved, so it is dropped on the next prune. */
+    suspend fun open(id: String, save: Boolean = true): File = mutex.withLock { withContext(Dispatchers.IO) {
         require(id.matches(Regex("[A-Za-z0-9-]{1,128}")))
         val row = db.classworkDao().material(id) ?: throw IOException("Material unavailable")
         row.localFilePath?.let { path ->
@@ -41,7 +46,8 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
         root.mkdirs()
         val key = MessageDigest.getInstance("SHA-256").digest("$id:${row.updatedAt}".toByteArray())
             .joinToString("") { "%02x".format(it) }
-        val target = File(root, key)
+        val target = File(root, if (save) key else "preview-$key")
+        if (!save && target.isFile) return@withContext target
         val part = File.createTempFile("download-", ".part", root)
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
@@ -86,7 +92,7 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
                 else -> "application/octet-stream"
             }
             check(part.renameTo(target))
-            if (db.classworkDao().saveFile(id, row.updatedAt, target.path, mime) != 1) {
+            if (save && db.classworkDao().saveFile(id, row.updatedAt, target.path, mime) != 1) {
                 target.delete(); throw IOException("Material changed")
             }
             target

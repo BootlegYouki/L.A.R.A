@@ -20,6 +20,7 @@ pub fn run() {
             account::account_token,
             account::save_classroom_snapshot,
             account::classroom_teacher_names,
+            account::read_class_content,
             account::save_roster_snapshot,
             account::clear_roster_snapshot,
             account::save_join_status,

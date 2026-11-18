@@ -77,15 +77,17 @@ class TestMockHub(unittest.TestCase):
         wrong = {"lrn_or_id": "123456789013", "pin": "9999"}
         for _ in range(5):
             self.assertEqual(call(BASE, "POST", "/api/auth/login", wrong)[0], 401)
-        status, body, headers = call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "123456789013", "pin": "1234"})
+        status, body, headers = call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "123456789013", "pin": "123456"})
         self.assertEqual((status, body["error"]["code"]), (429, "TOO_MANY_ATTEMPTS"))
         self.assertGreater(int(headers["Retry-After"]), 0)
-        self.assertEqual(call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "T-0001", "pin": "1234"})[0], 200)
-        for bad in ({"lrn_or_id": " ", "full_name": "A", "pin": "1234"}, {"lrn_or_id": "999", "full_name": "", "pin": "1234"}):
+        self.assertEqual(call(BASE, "POST", "/api/auth/login", {"lrn_or_id": "T-0001", "pin": "123456"})[0], 200)
+        for bad in ({"lrn_or_id": " ", "full_name": "A", "pin": "123456"}, {"lrn_or_id": "999", "full_name": "", "pin": "123456"}):
             self.assertEqual(call(BASE, "POST", "/api/auth/register", bad)[0], 400)
+        four = {"lrn_or_id": "123456789099", "full_name": "Old Pin", "pin": "1234"}
+        self.assertEqual(call(BASE, "POST", "/api/auth/register", four)[0], 400, "PINs are 6 digits")
 
     def test_admin_login_is_hub_pc_only(self):
-        body = {"lrn_or_id": "ADMIN-0001", "pin": "1234"}
+        body = {"lrn_or_id": "ADMIN-0001", "pin": "123456"}
         status, err, _ = call(BASE, "POST", "/api/auth/login", body, headers={"Cf-Connecting-IP": "203.0.113.7"})
         self.assertEqual((status, err["error"]["code"]), (403, "ADMIN_LOCAL_ONLY"))
         self.assertEqual(call(BASE, "POST", "/api/auth/login", body)[0], 200)
@@ -150,6 +152,8 @@ class TestMockHub(unittest.TestCase):
         ana_ws = WsClient(WS_HOST, WS, ana)
         status, receipt, _ = call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M-4QX"}, ana)
         self.assertEqual((status, receipt["status"]), (200, "PENDING"))
+        self.assertEqual((receipt["section"], receipt["teacher_name"]), ("Aguinaldo", "Maria Santos"))
+        self.assertEqual(set(receipt), {"status", "classroom_id", "section", "teacher_name"})
         self.assertEqual(teacher_ws.recv_until("EVENT_JOIN_REQUEST")["lrn"], "123456789013")
         _, roster, _ = call(BASE, "GET", f"/api/classrooms/{CLASSROOM}/roster", token=self.teacher)
         row = next(r for r in roster if r["lrn"] == "123456789013")
@@ -191,14 +195,14 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
 
     def test_archived_class_is_read_only_until_unarchived(self):
-        ann = self.pull(self.pupil)["announcements"][0]["id"]
-        saved = {"id": "c-saved", "announcement_id": ann, "content": "before", "created_at": 1}
-        call(BASE, "POST", "/api/sync/push", {"comments": [saved]}, self.pupil)
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        saved = {"id": "c-saved", "assignment_id": asg, "content": "before", "created_at": 1}
+        call(BASE, "POST", "/api/sync/push", {"private_comments": [saved]}, self.pupil)
         call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
         status, body, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New"}, self.teacher)
         self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
-        new = {"id": "c-new", "announcement_id": ann, "content": "after", "created_at": 2}
-        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [saved, new]}, self.pupil)
+        new = {"id": "c-new", "assignment_id": asg, "content": "after", "created_at": 2}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [saved, new]}, self.pupil)
         self.assertEqual(res["receipts"], [{"id": "c-saved", "status": "SYNCED"},
                                            {"id": "c-new", "status": "REJECTED", "reason": "FORBIDDEN"}])
         status, room, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New", "archived": False}, self.teacher)
@@ -438,10 +442,30 @@ class TestMockHub(unittest.TestCase):
                              ("GET", f"/api/quizzes/{quiz['id']}"), ("POST", f"/api/quizzes/{quiz['id']}/begin")):
             self.assertEqual(call(BASE, method, path, token=outsider)[0], 403, path)
         admin = login(BASE, "ADMIN-0001")
-        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "123456"}, admin)
         other_teacher = login(BASE, "T-0002")
         self.assertEqual(call(BASE, "GET", f"/api/assignments/{asg}/submissions", token=other_teacher)[0], 403)
         self.assertEqual(call(BASE, "GET", f"/api/materials/{mat}/chunks", token=self.pupil)[0], 200)
+
+    def test_handout_thread_supports_teacher_and_learner_comments_and_moderation(self):
+        material = self.pull(self.pupil)["materials"][0]
+        ann = material["announcement_id"]
+        ws = WsClient(WS_HOST, WS, self.pupil)
+        self.addCleanup(ws.close)
+        queued = {"id": "teacher-handout-comment", "announcement_id": ann,
+                  "content": "Ask about this handout here", "created_at": 1}
+        status, result, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.teacher)
+        self.assertEqual(status, 200)
+        self.assertEqual(result["receipts"][0]["status"], "SYNCED")
+        self.assertEqual(ws.recv_until("EVENT_ANNOUNCEMENT_PUSH")["announcement_id"], ann)
+        self.assertTrue(any(c["id"] == queued["id"] for c in self.pull(self.pupil)["comments"]))
+        call(BASE, "PATCH", f"/api/announcements/{ann}", {"allow_comments": False}, self.teacher)
+        _, retry, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.teacher)
+        self.assertEqual(retry["receipts"][0]["status"], "SYNCED")
+        queued["id"] = "disabled-handout-comment"
+        _, result, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
+        self.assertEqual(result["receipts"][0]["reason"], "COMMENTS_DISABLED")
+        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann}/comments", token=self.pupil)[0], 200)
 
     def test_stream_comments_are_only_for_members_of_the_class(self):
         ann = self.pull(self.pupil)["announcements"][0]["id"]
@@ -486,7 +510,7 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(again["announcements"], [], "the snapshot is sent once, not on every pull")
 
         admin = login(BASE, "ADMIN-0001")
-        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "123456"}, admin)
         jose = login(BASE, "T-0002")
         first = self.pull(jose)
         call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/teachers", {"lrn_or_id": "T-0002"}, self.teacher)
@@ -506,7 +530,7 @@ class TestMockHub(unittest.TestCase):
                          "the removed learner still receives their own REMOVED enrollment")
 
         admin = login(BASE, "ADMIN-0001")
-        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "1234"}, admin)
+        call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Jose Rizal", "role": "TEACHER", "pin": "123456"}, admin)
         jose = login(BASE, "T-0002")
         self.assertEqual(call(BASE, "GET", "/api/classrooms", token=jose)[1], [])
         _, room, _ = call(BASE, "POST", f"/api/classrooms/{CLASSROOM}/teachers", {"lrn_or_id": "T-0002"}, self.teacher)
@@ -534,7 +558,7 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(status, 403, "the admin is not a teacher")
         self.assertNotIn("Hub Admin", json.dumps(self.pull(self.teacher)["users"]), "the admin is never synced")
         self.server.state.users.clear()
-        status, session, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "ICT Coordinator", "pin": "4321"})
+        status, session, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "ICT Coordinator", "pin": "654321"})
         self.assertEqual((status, session["user"]["role"]), (200, "ADMIN"))
 
     def test_material_can_be_attached_renamed_and_deleted(self):

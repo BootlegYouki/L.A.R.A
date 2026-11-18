@@ -39,7 +39,7 @@ fun ClassFormDialog(
     val render: @Composable () -> Unit = {
         Scaffold(Modifier.fillMaxSize(), containerColor = LaraColors.Surface, topBar = {
             Surface(color = LaraColors.PrimaryDark, contentColor = LaraColors.Surface) {
-                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = LaraSpacing.S3, vertical = LaraSpacing.S1),
+                Row(Modifier.fillMaxWidth().statusBarsPadding().height(AppBarHeight).padding(horizontal = LaraSpacing.S3),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                     IconButton(onClick = onDismiss, enabled = canDismiss, modifier = Modifier.size(MinTouchTarget)) {
                         Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.enrollment_cancel_action), Modifier.size(24.dp))

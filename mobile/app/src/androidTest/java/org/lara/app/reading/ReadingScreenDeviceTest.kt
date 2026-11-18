@@ -33,7 +33,7 @@ import org.lara.app.data.remote.discovery.HubEndpoint
 import org.lara.app.data.repository.toDomain
 import org.lara.app.ui.navigation.ShellDestination
 import org.lara.app.ui.screens.stream.ClassroomLearningHost
-import org.lara.app.ui.screens.stream.ReadingSkeleton
+import org.lara.app.ui.components.LoadingSpinner
 import org.lara.app.ui.screens.classwork.MaterialReader
 import org.lara.app.ui.theme.LaraTheme
 
@@ -162,55 +162,16 @@ class ReadingScreenDeviceTest {
                 }
                 show { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-class") }
                 waitFor("Synthetic lesson"); shot("stream")
-                scrollTo("Class comments (1)"); click("Class comments (1)")
-                scrollTo("Sample")
-                assertFalse(nodes().any { it.text?.toString()?.contains("SecretSurname") == true })
-                scrollTo("Save comment")
-                val field = nodes().first { it.className?.toString() == "android.widget.EditText" }
-                assertTrue(field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
-                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "Phone queued question")
-                }))
-                click("Save comment")
-                repeat(50) {
-                    if (db.streamDao().observeComments("fixture-post").first().any { it.content == "Phone queued question" }) return@repeat
-                    SystemClock.sleep(100)
-                }
-                assertTrue(db.streamDao().observeComments("fixture-post").first().any { it.syncStatus == "QUEUED_FOR_SYNC" })
-                scrollTo("Queued for sync"); shot("queued-comment")
                 show(font = 2f) {
                     org.lara.app.ui.navigation.TeacherNavGraph(org.lara.app.ui.navigation.ShellState(
                         org.lara.app.ui.navigation.ShellRole.TEACHER, isHubReachable = false), approvalActions = {
                         androidx.compose.material3.Text("Synthetic teacher tools")
                     }, content = { destination -> ClassroomLearningHost(active, owner, destination, "fixture-class") })
                 }
-                scrollTo("Class comments (2)"); click("Class comments (2)")
-                scrollTo("Save comment")
-                val input = nodes().first { it.className?.toString() == "android.widget.EditText" }
-                var clickInput = input
-                while (!clickInput.isClickable && clickInput.parent != null) clickInput = clickInput.parent
-                clickInput.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                SystemClock.sleep(800)
-                scrollTo("Save comment")
-                val saveBounds = android.graphics.Rect().also { bounds ->
-                    nodes().first { it.text?.toString() == "Save comment" }.getBoundsInScreen(bounds)
-                }
-                var keyboardTop = Int.MAX_VALUE
-                scenario.onActivity { activity ->
-                    if (Build.VERSION.SDK_INT >= 30) {
-                        val bottom = activity.window.decorView.rootWindowInsets?.getInsets(android.view.WindowInsets.Type.ime())?.bottom ?: 0
-                        assertTrue("Keyboard must be open for the composer check", bottom > 0)
-                        keyboardTop = activity.window.decorView.height - bottom
-                    }
-                }
-                assertTrue("Save comment must remain above the keyboard", saveBounds.bottom <= keyboardTop)
-                shot("comment-keyboard")
-                instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-class") }
                 scrollTo("Synthetic PDF"); shot("classwork")
                 show(font=2f) { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-class") }
                 waitFor("Science"); shot("stream-200-top")
-                scrollTo("Class comments (2)"); click("Class comments (2)")
-                scrollTo("Hide comments (2)"); shot("stream-200-bottom")
                 show(font=2f) { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-class") }
                 waitFor("Science"); shot("classwork-200-top")
                 scrollTo("Synthetic PDF"); shot("classwork-200-bottom")
@@ -232,13 +193,13 @@ class ReadingScreenDeviceTest {
                 waitFor("Synthetic DOCX lesson text is available offline."); shot("docx-text")
                 docx.delete()
                 show { MaterialReader(active, materials[2].toDomain()) {} }
-                waitFor(context.getString(org.lara.app.R.string.reading_showing_text)); shot("lesson-text-fallback")
+                waitFor(context.getString(org.lara.app.R.string.reading_lesson_text)); shot("lesson-text-fallback")
                 assertFalse(nodes().any { it.text?.toString() == context.getString(org.lara.app.R.string.reading_file_unavailable) })
                 show { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-empty") }
                 waitFor("This is where your class announcements will appear."); shot("empty-stream")
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-empty") }
                 waitFor(context.getString(org.lara.app.R.string.reading_handouts_empty_title)); shot("empty-classwork")
-                show { ReadingSkeleton() }; waitFor("Loading saved classroom content…"); shot("loading")
+                show { LoadingSpinner() }; waitFor("Loading saved classroom content…"); shot("loading")
             }
         } finally { TokenStore(context).clear(); db.close() }
     }
