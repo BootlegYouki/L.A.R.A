@@ -9,6 +9,12 @@ class HubFailure(val status: Int, val code: String, val retryAfterSeconds: Long 
 
 /** Fixed route groups and no redirects: credentials remain on the selected LAN Hub. */
 class HubClient {
+    internal fun postAnnouncement(c: EnrollmentConnection, payload: String) {
+        require(c.session.hub == c.endpoint.restBase)
+        require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
+        exchange(c.endpoint, "/api/announcements", "POST", payload, c.session.token, maxBytes = null)
+    }
+
     internal fun manageClass(c: EnrollmentConnection, classroomId: String?, action: String?,
         teacherId: String?, method: String, payload: String?): String {
         fun valid(value: String) = value.matches(Regex("[A-Za-z0-9-]{1,128}"))
@@ -70,7 +76,7 @@ class HubClient {
         require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
         return exchange(c.endpoint, "/api/sync/$action", "POST", payload, c.session.token, 8 * 1024 * 1024)
     }
-    private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?, maxBytes: Int = 65_536): String {
+    private fun exchange(endpoint: HubEndpoint, path: String, method: String, payload: String?, token: String?, maxBytes: Int? = 65_536): String {
         val url = endpoint.restBase + path
         require(isAllowedHubUrl(url))
         val connection = URL(url).openConnection() as HttpURLConnection
@@ -94,7 +100,7 @@ class HubClient {
                 throw HubFailure(status, code,
                     connection.getHeaderField("Retry-After")?.toLongOrNull()?.coerceIn(1, 3600) ?: 60)
             }
-            return connection.inputStream.use { readBounded(it, maxBytes) }
+            return if (maxBytes == null) "" else connection.inputStream.use { readBounded(it, maxBytes) }
         } finally { connection.disconnect() }
     }
 

@@ -37,7 +37,7 @@ fun TeacherClassroomNavigation(container: AppContainer, userId: String, shell: S
     }
     if (selected != null) org.lara.app.ui.components.ClassScreen {
         CompositionLocalProvider(LocalClassChrome provides ClassChrome(selected.name, selected.section, edit = { management = "edit" }, info = { management = "info" }, back = home)) {
-            LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id) },
+            LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id, teacherHubReachable = shell.isHubReachable) },
                 teacherPeopleContent = { close ->
                     org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,
                         initialClassId = selected.id, embedded = true,
