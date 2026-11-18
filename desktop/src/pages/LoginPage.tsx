@@ -24,7 +24,7 @@ export default function LoginPage({ hub, busy, error, retryAfter, onSubmit, onCa
   }
   function fieldError(key: keyof Fields) { return errors[key] ? <p id={`auth-${key}-error`} className="auth-field-error"><i className="ph ph-warning-circle" aria-hidden="true" />{errors[key]}</p> : null; }
   return <section className="auth-panel" aria-labelledby="auth-title">
-    <div className="auth-heading"><span className="empty-art"><i className="ph ph-chalkboard-teacher" aria-hidden="true" /></span><div><h1 id="auth-title">{register ? t.auth_register : t.auth_sign_in}</h1><p>{register ? t.auth_register_help : t.auth_sign_in_help}</p></div></div>
+    <div className="auth-heading"><span className="empty-art"><i className="ph ph-user-circle" aria-hidden="true" /></span><div><h1 id="auth-title">{register ? t.auth_register : t.auth_sign_in}</h1><p>{register ? t.auth_register_help : t.auth_sign_in_help}</p></div></div>
     <p className="auth-hub">{hub ? `${t.auth_selected_hub} ${hub.name}` : t.auth_need_hub}</p>
     <form onSubmit={submit} noValidate aria-busy={busy}>
       {register && <div className="auth-field"><label htmlFor="auth-name">{t.auth_full_name}</label><input id="auth-name" name="full_name" autoComplete="name" maxLength={100} value={fields.full_name} disabled={busy} aria-invalid={!!errors.full_name} aria-describedby={errors.full_name ? 'auth-full_name-error' : undefined} onChange={(e) => setFields({ ...fields, full_name: e.target.value })} />{fieldError('full_name')}</div>}
