@@ -214,7 +214,7 @@ class HomeNavigationDeviceTest {
             waitFor("Science 4")
             instrumentation.sendStatus(0, android.os.Bundle().apply { putString("stream", "Ready to remove USB Hub forwarding\n") })
             val deadline = SystemClock.uptimeMillis() + 40_000
-            val offline = context.getString(if (teacher) org.lara.app.R.string.shell_offline else org.lara.app.R.string.enrollment_join_offline)
+            val offline = context.getString(if (teacher) org.lara.app.R.string.home_offline else org.lara.app.R.string.enrollment_join_offline)
             while (SystemClock.uptimeMillis() < deadline && nodes().none { it.text?.toString() == offline }) SystemClock.sleep(200)
             waitFor(offline)
             waitFor("Science 4")

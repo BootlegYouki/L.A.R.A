@@ -23,38 +23,50 @@ import org.lara.app.ui.screens.teacher.classes.teacherIds
 @Composable
 fun TeacherClassroomNavigation(container: AppContainer, userId: String, shell: ShellState,
     session: SyncSessionViewModel, expired: () -> Unit) {
-    var selectedId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     var management by rememberSaveable(userId) { mutableStateOf<String?>(null) }
+    var requests by rememberSaveable(userId) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val flow = remember(container) { container.classrooms.classrooms(scope) }
     val cached by flow.collectAsStateWithLifecycle()
+    val managed = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() && it.managedBy(userId) }.map { it.id }
+    val joinRequestCount by remember(managed) { container.pendingJoinCount(managed) }.collectAsStateWithLifecycle(0)
+    org.lara.app.ui.components.ClassNav { selectedId, open, home ->
     val selected = (cached as? Cached.Content)?.value?.find { it.id == selectedId && userId in it.teacherIds() }
     LaunchedEffect(cached, selectedId) {
-        if (cached is Cached.Content && selected == null) selectedId = null
+        if (selectedId != null && cached is Cached.Content && selected == null) home()
     }
-    BackHandler(enabled = selected != null) { selectedId = null }
-    if (selected == null) ClassHomeScaffold(
+    if (selected != null) org.lara.app.ui.components.ClassScreen {
+        CompositionLocalProvider(LocalClassChrome provides ClassChrome(selected.name, selected.section, edit = { management = "edit" }, info = { management = "info" }, back = home)) {
+            LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id) },
+                teacherPeopleContent = { close ->
+                    org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,
+                        initialClassId = selected.id, embedded = true,
+                        pendingContent = { ClassPendingRequests(container, userId, session, selected, expired) }, close = close)
+                })
+        }
+    } else if (selectedId == null) ClassHomeScaffold(
         classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
             .map { HomeClass(it.id, it.name, it.section) },
+        offline = if (cached is Cached.Content) !shell.isHubReachable else null, joinRequestCount = joinRequestCount,
         teacher = true, canAdd = shell.isHubReachable, onAdd = { management = "create" },
-        onOpenClass = { selectedId = it }, onManageClasses = { management = "manage" },
+        onOpenClass = { open(it); requests = false }, onJoinRequests = { requests = true },
+        onHome = { home(); requests = false },
+        pageTitle = if (requests) stringResource(R.string.approval_title) else null,
     ) { insets ->
-        Box(Modifier.fillMaxSize().padding(insets)) {
-            TeacherApprovalPanel(container, userId, session, expired, onOpenClass = { selectedId = it }, showManagementEntry = false)
+        if (requests) {
+            BackHandler { requests = false }
+            Box(Modifier.fillMaxSize().padding(insets)) { JoinRequestsPage(container, userId, session, expired) }
+        } else Box(Modifier.fillMaxSize().padding(insets)) {
+            TeacherApprovalPanel(container, userId, session, expired, onOpenClass = open, showManagementEntry = false)
         }
-    } else CompositionLocalProvider(LocalClassChrome provides ClassChrome(selected.name, selected.section) { selectedId = null }) {
-        LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", teacherApprovalActions = {
-            TeacherApprovalPanel(container, userId, session, expired, selectedClassId = selected.id, showManagementEntry = false)
-        }, content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id) },
-            teacherPeopleContent = { close ->
-                org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,
-                    initialClassId = selected.id, embedded = true, close = close)
-            })
     }
-    management?.let { action ->
-        Dialog(onDismissRequest = { management = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-            org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,
-                startCreating = action == "create", close = { management = null })
+    management?.takeIf { (it == "create") == (selected == null) }?.let { action ->
+        @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { management = null },
+            containerColor = org.lara.app.ui.theme.LaraColors.Surface) {
+            if (action == "info" && selected != null) org.lara.app.ui.screens.teacher.classes.ClassInfoSheet(selected)
+            else org.lara.app.ui.screens.teacher.classes.EditClassPage(container, userId, session.reachable, expired, if (action == "edit") selected?.id else null) { management = null }
         }
+    }
     }
 }

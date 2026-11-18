@@ -170,3 +170,12 @@ for screenshots, checks, remaining device coverage and the reviewer response.
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+## Hub step (sign-in split)
+
+`DiscoveryScreen` is now only the "connect to your classroom" step: a tinted
+broadcast-icon header that pulses while scanning (static when the system animation
+scale is 0), the status pill, found Hubs as large tappable cards, Scan again, then the
+manual address field with a Connect button as the secondary path. `onBack` is null when
+no Hub is saved (first run), so there is nothing to go back to. It never mentions
+accounts or PINs; `AuthHost` moves to the sign-in step when the Hub responds.

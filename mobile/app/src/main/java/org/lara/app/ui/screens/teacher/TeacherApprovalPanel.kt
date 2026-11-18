@@ -49,23 +49,19 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: o
     val refreshing by session.refreshingClasses.collectAsStateWithLifecycle()
     val classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
     val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
+    val body: @Composable () -> Unit = {
     Column(Modifier.fillMaxWidth().then(if (onOpenClass != null) Modifier.fillMaxHeight() else Modifier.heightIn(max = LaraSpacing.S12 * 4))
         .verticalScroll(rememberScrollState()).padding(LaraSpacing.S4)
         .padding(bottom = if (onOpenClass != null) org.lara.app.ui.theme.PrimaryTouchTarget + LaraSpacing.S8 else LaraSpacing.S1),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         if (onOpenClass != null) Text(stringResource(R.string.enrollment_classes), style = MaterialTheme.typography.headlineMedium)
-        if (onOpenClass != null && !reachable) DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
         if (showManagementEntry) org.lara.app.ui.screens.teacher.classes.ClassManagementEntry(container, userId, session.reachable) { latestExpired() }
         if (error != null && reachable) DiscoveryBanner(R.string.approval_failed, warning = true, success = false)
-        if (cached == Cached.Loading || classes.isEmpty() && refreshing) ApprovalLoadingSkeleton()
+        if (cached == Cached.Loading || classes.isEmpty() && refreshing) org.lara.app.ui.components.LoadingSpinner(inline = true)
         else if (classes.isEmpty()) Text(stringResource(if (reachable) R.string.approval_no_classes else R.string.approval_no_saved_classes))
         classes.filter { selectedClassId == null || it.id == selectedClassId }.forEach { classroom ->
             key(classroom.id) {
-                val model: RosterViewModel = viewModel(key = "approval-$userId-${classroom.id}", factory = viewModelFactory {
-                    initializer { RosterViewModel(classroom.id, classroom.classCode, container.enrollments,
-                        session.remote, session.reachable, session.events.filterNot { it is HubEvent.JoinRequest },
-                        { id -> container.sync.refreshRoster(userId) { session.refresher.refresh(id) } }, { latestExpired() }) }
-                })
+                val model = rosterModel(container, userId, session, classroom, latestExpired)
                 val code = ClassCode.canonicalOrNull(classroom.classCode)
                 LaunchedEffect(model, code, pendingCodes) {
                     if (classroom.managedBy(userId) && code != null && code in pendingCodes) {
@@ -77,8 +73,21 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: o
                     names.find { it.id == classroom.teacherId }?.name,
                     stringResource(if (classroom.archivedAt == null) R.string.classes_active else R.string.classes_archived),
                     true) { onOpenClass(classroom.id) }
-                if (classroom.managedBy(userId)) org.lara.app.ui.components.ClassroomSurface { TeacherApprovalHost(model) }
+                if (onOpenClass == null && classroom.managedBy(userId)) org.lara.app.ui.components.ClassroomSurface { TeacherApprovalHost(model) }
             }
         }
     }
+    }
+    if (onOpenClass != null) org.lara.app.ui.components.PullRefresh({
+        container.sync.refreshRoster(userId) { session.refresher.refreshClasses() }
+    }) { body() } else body()
 }
+
+@Composable
+internal fun rosterModel(container: AppContainer, userId: String, session: TeacherApprovalSession,
+    classroom: org.lara.app.domain.model.Classroom, onExpired: () -> Unit): RosterViewModel =
+    viewModel(key = "approval-$userId-${classroom.id}", factory = viewModelFactory {
+        initializer { RosterViewModel(classroom.id, classroom.classCode, container.enrollments,
+            session.remote, session.reachable, session.events.filterNot { it is HubEvent.JoinRequest },
+            { id -> container.sync.refreshRoster(userId) { session.refresher.refresh(id) } }, onExpired) }
+    })

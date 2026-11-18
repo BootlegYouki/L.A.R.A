@@ -41,33 +41,37 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
     })
     val state by model.state.collectAsStateWithLifecycle()
     val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
-    var selectedId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
-    val selected = state.openableClass(selectedId)
     EnrollmentSession(model)
+    org.lara.app.ui.components.ClassNav { selectedId, open, home ->
+    val selected = state.openableClass(selectedId)
     LaunchedEffect(selectedId, state.classes, state.requests) {
-        if (selectedId != null && state.classes is Cached.Content && selected == null) selectedId = null
+        if (selectedId != null && state.classes is Cached.Content && selected == null) home()
     }
-    BackHandler(enabled = selected != null) { selectedId = null }
-    if (selected == null) {
-        ClassHomeScaffold(
-            classes = (state.classes as? Cached.Content)?.value.orEmpty().filter { state.openableClass(it.classroom.id) != null }
-                .map { HomeClass(it.classroom.id, it.classroom.name, it.classroom.section) },
-            teacher = false, canAdd = !state.offline && !state.busy, onAdd = model::showJoin,
-            onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id },
-        ) { insets ->
-            Box(Modifier.fillMaxSize().padding(insets)) {
-                EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit,
-                    onOpenClass = { id -> if (state.openableClass(id) != null) selectedId = id }, onCodeChanged = model::onInputChanged,
-                    teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name }, showJoinAction = false,
-                    learnerName = names.find { it.id == userId }?.name)
-            }
-        }
-    } else {
+    if (selected != null) org.lara.app.ui.components.ClassScreen {
+        var info by rememberSaveable(selected.classroom.id) { mutableStateOf(false) }
         CompositionLocalProvider(org.lara.app.ui.components.LocalClassChrome provides
-            org.lara.app.ui.components.ClassChrome(selected.classroom.name, selected.classroom.section) { selectedId = null }) {
-        LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.classroom.id}", content = { destination ->
-            org.lara.app.ui.screens.stream.ClassroomLearningHost(container, userId, destination, selected.classroom.id)
-        })
+            org.lara.app.ui.components.ClassChrome(selected.classroom.name, selected.classroom.section, info = { info = true }, back = home)) {
+            LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.classroom.id}", content = { destination ->
+                org.lara.app.ui.screens.stream.ClassroomLearningHost(container, userId, destination, selected.classroom.id)
+            })
         }
+        if (info) @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { info = false },
+            containerColor = org.lara.app.ui.theme.LaraColors.Surface) {
+            org.lara.app.ui.screens.teacher.classes.ClassInfoSheet(selected.classroom)
+        }
+    } else if (selectedId == null) ClassHomeScaffold(
+        classes = (state.classes as? Cached.Content)?.value.orEmpty().filter { state.openableClass(it.classroom.id) != null }
+            .map { HomeClass(it.classroom.id, it.classroom.name, it.classroom.section) },
+        teacher = false, canAdd = !state.offline && !state.busy, onAdd = model::showJoin, offline = if (state.classes is Cached.Content) state.offline else null,
+        onOpenClass = { id -> if (state.openableClass(id) != null) open(id) }, onHome = home,
+    ) { insets ->
+        Box(Modifier.fillMaxSize().padding(insets)) {
+            org.lara.app.ui.components.PullRefresh({ model.reload() }) { EnrollmentScreen(state, model::showJoin, model::dismissJoin, model::submit,
+                onOpenClass = { id -> if (state.openableClass(id) != null) open(id) }, onCodeChanged = model::onInputChanged,
+                teacherNames = names.filter { it.role == "TEACHER" }.associate { it.id to it.name }, showJoinAction = false,
+                learnerName = names.find { it.id == userId }?.name) }
+        }
+    }
     }
 }

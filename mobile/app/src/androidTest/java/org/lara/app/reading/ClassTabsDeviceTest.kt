@@ -133,7 +133,7 @@ class ClassTabsDeviceTest {
         assertEquals(if (role == "teacher") "TEACHER" else "STUDENT", user.role)
         ActivityScenario.launch(MainActivity::class.java).use {
             waitFor("Science 4"); click("Science 4")
-            waitFor(context.getString(org.lara.app.R.string.shell_offline)); capture("$role-disconnected-stream")
+            waitFor(context.getString(org.lara.app.R.string.home_offline)); capture("$role-disconnected-stream")
             click("Classwork"); click("Filter by topic"); waitFor("All topics"); capture("$role-disconnected-topics")
             click("All topics"); click("People"); waitFor("Teachers"); capture("$role-disconnected-people")
             assertFalse(nodes().any { it.text?.toString() == context.getString(org.lara.app.R.string.classes_offline) })

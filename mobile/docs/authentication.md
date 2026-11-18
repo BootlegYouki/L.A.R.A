@@ -4,7 +4,7 @@
 
 The app opens the last encrypted session and its Room profile before showing any network screen. A cached profile opens its learner or teacher graph even with the Hub unavailable or a token past its server expiry. Token expiry limits authenticated Hub requests; it does not erase downloaded classroom work.
 
-New sessions use the saved Sprint 1.2 Hub endpoint. Find classroom Hub opens the existing discovery screen, including its manual IPv4 entry. A responding Hub returns to the sign-in screen. The app calls only the contract login or learner-registration POST routes; teacher accounts are created on the Hub. ADMIN responses are rejected before profile/token persistence.
+New sessions use the saved Sprint 1.2 Hub endpoint. Connecting to a Hub and signing in are two separate steps. `AuthHost` starts on the Hub step (`DiscoveryScreen`, no account or PIN wording) when `endpoints.load() == null`; a responding Hub goes straight to the sign-in step. The sign-in form has no Hub row: a chip at the top shows "Connected to <address>" (check icon), "Checking ..." or, when the Hub does not answer, "Can't reach <address>" (warning icon and text), with a Change Hub action that returns to the Hub step (Back returns to sign-in while a Hub is saved). Reachability comes from `AuthRepository.reachability`. Helper text is kept to the 12-digit LRN hint when registering. The app calls only the contract login or learner-registration POST routes; teacher accounts are created on the Hub. ADMIN responses are rejected before profile/token persistence.
 
 ## Key files
 

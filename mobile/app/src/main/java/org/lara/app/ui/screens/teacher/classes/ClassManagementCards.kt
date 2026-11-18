@@ -60,3 +60,22 @@ internal fun ClassPersonCard(name: String, status: String, action: @Composable (
         action()
     }
 }
+
+/** Compact people row: initial avatar, name, one status line and an optional trailing action. */
+@Composable
+internal fun PersonRow(name: String, status: String, action: @Composable RowScope.() -> Unit = {}) {
+    org.lara.app.ui.components.ClassroomSurface {
+        Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3), verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = CircleShape, color = LaraColors.PrimaryLight) {
+                Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                    Text(name.trim().take(1).uppercase(), color = LaraColors.PrimaryDark, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            Column(Modifier.weight(1f)) {
+                Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text(status, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+            }
+            action()
+        }
+    }
+}

@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -47,7 +48,8 @@ fun ClassManagementEntry(container: AppContainer, userId: String, reachable: Sta
 
 @Composable
 fun ClassManagementPage(container: AppContainer, userId: String, reachable: StateFlow<Boolean>, expired: () -> Unit,
-    initialClassId: String? = null, embedded: Boolean = false, startCreating: Boolean = false, close: () -> Unit) {
+    initialClassId: String? = null, embedded: Boolean = false, startCreating: Boolean = false,
+    pendingContent: (@Composable () -> Unit)? = null, close: () -> Unit) {
     val latestExpired by rememberUpdatedState(expired)
     val model: ClassManagementViewModel = viewModel(key = "class-management-$userId", factory = viewModelFactory {
         initializer { ClassManagementViewModel(container, userId, reachable) { latestExpired() } }
@@ -59,12 +61,12 @@ fun ClassManagementPage(container: AppContainer, userId: String, reachable: Stat
         }
     }
     val online by reachable.collectAsStateWithLifecycle()
-    ClassManagementScreen(model, userId, online, close, embedded, startCreating)
+    ClassManagementScreen(model, userId, online, close, embedded, startCreating, pendingContent)
 }
 
 @Composable
 private fun ClassManagementScreen(model: ClassManagementViewModel, userId: String, online: Boolean, close: () -> Unit,
-    embedded: Boolean = false, startCreating: Boolean = false) {
+    embedded: Boolean = false, startCreating: Boolean = false, pendingContent: (@Composable () -> Unit)? = null) {
     val cached by model.classrooms.collectAsStateWithLifecycle()
     val teacherNames by model.teacherNames.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
@@ -84,18 +86,16 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
         contentWindowInsets = if (embedded) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets, topBar = {
         if (!embedded) org.lara.app.ui.components.ClassroomTopBar(stringResource(R.string.classes_manage), selected?.name, close)
     }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(LaraSpacing.S4),
+        org.lara.app.ui.components.PullRefresh({ model.reload() }, Modifier.fillMaxSize().padding(padding)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-            if (!online) {
-                if (!embedded) item { DiscoveryBanner(R.string.classes_offline, warning = true, success = false) }
-            }
-            else state.error?.let { message -> item { DiscoveryBanner(message, warning = true, success = false) } }
+            if (online) state.error?.let { message -> item { DiscoveryBanner(message, warning = true, success = false) } }
             if (!embedded) item { Button(enabled = enabled, onClick = { name = ""; section = ""; form = "create" },
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.classes_create)) } }
-            item { OutlinedButton(enabled = enabled, onClick = model::refresh, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+            if (!embedded) item { OutlinedButton(enabled = enabled, onClick = model::refresh, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.classes_refresh))
             } }
-            if (state.busy || cached == Cached.Loading) item { org.lara.app.ui.screens.teacher.ApprovalLoadingSkeleton() }
+            if (cached == Cached.Loading) item { org.lara.app.ui.components.LoadingSpinner(inline = true) }
             if (cached != Cached.Loading && classes.isEmpty()) item { Text(stringResource(R.string.classes_empty)) }
             if (!embedded) items(classes, key = { it.id }) { row ->
                 ManagedClassCard(row, selected?.id == row.id, !state.busy) { model.select(row.id) }
@@ -143,33 +143,36 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                     }
                 }
                 if (!settingsTab || !row.canManage(userId, true)) {
-                item { Text(stringResource(R.string.classes_teachers), style = MaterialTheme.typography.titleLarge) }
+                item { Text(stringResource(R.string.classes_teachers), style = MaterialTheme.typography.titleMedium) }
                 items(row.teacherIds().distinct(), key = { "teacher:$it" }) { id ->
-                    ClassPersonCard(teacherNames.find { it.id == id }?.full_name ?: id,
+                    PersonRow(teacherNames.find { it.id == id }?.full_name ?: id,
                         stringResource(if (id == row.teacherId) R.string.classes_owner_role else R.string.classes_co_role)) {
-                    if (id != row.teacherId && row.canManage(userId, true)) OutlinedButton(enabled = enabled,
-                        onClick = { target = id; form = "removeTeacher" }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.classes_remove_teacher))
+                    if (id != row.teacherId && row.canManage(userId, true)) IconButton({ target = id; form = "removeTeacher" },
+                        Modifier.size(MinTouchTarget), enabled) {
+                        Icon(painterResource(R.drawable.ic_x), stringResource(R.string.classes_remove_teacher), Modifier.size(24.dp))
                     }
                     }
                 }
-                item { Text(stringResource(R.string.classes_learners), style = MaterialTheme.typography.titleLarge) }
+                if (pendingContent != null) item { pendingContent() }
+                item { Text(stringResource(R.string.classes_learners), style = MaterialTheme.typography.titleMedium) }
                 val members = (state.roster as? Cached.Content)?.value.orEmpty()
-                if (state.roster == Cached.Loading) item { org.lara.app.ui.screens.teacher.ApprovalLoadingSkeleton() }
-                else if (members.isEmpty()) item { Text(stringResource(R.string.classes_no_learners)) }
-                items(members, key = { "learner:${it.enrollment.id}" }) { member ->
-                    ClassPersonCard(member.user?.fullName ?: stringResource(R.string.classes_unnamed), stringResource(when (member.enrollment.status) {
+                if (state.roster == Cached.Loading) item { org.lara.app.ui.components.LoadingSpinner(inline = true) }
+                else if (members.none { it.enrollment.status != "PENDING" }) item { Text(stringResource(R.string.classes_no_learners)) }
+                // Waiting learners are reviewed on the sidebar's Join requests page.
+                items(members.filter { it.enrollment.status != "PENDING" }, key = { "learner:${it.enrollment.id}" }) { member ->
+                    PersonRow(member.user?.fullName ?: stringResource(R.string.classes_unnamed), stringResource(when (member.enrollment.status) {
                         "ACTIVE" -> R.string.classes_active; "PENDING" -> R.string.classes_pending
                         "REMOVED" -> R.string.classes_removed; else -> R.string.classes_rejected
                     })) {
-                    if (member.enrollment.status == "ACTIVE" && row.canManage(userId, false)) OutlinedButton(enabled = enabled,
-                        onClick = { target = member.enrollment.studentId; form = "removeLearner" }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                        Text(stringResource(R.string.classes_remove_learner))
+                    if (member.enrollment.status == "ACTIVE" && row.canManage(userId, false)) IconButton({ target = member.enrollment.studentId; form = "removeLearner" },
+                        Modifier.size(MinTouchTarget), enabled) {
+                        Icon(painterResource(R.drawable.ic_x), stringResource(R.string.classes_remove_learner), Modifier.size(24.dp))
                     }
                     }
                 }
                 }
             }
+        }
         }
     }
     form?.let { action ->
@@ -183,7 +186,6 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                 enabled = enabled && name.isNotBlank() && (action == "add" || section.isNotBlank()),
                 onAction = { if (action == "rename") model.rename(name, section) else model.addTeacher(name); form = null },
                 onDismiss = { form = null }) {
-                if (!online) DiscoveryBanner(R.string.classes_offline, warning = true, success = false)
                 Text(stringResource(if (action == "rename") R.string.classes_details else R.string.classes_teachers),
                     style = MaterialTheme.typography.titleMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -200,28 +202,13 @@ private fun ClassManagementScreen(model: ClassManagementViewModel, userId: Strin
                 }
             }
         } else {
-            AlertDialog(onDismissRequest = { form = null }, containerColor = LaraColors.Surface,
-                titleContentColor = LaraColors.TextPrimary, textContentColor = LaraColors.TextSecondary,
-                shape = LaraShapes.extraLarge, title = { Text(stringResource(when(action) {
-                "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner
-            })) }, text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-                Text(stringResource(when (action) {
-                    "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning
-                }))
-                selected?.takeIf { action == "archive" }?.let { classroom ->
-                    Text(classroom.name, style = MaterialTheme.typography.titleMedium, color = LaraColors.TextPrimary)
-                    Text(classroom.section, style = MaterialTheme.typography.bodyLarge)
-                }
-            } }, confirmButton = { TextButton(enabled = enabled,
-                onClick = {
-                    when(action) {
-                        "archive" -> model.archive()
-                        "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target)
-                    }; form = null
-                }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(if (action == "archive") R.string.classes_archive else R.string.classes_confirm)) } },
-                dismissButton = { TextButton(onClick = { form = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                    Text(stringResource(R.string.enrollment_cancel_action))
-                } })
+            org.lara.app.ui.components.NativeConfirmDialog(
+                stringResource(when (action) { "archive" -> R.string.classes_archive; "removeTeacher" -> R.string.classes_remove_teacher; else -> R.string.classes_remove_learner }),
+                stringResource(when (action) { "archive" -> R.string.classes_archive_warning; "removeLearner" -> R.string.classes_remove_warning; else -> R.string.classes_teacher_warning }) +
+                    (selected?.takeIf { action == "archive" }?.let { "\n\n${it.name}\n${it.section}" } ?: ""),
+                stringResource(if (action == "archive") R.string.classes_archive else R.string.classes_confirm), stringResource(R.string.enrollment_cancel_action),
+                { if (enabled) { when (action) { "archive" -> model.archive(); "removeTeacher" -> model.removeTeacher(target); else -> model.removeLearner(target) } }; form = null },
+                { form = null })
         }
     }
 }

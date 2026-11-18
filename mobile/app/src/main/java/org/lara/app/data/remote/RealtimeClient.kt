@@ -36,6 +36,13 @@ internal fun decodeHubEvent(text: String): HubEvent? = runCatching {
     }
 }.getOrNull()
 
+sealed interface TutorEvent {
+    data class Queue(val message: String) : TutorEvent
+    data class Token(val text: String) : TutorEvent
+    data object Done : TutorEvent
+    data class Failed(val code: String) : TutorEvent
+}
+
 /** Foreground owners subscribe once per session; canceling the subscription releases its socket. */
 class RealtimeClient : Closeable {
     private val client = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
@@ -66,6 +73,38 @@ class RealtimeClient : Closeable {
             delay(reconnectDelayMillis(failures))
             failures = (failures + 1).coerceAtMost(4)
         }
+    }
+
+    /** One question per socket: the Hub builds the prompt, the client only sends the learner's message. */
+    fun askTutor(connection: EnrollmentConnection, classroomId: String, materialId: String, message: String): Flow<TutorEvent> = callbackFlow {
+        require(isAllowedHubUrl(connection.endpoint.webSocketUrl))
+        val requestId = java.util.UUID.randomUUID().toString()
+        val socket = client.newWebSocket(Request.Builder().url(connection.endpoint.webSocketUrl).build(), object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                webSocket.send(buildJsonObject { put("event", "EVENT_HELLO"); put("token", connection.session.token) }.toString())
+            }
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                val v = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull() ?: return
+                fun str(k: String) = (v[k] as? JsonPrimitive)?.contentOrNull
+                when (str("event")) {
+                    "EVENT_HELLO_ACK" -> webSocket.send(buildJsonObject {
+                        put("event", "EVENT_AI_CHAT_REQUEST"); put("request_id", requestId)
+                        put("classroom_id", classroomId); put("material_id", materialId)
+                        put("message", message); put("language", "EN")
+                    }.toString())
+                    "EVENT_QUEUE_STATUS" -> str("message")?.let { trySend(TutorEvent.Queue(it)) }
+                    "EVENT_AI_TOKEN_STREAM" -> if (str("request_id") == requestId) {
+                        str("token")?.let { trySend(TutorEvent.Token(it)) }
+                        if (v["is_finished"]?.jsonPrimitive?.booleanOrNull == true) { trySend(TutorEvent.Done); channel.close() }
+                    }
+                    "EVENT_ERROR" -> { trySend(TutorEvent.Failed(str("code") ?: "BAD_REQUEST")); channel.close() }
+                }
+            }
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) { webSocket.close(code, null); channel.close() }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { channel.close(IOException("Hub connection unavailable")) }
+        })
+        val timeout = launch { delay(120_000); channel.close(IOException("Tutor timed out")); socket.cancel() }
+        awaitClose { timeout.cancel(); socket.cancel() }
     }
 
     private fun socket(connection: EnrollmentConnection): Flow<HubEvent> = callbackFlow {

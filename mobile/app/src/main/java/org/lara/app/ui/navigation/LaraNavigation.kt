@@ -86,7 +86,7 @@ fun LaraNavigation(
                 val model: DiscoveryViewModel = viewModel(factory = viewModelFactory {
                     initializer { DiscoveryViewModel(discovery) }
                 })
-                DiscoveryScreen(model, onBack = {
+                DiscoveryScreen(model, onDismiss = {
                     controller.navigate(Home) { popUpTo<Discovery> { inclusive = true }; launchSingleTop = true }
                 })
             }
