@@ -332,4 +332,23 @@
     <string name="tutor_quiz_locked">The AI tutor is locked during a quiz</string>
     <string name="tutor_busy">The tutor is busy. Try again in a moment.</string>
     <string name="tutor_failed">The tutor could not answer. Try again.</string>
+    <string name="announcement_new">New announcement</string>
+    <string name="announcement_title">Title</string>
+    <string name="announcement_content">Announcement</string>
+    <string name="announcement_allow_comments">Allow learner comments</string>
+    <string name="announcement_post">Post announcement</string>
+    <string name="announcement_send">Post</string>
+    <string name="announcement_posting">Posting…</string>
+    <string name="announcement_posted">Announcement posted</string>
+    <string name="announcement_needs_hub">Waiting for the Hub. Posting needs the classroom network.</string>
+    <string name="announcement_failed">Couldn’t confirm the post. Check the Stream before trying again.</string>
+    <string name="class_comments_title">Class comments</string>
+    <string name="class_comments_empty">No class comments yet. Start the discussion.</string>
+    <string name="class_comments_member">Class member</string>
+    <string name="class_comments_hint">Add class comment</string>
+    <string name="class_comments_send">Send class comment</string>
+    <string name="class_comments_disabled">Comments are turned off for this post.</string>
+    <string name="class_comments_rejected">Not sent. Commenting may be turned off or your class access may have changed.</string>
+    <string name="class_comments_save_failed">Could not save your comment. Please try again.</string>
+    <string name="class_comments_archived">This class is archived. Comments are read-only.</string>
 </resources>
