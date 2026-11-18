@@ -1,0 +1,21 @@
+import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { createElement } from 'react';
+import { afterEach, expect, it, vi } from 'vitest';
+const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke }));
+import ClassPage from '../src/pages/ClassPage';
+import type { CachedAccount } from '../src/services/auth';
+const room = {id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_id:'teacher'};
+const account: CachedAccount = {hub:{ip:'127.0.0.1',http_port:8080,ws_port:8081,name:'Hub'},user:{id:'teacher',role:'TEACHER',lrn_or_id:'T',full_name:'Teacher'},expires_at:1,persistent:true,classrooms:[room]};
+let renderer: ReactTestRenderer;
+afterEach(async () => {if(renderer) await act(async () => renderer.unmount()); vi.clearAllMocks(); vi.unstubAllGlobals();});
+it('opens cached classwork offline and routes a video through its actual material ID', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[{id:'lesson',title:'Food chain',file_type:'VIDEO',saved:true,chunks:[]}]});
+  const open = vi.fn();
+  await act(async () => {renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:open}));});
+  await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  await act(async () => renderer.root.findByProps({className:'material-row'}).props.onClick());
+  expect(open).toHaveBeenCalledWith('lesson');
+  expect(invoke).toHaveBeenCalledWith('read_class_content',{hub:account.hub,userId:'teacher',classroomId:'class'});
+});

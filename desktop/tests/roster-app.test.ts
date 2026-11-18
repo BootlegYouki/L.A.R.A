@@ -38,6 +38,7 @@ it('does not restore teacher rows after switching to a learner while roster read
 it.each([['approve','accept'],['reject','decline']] as const)('keeps a failed %s Pending and reports the action without replaying it',async(action,word)=>{
  const pending=rows(rooms[0].id);mocks.roster.mockResolvedValue(pending);mocks.decide.mockRejectedValue(new ApiError('server'));
  await act(async()=>{renderer=create(createElement(App))});await act(async()=>renderer.root.findByType(HomePage).props.onOpen(rooms[0].id));
+ await act(async()=>renderer.root.findByProps({id:'tab-people'}).props.onClick());
  await act(async()=>renderer.root.findByType(RosterPage).props.onDecide(uid,action));
  const view=renderer.root.findByType(RosterPage);expect(view.props.actionError).toContain(`Could not ${word} Synthetic learner`);expect(view.props.error).toBeNull();expect(view.props.busy).toBe(false);expect(view.props.roster[0].status).toBe('PENDING');
  await act(async()=>{await vi.advanceTimersByTimeAsync(10000)});expect(mocks.decide).toHaveBeenCalledTimes(1);expect(useStore.getState().account?.rosters?.[rooms[0].id][0].status).toBe('PENDING');
