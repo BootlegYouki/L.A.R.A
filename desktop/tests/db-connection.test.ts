@@ -1,9 +1,11 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 
 const load = vi.hoisted(() => vi.fn());
+const prepare = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: prepare }));
 vi.mock('@tauri-apps/plugin-sql', () => ({ default: { load } }));
 
-beforeEach(() => { vi.resetModules(); load.mockReset(); });
+beforeEach(() => { vi.resetModules(); load.mockReset(); prepare.mockReset().mockResolvedValue(undefined); });
 
 it('retries a failed open instead of caching a rejected promise', async () => {
   const db = { execute: vi.fn().mockResolvedValue({}), select: vi.fn().mockResolvedValue([]) };
@@ -29,4 +31,12 @@ it('times out a stalled native request and permits a fresh open', async () => {
   } finally {
     vi.useRealTimers();
   }
+});
+
+it('does not load the plugin database if native compatibility preparation fails', async () => {
+  prepare.mockRejectedValueOnce(new Error('locked database'));
+  const { openDatabase } = await import('../src/services/db');
+  await expect(openDatabase()).rejects.toThrow('locked database');
+  expect(prepare).toHaveBeenCalledWith('prepare_client_database');
+  expect(load).not.toHaveBeenCalled();
 });
