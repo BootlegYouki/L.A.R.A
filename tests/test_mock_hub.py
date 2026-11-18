@@ -447,11 +447,36 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(call(BASE, "GET", f"/api/assignments/{asg}/submissions", token=other_teacher)[0], 403)
         self.assertEqual(call(BASE, "GET", f"/api/materials/{mat}/chunks", token=self.pupil)[0], 200)
 
-    def test_stream_comments_are_gone(self):
-        ann = self.pull(self.pupil)["announcements"][0]
-        self.assertNotIn("allow_comments", ann)
-        self.assertNotIn("comments", self.pull(self.pupil))
-        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann['id']}/comments", token=self.pupil)[0], 404)
+    def test_handout_thread_supports_teacher_and_learner_comments_and_moderation(self):
+        material = self.pull(self.pupil)["materials"][0]
+        ann = material["announcement_id"]
+        ws = WsClient(WS_HOST, WS, self.pupil)
+        self.addCleanup(ws.close)
+        queued = {"id": "teacher-handout-comment", "announcement_id": ann,
+                  "content": "Ask about this handout here", "created_at": 1}
+        status, result, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.teacher)
+        self.assertEqual(status, 200)
+        self.assertEqual(result["receipts"][0]["status"], "SYNCED")
+        self.assertEqual(ws.recv_until("EVENT_ANNOUNCEMENT_PUSH")["announcement_id"], ann)
+        self.assertTrue(any(c["id"] == queued["id"] for c in self.pull(self.pupil)["comments"]))
+        call(BASE, "PATCH", f"/api/announcements/{ann}", {"allow_comments": False}, self.teacher)
+        _, retry, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.teacher)
+        self.assertEqual(retry["receipts"][0]["status"], "SYNCED")
+        queued["id"] = "disabled-handout-comment"
+        _, result, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
+        self.assertEqual(result["receipts"][0]["reason"], "COMMENTS_DISABLED")
+        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann}/comments", token=self.pupil)[0], 200)
+
+    def test_stream_comments_are_only_for_members_of_the_class(self):
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        outsider = login(BASE, "123456789013")          # signed in, but not enrolled
+        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann}/comments", token=outsider)[0], 403)
+        self.assertEqual(call(BASE, "POST", f"/api/announcements/{ann}/comments", {"content": "x"}, outsider)[0], 403)
+        queued = {"id": "c-1", "announcement_id": ann, "content": "x", "created_at": 1}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, outsider)
+        self.assertEqual(res["receipts"][0], {"id": "c-1", "status": "REJECTED", "reason": "FORBIDDEN"})
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED")
 
     @needs_mock
     def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):
