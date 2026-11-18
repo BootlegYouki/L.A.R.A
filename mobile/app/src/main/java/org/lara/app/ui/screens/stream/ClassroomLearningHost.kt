@@ -32,12 +32,14 @@ import org.lara.app.ui.screens.classwork.MaterialReader
 import org.lara.app.ui.screens.classwork.VideoPlayerScreen
 import org.lara.app.ui.theme.*
 import org.lara.app.ui.screens.teacher.classes.teacherIds
+import org.lara.app.ui.screens.teacher.PostAnnouncement
 import java.text.DateFormat
 import java.util.Date
 
 @Composable
 fun ClassroomLearningHost(container: AppContainer, userId: String, destination: ShellDestination,
-    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null) {
+    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null,
+    teacherHubReachable: Boolean? = null) {
     if (destination !in setOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE)) {
         ShellPlaceholder(destination); return
     }
@@ -66,13 +68,14 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
                 }
             }
         }
-        key(selected.id) { ClassFeed(container, userId, selected, destination) }
+        key(selected.id) { ClassFeed(container, userId, selected, destination, teacherHubReachable) }
     }
 }
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination) {
+private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination,
+    teacherHubReachable: Boolean?) {
     val scope = rememberCoroutineScope()
     val streamFlow = remember(classroom.id) { container.stream.stream(classroom.id, scope) }
     val workFlow = remember(classroom.id) { container.classwork.classwork(classroom.id, scope) }
@@ -122,57 +125,65 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     val topic = selectedTopic?.takeIf { id -> topics.any { it.id == id } }
     var filtering by rememberSaveable(classroom.id) { mutableStateOf(false) }
     if (filtering) TopicFilter(topics, topic, { selectedTopic = it; filtering = false }, { filtering = false })
-    LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(LaraSpacing.S4),
-        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-        if (destination == ShellDestination.STREAM) {
-            item { ClassBanner(classroom) }
-            if (announcements.isEmpty()) item { ReadingEmpty(R.string.reading_stream_empty) }
-            items(announcements, key = { it.id }) { post ->
-                AnnouncementCard(container, post, userId, names, action, model,
-                    materials.filter { it.announcementId == post.id }) { opened = it.id }
-            }
-        } else {
-            item {
-                OutlinedButton(onClick = { filtering = true }, modifier = Modifier.heightIn(min = MinTouchTarget), shape = CircleShape) {
-                    Icon(painterResource(R.drawable.ic_funnel), null, Modifier.size(24.dp))
-                    Spacer(Modifier.width(LaraSpacing.S2))
-                    Text(stringResource(R.string.reading_filter_topics))
+    val canCompose = teacherHubReachable != null && destination == ShellDestination.STREAM &&
+        userId in classroom.teacherIds() && classroom.archivedAt == null
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(
+            start = LaraSpacing.S4, top = LaraSpacing.S4, end = LaraSpacing.S4,
+            bottom = LaraSpacing.S4 + if (canCompose) PrimaryTouchTarget + LaraSpacing.S4 else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+            if (destination == ShellDestination.STREAM) {
+                item { ClassBanner(classroom) }
+                if (announcements.isEmpty()) item { ReadingEmpty(R.string.reading_stream_empty) }
+                items(announcements, key = { it.id }) { post ->
+                    AnnouncementCard(container, post, userId, names, action, model,
+                        materials.filter { it.announcementId == post.id }) { opened = it.id }
                 }
-            }
-            val learner = userId !in classroom.teacherIds()
-            val handouts = materials.filter { it.assignmentId == null && it.announcementId == null }
-            val groups = handouts.groupBy { it.topicId }
-            val assignmentGroups = (if (learner) assignments else emptyList()).groupBy { it.topicId }
-            val ids = groups.keys + assignmentGroups.keys
-            val ordered = (topics.map { it.id }.filter { it in ids } + ids.filter { id -> topics.none { it.id == id } })
-                .filter { topic == null || it == topic }
-            if (ordered.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
-            ordered.forEach { topicId ->
-                item(key = "topic-${topicId ?: "none"}") {
-                    Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                        Text(topics.find { it.id == topicId }?.name ?: stringResource(R.string.reading_no_topic),
-                            style = MaterialTheme.typography.headlineMedium, color = LaraColors.PrimaryDark)
-                        Text(stringResource(R.string.reading_work_count, groups[topicId].orEmpty().size + assignmentGroups[topicId].orEmpty().size),
-                            style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-                        HorizontalDivider(thickness = 2.dp, color = LaraColors.Primary)
+            } else {
+                item {
+                    OutlinedButton(onClick = { filtering = true }, modifier = Modifier.heightIn(min = MinTouchTarget), shape = CircleShape) {
+                        Icon(painterResource(R.drawable.ic_funnel), null, Modifier.size(24.dp))
+                        Spacer(Modifier.width(LaraSpacing.S2))
+                        Text(stringResource(R.string.reading_filter_topics))
                     }
                 }
-                items(assignmentGroups[topicId].orEmpty(), key = { "assignment-${it.id}" }) { assignment ->
-                    Surface(onClick = { openedAssignment = assignment.id }, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
-                        color = LaraColors.Surface, shape = LaraShapes.medium) {
-                        Row(Modifier.padding(LaraSpacing.S4), verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                            Icon(painterResource(R.drawable.ic_exam_regular), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                            Column(Modifier.weight(1f)) {
-                                Text(assignment.title, style = MaterialTheme.typography.titleMedium)
-                                Text(stringResource(R.string.homework_open), color = LaraColors.TextSecondary)
+                val learner = userId !in classroom.teacherIds()
+                val handouts = materials.filter { it.assignmentId == null && it.announcementId == null }
+                val groups = handouts.groupBy { it.topicId }
+                val assignmentGroups = (if (learner) assignments else emptyList()).groupBy { it.topicId }
+                val ids = groups.keys + assignmentGroups.keys
+                val ordered = (topics.map { it.id }.filter { it in ids } + ids.filter { id -> topics.none { it.id == id } })
+                    .filter { topic == null || it == topic }
+                if (ordered.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
+                ordered.forEach { topicId ->
+                    item(key = "topic-${topicId ?: "none"}") {
+                        Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                            Text(topics.find { it.id == topicId }?.name ?: stringResource(R.string.reading_no_topic),
+                                style = MaterialTheme.typography.headlineMedium, color = LaraColors.PrimaryDark)
+                            Text(stringResource(R.string.reading_work_count, groups[topicId].orEmpty().size + assignmentGroups[topicId].orEmpty().size),
+                                style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+                            HorizontalDivider(thickness = 2.dp, color = LaraColors.Primary)
+                        }
+                    }
+                    items(assignmentGroups[topicId].orEmpty(), key = { "assignment-${it.id}" }) { assignment ->
+                        Surface(onClick = { openedAssignment = assignment.id }, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
+                            color = LaraColors.Surface, shape = LaraShapes.medium) {
+                            Row(Modifier.padding(LaraSpacing.S4), verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                                Icon(painterResource(R.drawable.ic_exam_regular), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+                                Column(Modifier.weight(1f)) {
+                                    Text(assignment.title, style = MaterialTheme.typography.titleMedium)
+                                    Text(stringResource(R.string.homework_open), color = LaraColors.TextSecondary)
+                                }
                             }
                         }
                     }
+                    items(groups[topicId].orEmpty(), key = { it.id }) { material -> MaterialRow(material) { opened = material.id } }
                 }
-                items(groups[topicId].orEmpty(), key = { it.id }) { material -> MaterialRow(material) { opened = material.id } }
             }
         }
+        if (canCompose) PostAnnouncement(container, userId, classroom, teacherHubReachable == true,
+            Modifier.align(Alignment.BottomEnd).padding(LaraSpacing.S4))
     }
 }
 

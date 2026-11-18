@@ -318,4 +318,14 @@
     <string name="approval_updating">Updating this join request...</string>
     <string name="video_home_title">Watch at home</string>
     <string name="video_home_help">Save this video to watch on this device when the Hub is unreachable.</string>
+    <string name="announcement_new">New announcement</string>
+    <string name="announcement_title">Title</string>
+    <string name="announcement_content">Announcement</string>
+    <string name="announcement_allow_comments">Allow learner comments</string>
+    <string name="announcement_post">Post announcement</string>
+    <string name="announcement_send">Post</string>
+    <string name="announcement_posting">Posting…</string>
+    <string name="announcement_posted">Announcement posted</string>
+    <string name="announcement_needs_hub">Waiting for the Hub. Posting needs the classroom network.</string>
+    <string name="announcement_failed">Couldn’t confirm the post. Check the Stream before trying again.</string>
 </resources>

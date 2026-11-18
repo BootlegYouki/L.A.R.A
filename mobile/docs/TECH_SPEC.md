@@ -110,7 +110,8 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `POST /api/sync/pull` | `SyncRepository.pull` | 401 relogin; other: roll back, keep cursor, retry by WorkManager backoff | Keep cursor, schedule retry on connectivity |
 | `POST /api/sync/push` | `SyncRepository.pushQueued` | per-item receipt `SYNCED` or `REJECTED(reason)`; request error: rows stay queued | Rows stay `QUEUED_FOR_SYNC` |
 | `POST /api/topics`, `PATCH/DELETE /api/topics/{id}` | `ClassworkAuthoringRepository` | 403 | Needs Hub |
-| `POST /api/announcements`, `PATCH/DELETE .../{id}` | `ClassworkAuthoringRepository` | 403 | Needs Hub (not queued, [MOBILE 3.4]) |
+| `POST /api/announcements` | `AnnouncementApi` | 403 | Needs Hub. Refreshes the Room-backed Stream on success ([MOBILE 3.4]). |
+| `PATCH/DELETE /api/announcements/{id}` | `ClassworkAuthoringRepository` | 403 | Needs Hub (not queued). |
 | `GET/POST /api/announcements/{id}/comments` | `StreamRepository` | 403 `COMMENTS_DISABLED` | POST is outbox (`announcement_comments`); GET from Room |
 | `POST /api/materials` | `ClassworkAuthoringRepository` + upload worker | 413 `FILE_TOO_LARGE` (also pre-check 250 MB) | WorkManager retry; progress kept |
 | `PATCH/DELETE /api/materials/{id}` | `ClassworkAuthoringRepository` | 403 | Needs Hub |
