@@ -8,7 +8,7 @@ build against a realistic Hub before the Rust server exists:
 - HTTP REST, uploads and 206 video streaming (:8080)  -> contracts/openapi.yaml
 - WebSocket event broker (:8081)                       -> contracts/events/
 
-State is in memory and resets on restart. Seeded accounts (PIN 1234 for all):
+State is in memory and resets on restart. Seeded accounts (PIN 123456 for all):
   ADMIN-0001      the Hub admin (role ADMIN); only this account may call /api/admin/*, backup and restore
   T-0001          teacher "Maria Santos" (owns Science 4)
   123456789012    learner   "Juan dela Cruz" (enrolled, ACTIVE)
@@ -64,7 +64,6 @@ class HubState:
         self.classrooms = {}
         self.enrollments = {}
         self.announcements = {}
-        self.comments = {}
         self.materials = {}
         self.chunks = {}
         self.material_files = {}
@@ -86,10 +85,10 @@ class HubState:
 
     def _seed(self):
         t = now_ms()
-        self.add_user(ADMIN_ID, "Hub Admin", "ADMIN", "1234")
-        teacher = self.add_user("T-0001", "Maria Santos", "TEACHER", "1234")
-        pupil = self.add_user("123456789012", "Juan dela Cruz", "STUDENT", "1234")
-        self.add_user("123456789013", "Ana Reyes", "STUDENT", "1234")
+        self.add_user(ADMIN_ID, "Hub Admin", "ADMIN", "123456")
+        teacher = self.add_user("T-0001", "Maria Santos", "TEACHER", "123456")
+        pupil = self.add_user("123456789012", "Juan dela Cruz", "STUDENT", "123456")
+        self.add_user("123456789013", "Ana Reyes", "STUDENT", "123456")
         classroom = {
             "id": "c1a2b3c4-0001-4000-8000-000000000001", "name": "Science 4",
             "section": "Aguinaldo", "class_code": "K7M4QX",
@@ -104,7 +103,7 @@ class HubState:
         ann = {"id": new_id(), "classroom_id": classroom["id"],
                "title": "Maligayang Pagdating sa Agham 4!",
                "content": "Basahin ang Aralin 1 tungkol sa Ecosystem bago ang pagsusulit.",
-               "allow_comments": True, "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
+               "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
         self.announcements[ann["id"]] = ann
         self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "a1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
@@ -433,8 +432,8 @@ def register(req):
     b["lrn_or_id"], b["full_name"] = str(b["lrn_or_id"]).strip(), str(b["full_name"]).strip()
     if not (0 < len(b["lrn_or_id"]) <= 32 and 0 < len(b["full_name"]) <= 100):
         raise ApiError(400, "BAD_REQUEST", "LRN and name must be 1-32 and 1-100 characters")
-    if not re.fullmatch(r"\d{4}", str(b["pin"])):
-        raise ApiError(400, "BAD_REQUEST", "PIN must be 4 digits")
+    if not re.fullmatch(r"\d{6}", str(b["pin"])):
+        raise ApiError(400, "BAD_REQUEST", "PIN must be 6 digits")
     if any(u["lrn_or_id"] == b["lrn_or_id"] for u in STATE.users.values()):
         raise ApiError(409, "ALREADY_EXISTS", "Account already exists")
     user = STATE.add_user(b["lrn_or_id"], b["full_name"], "STUDENT", b["pin"])
@@ -481,8 +480,8 @@ def admin_setup(req):
     need(b, "full_name", "pin")
     if any(u["role"] == "ADMIN" for u in STATE.users.values()):
         raise ApiError(409, "ADMIN_EXISTS", "The Hub admin is already set up")
-    if not re.fullmatch(r"\d{4}", str(b["pin"])):
-        raise ApiError(400, "BAD_REQUEST", "PIN must be 4 digits")
+    if not re.fullmatch(r"\d{6}", str(b["pin"])):
+        raise ApiError(400, "BAD_REQUEST", "PIN must be 6 digits")
     return STATE.open_session(STATE.add_user(ADMIN_ID, b["full_name"], "ADMIN", b["pin"]))
 
 
@@ -570,7 +569,8 @@ def classroom_join(req):
         STATE.broadcast({"event": "EVENT_JOIN_REQUEST", "class_code": c["class_code"],
                          "student_id": req.user["id"], "full_name": req.user["full_name"],
                          "lrn": req.user["lrn_or_id"], "timestamp": t}, STATE.teachers_of(c["id"]))
-    return {"status": enr["status"], "classroom_id": c["id"]}
+    return {"status": enr["status"], "classroom_id": c["id"], "section": c["section"],
+            "teacher_name": STATE.users[c["teacher_id"]]["full_name"]}
 
 
 @route("GET", r"/api/classrooms/([^/]+)/roster", role="TEACHER")
@@ -695,7 +695,7 @@ def sync_pull(req):
             continue
         latest[(e["table"], e["id"])] = e
 
-    out = {k: [] for k in ("classrooms", "enrollments", "topics", "announcements", "comments", "materials",
+    out = {k: [] for k in ("classrooms", "enrollments", "topics", "announcements", "materials",
                            "material_chunks", "assignments", "submissions", "private_comments", "quizzes",
                            "quiz_attempts")}
     deleted = []
@@ -712,8 +712,6 @@ def sync_pull(req):
             out["private_comments"].append(STATE.private_comments[eid])
         elif table == "announcements" and eid in STATE.announcements:
             out["announcements"].append(STATE.announcements[eid])
-        elif table == "announcement_comments" and eid in STATE.comments:
-            out["comments"].append(STATE.comments[eid])
         elif table == "materials" and eid in STATE.materials:
             out["materials"].append({k: v for k, v in STATE.materials[eid].items() if k != "uploaded_by"})
         elif table == "material_chunks":
@@ -760,24 +758,6 @@ def sync_push(req):
             receipts.append({"id": att["id"], "status": "SYNCED"})
         except ApiError as e:
             receipts.append({"id": att["id"], "status": "REJECTED", "reason": e.code})
-    for c in b.get("comments", []):
-        ann = STATE.announcements.get(c["announcement_id"])
-        existing = STATE.comments.get(c["id"])
-        if not ann or ann["classroom_id"] not in STATE.visible_classroom_ids(req.user) or (
-                existing and existing["author_id"] != req.user["id"]):
-            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
-        elif STATE.classrooms[ann["classroom_id"]].get("archived_at"):
-            # A retry of a comment saved before the archive is still SYNCED; new work is refused.
-            receipts.append({"id": c["id"], "status": "SYNCED"} if existing
-                            else {"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
-        elif ann["allow_comments"]:
-            STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
-                                       "author_id": req.user["id"], "content": c["content"],
-                                       "created_at": c["created_at"], "updated_at": now_ms()}
-            STATE.log("announcement_comments", c["id"], ann["classroom_id"])
-            receipts.append({"id": c["id"], "status": "SYNCED"})
-        else:
-            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "COMMENTS_DISABLED"})
     for c in b.get("private_comments", []):
         asg = STATE.assignments.get(c["assignment_id"])
         existing = STATE.private_comments.get(c["id"])
@@ -805,7 +785,7 @@ def announcement_create(req):
     owned_classroom(req, b["classroom_id"])
     t = now_ms()
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"], "content": b["content"],
-         "allow_comments": b.get("allow_comments", True), "created_at": t, "updated_at": t}
+         "created_at": t, "updated_at": t}
     STATE.announcements[a["id"]] = a
     STATE.log("announcements", a["id"], a["classroom_id"])
     STATE.broadcast({"event": "EVENT_ANNOUNCEMENT_PUSH", "classroom_id": a["classroom_id"],
@@ -820,7 +800,7 @@ def announcement_patch(req):
     if not a:
         raise ApiError(404, "NOT_FOUND", "Announcement not found")
     owned_classroom(req, a["classroom_id"])
-    for k in ("title", "content", "allow_comments"):
+    for k in ("title", "content"):
         if k in req.json():
             a[k] = req.json()[k]
     a["updated_at"] = now_ms()
@@ -837,36 +817,6 @@ def announcement_delete(req):
     del STATE.announcements[a["id"]]
     STATE.log("announcements", a["id"], a["classroom_id"], action="DELETE")
     return {"success": True}
-
-
-def announcement_in_my_class(req):
-    """Comments are class-scoped: only the class's teachers and ACTIVE learners may read or write them."""
-    a = STATE.announcements.get(req.groups[0])
-    if not a:
-        raise ApiError(404, "NOT_FOUND", "Announcement not found")
-    member_of(req.user, a["classroom_id"])
-    return a
-
-
-@route("GET", r"/api/announcements/([^/]+)/comments")
-def comments_list(req):
-    announcement_in_my_class(req)
-    return sorted((c for c in STATE.comments.values() if c["announcement_id"] == req.groups[0]),
-                  key=lambda c: c["created_at"])
-
-
-@route("POST", r"/api/announcements/([^/]+)/comments")
-def comment_create(req):
-    a = announcement_in_my_class(req)
-    if not a["allow_comments"]:
-        raise ApiError(403, "COMMENTS_DISABLED", "Naka-off ang komento")
-    need(req.json(), "content")
-    t = now_ms()
-    c = {"id": new_id(), "announcement_id": a["id"], "author_id": req.user["id"],
-         "content": req.json()["content"], "created_at": t, "updated_at": t}
-    STATE.comments[c["id"]] = c
-    STATE.log("announcement_comments", c["id"], a["classroom_id"])
-    return c
 
 
 # ---- topics
@@ -1633,9 +1583,9 @@ if __name__ == "__main__":
     print(f"  - Web Portal:   http://{lan_ip}:8080/download")
     print(f"  - WebSocket:    ws://{lan_ip}:8081")
     print("  - UDP Beacon:   Broadcasting to 255.255.255.255:8888")
-    print("  - Teacher:      T-0001 / PIN 1234   (class code K7M4QX)")
-    print("  - Learner:      123456789012 / PIN 1234")
-    print("  - Admin:        ADMIN-0001 / PIN 1234")
+    print("  - Teacher:      T-0001 / PIN 123456   (class code K7M4QX)")
+    print("  - Learner:      123456789012 / PIN 123456")
+    print("  - Admin:        ADMIN-0001 / PIN 123456")
     print("=" * 65)
     print("Press Ctrl+C to stop.\n")
     try:

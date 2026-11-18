@@ -40,7 +40,7 @@ def call(base, method, path, body=None, token=None, headers=None, raw=None):
         return status, payload, hdrs
 
 
-def login(base, lrn, pin="1234"):
+def login(base, lrn, pin="123456"):
     status, body, _ = call(base, "POST", "/api/auth/login", {"lrn_or_id": lrn, "pin": pin})
     assert status == 200, body
     return body["token"]
