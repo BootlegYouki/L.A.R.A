@@ -62,7 +62,7 @@ paths:
                   example: "Juan dela Cruz"
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Account created and session opened
@@ -99,7 +99,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Session opened
@@ -149,7 +149,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Signed-in admin session
@@ -193,7 +193,7 @@ paths:
                   enum: ["TEACHER", "STUDENT"]
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           description: Created user
@@ -221,7 +221,7 @@ paths:
               properties:
                 pin:
                   type: string
-                  pattern: "^[0-9]{4}$"
+                  pattern: "^[0-9]{6}$"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
