@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit LRN (learner) or teacher/admin ID
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT', 'ADMIN')),   -- one ADMIN row, created by POST /api/admin/setup; never synced
-    pin_hash TEXT NOT NULL,                    -- argon2id of the 4-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
+    pin_hash TEXT NOT NULL,                    -- argon2id of the 6-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
     is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0, 1)),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -60,22 +60,9 @@ CREATE TABLE IF NOT EXISTS announcements (
     classroom_id TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    allow_comments INTEGER NOT NULL DEFAULT 1 CHECK(allow_comments IN (0, 1)),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
-);
-
--- 5. Announcement Comments (Learners & Teachers)
-CREATE TABLE IF NOT EXISTS announcement_comments (
-    id TEXT PRIMARY KEY NOT NULL,
-    announcement_id TEXT NOT NULL,
-    author_id TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 -- 6. Lesson Materials (files). Lesson text for the AI lives in material_chunks, not here.
@@ -298,7 +285,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS idx_classrooms_teacher ON classrooms(teacher_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id, status);
 CREATE INDEX IF NOT EXISTS idx_announcements_feed ON announcements(classroom_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_announcement_comments_order ON announcement_comments(announcement_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_materials_class_type ON materials(classroom_id, file_type);
 CREATE INDEX IF NOT EXISTS idx_assignments_class_due ON assignments(classroom_id, due_date ASC);
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON assignment_submissions(student_id);

@@ -56,7 +56,7 @@ A single-file Python 3 program (standard library only) that implements **every**
 ```bash
 python3 scripts/mock_hub.py
 ```
-State is in memory and reseeds on every start. Accounts (PIN `1234`): Hub admin `ADMIN-0001` (not a teacher), teacher `T-0001` (Science 4, code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (join with the code).
+State is in memory and reseeds on every start. Accounts (PIN `123456`): Hub admin `ADMIN-0001` (not a teacher), teacher `T-0001` (Science 4, code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (join with the code).
 
 ### 2.4 Parity guarantee
 `tests/test_contract_coverage.py` fails CI if any `openapi.yaml` operation has no mock route, if the mock serves an undocumented `/api/` route, or if an event schema is not emitted or handled by the mock. A contract change is therefore incomplete until the mock hub follows.

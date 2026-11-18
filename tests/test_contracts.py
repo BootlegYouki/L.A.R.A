@@ -42,13 +42,13 @@ class TestContracts(unittest.TestCase):
         cur_server = conn_server.cursor()
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 19, f"Server master must have exactly 19 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 18, f"Server master must have exactly 18 tables, got {server_tables}")
         for added in ("classroom_teachers", "topics", "private_comments"):
             self.assertIn(added, server_tables)
         self.assertIn("hub_meta", server_tables)
         self.assertIn("sessions", server_tables)
         self.assertIn("material_chunks", server_tables)
-        self.assertIn("announcement_comments", server_tables)
+        self.assertNotIn("announcement_comments", server_tables)
         self.assertIn("ai_chat_messages", server_tables)
         self.assertIn("sync_revisions", server_tables)
 
@@ -104,7 +104,7 @@ class TestContracts(unittest.TestCase):
         cur_client = conn_client.cursor()
         cur_client.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         client_tables = [r[0] for r in cur_client.fetchall()]
-        self.assertEqual(len(client_tables), 16, f"Client offline must have exactly 16 tables, got {client_tables}")
+        self.assertEqual(len(client_tables), 15, f"Client offline must have exactly 15 tables, got {client_tables}")
         self.assertNotIn("classroom_teachers", client_tables)
         self.assertIn("sync_state", client_tables)
         self.assertNotIn("sessions", client_tables)
@@ -129,7 +129,7 @@ class TestContracts(unittest.TestCase):
         sub_cols = [r[1] for r in cur_client.fetchall()]
         self.assertIn("sync_status", sub_cols)
 
-        for table in ("assignment_submissions", "quiz_attempts", "announcement_comments", "private_comments"):
+        for table in ("assignment_submissions", "quiz_attempts", "private_comments"):
             cur_client.execute(f"PRAGMA table_info({table});")
             self.assertIn("sync_reject_reason", [r[1] for r in cur_client.fetchall()], f"{table} must keep the Hub's reject reason")
             sql = cur_client.execute("SELECT sql FROM sqlite_master WHERE name = ?", (table,)).fetchone()[0]
