@@ -64,6 +64,7 @@ class HubState:
         self.classrooms = {}
         self.enrollments = {}
         self.announcements = {}
+        self.comments = {}
         self.materials = {}
         self.chunks = {}
         self.material_files = {}
@@ -103,7 +104,7 @@ class HubState:
         ann = {"id": new_id(), "classroom_id": classroom["id"],
                "title": "Maligayang Pagdating sa Agham 4!",
                "content": "Basahin ang Aralin 1 tungkol sa Ecosystem bago ang pagsusulit.",
-               "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
+               "allow_comments": True, "created_at": t - 3_600_000, "updated_at": t - 3_600_000}
         self.announcements[ann["id"]] = ann
         self.log("announcements", ann["id"], classroom["id"])
         mat = {"id": "a1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
@@ -695,7 +696,7 @@ def sync_pull(req):
             continue
         latest[(e["table"], e["id"])] = e
 
-    out = {k: [] for k in ("classrooms", "enrollments", "topics", "announcements", "materials",
+    out = {k: [] for k in ("classrooms", "enrollments", "topics", "announcements", "comments", "materials",
                            "material_chunks", "assignments", "submissions", "private_comments", "quizzes",
                            "quiz_attempts")}
     deleted = []
@@ -712,6 +713,8 @@ def sync_pull(req):
             out["private_comments"].append(STATE.private_comments[eid])
         elif table == "announcements" and eid in STATE.announcements:
             out["announcements"].append(STATE.announcements[eid])
+        elif table == "announcement_comments" and eid in STATE.comments:
+            out["comments"].append(STATE.comments[eid])
         elif table == "materials" and eid in STATE.materials:
             out["materials"].append({k: v for k, v in STATE.materials[eid].items() if k != "uploaded_by"})
         elif table == "material_chunks":
@@ -758,6 +761,24 @@ def sync_push(req):
             receipts.append({"id": att["id"], "status": "SYNCED"})
         except ApiError as e:
             receipts.append({"id": att["id"], "status": "REJECTED", "reason": e.code})
+    for c in b.get("comments", []):
+        ann = STATE.announcements.get(c["announcement_id"])
+        existing = STATE.comments.get(c["id"])
+        if not ann or ann["classroom_id"] not in STATE.visible_classroom_ids(req.user) or (
+                existing and existing["author_id"] != req.user["id"]):
+            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
+        elif STATE.classrooms[ann["classroom_id"]].get("archived_at"):
+            # A retry of a comment saved before the archive is still SYNCED; new work is refused.
+            receipts.append({"id": c["id"], "status": "SYNCED"} if existing
+                            else {"id": c["id"], "status": "REJECTED", "reason": "FORBIDDEN"})
+        elif ann["allow_comments"]:
+            STATE.comments[c["id"]] = {"id": c["id"], "announcement_id": c["announcement_id"],
+                                       "author_id": req.user["id"], "content": c["content"],
+                                       "created_at": c["created_at"], "updated_at": now_ms()}
+            STATE.log("announcement_comments", c["id"], ann["classroom_id"])
+            receipts.append({"id": c["id"], "status": "SYNCED"})
+        else:
+            receipts.append({"id": c["id"], "status": "REJECTED", "reason": "COMMENTS_DISABLED"})
     for c in b.get("private_comments", []):
         asg = STATE.assignments.get(c["assignment_id"])
         existing = STATE.private_comments.get(c["id"])
@@ -785,7 +806,7 @@ def announcement_create(req):
     owned_classroom(req, b["classroom_id"])
     t = now_ms()
     a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"], "content": b["content"],
-         "created_at": t, "updated_at": t}
+         "allow_comments": b.get("allow_comments", True), "created_at": t, "updated_at": t}
     STATE.announcements[a["id"]] = a
     STATE.log("announcements", a["id"], a["classroom_id"])
     STATE.broadcast({"event": "EVENT_ANNOUNCEMENT_PUSH", "classroom_id": a["classroom_id"],
@@ -800,7 +821,7 @@ def announcement_patch(req):
     if not a:
         raise ApiError(404, "NOT_FOUND", "Announcement not found")
     owned_classroom(req, a["classroom_id"])
-    for k in ("title", "content"):
+    for k in ("title", "content", "allow_comments"):
         if k in req.json():
             a[k] = req.json()[k]
     a["updated_at"] = now_ms()
@@ -817,6 +838,36 @@ def announcement_delete(req):
     del STATE.announcements[a["id"]]
     STATE.log("announcements", a["id"], a["classroom_id"], action="DELETE")
     return {"success": True}
+
+
+def announcement_in_my_class(req):
+    """Comments are class-scoped: only the class's teachers and ACTIVE learners may read or write them."""
+    a = STATE.announcements.get(req.groups[0])
+    if not a:
+        raise ApiError(404, "NOT_FOUND", "Announcement not found")
+    member_of(req.user, a["classroom_id"])
+    return a
+
+
+@route("GET", r"/api/announcements/([^/]+)/comments")
+def comments_list(req):
+    announcement_in_my_class(req)
+    return sorted((c for c in STATE.comments.values() if c["announcement_id"] == req.groups[0]),
+                  key=lambda c: c["created_at"])
+
+
+@route("POST", r"/api/announcements/([^/]+)/comments")
+def comment_create(req):
+    a = announcement_in_my_class(req)
+    if not a["allow_comments"]:
+        raise ApiError(403, "COMMENTS_DISABLED", "Naka-off ang komento")
+    need(req.json(), "content")
+    t = now_ms()
+    c = {"id": new_id(), "announcement_id": a["id"], "author_id": req.user["id"],
+         "content": req.json()["content"], "created_at": t, "updated_at": t}
+    STATE.comments[c["id"]] = c
+    STATE.log("announcement_comments", c["id"], a["classroom_id"])
+    return c
 
 
 # ---- topics

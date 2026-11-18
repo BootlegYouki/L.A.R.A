@@ -62,7 +62,7 @@ paths:
                   example: "Juan dela Cruz"
                 pin:
                   type: string
-                  pattern: "^[0-9]{6}$"
+                  pattern: "^[0-9]{4}$"
       responses:
         "200":
           description: Account created and session opened
@@ -99,7 +99,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{6}$"
+                  pattern: "^[0-9]{4}$"
       responses:
         "200":
           description: Session opened
@@ -149,7 +149,7 @@ paths:
                   type: string
                 pin:
                   type: string
-                  pattern: "^[0-9]{6}$"
+                  pattern: "^[0-9]{4}$"
       responses:
         "200":
           description: Signed-in admin session
@@ -193,7 +193,7 @@ paths:
                   enum: ["TEACHER", "STUDENT"]
                 pin:
                   type: string
-                  pattern: "^[0-9]{6}$"
+                  pattern: "^[0-9]{4}$"
       responses:
         "200":
           description: Created user
@@ -221,7 +221,7 @@ paths:
               properties:
                 pin:
                   type: string
-                  pattern: "^[0-9]{6}$"
+                  pattern: "^[0-9]{4}$"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
@@ -472,7 +472,7 @@ paths:
 
   /api/sync/push:
     post:
-      summary: Delta-sync push for queued offline work (quiz attempts, private comments)
+      summary: Delta-sync push for queued offline work (quiz attempts, stream comments, private comments)
       tags: [sync]
       requestBody:
         required: true
@@ -485,6 +485,10 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/QuizAttemptPush"
+                comments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CommentPush"
                 private_comments:
                   type: array
                   items:
@@ -593,6 +597,9 @@ paths:
                   type: string
                 content:
                   type: string
+                allow_comments:
+                  type: boolean
+                  default: true
       responses:
         "200":
           description: Created announcement
@@ -603,7 +610,7 @@ paths:
 
   /api/announcements/{id}:
     patch:
-      summary: Edit an announcement (teacher)
+      summary: Edit an announcement or toggle comments (teacher)
       tags: [stream]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -618,6 +625,8 @@ paths:
                   type: string
                 content:
                   type: string
+                allow_comments:
+                  type: boolean
       responses:
         "200":
           description: Updated announcement
@@ -633,6 +642,44 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
+
+  /api/announcements/{id}/comments:
+    get:
+      summary: Retrieve comments for a specific announcement (members of the class only, else 403)
+      tags: [stream]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: List of announcement comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      summary: Post a comment on an announcement (members of the class only; rejected with 403 COMMENTS_DISABLED when allow_comments is false)
+      tags: [stream]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+      responses:
+        "200":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
 
   # ---------------------------------------------------------------- MATERIALS
   /api/materials:
@@ -1350,7 +1397,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, QUIZ_NOT_DRAFT, QUIZ_NOT_STARTED, QUIZ_ALREADY_ACTIVE, QUIZ_CLOSED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, QUIZ_NOT_DRAFT, QUIZ_NOT_STARTED, QUIZ_ALREADY_ACTIVE, QUIZ_CLOSED, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
       content:
         application/json:
           schema:
@@ -1465,9 +1512,46 @@ components:
           type: string
         content:
           type: string
+        allow_comments:
+          type: boolean
         created_at:
           type: integer
         updated_at:
+          type: integer
+
+    Comment:
+      type: object
+      required: [id, announcement_id, author_id, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        announcement_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+
+    CommentPush:
+      type: object
+      required: [id, announcement_id, content, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        announcement_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
           type: integer
 
     Material:
@@ -1869,6 +1953,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Announcement"
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
         materials:
           type: array
           items:

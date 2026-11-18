@@ -195,14 +195,14 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
 
     def test_archived_class_is_read_only_until_unarchived(self):
-        asg = self.pull(self.pupil)["assignments"][0]["id"]
-        saved = {"id": "c-saved", "assignment_id": asg, "content": "before", "created_at": 1}
-        call(BASE, "POST", "/api/sync/push", {"private_comments": [saved]}, self.pupil)
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        saved = {"id": "c-saved", "announcement_id": ann, "content": "before", "created_at": 1}
+        call(BASE, "POST", "/api/sync/push", {"comments": [saved]}, self.pupil)
         call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"archived": True}, self.teacher)
         status, body, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New"}, self.teacher)
         self.assertEqual((status, body["error"]["code"]), (403, "FORBIDDEN"))
-        new = {"id": "c-new", "assignment_id": asg, "content": "after", "created_at": 2}
-        _, res, _ = call(BASE, "POST", "/api/sync/push", {"private_comments": [saved, new]}, self.pupil)
+        new = {"id": "c-new", "announcement_id": ann, "content": "after", "created_at": 2}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [saved, new]}, self.pupil)
         self.assertEqual(res["receipts"], [{"id": "c-saved", "status": "SYNCED"},
                                            {"id": "c-new", "status": "REJECTED", "reason": "FORBIDDEN"}])
         status, room, _ = call(BASE, "PATCH", f"/api/classrooms/{CLASSROOM}", {"name": "New", "archived": False}, self.teacher)
@@ -447,11 +447,16 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(call(BASE, "GET", f"/api/assignments/{asg}/submissions", token=other_teacher)[0], 403)
         self.assertEqual(call(BASE, "GET", f"/api/materials/{mat}/chunks", token=self.pupil)[0], 200)
 
-    def test_stream_comments_are_gone(self):
-        ann = self.pull(self.pupil)["announcements"][0]
-        self.assertNotIn("allow_comments", ann)
-        self.assertNotIn("comments", self.pull(self.pupil))
-        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann['id']}/comments", token=self.pupil)[0], 404)
+    def test_stream_comments_are_only_for_members_of_the_class(self):
+        ann = self.pull(self.pupil)["announcements"][0]["id"]
+        outsider = login(BASE, "123456789013")          # signed in, but not enrolled
+        self.assertEqual(call(BASE, "GET", f"/api/announcements/{ann}/comments", token=outsider)[0], 403)
+        self.assertEqual(call(BASE, "POST", f"/api/announcements/{ann}/comments", {"content": "x"}, outsider)[0], 403)
+        queued = {"id": "c-1", "announcement_id": ann, "content": "x", "created_at": 1}
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, outsider)
+        self.assertEqual(res["receipts"][0], {"id": "c-1", "status": "REJECTED", "reason": "FORBIDDEN"})
+        _, res, _ = call(BASE, "POST", "/api/sync/push", {"comments": [queued]}, self.pupil)
+        self.assertEqual(res["receipts"][0]["status"], "SYNCED")
 
     @needs_mock
     def test_pushed_private_comments_need_enrollment_and_cannot_overwrite_another_learners(self):

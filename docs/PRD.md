@@ -138,7 +138,7 @@ flowchart TD
 * **FR-1.6 Shared Devices:** Each signed-in account has its own local database, mirror and sync cursor, as required by `rules/database-and-sync.md` section 2. Signing into another account never exposes or overwrites the first account's data; queued work survives until its owner signs in again.
 
 ### 4.2 Module 2: Stream & Announcements
-* **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices, and can edit or delete them. Posting requires a reachable Hub; when it is unreachable, Post is disabled with an explanation. Announcements have no comments; a learner talks to the teacher only through private comments on an assignment (FR-3.8), which can queue offline.
+* **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices, and can edit or delete them. Posting requires a reachable Hub; when it is unreachable, Post is disabled with an explanation. Comments can queue offline.
 * **FR-2.2 Comment Moderation:** Teachers can enable or disable student commenting per post to prevent distractions.
 * **FR-2.3 Offline Persistence:** All stream items are cached in the client’s local SQLite database for viewing outside the school network.
 * **FR-2.4 Attachments:** A teacher can attach files to an announcement.
@@ -300,6 +300,7 @@ erDiagram
  CLASSROOMS ||--o{ ASSIGNMENTS : "assigns"
  CLASSROOMS ||--o{ QUIZZES : "schedules"
 
+ ANNOUNCEMENTS ||--o{ ANNOUNCEMENT_COMMENTS : "has"
  MATERIALS ||--o{ MATERIAL_CHUNKS : "split into"
  ASSIGNMENTS ||--o{ ASSIGNMENT_SUBMISSIONS : "receives"
  QUIZZES ||--o{ QUIZ_QUESTIONS : "consists_of"
@@ -328,7 +329,7 @@ sequenceDiagram
  App->>App: ONE atomic transaction: apply records AND store next_cursor
 
  Note over App,Hub: Step 3: Push (upload offline work)
- App->>Hub: POST /api/sync/push { quiz_attempts, private_comments }
+ App->>Hub: POST /api/sync/push { quiz_attempts, comments }
  App->>Hub: POST /api/assignments/{id}/submit (homework photo, submission_id)
  Hub->>Hub: Validate, auto-grade, store files, write sync_revisions
  Hub-->>App: Per-item receipts (SYNCED or REJECTED + reason)
@@ -379,7 +380,7 @@ sequenceDiagram
 * Offline Class Code enrollment with manual teacher approval gate.
 * Google Classroom's classwork features: topics, attachments, private comments, To-do, editing and deleting posts, co-teachers, archiving a class.
 * The same teacher features on desktop and on the phone.
-* Stream announcements (no public comments; private comments on assignments only).
+* Stream announcements with teacher comment controls.
 * Downloadable materials (PDF/images) and streaming/offline educational video (MP4).
 * Timed paperless quizzes with instant auto-grading for objective questions.
 * Hub-only Socratic AI tutor with a model chosen by the AI evaluation.

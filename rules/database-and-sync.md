@@ -15,7 +15,7 @@ The schema is defined **only** in `contracts/schema/`:
 
 Never copy column lists into other documents. READMEs, the PRD and issues link to these files. A schema change is a `contract-change` PR (see `rules/team-workflow-and-prs.md`): update both SQL files, `contracts/openapi.yaml` if the API shape changes, `scripts/mock_hub.py` and `tests/` together.
 
-Core tables share names and column meaning across server and clients: `users`, `classrooms`, `enrollments`, `announcements`, `materials`, `material_chunks`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`, `ai_chat_messages`, `topics`, `private_comments`. Server-only: `sessions`, `sync_revisions`, `hub_meta`, `classroom_teachers` (clients get co-teachers as `Classroom.co_teacher_ids`). Client-only: `sync_state`.
+Core tables share names and column meaning across server and clients: `users`, `classrooms`, `enrollments`, `announcements`, `announcement_comments`, `materials`, `material_chunks`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`, `ai_chat_messages`, `topics`, `private_comments`. Server-only: `sessions`, `sync_revisions`, `hub_meta`, `classroom_teachers` (clients get co-teachers as `Classroom.co_teacher_ids`). Client-only: `sync_state`.
 
 ### Conventions
 * IDs are UUID v4 `TEXT`. Timestamps are epoch **milliseconds** `INTEGER`. Booleans are `INTEGER` 0/1.
@@ -42,7 +42,7 @@ A learner can open their own phone's SQLite file, so the client schema is public
 Clients get other people's names through `PublicUser` (`id`, `full_name`, `role`) in the pull response.
 
 ### Client-specific columns
-* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'` | `'REJECTED'`) and `sync_reject_reason` on `assignment_submissions`, `quiz_attempts` and `private_comments`: work created offline waiting to upload, and the Hub's reason when it refused it.
+* `sync_status` (`'SYNCED'` | `'QUEUED_FOR_SYNC'` | `'REJECTED'`) and `sync_reject_reason` on `assignment_submissions`, `quiz_attempts`, `announcement_comments` and `private_comments`: work created offline waiting to upload, and the Hub's reason when it refused it.
 * `materials.local_file_path`: absolute path of the cached PDF or MP4.
 * `sync_state` (key/value): `hub_id`, `sync_epoch`, `cursor`, `current_user_id`. A client may add its own bookkeeping keys under a `namespace:` prefix (for example upload receipts); they are never a cursor and never sent to the Hub. Upload outcomes belong in `sync_status` / `sync_reject_reason`, not in `sync_state`.
 * **One device, several accounts:** each account that signs in on a device gets its own local database (its own mirror, `sync_state` and cursor). Signing in as someone else never reads, overwrites or deletes another account's rows, so queued work survives until its owner signs in again. A signed-out account's data is never shown to another account, and its database file is named by a hash of the user id, never the LRN.
@@ -69,7 +69,7 @@ Each revision has `classroom_id` (NULL for global records) and `student_id` (NUL
 * The same applies if a client was offline longer than the tombstone retention window (the Hub bumps the epoch when it prunes).
 
 ### 3.4 Push (`POST /api/sync/push`)
-* Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts and private comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
+* Client uploads rows with `sync_status = 'QUEUED_FOR_SYNC'`: quiz attempts, stream comments and private comments. Homework photos use `POST /api/assignments/{id}/submit` (multipart) with the client-generated `submission_id`, so retries are idempotent.
 * Hub validates and grades server-side, writes `sync_revisions` in the same transaction, and returns one receipt per item (`SYNCED` or `REJECTED` + reason such as `TIME_LIMIT_EXCEEDED`).
 * Client marks `SYNCED` only from a receipt. On `REJECTED` it sets `sync_status = 'REJECTED'` and `sync_reject_reason` from the receipt; the row stays visible to the learner with a kind explanation, is never retried automatically and is never silently deleted.
 
