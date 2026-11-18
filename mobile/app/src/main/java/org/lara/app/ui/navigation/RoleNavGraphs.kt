@@ -1,5 +1,7 @@
 package org.lara.app.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -106,37 +108,34 @@ private fun RoleNavGraph(
                 ?: stringResource(if (teacher) R.string.teacher_classroom else R.string.learner_classroom),
                 classroom?.section, classroom?.back) {
                 var expanded by remember { mutableStateOf(false) }
+                // Connection status lives in the bar instead of a banner; the slash shape carries it, not colour alone.
+                Icon(painterResource(if (state.isHubReachable) R.drawable.ic_wifi_high else R.drawable.ic_wifi_slash),
+                    stringResource(if (state.isHubReachable) R.string.home_connected else R.string.home_offline), Modifier.size(24.dp),
+                    tint = LaraColors.Surface)
                 Box {
                     IconButton(onClick = { expanded = true }, modifier = Modifier.size(MinTouchTarget)) {
                         Icon(painterResource(R.drawable.ic_dots_three_vertical), stringResource(R.string.class_actions))
                     }
                     DropdownMenu(expanded, { expanded = false }, containerColor = LaraColors.Surface,
                         shape = LaraShapes.large) {
-                        listOf(ShellDestination.QUIZZES, ShellDestination.AI_TUTOR).forEach { destination ->
-                            DropdownMenuItem(text = { Text(stringResource(destination.label),
-                                color = if (!state.allows(destination)) androidx.compose.ui.graphics.Color.Unspecified
-                                    else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.TextPrimary) },
-                                leadingIcon = { Icon(painterResource(if (destination == ShellDestination.AI_TUTOR)
-                                    R.drawable.ic_sparkle_regular else R.drawable.ic_exam_regular), null,
-                                    tint = if (!state.allows(destination)) LocalContentColor.current
-                                        else if (destination == ShellDestination.AI_TUTOR) LaraColors.AiDark else LaraColors.PrimaryDark) },
-                                enabled = state.allows(destination), modifier = Modifier.heightIn(min = MinTouchTarget),
-                                onClick = { expanded = false; controller.navigate(destination.route) { launchSingleTop = true } })
-                        }
-                        if (state.hasInProgressAttempt) DropdownMenuItem(
-                            text = { Text(stringResource(R.string.ai_quiz_locked)) }, onClick = {}, enabled = false)
-                        if (teacher) HorizontalDivider(color = LaraColors.Border)
-                        if (teacher) DropdownMenuItem(
-                            leadingIcon = { Icon(painterResource(R.drawable.ic_exam_regular), null, tint = LaraColors.PrimaryDark) },
-                            text = { Text(stringResource(R.string.nav_grades)) },
+                        classroom?.info?.let { info -> DropdownMenuItem(
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_info), null, tint = LaraColors.PrimaryDark) },
+                            text = { Text(stringResource(R.string.class_info)) },
                             modifier = Modifier.heightIn(min = MinTouchTarget),
-                            onClick = { expanded = false; controller.navigate(Grades) { launchSingleTop = true } })
+                            onClick = { expanded = false; info() }) }
+                        if (teacher) classroom?.edit?.let { edit -> DropdownMenuItem(
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_pencil_simple), null, tint = LaraColors.PrimaryDark) },
+                            text = { Text(stringResource(R.string.classes_manage)) },
+                            modifier = Modifier.heightIn(min = MinTouchTarget),
+                            onClick = { expanded = false; edit() }) }
                     }
                 }
             }
         },
         bottomBar = {
-            if (!keyboardOpen) Column(Modifier.navigationBarsPadding()) {
+            // Colour sits behind the system-bar inset too, so the bar and the gesture area read as one surface.
+            if (!keyboardOpen) Column(Modifier.background(LaraColors.Surface).navigationBarsPadding()) {
+                HorizontalDivider(color = LaraColors.Border)
                 if (state.hasInProgressAttempt) {
                     Text(stringResource(R.string.ai_quiz_locked), Modifier.padding(LaraSpacing.S4))
                 }
@@ -153,22 +152,15 @@ private fun RoleNavGraph(
         },
     ) { insets ->
         Column(Modifier.fillMaxSize().padding(insets)) {
-            if (!state.isHubReachable) {
-                Box(Modifier.fillMaxWidth().padding(LaraSpacing.S4)) {
-                    if (keyboardOpen) Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                        Icon(painterResource(R.drawable.ic_info), null, Modifier.size(24.dp))
-                        Text(stringResource(R.string.settings_disconnected), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    else DiscoveryBanner(R.string.shell_offline, warning = true, success = false)
-                }
-            }
             if (!teacher) learnerClassActions()
             if (teacher && selected == ShellDestination.PEOPLE) {
                 Box(if (keyboardOpen) Modifier.height(0.dp).clipToBounds() else Modifier) {
                     approvalActions()
                 }
             }
-            NavHost(controller, startDestination = Stream, modifier = Modifier.weight(1f)) {
+            NavHost(controller, startDestination = Stream, modifier = Modifier.weight(1f),
+                enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None }, popExitTransition = { ExitTransition.None }) {
                 composable<Stream> { TabContent(ShellDestination.STREAM, state, content) }
                 composable<Classwork> { TabContent(ShellDestination.CLASSWORK, state, content) }
                 composable<Quizzes> { TabContent(ShellDestination.QUIZZES, state, content) }
@@ -195,19 +187,9 @@ internal fun ShellPlaceholder(destination: ShellDestination) {
 
 @Composable
 private fun ManagementPlaceholder(title: Int, loading: Boolean) {
-    if (loading) ShellSkeleton() else Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+    if (loading) org.lara.app.ui.components.LoadingSpinner() else Column(Modifier.padding(LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         Text(stringResource(title), style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(R.string.shell_empty))
-    }
-}
-
-@Composable
-private fun ShellSkeleton() {
-    val loading = stringResource(R.string.shell_loading)
-    Column(Modifier.fillMaxSize().padding(LaraSpacing.S4).semantics { contentDescription = loading }, verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
-        repeat(3) {
-            Spacer(Modifier.fillMaxWidth().height(64.dp).background(LaraColors.SurfaceSubtle, LaraShapes.medium))
-        }
     }
 }
 
@@ -219,7 +201,7 @@ private fun TabContent(
 ) {
     when {
         !state.allows(destination) -> Text(stringResource(R.string.ai_quiz_locked), Modifier.padding(LaraSpacing.S4))
-        state.isLoading -> ShellSkeleton()
+        state.isLoading -> org.lara.app.ui.components.LoadingSpinner()
         else -> content(destination)
     }
 }

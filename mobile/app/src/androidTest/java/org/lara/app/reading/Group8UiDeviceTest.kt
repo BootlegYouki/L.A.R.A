@@ -292,7 +292,6 @@ class Group8UiDeviceTest {
                 } else {
                     if (id == "group8-image") SystemClock.sleep(500)
                     if (id == "group8-text") scrollTo("Plants")
-                    if (id == "group8-missing") scrollTo(context.getString(R.string.reading_file_unavailable))
                     shot(id)
                 }
             }

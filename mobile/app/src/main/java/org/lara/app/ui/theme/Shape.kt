@@ -32,6 +32,8 @@ val LaraShapes = Shapes(
 
 // Minimum interactive size for learner-facing controls. Primary actions and quiz options use 56dp.
 val MinTouchTarget = 52.dp
+/** Every green or home app bar is exactly this tall (below the status bar), so the header never changes height between screens. */
+val AppBarHeight = 64.dp
 val PrimaryTouchTarget = 56.dp
 
 // Compose elevation is a single blur, so tint it with navy instead of gray. Ambient and spot colors are

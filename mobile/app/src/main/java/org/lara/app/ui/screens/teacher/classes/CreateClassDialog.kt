@@ -33,7 +33,6 @@ internal fun CreateClassDialog(
         enabled = online && !busy && name.isNotBlank() && section.isNotBlank(),
         onAction = if (review) onCreate else onReview, onDismiss = onDismiss,
     ) {
-        if (!online) DiscoveryBanner(R.string.classes_offline, warning = true, success = false)
         if (busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth(), color = LaraColors.PrimaryDark, trackColor = LaraColors.Border)
             Text(stringResource(R.string.classes_updating))

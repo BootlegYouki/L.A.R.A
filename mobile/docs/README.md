@@ -24,8 +24,8 @@ verification output under [evidence/41/](./evidence/41/).
 | `room_schema.md` | Entities versus `client_offline.sql`, DAOs, schema test | Sprint 1 |
 | `discovery.md` | NSD, UDP, `MulticastLock`, manual IP, reconnect | Sprint 1 |
 | `sync_worker.md` | WorkManager sync, cursor handling, `reset`, offline queue | Sprint 2 |
-| [stream-reader.md](./stream-reader.md) | Room-backed Stream, queued class comments, PDF/image handouts and extracted DOCX text | Sprint 3 |
-| [classroom-layout.md](./classroom-layout.md) | Shared phone class cards, class headers, teacher tools and keyboard-safe comments | Sprint 3.1.1 |
+| [stream-reader.md](./stream-reader.md) | Room-backed Stream, PDF/image handouts and extracted DOCX text | Sprint 3 |
+| [classroom-layout.md](./classroom-layout.md) | Shared phone class cards, class headers, teacher tools and keyboard-safe private comments | Sprint 3.1.1 |
 | [classroom-layout-group3.md](./classroom-layout-group3.md) | Three class tabs, Stream banner, teachers-only learner People and local topic filters; #266 Group 3 evidence | Sprint 3 |
 | `camerax.md` | Capture, orientation, JPEG under 800 KB, upload retry | Sprint 3 |
 | [video_player.md](./video_player.md) | Media3 Range streaming, Save for Home | Sprint 3 |

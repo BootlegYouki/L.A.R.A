@@ -26,6 +26,9 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
     val submission = container.homework.observe(assignmentId)
         .map<AssignmentSubmissionEntity?, Cached<AssignmentSubmissionEntity?>> { Cached.Content(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Cached.Loading)
+    val comments = container.privateComments(assignmentId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    fun comment(studentId: String, text: String) { viewModelScope.launch { container.addPrivateComment(assignmentId, studentId, text) } }
     val draft = saved.getStateFlow<String?>("photo", null)
     val scanSource = saved.getStateFlow<String?>("scan_source", null)
     val scanPreview = saved.getStateFlow<String?>("scan_preview", null)

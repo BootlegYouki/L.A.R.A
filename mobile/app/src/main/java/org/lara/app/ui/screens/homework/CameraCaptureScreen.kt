@@ -91,7 +91,7 @@ fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
             }
         }
         if (failed) Text(stringResource(R.string.homework_camera_failed))
-        if (granted && !ready && !failed) org.lara.app.ui.screens.stream.ReadingSkeleton()
+        if (granted && !ready && !failed) org.lara.app.ui.components.LoadingSpinner(inline = true)
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         Button(enabled = ready && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
             colors = ButtonDefaults.buttonColors(containerColor = LaraColors.Surface, contentColor = LaraColors.PrimaryDark),

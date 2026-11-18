@@ -95,7 +95,7 @@ class TeacherApprovalDeviceTest {
                     }
                 }
             }
-            waitFor { find(text(R.string.approval_loading)) != null }
+            waitFor { find(text(R.string.reading_loading)) != null }
             screenshot("$language-loading")
             rows.value = Cached.Content(listOf(row))
             waitFor { find(text(R.string.approval_accept)) != null }

@@ -20,14 +20,6 @@ import org.lara.app.ui.theme.*
 val LocalOpenSettings = staticCompositionLocalOf<(() -> Unit)?> { null }
 
 @Composable
-fun SettingsAction() {
-    val open = LocalOpenSettings.current ?: return
-    IconButton(onClick = open, modifier = Modifier.size(MinTouchTarget)) {
-        Icon(painterResource(R.drawable.ic_gear), stringResource(R.string.settings_title), tint = LaraColors.Surface)
-    }
-}
-
-@Composable
 fun SettingsHost(container: AppContainer, userId: String, reachable: Boolean,
     onSignedOut: () -> Unit, onChangeHub: () -> Unit, onBack: () -> Unit) {
     val signedOut by rememberUpdatedState(onSignedOut)

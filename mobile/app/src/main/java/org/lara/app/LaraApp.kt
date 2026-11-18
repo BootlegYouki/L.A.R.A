@@ -2,6 +2,7 @@ package org.lara.app
 
 import android.app.Application
 import android.content.Context
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import org.lara.app.data.remote.discovery.AndroidHubDiscovery
 import org.lara.app.domain.discovery.HubDiscovery
@@ -44,8 +45,21 @@ class AppContainer private constructor(private val services: AppServices, privat
     val discovery get() = services.discovery
     val syncScheduler get() = services.scheduler
     private val database get() = services.accounts.prepared(requireNotNull(accountId))
+    fun privateComments(assignmentId: String) = database.streamDao().observePrivateComments(assignmentId)
+    suspend fun addPrivateComment(assignmentId: String, studentId: String, content: String) {
+        require(content.isNotBlank())
+        val now = System.currentTimeMillis()
+        database.streamDao().insertPrivateComment(org.lara.app.data.local.entities.PrivateCommentEntity(
+            java.util.UUID.randomUUID().toString(), assignmentId, studentId, studentId, content.trim(), now, now, "QUEUED_FOR_SYNC"))
+        syncScheduler.enqueueNow()
+    }
     private val sessionTokens get() = services.tokens
     private val hubClient by lazy { org.lara.app.data.remote.HubClient() }
+    private val tutorClient by lazy { org.lara.app.data.remote.RealtimeClient() }
+    fun askTutor(classroomId: String, materialId: String, message: String): kotlinx.coroutines.flow.Flow<org.lara.app.data.remote.TutorEvent> =
+        kotlinx.coroutines.flow.flow {
+            emitAll(tutorClient.askTutor(enrollmentApi.connection(requireNotNull(accountId)), classroomId, materialId, message))
+        }
     fun forUser(userId: String): AppContainer {
         services.accounts.prepared(userId)
         // Foreground actions and WorkManager must use the same account sync mutex.
@@ -98,6 +112,7 @@ class AppContainer private constructor(private val services: AppServices, privat
             upload = { assignment, submission, file, turnedInAt -> api.upload(owner, assignment, submission, file, turnedInAt) },
             onQueued = syncScheduler::enqueueHomework)
     }
+    fun pendingJoinCount(classroomIds: List<String>) = database.rosterDao().observePendingCount(classroomIds)
     fun savedRosterRefresher(remote: org.lara.app.data.remote.ClassManagementRepository, userId: String) =
         org.lara.app.data.repository.SavedRosterRefresher(database, remote, userId)
     val enrollmentNotices by lazy { org.lara.app.data.repository.RoomEnrollmentNoticeRepository(database) }

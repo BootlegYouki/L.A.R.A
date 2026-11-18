@@ -15,6 +15,12 @@ interface StreamDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertComment(row: AnnouncementCommentEntity)
 
+    @Query("SELECT * FROM private_comments WHERE assignment_id = :assignmentId ORDER BY created_at, id")
+    fun observePrivateComments(assignmentId: String): Flow<List<PrivateCommentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertPrivateComment(row: PrivateCommentEntity)
+
     @Query("SELECT allow_comments FROM announcements WHERE id = :id")
     suspend fun allowsComments(id: String): Boolean?
 

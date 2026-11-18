@@ -14,7 +14,7 @@ Teacher controls stay composed inside a clipped zero-height container while hidd
 
 ## Reference and boundaries
 
-Compared the installed Google Classroom Android Home and class Stream read-only. Its card hierarchy, class banner, source/date post header, divider and flat comments guide the layout. Google account/class data is never copied into this repository. Classroom reference screenshots are not evidence assets here. L.A.R.A keeps the documented green class bar, Nunito, solid fills, Phosphor icons and four bottom destinations; no Google branding, imagery, Meet or Drive controls.
+Compared the installed Google Classroom Android Home and class Stream read-only. Its card hierarchy, class banner, source/date post header, divider guide the layout. Google account/class data is never copied into this repository. Classroom reference screenshots are not evidence assets here. L.A.R.A keeps the documented green class bar, Nunito, solid fills, Phosphor icons and four bottom destinations; no Google branding, imagery, Meet or Drive controls.
 
 Design interpretations to disclose: #244 explicitly requests a dark-green Home class header, so the shared card uses that header with a white status/footer area, rather than only the small green tile shown by the desktop Home reference. Fixed banner heights are avoided to support long names and 200% text. Teacher/People management and Grades retain their existing scope; no new roster or gradebook feature is invented. Where cached teacher names are unavailable the card omits the name rather than inventing one.
 

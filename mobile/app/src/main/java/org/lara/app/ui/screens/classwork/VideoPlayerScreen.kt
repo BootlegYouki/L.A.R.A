@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.clickable
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
@@ -47,7 +49,7 @@ import org.lara.app.AppContainer
 import org.lara.app.R
 import org.lara.app.domain.*
 import org.lara.app.ui.theme.*
-import org.lara.app.ui.components.ClassroomDetailHeader
+import org.lara.app.ui.components.ClassroomBackBar
 import org.lara.app.ui.components.ClassroomSurface
 import org.lara.app.ui.components.DiscoveryBanner
 
@@ -64,12 +66,21 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
     val state by model.state.collectAsStateWithLifecycle()
     val material by model.material.collectAsStateWithLifecycle()
     val download by model.download.collectAsStateWithLifecycle()
+    val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    val notificationTitle = material?.title ?: stringResource(R.string.video_title)
+    LaunchedEffect(download) { postDownloadNotification(appContext, id, notificationTitle, download) }
+    val askNotifications = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { model.save() }
+    val save = {
+        if (android.os.Build.VERSION.SDK_INT >= 33) askNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS) else model.save()
+    }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var started by remember { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) }
     val playback: VideoPlaybackSession = viewModel(viewModelStoreOwner = owner, key = "video-player-$userId-$id")
     var fullscreen by rememberSaveable(id) { mutableStateOf(false) }
     var confirmRemoval by rememberSaveable(id) { mutableStateOf(false) }
-    BackHandler { if (fullscreen) fullscreen = false else close() }
+    var open by rememberSaveable(id) { mutableStateOf(false) }
+    BackHandler { if (fullscreen) fullscreen = false else if (open) open = false else close() }
     DisposableEffect(model, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) { started = true; model.start() }
@@ -82,29 +93,41 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
             if (activity?.isChangingConfigurations != true) { model.stop(); playback.release() }
         }
     }
-    if (confirmRemoval) AlertDialog(
-        onDismissRequest = { confirmRemoval = false },
-        containerColor = LaraColors.Surface,
-        titleContentColor = LaraColors.TextPrimary,
-        textContentColor = LaraColors.TextSecondary,
-        title = { Text(stringResource(R.string.video_remove)) },
-        text = { Text(stringResource(R.string.video_remove_confirmation), Modifier.verticalScroll(rememberScrollState())) },
-        confirmButton = { TextButton(onClick = {
-            confirmRemoval = false
-            playback.release()
-            model.remove()
-        }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.video_remove_confirm)) } },
-        dismissButton = { TextButton(onClick = { confirmRemoval = false }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-            Text(stringResource(R.string.video_remove_cancel))
-        } })
-    Column(Modifier.fillMaxSize()) {
-        if (!fullscreen) ClassroomDetailHeader(material?.title ?: stringResource(R.string.video_title), R.string.video_back, close)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
+    if (confirmRemoval) org.lara.app.ui.components.NativeConfirmDialog(stringResource(R.string.video_remove), stringResource(R.string.video_remove_confirmation),
+        stringResource(R.string.video_remove_confirm), stringResource(R.string.video_remove_cancel),
+        { confirmRemoval = false; playback.release(); model.remove() }, { confirmRemoval = false })
+    Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(LaraColors.Surface)) {
+        if (!fullscreen) ClassroomBackBar(close)
+        org.lara.app.ui.components.PullRefresh({
+            model.load()
+            kotlinx.coroutines.withTimeoutOrNull(1_000) { model.state.first { it.loading } }
+            kotlinx.coroutines.withTimeoutOrNull(15_000) { model.state.first { !it.loading } }
+        }, Modifier.weight(1f)) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             if (!fullscreen) {
-                if (state.loading) {
-                    Text(stringResource(R.string.video_buffering))
-                    Spacer(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(LaraColors.Border, LaraShapes.medium))
+                Text(material?.title ?: stringResource(R.string.video_title), style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.material_attachments), style = MaterialTheme.typography.titleMedium)
+                // A frame can only be read from the saved file; a streamed video shows a dark card with a play button.
+                val frame by produceState<android.graphics.Bitmap?>(null, state.source) {
+                    val path = (state.source as? VideoSource.Local)?.path
+                    value = if (path == null) null else withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching { android.media.MediaMetadataRetriever().use { it.setDataSource(path); it.getFrameAtTime(0) } }.getOrNull()
+                    }
+                }
+                if (state.source != null) Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                AttachmentThumb(frame, R.drawable.ic_play, play = true) { open = true }
+                if (state.source != null) Row(Modifier.fillMaxWidth().clickable { open = true }.heightIn(min = 40.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    Icon(painterResource(R.drawable.ic_play), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+                    Text(material?.title ?: stringResource(R.string.video_title), Modifier.weight(1f), maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+                }
+                if (state.loading && state.source == null) {
+                    Spacer(Modifier.fillMaxWidth(0.48f).aspectRatio(1.6f).clip(LaraShapes.medium).background(Color.Black))
+                    Spacer(Modifier.heightIn(min = MinTouchTarget))
                 }
                 state.problem?.let { problem ->
                     if (problem == VideoProblem.UNAVAILABLE) {
@@ -121,27 +144,30 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
                     }
                 }
             }
-            state.source?.let { source ->
-                VideoPlayback(source, container::createVideoPlayer, playback, fullscreen,
-                    onFullscreen = { fullscreen = it }, onRetry = model::load)
-            }
-            if (!fullscreen) {
+            if (!fullscreen && !(state.loading && state.source == null)) {
                 if (state.source is VideoSource.Local) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(painterResource(R.drawable.ic_check_circle), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                        Text(stringResource(R.string.video_local), color = LaraColors.PrimaryDark)
-                    }
                     OutlinedButton(onClick = { confirmRemoval = true }, enabled = !state.removing,
-                        modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                        Icon(painterResource(R.drawable.ic_trash), null, Modifier.size(24.dp))
-                        Spacer(Modifier.width(LaraSpacing.S2))
+                        modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                         Text(stringResource(R.string.video_remove))
                     }
                 }
                 if (state.removing) Text(stringResource(R.string.video_removing))
-                else DownloadControls(download, model::save, model::pause)
+                else if (state.source !is VideoSource.Local) DownloadControls(download, save, model::pause)
             }
         }
+        }
+    }
+    // The player floats over a dimmed page; tapping the dim area closes it.
+    state.source?.takeIf { open }?.let { source ->
+        Box(Modifier.fillMaxSize().background(if (fullscreen) Color.Black else Color.Black.copy(alpha = 0.6f))
+            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { if (!fullscreen) open = false },
+            contentAlignment = Alignment.Center) {
+          Box(if (fullscreen) Modifier else Modifier.padding(horizontal = LaraSpacing.S4)) {
+            VideoPlayback(source, container::createVideoPlayer, playback, fullscreen,
+                onFullscreen = { fullscreen = it }, onRetry = model::load)
+          }
+        }
+    }
     }
 }
 
@@ -150,25 +176,13 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
 private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, session: VideoPlaybackSession,
     fullscreen: Boolean, onFullscreen: (Boolean) -> Unit, onRetry: () -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var position by remember(source) { mutableLongStateOf(session.player?.currentPosition ?: 0) }
-    var duration by remember(source) { mutableLongStateOf(0) }
-    var isPlaying by remember(source) { mutableStateOf(false) }
-    var buffering by remember(source) { mutableStateOf(true) }
-    var ended by remember(source) { mutableStateOf(false) }
     var error by remember(source) { mutableStateOf<VideoProblem?>(null) }
     var player by remember(source) { mutableStateOf<Player?>(null) }
-    var scrub by remember(source) { mutableStateOf<Float?>(null) }
     val activity = LocalContext.current.activity()
     DisposableEffect(source, lifecycle) {
         var current: Player? = null
         val listener = object : Player.Listener {
-            override fun onPlaybackStateChanged(state: Int) {
-                buffering = state == Player.STATE_BUFFERING
-                ended = state == Player.STATE_ENDED
-            }
-            override fun onIsPlayingChanged(value: Boolean) { isPlaying = value }
             override fun onPlayerError(exception: PlaybackException) {
-                buffering = false
                 var cause: Throwable? = exception
                 var problem = if (exception.errorCode >= 3000) VideoProblem.INVALID_FILE else VideoProblem.HUB_UNAVAILABLE
                 while (cause != null) {
@@ -179,10 +193,7 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
             }
         }
         fun release() {
-            current?.let {
-                position = it.currentPosition.coerceAtLeast(0)
-                it.removeListener(listener)
-            }
+            current?.removeListener(listener)
             session.release()
             current = null
             player = null
@@ -195,9 +206,6 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
                 created.addListener(listener)
                 player = created
                 error = null
-                isPlaying = created.isPlaying
-                buffering = created.playbackState == Player.STATE_BUFFERING
-                ended = created.playbackState == Player.STATE_ENDED
             } catch (e: Exception) { release(); error = (e as? VideoFailure)?.problem ?: VideoProblem.UNAVAILABLE }
         }
         val observer = LifecycleEventObserver { _, event ->
@@ -212,88 +220,16 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
             if (activity?.isChangingConfigurations != true) release()
         }
     }
-    LaunchedEffect(player, lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                player?.let {
-                    position = it.currentPosition.coerceAtLeast(0)
-                    duration = it.duration.coerceAtLeast(0)
-                }
-                delay(250)
-            }
-        }
-    }
-    var controls by remember { mutableStateOf(true) }
-    var interaction by remember { mutableIntStateOf(0) }
-    val accessibility = LocalAccessibilityManager.current
-    fun interact() { controls = true; interaction++ }
-    LaunchedEffect(fullscreen, isPlaying, scrub, interaction) {
-        controls = true
-        if (fullscreen && isPlaying && scrub == null) {
-            delay(accessibility?.calculateRecommendedTimeoutMillis(3_000, containsIcons = true,
-                containsText = true, containsControls = true) ?: 3_000)
-            controls = false
-        }
-    }
-    val transport: @Composable () -> Unit = {
-        val time = stringResource(R.string.video_time, timeText(position), timeText(duration))
-        Text(time, style = MaterialTheme.typography.bodyMedium)
-        val seekLabel = stringResource(R.string.video_seek)
-        Slider(value = scrub ?: if (duration > 0) position.toFloat() / duration else 0f,
-            onValueChange = { interact(); scrub = it },
-            onValueChangeFinished = { scrub?.let { player?.seekTo((duration * it).toLong()) }; scrub = null; interact() },
-            enabled = duration > 0 && error == null,
-            colors = SliderDefaults.colors(thumbColor = LaraColors.Primary, activeTrackColor = LaraColors.Primary,
-                inactiveTrackColor = LaraColors.Border, activeTickColor = LaraColors.PrimaryDark,
-                inactiveTickColor = LaraColors.PrimaryDark, disabledThumbColor = LaraColors.TextMuted,
-                disabledActiveTrackColor = LaraColors.TextMuted, disabledInactiveTrackColor = LaraColors.Border),
-            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).semantics { contentDescription = seekLabel; stateDescription = time })
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically) {
-            if (!fullscreen) OutlinedButton(onClick = { interact(); player?.seekTo((position - 10_000).coerceAtLeast(0)) },
-                enabled = error == null && player != null, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Text(stringResource(R.string.video_back_ten))
-            }
-            FilledIconButton(onClick = { interact(); player?.let { if (it.isPlaying) it.pause() else {
-                if (ended) it.seekTo(0); it.play()
-            } } }, enabled = error == null && player != null, modifier = Modifier.size(PrimaryTouchTarget)) {
-                Icon(painterResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                    stringResource(if (isPlaying) R.string.video_pause else R.string.video_play), Modifier.size(32.dp))
-            }
-            if (!fullscreen) OutlinedButton(onClick = { interact(); player?.seekTo((position + 10_000).coerceAtMost(duration)) },
-                enabled = duration > 0 && error == null, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-                Text(stringResource(R.string.video_forward_ten))
-            }
-            if (fullscreen) IconButton(onClick = { interact(); onFullscreen(false) }, modifier = Modifier.size(MinTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_corners_in), stringResource(R.string.video_exit_fullscreen),
-                    Modifier.size(24.dp))
-            }
-        }
-    }
+    // Media3's own controller: play/pause, seek bar, time and fullscreen button.
     val render: @Composable (Modifier) -> Unit = { modifier ->
-        val showControls = stringResource(R.string.video_show_controls)
-        Box(modifier.background(Color.Black).semantics { if (fullscreen) contentDescription = showControls }
-            .clickable(onClickLabel = showControls) { interact() }) {
-            AndroidView(factory = { context -> PlayerView(context).apply {
-                useController = false
-                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-                importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            } }, update = { session.attach(it, player) }, onRelease = { session.detach(it) }, modifier = Modifier.fillMaxSize())
-            if (!fullscreen) IconButton(onClick = { onFullscreen(true) },
-                modifier = Modifier.align(Alignment.TopEnd).padding(LaraSpacing.S2).size(MinTouchTarget)
-                    .background(LaraColors.TextPrimary, CircleShape)) {
-                Icon(painterResource(R.drawable.ic_corners_out), stringResource(R.string.video_fullscreen),
-                    Modifier.size(24.dp), tint = LaraColors.Surface)
-            }
-            if (buffering) CircularProgressIndicator(Modifier.align(Alignment.Center), color = LaraColors.Primary)
-            if (fullscreen && controls) {
-                Column(Modifier.align(Alignment.BottomCenter).safeDrawingPadding().fillMaxWidth()
-                    .background(LaraColors.TextPrimary).padding(LaraSpacing.S3)) {
-                    error?.let { VideoMessage(problemText(it)) }
-                    CompositionLocalProvider(LocalContentColor provides LaraColors.Surface) { transport() }
-                }
-            }
-        }
+        AndroidView(factory = { context -> PlayerView(context).apply {
+            useController = true
+            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+        } }, update = {
+            session.attach(it, player)
+            it.setFullscreenButtonState(fullscreen)
+            it.setFullscreenButtonClickListener { onFullscreen(!fullscreen) }
+        }, onRelease = { session.detach(it) }, modifier = modifier.background(Color.Black))
     }
     if (fullscreen) {
         val context = LocalContext.current
@@ -359,44 +295,24 @@ private fun VideoPlayback(source: VideoSource, create: (VideoSource) -> Player, 
         val viewport = if (configuration.screenWidthDp > configuration.screenHeightDp)
             Modifier.height((configuration.screenHeightDp * 0.45f).dp) else Modifier.aspectRatio(16f / 9f)
         render(Modifier.fillMaxWidth().then(viewport).clip(LaraShapes.medium))
-        if (buffering) Text(stringResource(R.string.video_buffering), style = MaterialTheme.typography.bodyMedium)
         error?.let {
-            VideoMessage(problemText(it))
+            if (it != VideoProblem.HUB_UNAVAILABLE) VideoMessage(problemText(it))
             OutlinedButton(onClick = onRetry, modifier = Modifier.heightIn(min = MinTouchTarget)) {
                 Text(stringResource(R.string.video_retry))
             }
         }
-        if (ended) Text(stringResource(R.string.video_finished), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        transport()
     }
 }
 
 @Composable
 internal fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () -> Unit) {
-    ClassroomSurface {
-        Text(stringResource(R.string.video_home_title), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.video_home_help), style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
+    Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
         val downloading = state.phase == DownloadPhase.DOWNLOADING
-        val percent = if (state.total > 0) (state.bytes * 100 / state.total).toInt() else 0
-        if (downloading || state.phase == DownloadPhase.PAUSED || state.phase == DownloadPhase.COMPLETE) {
-            val label = when (state.phase) {
-                DownloadPhase.DOWNLOADING -> R.string.video_downloading
-                DownloadPhase.COMPLETE -> R.string.video_downloaded
-                else -> R.string.video_paused
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(if (state.phase == DownloadPhase.COMPLETE) R.drawable.ic_check_circle else R.drawable.ic_download),
-                    null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                Text(stringResource(label), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-            }
-            Text(stringResource(R.string.video_progress, percent), style = MaterialTheme.typography.bodyLarge)
-            LinearProgressIndicator(progress = { percent / 100f }, color = LaraColors.Primary, trackColor = LaraColors.Border,
-                modifier = Modifier.fillMaxWidth().height(LaraSpacing.S3).clip(LaraShapes.large))
-        }
         if (state.phase == DownloadPhase.FAILED) Text(stringResource(R.string.video_download_failed), style = MaterialTheme.typography.titleMedium)
-        state.problem?.let { VideoMessage(problemText(it)) }
-        if (state.phase != DownloadPhase.COMPLETE) {
-            Button(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+        // No Hub, no warning and no download button: the wifi icon already says it, and there is nothing to download.
+        state.problem?.takeIf { it != VideoProblem.HUB_UNAVAILABLE }?.let { VideoMessage(problemText(it)) }
+        if (state.phase != DownloadPhase.COMPLETE && state.problem != VideoProblem.HUB_UNAVAILABLE) {
+            OutlinedButton(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Text(stringResource(if (downloading) R.string.video_cancel
                     else if (state.phase == DownloadPhase.PAUSED || state.bytes > 0) R.string.video_resume else R.string.video_save))
             }

@@ -1,7 +1,6 @@
 package org.lara.app.ui.screens.enrollment
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,16 +12,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import org.lara.app.R
 import org.lara.app.domain.enrollment.ClassCode
 import org.lara.app.ui.components.DiscoveryBanner
-import org.lara.app.ui.components.ClassFormDialog
 import org.lara.app.ui.components.classFormInputScroll
 import org.lara.app.ui.theme.*
 
 enum class JoinClassError { INVALID_CODE, HUB_UNREACHABLE, REQUEST_FAILED, REFRESH_FAILED, SESSION_EXPIRED }
 
+@OptIn(ExperimentalMaterial3Api::class)
 /** Presentation only; the enrollment owner supplies reachability, request state, and persistence. */
 @Composable
 fun JoinClassDialog(
@@ -32,47 +37,52 @@ fun JoinClassDialog(
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     onInputChanged: () -> Unit = {},
-    learnerName: String? = null,
+    learnerName: String? = null, // kept for callers; the sheet no longer shows it
 ) {
-    var draft by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    var draft by rememberSaveable { mutableStateOf("") }
     var invalid by rememberSaveable { mutableStateOf(false) }
     val invalidCode = invalid || error == JoinClassError.INVALID_CODE
     val label = stringResource(R.string.enrollment_code_label)
-    ClassFormDialog(
-        title = stringResource(R.string.enrollment_join_title),
-        action = stringResource(R.string.enrollment_join_action), enabled = !busy && isHubReachable,
-        onAction = {
-            val code = ClassCode.canonicalOrNull(draft.text)
-            if (code == null) invalid = true else onSubmit(code)
-        }, onDismiss = onDismiss, canDismiss = !busy,
-    ) {
-        learnerName?.takeIf { it.isNotBlank() }?.let { name ->
-            Text(stringResource(R.string.enrollment_signed_in_as), style = MaterialTheme.typography.labelLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Surface(shape = CircleShape, color = LaraColors.PrimaryLight, contentColor = LaraColors.PrimaryDark) {
-                    Box(Modifier.size(LaraSpacing.S12), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                        Text(name.trim().take(1).uppercase(), style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-                Text(name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            }
-        }
-        Text(stringResource(R.string.enrollment_code_help))
+    val submit = {
+        val code = ClassCode.canonicalOrNull(draft)
+        if (code == null) invalid = true else onSubmit(code)
+    }
+    ModalBottomSheet(onDismissRequest = { if (!busy) onDismiss() }, containerColor = LaraColors.Surface) {
+      Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S6),
+        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+        Text(stringResource(R.string.enrollment_join_title), style = MaterialTheme.typography.titleLarge)
         Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             Text(label, style = MaterialTheme.typography.labelLarge)
-            OutlinedTextField(
+            BasicTextField(
                 value = draft,
-                onValueChange = { if (it.text.length <= 32) { draft = it; invalid = false; onInputChanged() } },
-                visualTransformation = GroupedClassCode,
-                enabled = !busy, singleLine = true, isError = invalidCode,
-                shape = LaraShapes.medium,
+                onValueChange = { v ->
+                    draft = v.filter { it.isLetterOrDigit() }.uppercase().take(6)
+                    invalid = false; onInputChanged()
+                },
+                enabled = !busy, singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
                     keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Done,
                     autoCorrectEnabled = false,
                 ),
-                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).classFormInputScroll().semantics { contentDescription = label },
+                keyboardActions = KeyboardActions(onDone = { submit() }),
+                modifier = Modifier.fillMaxWidth().classFormInputScroll().semantics { contentDescription = label },
+                decorationBox = {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        repeat(6) { i ->
+                            if (i == 3) Spacer(Modifier.width(LaraSpacing.S3))
+                            else if (i > 0) Spacer(Modifier.width(LaraSpacing.S2))
+                            val current = i == draft.length
+                            Box(Modifier.weight(1f).height(PrimaryTouchTarget).background(LaraColors.Surface, LaraShapes.medium)
+                                .border(if (current || invalidCode) 2.dp else 1.dp,
+                                    if (invalidCode) LaraColors.Danger else if (current) LaraColors.Primary else LaraColors.Border,
+                                    LaraShapes.medium), contentAlignment = Alignment.Center) {
+                                if (i < draft.length) Text(draft[i].toString(), style = MaterialTheme.typography.titleLarge)
+                            }
+                        }
+                    }
+                },
             )
             if (invalidCode) {
                 Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -81,7 +91,6 @@ fun JoinClassDialog(
                 }
             }
         }
-        Text(stringResource(R.string.enrollment_approval_help), color = LaraColors.TextSecondary)
         when {
             !isHubReachable || error == JoinClassError.HUB_UNREACHABLE ->
                 DiscoveryBanner(R.string.enrollment_join_offline, warning = true, success = false)
@@ -96,5 +105,11 @@ fun JoinClassDialog(
             LinearProgressIndicator(Modifier.fillMaxWidth(), color = LaraColors.PrimaryDark, trackColor = LaraColors.Border)
             Text(stringResource(R.string.enrollment_join_sending))
         }
+        Button(onClick = submit, enabled = !busy && isHubReachable,
+            colors = ButtonDefaults.buttonColors(containerColor = LaraColors.PrimaryDark, contentColor = LaraColors.Surface),
+            modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+            Text(stringResource(R.string.enrollment_join_action))
+        }
+      }
     }
 }

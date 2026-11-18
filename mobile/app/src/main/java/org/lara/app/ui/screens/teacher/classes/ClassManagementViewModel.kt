@@ -40,6 +40,15 @@ class ClassManagementViewModel(private val container: AppContainer, private val 
     }
     private fun selected(): Classroom? = (classrooms.value as? Cached.Content)?.value?.find { it.id == state.value.selected }
     fun refresh() = run(false, false) { }
+    /** Pull to refresh: the reload that follows a change, without the busy lock. */
+    suspend fun reload() {
+        if (!reachable.value) return
+        container.sync.refreshRoster(userId) {
+            refresher.refreshClasses()
+            state.value.selected?.let { refresher.refreshIfActive(it) }
+        }
+        container.sync.pull(userId)
+    }
     fun create(name: String, section: String) = run(false, false) {
         api.create(name, section).also { row ->
             rosterJob?.cancel(); rosterJob = null
