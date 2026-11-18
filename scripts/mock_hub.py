@@ -37,8 +37,36 @@ GRACE_MS = 60_000
 CLASS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 ADMIN_ID = "ADMIN-0001"
 # A real 30 s H.264 clip so clients can decode, seek and save it, not just count bytes.
+MOCK_PDF = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lesson.pdf"), "rb").read()
 MOCK_VIDEO = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lesson-video.mp4"), "rb").read()
 MOCK_VIDEO_SIZE = len(MOCK_VIDEO)
+
+
+def _mock_png():
+    import struct, zlib
+    w, h = 320, 200
+    rows = b"".join(b"\x00" + bytes(v for x in range(w) for v in (40 + y // 2, 140, 70 + x // 4)) for y in range(h))
+    chunk = lambda t, d: struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d))
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
+
+
+def _mock_docx():
+    import io, zipfile
+    paras = ["The Food Chain", "A food chain shows how energy moves from the sun to plants and then to animals.",
+             "Producers make their own food. Consumers eat plants or other animals."]
+    body = "".join(f"<w:p><w:r><w:t>{x}</w:t></w:r></w:p>" for x in paras[:2])
+    body += '<w:p><w:r><w:drawing><a:blip r:embed="rId1"/></w:drawing></w:r></w:p>'
+    body += f"<w:p><w:r><w:t>{paras[2]}</w:t></w:r></w:p>"
+    ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("word/document.xml", f'<?xml version="1.0"?><w:document {ns}><w:body>{body}</w:body></w:document>')
+        z.writestr("word/_rels/document.xml.rels", '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/></Relationships>')
+        z.writestr("word/media/image1.png", _mock_png())
+    return buf.getvalue()
+
+
+MOCK_DOCX, MOCK_PNG = _mock_docx(), _mock_png()
 
 
 def now_ms():
@@ -110,9 +138,10 @@ class HubState:
         mat = {"id": "a1000000-0000-4000-8000-000000000001", "classroom_id": classroom["id"],
                "title": "Aralin 1 - Ang Ecosystem.pdf", "file_type": "DOCUMENT",
                "uploaded_by": teacher["id"],
-               "file_size_bytes": 2048, "download_url": "/api/materials/a1000000-0000-4000-8000-000000000001/download",
+               "file_size_bytes": len(MOCK_PDF), "download_url": "/api/materials/a1000000-0000-4000-8000-000000000001/download",
                "created_at": t, "updated_at": t}
         self.materials[mat["id"]] = mat
+        self.material_files[mat["id"]] = MOCK_PDF
         self.log("materials", mat["id"], classroom["id"])
         self.chunks[mat["id"]] = [
             {"id": new_id(), "material_id": mat["id"], "order_index": 1, "heading": "Ang Ecosystem",
@@ -128,6 +157,13 @@ class HubState:
                "download_url": "/api/materials/a2000000-0000-4000-8000-000000000002/download",
                "created_at": t, "updated_at": t}
         self.materials[vid["id"]] = vid
+        for n, (title, data) in enumerate([("Food Chain Notes.docx", MOCK_DOCX), ("Food Chain Photo.png", MOCK_PNG)], 3):
+            extra = {"id": f"a{n}000000-0000-4000-8000-00000000000{n}", "classroom_id": classroom["id"], "title": title,
+                     "file_type": "DOCUMENT", "uploaded_by": teacher["id"], "file_size_bytes": len(data),
+                     "download_url": f"/api/materials/a{n}000000-0000-4000-8000-00000000000{n}/download", "created_at": t, "updated_at": t}
+            self.materials[extra["id"]] = extra
+            self.material_files[extra["id"]] = data
+            self.log("materials", extra["id"], classroom["id"])
         self.log("materials", vid["id"], classroom["id"])
         for chunk in self.chunks[mat["id"]]:
             self.log("material_chunks", chunk["id"], classroom["id"])
