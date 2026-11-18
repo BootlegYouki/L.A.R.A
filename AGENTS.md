@@ -9,7 +9,7 @@ Mandatory architectural invariants, technical constraints, coding standards and 
 An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Philippine public schools (Grades 1 to 12, elementary to senior high). It runs entirely on the classroom's own Wi-Fi, with no internet at all. First deployment: the capstone defense plus one pilot class of about 40 learners.
 
 **Three programs, one network:**
-* **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
+* **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI queue. One Hub serves all teachers and is the single place that syncs. It is headless (no window): its admin console and health dashboard (accounts, port health, USB export and backup) are a website the Hub serves, and the admin signs in to it from the Hub PC itself.
 * **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
@@ -54,11 +54,12 @@ Seed accounts for the mock hub (PIN `1234`): `T-0001` (teacher, class code `K7M4
 * **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
 * **The product is Google Classroom, offline, plus quizzes and the Socratic tutor.** When a classroom behavior is not written down, Google Classroom's behavior is the default, limited to what the contract supports. Out of scope: Meet, Drive, Calendar, guardian emails, rubrics and grade categories.
 * **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
+* **The Hub is headless, with a website dashboard** (decided 2026-11-18, #329, replacing the Tauri window): the Hub is the `lara-hub` process and serves its admin console and health dashboard as a web page. The ADMIN account still signs in only from the Hub PC (loopback), so the admin pages are opened in a browser on that PC. Built after the defense (#297 freeze).
 * **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
 * **Sync cursor is a sequence number,** never a timestamp (`rules/database-and-sync.md`).
 * **Remote/Suspension Mode is the one sanctioned exception to LAN-only** (decided 2026-10-26): a Hub may opt into a Cloudflare Tunnel so its own accounts can reach it from outside the school network while classes are suspended (e.g. bad weather). Same accounts, same bearer tokens, same contract, same sync cursor — nothing about in-school behavior changes, and the tunnel is the only sanctioned path off the LAN (section 3.5).
 * **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
-* **The apps are English only** (decided 2026-11-03): no Filipino strings and no language toggle on mobile, desktop or the Hub window. The tutor already replies in English (§5.2).
+* **The apps are English only** (decided 2026-11-03): no Filipino strings and no language toggle on mobile, desktop or the Hub dashboard. The tutor already replies in English (§5.2).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
 * **The AI tutor runs only on the Hub** (decided 2026-11-02): no model download and no on-device inference on phones or laptops; every client uses the Hub WebSocket stream. The small models tested in #73 leaked answers or refused everything; the passing candidate needs about 11 GB RAM on a 16 GB Hub.
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
@@ -73,7 +74,7 @@ Say so, in an issue, with evidence. Every developer and agent may propose a bett
 
 1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
 2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`.
-3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, gradebook export, backup.
+3. **Server (`server/`):** Headless Rust backend (no window, dashboard served as a website): mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue, gradebook export, backup.
 4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
 Rule documents (read the ones for your task):
@@ -126,7 +127,7 @@ Rule documents (read the ones for your task):
 * **Components:** Android: `androidx.compose.material3` themed with `design-system/mobile/*`. Desktop: Tailwind with `design-system/desktop/tailwind.theme.ts`. Phosphor icons and Nunito, bundled.
 * **Tokens only:** no invented hex values, no gradients, purple only for the AI tutor.
 * **Target sizes:** phones minimum 52dp, 56dp for primary actions and quiz options. Desktop buttons and icon buttons 40px, tabs and drawer items 48px, as in Google Classroom. Never rely on color alone: pair status color with an icon and text.
-* **English only, no hardcoded strings:** all user-facing text in `values/strings.xml` on Android and the English JSON dictionary on desktop and the Hub window, so wording stays in one place.
+* **English only, no hardcoded strings:** all user-facing text in `values/strings.xml` on Android and the English JSON dictionary on desktop and the Hub dashboard, so wording stays in one place.
 * **Every screen** needs an offline state, an empty state and a loading skeleton.
 * **Camera:** CameraX with a document framing guide, compress to JPEG under 800 KB.
 * **Gradebook export:** `.xlsx` and `.csv` of learners by assignment and quiz with points, per class, direct to USB. Like Google Classroom, L.A.R.A records points only; each teacher applies their own grading system.
