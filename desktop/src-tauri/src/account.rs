@@ -768,6 +768,73 @@ pub async fn account_token(
     Ok(token_for(&p, &memory, &key))
 }
 #[tauri::command]
+pub async fn read_class_content(
+    app: tauri::AppHandle,
+    accounts: tauri::State<'_, Accounts>,
+    hub: HubInfo,
+    user_id: String,
+    classroom_id: String,
+    save_handout: Option<String>,
+) -> Result<serde_json::Value, &'static str> {
+    validate_hub(&hub)?;
+    if !uuid(&user_id) || !uuid(&classroom_id) {
+        return Err(INVALID);
+    }
+    let user_id = user_id.to_ascii_lowercase();
+    let _guard = accounts.0.lock().await;
+    accounts.require_sync_selection(&hub, &user_id)?;
+    let root = root(&app)?;
+    let mut db = database(&root, &context(&hub, &user_id)).await?;
+    let profile = profile(&mut db, &user_id).await?;
+    let room = classes(&mut db, &profile.user).await?.into_iter()
+        .find(|c| c.id.eq_ignore_ascii_case(&classroom_id)
+            && (profile.user.role == Role::TEACHER || c.enrollment_status.as_deref() == Some("ACTIVE")))
+        .ok_or(INVALID)?;
+    let posts = sqlx::query("SELECT id,title,content,created_at FROM announcements WHERE classroom_id=? ORDER BY created_at DESC,id")
+        .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
+    let materials = sqlx::query("SELECT id,title,file_type,local_file_path,updated_at FROM materials WHERE classroom_id=? ORDER BY created_at DESC,id")
+        .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
+    let chunks = sqlx::query("SELECT c.material_id,c.heading,c.text FROM material_chunks c JOIN materials m ON m.id=c.material_id WHERE m.classroom_id=? ORDER BY c.material_id,c.order_index,c.id")
+        .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
+    if let Some(id) = save_handout {
+        if !uuid(&id) {
+            return Err(INVALID);
+        }
+        let material = materials.iter().find(|row| row.get::<String,_>("id") == id
+            && row.get::<String,_>("file_type") != "VIDEO").ok_or(INVALID)?;
+        if !chunks.iter().any(|row| row.get::<String,_>("material_id") == id) {
+            return Err("lesson_text_unavailable");
+        }
+        put(&mut db, &format!("desktop:saved-handout:{id}"), &material.get::<i64,_>("updated_at").to_string()).await?;
+    }
+    let mut lessons = Vec::new();
+    for row in materials {
+        let id: String = row.get("id");
+        let kind: String = row.get("file_type");
+        let path: Option<String> = row.get("local_file_path");
+        let saved = if kind == "VIDEO" {
+            path.and_then(|path| app.path().app_data_dir().ok().map(|root| root.join(path)))
+                .is_some_and(|path| path.is_file())
+        } else {
+            state(&mut db, &format!("desktop:saved-handout:{id}")).await?
+                .is_some_and(|revision| revision == row.get::<i64,_>("updated_at").to_string())
+        };
+        lessons.push(serde_json::json!({
+            "id": id, "title": row.get::<String,_>("title"), "file_type": kind, "saved": saved,
+            "chunks": chunks.iter().filter(|chunk| chunk.get::<String,_>("material_id") == id)
+                .map(|chunk| serde_json::json!({"heading": chunk.get::<Option<String>,_>("heading"), "text": chunk.get::<String,_>("text")})).collect::<Vec<_>>()
+        }));
+    }
+    Ok(serde_json::json!({
+        "announcements": posts.iter().map(|row| serde_json::json!({
+            "id": row.get::<String,_>("id"), "title": row.get::<String,_>("title"),
+            "content": row.get::<String,_>("content"), "created_at": row.get::<i64,_>("created_at")
+        })).collect::<Vec<_>>(),
+        "materials": lessons
+    }))
+}
+
+#[tauri::command]
 pub async fn classroom_teacher_names(
     app: tauri::AppHandle,
     accounts: tauri::State<'_, Accounts>,

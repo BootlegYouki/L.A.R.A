@@ -285,3 +285,15 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .spin-animation {
   animation: spin 1s linear infinite;
 }
+
+.class-tabs { display: flex; border-bottom: 1px solid var(--color-lara-border); margin: 16px 0 24px; }
+.class-tabs button { min-height: 48px; padding: 0 24px; border: 0; border-bottom: 4px solid transparent; background: transparent; font: inherit; font-weight: 800; }
+.class-tabs button[aria-selected=true] { color: var(--color-lara-primary-dark); border-color: var(--color-lara-primary); }
+.stream-post { padding: 24px; margin: 16px 0; border-radius: 12px; background: var(--color-lara-subtle); }
+.lesson-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.material-list { list-style: none; margin: 0; padding: 0; }
+.material-row { width: 100%; min-height: 72px; display: flex; align-items: center; gap: 16px; padding: 16px; text-align: left; border: 0; border-radius: 12px; background: var(--color-lara-subtle); margin: 8px 0; font: inherit; }
+.material-row span { flex: 1; overflow-wrap: anywhere; }
+.material-row > .ph { font-size: 24px; color: var(--color-lara-primary-dark); }
+.lesson-reader h1, .class-page h1 { margin: 16px 0; }
+.lesson-reader > section { margin: 24px 0; }

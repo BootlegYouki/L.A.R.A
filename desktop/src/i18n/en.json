@@ -30,7 +30,7 @@
   "sign_out_queued_many": "{count} items are waiting to sync. They stay on this device and can sync when you sign in again.",
   "sign_out_count_error": "Could not check for work waiting to sync. Try again.",
   "sign_out_error": "Could not clear the local session. Try signing out again.",
-  "sign_out_working": "Signing out…",
+  "sign_out_working": "Signing out\u2026",
   "signed_out": "You signed out.",
   "signed_out_local": "You signed out on this device. The Hub could not be told to end the session.",
   "account_placeholder": "Account",
@@ -214,5 +214,15 @@
   "video_offline_title": "This video is not downloaded",
   "video_offline_body": "Connect to the classroom Hub to watch this video, or save it for home first.",
   "back_to_stream": "Back to Stream",
-  "back": "Back"
+  "back": "Back",
+  "stream": "Stream",
+  "classwork": "Classwork",
+  "class_tabs": "Class navigation",
+  "stream_empty": "No announcements yet",
+  "classwork_empty": "No lesson materials yet",
+  "class_content_error": "Saved class content could not be opened.",
+  "lesson_saved": "Saved on this device",
+  "lesson_save": "Save for Home",
+  "lesson_save_error": "The lesson could not be saved. Try again.",
+  "lesson_text_missing": "Lesson text is not available on this device yet. Connect to the Hub and let the class sync."
 }
