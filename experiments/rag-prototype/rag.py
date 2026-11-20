@@ -10,7 +10,7 @@ EMBED_URL = os.environ.get("EMBED_URL", f"http://127.0.0.1:{config.EMBED_PORT}")
 EMBED_KIND = config.EMBED_KIND  # bge | nomic
 PROMPT_FILE = os.environ.get("PROMPT_FILE", os.path.join(HERE, "prompts", "prompt_v1_contract.txt"))  # byte copy of contracts/ai/socratic_system_prompt.txt
 # V1 is the contract file; V2/V3 are experiments kept next to the app, never written into contracts/.
-VARIANTS = {"V1": PROMPT_FILE, "V0": os.path.join(HERE, "prompts", "prompt_v0.txt"), "V2": os.path.join(HERE, "prompts", "prompt_v2.txt"), "V3": os.path.join(HERE, "prompts", "prompt_v3.txt"), "V4": os.path.join(HERE, "prompts", "prompt_v4.txt"), "V5": os.path.join(HERE, "prompts", "prompt_v5.txt"), "V6": os.path.join(HERE, "prompts", "prompt_v6.txt")}
+VARIANTS = {"V1": PROMPT_FILE, "V0": os.path.join(HERE, "prompts", "prompt_v0.txt"), "V2": os.path.join(HERE, "prompts", "prompt_v2.txt"), "V3": os.path.join(HERE, "prompts", "prompt_v3.txt"), "V4": os.path.join(HERE, "prompts", "prompt_v4.txt"), "V5": os.path.join(HERE, "prompts", "prompt_v5.txt"), "V6": os.path.join(HERE, "prompts", "prompt_v6.txt"), "V7": os.path.join(HERE, "prompts", "prompt_v7.txt")}
 CALIB_FILE = os.path.join(HERE, "calibration.json")
 NO_MATCH = "(No part of the lesson matches this question.)"
 WINDOW, REPLY = 2048, 300
@@ -395,7 +395,7 @@ def page_lookup(message):
 # shortcut: function-word list, so a Filipino message with none of these slips through; replace with a real detector if kept.
 FIL = set("ano ang ng mga sagot ilan paano bakit saan sino kailan po yung nito natin namin hindi pwede naman lang kasi".split())
 ENGLISH_ONLY = "I can only help in English. Please ask your question again in English."
-CODE_LANG_GATE = {"V2", "V3", "V4", "V5", "V6"}
+CODE_LANG_GATE = {"V2", "V3", "V4", "V5", "V6", "V7"}
 
 
 def is_filipino(text):
@@ -512,8 +512,8 @@ def build(message, history, retriever, threshold, variant="V1", rerank=None):
                          "ranks": {r: (sc["rank"][r].index(i) + 1 if i in sc["rank"][r] else None) for r in RETRIEVERS}} for i in order]}
 
 
-GUARDED = {"V2", "V3", "V4", "V5", "V6"}
-PAGE_PREFIX = {"V5", "V6"}
+GUARDED = {"V2", "V3", "V4", "V5", "V6", "V7"}
+PAGE_PREFIX = {"V5", "V6", "V7"}
 OPENERS_H = ['You\'ll find this on page {p}, in "{h}".', 'Page {p} covers this, in the part called "{h}".', 'Open your lesson to page {p}, to "{h}".',
              'This one is on page {p}, under "{h}".', 'Check page {p}, in the section "{h}".', 'The lesson explains this on page {p}, under "{h}".']
 OPENERS_P = ['You\'ll find this on page {p}.', 'Page {p} covers this.', 'This one is on page {p}.', 'Check page {p} of the lesson.']  # the app writes "Look at <heading> on page N." itself from retrieval, instantly, so small models cannot forget the page  # V1 (contract baseline) and V0 are never touched by the output guard

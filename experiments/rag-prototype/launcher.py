@@ -59,6 +59,7 @@ def gpu_report():
     """What the LLM log says about the device; shouts if a GPU run silently fell back to CPU."""
     log = open(os.path.join(LOGS, "llm.log"), encoding="utf-8", errors="replace").read()
     dev = re.findall(r"ggml_vulkan: \d+ = (.+)", log)
+    dev += re.findall(r"\bVulkan\d+\s*:\s*([^(\r\n]+)", log)
     off = re.search(r"offloaded (\d+)/(\d+) layers to GPU", log)
     print("Vulkan devices seen:", "; ".join(d.strip() for d in dev) or "none")
     if off: print(f"Layers on GPU: {off.group(1)} of {off.group(2)}")

@@ -53,6 +53,8 @@ LLM_NO_MMAP = env("LLM_NO_MMAP") not in ("", "0")  # read the whole file into RA
 LLM_N_CPU_MOE = env("LLM_N_CPU_MOE")  # MoE models: keep the experts of the first N layers in system RAM (llama-server --n-cpu-moe); empty = off, 99 = all
 LLM_MODEL = env("LLM_MODEL", "Qwen3-4B-Instruct-2507-Q4_K_M.gguf")  # same default on GPU and CPU
 LLM_SLOTS = int(env("LLM_SLOTS", "5" if LLM_NGL > 0 else "1"))  # context = 2048 x slots, as the Hub docs say; 5 learners at once on a GPU
+LLM_BATCH = int(env("LLM_BATCH", "2048"))
+LLM_UBATCH = int(env("LLM_UBATCH", "512"))
 EMBED_THREADS = int(env("EMBED_THREADS", "2"))
 EMBED_NGL = int(env("EMBED_NGL", "0"))  # set 99 to embed on the GPU (faster ingest of a long PDF)
 
@@ -67,7 +69,7 @@ LOGS = os.path.join(HERE, "logs")
 
 def llm_args(model, port=None):
     return [LLAMA_SERVER, "-m", model, "-c", str(2048 * LLM_SLOTS), "-np", str(LLM_SLOTS), "-ngl", str(LLM_NGL),
-            "-t", str(LLM_THREADS), "--host", "127.0.0.1", "--port", str(port or LLM_PORT)] + (["--n-cpu-moe", LLM_N_CPU_MOE] if LLM_N_CPU_MOE else []) + (["--no-mmap"] if LLM_NO_MMAP else [])
+            "-t", str(LLM_THREADS), "-b", str(LLM_BATCH), "-ub", str(LLM_UBATCH), "-lv", "4", "--host", "127.0.0.1", "--port", str(port or LLM_PORT)] + (["--n-cpu-moe", LLM_N_CPU_MOE] if LLM_N_CPU_MOE else []) + (["--load-mode", "none"] if LLM_NO_MMAP else [])
 
 
 def embed_args(port=None):

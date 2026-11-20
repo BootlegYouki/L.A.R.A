@@ -118,8 +118,8 @@ class Paging:
 def moe_variants(name):
     """Big MoE models: experts of N layers stay in system RAM. 5 GB of experts in VRAM is about 14 layers of the original 30B, 27 of the pruned one."""
     n = name.lower()
-    if "reap" in n: return [("all experts on CPU (--n-cpu-moe 99, --no-mmap)", "99"), ("experts of 21 layers on CPU, rest in VRAM (--n-cpu-moe 21, --no-mmap)", "21")]
-    if "qwen3-30b-a3b" in n: return [("all experts on CPU (--n-cpu-moe 99, --no-mmap)", "99"), ("experts of 34 layers on CPU, rest in VRAM (--n-cpu-moe 34, --no-mmap)", "34")]
+    if "reap" in n: return [("all experts on CPU (--n-cpu-moe 99, --load-mode none)", "99"), ("experts of 21 layers on CPU, rest in VRAM (--n-cpu-moe 21, --load-mode none)", "21")]
+    if "qwen3-30b-a3b" in n: return [("all experts on CPU (--n-cpu-moe 99, --load-mode none)", "99"), ("experts of 34 layers on CPU, rest in VRAM (--n-cpu-moe 34, --load-mode none)", "34")]
     return [("", "")]
 
 
