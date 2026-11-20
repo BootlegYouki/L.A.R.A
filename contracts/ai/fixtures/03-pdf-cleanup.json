@@ -1,0 +1,67 @@
+{
+  "spec_version": "0-draft",
+  "normative": false,
+  "description": "A text-layer PDF: one-line headings are recognised, a hyphen at a line end joins the split word, other line breaks become spaces, and bare page numbers and 'Page N of M' lines are dropped.",
+  "material_id": "33333333-3333-4333-8333-333333333333",
+  "title": "Fractions",
+  "params": {
+    "max_chunk_tokens": 500,
+    "max_chunks": 1000
+  },
+  "input": {
+    "format": "pdf",
+    "pages": [
+      {
+        "page": 1,
+        "text": "Fractions\n\nA fraction shows part of a\nwhole. The top number is the\nnumer-\nator.\n\n1\n\nPage 1 of 2"
+      },
+      {
+        "page": 2,
+        "text": "Adding Fractions\n\nAdd the numerators when the\ndenominators are the same.\n\nPage 2 of 2"
+      }
+    ]
+  },
+  "expected": {
+    "blocks": [
+      {
+        "kind": "heading",
+        "text": "Fractions",
+        "page": 1
+      },
+      {
+        "kind": "paragraph",
+        "text": "A fraction shows part of a whole. The top number is the numerator.",
+        "page": 1
+      },
+      {
+        "kind": "heading",
+        "text": "Adding Fractions",
+        "page": 2
+      },
+      {
+        "kind": "paragraph",
+        "text": "Add the numerators when the denominators are the same.",
+        "page": 2
+      }
+    ],
+    "cleaned_text": "Fractions\n\nA fraction shows part of a whole. The top number is the numerator.\n\nAdding Fractions\n\nAdd the numerators when the denominators are the same.",
+    "chunks": [
+      {
+        "id": "36af80a7-cb37-5ae5-ac56-423b856fcc42",
+        "order_index": 1,
+        "heading": "Fractions",
+        "page": 1,
+        "text": "A fraction shows part of a whole. The top number is the numerator.",
+        "token_estimate": 19
+      },
+      {
+        "id": "95b9f121-4e89-56e3-adcb-d69a7f1220a4",
+        "order_index": 2,
+        "heading": "Adding Fractions",
+        "page": 2,
+        "text": "Add the numerators when the denominators are the same.",
+        "token_estimate": 13
+      }
+    ]
+  }
+}

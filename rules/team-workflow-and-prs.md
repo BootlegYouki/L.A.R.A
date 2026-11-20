@@ -94,9 +94,9 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
 2. **RAM Bloat & Hardware Crashes (Budget Phone Invariant):**
    * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM.
    * Rule: Target devices are 3GB/4GB RAM phones (Infinix, TECNO, realme). Mobile heap must remain < 250MB, and the on-device tutor's model must never get the app killed (`rules/socratic-ai-guardrails.md` section 2).
-3. **Pedagogical AI Leaks (Socratic Invariant):**
-   * Check for: Prompts (the bundled `contracts/ai/socratic_system_prompt.txt` is the only one) or code that provides direct answers, complete formulas, or write out homework solutions for students.
-   * Rule: The AI tutor must guide step-by-step using teacher-provided lesson chunks without revealing answers.
+3. **Ungrounded Tutor Answers (Socratic and Grounding Invariant):**
+   * Check for: Prompts (the bundled `contracts/ai/socratic_system_prompt.txt` is the only one) or code that let the tutor answer from outside knowledge, infer beyond the text, guess, or skip the exact decline sentence when the lesson does not cover the question.
+   * Rule: The AI tutor answers only from the supplied lesson passages of materials the teacher allowed, cites page and heading, and declines with the exact sentence in `rules/socratic-ai-guardrails.md` section 3 otherwise. It guides rather than hands over, but accuracy comes first; a direct answer that slips is a soft metric, not a failure.
 4. **Assessment Integrity Bypass (Quiz Lockout Invariant):**
    * Check for: Any code path allowing the on-device tutor to load its model, generate, or remain visible in the UI during an active quiz session.
    * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the client must refuse to generate. The check is client-side only and is a known, accepted limitation (`rules/quiz-and-anti-cheat.md` section 1).

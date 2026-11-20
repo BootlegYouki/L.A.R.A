@@ -686,7 +686,7 @@ paths:
   /api/materials:
     post:
       description: A standalone material is linked to a classroom announcement thread. When neither assignment_id nor announcement_id is supplied, the Hub creates an announcement with the material title and empty content atomically with the material. Attachments use the linked announcement comments; assignment attachments retain private assignment comments. An explicit announcement_id must belong to the same class. Existing standalone materials must receive a linked thread before syncing to clients.
-      summary: Upload a lesson file, or an attachment for an assignment or announcement (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
+      summary: Upload a lesson file, or an attachment for an assignment or announcement (teacher). Max 250 MB. DEPRECATED behavior - the Hub text-chunks PDF/DOCX on upload today; after the defense the Hub stops (devices chunk the file themselves, contracts/ai/chunking_spec.md). A PDF with a text layer or a DOCX is an ordinary handout.
       tags: [materials]
       requestBody:
         required: true
@@ -810,7 +810,9 @@ paths:
 
   /api/materials/{id}/chunks:
     get:
-      summary: Pre-extracted lesson text chunks, read by the on-device tutor for Socratic grounding
+      deprecated: true
+      description: DEPRECATED (decided 2026-11-20). The Hub no longer parses documents; each device makes its own chunks from the handout file (contracts/ai/chunking_spec.md). This route, the `material_chunks` entity in the pull response and the Hub table are removed after the defense, once both clients chunk on the device.
+      summary: Pre-extracted lesson text chunks made by the Hub (deprecated, see description)
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"

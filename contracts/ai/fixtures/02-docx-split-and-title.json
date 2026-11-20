@@ -1,0 +1,74 @@
+{
+  "spec_version": "0-draft",
+  "normative": false,
+  "description": "Text before the first heading takes the material title; a paragraph longer than max_chunk_tokens (14 tokens = 10 words) splits at sentence ends and the pieces become separate chunks.",
+  "material_id": "22222222-2222-4222-8222-222222222222",
+  "title": "Water Cycle",
+  "params": {
+    "max_chunk_tokens": 14,
+    "max_chunks": 1000
+  },
+  "input": {
+    "format": "docx",
+    "paragraphs": [
+      {
+        "style": "Normal",
+        "text": "Water moves around the Earth."
+      },
+      {
+        "style": "Heading1",
+        "text": "Evaporation"
+      },
+      {
+        "style": "Normal",
+        "text": "The sun heats the water. The water rises as vapor. Clouds form later."
+      }
+    ]
+  },
+  "expected": {
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "text": "Water moves around the Earth.",
+        "page": null
+      },
+      {
+        "kind": "heading",
+        "text": "Evaporation",
+        "page": null
+      },
+      {
+        "kind": "paragraph",
+        "text": "The sun heats the water. The water rises as vapor. Clouds form later.",
+        "page": null
+      }
+    ],
+    "cleaned_text": "Water moves around the Earth.\n\nEvaporation\n\nThe sun heats the water. The water rises as vapor. Clouds form later.",
+    "chunks": [
+      {
+        "id": "b71a02f5-6213-5638-bde4-0b081de4b2f4",
+        "order_index": 1,
+        "heading": "Water Cycle",
+        "page": null,
+        "text": "Water moves around the Earth.",
+        "token_estimate": 7
+      },
+      {
+        "id": "d05bf309-547e-51d2-b263-3101968717bc",
+        "order_index": 2,
+        "heading": "Evaporation",
+        "page": null,
+        "text": "The sun heats the water. The water rises as vapor.",
+        "token_estimate": 14
+      },
+      {
+        "id": "d1927ba7-fc7b-5406-8875-05d46998808e",
+        "order_index": 3,
+        "heading": "Evaporation",
+        "page": null,
+        "text": "Clouds form later.",
+        "token_estimate": 5
+      }
+    ]
+  }
+}

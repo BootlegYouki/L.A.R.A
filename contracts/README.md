@@ -8,8 +8,9 @@ Everything the three teams must agree on lives here. Nothing else is shared.
 | [`events/`](./events/) | Every WebSocket event schema, the handshake and direction table ([README](./events/README.md)) | All three |
 | [`schema/server_master.sql`](./schema/server_master.sql) | The Hub's authoritative SQLite schema | Server migrations |
 | [`schema/client_offline.sql`](./schema/client_offline.sql) | The offline slice for clients | Room entities, desktop migrations |
-| [`ai/socratic_system_prompt.txt`](./ai/socratic_system_prompt.txt) | The one Socratic system prompt, with `{reply_language}` and `{lesson_chunks}` placeholders | Bundled byte for byte by the Mobile and Desktop apps, which build the prompt on-device. The Hub never loads it |
-| [`planned/document-pipeline.md`](./planned/document-pipeline.md) | **Planned, not implemented, not covered by tests:** teacher document upload and parse, chunk sync, model-file serving, the attempt state for the tutor lockout | Becomes OpenAPI in a `contract-change` PR when the post-defense issues start. Do not code against it |
+| [`ai/socratic_system_prompt.txt`](./ai/socratic_system_prompt.txt) | The one tutor system prompt (grounded answers), with one `{lesson_chunks}` placeholder | Bundled byte for byte by the Mobile and Desktop apps, which build the prompt on-device. The Hub never loads it |
+| [`ai/chunking_spec.md`](./ai/chunking_spec.md) and [`ai/fixtures/`](./ai/fixtures/) | **Draft, numbers PENDING:** how a device cleans extracted PDF and Word text and cuts it into `material_chunks`, and the golden cases | Mobile and Desktop must pass the same fixtures in their own tests (`rules/socratic-ai-guardrails.md` section 3.4) |
+| [`planned/on-device-documents.md`](./planned/on-device-documents.md) | **Planned, not implemented, not covered by tests:** device-side document parsing (columns, no sync), model-file serving, the attempt state for the tutor lockout | Becomes OpenAPI in a `contract-change` PR when the post-defense issues start. Do not code against it |
 | [`naming_rules.md`](./naming_rules.md) | Serialization, privacy and error rules | All three |
 
 These files are checked by [`../tests/`](../tests/) and implemented by the real Hub in `server/backend`.

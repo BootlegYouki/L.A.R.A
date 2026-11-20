@@ -1,0 +1,84 @@
+{
+  "spec_version": "0-draft",
+  "normative": false,
+  "description": "A Word handout with two headed sections, nothing to clean, everything fits in one chunk per section.",
+  "material_id": "11111111-1111-4111-8111-111111111111",
+  "title": "Plants",
+  "params": {
+    "max_chunk_tokens": 500,
+    "max_chunks": 1000
+  },
+  "input": {
+    "format": "docx",
+    "paragraphs": [
+      {
+        "style": "Heading1",
+        "text": "Photosynthesis"
+      },
+      {
+        "style": "Normal",
+        "text": "Plants make food using sunlight."
+      },
+      {
+        "style": "Normal",
+        "text": "They take in carbon dioxide."
+      },
+      {
+        "style": "Heading1",
+        "text": "Roots"
+      },
+      {
+        "style": "Normal",
+        "text": "Roots hold the plant and take in water."
+      }
+    ]
+  },
+  "expected": {
+    "blocks": [
+      {
+        "kind": "heading",
+        "text": "Photosynthesis",
+        "page": null
+      },
+      {
+        "kind": "paragraph",
+        "text": "Plants make food using sunlight.",
+        "page": null
+      },
+      {
+        "kind": "paragraph",
+        "text": "They take in carbon dioxide.",
+        "page": null
+      },
+      {
+        "kind": "heading",
+        "text": "Roots",
+        "page": null
+      },
+      {
+        "kind": "paragraph",
+        "text": "Roots hold the plant and take in water.",
+        "page": null
+      }
+    ],
+    "cleaned_text": "Photosynthesis\n\nPlants make food using sunlight.\n\nThey take in carbon dioxide.\n\nRoots\n\nRoots hold the plant and take in water.",
+    "chunks": [
+      {
+        "id": "8f485159-fad1-519f-8a0c-c67fd6dcbb01",
+        "order_index": 1,
+        "heading": "Photosynthesis",
+        "page": null,
+        "text": "Plants make food using sunlight.\n\nThey take in carbon dioxide.",
+        "token_estimate": 14
+      },
+      {
+        "id": "9c0ab815-42c9-5df5-a355-bcb1ab60dd2d",
+        "order_index": 2,
+        "heading": "Roots",
+        "page": null,
+        "text": "Roots hold the plant and take in water.",
+        "token_estimate": 12
+      }
+    ]
+  }
+}

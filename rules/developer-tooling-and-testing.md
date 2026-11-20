@@ -14,7 +14,7 @@ The `contracts/` directory is the single source of truth for all network communi
 * **WebSocket Event Schemas:** [`contracts/events/`](../contracts/events/), one file per event; the handshake and the direction of each event are in its `README.md`.
 * **Database Schemas:** [`contracts/schema/`](../contracts/schema/).
 * **The tutor's system prompt:** [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), bundled by the mobile and desktop apps (the Hub never loads it).
-* **Planned, not yet in the contract:** [`contracts/planned/document-pipeline.md`](../contracts/planned/document-pipeline.md) (document upload and parse, chunk sync, model-file serving). Nothing in `planned/` may be coded or tested against until it becomes OpenAPI in a `contract-change` PR.
+* **Planned, not yet in the contract:** [`contracts/planned/on-device-documents.md`](../contracts/planned/on-device-documents.md) (document upload and parse, chunk sync, model-file serving). Nothing in `planned/` may be coded or tested against until it becomes OpenAPI in a `contract-change` PR.
 * **Serialization Case Rule:** All network keys transmitted over HTTP and WebSockets must strictly use **`snake_case`**.
 * **Strict Answer Key Redaction:** Every response a learner can receive (for example `GET /api/quizzes/active`) must strictly omit the `correct_answer` field. Client data models must never contain unsubmitted answer keys.
 * **Protocol Modification Rule:** Never introduce or modify an HTTP endpoint or WebSocket payload in client or server code without first updating and validating the corresponding schema in `contracts/`.

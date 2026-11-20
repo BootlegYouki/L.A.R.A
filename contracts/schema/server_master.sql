@@ -100,7 +100,8 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
 );
 
--- 7. Pre-chunked lesson text for the on-device Socratic tutor; the Hub parses documents into these rows and syncs them
+-- 7. LEGACY (decided 2026-11-20): lesson text chunks made by the Hub's parser (#10). The Hub no longer parses documents:
+-- each device makes its own chunks (contracts/ai/chunking_spec.md). Removed after the defense with the Hub parser.
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,

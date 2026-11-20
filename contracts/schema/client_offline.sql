@@ -90,7 +90,9 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Lesson text chunks (parsed by the Hub, synced) for offline reading and the on-device Socratic tutor
+-- 7. Lesson text chunks for offline reading and the on-device tutor. Target (decided 2026-11-20): each device makes
+-- its own rows from the handout file (contracts/ai/chunking_spec.md) and they are never synced. Until the Hub's
+-- chunking is removed after the defense, rows still arrive in the pull response.
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,
@@ -191,7 +193,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     UNIQUE(quiz_id, student_id)
 );
 
--- 13. On-device Socratic AI chat history (home study and school). Never synced to the Hub.
+-- 13. On-device AI tutor chat history (home study and school). Never synced to the Hub.
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,

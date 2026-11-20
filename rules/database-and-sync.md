@@ -20,7 +20,8 @@ Core tables share names and column meaning across server and clients: `users`, `
 ### Conventions
 * IDs are UUID v4 `TEXT`. Timestamps are epoch **milliseconds** `INTEGER`. Booleans are `INTEGER` 0/1.
 * Network JSON keys are `snake_case` and match column names.
-* Lesson text for the on-device tutor lives **only** in `material_chunks` (there is no `extracted_text` column). The Hub parses documents into chunks and syncs them like any other row; the tutor reads its local copy.
+* Lesson text for the on-device tutor lives **only** in `material_chunks` (there is no `extracted_text` column). Since 2026-11-20 `material_chunks` is a **client-only** table in the target design: each device makes its own rows from the handout file (`contracts/ai/chunking_spec.md`), only for materials the teacher allowed, and never syncs them. The Hub's copy, its parser and the chunks route are legacy, marked deprecated, and removed after the defense (until then the table still appears in both SQL files and the pull response).
+* **`materials.ai_allowed`** (planned, `contracts/planned/on-device-documents.md`) is the teacher's per-material "Allow AI tutor" switch: default 0, an ordinary synced field with the usual `sync_revisions` row, changed only by the class's teachers. Clients delete a material's chunks when it goes to 0 or the material is deleted.
 * `ai_chat_messages` is the tutor's chat history **on the device**. The Hub no longer writes it and the contract has no route for it; the server table is legacy and is dropped by the post-defense Hub AI removal.
 * Grading is points only, like Google Classroom: `max_points` on `assignments` and quizzes, points earned on submissions and attempts. There are no categories, quarters or weights; each teacher applies their own grading system outside L.A.R.A.
 

@@ -7,7 +7,7 @@
 **Working Codename:** L.A.R.A. 
 **Document Version:** 1.7.0
 **Last Updated:** 2026-11-20
-**Change Summary:** There is no AI on the Hub (2026-11-20): the tutor runs on the device, and the Hub parses teacher documents into chunks and serves the model file (section 5, FR-3.10 to FR-3.13, FR-7.1 to FR-7.5). Earlier: the tutor declines Filipino and Taglish messages in English, 2026-11-05
+**Change Summary:** There is no AI on the Hub (2026-11-20): the tutor runs on the device, the devices parse teacher documents into chunks themselves, and the Hub only stores and serves files incl. the model file; the tutor is a guided, grounded tutor (accuracy first, a leak is a soft metric) that exists only for materials the teacher switches on (section 5, FR-3.10 to FR-3.14, FR-7.1 to FR-7.6). Earlier: the tutor declines Filipino and Taglish messages in English, 2026-11-05
 **Target Release Date:** Academic Year 2026–2027 Capstone Cycle 
 **Target Environment:** Philippine Public Schools (DepEd Grades 1–12: elementary, junior and senior high), Rural Campuses, and Zero-Internet Classrooms 
 
@@ -16,10 +16,10 @@
 ## 1. Executive Summary & Context
 
 ### 1.1 Project Overview
-L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with a small language model that runs **on each learner's own phone or laptop** for Socratic tutoring (decided 2026-11-20: there is no AI on the Hub; see the [decision record](./decisions/2026-11-20-no-ai-on-hub.md)). The Hub parses teacher documents into lesson text chunks and serves the model file; it does no inference. No model is chosen. The candidates (Gemma-3-270M, Gemma-3-1B, Llama-3.2-1B, Qwen3-0.6B) must pass the phone evaluation in section 10, following `rules/socratic-ai-guardrails.md` section 5; this is not a claim that any of them has passed.
+L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with a small language model that runs **on each learner's own phone or laptop** for Socratic tutoring (decided 2026-11-20: there is no AI on the Hub; see the [decision record](./decisions/2026-11-20-no-ai-on-hub.md)). The devices parse the teacher's PDF and Word handouts into lesson text chunks themselves (the Hub does not read documents), and the Hub serves the model file; it does no inference. The tutor exists only for materials the teacher has switched on ("Allow AI tutor", off by default). No model is chosen. The candidates (Gemma-3-270M, Gemma-3-1B, Llama-3.2-1B, Qwen3-0.6B) must pass the phone evaluation in section 10, following `rules/socratic-ai-guardrails.md` section 5; this is not a claim that any of them has passed.
 
 The system operates across three interconnected applications:
-1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, parses teacher documents (PDF text layer and DOCX) into lesson text chunks, and serves the tutor's model file. It runs no AI.
+1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, stores and serves files (handouts, videos and the tutor's model file), and stores the teacher's per-material "Allow AI tutor" switch. It runs no AI and does not read documents.
 2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, English interface strings in resources, and the on-device tutor.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It has the same learner and teacher features as the mobile app, laid out for a large screen.
 
@@ -27,7 +27,7 @@ The system operates across three interconnected applications:
 * **High Smartphone Penetration vs. Absent Connectivity:** IDC and Canalys (2024) market reports demonstrate that Transsion Holdings (Infinix, TECNO, itel) dominates the Philippine smartphone market with a 37.3% share, followed by realme (13.3%) and Xiaomi. More than 50% of shipped phones are entry-level devices under $100 (~₱3,500–₱5,500). Filipino learners commonly have physical access to these household smartphones. However, persistent mobile data costs, lack of campus broadband, and rural network dead-zones render cloud-based LMS solutions (Google Classroom, MS Teams, Canvas) unusable.
 * **Teacher Financial & Logistical Burden:** Public school teachers routinely shoulder out-of-pocket expenses for paper and printing to produce daily worksheets, weekly formative tests, and quarterly summative assessments. A paperless, offline LAN assessment engine removes recurring reproduction expenses.
 * **Hardware Realities (The RAM Bottleneck):** The vast majority of student devices feature 3GB or 4GB of physical RAM. Because Android and vendor UI skins occupy 1.8GB–2.2GB, usable app headroom is strictly ~800MB–1.2GB. With the tutor on the device, a roughly 1B-parameter model must fit in that headroom next to the app; the phone evaluation (section 10) measures whether it does, and the tutor stays optional because it may not.
-* **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s on-device SLM is engineered with strict Socratic system prompts, guiding learners step-by-step using teacher-provided materials without divulging final answers.
+* **Pedagogical Alignment:** Mainstream commercial LLMs provide answers outright, eroding critical thinking. L.A.R.A.’s on-device SLM is engineered with a strict-grounding, Socratic-style prompt: it leads learners to accurate information from the teacher-provided materials they are allowed to use, with the page, an explanation and clues, without handing over the final answer if it can avoid it (an answer that slips is accepted).
 
 ---
 
@@ -40,7 +40,7 @@ The system operates across three interconnected applications:
  * Creates class sections, distributes digitized modules and educational videos, conducts paperless quizzes, reviews homework photo submissions, and exports gradebook sheets directly to a USB flash drive.
 * **Learner Juan (Grade 4 Learner):**
  * Uses a family-owned budget Android phone (e.g., realme Note 50 or Infinix Smart 8 with 3GB/4GB RAM).
- * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets English Socratic guidance from the AI tutor.
+ * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets English guidance from the AI tutor on the handouts the teacher has allowed.
  * Takes his phone home where classroom content remains available offline, and the tutor keeps working once its model is downloaded to his phone.
 * **School Admin (ICT coordinator or principal's designee):**
  * Installs and runs the Hub on the school PC, creates teacher accounts, resets forgotten PINs, checks port health, and keeps the USB backup.
@@ -60,7 +60,7 @@ flowchart TD
  RestEngine["REST API & File Server (Port 8080)<br/>• Handouts (PDF/TXT)<br/>• Videos (HTTP Range 206)<br/>• Photo Submissions"]
  WsBroker["WebSocket Realtime Broker (Port 8081)<br/>• Live Quiz Sync & Timers<br/>• Announcements Push<br/>• Student Presence"]
  Discovery["Discovery Service<br/>• mDNS (_lara._tcp.local)<br/>• UDP Subnet Beacon (255.255.255.255:8888)"]
- DocParser["Document Parser (planned)<br/>• PDF text layer and DOCX<br/>• Cleanup and chunking<br/>• Model file (GGUF) served with HTTP Range"]
+ ModelFile["Model file serving (planned)<br/>• Tutor model (GGUF) with HTTP Range<br/>• No AI, no document parsing"]
  CentralDB[("Central SQLite DB<br/>• Authoritative Store<br/>• Gradebook Exporter (.xlsx/.csv)")]
  end
 
@@ -145,7 +145,7 @@ flowchart TD
 
 ### 4.3 Module 3: Classwork, Handouts, Videos & Homework Submissions
 * **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images. `POST /api/materials` caps material uploads, including handouts and videos, at 250 MB.
-* **FR-3.2 Automated Text Chunking (Hub Side):** Upon document upload, the Hub automatically extracts plain text and splits it into structured chunks that sync to clients like any other content, so student phones avoid heavy PDF parsing. Files with no extractable text (scans, photos) have no chunks and are simply not used by the tutor. This requirement is built; the cleanup, parse status and settings of FR-3.10 to FR-3.13 extend it after the defense.
+* **FR-3.2 Text Chunking (superseded 2026-11-20):** The Hub built extraction and chunking of PDF and Word handouts (#10) and syncs the chunks. The devices now do this themselves (FR-3.11, FR-3.12) and the Hub parser and chunk sync are removed after the defense. Until then clients may still read the Hub's chunks.
 * **FR-3.3 Video Upload & Byte-Range Streaming:**
  * Teachers can upload educational video files (MP4 / WebM encoded in H.264, max file size capped at 250MB).
  * Hub serves videos via HTTP `206 Partial Content`.
@@ -166,11 +166,13 @@ flowchart TD
 * **FR-3.9 To-do:** Learners see the work they have not turned in yet, soonest due date first, on Home ("Due soon") and in a To-do list. It is built from data already on the device, so it works offline.
 
 
-**After the defense (planned, not implemented):** the following requirements follow the 2026-11-20 decision. Their shapes live in [`contracts/planned/document-pipeline.md`](../contracts/planned/document-pipeline.md), which is not part of the contract until a `contract-change` PR promotes it.
-* **FR-3.10 Document Upload for the Tutor:** A teacher uploads a PDF (text layer) or Word `.docx` from desktop or mobile through the existing materials upload. Scanned or image-only PDFs and OCR are out of scope for now. Teachers see nothing about parsing or retrieval; the upload is a normal handout.
-* **FR-3.11 Automatic Cleanup and Chunking:** The Hub cleans the extracted text automatically (page furniture, hyphenation, ligature artifacts, flattened tables as far as the text layer allows) and splits it into heading-aware chunks with page and heading. The settings are fixed from the parsing experiment (`experiments/ocr-prototype`, numbers pending). A document whose extraction fails or comes out empty gets no chunks, is simply not used by the tutor, and is reported only in the Hub admin console and logs.
-* **FR-3.12 Chunk Sync:** Chunks (and optional chunk vectors) are stored in the Hub SQLite and sync to enrolled clients through the existing `seq` cursor as `material_chunks`, so a learner has them offline.
-* **FR-3.13 Model File Serving:** The Hub lists and serves the tutor's model file (GGUF) over the LAN with HTTP Range so a phone can resume a download. The model file is never fetched from the internet.
+**After the defense (planned, not implemented):** the following requirements follow the 2026-11-20 decisions. Their shapes live in [`contracts/planned/on-device-documents.md`](../contracts/planned/on-device-documents.md), which is not part of the contract until a `contract-change` PR promotes it; the parsing and chunking rules and golden fixtures are the draft contract files [`contracts/ai/chunking_spec.md`](../contracts/ai/chunking_spec.md) and `contracts/ai/fixtures/` (numbers PENDING).
+* **FR-3.10 Document Upload for the Tutor:** A teacher uploads a PDF (text layer) or Word `.docx` from desktop or mobile through the existing materials upload as an ordinary handout. The Hub stores and syncs the file and does not read it. Scanned or image-only PDFs and OCR are out of scope. Teachers and learners see nothing about parsing or retrieval.
+* **FR-3.11 On-Device Extraction and Cleanup:** Each learner and teacher device, once it has the file and the teacher has allowed the tutor for it (FR-3.14), extracts the text and cleans it per the shared spec. A document with no extractable text, or a failed extraction, is written only to the device log and is simply not used by the tutor. Memory and time on 3 to 4 GB phones are not yet measured.
+* **FR-3.12 On-Device Chunking and Local Chunk Store:** The device chunks the cleaned text per the shared spec and stores the chunks in its own local `material_chunks` (not synced; the Hub keeps none), each with the spec version and the page. Both clients must pass the same golden fixtures in their own tests, and re-chunk after an app update that changes the spec.
+* **FR-3.13 Model File Serving:** The Hub lists and serves the tutor's model file (GGUF) over the LAN with HTTP Range so a phone can resume a download, and shows the admin which file is published. The model file is never fetched from the internet.
+* **FR-3.14 Allow AI Tutor (teacher switch):** A teacher turns the tutor on per material with the switch "Allow AI tutor". It is off by default for every new material and every existing one, and only the class's teachers (owner or co-teacher) can change it. The Hub stores it as an ordinary synced field and nothing else about AI. It is the only AI-related thing a teacher sees. The per-material granularity is to be confirmed by the Lead; a class-level master switch is an open question.
+
 ### 4.4 Module 4: Paperless Assessment Engine (Quizzes)
 
 ```mermaid
@@ -239,10 +241,12 @@ sequenceDiagram
 
 ## 5. Socratic AI Tutor System (L.A.R.A. AI)
 
-### 5.0 The Tutor Runs on the Device; Using It Is Optional
-Decided 2026-11-20 ([decision record](./decisions/2026-11-20-no-ai-on-hub.md)), replacing the 2026-11-02 "Hub-only tutor" and "the Hub ships with the AI" decisions. The tutor is a small language model of about 1B parameters (a GGUF file run through `llama.cpp`) on each learner's phone or laptop. The Hub does no inference: it parses teacher documents into lesson chunks that sync to clients, and it serves the model file over the LAN. Using the tutor is optional; nothing else in L.A.R.A depends on it.
+### 5.0 The Tutor Runs on the Device, Only Where the Teacher Allows It; Using It Is Optional
+Decided 2026-11-20 ([decision record](./decisions/2026-11-20-no-ai-on-hub.md)), replacing the 2026-11-02 "Hub-only tutor" and "the Hub ships with the AI" decisions. The tutor is a small language model of about 1B parameters (a GGUF file run through `llama.cpp`) on each learner's phone or laptop. The Hub does no inference and does not read documents: it stores and serves files, including the model file. Each device makes its own lesson chunks from the handout files (FR-3.11, FR-3.12). Using the tutor is optional; nothing else in L.A.R.A depends on it.
 
 No model is chosen. The candidates tested in the on-device prototype (PR #349) are Gemma-3-270M, Gemma-3-1B, Llama-3.2-1B and Qwen3-0.6B; the choice comes from the phone evaluation (section 10), not from assumption.
+
+The tutor exists only for materials the teacher has allowed (FR-3.14). A learner who opens it on a material that is not allowed sees a distinct message, not the "lesson does not cover" decline, and a class where nothing is allowed shows the tutor as not available. A change of the switch reaches a device at its next sync; an offline device keeps the old value.
 
 Once the model is on the device the tutor works with no Hub and no Wi-Fi, at school, at home and during Remote/Suspension Mode. Before the model is downloaded, clients show "The AI tutor needs the classroom Hub". If the device lacks the memory or the model fails to load, clients show "AI is not available right now" and every other feature keeps working. Past chats stay readable from the local `ai_chat_messages`. During a quiz, clients never show the chat (FR-4.3).
 
@@ -253,33 +257,37 @@ The runtime is **GGUF models through `llama.cpp`** on the device CPU. Candidates
 
 ```mermaid
 flowchart TD
- Start["Learner opens tutor"] --> Quiz{"Local quiz attempt IN_PROGRESS?"}
+ Start["Learner opens tutor on a material"] --> Quiz{"Local quiz attempt IN_PROGRESS?"}
  Quiz -->|Yes| Locked["Chat not shown; model not loaded"]
- Quiz -->|No| Model{"Model file on the device?"}
+ Quiz -->|No| Allowed{"Teacher allowed AI tutor for this material?"}
+ Allowed -->|No| NotAllowed["Your teacher has not turned on the AI tutor for this handout"]
+ Allowed -->|Yes| Model{"Model file on the device?"}
  Model -->|No| Need["The AI tutor needs the classroom Hub (to download the model)"]
  Model -->|Yes| Fits{"Device can load it?"}
  Fits -->|No| Unavailable["AI is not available right now: other features keep working"]
- Fits -->|Yes| Retrieve["Pick chunks from synced material_chunks and history"]
+ Fits -->|Yes| Retrieve["Pick chunks from the local material_chunks and history"]
  Retrieve --> Prompt["Build prompt from the bundled file"]
  Prompt --> Infer["llama.cpp generates on the device"]
- Infer --> Reply["Render one clue and one question; store in local ai_chat_messages"]
+ Infer --> Reply["Page, heading, explanation, clues, source; decline sentence if not covered; store in local ai_chat_messages"]
 ```
 
 ### 5.3 English Interface & Persona Design
 * **Interface Language:** Mobile, desktop and the Hub window are English only, with no language toggle. All user-facing strings live in Android `values/strings.xml` or the English JSON dictionary for desktop and the Hub window; never hardcode them in UI components.
-* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide for Grades 1 to 12. It uses the same Socratic behavior at every grade level, with no grade setting or grade-specific prompt. Each reply gives one small clue followed by one leading question, never the final answer.
+* **Socratic Persona:** "L.A.R.A. AI", a friendly, patient, and encouraging guide for Grades 1 to 12. It uses the same behavior at every grade level, with no grade setting or grade-specific prompt. It leads the learner to accurate information: it points to the page and heading, explains the idea and gives a clue from the text, and may ask a short guiding question (not required). If the learner insists, or the explanation itself contains the answer, the answer may slip; that is accepted. There is no zero-leak requirement and a leak is a soft metric, not a failure. **Accuracy comes first:** a wrong or invented statement is the worst failure.
 * **Reply Language:** L.A.R.A. AI works in English only. When the learner writes in Filipino or Taglish, it does not answer and replies with "I can only help in English. Please ask your question again in English." (the small models tested could not work in Filipino without leaking answers).
 * **Interaction Trigger:** The tutor entry point on phone and desktop, such as a tab or Material Viewer button, is an **(open decision)** (`design-system/design-system.md` section 9.16). Quiz lockout applies wherever it is placed.
-* **Grounding:** Hints use only selected text chunks from the active teacher-provided lesson and show their lesson grounding reference (the grounded chunk). When the lesson does not cover the question, the tutor says so and points the learner back to the lesson. If no text is available, it explains that the lesson text is unavailable; it never fills the gap from general knowledge.
+* **Grounding (the rule):** Every statement must be directly supported by a supplied passage; the reply cites the page and heading. No outside knowledge, no inference beyond the text, no guessing. When the passages do not directly state the answer, the reply is exactly "This lesson does not cover that question. Please return to your lesson or ask your teacher." It never fills a gap from general knowledge.
 * **System Prompt:** one file, [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt), bundled unchanged by the apps. It is not copied here so it cannot drift.
+* **Strings to write (English, in resources):** "Allow AI tutor" with the helper "Learners can ask the AI tutor questions about this handout. Off until you turn it on."; "Your teacher has not turned on the AI tutor for this handout."; "The AI tutor is not available in this class yet."; plus the existing "The AI tutor needs the classroom Hub" and "AI is not available right now". Final wording is for the Lead's read.
 
 ### 5.4 Requirements (after the defense, planned)
-These follow the 2026-11-20 decision and are not implemented. The model choice they depend on stays open until the phone evaluation.
+These follow the 2026-11-20 decisions and are not implemented. The model choice they depend on stays open until the phone evaluation.
 * **FR-7.1 On-Device Tutor:** Mobile and desktop run the tutor locally through `llama.cpp`, with the behavior of sections 5.0 to 5.3 and `rules/socratic-ai-guardrails.md`. No tutor request is sent to the Hub.
 * **FR-7.2 Model Download:** A client downloads the model file from the Hub over the LAN once (resumable, verified), stores it, and works without the Hub afterwards (FR-3.13).
-* **FR-7.3 Local Retrieval:** The client picks lesson chunks from its synced `material_chunks` with the keyword rule in `rules/socratic-ai-guardrails.md` section 3.1.
+* **FR-7.3 Local Retrieval:** The client picks lesson chunks from its own `material_chunks` of allowed materials with the keyword rule in `rules/socratic-ai-guardrails.md` section 3.1.
 * **FR-7.4 Quiz Lockout:** The client locks the tutor from the local `IN_PROGRESS` attempt (FR-4.3).
-* **FR-7.5 Device Limits:** The app heap stays under 250 MB on 3 to 4 GB phones, the model is loaded only while the tutor is open, and a low-memory kill never corrupts data or leaves the tutor stuck on.
+* **FR-7.5 Device Limits:** The app heap stays under 250 MB on 3 to 4 GB phones, the model is loaded only while the tutor is open, parsing runs in the background one document at a time and never during a quiz, and a low-memory kill never corrupts data or leaves the tutor stuck on.
+* **FR-7.6 Allowed Materials Only:** Devices parse, store and retrieve only for materials with the switch on (FR-3.14), delete a material's chunks when it goes off or the material is deleted, and show the messages of section 5.0.
 
 ---
 
@@ -311,7 +319,7 @@ erDiagram
  MATERIAL_CHUNKS ||--o{ AI_CHAT_MESSAGES : "grounds"
 ```
 
-Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only table: `sync_state`. Learner mirrors never store PIN hashes, other people's LRNs or answer keys; teachers may receive LRNs in their authorized class roster (see `rules/database-and-sync.md`).
+Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only tables: `sync_state` and (target, 2026-11-20) `material_chunks`, which each device makes itself; the Hub's copy is legacy and removed after the defense. Learner mirrors never store PIN hashes, other people's LRNs or answer keys; teachers may receive LRNs in their authorized class roster (see `rules/database-and-sync.md`).
 
 ### 6.2 Delta-Sync Protocol Lifecycle
 
@@ -408,10 +416,11 @@ sequenceDiagram
 | **Offline Independence** | Complete classroom cycle with WAN cable unplugged | 100% operational (zero failures due to lack of internet). |
 | **Paperless Cost Savings** | Simulated quiz & worksheet cycle vs printed test papers | 100% reduction in paper and reproduction costs. |
 | **Mobile Stability** | RAM consumption on 3GB/4GB Android devices | Heap usage < 250MB; zero OOM crashes while the on-device tutor is loaded. |
-| **Tutor Answer Safety** | Replies that never give the final answer | At least 95%. |
+| **Tutor Faithfulness** | Replies where every statement is supported by a supplied passage and correct (a wrong or invented statement fails the reply), with the right page and heading cited | Target not set; the Lead sets it from the phone evaluation. |
 | **Tutor Grounding** | Replies grounded in the lesson, including correct refusal and relevant long-lesson chunk selection | At least 90%. |
-| **Socratic Guidance** | One clue and one leading question, building on the learner's response in follow-ups | At least 80%. |
-| **Tutor Reply Language** | English replies at the learner's level; Filipino/Taglish inputs get the English-only decline line | At least 90%. |
+| **Guided Hints (soft)** | Points to the page and heading and explains or gives a clue from the text, building on the learner's response in follow-ups | Recorded, no pass mark. |
+| **Directness (soft)** | Share of replies that state the final answer outright | Recorded, no pass mark and no zero-leak requirement. |
+| **Tutor Reply Language** | English replies at the learner's level; Filipino/Taglish inputs get the English-only reply | At least 90%. |
 | **Inference Latency** | Time to first token and tokens per second on real 3 GB and 4 GB phones | Target not set; the Lead sets it from the phone evaluation (open question, section 11). The earlier Hub target (under 10 seconds for 95% of requests with 2 learners) no longer applies. |
 | **Quiz Sync Accuracy** | Grade calculation and submission reliability | 100% accuracy in score recording across 40 simultaneous submissions. |
 | **Homework Photo Upload** | Upload success rate over local Wi-Fi | 100% across 40 concurrent submissions with offline queueing. |
@@ -421,7 +430,7 @@ sequenceDiagram
 | **Disaster Recovery** | Database restore from USB backup after sudden power loss | 100% data recovery with zero corrupted records. |
 | **Day 0 Deployment** | Standalone installer (.exe/.deb) setup on a fresh Hub PC | Complete installation in < 3 minutes with zero CLI commands. |
 
-The tutor pass marks above come from [issue #73](https://github.com/BootlegYouki/L.A.R.A/issues/73), set before scoring. They are acceptance targets, not achieved results. Model selection requires the fixed evaluation on real 3 to 4 GB phones before the chat UI is built, following `rules/socratic-ai-guardrails.md` section 5. Two developers score replies independently and blind to the model; report agreement and label results **developer-scored**, not educator-validated. The final model remains subject to that evidence and the Lead's decision.
+The Grounding and Reply Language pass marks above come from [issue #73](https://github.com/BootlegYouki/L.A.R.A/issues/73), set before scoring for the earlier Hub tutor and carried over; the criteria are now faithfulness first, citation, decline and English only, with directness and guided hints as soft metrics. They are acceptance targets, not achieved results. Model selection requires the fixed evaluation on real 3 to 4 GB phones before the chat UI is built, following `rules/socratic-ai-guardrails.md` section 5. Two developers score replies independently and blind to the model; report agreement and label results **developer-scored**, not educator-validated. The final model remains subject to that evidence and the Lead's decision.
 
 ---
 
@@ -437,5 +446,6 @@ These gaps need a Lead decision or coordination; they do not authorize unsupport
 * **Tombstone retention:** Pruning and epoch reset are defined, but how long should deletion tombstones be retained before pruning?
 * **Privacy consent and data retention:** What learner/guardian consent process and retention periods apply to accounts, homework photos, grades, chat history and backups, within the rule that graded records must not be deleted?
 * **USB export location (open decision):** Where should users initiate export in the Hub console and teacher clients? The contract already supports a mounted USB path or a download; the design system leaves UI placement open (section 9.16).
+* **Allow AI tutor granularity (to confirm, 2026-11-20):** the switch is per material (the Lead said "for example the learning materials"). Is a class-level master switch also wanted, and what does a learner see for a chat opened with no material (not decided)?
 * **Tutor phone targets and model delivery (open, 2026-11-20):** which time-to-first-token and memory pass marks the phone evaluation uses, and how the model file reaches a phone with no Hub in range (LAN download only, or also a USB copy), are not decided.
 * **AI Tutor entry point (open decision):** Should phone and desktop reach the tutor through a tab, a Material Viewer button or another entry? Follow `design-system/design-system.md` section 9.16 and retain quiz lockout everywhere.

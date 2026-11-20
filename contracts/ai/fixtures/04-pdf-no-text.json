@@ -1,0 +1,29 @@
+{
+  "spec_version": "0-draft",
+  "normative": false,
+  "description": "A scanned PDF has no text layer: no blocks and no chunks. The device logs it and never shows it; the document is simply not used by the tutor.",
+  "material_id": "44444444-4444-4444-8444-444444444444",
+  "title": "Scanned worksheet",
+  "params": {
+    "max_chunk_tokens": 500,
+    "max_chunks": 1000
+  },
+  "input": {
+    "format": "pdf",
+    "pages": [
+      {
+        "page": 1,
+        "text": ""
+      },
+      {
+        "page": 2,
+        "text": "   \n"
+      }
+    ]
+  },
+  "expected": {
+    "blocks": [],
+    "cleaned_text": "",
+    "chunks": []
+  }
+}

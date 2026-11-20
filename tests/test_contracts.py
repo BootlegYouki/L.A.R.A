@@ -13,16 +13,25 @@ class TestContracts(unittest.TestCase):
 
     def test_one_shared_socratic_system_prompt(self):
         # The Kotlin and TypeScript apps bundle this one file and build the prompt on-device (the Hub never
-        # loads it), so the tutor behaves the same on every device.
+        # loads it), so the tutor behaves the same on every device. Guided and grounded since 2026-11-20:
+        # accuracy first, no outside knowledge, the exact decline and English-only sentences.
         with open("contracts/ai/socratic_system_prompt.txt", "r", encoding="utf-8") as f:
             prompt = f.read()
-        for placeholder in ("{reply_language}", "{lesson_chunks}"):
-            self.assertEqual(prompt.count(placeholder), 1, f"prompt needs exactly one {placeholder}")
-        decline = ("I can't give you the answer itself, but I will help you find it! "
-                   "Let's go back to what you read. What is the first step?")
+        self.assertEqual(prompt.count("{lesson_chunks}"), 1, "prompt needs exactly one {lesson_chunks}")
+        self.assertNotIn("{reply_language}", prompt, "English only: no reply-language placeholder")
+        decline = "This lesson does not cover that question. Please return to your lesson or ask your teacher."
+        english_only = "I can only help in English. Please ask your question again in English."
         self.assertIn(decline, prompt)
+        self.assertIn(english_only, prompt)
+        self.assertRegex(prompt, r"(?i)outside knowledge", "prompt must forbid outside knowledge")
+        self.assertRegex(prompt, r"(?i)directly supported by a passage", "prompt must require grounding in a passage")
+        self.assertRegex(prompt, r"\(Source: <heading>, page <page>\)", "prompt must ask for the citation")
+        for removed in ("I can't give you the answer itself", "never give the final answer", "ONE small clue"):
+            self.assertNotIn(removed, prompt, "the old Socratic rule was removed on 2026-11-20")
         with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
-            self.assertIn(decline, f.read())
+            rules = f.read()
+        self.assertIn(decline, rules)
+        self.assertIn(english_only, rules)
 
     def test_required_event_schemas_exist(self):
         # Shape and snake_case of every contracts/events/*.json is checked in test_contract_coverage.
@@ -45,7 +54,7 @@ class TestContracts(unittest.TestCase):
         # once that code is gone. It is not a failing check yet because the server team removes it after the defense.
 
     def test_planned_document_pipeline_is_marked_planned_and_not_in_openapi(self):
-        with open("contracts/planned/document-pipeline.md", "r", encoding="utf-8") as f:
+        with open("contracts/planned/on-device-documents.md", "r", encoding="utf-8") as f:
             text = f.read()
         self.assertIn("PLANNED, not implemented", text[:600])
         with open("contracts/openapi.yaml", "r", encoding="utf-8") as f:
