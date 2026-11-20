@@ -41,7 +41,7 @@ import java.util.Date
 
 @Composable
 internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: String, classroom: Classroom, work: Classwork,
-    announcements: List<Announcement>, reachable: Boolean, openMaterial: (String) -> Unit) {
+    announcements: List<Announcement>, reachable: Boolean, openMaterial: (String) -> Unit, openReview: (String) -> Unit) {
     val model: ClassworkAuthoringViewModel = viewModel(key = "author-$userId-${classroom.id}", factory = viewModelFactory {
         initializer { ClassworkAuthoringViewModel(repository) }
     })
@@ -98,7 +98,7 @@ internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: 
                 }
                 items(assignments, key = { "assignment-${it.id}" }) { a ->
                     AuthorRow(a.title, stringResource(R.string.classwork_due, DateFormat.getDateTimeInstance().format(Date(a.dueDate))), R.drawable.ic_exam_regular,
-                        { edit("assignments", a.id) }) { ItemMenu(canWrite, { edit("assignments", a.id) }, { selectedId = a.id; deleting = "assignments" }) }
+                        { openReview(a.id) }) { ItemMenu(canWrite, { edit("assignments", a.id) }, { selectedId = a.id; deleting = "assignments" }) }
                 }
                 items(materials, key = { "material-${it.id}" }) { m ->
                     AuthorRow(m.title, stringResource(R.string.classwork_posted, DateFormat.getDateInstance().format(Date(m.createdAt))),

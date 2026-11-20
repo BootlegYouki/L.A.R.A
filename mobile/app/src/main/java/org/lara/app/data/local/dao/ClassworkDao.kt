@@ -6,6 +6,9 @@ import org.lara.app.data.local.entities.*
 
 @Dao
 interface ClassworkDao {
+    @Query("SELECT * FROM assignment_submissions WHERE assignment_id = :assignmentId AND sync_status = 'SYNCED' ORDER BY submitted_at, id")
+    fun observeSubmissions(assignmentId: String): Flow<List<AssignmentSubmissionEntity>>
+
     @Query("SELECT * FROM materials WHERE file_type = 'VIDEO'")
     suspend fun videos(): List<MaterialEntity>
     @Query("SELECT * FROM materials WHERE id = :id")
