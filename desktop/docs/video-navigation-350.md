@@ -32,3 +32,8 @@ Started an actual saved lesson video before each navigation action. Home, Archiv
 ## Not verified
 
 Linux/macOS, physical second-PC/WAN-disconnected operation and a new installer were not tested. The installed app files were not changed; native checks used synthetic task accounts and the existing task cache on this PC.
+
+
+## Combined Desktop-fix verification
+
+An isolated integration checkout combined #249's updated tooling, #346's Home cleanup and this navigation fix without conflicts. Fresh npm ci, all 104 tests in 22 files under Vitest 4.1.12, lint and production build passed; full npm audit reported zero vulnerabilities. This combined check does not include the server-blocked six-digit PIN draft #348.
