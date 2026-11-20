@@ -33,25 +33,36 @@ class EnrollmentNoticePersistenceTest {
     }
     @After fun close() { db.close(); context.deleteDatabase(name) }
     @Test fun pendingSurvivesReopenWithoutInventingAnEnrollment(): Unit = runBlocking {
-        RoomEnrollmentNoticeRepository(db).save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.PENDING))
+        RoomEnrollmentNoticeRepository(db).save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.PENDING, "A", "Teacher"))
         db.close(); db = open()
         val saved = RoomEnrollmentNoticeRepository(db).notices("learner").first().single()
         assertEquals("Science", saved.title)
+        assertEquals("A", saved.section)
+        assertEquals("Teacher", saved.teacherName)
         assertEquals(EnrollmentStatus.PENDING, saved.status)
         assertTrue(db.rosterDao().observeByClassroom("class").first().isEmpty())
     }
     @Test fun restrictiveStatusSurvivesReopenAndPreservesClassTitle(): Unit = runBlocking {
         val repo = RoomEnrollmentNoticeRepository(db)
-        repo.save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.ACTIVE))
+        repo.save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.ACTIVE, "A", "Teacher"))
         repo.save("learner", EnrollmentNotice("class", null, EnrollmentStatus.REMOVED))
         db.close(); db = open()
         val saved = RoomEnrollmentNoticeRepository(db).notices("learner").first().single()
         assertEquals(EnrollmentStatus.REMOVED, saved.status)
         assertEquals("Science", saved.title)
+        assertEquals("A", saved.section)
+        assertEquals("Teacher", saved.teacherName)
+    }
+    @Test fun legacySavedNoticesRemainReadableWithoutInventedMetadata(): Unit = runBlocking {
+        db.syncStateDao().put(SyncStateEntity("enrollment_notice:learner:class",
+            """{"classroomId":"class","title":"Science","status":"PENDING","hubId":"hub"}""", 1))
+        val saved = RoomEnrollmentNoticeRepository(db).notices("learner").first().single()
+        assertNull(saved.section)
+        assertNull(saved.teacherName)
     }
     @Test fun noticesAreScopedByAccountAndHubAndMalformedEntriesAreIgnored(): Unit = runBlocking {
         val repo = RoomEnrollmentNoticeRepository(db)
-        repo.save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.PENDING))
+        repo.save("learner", EnrollmentNotice("class", "Science", EnrollmentStatus.PENDING, "A", "Teacher"))
         db.syncStateDao().put(SyncStateEntity("enrollment_notice:learner:bad", "invalid-json", 1))
         assertEquals(1, repo.notices("learner").first().size)
         assertTrue(repo.notices("another").first().isEmpty())

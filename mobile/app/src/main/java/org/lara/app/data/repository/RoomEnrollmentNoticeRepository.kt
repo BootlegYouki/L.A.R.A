@@ -14,7 +14,7 @@ import org.lara.app.domain.enrollment.*
 
 @Serializable
 private data class SavedEnrollmentNotice(val classroomId: String, val title: String?,
-    val status: String, val hubId: String?)
+    val status: String, val hubId: String?, val section: String? = null, val teacherName: String? = null)
 
 /** The join receipt has no enrollment ID. Persist its metadata without inventing a membership row. */
 class RoomEnrollmentNoticeRepository(private val database: LaraDatabase) : EnrollmentNoticeRepository {
@@ -25,7 +25,7 @@ class RoomEnrollmentNoticeRepository(private val database: LaraDatabase) : Enrol
         rows.mapNotNull { row -> runCatching {
             val saved = json.decodeFromString<SavedEnrollmentNotice>(row.value)
             if (saved.hubId != null && saved.hubId != hub?.value) null
-            else EnrollmentNotice(saved.classroomId, saved.title, EnrollmentStatus.valueOf(saved.status))
+            else EnrollmentNotice(saved.classroomId, saved.title, EnrollmentStatus.valueOf(saved.status), saved.section, saved.teacherName)
         }.getOrNull() }
     }.flowOn(Dispatchers.IO)
 
@@ -38,9 +38,12 @@ class RoomEnrollmentNoticeRepository(private val database: LaraDatabase) : Enrol
                 runCatching { json.decodeFromString<SavedEnrollmentNotice>(it) }.getOrNull()
             }
             val hubId = database.syncStateDao().get("hub_id")?.value
-            val title = notice.title ?: previous?.takeIf { it.hubId == null || it.hubId == hubId }?.title
+            val sameHub = previous?.takeIf { it.hubId == null || it.hubId == hubId }
+            val title = notice.title ?: sameHub?.title
+            val section = notice.section ?: sameHub?.section
+            val teacherName = notice.teacherName ?: sameHub?.teacherName
             database.syncStateDao().put(SyncStateEntity(key, json.encodeToString(SavedEnrollmentNotice(
-                notice.classroomId, title, notice.status.name, hubId)), System.currentTimeMillis()))
+                notice.classroomId, title, notice.status.name, hubId, section, teacherName)), System.currentTimeMillis()))
         }
     }
 }

@@ -107,14 +107,15 @@ fun EnrollmentScreen(
         items(classes, key = { "saved:" + it.classroom.id }) { item ->
             val notice = state.requests.firstOrNull { it.classroomId == item.classroom.id }
             val denied = notice != null && notice.status != EnrollmentStatus.ACTIVE
-            EnrollmentCard(item.classroom.name, item.classroom.section,
-                if (denied) requireNotNull(notice).status else item.status,
-                state.openableClass(item.classroom.id) != null,
-                onOpen = { onOpenClass(item.classroom.id) }, teacher = teacherNames[item.classroom.teacherId])
+            val status = if (denied) requireNotNull(notice).status else item.status
+            val pendingNotice = notice?.takeIf { status == EnrollmentStatus.PENDING }
+            EnrollmentCard(item.classroom.name, pendingNotice?.section ?: item.classroom.section,
+                status, state.openableClass(item.classroom.id) != null,
+                onOpen = { onOpenClass(item.classroom.id) }, teacher = pendingNotice?.teacherName ?: teacherNames[item.classroom.teacherId])
         }
         items(requests, key = { "request:" + it.classroomId }) { item ->
-            EnrollmentCard(item.title ?: stringResource(R.string.enrollment_request_title), null,
-                item.status, canOpen = false, onOpen = {})
+            EnrollmentCard(item.title ?: stringResource(R.string.enrollment_request_title), item.section,
+                item.status, canOpen = false, onOpen = {}, teacher = item.teacherName)
         }
     }
     if (state.showJoinDialog) JoinClassDialog(!state.offline, state.busy, state.error, onDismissJoin, onSubmit, onCodeChanged, learnerName)

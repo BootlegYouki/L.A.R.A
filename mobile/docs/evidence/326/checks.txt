@@ -1,0 +1,14 @@
+Current verification: 2026-11-20, Asia/Manila.
+Staging baseline: 6f977e8ece6980374ae389db3f8cec9608b393eb (merged PR #342).
+Merged staging into the separate issue branch without conflicts; no shared or comment code edits in the PR diff.
+./gradlew --max-workers=2 --init-script /private/tmp/lara-326-unit.init.gradle test lint assembleDebug
+BUILD SUCCESSFUL in 2m 8s; 90 actionable tasks: 43 executed, 47 up-to-date.
+Debug: 214 tests, 0 failures, 0 errors, 7 opt-in skips.
+Release: 214 tests, 0 failures, 0 errors, 7 opt-in skips.
+Lint: 0 errors, 80 warnings; no new lint suppressions.
+Shared contracts/mock Hub: 72 tests passed.
+Offline invariants and git diff --check passed.
+Earlier isolated OPPO CPH2179 / Android 10 run: 3 focused tests passed (see device-focused.txt).
+Real-Hub (#324), normal-entry offline process restart, physical WAN-unplugged router, 200% font, TalkBack and memory profiling remain unverified.
+An earlier broader phone fixture failed in its unchanged teacher-approval assertion after the authentication checks passed; see device-broad.txt.
+Old integrated-* and test-lint/lint logs preserve the failures before PR #342 was integrated; ready-* logs supersede them.

@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import org.lara.app.R
+import org.lara.app.domain.model.AuthPin
 import org.lara.app.ui.components.ClassroomSurface
 import org.lara.app.ui.components.ClassroomTopBar
 import org.lara.app.ui.components.DiscoveryBanner
@@ -75,9 +76,10 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
     val keyboard = LocalSoftwareKeyboardController.current
     fun dismissKeyboard() { focus.clearFocus(); keyboard?.hide() }
     val invalid = state.error == R.string.auth_invalid || state.error == R.string.auth_wrong_pin
-    val canSubmit = !state.busy && !retrying && id.isNotBlank() && pin.length == 4 && (!registering || name.isNotBlank())
+    fun canSubmitNow() = !state.busy && !retrying && id.isNotBlank() && AuthPin.isValid(pin) && (!registering || name.isNotBlank())
+    val canSubmit = canSubmitNow()
     fun submit() {
-        if (canSubmit) {
+        if (canSubmitNow()) {
             dismissKeyboard()
             onSubmit(id, pin, if (registering) name else null)
             pin = ""
@@ -123,18 +125,19 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
                 Text(stringResource(R.string.auth_pin), style = MaterialTheme.typography.labelLarge)
                 val pinLabel = stringResource(R.string.auth_pin)
                 BasicTextField(value = pin, onValueChange = { value ->
-                    pin = value.filter { it in '0'..'9' }.take(4)
+                    pin = value.filter { it in '0'..'9' }.take(AuthPin.LENGTH)
                 }, enabled = !state.busy, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword,
                         imeAction = ImeAction.Done, autoCorrectEnabled = false),
-                    keyboardActions = KeyboardActions(onDone = { if (canSubmit) submit() else dismissKeyboard() }),
-                    modifier = Modifier.focusRequester(pinFocus).classFormInputScroll()
+                    keyboardActions = KeyboardActions(onDone = { if (canSubmitNow()) submit() else dismissKeyboard() }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(pinFocus).classFormInputScroll()
                         .semantics { contentDescription = pinLabel },
                     decorationBox = {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3, Alignment.CenterHorizontally)) {
-                            repeat(4) { i ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2, Alignment.CenterHorizontally)) {
+                            repeat(AuthPin.LENGTH) { i ->
                                 val current = i == pin.length
-                                Box(Modifier.size(PrimaryTouchTarget).background(LaraColors.Surface, LaraShapes.medium)
+                                Box(Modifier.weight(1f).height(PrimaryTouchTarget).background(LaraColors.Surface, LaraShapes.medium)
                                     .border(if (current || (invalid && i < pin.length)) 2.dp else 1.dp,
                                         if (invalid) LaraColors.Danger else if (current) LaraColors.Primary else LaraColors.Border,
                                         LaraShapes.medium), contentAlignment = Alignment.Center) {
