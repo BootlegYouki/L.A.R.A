@@ -100,8 +100,8 @@ fn mock_role_routes() -> Vec<(Method, String, Role)> {
 #[tokio::test]
 async fn stub_role_guards_match_the_mock() {
     let hub = TestHub::start().await;
-    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "1234").await;
-    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "123456").await;
+    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456").await;
     let tokens = [
         (Role::Teacher, hub.teacher_token().to_owned()),
         (Role::Student, hub.open_session(learner).await),
@@ -159,8 +159,8 @@ async fn every_scaffolded_contract_route_is_registered() {
     assert!(scaffolded.len() >= 40, "parsed only {} operations", scaffolded.len());
 
     let hub = TestHub::start().await;
-    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "1234").await;
-    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let learner = hub.seed_user("123456789012", "Ana", Role::Student, "123456").await;
+    let admin = hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456").await;
     let tokens = [
         (Role::Teacher, hub.teacher_token().to_owned()),
         (Role::Student, hub.open_session(learner).await),

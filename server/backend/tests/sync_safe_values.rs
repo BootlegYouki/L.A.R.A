@@ -120,7 +120,7 @@ async fn rest_text_over_the_cap_is_refused_on_every_route() {
     let (status, material) = class.upload("/api/materials", Some(class.teacher()), material_form(&class.id, "DOCUMENT", PDF)).await;
     assert_eq!(status, 200, "{material}");
     let material = material["id"].as_str().unwrap().to_owned();
-    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456").await;
     let admin = class.hub.open_session(admin).await;
     let long = too_long();
     let question =
@@ -156,7 +156,7 @@ async fn rest_text_over_the_cap_is_refused_on_every_route() {
         (
             Method::POST,
             "/api/admin/users".into(),
-            json!({"lrn_or_id": "T-0100", "full_name": long, "role": "TEACHER", "pin": "1234"}),
+            json!({"lrn_or_id": "T-0100", "full_name": long, "role": "TEACHER", "pin": "123456"}),
             "full_name",
             &admin,
         ),

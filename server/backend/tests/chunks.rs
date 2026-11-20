@@ -64,10 +64,10 @@ async fn chunks_route_answers_members_only() {
         assert_eq!(keys, ["heading", "id", "material_id", "order_index", "text"], "no token_estimate");
     }
 
-    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (_, other_teacher) = class.teacher_token("T-0002").await;
-    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "1234").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "123456").await;
     let admin = class.hub.open_session(admin).await;
     for token in [&outsider, &other_teacher, &admin] {
         let (status, body) = class.hub.get(&url, Some(token)).await;

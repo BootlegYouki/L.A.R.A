@@ -313,7 +313,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 # server/backend/ (what CI runs)
 cargo check --all-targets && cargo test
 cargo run --bin lara-hub                  # headless Hub, data in $LARA_DATA_DIR
-LARA_TEST_SEED=1 cargo run --bin lara-hub # test only: the mock's accounts (PIN 1234), for the line below
+LARA_TEST_SEED=1 cargo run --bin lara-hub # test only: the mock's accounts (PIN 123456), for the line below
 LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub   # repo root: mock tests against this Hub
 # server/ui/
 npm run build

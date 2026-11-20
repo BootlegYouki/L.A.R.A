@@ -4,13 +4,13 @@ use common::TestHub;
 use serde_json::{json, Value};
 
 async fn admin(hub: &TestHub) -> String {
-    let (status, session) = hub.post_json("/api/admin/setup", &json!({"full_name": "ICT Coordinator", "pin": "4321"}), None).await;
+    let (status, session) = hub.post_json("/api/admin/setup", &json!({"full_name": "ICT Coordinator", "pin": "432156"}), None).await;
     assert_eq!(status, 200);
     session["token"].as_str().unwrap().to_owned()
 }
 
 fn teacher() -> Value {
-    json!({"lrn_or_id": "T-0002", "full_name": "New Teacher", "role": "TEACHER", "pin": "0284"})
+    json!({"lrn_or_id": "T-0002", "full_name": "New Teacher", "role": "TEACHER", "pin": "028456"})
 }
 
 #[tokio::test]
@@ -18,12 +18,12 @@ async fn created_accounts_sign_in_and_reset_pin_survives_restart() {
     let hub = TestHub::start().await;
     let token = admin(&hub).await;
     let mut created_ids = Vec::new();
-    for body in [teacher(), json!({"lrn_or_id": "123456789014", "full_name": "New Learner", "role": "STUDENT", "pin": "0284"})] {
+    for body in [teacher(), json!({"lrn_or_id": "123456789014", "full_name": "New Learner", "role": "STUDENT", "pin": "028456"})] {
         let (status, created) = hub.post_json("/api/admin/users", &body, Some(&token)).await;
         assert_eq!(status, 200, "{created}");
         assert_eq!(created.as_object().unwrap().len(), 4, "only User fields leave the Hub");
         assert_eq!(created["role"], body["role"]);
-        hub.login(body["lrn_or_id"].as_str().unwrap(), "0284").await;
+        hub.login(body["lrn_or_id"].as_str().unwrap(), "028456").await;
         let id = created["id"].as_str().unwrap().to_owned();
         let hash: String = sqlx::query_scalar("SELECT pin_hash FROM users WHERE id = ?")
             .bind(&id).fetch_one(&hub.state().db).await.unwrap();
@@ -41,11 +41,11 @@ async fn created_accounts_sign_in_and_reset_pin_survives_restart() {
         assert!(user.get("pin").is_none() && user.get("pin_hash").is_none());
     }
     let path = format!("/api/admin/users/{}/reset-pin", created_ids[0]);
-    assert_eq!(hub.post_json(&path, &json!({"pin": "0907"}), Some(&token)).await, (200, json!({"success": true})));
+    assert_eq!(hub.post_json(&path, &json!({"pin": "090756"}), Some(&token)).await, (200, json!({"success": true})));
     let hub = hub.restart().await;
-    assert_eq!(hub.post_json("/api/auth/login", &json!({"lrn_or_id": "T-0002", "pin": "0284"}), None).await.0, 401);
-    hub.login("T-0002", "0907").await;
-    hub.login("123456789014", "0284").await;
+    assert_eq!(hub.post_json("/api/auth/login", &json!({"lrn_or_id": "T-0002", "pin": "028456"}), None).await.0, 401);
+    hub.login("T-0002", "090756").await;
+    hub.login("123456789014", "028456").await;
     assert_eq!(hub.get("/api/admin/users", Some(&token)).await.0, 200);
     hub.stop().await;
 }
@@ -54,13 +54,13 @@ async fn created_accounts_sign_in_and_reset_pin_survives_restart() {
 async fn a_pin_reset_signs_the_user_out_everywhere_but_not_the_admin() {
     let hub = TestHub::start().await;
     let token = admin(&hub).await;
-    let other = hub.login("T-0001", "1234").await;
-    let learner = hub.seed_user("123456789014", "Learner", lara_hub::auth::Role::Student, "1234").await;
+    let other = hub.login("T-0001", "123456").await;
+    let learner = hub.seed_user("123456789014", "Learner", lara_hub::auth::Role::Student, "123456").await;
     let learner_token = hub.open_session(learner).await;
     let users = hub.get("/api/admin/users", Some(&token)).await.1;
     let id = users.as_array().unwrap().iter().find(|u| u["lrn_or_id"] == "T-0001").unwrap()["id"].as_str().unwrap().to_owned();
     assert_eq!(hub.get("/api/classrooms", Some(&other)).await.0, 200);
-    assert_eq!(hub.post_json(&format!("/api/admin/users/{id}/reset-pin"), &json!({"pin": "0907"}), Some(&token)).await.0, 200);
+    assert_eq!(hub.post_json(&format!("/api/admin/users/{id}/reset-pin"), &json!({"pin": "090756"}), Some(&token)).await.0, 200);
     for old in [hub.teacher_token(), other.as_str()] {
         let (status, body) = hub.get("/api/classrooms", Some(old)).await;
         assert_eq!((status, body["error"]["code"].as_str()), (401, Some("UNAUTHORIZED")));
@@ -68,8 +68,8 @@ async fn a_pin_reset_signs_the_user_out_everywhere_but_not_the_admin() {
     let remaining: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
         .bind(&id).fetch_one(&hub.state().db).await.unwrap();
     assert_eq!(remaining, 0);
-    assert_eq!(hub.post_json("/api/auth/login", &json!({"lrn_or_id": "T-0001", "pin": "1234"}), None).await.0, 401);
-    let fresh = hub.login("T-0001", "0907").await;
+    assert_eq!(hub.post_json("/api/auth/login", &json!({"lrn_or_id": "T-0001", "pin": "123456"}), None).await.0, 401);
+    let fresh = hub.login("T-0001", "090756").await;
     assert_eq!(hub.get("/api/classrooms", Some(&fresh)).await.0, 200);
     // Only that user's sessions end: the admin and other accounts stay signed in.
     assert_eq!(hub.get("/api/admin/users", Some(&token)).await.0, 200);
@@ -81,7 +81,7 @@ async fn a_pin_reset_signs_the_user_out_everywhere_but_not_the_admin() {
 async fn account_routes_require_admin_and_do_not_change_data_for_other_roles() {
     let hub = TestHub::start().await;
     let token = admin(&hub).await;
-    let learner = hub.seed_user("123456789014", "Learner", lara_hub::auth::Role::Student, "1234").await;
+    let learner = hub.seed_user("123456789014", "Learner", lara_hub::auth::Role::Student, "123456").await;
     let learner_token = hub.open_session(learner).await;
     let (status, users) = hub.get("/api/admin/users", Some(&token)).await;
     assert_eq!(status, 200);
@@ -89,9 +89,9 @@ async fn account_routes_require_admin_and_do_not_change_data_for_other_roles() {
     for (token, expected) in [(None, 401), (Some(hub.teacher_token()), 403), (Some(learner_token.as_str()), 403)] {
         assert_eq!(hub.get("/api/admin/users", token).await.0, expected);
         assert_eq!(hub.post_json("/api/admin/users", &teacher(), token).await.0, expected);
-        assert_eq!(hub.post_json(&format!("/api/admin/users/{id}/reset-pin"), &json!({"pin": "9999"}), token).await.0, expected);
+        assert_eq!(hub.post_json(&format!("/api/admin/users/{id}/reset-pin"), &json!({"pin": "999956"}), token).await.0, expected);
     }
-    hub.login("T-0001", "1234").await;
+    hub.login("T-0001", "123456").await;
     assert_eq!(hub.get("/api/admin/users", Some(&token)).await.1, users);
     hub.stop().await;
 }
@@ -117,8 +117,8 @@ async fn invalid_input_duplicates_and_missing_users_are_safe() {
     for pin in [json!(""), json!("123"), json!("１２３４"), json!(null)] {
         assert_eq!(hub.post_json(&path, &json!({"pin": pin}), Some(&token)).await.0, 400);
     }
-    assert_eq!(hub.post_json("/api/admin/users/missing/reset-pin", &json!({"pin": "1234"}), Some(&token)).await.0, 404);
-    hub.login("T-0002", "0284").await;
+    assert_eq!(hub.post_json("/api/admin/users/missing/reset-pin", &json!({"pin": "123456"}), Some(&token)).await.0, 404);
+    hub.login("T-0002", "028456").await;
     hub.stop().await;
 }
 

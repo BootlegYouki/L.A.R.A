@@ -31,7 +31,7 @@ impl Class {
             .await;
         assert_eq!(status, 200, "{room}");
         let learner = hub
-            .seed_user("123456789012", "Juan", Role::Student, "1234")
+            .seed_user("123456789012", "Juan", Role::Student, "123456")
             .await;
         let student = learner.id.clone();
         let token = hub.open_session(learner).await;
@@ -290,13 +290,13 @@ async fn newly_visible_class_arrives_with_older_rows_for_learner_and_co_teacher_
     class.announcements(620, 100).await;
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
     let teacher = class
         .hub
-        .seed_user("T-0002", "Jose", Role::Teacher, "1234")
+        .seed_user("T-0002", "Jose", Role::Teacher, "123456")
         .await;
     let teacher_id = teacher.id.clone();
     let teacher_token = class.hub.open_session(teacher).await;
@@ -465,7 +465,7 @@ async fn push_validation_ownership_and_quiz_attempts_stay_separate() {
     assert_eq!(count, 0);
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
@@ -644,14 +644,14 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
     class.assignment().await;
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
     class.enroll(&ana_token, &ana_id).await;
     let admin = class
         .hub
-        .seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234")
+        .seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456")
         .await;
     let admin_token = class.hub.open_session(admin).await;
     let mut tx = db::begin_immediate(&class.hub.state().db).await.unwrap();
@@ -829,7 +829,7 @@ impl Class {
     }
 
     async fn add_co_teacher(&self, lrn: &str) -> (String, String) {
-        let teacher = self.hub.seed_user(lrn, "Jose", Role::Teacher, "1234").await;
+        let teacher = self.hub.seed_user(lrn, "Jose", Role::Teacher, "123456").await;
         let id = teacher.id.clone();
         let token = self.hub.open_session(teacher).await;
         let (status, body) = self
@@ -912,7 +912,7 @@ async fn a_learner_removed_through_the_route_gets_the_enrollment_and_nothing_els
 async fn an_added_co_teacher_gets_the_older_rows_and_the_learners_see_them_listed() {
     let class = Class::start().await;
     class.announcements(3, 1).await;
-    let teacher = class.hub.seed_user("T-0002", "Jose", Role::Teacher, "1234").await;
+    let teacher = class.hub.seed_user("T-0002", "Jose", Role::Teacher, "123456").await;
     let teacher_token = class.hub.open_session(teacher.clone()).await;
     let position = drain(&class.hub, &teacher_token).await;
     let learner_position = drain(&class.hub, &class.token).await;

@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '../../..');
 const mode = process.argv[2];
 assert(['mock', 'real'].includes(mode), 'Choose mock or real; use an isolated development Hub.');
 const base = 'http://127.0.0.1:8080';
-const evidence = path.join(root, 'server/docs/evidence');
+const evidence = path.join(root, 'server/docs/evidence/339');
 
 async function main() {
   try {
@@ -55,18 +55,28 @@ async function main() {
     const visible = locator => locator.waitFor({ state: 'visible' });
     async function pin(value) {
       // Password inputs have no implicit textbox role.
-      for (let n = 0; n < 4; n++) await page.getByLabel(`PIN digit ${n + 1}`, { exact: true }).fill(value[n]);
+      for (let n = 0; n < 6; n++) await page.getByLabel(`PIN digit ${n + 1}`, { exact: true }).fill(value[n]);
     }
     const usersReady = new Promise(resolve => { releaseUsers = resolve; });
     await page.route(`${base}/api/admin/users`, async route => { await usersReady; await route.continue(); });
     await page.goto('http://127.0.0.1:5173', { timeout: 60000, waitUntil: 'domcontentloaded' });
     await visible(page.getByRole('heading', { name: 'Set the admin PIN' }));
     await page.getByLabel('Full name', { exact: true }).fill('Test Coordinator');
-    await pin('1234');
+    assert.equal(await page.locator('input[type="password"]').count(), 6);
+    for (let index = 0; index < 4; index++) await page.getByLabel(`PIN digit ${index + 1}`, { exact: true }).fill(String(index + 1));
+    await page.getByRole('button', { name: 'Set admin PIN', exact: true }).click();
+    await visible(page.getByText('The PIN must be 6 digits.', { exact: true }));
+    await page.getByLabel('PIN digit 1', { exact: true }).evaluate(input => {
+      const clipboardData = new DataTransfer();
+      clipboardData.setData('text', '123456');
+      input.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+    });
+    assert.deepEqual(await page.locator('input[type="password"]').evaluateAll(inputs => inputs.map(input => input.value)), ['1', '2', '3', '4', '5', '6']);
+    assert(await page.getByLabel('PIN digit 6', { exact: true }).evaluate(input => input === document.activeElement));
     await page.getByRole('button', { name: 'Set admin PIN', exact: true }).click();
     if (mode === 'mock') {
       await visible(page.getByRole('heading', { name: 'Admin sign in' }));
-      await pin('1234');
+      await pin('123456');
       await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     }
     await visible(page.getByRole('heading', { name: 'Accounts', exact: true }));
@@ -82,26 +92,26 @@ async function main() {
       await page.getByLabel('Full name', { exact: true }).fill(name);
       await page.getByLabel('Teacher ID / Learner LRN', { exact: true }).fill(id);
       await page.getByRole('radio', { name: role, exact: true }).check();
-      await pin('0284');
+      await pin('028456');
       await page.getByRole('button', { name: 'Create account', exact: true }).last().click();
       await visible(page.getByRole('heading', { name: 'PIN saved' }));
-      assert.equal(await page.getByText('0284', { exact: true }).count(), 1);
+      assert.equal(await page.getByText('028456', { exact: true }).count(), 1);
       await page.getByRole('button', { name: 'I have recorded the PIN' }).click();
-      assert.equal(await page.getByText('0284', { exact: true }).count(), 0);
-      const login = await context.request.post(`${base}/api/auth/login`, { data: { lrn_or_id: id, pin: '0284' } });
+      assert.equal(await page.getByText('028456', { exact: true }).count(), 0);
+      const login = await context.request.post(`${base}/api/auth/login`, { data: { lrn_or_id: id, pin: '028456' } });
       assert.equal(login.status(), 200);
       const session = await login.json();
       assert.equal((await context.request.get(`${base}/api/admin/users`, { headers: { Authorization: `Bearer ${session.token}` } })).status(), 403);
     }
     console.log('PASS teacher and learner creation, one-time PIN, login, role guards');
     await page.getByRole('button', { name: 'Reset PIN Test Teacher', exact: true }).click();
-    await pin('0907');
+    await pin('090756');
     await page.getByRole('button', { name: 'Reset PIN', exact: true }).click();
     await visible(page.getByRole('heading', { name: 'PIN saved' }));
     await page.keyboard.press('Escape');
-    assert.equal(await page.getByText('0907', { exact: true }).count(), 0);
+    assert.equal(await page.getByText('090756', { exact: true }).count(), 0);
     assert(await page.getByRole('button', { name: 'Reset PIN Test Teacher', exact: true }).evaluate(node => node === document.activeElement));
-    for (const [value, status] of [['0284', 401], ['0907', 200]]) {
+    for (const [value, status] of [['028456', 401], ['090756', 200]]) {
       assert.equal((await context.request.post(`${base}/api/auth/login`, { data: { lrn_or_id: 'T-ADMIN-UI', pin: value } })).status(), status);
     }
     await page.screenshot({ path: path.join(evidence, `issue-43-${mode}-accounts.png`), fullPage: true });

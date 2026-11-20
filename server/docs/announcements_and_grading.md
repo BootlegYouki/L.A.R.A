@@ -112,7 +112,7 @@ These go beyond the mock and are listed in the PR:
   - who may write
 
 ## Manual check (WAN unplugged)
-1. Start the Hub and sign in on the desktop app as `T-0001` (PIN `1234`). Create a class, and have learner `123456789012` join from a phone; approve them.
+1. Start the Hub and sign in on the desktop app as `T-0001` (PIN `123456`). Create a class, and have learner `123456789012` join from a phone; approve them.
 2. With the phone's app open, post an announcement. The phone shows it at once (push); a phone that was off gets it on the next sync.
 3. Turn comments off on the post. The phone's comment box is refused with "Comments are turned off for this post".
 4. Create an assignment worth 20 points. The learner photographs and submits homework. Open it from the teacher's submission list, grade it 18 with feedback, and the phone shows the grade after a sync.
