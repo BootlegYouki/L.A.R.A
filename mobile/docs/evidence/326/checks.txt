@@ -1,0 +1,13 @@
+Verified baseline: dcb65f158e5dcc042d8ccaeec00788a2f83188ec
+Shared suite: 72 tests passed
+Offline invariants: passed
+git diff --check: passed
+Device APK build: passed
+OPPO CPH2179 / Android 10 / isolated org.lara.app.group8: 3 focused tests passed
+testDebugUnitTest: {'tests': 210, 'failures': 0, 'errors': 0, 'skipped': 6}
+testReleaseUnitTest: {'tests': 210, 'failures': 0, 'errors': 0, 'skipped': 6}
+test lint: fails on 3 lint errors in unchanged staging MaterialReader/VideoPlayerScreen files (78 warnings).
+Broader inputCallbacksAndKeyboardRemainUsable: auth checks reached completion, then unchanged teacher-approval assertion failed; see device-broad.txt.
+That exploratory run also captured the test harness typing after focus dismissal. The corrected refocus step passes in device-focused.txt.
+Not verified: real Rust Hub (#324 remains open), normal-entry process restart with Hub down, physical WAN-unplugged router, 200% font, TalkBack.
+Device build used /private/tmp/lara-326-device.init.gradle to override the test package only. No build configuration change is part of the diff.

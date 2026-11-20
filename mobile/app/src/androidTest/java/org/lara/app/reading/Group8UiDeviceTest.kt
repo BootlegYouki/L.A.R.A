@@ -45,6 +45,8 @@ import org.lara.app.domain.enrollment.*
 import org.lara.app.domain.model.*
 import org.lara.app.ui.components.ClassroomTopBar
 import org.lara.app.ui.screens.auth.*
+import org.lara.app.ui.screens.enrollment.EnrollmentScreen
+import org.lara.app.ui.screens.enrollment.EnrollmentScreenState
 import org.lara.app.ui.screens.classwork.*
 import org.lara.app.ui.screens.discovery.*
 import org.lara.app.ui.screens.teacher.*
@@ -333,12 +335,12 @@ class Group8UiDeviceTest {
             waitUntil("PIN numeric keyboard must open") { keyboardShown(scenario) }
             shot("keyboard-blank-pin")
             enterText(context.getString(R.string.auth_id), "SAMPLE-TEACHER")
-            enterText(context.getString(R.string.auth_pin), "12a456")
+            enterText(context.getString(R.string.auth_pin), "12a45678")
             instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
             waitUntil("Back must dismiss the keyboard") { !keyboardShown(scenario) }
             click(context.getString(R.string.auth_login))
             assertTrue("Sign-in callback must receive the unchanged values", submitted.get()?.let {
-                it.first == "SAMPLE-TEACHER" && it.second == "1245" && it.third == null } == true)
+                it.first == "SAMPLE-TEACHER" && it.second == "124567" && it.third == null } == true)
             click(context.getString(R.string.auth_pin))
             val passwordFields = nodes().filter { it.isPassword }
             assertTrue("PIN field must retain password semantics", passwordFields.isNotEmpty())
@@ -360,13 +362,13 @@ class Group8UiDeviceTest {
             shot("keyboard-blank-registration-pin")
             enterText(context.getString(R.string.auth_lrn), "999999999999")
             enterText(context.getString(R.string.auth_name), "Sample Learner")
-            enterText(context.getString(R.string.auth_pin), "12a456")
+            enterText(context.getString(R.string.auth_pin), "12a45678")
             assertTrue("Registration PIN must retain password semantics", nodes().any { it.isPassword })
             instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
             waitUntil("Back must dismiss registration keyboard") { !keyboardShown(scenario) }
             click(context.getString(R.string.auth_register))
             assertTrue("Existing registration callback must receive name and LRN", submitted.get()?.let {
-                it.first == "999999999999" && it.second == "1245" && it.third == "Sample Learner" } == true)
+                it.first == "999999999999" && it.second == "124567" && it.third == "Sample Learner" } == true)
             val choices = mutableListOf<Boolean>()
             val member = RosterMember(Enrollment("interaction-request","interaction-class","interaction-learner","PENDING",1,1),
                 User("interaction-learner",null,"Sample Learner","STUDENT",1,1))
@@ -404,6 +406,23 @@ class Group8UiDeviceTest {
         }
     }
 
+    @Test fun pendingMetadataRemainsVisibleInTheOfflineScreen() {
+        guard()
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            val state = EnrollmentScreenState(classes = Cached.Content(emptyList()),
+                requests = listOf(EnrollmentNotice("synthetic-class", "Science", EnrollmentStatus.PENDING,
+                    "Aguinaldo", "Synthetic Teacher")), noticesLoaded = true, offline = true)
+            var opened = false
+            show(scenario) { EnrollmentScreen(state, {}, {}, {}, { opened = true }) }
+            waitFor("Science")
+            waitFor("Aguinaldo")
+            waitFor("Synthetic Teacher")
+            click("Science")
+            assertFalse("A saved pending notice must not grant class access", opened)
+            shot("pending-class-offline")
+        }
+    }
+
     @Test fun hardwareKeyboardFocusAndSubmission() {
         guard()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
@@ -412,9 +431,16 @@ class Group8UiDeviceTest {
             enterText(context.getString(R.string.auth_id), "SAMPLE-TEACHER")
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB)
             waitUntil("Tab must move from ID to PIN") { nodes().any { it.isFocused && it.isPassword } }
-            instrumentation.sendStringSync("1234")
+            instrumentation.sendStringSync("123456")
+            assertTrue("PIN must expose password semantics without plaintext", nodes().any {
+                it.isFocused && it.isPassword && it.text?.toString() != "123456"
+            })
+            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_DEL)
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
-            waitUntil("Hardware Enter must submit sign-in") { submitted.get() == Triple("SAMPLE-TEACHER", "1234", null) }
+            assertNull("Deleting a digit must disable submission", submitted.get())
+            enterText(context.getString(R.string.auth_pin), "6")
+            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
+            waitUntil("Hardware Enter must submit sign-in") { submitted.get() == Triple("SAMPLE-TEACHER", "123456", null) }
             submitted.set(null)
             show(scenario) { AuthScreen(AuthState(restoring=false), { id, pin, name -> submitted.set(Triple(id,pin,name)) }, {}) }
             click(context.getString(R.string.auth_register_instead))
@@ -427,10 +453,10 @@ class Group8UiDeviceTest {
             instrumentation.sendStringSync("123")
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
             assertNull("Incomplete PIN must never submit", submitted.get())
-            enterText(context.getString(R.string.auth_pin), "4")
+            enterText(context.getString(R.string.auth_pin), "456")
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
             waitUntil("Hardware Enter must submit registration") {
-                submitted.get() == Triple("999999999999", "1234", "Sample Learner")
+                submitted.get() == Triple("999999999999", "123456", "Sample Learner")
             }
         }
     }
@@ -463,7 +489,7 @@ class Group8UiDeviceTest {
                     val id = if (register) "9" + System.nanoTime().toString().takeLast(11).padStart(11,'0') else "T-0001"
                     enterText(label,id)
                     if (register) enterText(context.getString(R.string.auth_name),"Group 8 Sample Learner")
-                    enterText(context.getString(R.string.auth_pin), "1234")
+                    enterText(context.getString(R.string.auth_pin), "123456")
                     instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
                     waitUntil("Back must dismiss authentication keyboard") { !keyboardShown(scenario) }
                     click(context.getString(if (register) R.string.auth_register else R.string.auth_login))
@@ -479,7 +505,7 @@ class Group8UiDeviceTest {
         val learnerContainer = root.forUser(student.id)
         assertEquals("PENDING",learnerContainer.enrollmentApi.join(student.id,"K7M4QX").status.name)
         learnerContainer.settings.signOut(student.id)
-        val teacherUser = root.auth.authenticate(endpoint,"T-0001","1234",null)
+        val teacherUser = root.auth.authenticate(endpoint,"T-0001","123456",null)
         val active = root.forUser(teacherUser.id)
         active.sync.pull(teacherUser.id)
         val classroom = active.enrollmentApi.classrooms(teacherUser.id).first { it.classCode == "K7M4QX" }

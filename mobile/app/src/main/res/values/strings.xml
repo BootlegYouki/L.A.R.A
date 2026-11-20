@@ -58,12 +58,12 @@
     <string name="auth_register">Create learner account</string>
     <string name="auth_id">LRN or teacher ID</string>
     <string name="auth_name">Full name</string>
-    <string name="auth_pin">4-digit PIN</string>
+    <string name="auth_pin">6-digit PIN</string>
     <string name="auth_checking">Signing in to your classroom Hub...</string>
     <string name="auth_restoring">Opening your saved classroom...</string>
     <string name="auth_register_instead">New learner? Create an account</string>
     <string name="auth_login_instead">Already registered? Sign in</string>
-    <string name="auth_invalid">Enter your ID and a 4-digit PIN.</string>
+    <string name="auth_invalid">Enter your ID and a 6-digit PIN.</string>
     <string name="auth_hub_required">Connect to your Hub first.</string>
     <string name="auth_hub_connected">Connected to %1$s</string>
     <string name="auth_hub_unreachable">Can\'t reach %1$s</string>

@@ -24,8 +24,8 @@ abstract class RestApprovalFlowTests {
     @Test fun freshTeacherRestAndCanonicalLearnerSyncApproveAndSurviveReopen(): Unit = runBlocking {
         assumeTrue("Requires isolated mock on 28080/28081", mockEnabled())
         val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", 28080, 28081))
-        val teacher = AuthApi().authenticate(endpoint, "T-0001", "1234", null)
-        val learner = AuthApi().authenticate(endpoint, "7" + System.nanoTime().toString().takeLast(11).padStart(11, '0'), "1234", "REST approval learner")
+        val teacher = AuthApi().authenticate(endpoint, "T-0001", "123456", null)
+        val learner = AuthApi().authenticate(endpoint, "7" + System.nanoTime().toString().takeLast(11).padStart(11, '0'), "123456", "REST approval learner")
         fun api(session: AuthSession): EnrollmentApi {
             val tokens = object : SessionTokenStore {
                 override fun load() = StoredToken(session.token, session.user.id, session.expiresAt, endpoint.restBase)

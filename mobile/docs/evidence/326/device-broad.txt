@@ -1,0 +1,34 @@
+
+org.lara.app.reading.Group8UiDeviceTest:
+Error in inputCallbacksAndKeyboardRemainUsable(org.lara.app.reading.Group8UiDeviceTest):
+java.lang.AssertionError: expected:<[true, false]> but was:<[]>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at org.lara.app.reading.Group8UiDeviceTest.inputCallbacksAndKeyboardRemainUsable(Group8UiDeviceTest.kt:380)
+..
+Error in hardwareKeyboardFocusAndSubmission(org.lara.app.reading.Group8UiDeviceTest):
+java.lang.IllegalStateException: Hardware Enter must submit sign-in
+	at org.lara.app.reading.Group8UiDeviceTest.waitUntil(Group8UiDeviceTest.kt:316)
+	at org.lara.app.reading.Group8UiDeviceTest.hardwareKeyboardFocusAndSubmission(Group8UiDeviceTest.kt:443)
+
+
+Time: 64.772
+There were 2 failures:
+1) inputCallbacksAndKeyboardRemainUsable(org.lara.app.reading.Group8UiDeviceTest)
+java.lang.AssertionError: expected:<[true, false]> but was:<[]>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at org.lara.app.reading.Group8UiDeviceTest.inputCallbacksAndKeyboardRemainUsable(Group8UiDeviceTest.kt:380)
+2) hardwareKeyboardFocusAndSubmission(org.lara.app.reading.Group8UiDeviceTest)
+java.lang.IllegalStateException: Hardware Enter must submit sign-in
+	at org.lara.app.reading.Group8UiDeviceTest.waitUntil(Group8UiDeviceTest.kt:316)
+	at org.lara.app.reading.Group8UiDeviceTest.hardwareKeyboardFocusAndSubmission(Group8UiDeviceTest.kt:443)
+
+FAILURES!!!
+Tests run: 4,  Failures: 2
+
+

@@ -202,7 +202,7 @@ class AssignmentUiDeviceTest {
         val container = (context.applicationContext as LaraApp).container
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         container.endpoints.save(endpoint, "Synthetic Group 5 mock Hub")
-        val user = container.auth.authenticate(endpoint, "123456789012", "1234", null)
+        val user = container.auth.authenticate(endpoint, "123456789012", "123456", null)
         val active = container.forUser(user.id)
         active.sync.pull(user.id)
         val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default + kotlinx.coroutines.Job())

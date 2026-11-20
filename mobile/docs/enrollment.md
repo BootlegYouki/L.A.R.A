@@ -17,3 +17,12 @@ Test an unknown code, valid K7M-4QX, pending offline relaunch, matching approval
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+## Pending display metadata (#326)
+
+The join receipt's required `section` and `teacher_name` are saved in the existing
+Room notice before the follow-up refresh. Pending cards retain them offline and
+after restart. The class title still comes from the classroom list/cache because
+the join receipt has no name. Empty display strings are omitted. Legacy saved
+notices remain readable without invented values. See
+[the contract assumptions and validation](auth-pin-pending-join.md).

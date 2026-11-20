@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.lara.app.R
+import org.lara.app.domain.model.AuthPin
 import org.lara.app.domain.model.User
 import org.lara.app.data.remote.AuthFailure
 import org.lara.app.data.remote.discovery.HubEndpointStore
@@ -41,7 +42,7 @@ class AuthViewModel(private val repository: AuthRepository, private val endpoint
         if (mutable.value.busy || SystemClock.elapsedRealtime() < mutable.value.retryAt) return
         val normalizedId = id.trim()
         val normalizedName = name?.trim()
-        if (normalizedId.isBlank() || normalizedId.length > 32 || !pin.matches(Regex("[0-9]{4}")) ||
+        if (normalizedId.isBlank() || normalizedId.length > 32 || !AuthPin.isValid(pin) ||
             (normalizedName != null && (normalizedName.isBlank() || normalizedName.length > 100 || !normalizedId.matches(Regex("[0-9]{12}"))))) {
             mutable.value = mutable.value.copy(error = R.string.auth_invalid)
             return
