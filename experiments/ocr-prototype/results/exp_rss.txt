@@ -1,0 +1,7 @@
+bare python3 9 MB (laptop)
+pdftotext (child process) v0_orig 62 pages: 19.6 MB; v4_messy 30 pages: 19.7 MB
+pypdf v0_orig 0.65s peak_rss=39MB; v4_messy 0.58s 39MB (extract+cleanup+chunk, own process)
+pdfminer v0_orig 2.15s 38MB; v4_messy 1.88s 39MB
+pdfplumber v0_orig 3.69s 278MB; v4_messy 2.92s 271MB
+python-docx v5_docx 0.28s 34MB
+pdftotext + cleanup + chunking in python v0_orig 0.08s 13MB

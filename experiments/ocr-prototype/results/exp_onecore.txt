@@ -1,0 +1,10 @@
+== all cores
+pdftotext wells.pdf 254 pages: extract 0.38s, total with cleanup+chunk 0.56s, chunks 450, peak 16 MB
+pypdf wells.pdf 254 pages: extract 5.73s, total with cleanup+chunk 5.90s, chunks 382, peak 89 MB
+== pinned to ONE logical cpu (taskset -c 0)
+pdftotext wells.pdf 254 pages: extract 0.36s, total with cleanup+chunk 0.54s, chunks 450, peak 16 MB
+pypdf wells.pdf 254 pages: extract 4.00s, total with cleanup+chunk 4.11s, chunks 382, peak 89 MB
+pdftotext v0_orig.pdf 0.08s peak_rss=13MB chunks=113
+pypdf v0_orig.pdf 0.36s peak_rss=39MB chunks=116
+pdftotext v4_messy.pdf 0.09s peak_rss=14MB chunks=120
+pypdf v4_messy.pdf 0.38s peak_rss=39MB chunks=113

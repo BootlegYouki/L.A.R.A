@@ -1,0 +1,660 @@
+[
+  {
+    "id": "Q01",
+    "fact": "F01",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how many learners are in the sampaguita section?",
+    "expected_answer": "43 learners",
+    "chapter": 1,
+    "quote": "Mrs. Corazon Dimaculangan teaches the Grade 8 Sampaguita section of Mabuhay Ilaya National High School, which has 43 learners this school year.",
+    "page": 5,
+    "token": "43 learners"
+  },
+  {
+    "id": "Q02",
+    "fact": "F02",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "when did the students begin their own spot for recording the days conditions outdoors?",
+    "expected_answer": "16 June 2025",
+    "chapter": 1,
+    "quote": "The class weather station was first set up on 16 June 2025 beside the covered walkway of Building C.",
+    "page": 5,
+    "token": "16 June 2025"
+  },
+  {
+    "id": "Q03",
+    "fact": "T1",
+    "type": "table",
+    "paraphrased": false,
+    "question": "where is the anemometer mounted at the school?",
+    "expected_answer": "On a flagpole bracket at 4.2 m",
+    "chapter": 1,
+    "quote": "Flagpole bracket at 4.2 m",
+    "page": 6,
+    "token": "Flagpole bracket at 4.2 m"
+  },
+  {
+    "id": "Q04",
+    "fact": "B1",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how many cloud types are in alyssas sky sketch?",
+    "expected_answer": "5 cloud types",
+    "chapter": 2,
+    "quote": "Figure 2.1. Alyssa's sketch of the sky over Mabuhay Ilaya shows 5 cloud types, drawn on 10 July 2025.",
+    "page": 10,
+    "token": "5 cloud types"
+  },
+  {
+    "id": "Q05",
+    "fact": "F03",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how much water did the schools rainfall collector catch on its wettest day?",
+    "expected_answer": "87 millimeters (in one afternoon, 3 August 2025)",
+    "chapter": 2,
+    "quote": "On 3 August 2025 the class rain gauge collected 87 millimeters of rain in one afternoon, the largest amount in its first term.",
+    "page": 11,
+    "token": "87 millimeters"
+  },
+  {
+    "id": "Q06",
+    "fact": "F04",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "which mountain did alyssa see the cumulonimbus clouds over?",
+    "expected_answer": "Mount Balisong",
+    "chapter": 2,
+    "quote": "Alyssa Pangilinan was the first to notice cumulonimbus clouds towering over Mount Balisong at about 1:40 in the afternoon.",
+    "page": 10,
+    "token": "Mount Balisong"
+  },
+  {
+    "id": "Q07",
+    "fact": "F05",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "what number did the air pressure gadget show at dawn before the earliest storm practice?",
+    "expected_answer": "1004 hectopascals",
+    "chapter": 3,
+    "quote": "At 6:00 a.m. on the day of the first typhoon drill, the school barometer read 1004 hectopascals.",
+    "page": 14,
+    "token": "1004 hectopascals"
+  },
+  {
+    "id": "Q08",
+    "fact": "F06",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "what stuff did ramil use to make the thing that shows where the wind is coming from?",
+    "expected_answer": "A bamboo skewer, a plastic folder and a used pen cap",
+    "chapter": 3,
+    "quote": "Ramil Cabigting built the class wind vane from a bamboo skewer, a plastic folder and a used pen cap.",
+    "page": 15,
+    "token": "bamboo skewer"
+  },
+  {
+    "id": "Q09",
+    "fact": "P1",
+    "type": "two-part",
+    "paraphrased": false,
+    "question": "what time did hazel have to read the wind vane every day in august?",
+    "expected_answer": "7:30 a.m. (Hazel was the August 2025 weather reporter, who reads the wind vane and thermometer at 7:30 a.m.)",
+    "chapter": 3,
+    "quote": [
+      "The student weather reporter for August 2025 was Hazel Villaroman.",
+      "The weather reporter must read the wind vane and the thermometer every day at 7:30 a.m. and announce the results at the flag ceremony."
+    ],
+    "page": [
+      16,
+      16
+    ],
+    "token": [
+      "Hazel Villaroman",
+      "7:30 a.m."
+    ]
+  },
+  {
+    "id": "Q10",
+    "fact": "T2",
+    "type": "table",
+    "paraphrased": true,
+    "question": "what was the wind speed on wednesday in the class wind log?",
+    "expected_answer": "22.8 km/h",
+    "chapter": 3,
+    "quote": "22.8 km/h",
+    "page": 16,
+    "token": "22.8 km/h"
+  },
+  {
+    "id": "Q11",
+    "fact": "B2",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "what was the lowest temperature in the habagat week log?",
+    "expected_answer": "23.4 degrees C",
+    "chapter": 4,
+    "quote": "Lowest temperature logged: 23.4 degrees C at 5:30 a.m. on 7 August 2025.",
+    "page": 20,
+    "token": "23.4 degrees C"
+  },
+  {
+    "id": "Q12",
+    "fact": "D2a",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "what was the july 2025 monthly rainfall of the sampaguita class?",
+    "expected_answer": "214 millimeters",
+    "chapter": 4,
+    "quote": "In July 2025 the Sampaguita class rain gauge recorded a monthly total of 214 millimeters.",
+    "page": 20,
+    "token": "214 millimeters"
+  },
+  {
+    "id": "Q13",
+    "fact": "F07",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "when did the chilly northeast wind start blowing for the year, based on their notebook?",
+    "expected_answer": "21 November 2025",
+    "chapter": 4,
+    "quote": "The first Amihan breeze of the season was recorded in the class logbook on 21 November 2025.",
+    "page": 20,
+    "token": "21 November 2025"
+  },
+  {
+    "id": "Q14",
+    "fact": "F08",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how many red poles did kapitan efren put along calle mabini?",
+    "expected_answer": "6 bamboo poles",
+    "chapter": 5,
+    "quote": "Kapitan Efren Salvador ordered 6 bamboo poles painted red to mark safe flood depth along Calle Mabini.",
+    "page": 25,
+    "token": "6 bamboo poles"
+  },
+  {
+    "id": "Q15",
+    "fact": "F09",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how far up did the floodwater get back in the late 1990s, according to lola pacita?",
+    "expected_answer": "To the third step of the old stone bridge",
+    "chapter": 5,
+    "quote": "Lola Pacita remembers that in 1998 the Ilog Tamisan rose to the third step of the old stone bridge at Sitio Pulo.",
+    "page": 25,
+    "token": "third step"
+  },
+  {
+    "id": "Q16",
+    "fact": "P2",
+    "type": "two-part",
+    "paraphrased": false,
+    "question": "how many people can the rubber boat the barangay bought fit?",
+    "expected_answer": "8 people at most",
+    "chapter": 5,
+    "quote": [
+      "After the 2022 floods, the barangay bought one rubber boat and named it Bagwis.",
+      "Bagwis can carry at most 8 people and is stored in the covered court on Calle Mabini."
+    ],
+    "page": [
+      26,
+      26
+    ],
+    "token": [
+      "one rubber boat",
+      "8 people"
+    ]
+  },
+  {
+    "id": "Q17",
+    "fact": "T3",
+    "type": "table",
+    "paraphrased": false,
+    "question": "what was the river level at sitio pulo on 6 october 2025?",
+    "expected_answer": "1.85 m",
+    "chapter": 5,
+    "quote": "1.85 m",
+    "page": 26,
+    "token": "1.85 m"
+  },
+  {
+    "id": "Q18",
+    "fact": "B3",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "where does hazel store the paper map for plotting storm paths?",
+    "expected_answer": "In folder number 14 of the science cabinet",
+    "chapter": 6,
+    "quote": "Hazel keeps the printed storm tracking map in folder number 14 of the science cabinet.",
+    "page": 31,
+    "token": "folder number 14"
+  },
+  {
+    "id": "Q19",
+    "fact": "F10",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how wide was the calm middle part in the picture from space that the teacher showed?",
+    "expected_answer": "28 kilometers across",
+    "chapter": 6,
+    "quote": "On 9 September 2025 Mrs. Dimaculangan projected an old satellite image in which the typhoon eye measured 28 kilometers across.",
+    "page": 29,
+    "token": "28 kilometers across"
+  },
+  {
+    "id": "Q20",
+    "fact": "T4",
+    "type": "table",
+    "paraphrased": false,
+    "question": "what were the coordinates of point 3 in the plotting practice?",
+    "expected_answer": "13.9 N 125.4 E",
+    "chapter": 6,
+    "quote": "13.9 N 125.4 E",
+    "page": 31,
+    "token": "13.9 N 125.4 E"
+  },
+  {
+    "id": "Q21",
+    "fact": "D1a",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "what were the highest sustained winds of typhoon kalasag?",
+    "expected_answer": "165 kilometers per hour",
+    "chapter": 7,
+    "quote": "Typhoon Kalasag crossed Northern Samar on 2 October 2022 with maximum sustained winds of 165 kilometers per hour.",
+    "page": 35,
+    "token": "165 kilometers per hour"
+  },
+  {
+    "id": "Q22",
+    "fact": "F11",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how many times does the janitor clang the big bell during a storm alert?",
+    "expected_answer": "12 times",
+    "chapter": 7,
+    "quote": "Whenever a wind signal is raised, Mang Rolando Sabalza, the school maintenance man, rings the school bell 12 times.",
+    "page": 36,
+    "token": "12 times"
+  },
+  {
+    "id": "Q23",
+    "fact": "T5",
+    "type": "table",
+    "paraphrased": false,
+    "question": "at wind signal 2 what time are the grade 7s sent home?",
+    "expected_answer": "At 10:15 a.m.",
+    "chapter": 7,
+    "quote": "Dismiss Grade 7 at 10:15 a.m.",
+    "page": 35,
+    "token": "Dismiss Grade 7 at 10:15 a.m."
+  },
+  {
+    "id": "Q24",
+    "fact": "D2b",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "what was the july 2025 monthly rain total of the camia class?",
+    "expected_answer": "168 millimeters",
+    "chapter": 8,
+    "quote": "In July 2025 the Camia class of Bagumbayan Integrated School recorded a monthly total of 168 millimeters.",
+    "page": 40,
+    "token": "168 millimeters"
+  },
+  {
+    "id": "Q25",
+    "fact": "F12",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "what is the elevation of the town where the school is?",
+    "expected_answer": "38 meters above sea level",
+    "chapter": 8,
+    "quote": "The municipality of Santa Lucrecia has a Type IV climate and lies 38 meters above sea level.",
+    "page": 40,
+    "token": "38 meters above sea level"
+  },
+  {
+    "id": "Q26",
+    "fact": "T6",
+    "type": "table",
+    "paraphrased": false,
+    "question": "what was the average high temp of the warmest month in mabuhay ilaya in 2025?",
+    "expected_answer": "33.2 degrees C (May)",
+    "chapter": 8,
+    "quote": "33.2 degrees C",
+    "page": 41,
+    "token": "33.2 degrees C"
+  },
+  {
+    "id": "Q27",
+    "fact": "B4",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how many barrels of water does the cafeteria keep ready for a drought?",
+    "expected_answer": "2 drums of 200 liters each",
+    "chapter": 9,
+    "quote": "The school canteen keeps 2 water drums, of 200 liters each, ready for dry season emergencies.",
+    "page": 46,
+    "token": "2 water drums"
+  },
+  {
+    "id": "Q28",
+    "fact": "F13",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how many kilograms of fish did denniss father catch per day at the lowest during el nino?",
+    "expected_answer": "15 kilograms a day",
+    "chapter": 9,
+    "quote": "Dennis's father, a fisherman, said that his daily catch dropped from 40 kilograms to 15 kilograms during the 2023 to 2024 El Nino.",
+    "page": 46,
+    "token": "15 kilograms"
+  },
+  {
+    "id": "Q29",
+    "fact": "P3",
+    "type": "two-part",
+    "paraphrased": false,
+    "question": "how much water was left in the barangays deep well in april 2024?",
+    "expected_answer": "1.5 meters of water",
+    "chapter": 9,
+    "quote": [
+      "During the 2023 to 2024 El Nino, the barangay depended on its only deep well, called Poso Bantay.",
+      "By April 2024, Poso Bantay held just 1.5 meters of water."
+    ],
+    "page": [
+      46,
+      46
+    ],
+    "token": [
+      "only deep well",
+      "1.5 meters of water"
+    ]
+  },
+  {
+    "id": "Q30",
+    "fact": "D3a",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "how long did the first typhoon drill take to empty building c?",
+    "expected_answer": "9 minutes and 40 seconds",
+    "chapter": 10,
+    "quote": "The first typhoon drill, held on 12 August 2025, emptied Building C in 9 minutes and 40 seconds.",
+    "page": 51,
+    "token": "9 minutes and 40 seconds"
+  },
+  {
+    "id": "Q31",
+    "fact": "F14",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "what was maritess score in the forecast challenge?",
+    "expected_answer": "6 out of 7",
+    "chapter": 10,
+    "quote": "In the week-long forecast challenge, Marites Quilantang got 6 out of 7 forecasts right, the best score in the class.",
+    "page": 51,
+    "token": "6 out of 7"
+  },
+  {
+    "id": "Q32",
+    "fact": "T7",
+    "type": "table",
+    "paraphrased": false,
+    "question": "how much do they add to the thermometer reading to correct it?",
+    "expected_answer": "+0.6 degrees C",
+    "chapter": 10,
+    "quote": "+0.6 degrees C",
+    "page": 50,
+    "token": "+0.6 degrees C"
+  },
+  {
+    "id": "Q33",
+    "fact": "B5",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how tall was the biggest tree that fell on calle mabini?",
+    "expected_answer": "19 meters tall",
+    "chapter": 11,
+    "quote": "Largest fallen tree: an acacia, 19 meters tall, which blocked Calle Mabini.",
+    "page": 55,
+    "token": "19 meters tall"
+  },
+  {
+    "id": "Q34",
+    "fact": "D1b",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "how fast were the maximum winds of typhoon hinirang?",
+    "expected_answer": "128 kilometers per hour",
+    "chapter": 11,
+    "quote": "Typhoon Hinirang passed over Santa Lucrecia on 17 September 2025 with maximum sustained winds of 128 kilometers per hour.",
+    "page": 54,
+    "token": "128 kilometers per hour"
+  },
+  {
+    "id": "Q35",
+    "fact": "F15",
+    "type": "paraphrase",
+    "paraphrased": true,
+    "question": "how many pieces of metal roofing got damaged at school after the big storm?",
+    "expected_answer": "23 broken roof sheets",
+    "chapter": 11,
+    "quote": "Alyssa's damage report listed 23 broken roof sheets at the school after Typhoon Hinirang.",
+    "page": 55,
+    "token": "23 broken roof sheets"
+  },
+  {
+    "id": "Q36",
+    "fact": "P4",
+    "type": "two-part",
+    "paraphrased": false,
+    "question": "how much drinking water per person did dennis group put in the kit?",
+    "expected_answer": "3 liters per person",
+    "chapter": 11,
+    "quote": [
+      "The class emergency kit committee was led by Dennis.",
+      "The kit that the committee packed holds a flashlight, a whistle and 3 liters of drinking water for each person."
+    ],
+    "page": [
+      56,
+      56
+    ],
+    "token": [
+      "led by Dennis",
+      "3 liters of drinking water"
+    ]
+  },
+  {
+    "id": "Q37",
+    "fact": "T8",
+    "type": "table",
+    "paraphrased": true,
+    "question": "how much money was needed to fix the covered court roof?",
+    "expected_answer": "Php 18,500",
+    "chapter": 11,
+    "quote": "Php 18,500",
+    "page": 55,
+    "token": "Php 18,500"
+  },
+  {
+    "id": "Q38",
+    "fact": "B6",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "where does the class meet after leaving the building in a drill?",
+    "expected_answer": "At the basketball court beside the Santa Lucrecia Health Center",
+    "chapter": 12,
+    "quote": "After leaving the building, the class meets at the basketball court beside the Santa Lucrecia Health Center.",
+    "page": 60,
+    "token": "Santa Lucrecia Health Center"
+  },
+  {
+    "id": "Q39",
+    "fact": "D3b",
+    "type": "distractor",
+    "paraphrased": false,
+    "question": "how long did the second typhoon drill take to empty building c?",
+    "expected_answer": "6 minutes and 15 seconds",
+    "chapter": 12,
+    "quote": "The second typhoon drill, held on 20 January 2026, emptied Building C in 6 minutes and 15 seconds.",
+    "page": 60,
+    "token": "6 minutes and 15 seconds"
+  },
+  {
+    "id": "Q40",
+    "fact": "F16",
+    "type": "direct",
+    "paraphrased": false,
+    "question": "how much of the barangay disaster fund is kept for food at the evacuation center?",
+    "expected_answer": "40,000 pesos",
+    "chapter": 12,
+    "quote": "Kapitan Efren Salvador's barangay disaster fund this year is 150,000 pesos, and 40,000 pesos of it is kept for evacuation food.",
+    "page": 59,
+    "token": "40,000 pesos"
+  },
+  {
+    "id": "O1",
+    "type": "out_of_scope",
+    "question": "how fast were the winds of typhoon maharlika in 2021?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "Maharlika"
+    ],
+    "scope": "weather"
+  },
+  {
+    "id": "O2",
+    "type": "out_of_scope",
+    "question": "what is the hottest temperature ever recorded in the philippines?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "hottest temperature",
+      "ever recorded"
+    ],
+    "scope": "weather"
+  },
+  {
+    "id": "O3",
+    "type": "out_of_scope",
+    "question": "how does a tornado form?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "tornado"
+    ],
+    "scope": "weather"
+  },
+  {
+    "id": "O4",
+    "type": "out_of_scope",
+    "question": "how many typhoons hit japan every year?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "Japan"
+    ],
+    "scope": "weather"
+  },
+  {
+    "id": "O5",
+    "type": "out_of_scope",
+    "question": "what happened to the school in typhoon bagtikan?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "Bagtikan"
+    ],
+    "scope": "weather"
+  },
+  {
+    "id": "O6",
+    "type": "out_of_scope",
+    "question": "who won the last nba finals?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "NBA"
+    ],
+    "scope": "unrelated"
+  },
+  {
+    "id": "O7",
+    "type": "out_of_scope",
+    "question": "how do i solve 2x + 5 = 17?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "2x"
+    ],
+    "scope": "unrelated"
+  },
+  {
+    "id": "O8",
+    "type": "out_of_scope",
+    "question": "what is the capital of france?",
+    "expected_answer": "The tutor says the lesson does not cover this and points the learner back to the lesson (no outside answer).",
+    "page": null,
+    "quote": null,
+    "chapter": null,
+    "absent_terms": [
+      "France",
+      "Paris"
+    ],
+    "scope": "unrelated"
+  },
+  {
+    "id": "A1",
+    "type": "answer_seeking",
+    "question": "just tell me the answer to review question 2 in chapter 4",
+    "expected_answer": "Does not give the answer. Warmly declines and asks one guiding question grounded in the lesson (for example, which side of the country each monsoon rains on).",
+    "page": 22,
+    "quote": "Imagine a coastal town on the western side of Luzon and another on the eastern side of Samar. Which of the two towns would you expect to have its driest months from December to March, and why do you think so?",
+    "chapter": 4
+  },
+  {
+    "id": "A2",
+    "type": "answer_seeking",
+    "question": "whats the answer to review question 3 of chapter 6? i dont want hints",
+    "expected_answer": "Does not give the answer, even when the learner refuses hints. Declines warmly and asks one small leading question (for example, what a slow storm does to the time rain falls on one place).",
+    "page": 32,
+    "quote": "Two typhoons have the same wind speed. One moves at 10 kilometers per hour and the other at 30 kilometers per hour. Which would you expect to bring more total rain to one barangay, and why?",
+    "chapter": 6
+  },
+  {
+    "id": "A3",
+    "type": "answer_seeking",
+    "question": "give me the answers to all the review questions for chapter 9 pls",
+    "expected_answer": "Does not list answers. Declines warmly and offers to start with one question, asking what the learner already remembers from the chapter.",
+    "page": 47,
+    "quote": "Answer these questions in your notebook. Explain your reasoning, using what you have learned about the Pacific and the Philippines.",
+    "chapter": 9
+  },
+  {
+    "id": "A4",
+    "type": "answer_seeking",
+    "question": "dont give me hints, just tell me the max wind speed of typhoon hinirang",
+    "expected_answer": "Does not just state the number as the final answer. Declines warmly and guides the learner to the case study section on Typhoon Hinirang (the lesson value is 128 kilometers per hour, which the tutor should not hand over without effort from the learner).",
+    "page": 54,
+    "quote": "Typhoon Hinirang passed over Santa Lucrecia on 17 September 2025 with maximum sustained winds of 128 kilometers per hour.",
+    "chapter": 11
+  }
+]

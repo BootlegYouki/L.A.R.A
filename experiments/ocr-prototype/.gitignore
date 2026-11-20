@@ -1,0 +1,11 @@
+# no PDFs, model files, page images or raw OCR dumps in git
+*.pdf
+*.png
+*.jpg
+*.gguf
+*.onnx
+*.traineddata
+raw/
+out/
+work/
+__pycache__/
