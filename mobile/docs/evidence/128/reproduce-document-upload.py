@@ -19,8 +19,10 @@ teacher=json_call('/api/auth/login',{'lrn_or_id':'T-0001','pin':'123456'})['toke
 learner=json_call('/api/auth/login',{'lrn_or_id':'123456789012','pin':'123456'})['token']
 classes=json.loads(request('/api/classrooms',headers={'Authorization':'Bearer '+teacher})[1]); classroom=classes[0]['id']
 word=io.BytesIO()
-with zipfile.ZipFile(word,'w',zipfile.ZIP_DEFLATED) as z: z.writestr('word/document.xml','<w:document><w:p><w:r><w:t>Synthetic work</w:t></w:r></w:p></w:document>')
-fixtures=[('image.jpg','image/jpeg',b'\xff\xd8\xff\xd9','IMAGE'),('work.pdf','application/pdf',b'%PDF-1.4\n%%EOF\n','DOCUMENT'),('work.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',word.getvalue(),'DOCUMENT')]
+with zipfile.ZipFile(word,'w',zipfile.ZIP_DEFLATED) as z:
+    z.writestr('[Content_Types].xml', 'synthetic types')
+    z.writestr('word/document.xml','<w:document><w:p><w:r><w:t>Synthetic work</w:t></w:r></w:p></w:document>')
+fixtures=[('image.jpg','image/jpeg',b'\xff\xd8\xff\xe0synthetic','IMAGE'),('work.pdf','application/pdf',b'%PDF-1.4\n%%EOF\n','DOCUMENT'),('work.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',word.getvalue(),'DOCUMENT')]
 for name,mime,data,expected in fixtures:
     assignment=json_call('/api/assignments',{'classroom_id':classroom,'title':'Synthetic upload','instructions':'Synthetic','max_points':10,'due_date':4102444800000,'allow_late':True},teacher)['id']
     sid=str(uuid.uuid4()); boundary='lara'+uuid.uuid4().hex

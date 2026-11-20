@@ -1,8 +1,10 @@
+import io
 import json
 import os
 import sys
 import time
 import unittest
+import zipfile
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(0, os.path.dirname(__file__))
@@ -56,14 +58,14 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "POST", f"/api/quizzes/{quiz['id']}/start", token=self.teacher)
         return quiz
 
-    def submit_homework(self, assignment_id, submission_id, file_bytes, turned_in_at=None):
+    def submit_homework(self, assignment_id, submission_id, file_bytes, turned_in_at=None, filename="work.jpg", mime="image/jpeg"):
         boundary = "HW-BOUNDARY"
         parts = [f'--{boundary}\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\n{submission_id}\r\n']
         if turned_in_at is not None:
             parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="turned_in_at"\r\n\r\n{turned_in_at}\r\n')
         body = "".join(parts).encode() + (
-            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="work.jpg"\r\n'
-            f'Content-Type: image/jpeg\r\n\r\n'
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f'Content-Type: {mime}\r\n\r\n'
         ).encode() + file_bytes + f'\r\n--{boundary}--\r\n'.encode()
         return call(BASE, "POST", f"/api/assignments/{assignment_id}/submit", token=self.pupil, raw=body,
                     headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
@@ -589,6 +591,41 @@ class TestMockHub(unittest.TestCase):
         self.assertEqual(len(self.pull(self.pupil)["submissions"]), 1)
         self.assertEqual(self.pull(self.teacher)["submissions"][0]["student_id"], self.pull(self.pupil)["submissions"][0]["student_id"])
         self.assertEqual(self.pull(ana)["submissions"], [], "classmates must never see each other's homework")
+
+    def test_homework_file_types_follow_content_and_replacements(self):
+        asg = self.pull(self.pupil)["assignments"][0]["id"]
+        word = io.BytesIO()
+        with zipfile.ZipFile(word, "w") as archive:
+            archive.writestr("[Content_Types].xml", "types")
+            archive.writestr("word/document.xml", "synthetic work")
+        items = [
+            (b"\xff\xd8\xff\xe0jpeg", "IMAGE", "image/jpeg"),
+            (b"\x89PNG\r\n\x1a\nsynthetic", "IMAGE", "image/png"),
+            (b"%PDF-1.4\nsynthetic", "DOCUMENT", "application/pdf"),
+            (word.getvalue(), "DOCUMENT", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+        ]
+        for index, (data, kind, mime) in enumerate(items):
+            # An intentionally misleading filename and MIME verify content, not caller claims.
+            status, receipt, _ = self.submit_homework(asg, f"format-{index}", data, filename="wrong.bin", mime="application/octet-stream")
+            self.assertEqual((status, receipt["file_type"]), (200, kind))
+            sid = receipt["id"]
+            status, submissions, _ = call(BASE, "GET", f"/api/assignments/{asg}/submissions", token=self.teacher)
+            self.assertEqual((status, submissions[0]["file_type"]), (200, kind))
+            self.assertEqual(self.pull(self.pupil)["submissions"][0]["file_type"], kind)
+            status, stored, headers = call(BASE, "GET", f"/api/submissions/{sid}/file", token=self.teacher)
+            self.assertEqual((status, stored, headers["Content-Type"]), (200, data, mime))
+            self.assertEqual(call(BASE, "GET", f"/api/submissions/{sid}/file")[0], 401)
+            status, retry, _ = self.submit_homework(asg, f"format-{index}", data)
+            self.assertEqual((status, retry), (200, receipt))
+
+        admin = login(BASE, "ADMIN-0001")
+        _, other, _ = call(BASE, "POST", "/api/admin/users", {"lrn_or_id": "T-0002", "full_name": "Other teacher", "role": "TEACHER", "pin": "123456"}, admin)
+        self.assertIn("id", other)
+        outsider = login(BASE, "T-0002")
+        self.assertEqual(call(BASE, "GET", f"/api/submissions/{sid}/file", token=outsider)[0], 403)
+        status, _, _ = self.submit_homework(asg, "invalid", b"not a supported document", filename="wrong.pdf", mime="application/pdf")
+        self.assertEqual(status, 400)
+        self.assertEqual(call(BASE, "GET", f"/api/submissions/{sid}/file", token=self.teacher)[1], word.getvalue())
 
     def test_homework_late_submission_rules_and_idempotent_retry(self):
         asg = self.pull(self.pupil)["assignments"][0]["id"]

@@ -5,6 +5,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
 import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -60,7 +62,7 @@ class GradingMockTest {
         }).let { Json.parseToJsonElement(it).jsonObject.getValue("id").jsonPrimitive.content }
         val app = ApplicationProvider.getApplicationContext<Application>()
         val db = Room.inMemoryDatabaseBuilder(app, LaraDatabase::class.java).build()
-        val file = File.createTempFile("review-test", ".jpg", app.cacheDir).apply { writeBytes(byteArrayOf(1, 2, 3)) }
+        val file = File.createTempFile("review-test", ".jpg", app.cacheDir).apply { writeBytes(byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0xe0.toByte(), 1, 2, 3)) }
         val downloaded = File.createTempFile("review-download", ".jpg", app.cacheDir)
         try {
             db.authDao().saveProfile(UserEntity(learner.user.id, learner.user.lrnOrId, "Synthetic learner", "STUDENT", 1, 1))
@@ -86,6 +88,32 @@ class GradingMockTest {
                 GradingApi(session(otherTeacher)).file(otherTeacher.user.id, id, downloaded)
                 fail("Expected file access to be forbidden")
             } catch (error: HubFailure) { assertEquals(403, error.status) }
+            for (extension in listOf("pdf", "docx")) {
+                val document = File.createTempFile("review-document", ".$extension", app.cacheDir)
+                try {
+                    if (extension == "pdf") document.writeText("%PDF-1.4\nsynthetic")
+                    else ZipOutputStream(document.outputStream()).use { zip ->
+                        listOf("[Content_Types].xml", "word/document.xml").forEach { name ->
+                            zip.putNextEntry(ZipEntry(name)); zip.write("synthetic".toByteArray()); zip.closeEntry()
+                        }
+                    }
+                    val docAssignment = ClassworkAuthoringApi(teacherSession).mutate(teacher.user.id, "assignments", null, "POST", buildJsonObject {
+                        put("classroom_id", classroom.id); put("title", "Document test"); put("instructions", "Read")
+                        put("max_points", 25); put("due_date", System.currentTimeMillis() + 86400000); put("allow_late", true)
+                    }).let { Json.parseToJsonElement(it).jsonObject.getValue("id").jsonPrimitive.content }
+                    val documentId = UUID.randomUUID().toString()
+                    val saved = HomeworkApi(learnerSession).upload(learner.user.id, docAssignment, documentId, document, System.currentTimeMillis())
+                    assertEquals("DOCUMENT", saved.fileType)
+                    assertEquals("DOCUMENT", api.list(teacher.user.id, docAssignment).single().fileType)
+                    api.file(teacher.user.id, documentId, downloaded)
+                    assertArrayEquals(document.readBytes(), downloaded.readBytes())
+                    api.grade(teacher.user.id, documentId, 17, "Good work")
+                    sync.pull(learner.user.id)
+                    val synced = db.homeworkDao().observe(docAssignment, learner.user.id).first()
+                    assertEquals(17L, synced?.score)
+                    assertEquals("Good work", synced?.teacherFeedback)
+                } finally { document.delete() }
+            }
         } finally { file.delete(); downloaded.delete(); db.close() }
     }
 }
