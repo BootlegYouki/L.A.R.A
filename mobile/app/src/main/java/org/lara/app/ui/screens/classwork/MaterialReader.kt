@@ -328,8 +328,9 @@ private fun PageViewer(file: File, material: Material, pages: Int, onAi: (() -> 
 
 @Composable
 private fun PdfPage(file: File, pdf: Boolean, index: Int, title: String) {
-    val raster by produceState<HandoutRaster?>(null, file, index) {
-        value = try { withContext(Dispatchers.IO) { renderHandout(file, pdf, index) } }
+    var raster by remember(file, index) { mutableStateOf<HandoutRaster?>(null) }
+    LaunchedEffect(file, index) {
+        raster = try { withContext(Dispatchers.IO) { renderHandout(file, pdf, index) } }
         catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
     val bitmap = raster?.bitmap

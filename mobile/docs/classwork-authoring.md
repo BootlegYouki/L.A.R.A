@@ -25,12 +25,10 @@ WorkManager persists filenames and metadata, not bearer tokens. Every execution 
 - If an assignment was created before an attachment failed, retry edits that saved assignment and skips already-enqueued attachments. Leaving that form does not undo an already-saved assignment.
 - Material metadata supports title/topic only: no invented material description, draft scheduling, recipient selection, Drive, links, or Google-only controls.
 - Forms reuse `ClassFormDialog`; Create stays at the top left per design-system 9.5. Date/time use native Android pickers. Item deletion and abandoning edits require confirmation.
-- English and Filipino resources for this feature follow the user's explicit task instruction, an exception to the repository's English-only rule. This does not add a language selector. Existing unrelated screens still use their existing resources; default strings provide fallback.
-- Mobile sign-in accepts four-digit PINs while the contract Mock Hub seed uses six digits. For phone testing, run `python3 mobile/scripts/mock_hub_4digit.py`; it changes teacher and learner seed PIN hashes to `1234` in memory after the normal seed reset. The shared `scripts/mock_hub.py` and production authentication remain unchanged. Stop the helper with Ctrl+C; a fresh run restores the normal seed and reapplies the test PIN.
 
 ## How to test (for teachers and reviewers)
 
-Start the phone-testing Mock Hub with `python3 mobile/scripts/mock_hub_4digit.py` and install the Mobile APK. Use only the synthetic seed accounts: teacher `T-0001` / PIN `1234` and enrolled learner `123456789012` / PIN `1234` in Science 4. For a USB-connected phone, run `adb reverse tcp:38080 tcp:38080` and `adb reverse tcp:38081 tcp:38081`, then use manual Hub address `127.0.0.1:38080`. Do not use real learner data.
+Start the Mock Hub (`python3 scripts/mock_hub.py` from the repo root) and install the Mobile APK. Use only the synthetic seed accounts: teacher `T-0001` / PIN `123456` and enrolled learner `123456789012` / PIN `123456` in Science 4. For a USB-connected phone, run `adb reverse tcp:8080 tcp:8080` and `adb reverse tcp:8081 tcp:8081`, then use manual Hub address `127.0.0.1:8080`. Do not use real learner data.
 
 1. Open Science 4, then **Classwork → Create → Topic**. Enter “Unit 1” and save. It should appear as a heading.
 2. Choose **Create → Assignment**. Enter a title, instructions, points, due date/time, late-work choice and Unit 1. Save. On the learner's phone, refresh once: the assignment should appear.
@@ -42,7 +40,7 @@ Start the phone-testing Mock Hub with `python3 mobile/scripts/mock_hub_4digit.py
 8. Delete Unit 1 using its menu and confirm. The assignment must remain under **No topic** on both phones after refreshing.
 9. Delete the assignment and read the confirmation: turn-ins and grades stay on the Hub. After one learner refresh it should disappear from active classwork.
 10. Ask the operator to stop the Hub. Reopen Classwork: saved items must remain visible, with a nonblocking Hub explanation. Save actions must be disabled. Restart the Hub and refresh.
-11. Repeat a form at the largest text size and in landscape. All controls should remain reachable by scrolling. Check both English and Filipino if the operator changes the phone's system language, then restore its original setting.
+11. Repeat a form at the largest text size and in landscape. All controls should remain reachable by scrolling.
 
 ## Automated checks and evidence
 
