@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.lara.app.AppContainer
 import org.lara.app.data.repository.HomeworkPhoto
+import org.lara.app.data.repository.HomeworkAttachment
 import org.lara.app.data.repository.DocumentScanner
 import org.lara.app.data.local.entities.AssignmentSubmissionEntity
 import org.lara.app.domain.Cached
@@ -61,6 +62,13 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
             }
             file
         } catch (error: Throwable) { file.delete(); throw error }
+    }
+
+    fun chooseDocument(context: Context, uri: Uri) = action {
+        val document = HomeworkAttachment.copyDocument(context, uri, container.homeworkPhotos)
+        val previous = draft.value
+        saved["photo"] = document.path
+        previous?.let { container.homework.discardDraft(it) }
     }
 
     private fun prepare(source: suspend () -> File) = action {

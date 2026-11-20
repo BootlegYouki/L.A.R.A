@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.lara.app.data.remote.dto.SubmissionDto
+import org.lara.app.data.repository.HomeworkAttachment
 import java.util.concurrent.TimeUnit
 
 class HomeworkApi(private val api: EnrollmentApi) {
@@ -27,7 +28,8 @@ class HomeworkApi(private val api: EnrollmentApi) {
         val body = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("submission_id", submissionId)
             .addFormDataPart("turned_in_at", turnedInAt.toString())
-            .addFormDataPart("file", "homework.jpg", file.asRequestBody("image/jpeg".toMediaType())).build()
+            .addFormDataPart("file", HomeworkAttachment.displayName(file),
+                file.asRequestBody(HomeworkAttachment.mimeType(file).toMediaType())).build()
         val request = Request.Builder().url(url).header("Authorization", "Bearer ${connection.session.token}").post(body).build()
         client.newCall(request).execute().use { response ->
             val source = requireNotNull(response.body).source()
@@ -40,7 +42,8 @@ class HomeworkApi(private val api: EnrollmentApi) {
                 throw HubFailure(response.code, code)
             }
             json.decodeFromString(SubmissionDto.serializer(), text).also {
-                require(it.id.matches(Regex("[A-Za-z0-9-]{1,128}")) && it.assignmentId == assignmentId && it.studentId == userId && it.fileType == "IMAGE")
+                require(it.id.matches(Regex("[A-Za-z0-9-]{1,128}")) && it.assignmentId == assignmentId &&
+                    it.studentId == userId && it.fileType == HomeworkAttachment.type(file))
             }
         }
     }

@@ -25,9 +25,11 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
         if (!db.homeworkDao().referencesFile(file.path)) file.delete()
     } }
 
-    suspend fun turnIn(assignmentId: String, photo: File) = mutex.withLock { withContext(Dispatchers.IO) {
-        val file = photo.canonicalFile
-        require(file.path.startsWith(root.canonicalPath + File.separator) && file.isFile && file.length() in 1 until HomeworkPhoto.MAX_BYTES)
+    suspend fun turnIn(assignmentId: String, attachment: File) = mutex.withLock { withContext(Dispatchers.IO) {
+        val file = attachment.canonicalFile
+        val fileType = HomeworkAttachment.type(file)
+        require(fileType != null && file.path.startsWith(root.canonicalPath + File.separator) && file.isFile &&
+            file.length() in 1..HomeworkAttachment.maxBytes(file))
         var previous: String? = null
         db.withTransaction {
             checkOwner()
@@ -43,7 +45,7 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
             val hub = requireNotNull(db.syncStateDao().get("hub_id")).value
             val binding = db.syncStateDao().get("queued_hub:assignment_submissions:$id")?.value
             require(binding == null || binding == hub)
-            db.homeworkDao().save(AssignmentSubmissionEntity(id, assignmentId, userId, file.path,
+            db.homeworkDao().save(AssignmentSubmissionEntity(id, assignmentId, userId, file.path, fileType,
                 submittedAt = now, score = old?.score, teacherFeedback = old?.teacherFeedback, updatedAt = now, createdAt = old?.createdAt ?: now))
             db.syncStateDao().put(SyncStateEntity("queued_hub:assignment_submissions:$id", hub, now))
         }
@@ -62,7 +64,8 @@ class HomeworkRepository(private val db: LaraDatabase, private val root: File, p
             val binding = db.syncStateDao().get("queued_hub:assignment_submissions:${row.id}")?.value
             if (binding != null && binding != expectedHub) continue
             val file = File(row.filePath).canonicalFile
-            if (!file.path.startsWith(root.canonicalPath + File.separator) || !file.isFile || file.length() !in 1 until HomeworkPhoto.MAX_BYTES) {
+            if (!file.path.startsWith(root.canonicalPath + File.separator) || !file.isFile ||
+                HomeworkAttachment.type(file) != row.fileType || file.length() !in 1..HomeworkAttachment.maxBytes(file)) {
                 missingFile = true
                 continue
             }
