@@ -75,7 +75,7 @@ A 720p H.264 lesson runs at about 0.2 to 0.4 MB/s, so 2.0 MB/s is 5 to 10 times 
 
 ## Manual check (WAN unplugged)
 
-1. Start the Hub with the test accounts (`LARA_TEST_SEED=1 cargo run --release --bin lara-hub` in `backend/`). Sign in teacher `T-0001` and learner `123456789012` (PIN `1234`), create a class, and approve the learner.
+1. Start the Hub with the test accounts (`LARA_TEST_SEED=1 cargo run --release --bin lara-hub` in `backend/`). Sign in teacher `T-0001` and learner `123456789012` (PIN `123456`), create a class, and approve the learner.
 2. As the teacher, upload a real 720p MP4 as `VIDEO`:
    ```
    curl -H "Authorization: Bearer $T" -F classroom_id=$C -F title=Lesson -F file_type=VIDEO -F file=@lesson.mp4 http://<hub>:8080/api/materials

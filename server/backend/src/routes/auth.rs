@@ -37,7 +37,7 @@ async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<Au
     if !(1..=MAX_LRN_CHARS).contains(&lrn_or_id.chars().count()) || !(1..=MAX_NAME_CHARS).contains(&full_name.chars().count()) {
         return Err(ApiError::bad_request("LRN and name must be 1-32 and 1-100 characters"));
     }
-    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 6 digits"))?;
     // Taken before setup too, as in the mock (which is seeded with the admin), so setup always works.
     if lrn_or_id == ADMIN_ID {
         return Err(users::InsertError::Exists.into());

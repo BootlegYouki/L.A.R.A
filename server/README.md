@@ -12,7 +12,7 @@
 | :--- | :--- |
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`server/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#36](https://github.com/BootlegYouki/L.A.R.A/issues/36)). The Lead approves it before Sprint 1 work merges. |
-| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` learner, `123456789013` learner (join with the code), `ADMIN-0001`. |
+| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `123456`): `T-0001` teacher (class code `K7M4QX`), `123456789012` learner, `123456789013` learner (join with the code), `ADMIN-0001`. |
 | 4 | Take the next issue whose dependencies are merged: [all server issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Server). The sprint-by-sprint roadmap is in section 5. |
 | 5 | Scaffold first: [#39](https://github.com/BootlegYouki/L.A.R.A/issues/39) creates the Axum, WebSocket and migration skeleton so developers can add routes in parallel PRs without touching each other's files. Then match the behavior of `scripts/mock_hub.py` and `tests/test_mock_hub.py`, which are the acceptance reference. |
 | 6 | Before every PR: run the commands in [`server/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `server/docs/`. |

@@ -15,7 +15,7 @@ The skeleton every later server step adds to: one process that opens the databas
 | `backend/src/routes/mod.rs` | Router: one module per area, `ROUTE_NOT_FOUND` fallback, path-only request log |
 | `backend/src/websocket/` | `mod.rs` listener and handshake, `broker.rs` connection registry, `events.rs` `ServerEvent` / `ClientEvent` |
 | `backend/src/discovery/mod.rs` | `lan_ip()`: the IPv4 of the adapter with the default route |
-| `backend/tests/common/mod.rs` | `TestHub`: real Hub on a temp dir and free ports, with teacher `T-0001` (PIN `1234`) and a session for it in the database; `seed_user`, `open_session`, `login`, `post_json` |
+| `backend/tests/common/mod.rs` | `TestHub`: real Hub on a temp dir and free ports, with teacher `T-0001` (PIN `123456`) and a session for it in the database; `seed_user`, `open_session`, `login`, `post_json` |
 | `src-tauri/src/main.rs` | Window: starts the backend on its own Tokio runtime, `lan_address` command, shuts the Hub down on exit |
 | `ui/` | React + Vite + Tailwind 4 page for the window; tokens from `design-system/desktop/theme.css`, Nunito and Phosphor from `design-system/assets/`, English strings in `ui/src/i18n/en.json`, accessed through `useStrings()` |
 

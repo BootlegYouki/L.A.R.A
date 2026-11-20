@@ -30,9 +30,9 @@ async fn enroll(hub: &TestHub, id: &str, student: &str, status: &str) {
 #[tokio::test]
 async fn targeted_push_uses_active_membership_and_all_class_teachers() {
     let hub = TestHub::start().await;
-    let owner = hub.seed_user("T-owner", "Owner", Role::Teacher, "1234").await;
-    let co = hub.seed_user("T-co", "Co", Role::Teacher, "1234").await;
-    let foreign = hub.seed_user("T-other", "Other", Role::Teacher, "1234").await;
+    let owner = hub.seed_user("T-owner", "Owner", Role::Teacher, "123456").await;
+    let co = hub.seed_user("T-co", "Co", Role::Teacher, "123456").await;
+    let foreign = hub.seed_user("T-other", "Other", Role::Teacher, "123456").await;
     classroom(&hub, &owner.id).await;
     for teacher in [&owner.id, &co.id] {
         sqlx::query("INSERT INTO classroom_teachers VALUES ('c',?,1,1,1)")
@@ -48,7 +48,7 @@ async fn targeted_push_uses_active_membership_and_all_class_teachers() {
         ("123456789014", "REMOVED"),
         ("123456789015", "REJECTED"),
     ] {
-        let student = hub.seed_user(lrn, "Learner", Role::Student, "1234").await;
+        let student = hub.seed_user(lrn, "Learner", Role::Student, "123456").await;
         enroll(&hub, lrn, &student.id, status).await;
         let (tx, rx) = broker::channel();
         hub.state().broker.register(&student.id, tx);
@@ -93,12 +93,12 @@ async fn targeted_push_uses_active_membership_and_all_class_teachers() {
 #[tokio::test]
 async fn presence_tracks_multiple_devices_and_abrupt_disconnect() {
     let hub = TestHub::start().await;
-    let teacher = hub.login("T-0001", "1234").await;
+    let teacher = hub.login("T-0001", "123456").await;
     // The seeded teacher's database id differs from its login id.
     let teacher_id: String =
         sqlx::query_scalar("SELECT id FROM users WHERE lrn_or_id = 'T-0001'").fetch_one(&hub.state().db).await.unwrap();
     classroom(&hub, &teacher_id).await;
-    let student = hub.seed_user("123456789012", "Learner", Role::Student, "1234").await;
+    let student = hub.seed_user("123456789012", "Learner", Role::Student, "123456").await;
     enroll(&hub, "e", &student.id, "ACTIVE").await;
     let student_id = student.id.clone();
     let token = hub.open_session(student).await;
