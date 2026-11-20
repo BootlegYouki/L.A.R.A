@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Lesson text chunks for offline reading and the local Socratic tutor
+-- 7. Lesson text chunks (parsed by the Hub, synced) for offline reading and the on-device Socratic tutor
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     UNIQUE(quiz_id, student_id)
 );
 
--- 13. Local Socratic AI Chat History (home study and school)
+-- 13. On-device Socratic AI chat history (home study and school). Never synced to the Hub.
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,

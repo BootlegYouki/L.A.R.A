@@ -22,7 +22,7 @@ These rules apply to every UI change. If a request conflicts with them, follow t
 6. **Nunito everywhere.** Bundled locally in the Android app. Never load fonts from a CDN on mobile because the app must work offline.
 7. **Never rely on color alone.** Every status needs an icon and a text label as well as a color.
 8. **Offline first.** Every screen must have a defined offline state. Show sync status with the standard badges and banners. Never describe the classroom connection as "internet"; say "Hub" or "classroom network".
-9. **AI is locked during assessments.** While a quiz is active, the AI tab and AI buttons are disabled with an explanation, and the Hub rejects tutor calls (HTTP 403, code `QUIZ_IN_PROGRESS`; on WebSocket an `EVENT_ERROR` with the same code). The chat composables are never composed while the quiz runs.
+9. **AI is locked during assessments.** While a quiz is active, the AI tab and AI buttons are disabled with an explanation, and the app itself refuses to load the on-device tutor (the client reads its local `IN_PROGRESS` attempt; `rules/quiz-and-anti-cheat.md` section 1). The chat composables are never composed while the quiz runs.
 10. **Tutor never gives final answers.** It replies with guiding questions and always shows a lesson grounding tag.
 
 ### Platform mapping rules

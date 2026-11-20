@@ -11,8 +11,8 @@ All AI agents and contributors must follow these rules.
 The engineering group operates across three independent streams overseen by the Lead Developer:
 
 1. **Mobile Project Team (`mobile/`):** Android Native (Kotlin 2.x, Jetpack Compose M3, Room DB, CameraX).
-2. **Desktop Project Team (`desktop/`):** Tauri Desktop Client (Tauri 2.x, React 19, TypeScript, Tailwind M3, bundled `llama.cpp`).
-3. **Server Project Team (`server/`):** Local Hub Host (mDNS, UDP `:8888`, SQLite, WebSockets `:8081`, video streaming, `llama-server` queue).
+2. **Desktop Project Team (`desktop/`):** Tauri Desktop Client (Tauri 2.x, React 19, TypeScript, Tailwind M3, on-device tutor through `llama.cpp`).
+3. **Server Project Team (`server/`):** Local Hub Host (mDNS, UDP `:8888`, SQLite, WebSockets `:8081`, video streaming, document parser and chunking, tutor model-file serving; no AI inference).
 4. **Lead Developer:** Reviews and gatekeeps all pull requests before merging into `staging`.
 
 ---
@@ -72,7 +72,7 @@ To ensure the Lead Developer and teammates always have immediate architectural c
 
 * **Mobile Developers (`mobile/`):** Maintain module documentation and architecture notes in `mobile/docs/` (e.g. `navigation.md`, `room_schema.md`, `camerax.md`, `budget_device_benchmarks.md`) or update `mobile/README.md`.
 * **Desktop Developers (`desktop/`):** Maintain component and service notes in `desktop/docs/` (e.g. `components.md`, `database.md`, `video_player.md`, `ai_chat.md`) or update `desktop/README.md`.
-* **Server Developers (`server/`):** Maintain endpoint, WebSocket, and background worker notes in `server/docs/` (e.g. `discovery_mdns_udp.md`, `database_sync.md`, `streaming_rate_limit.md`, `slm_inference_queue.md`) or update `server/README.md`.
+* **Server Developers (`server/`):** Maintain endpoint, WebSocket, and background worker notes in `server/docs/` (e.g. `discovery_mdns_udp.md`, `database_sync.md`, `streaming_rate_limit.md`, `document_chunking.md`) or update `server/README.md`.
 
 ### What Every Subsystem Document Must Include:
 1. **Feature / Component Purpose:** What problem does this screen, route, or module solve?
@@ -93,13 +93,13 @@ The Lead rejects any PR that introduces one of these five. Green CI is necessary
    * Rule: All networking must operate exclusively over local LAN (ports 8080, 8081, 8888, or mDNS).
 2. **RAM Bloat & Hardware Crashes (Budget Phone Invariant):**
    * Check for: Heavy heap allocations, uncompressed bitmaps in memory, loading large files into RAM.
-   * Rule: Target devices are 3GB/4GB RAM phones (Infinix, TECNO, realme). Mobile heap must remain < 250MB during Hub-assisted mode.
+   * Rule: Target devices are 3GB/4GB RAM phones (Infinix, TECNO, realme). Mobile heap must remain < 250MB, and the on-device tutor's model must never get the app killed (`rules/socratic-ai-guardrails.md` section 2).
 3. **Pedagogical AI Leaks (Socratic Invariant):**
-   * Check for: Prompts or endpoints that provide direct answers, complete formulas, or write out homework solutions for students.
+   * Check for: Prompts (the bundled `contracts/ai/socratic_system_prompt.txt` is the only one) or code that provides direct answers, complete formulas, or write out homework solutions for students.
    * Rule: The AI tutor must guide step-by-step using teacher-provided lesson chunks without revealing answers.
 4. **Assessment Integrity Bypass (Quiz Lockout Invariant):**
-   * Check for: Any code path allowing the AI tutor to execute, receive WebSocket tokens, or remain visible in the UI during an active quiz session.
-   * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the backend must reject AI requests (`HTTP 403` / `EVENT_ERROR` `QUIZ_IN_PROGRESS`).
+   * Check for: Any code path allowing the on-device tutor to load its model, generate, or remain visible in the UI during an active quiz session.
+   * Rule: While the learner has an `IN_PROGRESS` attempt the chat UI must never be composed (a disabled explanation placeholder is fine) and the client must refuse to generate. The check is client-side only and is a known, accepted limitation (`rules/quiz-and-anti-cheat.md` section 1).
 5. **Accessibility & Touch Degradation (Grades 1 to 12 Invariant):**
    * Check for: Clickable elements with touch targets < 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px, hardcoded user-facing strings in UI files instead of English resources, or tiny, unreadable fonts.
 

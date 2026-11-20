@@ -46,9 +46,9 @@ Full list: `rules/team-workflow-and-prs.md` section 5. The ones agents trip on m
 | Offline first | Every screen reads local SQLite and has offline, empty and loading states; offline work is `QUEUED_FOR_SYNC` | `rules/database-and-sync.md` section 6 |
 | Sync | The cursor is the integer `seq`; apply a pull and store `next_cursor` in one transaction; `SYNCED` only from a receipt | `rules/database-and-sync.md` section 3 |
 | Secrets | A client never receives `pin_hash`, another person's LRN, `correct_answer` or a server file path | `rules/database-and-sync.md` section 2 |
-| Quiz lockout | With an `IN_PROGRESS` attempt the chat UI is not composed and the Hub answers `QUIZ_IN_PROGRESS` | `rules/quiz-and-anti-cheat.md` |
-| Socratic tutor | One prompt file, loaded unchanged; grounded in `material_chunks`; one clue then one question | `rules/socratic-ai-guardrails.md` |
-| Budget phones | Heap under 250 MB on 3 to 4 GB phones; tutor inference runs only on the Hub | `mobile/AGENTS.md` |
+| Quiz lockout | With an `IN_PROGRESS` attempt the client does not compose the chat UI or load the model (client-enforced, a known limitation) | `rules/quiz-and-anti-cheat.md` |
+| Socratic tutor | One prompt file, bundled unchanged by the apps; runs on the device only; grounded in `material_chunks`; one clue then one question | `rules/socratic-ai-guardrails.md` |
+| Budget phones | Heap under 250 MB on 3 to 4 GB phones; the on-device tutor's model must not get the app killed | `mobile/AGENTS.md` |
 | Accessibility | Targets 52dp (56dp primary and quiz options); English only for every string; tokens only | `rules/ui-and-accessibility.md` |
 | Data safety | Deactivate or archive; users, classrooms and graded rows are never deleted | `rules/database-and-sync.md` section 4 |
 

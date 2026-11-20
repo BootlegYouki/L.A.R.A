@@ -4,7 +4,7 @@
 
 | Program | Folder | Runs on |
 | :--- | :--- | :--- |
-| **Hub** | [`server/`](./server/) | A dedicated always-on school PC (Linux for the pilot). Database, files, quizzes, AI queue, USB export. |
+| **Hub** | [`server/`](./server/) | A dedicated always-on school PC (Linux for the pilot). Database, files, quizzes, document parser, USB export. |
 | **Mobile app** | [`mobile/`](./mobile/) | Android phones (3 to 4 GB RAM budget phones are the target). Learners and teachers. |
 | **Desktop app** | [`desktop/`](./desktop/) | Student laptops, lab PCs, teacher PCs. Learners and teachers, the same features as the phone on a large screen. |
 

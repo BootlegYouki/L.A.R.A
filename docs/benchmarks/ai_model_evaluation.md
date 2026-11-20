@@ -1,5 +1,7 @@
 # AI Model Evaluation (SERVER 1.5, #73)
 
+> **Superseded on 2026-11-20.** There is no AI on the Hub any more ([decision record](../decisions/2026-11-20-no-ai-on-hub.md)): the tutor runs on the device and no model is chosen. Everything below is the record of the Hub-based evaluation of #73, including the 2026-11-14 choice of REAP-15B for a 16 GB Hub, and it no longer decides anything. The phone evaluation (`rules/socratic-ai-guardrails.md` section 5) appends its own section here when it runs.
+
 > **Developer-scored.** The test set is written and scored by the L.A.R.A development team, not by teachers or an adviser. These pass rates are not validated by educators (`rules/socratic-ai-guardrails.md` section 5.4). If a teacher or adviser reviews them later, record who and when here.
 
 > **Status: scored.** All 75 scorer disagreements are settled, so none are left for the Lead.

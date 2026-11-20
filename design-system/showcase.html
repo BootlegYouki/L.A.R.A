@@ -2690,8 +2690,7 @@ fun QuizResult(score: Int, total: Int, items: List<ResultItem>, onAskTutor: () -
   );
 }
 
-// Server guard: refuse tutor calls while an assessment is active.
-if (session.activeQuizId) return res.status(423).json({ error: 'ASSESSMENT_LOCKED' });`,
+// Client guard: the tutor runs on the device, so the app never mounts the chat while an assessment is active.`,
   kotlin: `@Composable
 fun TutorBubble(fromLearner: Boolean, lesson: String?, text: String) {
     if (fromLearner) {

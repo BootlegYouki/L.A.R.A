@@ -8,7 +8,8 @@ Everything the three teams must agree on lives here. Nothing else is shared.
 | [`events/`](./events/) | Every WebSocket event schema, the handshake and direction table ([README](./events/README.md)) | All three |
 | [`schema/server_master.sql`](./schema/server_master.sql) | The Hub's authoritative SQLite schema | Server migrations |
 | [`schema/client_offline.sql`](./schema/client_offline.sql) | The offline slice for clients | Room entities, desktop migrations |
-| [`ai/socratic_system_prompt.txt`](./ai/socratic_system_prompt.txt) | The one Socratic system prompt, with `{reply_language}` and `{lesson_chunks}` placeholders | Hub prompt builder only (loaded unchanged) |
+| [`ai/socratic_system_prompt.txt`](./ai/socratic_system_prompt.txt) | The one Socratic system prompt, with `{reply_language}` and `{lesson_chunks}` placeholders | Bundled byte for byte by the Mobile and Desktop apps, which build the prompt on-device. The Hub never loads it |
+| [`planned/document-pipeline.md`](./planned/document-pipeline.md) | **Planned, not implemented, not covered by tests:** teacher document upload and parse, chunk sync, model-file serving, the attempt state for the tutor lockout | Becomes OpenAPI in a `contract-change` PR when the post-defense issues start. Do not code against it |
 | [`naming_rules.md`](./naming_rules.md) | Serialization, privacy and error rules | All three |
 
 These files are checked by [`../tests/`](../tests/) and implemented by the real Hub in `server/backend`.
@@ -27,6 +28,6 @@ Contract changes are **never** part of a feature PR. They go first, in their own
 
 ## Rules every contract must follow
 * `snake_case` JSON keys; epoch **milliseconds** for timestamps; UUID v4 strings for ids; `UPPER_SNAKE` enum values.
-* Errors use `{"error": {"code", "message"}}` with stable codes (for example `UNAUTHORIZED`, `FORBIDDEN`, `CLASS_CODE_INVALID`, `QUIZ_IN_PROGRESS`, `TIME_LIMIT_EXCEEDED`, `COMMENTS_DISABLED`, `FILE_TOO_LARGE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_STARTED`, `QUIZ_ALREADY_ACTIVE`, `QUIZ_CLOSED`, `ADMIN_EXISTS`).
+* Errors use `{"error": {"code", "message"}}` with stable codes (for example `UNAUTHORIZED`, `FORBIDDEN`, `CLASS_CODE_INVALID`, `TIME_LIMIT_EXCEEDED`, `COMMENTS_DISABLED`, `FILE_TOO_LARGE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_STARTED`, `QUIZ_ALREADY_ACTIVE`, `QUIZ_CLOSED`, `ADMIN_EXISTS`).
 * Student-facing shapes never include `correct_answer`. Client-facing shapes never include `pin_hash`, another person's LRN or server file paths.
 * The sync cursor is an integer sequence, never a timestamp.

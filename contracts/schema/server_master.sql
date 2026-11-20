@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS announcement_comments (
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- 6. Lesson Materials (files). Lesson text for the AI lives in material_chunks, not here.
+-- 6. Lesson Materials (files). Lesson text for the on-device tutor lives in material_chunks, not here.
 CREATE TABLE IF NOT EXISTS materials (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
 );
 
--- 7. Pre-chunked lesson text for Socratic grounding (resolves ai_stream.grounded_chunk_id)
+-- 7. Pre-chunked lesson text for the on-device Socratic tutor; the Hub parses documents into these rows and syncs them
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,
@@ -186,8 +186,8 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 );
 
 -- 12. Student Quiz Attempts & Scores
--- A row is created by POST /api/quizzes/{id}/begin with status IN_PROGRESS. The AI lockout
--- (HTTP 403 / QUIZ_IN_PROGRESS) is enforced while a learner has any IN_PROGRESS row.
+-- A row is created by POST /api/quizzes/{id}/begin with status IN_PROGRESS. The client's on-device tutor
+-- lockout reads that row from its own local copy while the learner has any IN_PROGRESS row.
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     quiz_id TEXT NOT NULL,
@@ -207,7 +207,8 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     UNIQUE(quiz_id, student_id)                -- one attempt per learner per quiz (no retakes in v1)
 );
 
--- 13. Socratic AI Chat History (append-only Hub-assisted conversations)
+-- 13. LEGACY, no longer written by the Hub (decided 2026-11-20): the tutor's chat history lives only on the device.
+-- No route reads or syncs it. Dropped by the post-defense Hub AI removal (server migration + this file).
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,

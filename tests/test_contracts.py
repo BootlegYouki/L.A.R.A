@@ -1,3 +1,4 @@
+import json
 import unittest
 import os
 import yaml
@@ -11,8 +12,8 @@ class TestContracts(unittest.TestCase):
         self.assertTrue(spec["openapi"].startswith("3."), "Must be OpenAPI 3.x")
 
     def test_one_shared_socratic_system_prompt(self):
-        # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
-        # behaves the same on every path.
+        # The Kotlin and TypeScript apps bundle this one file and build the prompt on-device (the Hub never
+        # loads it), so the tutor behaves the same on every device.
         with open("contracts/ai/socratic_system_prompt.txt", "r", encoding="utf-8") as f:
             prompt = f.read()
         for placeholder in ("{reply_language}", "{lesson_chunks}"):
@@ -25,10 +26,30 @@ class TestContracts(unittest.TestCase):
 
     def test_required_event_schemas_exist(self):
         # Shape and snake_case of every contracts/events/*.json is checked in test_contract_coverage.
-        for filename in ("join_request", "join_approval", "quiz_start", "quiz_submit", "ai_stream", "queue_status",
-                         "ws_hello", "grade_confirmed", "quiz_closed", "announcement_push", "presence", "error",
-                         "ai_chat_request"):
+        for filename in ("join_request", "join_approval", "quiz_start", "quiz_submit",
+                         "ws_hello", "grade_confirmed", "quiz_closed", "announcement_push", "presence", "error"):
             self.assertTrue(os.path.exists(f"contracts/events/{filename}.json"), f"Missing {filename}.json")
+
+    def test_hub_has_no_ai_surface(self):
+        # Decided 2026-11-20: the tutor runs on the device. The Hub has no AI events, errors or routes.
+        for filename in ("ai_chat_request", "ai_stream", "queue_status"):
+            self.assertFalse(os.path.exists(f"contracts/events/{filename}.json"), f"{filename}.json must stay removed")
+        with open("contracts/events/error.json", "r", encoding="utf-8") as f:
+            codes = json.load(f)["properties"]["code"]["enum"]
+        self.assertEqual([c for c in codes if c.startswith("AI_") or c == "QUIZ_IN_PROGRESS"], [])
+        with open("contracts/events/README.md", "r", encoding="utf-8") as f:
+            self.assertNotRegex(f.read(), r"EVENT_AI_|EVENT_QUEUE_STATUS")
+        with open("contracts/openapi.yaml", "r", encoding="utf-8") as f:
+            self.assertNotRegex(f.read(), r"AI_NOT_AVAILABLE|AI_QUEUE_FULL|QUIZ_IN_PROGRESS|/api/ai")
+        # TODO(post-defense, Hub AI removal issue): also scan server/ for llama-server and Hub-side prompt building
+        # once that code is gone. It is not a failing check yet because the server team removes it after the defense.
+
+    def test_planned_document_pipeline_is_marked_planned_and_not_in_openapi(self):
+        with open("contracts/planned/document-pipeline.md", "r", encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("PLANNED, not implemented", text[:600])
+        with open("contracts/openapi.yaml", "r", encoding="utf-8") as f:
+            self.assertNotIn("/api/models", f.read(), "planned routes must not be added before the contract-change PR")
 
     def test_sqlite_schemas_valid_and_executable(self):
         import sqlite3
@@ -56,7 +77,7 @@ class TestContracts(unittest.TestCase):
         self.assertIn("started_at", quiz_cols)
         self.assertNotIn("deped_category", quiz_cols, "grading categories are the teacher's own, not DepEd's")
 
-        # An unsubmitted attempt must be representable: the AI quiz lockout depends on it.
+        # An unsubmitted attempt must be representable: the client's tutor lockout depends on it.
         cur_server.execute("PRAGMA table_info(quiz_attempts);")
         attempt_cols = {r[1]: r for r in cur_server.fetchall()}
         self.assertIn("status", attempt_cols)

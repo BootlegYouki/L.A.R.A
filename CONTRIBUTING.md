@@ -9,8 +9,8 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 | Team | Folder | Developers | Lead's view |
 | :--- | :--- | :--- | :--- |
 | **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3 |
-| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, Hub AI stream |
-| **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
+| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, on-device tutor |
+| **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, document parser |
 | **Lead Developer** | all | 1 | Reviews every PR, owns `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` |
 
 You only edit your own team's folder. Shared paths are Lead-owned (see `.github/CODEOWNERS`).
@@ -97,7 +97,7 @@ git commit -m "docs(server): document the enrollment gate"
 | :--- | :--- |
 | `fix(mobile): keep quiz timer running when Wi-Fi drops` | `fixed stuff` |
 | `feat(desktop): add roster table with Accept / Decline` | `WIP` / `update` / `final final` |
-| `test(server): reject AI requests during an active quiz` | a commit that mixes three unrelated changes |
+| `test(mobile): lock the tutor during an active quiz` | a commit that mixes three unrelated changes |
 
 Rules: plain messages only (no co-author or tool attribution lines), no secrets, no generated or build files, never `git add .` blindly (check `git status` first).
 
@@ -231,7 +231,7 @@ Closes #6
 - [ ] Works with the Hub unreachable (offline state defined)
 - [ ] English and Filipino strings, design tokens only, touch targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or other person's LRN reaches a client
-- [ ] AI unavailable during a quiz
+- [ ] Tutor unavailable on the device while the learner's quiz attempt is `IN_PROGRESS`
 - [ ] Team docs updated
 - [ ] CI green, evidence attached, card still In Progress until merged
 

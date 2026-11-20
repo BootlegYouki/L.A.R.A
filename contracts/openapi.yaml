@@ -810,7 +810,7 @@ paths:
 
   /api/materials/{id}/chunks:
     get:
-      summary: Pre-extracted lesson text chunks for Socratic grounding
+      summary: Pre-extracted lesson text chunks, read by the on-device tutor for Socratic grounding
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1178,7 +1178,7 @@ paths:
 
   /api/quizzes/{id}/begin:
     post:
-      summary: Learner begins the active quiz. Creates the IN_PROGRESS attempt that triggers the AI lockout. Answers 409 QUIZ_CLOSED if the quiz is not ACTIVE.
+      summary: Learner begins the active quiz. Creates the IN_PROGRESS attempt that the client reads to lock its on-device tutor. Answers 409 QUIZ_CLOSED if the quiz is not ACTIVE.
       tags: [quizzes]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1399,7 +1399,7 @@ components:
               success:
                 type: boolean
     Error:
-      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_IN_PROGRESS, QUIZ_NOT_DRAFT, QUIZ_NOT_STARTED, QUIZ_ALREADY_ACTIVE, QUIZ_CLOSED, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED, AI_NOT_AVAILABLE (the Hub's model file is missing or failed to load; everything else keeps working).
+      description: Error envelope. Known codes include UNAUTHORIZED, FORBIDDEN, TOO_MANY_ATTEMPTS, ADMIN_LOCAL_ONLY, NOT_FOUND, CLASS_CODE_INVALID, QUIZ_NOT_DRAFT, QUIZ_NOT_STARTED, QUIZ_ALREADY_ACTIVE, QUIZ_CLOSED, COMMENTS_DISABLED, TIME_LIMIT_EXCEEDED, FILE_TOO_LARGE, LATE_SUBMISSION, ALREADY_GRADED.
       content:
         application/json:
           schema:
@@ -1416,7 +1416,7 @@ components:
           properties:
             code:
               type: string
-              example: "QUIZ_IN_PROGRESS"
+              example: "QUIZ_CLOSED"
             message:
               type: string
 

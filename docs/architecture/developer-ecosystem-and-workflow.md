@@ -12,7 +12,7 @@
 The **L.A.R.A** engineering group operates across three decoupled project streams:
 1. **Mobile Project Team (`mobile/`):** Native Android (Kotlin, Jetpack Compose M3, Room DB).
 2. **Desktop Project Team (`desktop/`):** Desktop Client (Tauri 2.x, React 19, Tailwind M3).
-3. **Server Project Team (`server/`):** the Local Hub on a dedicated school PC (Tauri, Rust/Axum, SQLite, `llama-server`).
+3. **Server Project Team (`server/`):** the Local Hub on a dedicated school PC (Tauri, Rust/Axum, SQLite).
 
 The three teams are the only parallel streams. Inside a team both developers work one issue at a time, in step order (`rules/team-workflow-and-prs.md` section 1.1).
 

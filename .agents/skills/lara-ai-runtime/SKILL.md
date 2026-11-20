@@ -1,40 +1,37 @@
 ---
 name: lara-ai-runtime
-description: Running GGUF models with llama-server on the Hub for the L.A.R.A Socratic tutor (slots, queue, streaming). Context and memory budgeting, grounding, quiz lockout and how to record evidence. Use when working on anything under an ai/ folder or the AI issues.
+description: Running a small GGUF model with llama.cpp on the device (phone or laptop) for the L.A.R.A Socratic tutor. Context and memory budgeting, on-device retrieval, grounding, client-side quiz lockout and how to record evidence. Use when working on the tutor or its issues.
 ---
 
-# L.A.R.A AI runtime: Hub llama-server
+# L.A.R.A AI runtime: on-device llama.cpp
 
-Read `rules/socratic-ai-guardrails.md` first. It decides **what** the tutor may say; this skill covers **how** to run the model. AI quality on weak hardware is the project's biggest risk, so measure everything and write the numbers down.
+Read `rules/socratic-ai-guardrails.md` first. It decides **what** the tutor may say; this skill covers **how** to run the model on the device. There is no AI on the Hub (decided 2026-11-20, `docs/decisions/2026-11-20-no-ai-on-hub.md`). Tutor quality and memory on 3 to 4 GB phones are the project's biggest risk, so measure everything on real phones and write the numbers down.
 
 ## 0. Three facts
 
-* **The model is not chosen yet.** It comes from the evaluation in `rules/socratic-ai-guardrails.md` section 5, recorded as `MODEL_PATH` in `docs/benchmarks/ai_model_evaluation.md`. Never hard-code a model file name, a slot count or a tokens-per-second figure.
-* **Hub tutor behavior:** never give the final answer, one small clue then one leading question, reply in English for the pilot, ground in the teacher's lesson chunks, and say "I cannot help with that, go back to your lesson" when the lesson does not cover it.
-* **Quiz lockout everywhere:** while the learner has an `IN_PROGRESS` attempt the Hub rejects the request (`QUIZ_IN_PROGRESS`) and clients never compose the chat UI.
+* **The model is not chosen yet.** It comes from the phone evaluation in `rules/socratic-ai-guardrails.md` section 5, recorded in `docs/benchmarks/ai_model_evaluation.md`. Never hard-code a model file name, a context size or a tokens-per-second figure, and never name a winner before that data exists.
+* **Tutor behavior:** never give the final answer, one small clue then one leading question, reply in English, ground in the teacher's lesson chunks, and say you cannot help with that and point back to the lesson when the lesson does not cover it.
+* **Quiz lockout is the client's job:** while the learner has an `IN_PROGRESS` attempt in the local database, never load the model, never compose the chat UI, and stop any running generation. It is weaker than a Hub refusal and is an accepted limitation (`rules/quiz-and-anti-cheat.md` section 1).
 
-## 1. Hub-only routing
+## 1. What the Hub gives you, and what it does not
 
-Every phone, laptop and lab PC sends the learner's message through `EVENT_AI_CHAT_REQUEST` and renders `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. Only the Hub builds prompts and runs inference; there is no client RAM check or model download. The phone heap remains under 250 MB on the 3 to 4 GB target.
+The Hub syncs `material_chunks` (it parses the teacher's PDF or `.docx`) and serves the model file over HTTP with Range (`contracts/planned/document-pipeline.md`, planned). It never sees a tutor question. There is no chat request, queue or token stream. Before the model is downloaded and the Hub is unreachable, show "The AI tutor needs the classroom Hub"; once it is on the device the tutor needs no Hub at all.
 
-When the Hub is unreachable, clients show "The AI tutor needs the classroom Hub" and may read past chats from local `ai_chat_messages`. Other features keep working offline. Remote/Suspension Mode carries the same stream through the Hub tunnel. If the Hub model is missing or fails to load, return `AI_NOT_AVAILABLE`; AI remains optional.
+## 2. Running llama.cpp on the device
 
-## 2. `llama-server` on the Hub
-
-* Run it as a **managed child process**: spawn with `tokio::process::Command`, `kill_on_drop(true)`, wait for `GET /health` before accepting requests, restart with backoff if it dies, stop it when the Hub exits.
-* **Bind to `127.0.0.1` only** (`--host 127.0.0.1`). Only the Hub's own code talks to it; learners never reach it directly.
-* Flags: `-m <MODEL_PATH>`, `-c <context>`, `-np <slots>` (2 to 4 from the evaluation), continuous batching. **Budget the context per slot.** `-c` is the server's total context, and with several slots each sequence gets a share of it unless the KV cache is unified. Read the startup log for the per-slot context and make sure each slot has room for the system prompt, the lesson chunks (about 2048 tokens) and the reply. If it does not, raise `-c` and re-measure RAM. This is the easiest mistake to make: `-c 2048 -np 4` can leave only a quarter of the window per learner.
-* Request `POST /v1/chat/completions` with `"stream": true` and `max_tokens` capped (a hint is short; 200 to 256 is plenty). Low temperature. Convert the server's SSE chunks into `EVENT_AI_TOKEN_STREAM` frames; do not forward raw OpenAI chunks to clients.
-* **Cancel upstream** when the learner's socket closes, or a generation keeps burning a slot for nobody.
-* Keep a **bounded FIFO queue** in front of the slots. Send `EVENT_QUEUE_STATUS` with `position` and `estimated_wait_seconds`; clients show the localized text ("Pangalawa ka sa pila - est. 4s"). When the queue is full, answer with a friendly error, not a hang. Cap concurrent generation so video and quizzes still run on the same machine.
-* Return `grounded_chunk_id` in the stream so the UI can show which part of the lesson the hint came from.
+* Load the model **only when the tutor opens** and free it when the learner leaves, backgrounds the app or starts a quiz. One generation at a time, cancellable.
+* **Budget memory first.** The app heap stays under 250 MB (`AGENTS.md` section 2); the model's own RAM is separate and is measured on real 3 GB and 4 GB phones. Prefer `mmap` loading, a small context and few threads. If the device cannot load it, show "AI is not available right now" and leave everything else working.
+* **Budget the context:** model window minus the system prompt, the lesson chunks, the chat history and a reply reserve (`rules/socratic-ai-guardrails.md` section 3.1). Count with the loaded model's tokenizer, never words x 1.4.
+* Run inference off the UI thread, stream tokens to the screen, cap `max_tokens` (a hint is short) and use a low temperature.
+* A low-memory kill must leave no corrupted state: the next launch starts normally with the tutor off.
+* The CPU is the target. Emulator numbers are not phone numbers.
 
 ## 3. Prompt and grounding
 
-* Only the Hub selects chunks using `rules/socratic-ai-guardrails.md` section 3.1 and includes recent history from its `ai_chat_messages` using section 3.2. Files with no extracted text have no chunks: return the lesson-text-unavailable response rather than inventing a hint.
-* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. Only the Hub loads it byte for byte at start and fills `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
-* Test the Hub builder against learner prompts (`server/ai_eval/`), with English replies even to Filipino and Taglish messages, and add a regression test when you fix a leak.
+* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`, bundled byte for byte by the app and filled with `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
+* Pick chunks from the synced `material_chunks` with the keyword rule in `rules/socratic-ai-guardrails.md` section 3.1 and include recent history from the local `ai_chat_messages` per section 3.2. A document with no chunks gives the lesson-text-unavailable reply, never an invented hint.
+* Test the prompt builder against the learner prompts (`server/ai_eval/` until the Lead moves them), including Filipino and Taglish messages that must get the English-only decline, and add a regression test when you fix a leak.
 
 ## 4. Evidence to record
 
-For every model and slot count: pass rate per criterion from the evaluation, time to first token, tokens per second, peak RAM, and the hardware it ran on. Label results "developer-scored" as the rules require, and write them to `docs/benchmarks/`. Do not say "good enough" without these numbers.
+For every model: pass rate per criterion from the evaluation, time to first token, tokens per second, peak RAM, battery and temperature, and the phone model it ran on. Label results "developer-scored" as the rules require, and write them to `docs/benchmarks/`. Do not say "good enough" without these numbers.

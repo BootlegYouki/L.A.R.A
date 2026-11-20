@@ -20,13 +20,10 @@ Every frame is one JSON object with an `event` field and snake_case keys. One sc
 | `EVENT_QUIZ_SUBMIT` | learner to Hub | alternative to REST submit; same grading path |
 | `EVENT_GRADE_CONFIRMED` | Hub to learner | grading finished |
 | `EVENT_PRESENCE` | Hub to teacher | learner connect, quiz progress |
-| `EVENT_AI_CHAT_REQUEST` | learner to Hub | tutor question |
-| `EVENT_QUEUE_STATUS` | Hub to learner | FIFO queue position change |
-| `EVENT_AI_TOKEN_STREAM` | Hub to learner | generated tokens |
 | `EVENT_ERROR` | Hub to client | any rejected request |
 
 ## Rules
 - `EVENT_QUIZ_START` carries `start_epoch_ms` (server clock). Clients compute the offset from `server_time` in `EVENT_HELLO_ACK` and then count down on a monotonic clock (`SystemClock.elapsedRealtime()`, `performance.now()`).
 - REST remains the source of truth. Events are hints; a client that misses one recovers with `POST /api/sync/pull`.
-- The Hub does not replay events. After every reconnect, clients run `POST /api/sync/pull` and `GET /api/quizzes/active`. Presence, queue status and AI tokens are not recovered; the learner asks the tutor again.
+- The Hub does not replay events. After every reconnect, clients run `POST /api/sync/pull` and `GET /api/quizzes/active`. Presence is not recovered. There are no tutor events: the tutor runs on the device (`AGENTS.md` section 5).
 - Changing any file here is a `contract-change` PR (see `rules/team-workflow-and-prs.md`).

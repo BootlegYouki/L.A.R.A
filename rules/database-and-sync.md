@@ -20,7 +20,8 @@ Core tables share names and column meaning across server and clients: `users`, `
 ### Conventions
 * IDs are UUID v4 `TEXT`. Timestamps are epoch **milliseconds** `INTEGER`. Booleans are `INTEGER` 0/1.
 * Network JSON keys are `snake_case` and match column names.
-* Lesson text for the AI lives **only** in `material_chunks` (there is no `extracted_text` column).
+* Lesson text for the on-device tutor lives **only** in `material_chunks` (there is no `extracted_text` column). The Hub parses documents into chunks and syncs them like any other row; the tutor reads its local copy.
+* `ai_chat_messages` is the tutor's chat history **on the device**. The Hub no longer writes it and the contract has no route for it; the server table is legacy and is dropped by the post-defense Hub AI removal.
 * Grading is points only, like Google Classroom: `max_points` on `assignments` and quizzes, points earned on submissions and attempts. There are no categories, quarters or weights; each teacher applies their own grading system outside L.A.R.A.
 
 ---
@@ -85,7 +86,7 @@ Server is authoritative for classroom metadata, rosters and grades. The client i
 * **Every class-scoped route checks membership on the Hub:** the class's teachers and its `ACTIVE` learners only, and a learner only their own submissions, attempts and private comments. This covers reads (materials, chunks, comments, quizzes) as well as writes, and the queued rows in `POST /api/sync/push`. A pushed row may never overwrite a row another user wrote.
 * **"Teaches the class" means the owner (`classrooms.teacher_id`) or a row in `classroom_teachers`.** Every teacher route authorises against that, except rename, archive and managing teachers, which are owner only.
 * At most one `ACTIVE` quiz per classroom (partial unique index `uq_one_active_quiz_per_classroom`). `GET /api/quizzes/active` relies on it.
-* A `quiz_attempts` row exists from quiz start with `status = 'IN_PROGRESS'`; `submitted_at`, `score` and `total_points` are NULL until `SUBMITTED` (enforced by a CHECK). The AI quiz lockout is enforced while the learner has an `IN_PROGRESS` row.
+* A `quiz_attempts` row exists from quiz start with `status = 'IN_PROGRESS'`; `submitted_at`, `score` and `total_points` are NULL until `SUBMITTED` (enforced by a CHECK). The client's tutor lockout reads this row from its own local copy (`rules/quiz-and-anti-cheat.md` section 1).
 * One attempt per learner per quiz in v1 (`UNIQUE(quiz_id, student_id)`).
 
 ---
@@ -108,4 +109,4 @@ The client applications are offline-first by default:
 * **Zero blocking screens:** launched without Wi-Fi or away from the Hub, the app never shows a blocking "No Connection" dialog.
 * **Full local read access:** browse enrolled classrooms, read announcements and lesson text chunks, view cached PDFs and play downloaded videos.
 * **Offline homework capture:** photos taken at home are stored with `sync_status = 'QUEUED_FOR_SYNC'` and upload when the Hub is reachable.
-* **Tutor offline state:** when the Hub is unreachable, show *"The AI tutor needs the classroom Hub"*. Past chats remain readable locally, and everything else works offline. Remote/Suspension Mode carries the tutor stream through the Hub tunnel.
+* **Tutor offline state:** once the model file is on the device, the tutor works with no Hub. Before that, show *"The AI tutor needs the classroom Hub"* (to download the model). Past chats remain readable locally, and everything else works offline.

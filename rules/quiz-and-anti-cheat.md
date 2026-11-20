@@ -6,13 +6,14 @@ All AI agents and contributors must follow these rules.
 
 ---
 
-## 1. Absolute AI Tutor Lockout During Quizzes
+## 1. AI Tutor Lockout During Quizzes (enforced by the client)
 
-To guarantee assessment integrity, the Socratic AI tutor is strictly forbidden from running while a student has an active quiz session:
+To protect assessment integrity, the on-device Socratic AI tutor must not run while a student has an active quiz session. The tutor lives only on the device and the Hub never sees its requests, so **the client enforces this alone** (decided 2026-11-20).
 
 1. **Client UI Removal:** When the student opens the quiz screen, the floating "Ask L.A.R.A AI" button and chat drawer must be **completely unmounted from the view hierarchy**, not just hidden with CSS.
-2. **Server-Side Rejection (`HTTP 403`):** A learner has an *active attempt* from the moment `POST /api/quizzes/{id}/begin` creates a `quiz_attempts` row with `status = 'IN_PROGRESS'` until it is `SUBMITTED`. While one exists, the Hub rejects any AI request: `HTTP 403` with error code `QUIZ_IN_PROGRESS` on REST, or `EVENT_ERROR` with code `QUIZ_IN_PROGRESS` on the WebSocket (`EVENT_AI_CHAT_REQUEST`).
+2. **Local attempt state:** A learner has an *active attempt* from the moment `POST /api/quizzes/{id}/begin` creates a `quiz_attempts` row with `status = 'IN_PROGRESS'` until it is `SUBMITTED`. The client already holds that row in its local database (it created it, or pulled it with `POST /api/sync/pull`). While one exists the client must refuse to load the model or generate, even if the chat screen is reachable some other way, and must stop and free a generation that is already running when a quiz starts.
 3. **Visible state:** the AI tab may remain visible only as a disabled placeholder that explains why; the chat composables are never composed during the quiz.
+4. **Known, accepted limitation (not hidden):** this is weaker than the Hub refusing a request. A learner can edit their own local database, and a device that has not yet synced a quiz start does not know about the attempt, so a determined learner can still reach the tutor during a quiz. The Hub cannot see or stop it. The Lead accepted this trade-off with the move to an on-device tutor. Teachers should know it, and no document may describe the lockout as server-enforced. Mitigations that stay inside the rules: the model never carries answer keys (`correct_answer` never reaches a client), and the tutor only knows the teacher's lesson chunks.
 
 ---
 
