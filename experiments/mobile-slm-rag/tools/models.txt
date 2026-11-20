@@ -1,0 +1,7 @@
+# test order | file | bytes | url
+1|Qwen3-0.6B-Q8_0.gguf|639446688|https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf
+2|gemma-3-270m-it-Q8_0.gguf|291545600|https://huggingface.co/ggml-org/gemma-3-270m-it-GGUF/resolve/main/gemma-3-270m-it-Q8_0.gguf
+3|gemma-3-1b-it-Q4_K_M.gguf|806058240|https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf
+4|Llama-3.2-1B-Instruct-Q4_K_M.gguf|807694464|https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf
+5|SmolLM2-360M-Instruct-Q4_K_M.gguf|270590880|https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf
+6|LFM2-350M-Q4_K_M.gguf|229309376|https://huggingface.co/LiquidAI/LFM2-350M-GGUF/resolve/main/LFM2-350M-Q4_K_M.gguf

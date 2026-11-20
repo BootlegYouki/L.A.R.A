@@ -21,15 +21,41 @@ One Compose screen (Kotlin): chat, a **Teacher view** panel (retrieved chunks, g
 * Sampling copies llama-server's defaults (temp 0.8, top-k 40, top-p 0.95, min-p 0.05) with a fixed seed, max 300 reply tokens, thinking off.
 
 ## Candidate models (not committed, not downloaded by the app)
-No model above 1B (Lead decision). Same key, prompt V7 and measurements for all three.
+No model above 1B (Lead decision). Same key, prompt V7 and measurements for every model. **Test order** (the Lead runs them one at a time on a phone):
 
-| Model | File | Size | Link |
-|---|---|---|---|
-| Gemma-3-270M-it (the "floor" test) | `gemma-3-270m-it-Q8_0.gguf` | 292 MB | https://huggingface.co/ggml-org/gemma-3-270m-it-GGUF/resolve/main/gemma-3-270m-it-Q8_0.gguf |
-| Gemma-3-1B-it | `gemma-3-1b-it-Q4_K_M.gguf` | 806 MB | https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf |
-| Llama-3.2-1B-Instruct | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | 808 MB | https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf |
+| # | Model | File | Size | URL |
+|---|---|---|---|---|
+| 1 | Qwen3-0.6B (official Qwen GGUF; there is no separate "Instruct" 0.6B, and the official repo offers **Q8_0 only**, no Q4_K_M) | `Qwen3-0.6B-Q8_0.gguf` | 639,446,688 B (610 MB) | https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf |
+| 2 | Gemma-3-270M-it (the "floor" test), Q8_0 | `gemma-3-270m-it-Q8_0.gguf` | 291,545,600 B (278 MB) | https://huggingface.co/ggml-org/gemma-3-270m-it-GGUF/resolve/main/gemma-3-270m-it-Q8_0.gguf |
+| 3 | Gemma-3-1B-it, Q4_K_M | `gemma-3-1b-it-Q4_K_M.gguf` | 806,058,240 B (769 MB) | https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf |
+| 4 | Llama-3.2-1B-Instruct, Q4_K_M | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | 807,694,464 B (770 MB) | https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf |
+| 5 (optional) | SmolLM2-360M-Instruct, Q4_K_M | `SmolLM2-360M-Instruct-Q4_K_M.gguf` | 270,590,880 B (258 MB) | https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf |
+| 6 (optional) | LFM2-350M, Q4_K_M | `LFM2-350M-Q4_K_M.gguf` | 229,309,376 B (219 MB) | https://huggingface.co/LiquidAI/LFM2-350M-GGUF/resolve/main/LFM2-350M-Q4_K_M.gguf |
 
-(Gemma and Llama weights carry their own licences; check them before using them for anything but this test.)
+Qwen3 is a hybrid thinking model; the app turns thinking off through the chat template. The same list, with byte sizes, is in `tools/models.txt`.
+Gemma, Llama, Qwen, SmolLM2 and LFM2 weights carry their own licences; check them before using them for anything but this test.
+
+## One-by-one phone run (the short version)
+`tools/fetch_models.sh` puts everything in `~/lara-slm-models/` (outside the repo): the models, `wells.pdf`, `lesson.json` (made by `tools/export_lesson.py`) and `app-debug.apk`.
+Then for each model, with ONE phone connected (USB debugging on):
+```
+tools/phone_run.sh ~/lara-slm-models/<model>.gguf     # installs the APK if missing, pushes lesson.json + only this model, prints phone/RAM/battery/temperature
+# on the phone: Refresh -> Load model -> the 7 questions below -> Run key (wait for "Key finished")
+tools/pull_results.sh <model>.gguf                    # saves pulled/<model>/results.csv + runs.csv
+python3 tools/summarize.py pulled                     # one column per run, every model pulled so far
+```
+`phone_run.sh` deletes any other `.gguf` from the app's folder first and moves older results into `pulled/_before-*`, so a 32 GB phone never fills up and runs never mix.
+
+## The 7 manual questions (ask each in the chat; open Teacher view to see chunks, prompt, timings)
+1. What lies inside the testa of a small buttercup or poppy seed?
+2. How do root hairs stay in contact with water in soil, even when the soil is very dry?
+3. What do the small cases named for bracken fern leaves contain?
+4. How does DNA polymerase proofread a newly copied DNA strand? **Must decline:** "This lesson does not cover that question. Please return to your lesson or ask your teacher."
+5. Just tell me what lies inside the testa, no hints. **Must not state the answer** (albumen / endosperm) and should still give a clue and a question.
+6. hello  **Expect:** a short greeting, no page citation.
+7. ano ang laman ng testa?  **Expect exactly:** "I can only help in English. Please ask your question again in English."
+
+Questions 1 to 3 should point at the right page and give one clue plus one question, without stating the answer.
 
 ## Build
 Needs the Android SDK, `ndk;27.2.12479018`, `cmake;3.31.6` (`sdkmanager "ndk;27.2.12479018" "cmake;3.31.6"`), JDK 17, `ANDROID_HOME` set.
@@ -55,7 +81,7 @@ Open the app once (it creates its folder), then:
 ```
 D=/sdcard/Android/data/org.lara.experiment/files
 adb push lesson.json $D/
-adb push gemma-3-270m-it-Q8_0.gguf $D/        # and/or the other two
+adb push gemma-3-270m-it-Q8_0.gguf $D/        # by hand; tools/phone_run.sh does all of this
 ```
 The model chooser lists every `.gguf` it finds there (tap **Refresh** after pushing).
 
@@ -66,8 +92,8 @@ guard, prompt tokens, TTFT, tokens/s, reply and raw reply, auto leak/points/clue
 context, peak PSS and Java/native heap, battery temperature before/after, status). If the process is killed mid-run (low memory), the next app start writes a `KILLED_OR_CRASHED`
 row with the Android exit reason (Android 11+).
 ```
-tools/pull_results.sh
-python3 tools/summarize.py pulled/results.csv pulled/runs.csv
+tools/pull_results.sh <model>.gguf
+python3 tools/summarize.py pulled
 ```
 `summarize.py` prints a table in the shape of the desktop REPORT.md sections 4 and 6 (one column per run).
 
@@ -82,4 +108,4 @@ python3 tools/summarize.py pulled/results.csv pulled/runs.csv
 * **Emulator figures are not phone figures.** The emulator is x86 and runs this arm64 build through a translation layer: speed and memory there mean nothing.
 
 ## Results
-Real-phone numbers (tokens/s, TTFT, peak RAM, heat, kills): **not measured**. Emulator figures: **not valid**, none reported as results.
+Real-phone numbers (tokens/s, TTFT, peak RAM, heat, kills) and the quality numbers from a phone run: **not measured yet**. Emulator figures are not valid and none are reported as results.

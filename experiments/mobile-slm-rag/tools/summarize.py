@@ -2,15 +2,20 @@
 """Prints on-device results as tables to lay beside the desktop REPORT.md (section 4 retrieval, section 6 prompt metrics).
 
     python3 tools/summarize.py pulled/results.csv pulled/runs.csv
+    python3 tools/summarize.py pulled            # every pulled/<model>/ together, one column per run
 
 One column per run (one model + threads + context size). Rates are over the 27 in-scope (Q) and 3 out-of-scope (O) questions.
 Auto-flags are a first pass: read the replies in results.csv too, as the desktop report says.
 """
 import csv, statistics, sys
 
-if len(sys.argv) != 3: sys.exit(__doc__)
-rows = list(csv.DictReader(open(sys.argv[1], encoding="utf-8", newline="")))
-runs = {r["run_id"]: r for r in csv.DictReader(open(sys.argv[2], encoding="utf-8", newline=""))}
+import glob, os
+if len(sys.argv) == 2 and os.path.isdir(sys.argv[1]):  # "pulled": every pulled/<model>/results.csv + runs.csv together
+    rf = sorted(glob.glob(os.path.join(sys.argv[1], "*", "results.csv"))); uf = sorted(glob.glob(os.path.join(sys.argv[1], "*", "runs.csv")))
+elif len(sys.argv) == 3: rf, uf = [sys.argv[1]], [sys.argv[2]]
+else: sys.exit(__doc__)
+rows = [r for f in rf for r in csv.DictReader(open(f, encoding="utf-8", newline=""))]
+runs = {r["run_id"]: r for f in uf for r in csv.DictReader(open(f, encoding="utf-8", newline=""))}
 ids = list(dict.fromkeys(r["run_id"] for r in rows)) or list(runs)
 yes = lambda v: v == "True"
 num = lambda v: float(v) if v not in ("", None) else None
