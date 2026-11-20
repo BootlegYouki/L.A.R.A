@@ -17,7 +17,7 @@ else: sys.exit(__doc__)
 rows = [r for f in rf for r in csv.DictReader(open(f, encoding="utf-8", newline=""))]
 runs = {r["run_id"]: r for f in uf for r in csv.DictReader(open(f, encoding="utf-8", newline=""))}
 ids = list(dict.fromkeys(r["run_id"] for r in rows)) or list(runs)
-yes = lambda v: v == "True"
+yes = lambda v: v.strip().lower() == "true"  # the app writes true/false
 num = lambda v: float(v) if v not in ("", None) else None
 med = lambda xs: f"{statistics.median(xs):.2f}" if xs else "-"
 

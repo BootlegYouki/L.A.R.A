@@ -15,7 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0-experiment"
-        ndk { abiFilters += "arm64-v8a" }
+        // arm64-v8a only for phones; -Pabis=x86_64 builds the same code natively for the x86 emulator (quality checks, never a speed number)
+        ndk { abiFilters += (findProperty("abis") as String? ?: "arm64-v8a").split(",") }
         externalNativeBuild {
             cmake {
                 arguments += listOf(
