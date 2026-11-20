@@ -11,3 +11,10 @@ Broader inputCallbacksAndKeyboardRemainUsable: auth checks reached completion, t
 That exploratory run also captured the test harness typing after focus dismissal. The corrected refocus step passes in device-focused.txt.
 Not verified: real Rust Hub (#324 remains open), normal-entry process restart with Hub down, physical WAN-unplugged router, 200% font, TalkBack.
 Device build used /private/tmp/lara-326-device.init.gradle to override the test package only. No build configuration change is part of the diff.
+
+Publication integration baseline: 92639e36faf5fbce0cc295952a6d26835982a0db (merged PR #338).
+Post-integration debug and release: 215 tests each, 1 failure, 0 errors, 7 skips.
+21 focused issue tests pass in each variant; unchanged HomeworkTransportTest multipart filename assertion fails.
+Post-integration lint: same 3 errors, 80 warnings. Shared suite: 72 pass. See integrated logs.
+Draft PR only; acceptance is not green and no merge is requested.
+Integrated assembleDebug: BUILD SUCCESSFUL in 11s.
