@@ -412,8 +412,6 @@
     <string name="review_score">Score / %1$d</string>
     <string name="review_invalid">Enter a whole number between zero and the maximum points.</string>
     <string name="review_feedback">Feedback</string>
-    <string name="review_praise">Great effort!</string>
-    <string name="review_retake">Please retake the photo</string>
     <string name="review_save">Save grade</string>
     <string name="review_saving">Saving…</string>
     <string name="review_saved">Grade saved.</string>

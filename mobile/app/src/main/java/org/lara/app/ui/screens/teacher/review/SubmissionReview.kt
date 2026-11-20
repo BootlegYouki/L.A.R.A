@@ -162,12 +162,6 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
                     supportingText = { if (score.isNotEmpty() && validatedScore(score, assignment.maxPoints) == null) Text(stringResource(R.string.review_invalid)) })
                 OutlinedTextField(feedback, { feedback = it }, label = { Text(stringResource(R.string.review_feedback)) }, enabled = online && !archived && !busy,
                     modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), maxLines = 4)
-                Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    listOf(R.string.review_praise, R.string.review_retake).forEach { phrase ->
-                        val text = stringResource(phrase)
-                        OutlinedButton(onClick = { feedback = text }, enabled = online && !archived && !busy, modifier = Modifier.weight(1f).heightIn(min = MinTouchTarget)) { Text(text) }
-                    }
-                }
                 Button(onClick = {
                     val points = validatedScore(score, assignment.maxPoints) ?: return@Button
                     busy = true; message = null
