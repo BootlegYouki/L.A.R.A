@@ -46,6 +46,24 @@ class HomeworkTransportTest {
         try { api.upload("learner", "assignment", "local", photo, 123456L); fail() } catch (_: IllegalArgumentException) { }
     }
 
+    @Test fun sendsDocumentMimeAndRejectsAnImageReceipt(): Unit = runBlocking {
+        val docs = listOf("pdf" to "application/pdf", "docx" to "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        docs.forEach { (extension, mime) ->
+            val document = File.createTempFile("submission-test_worksheet", ".$extension").apply { writeText("synthetic") }
+            try {
+                server.enqueue(MockResponse().setBody("""{"id":"local","assignment_id":"assignment","student_id":"learner","file_type":"IMAGE","submitted_at":1,"received_at":2}"""))
+                try { api.upload("learner", "assignment", "local", document, 1L); fail("Expected a mismatched receipt to be rejected") }
+                catch (_: IllegalArgumentException) { }
+                val body = server.takeRequest().body.readUtf8()
+                assertTrue(body.contains("Content-Type: $mime", ignoreCase = true))
+                assertTrue(body.contains(".$extension\""))
+                server.enqueue(MockResponse().setBody("""{"id":"local","assignment_id":"assignment","student_id":"learner","file_type":"DOCUMENT","submitted_at":1,"received_at":2}"""))
+                assertEquals("DOCUMENT", api.upload("learner", "assignment", "local", document, 1L).fileType)
+                server.takeRequest()
+            } finally { document.delete() }
+        }
+    }
+
     @Test fun neverFollowsRedirects(): Unit = runBlocking {
         val other = MockWebServer().apply { start() }
         try {

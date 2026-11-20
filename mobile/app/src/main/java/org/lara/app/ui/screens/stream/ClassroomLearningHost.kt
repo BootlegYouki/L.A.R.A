@@ -115,6 +115,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         return
     }
     var opened by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
+    var reviewAssignment by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     var openedAssignment by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
     val selectedAssignment = assignments.find { it.id == openedAssignment }
@@ -126,6 +127,19 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         // The overlay is drawn by the scaffold, so hand it this screen's owners or its ViewModel loses the saved-state registry.
         SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
+    }
+    val review = assignments.find { it.id == reviewAssignment }
+    if (review != null && teacherHubReachable != null) {
+        val page: @Composable () -> Unit = { key(review.id) {
+            org.lara.app.ui.screens.teacher.review.SubmissionReview(container, userId, review, teacherHubReachable, classroom.archivedAt != null) { reviewAssignment = null }
+        } }
+        if (fullScreen != null) {
+            val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+            val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
+            DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
+        } else page()
+        return
     }
     val materials = (work as? Cached.Content)?.value?.materials.orEmpty()
     // Fetch the file and draw its preview first, then open the page, so nothing pops in afterwards.
@@ -173,7 +187,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     if (destination == ShellDestination.CLASSWORK && teacherHubReachable != null && userId in classroom.teacherIds()) {
         org.lara.app.ui.components.PullRefresh(reload) {
             org.lara.app.ui.screens.teacher.classwork.TeacherClasswork(container.classworkAuthoring, userId, classroom,
-                requireNotNull((work as? Cached.Content)?.value), announcements, teacherHubReachable, openMaterial)
+                requireNotNull((work as? Cached.Content)?.value), announcements, teacherHubReachable, openMaterial) { reviewAssignment = it }
         }
         return
     }
