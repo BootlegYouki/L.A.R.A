@@ -78,7 +78,7 @@ Do not commit, push, open PRs, or merge without explicit permission.
 Choose testing depth based on the change and applicable Lead requirements.
 
 For UI-only redesigns:
-- Prefer mock Hub, Room fixtures, and cached data during implementation.
+- Prefer Room fixtures, and cached data during implementation.
 - Use targeted Compose tests for navigation, accessibility, and UI behavior.
 - Avoid unnecessary Rust Hub rebuilding or infrastructure troubleshooting.
 - Reuse an existing working real-Hub setup when required.

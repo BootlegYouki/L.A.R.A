@@ -23,10 +23,10 @@ Work from the latest staging branch, one issue at a time. Use the issue's cited 
 
 Use the commands in the team's package scripts and native prerequisites for the host platform. Desktop tests use Node's built-in SQLite support; use Node 22.13 or newer.
 
-From the repository root, in a separate terminal:
+In a separate terminal, start the real Hub:
 
 ```sh
-python scripts/mock_hub.py
+cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub
 ```
 
 Use only the synthetic accounts documented in the [root guide](../../../AGENTS.md#12-commands). In desktop/:
@@ -47,7 +47,7 @@ python scripts/verify_invariants.py
 python -m unittest discover tests
 ```
 
-The shared suite creates its own mock instance; it does not prove the native frontend called the Hub. Exercise the feature in the real Tauri window against the mock, then stop the mock and check its offline state. Record the actual commands, results and limits in the feature documentation/PR. For real-Hub integration, use the [Hub hardware/run documentation](../../../server/docs/hub_hardware.md) and [network rules](../../../rules/networking-and-lan.md); do not claim a Hub launch if none was performed.
+The shared suite does not prove the native frontend called the Hub. Exercise the feature in the real Tauri window against the real Hub, then stop the Hub and check its offline state. Record the actual commands, results and limits in the feature documentation/PR. For real-Hub integration, use the [Hub hardware/run documentation](../../../server/docs/hub_hardware.md) and [network rules](../../../rules/networking-and-lan.md); do not claim a Hub launch if none was performed.
 
 ## Reuse the desktop foundation
 
@@ -61,7 +61,7 @@ The shared suite creates its own mock instance; it does not prove the native fro
 - Bundled assets and passing builds do not establish visual fidelity. For UI changes, compare the native app with the [prototype](../../../design-system/prototype.html) at the same viewport and read the corresponding [design-system](../../../design-system/design-system.md) sections. Disclose deliberate accessibility differences. Check both dictionaries, keyboard focus and enlarged text; do not put development roadmap notes on a product screen.
 - A reload is not a process restart. Close and reopen the entire app when claiming persisted language or cached-data behavior. Existing [verification notes](../../../desktop/docs/verification.md) distinguish these checks and their limits.
 - Database initialization timeouts bound the UI wait but do not cancel native work already running. Preserve retry handling and saved data when changing startup logic.
-- The mock broadcasts UDP; it does not prove real mDNS discovery. Validate the approved beacon fields, malformed packets, duplicate/stale entries and scanner shutdown. An advertisement alone must not label a Hub Connected. Read [networking](../../../rules/networking-and-lan.md) before implementing discovery or manual fallback; do not invent a health endpoint or disable access checks to probe one.
+- A UDP beacon alone does not prove real mDNS discovery. Validate the approved beacon fields, malformed packets, duplicate/stale entries and scanner shutdown. An advertisement alone must not label a Hub Connected. Read [networking](../../../rules/networking-and-lan.md) before implementing discovery or manual fallback; do not invent a health endpoint or disable access checks to probe one.
 - The scaffold CSP permits local IPC, not arbitrary Hub traffic. Test native HTTP permissions, browser WebSocket and media separately when their issue adds them. Use the spec's transport decision rather than mixing request implementations.
 - Test with temporary synthetic databases. Never erase a developer's or school's existing database to obtain an empty screenshot. Native runtimes keep some small state in OS app-data folders even when the source/build cache is elsewhere.
 - When Windows test isolation restricts temporary folders, set TEMP/TMP for the task process to an allowed project-local directory. Do not change system-wide variables or weaken tests. Report environment warnings separately from failures.

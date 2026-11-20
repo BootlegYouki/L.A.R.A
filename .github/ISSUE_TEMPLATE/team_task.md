@@ -15,9 +15,9 @@ What this delivers and why, in two or three sentences.
 - **PRD:** the requirement this delivers, for example `docs/PRD.md` FR-3.5 (behavior is defined there, not here)
 - One issue = one PR. The team works its issues one at a time, in step order. Do not edit another team's folder; shared paths (`contracts/`, `design-system/`, `rules/`) are Lead-owned.
 
-### Contract & Mock Hub
+### Contract
 - **Contract:** routes, events and tables from `contracts/` this issue implements or uses.
-- **Mock hub:** which `scripts/mock_hub.py` flow to build against (clients) or to match (server).
+- **Real Hub:** which Hub flow to test against (clients) or implement (server).
 - Needs a new route, event or column? Open a separate `contract-change` request first.
 
 ### Sub-Tasks & Implementation Checklist
@@ -36,4 +36,4 @@ Each line is something a reviewer can see pass or fail.
 ### Docs & Design
 - Update the team's `docs/` folder (purpose, key files, data flow, gotchas).
 - **Design system:** the component sections (5.x) and, for a screen, the layout section (9.x) of `design-system/design-system.md`, and for a remade desktop screen `design-system/prototype.html`, the visual reference (or N/A).
-- PR evidence: build or test output plus a log or screenshot against the mock hub, WAN unplugged.
+- PR evidence: build or test output plus a log or screenshot against the real Hub, WAN unplugged.

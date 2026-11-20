@@ -14,7 +14,7 @@ Closes #(issue number)
 
 
 ## How to Test (for the person reviewing as an end user)
-Numbered steps a teacher or learner could follow, with what they should see after each step. Say which accounts to use (for example teacher `T-0001`, learner `123456789012`, PIN `1234`) and how to start the mock hub or the real Hub. Include the offline case: airplane mode or Hub stopped.
+Numbered steps a teacher or learner could follow, with what they should see after each step. Say which accounts to use (for example teacher `T-0001`, learner `123456789012`, PIN `1234`) and how to start the real Hub. Include the offline case: airplane mode or Hub stopped.
 1. ...
 
 ## Verification & Testing
@@ -28,18 +28,18 @@ Describe the tests executed to verify these changes:
 - [ ] Screen matches `design-system/design-system.md`; any deviation (and why) is listed under Not Verified or in the description
 
 ## Screens and real-device tests (required; `rules/team-workflow-and-prs.md` section 3 item 5)
-- **Screens:** screenshots of every changed screen, run by you against the mock hub or real Hub: normal, empty, offline (Hub unreachable); mobile also 200% font size. Or write "no screen changes".
+- **Screens:** screenshots of every changed screen, run by you against the real Hub: normal, empty, offline (Hub unreachable); mobile also 200% font size. Or write "no screen changes".
 - **Real hardware:** if the change touches Wi-Fi/LAN, Hub discovery, several devices on one Hub, live pushes, camera, files, notifications, background sync, sleep or app killed, low memory or the Windows installer, a screenshot, video or log from a physical phone or second PC, naming the device model. Or write "nothing device-specific".
 
 ## Evidence
-Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the mock hub or real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.
+Paste test output (last lines of your build and test commands) and a log or screenshot of the feature running against the real Hub with the WAN unplugged, plus the Hub-unreachable case. Remove tokens, PINs and real learner names or LRNs first.
 
 ## Not Verified
 List anything you could not test (for example no physical budget phone). Write "nothing" if everything was verified.
 
 ## Contract Changes (only if `contracts/` is touched)
 - [ ] `contracts/openapi.yaml`, `contracts/events/*` and `contracts/schema/*.sql` updated together
-- [ ] `scripts/mock_hub.py` serves the change and `python3 -m unittest discover tests` passes
+- [ ] `python3 -m unittest discover tests` passes
 - [ ] Mobile, Desktop and Server leads tagged for review
 
 ## Non-Regression Checklist

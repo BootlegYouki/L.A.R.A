@@ -30,10 +30,10 @@ Done when you can name the routes or events you will touch, the files you will c
 
 ## 2. While you build
 
-* **Clients build against the mock hub** (`python3 scripts/mock_hub.py`; seed accounts in `AGENTS.md` section 1.2). **The server matches it:** `scripts/mock_hub.py` and `tests/test_mock_hub.py` are the acceptance reference.
+* **Clients test against the real Hub** (`AGENTS.md` section 1.2; test accounts in `rules/developer-tooling-and-testing.md` section 4). **The server matches `contracts/`.**
 * **Contract first.** A route, event, column or prompt wording that is not in `contracts/` does not exist. Ask the Lead for a `contract-change` PR; never add it in a feature PR.
 * **Stay in your team folder.** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` and `AGENTS.md` are Lead-owned. Reports are the exception: new files in `docs/benchmarks/`, `docs/audits/`, `docs/evaluations/`.
-* **A screen follows the design system, not your taste.** Open every section the issue's `Design system` line cites (components in 5.x, the screen in 9.x) and build from them: banners, pills, inputs, spacing, empty states. For a remade desktop screen, compare it side by side with `design-system/prototype.html`. Take screenshots against the mock hub and put them in the PR. Never ship roadmap text ("coming in a later update") on a screen.
+* **A screen follows the design system, not your taste.** Open every section the issue's `Design system` line cites (components in 5.x, the screen in 9.x) and build from them: banners, pills, inputs, spacing, empty states. For a remade desktop screen, compare it side by side with `design-system/prototype.html`. Take screenshots against the real Hub and put them in the PR. Never ship roadmap text ("coming in a later update") on a screen.
 * **Use the words the product uses:** "learner" (not pupil or student in prose), "Hub" or "classroom network" (never "internet"), and the classroom words in design system section 7.2.
 
 ## 3. What gets a PR rejected
@@ -63,7 +63,7 @@ Full list: `rules/team-workflow-and-prs.md` section 5. The ones agents trip on m
    | Mobile | `./gradlew test lint` in `mobile/` |
    | All | `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests` from the root |
 
-2. Walk every acceptance criterion in the issue and show the evidence for each: test output, or a log or screenshot against the mock hub with the Hub stopped for the offline case.
+2. Walk every acceptance criterion in the issue and show the evidence for each: test output, or a log or screenshot against the real Hub with the Hub stopped for the offline case.
 3. Update `<team>/docs/` (purpose, key files, data flow, gotchas), and `TECH_SPEC.md` if a decision or name changed.
 4. Fill in `.github/PULL_REQUEST_TEMPLATE.md` with `Closes #n`, and say plainly what you could not verify (a real phone, real Wi-Fi, load).
 

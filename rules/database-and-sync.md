@@ -13,7 +13,7 @@ The schema is defined **only** in `contracts/schema/`:
 * `server_master.sql`: the Hub's authoritative database.
 * `client_offline.sql`: the offline slice for Android Room and the Desktop client.
 
-Never copy column lists into other documents. READMEs, the PRD and issues link to these files. A schema change is a `contract-change` PR (see `rules/team-workflow-and-prs.md`): update both SQL files, `contracts/openapi.yaml` if the API shape changes, `scripts/mock_hub.py` and `tests/` together.
+Never copy column lists into other documents. READMEs, the PRD and issues link to these files. A schema change is a `contract-change` PR (see `rules/team-workflow-and-prs.md`): update both SQL files, `contracts/openapi.yaml` if the API shape changes, and `tests/` together.
 
 Core tables share names and column meaning across server and clients: `users`, `classrooms`, `enrollments`, `announcements`, `announcement_comments`, `materials`, `material_chunks`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_questions`, `quiz_attempts`, `ai_chat_messages`, `topics`, `private_comments`. Server-only: `sessions`, `sync_revisions`, `hub_meta`, `classroom_teachers` (clients get co-teachers as `Classroom.co_teacher_ids`). Client-only: `sync_state`.
 

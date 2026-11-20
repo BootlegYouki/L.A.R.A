@@ -47,14 +47,14 @@ Known traps for this stack and hardware, each with the fix. Example: "Transsion 
 The team works one issue at a time, in step order, with one open PR (`rules/team-workflow-and-prs.md` section 1.1). List every issue of Sprints 1 and 2 in the order you will build them, what each one creates, and which earlier step it needs. Anything a later step reuses (a shared interface, a DB entity) is named here once, in the step that creates it.
 
 ## 11. Dependencies on Other Teams
-What you need from the other two teams and when. Default is: use `scripts/mock_hub.py` until the real endpoint merges.
+What you need from the other two teams and when. Default is: build to `contracts/` until the real endpoint merges.
 
 ## 12. Risks and Unknowns
 | Risk or spike | Owner | Decision date | Fallback |
 |---|---|---|---|
 
 ## 13. Commands and Verification
-Exact commands to build, test and run against the mock hub (agents run these to prove their work). Then: what is checked by unit tests, by integration against the mock hub, and what is proven on integration day against the real Hub.
+Exact commands to build, test and run against the real Hub (agents run these to prove their work). Then: what is checked by unit tests, by integration against the real Hub, and what is proven on integration day against the real Hub.
 For each Sprint 1 and Sprint 2 deliverable, the check that proves it.
 
 ## 14. Open Questions

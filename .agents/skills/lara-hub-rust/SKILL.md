@@ -5,7 +5,7 @@ description: Rust patterns for the L.A.R.A Local Hub (Axum, Tokio, SQLx on SQLit
 
 # L.A.R.A Hub: Axum, SQLx, SQLite
 
-Read `AGENTS.md` and `server/AGENTS.md` first, then the contract you implement. `scripts/mock_hub.py` and `tests/test_mock_hub.py` are the acceptance reference: your behavior must match them. Where this skill and a contract or rule disagree, the contract or rule wins. For general Rust idiom see the `rust-skills` skill.
+Read `AGENTS.md` and `server/AGENTS.md` first, then the contract you implement. `contracts/` is the acceptance reference: your behavior must match it. Where this skill and a contract or rule disagree, the contract or rule wins. For general Rust idiom see the `rust-skills` skill.
 
 ## 1. SQLite with SQLx
 
@@ -67,4 +67,4 @@ Read `AGENTS.md` and `server/AGENTS.md` first, then the contract you implement. 
 cd server/backend && cargo check --all-targets && cargo test      # what CI runs
 python3 ../../scripts/verify_invariants.py && python3 -m unittest discover ../../tests
 ```
-Compare your behavior with the mock hub flows for the routes you touched, and write what differs in the PR.
+Run the flows for the routes you touched against your Hub, and write what differs from the contract in the PR.

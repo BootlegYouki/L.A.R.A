@@ -21,9 +21,8 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 
 1. Read [`AGENTS.md`](./AGENTS.md) (what the system is, decisions already made, invariants) and your folder's `AGENTS.md`.
 2. Read your team `README.md` (it has a **Start Here** checklist).
-3. Run the Hub simulator and the checks:
+3. Run the checks (clients test against the real Hub, see `rules/developer-tooling-and-testing.md`):
    ```bash
-   python3 scripts/mock_hub.py                 # leave running; clients build against it
    python3 -m unittest discover tests
    python3 scripts/verify_invariants.py
    ```
@@ -34,10 +33,10 @@ You only edit your own team's folder. Shared paths are Lead-owned (see `.github/
 ## 2. Picking and Doing Work
 
 * **Board:** the [L.A.R.A Sprint Board](https://github.com/users/BootlegYouki/projects/2) shows every issue by Team, Sprint and Status. Move your card to *In Progress* when you start and *Done* when the PR merges.
-* **Find your list:** use the team and sprint filter links in the [README](./README.md#start-in-10-minutes). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the mock-hub flow to use.
-* **Your team works one issue at a time, in step order** (`2.1`, then `2.2`, ...). Both developers work that issue together and open one PR; start the next issue when it is merged. The three teams are the only parallel streams. **One issue = one PR.** An issue that depends on another team's step builds against the mock hub and does not wait.
-* Clients build against `scripts/mock_hub.py`. The real Hub is used on **integration day** at the end of each sprint.
-* **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + mock hub + tests) merged first. Never edit `contracts/` inside a feature PR.
+* **Find your list:** use the team and sprint filter links in the [README](./README.md#start-in-10-minutes). Every issue is labelled by team (`scope:*`) and sprint (`sprint:N`). Sprint themes are in the [milestones](https://github.com/BootlegYouki/L.A.R.A/milestones). Issues are titled `[TEAM sprint.step]` and name their dependencies, the contract they implement and the Hub flow to test.
+* **Your team works one issue at a time, in step order** (`2.1`, then `2.2`, ...). Both developers work that issue together and open one PR; start the next issue when it is merged. The three teams are the only parallel streams. **One issue = one PR.** An issue that depends on another team's step builds against the contract and does not wait.
+* Clients build and test against the real Hub (`server/backend`).
+* **Need a new route, event or column?** Do not add it in code. Ask the Lead: it becomes a separate `contract-change` PR (contracts + tests) merged first. Never edit `contracts/` inside a feature PR.
 * Stuck or found a contradiction between documents? Write it in the issue instead of guessing. The documents are ranked in [`docs/README.md`](./docs/README.md).
 
 ---
@@ -124,7 +123,7 @@ Run these from the repository root and your team folder; all must pass:
 | **Desktop** | in `desktop/`: `npm run lint` and `npm run build` |
 | **Mobile** | in `mobile/`: `./gradlew test lint` |
 
-Then run the real thing: start `python3 scripts/mock_hub.py`, exercise your feature against it, and test **with the Hub unreachable** (stop the mock hub, or use airplane mode). Go through the Acceptance Criteria in the issue one by one.
+Then run the real thing: start the real Hub (`rules/developer-tooling-and-testing.md` section 4), exercise your feature against it, and test **with the Hub unreachable** (stop the Hub, or use airplane mode). Go through the Acceptance Criteria in the issue one by one.
 
 ### Step 6: Push and open the pull request
 ```bash
@@ -143,7 +142,7 @@ gh pr create --base staging --title "feat(server): class code generation and app
 ### Step 7: Attach evidence (this is what the Lead reads first)
 A PR without evidence is sent back. Paste into the PR description or a comment:
 * **Test output:** the last lines of `cargo test` / `npm run build` / `./gradlew test lint` and the unittest run, showing they pass.
-* **Proof it works:** a log snippet or screenshot (or a short screen recording) of the feature running against the mock hub or the real Hub, **with the WAN unplugged**. Drag images straight into the PR text box.
+* **Proof it works:** a log snippet or screenshot (or a short screen recording) of the feature running against the real Hub, **with the WAN unplugged**. Drag images straight into the PR text box.
 * **Offline proof:** a screenshot or log of the feature with the Hub unreachable.
 * **Not verified:** if you could not test something (for example no physical budget phone), say so plainly. That is acceptable; hiding it is not.
 
@@ -154,7 +153,7 @@ After you push, GitHub runs the checks listed at the bottom of the PR. All must 
 
 | Failing check | Usually means | Fix |
 | :--- | :--- | :--- |
-| **Contracts & Mock Hub Validation** | A contract, schema or mock hub test failed | Run `python3 -m unittest discover tests` locally and read the failing test name |
+| **Contracts Validation** | A contract, schema or guardrail test failed | Run `python3 -m unittest discover tests` locally and read the failing test name |
 | **Invariant Guardrails** | A forbidden pattern (Firebase, Google Fonts, CDN) was added, or Android Filipino strings are missing | Run `python3 scripts/verify_invariants.py`; remove the link or add the `values-tl` string |
 | **Server / Desktop / Mobile CI** | Build, lint or type error in your team's code | Run your team's commands from Step 5 and fix the first error |
 
@@ -190,7 +189,7 @@ Closes #6
 ## Verification & Testing
 - cargo check --all-targets: OK; cargo test: 14 passed
 - python3 -m unittest discover tests: 34 OK
-- Ran against the same flow as tests/test_mock_hub.py::test_join_approve_flow_pushes_websocket_events
+- Ran the join, approve and push flow against the real Hub
   (log below), WAN unplugged
 - Hub unreachable case: N/A (server-side change)
 - Not verified: Windows firewall behavior (tested on Linux only)
@@ -206,8 +205,8 @@ Closes #6
 ### Special cases
 | Situation | What to do |
 | :--- | :--- |
-| **You need a new route, event or column** | Stop. Comment on the issue. The Lead opens a separate `contract-change` PR (contracts + mock hub + tests). Branch from `staging` after it merges. Never edit `contracts/` in your feature PR. |
-| **Your issue depends on another team's unmerged work** | Build against `scripts/mock_hub.py` and say so in the PR. Do not copy their unmerged code into your branch. |
+| **You need a new route, event or column** | Stop. Comment on the issue. The Lead opens a separate `contract-change` PR (contracts + tests). Branch from `staging` after it merges. Never edit `contracts/` in your feature PR. |
+| **Your issue depends on another team's unmerged work** | Build against `contracts/` and say so in the PR. Do not copy their unmerged code into your branch. |
 | **The PR is getting huge** | Split it: land the foundation (models, DTOs) first, then the screen or route. One reviewable idea per PR. |
 | **You found a bug outside your folder** | Open a Bug Report issue for the owning team. Do not fix it in your PR. |
 | **You are blocked or the requirement is unclear** | Write the question on the issue, tag the Lead, and work on another card meanwhile. |
@@ -227,7 +226,7 @@ Closes #6
 
 ### Definition of done
 - [ ] Linked issue, one team, one PR, based on the latest `staging`
-- [ ] Contract, mock hub and tests updated first if the API changed (separate PR)
+- [ ] Contract and tests updated first if the API changed (separate PR)
 - [ ] Build, tests and `verify_invariants.py` pass; output attached
 - [ ] Works with the Hub unreachable (offline state defined)
 - [ ] English and Filipino strings, design tokens only, touch targets at least 52dp on phones and 40px buttons on desktop
@@ -248,7 +247,7 @@ A PR containing any of these is rejected immediately:
 4. **Quiz lockout bypass:** any path that lets the AI tutor run while the learner has an `IN_PROGRESS` quiz attempt.
 5. **Accessibility regressions:** touch targets under 52dp on phones (56dp for primary actions and quiz options) or desktop buttons under 40px or English-only strings.
 6. **Secrets reaching a client:** `pin_hash`, other people's LRN, `correct_answer`, or server file paths in a response, client table or log.
-7. **Contract drift:** a route, event or column changed in code without `contracts/`, the mock hub and the tests.
+7. **Contract drift:** a route, event or column changed in code without `contracts/` and the tests.
 8. **Scope violation:** a PR that edits more than one team's folder or a Lead-owned path inside a feature PR.
 
 ---

@@ -13,7 +13,7 @@ assignees: ''
 - [ ] `contracts/` (API & Event Schemas)
 
 ## 2. Test Environment
-- **Hub:** (mock hub `scripts/mock_hub.py`, or real Hub build/version and the machine it runs on)
+- **Hub:** (real Hub build/version and the machine it runs on)
 - **Device Model:** (e.g., realme Note 50, Infinix Smart 8, Lenovo Laptop, PC Lab)
 - **OS Version:** (e.g., Android 14, Windows 11, Ubuntu 24.04)
 - **Physical RAM:** (e.g., 3GB, 4GB, 8GB, 16GB)

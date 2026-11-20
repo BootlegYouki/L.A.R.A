@@ -28,7 +28,7 @@ Read `AGENTS.md` and `desktop/AGENTS.md` first. Where this skill and a contract 
 
 ## 3. Reaching the Hub from the webview
 
-* The Hub is plain HTTP on the LAN. Decide once how the webview talks to it and write it in `desktop/docs/`: either `fetch` from the webview (then the Hub must send CORS headers, which the mock hub does and the real Hub must match, and the Tauri CSP must allow the Hub's origin), or Tauri's HTTP plugin, which sends the request from Rust. Test both the REST calls and the WebSocket against `scripts/mock_hub.py`.
+* The Hub is plain HTTP on the LAN. Decide once how the webview talks to it and write it in `desktop/docs/`: either `fetch` from the webview (then the Hub must send CORS headers, which the real Hub must send, and the Tauri CSP must allow the Hub's origin), or Tauri's HTTP plugin, which sends the request from Rust. Test both the REST calls and the WebSocket against the real Hub.
 * HTML5 `<video>` cannot set headers: use `GET /api/materials/{id}/stream?token=` and make sure the CSP allows media from the Hub.
 * Keep the token in the OS-backed store the Tech Spec chooses. Never log tokens, PINs or LRNs.
 * WebSocket: send `EVENT_HELLO` with the token, reconnect with backoff 1 s, 2 s, 4 s, max 10 s, and never show a blocking dialog when the Hub is gone. Show the offline banner.
@@ -63,7 +63,7 @@ Read `AGENTS.md` and `desktop/AGENTS.md` first. Where this skill and a contract 
 
 ```bash
 cd desktop && npm ci && npm run lint && npm run build     # what CI runs
-npm run tauri dev                                          # run it against scripts/mock_hub.py
+npm run tauri dev                                          # run it against the real Hub
 python3 ../scripts/verify_invariants.py
 ```
-Stop the mock hub while the app runs and confirm it shows the offline state with no blocking error.
+Stop the Hub while the app runs and confirm it shows the offline state with no blocking error.

@@ -25,7 +25,7 @@ A good spec for humans and a good spec for agents are the same thing, taken a li
 5. **Contract usage is a complete table.** Each route and event this team touches, the module that handles it, and what happens on each documented error code, on timeout and when the Hub is unreachable.
 6. **Offline and sync are explicit.** What is stored locally, the `sync_status` lifecycle, the cursor and transaction rule from `rules/database-and-sync.md`, and what each screen or service does with no Hub. "Handled gracefully" is not an answer.
 7. **The build order is written.** The team works one issue at a time in step order, so the spec lists the order, what each step creates, and which earlier step it reuses. A later step never re-creates something an earlier step owns (a shared interface, a DB entity); it imports it by the name in check 4.
-8. **Every sprint item is testable.** Each deliverable has a command or a manual check that proves it, against the mock hub first. If you cannot say how you would prove it, it is not specified yet.
+8. **Every sprint item is testable.** Each deliverable has a command or a manual check that proves it, against the real Hub. If you cannot say how you would prove it, it is not specified yet.
 9. **Risks have an owner and a date.** Spikes (weak-phone memory, Hub AI streaming, Rust SSE) are scheduled, not "to be investigated".
 10. **Non-goals are written.** What this team is deliberately not building, so an agent does not helpfully add it.
 
@@ -36,7 +36,7 @@ A good spec for humans and a good spec for agents are the same thing, taken a li
 * **Prefer tables, lists and code blocks to prose.** Paths, names and commands go in backticks so they can be copied exactly.
 * **Say "must" and "must not".** Not "should probably" or "ideally".
 * **Give an example for any non-obvious pattern.** A 10-line sample (a repository method, an Axum handler, a Compose screen state) beats a paragraph, and agents copy the pattern.
-* **Put the exact commands in.** Build, test, run against the mock hub. An agent runs them to prove its work.
+* **Put the exact commands in.** Build, test, run against the real Hub. An agent runs them to prove its work.
 * **Name the traps.** The gotchas you already know (Transsion battery killers, `MulticastLock`, SQLx migrations without PRAGMAs) belong in the Pitfalls section, because an agent will not know them otherwise.
 * **Date it and keep it current.** When a decision changes, change the spec in the same PR as the code. A stale spec is worse than none, because agents trust it.
 * **Do not put secrets or real learner data in it.** Use the seed accounts from `AGENTS.md`.

@@ -11,7 +11,7 @@ Everything the three teams must agree on lives here. Nothing else is shared.
 | [`ai/socratic_system_prompt.txt`](./ai/socratic_system_prompt.txt) | The one Socratic system prompt, with `{reply_language}` and `{lesson_chunks}` placeholders | Hub prompt builder only (loaded unchanged) |
 | [`naming_rules.md`](./naming_rules.md) | Serialization, privacy and error rules | All three |
 
-The behavior behind these files is demonstrated by [`../scripts/mock_hub.py`](../scripts/mock_hub.py) and checked by [`../tests/`](../tests/).
+These files are checked by [`../tests/`](../tests/) and implemented by the real Hub in `server/backend`.
 
 ## Changing a contract (Lead-reviewed `contract-change` PR)
 
@@ -20,8 +20,7 @@ Contract changes are **never** part of a feature PR. They go first, in their own
 1. **Ask:** open or comment on the issue explaining the need. The Lead decides. If you think the design itself is wrong or could be better, not just a missing field, open a *Design Proposal* issue first (`rules/team-workflow-and-prs.md` section 1.2).
 2. **Change together** (one PR, label `contract-change`):
    * `contracts/openapi.yaml`, `contracts/events/*.json` and/or `contracts/schema/*.sql`. Keep both SQL files in parity (see `rules/database-and-sync.md`).
-   * `scripts/mock_hub.py` so it serves the change.
-   * `tests/` so the change is covered. `tests/test_contract_coverage.py` fails if you forget the mock.
+   * `tests/` so the change is covered. `tests/test_contract_coverage.py` fails if a path has no route in the Hub source or an event is undocumented.
 3. **Verify:** `python3 -m unittest discover tests` and `python3 scripts/verify_invariants.py`.
 4. **Tag all three team leads** in the PR. The Lead merges.
 5. **Then** each team updates its code on a normal feature branch from the new `staging`.

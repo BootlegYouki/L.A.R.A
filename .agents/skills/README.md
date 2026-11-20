@@ -17,7 +17,7 @@ Where a skill and a project rule disagree, `AGENTS.md` and `contracts/` win (see
 
 ## Skills written for this project
 
-`lara-android-offline`, `lara-desktop-web`, `lara-hub-rust` and `lara-ai-runtime` are original to this repository. Their library facts were checked against the current official documentation (Axum, SQLx, tower-http, Tailwind CSS 4, Tauri plugin-sql, llama.cpp) on 2026-10-10. Android cleartext traffic and the WorkManager network constraint were not checked against the docs, so those two items say "test it first". Treat every skill as guidance: the contracts and rules win, and a real device or the mock hub is the final check.
+`lara-android-offline`, `lara-desktop-web`, `lara-hub-rust` and `lara-ai-runtime` are original to this repository. Their library facts were checked against the current official documentation (Axum, SQLx, tower-http, Tailwind CSS 4, Tauri plugin-sql, llama.cpp) on 2026-10-10. Android cleartext traffic and the WorkManager network constraint were not checked against the docs, so those two items say "test it first". Treat every skill as guidance: the contracts and rules win, and a real device and the real Hub are the final check.
 
 ## Third-party skills
 

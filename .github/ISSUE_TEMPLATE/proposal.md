@@ -18,7 +18,7 @@ Cite the file and section (PRD `FR-x.x`, a contract route, a rule, a design-syst
 One change. Say how a teacher or learner would see the difference.
 
 ## 4. What it touches
-- [ ] `contracts/` (and the mock hub and tests)
+- [ ] `contracts/` (and tests)
 - [ ] `AGENTS.md` or `rules/` (an invariant in `AGENTS.md` section 3? say which and why)
 - [ ] `design-system/`
 - [ ] `docs/PRD.md`

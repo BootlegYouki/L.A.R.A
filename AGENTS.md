@@ -33,22 +33,23 @@ If you find a conflict, do not pick silently: fix the lower document, or if the 
 ### 1.2 Commands
 | Task | Command |
 |---|---|
-| Run the Hub simulator (clients build against it) | `python3 scripts/mock_hub.py` |
-| All contract, schema and mock hub tests | `python3 -m unittest discover tests` |
+| Start the real Hub (the only test target for clients) | `cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub` (in `server/backend/`) |
+| All contract, schema and guardrail tests | `python3 -m unittest discover tests` |
 | Offline invariant guardrail | `python3 scripts/verify_invariants.py` |
 | Mobile | `./gradlew test lint` (in `mobile/`) |
 | Desktop | `npm run build` (`tsc && vite build`) (in `desktop/`) |
 | Server | `cargo check && cargo test` (in `server/backend/`) |
 
-Seed accounts for the mock hub (PIN `123456`): `T-0001` (teacher, class code `K7M4QX`), `123456789012` (enrolled learner), `123456789013` (join with the code), `ADMIN-0001` (the Hub admin, not a teacher).
+The real Hub is the only test target: start it with the server commands above. `LARA_TEST_SEED=1` creates the test accounts (see `rules/developer-tooling-and-testing.md` section 4).
 
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
 * The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open feature PR at a time; an evaluation PR may run alongside (`rules/team-workflow-and-prs.md` section 1.1).
 * **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
-* Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
+* Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/` and the tests pass; then the server implements it.
 
 ### 1.4 Decisions already made (do not re-litigate)
+* **No Mock Hub** (decided 2026-11-20): clients are built and tested against the real Hub.
 * Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
 * The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
 * **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
@@ -187,7 +188,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 ### Definition of done (every PR)
 - [ ] Linked issue (`Closes #n`), one team, one PR
-- [ ] Contract, mock hub and tests updated first if the API changed
+- [ ] Contract and tests updated first if the API changed
 - [ ] Build, tests and `verify_invariants.py` pass, output attached
 - [ ] Works with the Hub unreachable (offline state defined)
 - [ ] Strings in resources (English), tokens only, targets at least 52dp on phones and 40px buttons on desktop
@@ -208,5 +209,4 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 | **Cursor / `seq`** | Strictly increasing sync position; never a clock time |
 | **Socratic** | Guide with questions and one clue at a time instead of giving the answer |
 | **Grounding** | Tying every tutor reply to a specific lesson chunk |
-| **Mock hub** | `scripts/mock_hub.py`, a Python stand-in for the Hub that implements the whole contract |
 | **Remote/Suspension Mode** | The one sanctioned exception to LAN-only: a Hub reachable from outside the school network through its own Cloudflare Tunnel, for use while classes are suspended (section 3.5) |

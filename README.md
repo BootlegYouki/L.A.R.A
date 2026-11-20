@@ -28,14 +28,14 @@ The people who review the project check it **as end users**: they run the app li
 ## Start in 10 minutes
 
 1. **Clone and install** what your team needs (below). Everyone needs Git and Python 3.11+ with `pip install pyyaml`.
-2. **Run the Hub simulator** so you can build without waiting for anyone:
+2. **Run the real Hub** (the only test target, no mock):
    ```bash
-   python3 scripts/mock_hub.py        # REST :8080, WebSocket :8081, UDP beacon :8888
+   cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub   # REST :8080, WebSocket :8081
    ```
-   Seed accounts (PIN `123456`): teacher `T-0001` (class code `K7M-4QX`), learner `123456789012` (enrolled), learner `123456789013` (joins with the code), admin `ADMIN-0001` (the Hub admin, not a teacher).
+   Test accounts and PIN: `rules/developer-tooling-and-testing.md` section 4.
 3. **Check your setup is healthy** (these are what CI runs):
    ```bash
-   python3 -m unittest discover tests     # contracts, schema, mock hub, guardrails
+   python3 -m unittest discover tests     # contracts, schema, guardrails
    python3 scripts/verify_invariants.py   # no cloud dependencies, Filipino strings match English
    ```
 4. **Take your team's next issue.** A team works one issue at a time, in step order (`2.1`, then `2.2`), both developers together, with one open PR. Find it on the [sprint board](https://github.com/users/BootlegYouki/projects/2), or filter by team: [mobile](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Amobile%22) · [desktop](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22) · [server](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Aserver%22). Comment that you are taking it. Titles look like `[MOBILE 2.3]` (team, sprint, step).
@@ -45,7 +45,7 @@ The people who review the project check it **as end users**: they run the app li
 
 | Team | Install | Run and check (the same commands CI runs) |
 | :--- | :--- | :--- |
-| **Mobile** | JDK 17, Android Studio with an SDK and an emulator | In `mobile/`: `./gradlew lintDebug testDebugUnitTest`, and `./gradlew installDebug` to run it. An emulator reaches your PC at `10.0.2.2`, so connect to the mock hub by typing `10.0.2.2` port `8080` (the emulator cannot auto-discover the Hub). |
+| **Mobile** | JDK 17, Android Studio with an SDK and an emulator | In `mobile/`: `./gradlew lintDebug testDebugUnitTest`, and `./gradlew installDebug` to run it. An emulator reaches your PC at `10.0.2.2`, so connect to the Hub by typing `10.0.2.2` port `8080` (the emulator cannot auto-discover the Hub). |
 | **Desktop** | Node 20, Rust stable, [Tauri 2 system dependencies](https://v2.tauri.app/start/prerequisites/) | In `desktop/`: `npm ci`, `npm run tauri dev` to run it, `npm run lint`, `npm run build`. |
 | **Server** | Rust stable, the Tauri 2 system dependencies for the window | In `server/backend/`: `cargo check --all-targets` and `cargo test`. |
 
@@ -64,7 +64,7 @@ for file names and patterns. The issue is the whole scope: its sub-tasks, Target
 - If the API, an event or a column must change, stop and tell me: that needs its own contract-change PR first.
 - No internet at runtime: no Firebase, Google Play Services, CDNs, Google Fonts or analytics. Fonts and icons come from design-system/assets/.
 - All user text in English and Filipino. Touch targets at least 52dp on phones (56dp for primary actions), 40px buttons on desktop. Design tokens only.
-- Build against scripts/mock_hub.py. Handle the Hub being unreachable without crashing or losing data.
+- Test against the real Hub. Handle the Hub being unreachable without crashing or losing data.
 - Never put answer keys, PIN data or other learners' LRNs where a client can see them.
 - Make the smallest change that satisfies the issue. If a requirement is missing or two documents
   disagree, ask me instead of guessing.
@@ -83,7 +83,7 @@ Skills for your stack (Compose, Tauri, Rust, and L.A.R.A rules) are in [`.agents
 | Rule | What it means |
 | :--- | :--- |
 | **One issue = one team = one PR** | Keep it small. Do not touch another team's folder. |
-| **Contract first** | [`contracts/`](./contracts/) is the only thing the three programs share. Never change an endpoint, event or column in code before it exists there, in the mock hub and in the tests. |
+| **Contract first** | [`contracts/`](./contracts/) is the only thing the three programs share. Never change an endpoint, event or column in code before it exists there, and in the tests. |
 | **Branch flow** | Branch from `staging`, open the PR to `staging`. Never base work on `main`: the Lead decides what goes to `main`, and it only receives `staging`. CI flags anything else. |
 | **One issue at a time per team** | The three teams work in parallel. Inside a team, both developers work the same issue, in step order, and open one PR. Start the next issue when that PR is merged. |
 | **Docs travel with code** | Update your folder's `docs/` (purpose, key files, data flow, gotchas). |
@@ -115,7 +115,7 @@ Read the PR description, run your "How to test" steps like an end user, then try
 | [`rules/`](./rules/) | Invariants for networking, sync, quizzes, AI, UI, tooling. |
 | [`design-system/`](./design-system/) | Tokens, components and the Google Classroom layout reference. Open `showcase.html` (components) and `prototype.html` (the visual reference for the desktop Home, Stream and quiz) offline. |
 | [`docs/`](./docs/README.md) | PRD, templates, and the documentation map. |
-| [`scripts/`](./scripts/) and [`tests/`](./tests/) | The mock hub, the guardrail scanner, and their tests. |
+| [`scripts/`](./scripts/) and [`tests/`](./tests/) | The guardrail scanner, the contract tests and their tests. |
 | `server/`, `desktop/`, `mobile/` | One program each, with its own `AGENTS.md` and `docs/`. |
 
 When two documents disagree, the higher one wins: `contracts/`, then `AGENTS.md` and `rules/`, then `design-system/`, then `docs/PRD.md`, then team docs and issues.

@@ -1,6 +1,6 @@
 # Developer Tooling, Contracts & Testing Rules
 
-This rule document governs the usage of shared API contracts, the standalone Mock Hub simulator, pre-push guardrail validation, and the automated test suite.
+This rule document governs the usage of shared API contracts, the real-Hub test setup, pre-push guardrail validation, and the automated test suite.
 
 All AI agents and human contributors must follow these rules.
 
@@ -20,26 +20,12 @@ The `contracts/` directory is the single source of truth for all network communi
 
 ---
 
-## 2. Local Hub Simulation (`scripts/mock_hub.py`)
+## 2. Test Against the Real Hub
 
-Mobile and Desktop developers must never be blocked waiting for the Rust server implementation. The standalone Mock Hub is a zero-dependency Python simulation of every Hub network service in `contracts/`.
+Clients have no Hub simulator (decided 2026-11-20). Mobile and Desktop build and test against the real Hub (`server/backend`). A route the Hub has not built yet answers `501 NOT_IMPLEMENTED`; the contract in `contracts/` is the truth until it lands.
 
-### Usage
-Run from the repository root:
-```bash
-python3 scripts/mock_hub.py
-```
-State is in memory and resets on restart. Seeded accounts (PIN `123456`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (not enrolled, use for the join and approval flow), and the Hub admin `ADMIN-0001` (role `ADMIN`, not a teacher; the only account accepted by `/api/admin/*`, backup and restore).
-
-### What It Simulates
-1. **UDP Discovery Beacon (`255.255.255.255:8888`):** every 3 seconds.
-2. **Captive Web Portal (`/download`).**
-3. **REST (`:8080`):** every operation in `contracts/openapi.yaml`: auth, admin setup and accounts, classrooms (approval, rename, archive, remove a learner, co-teachers), delta-sync, topics, announcements and comments, materials (upload, edit, delete, download, chunks, `206` streaming), assignments (create, edit, delete, homework upload, private comments), teacher grading, quizzes (create, edit while draft, start, begin, submit, close, results), export and backup. Bearer auth is enforced. Media routes also accept `?token=`.
-4. **WebSocket (`:8081`):** `EVENT_HELLO` handshake, then pushes `EVENT_JOIN_REQUEST`, `EVENT_JOIN_APPROVAL`, `EVENT_ANNOUNCEMENT_PUSH`, `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE`, and streams `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM` for `EVENT_AI_CHAT_REQUEST`.
-5. **Rules it enforces so clients meet them early:** learner quiz payloads never contain `correct_answer`; AI requests fail with `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt; quiz submissions later than the limit plus 60 seconds fail with `TIME_LIMIT_EXCEEDED`; held scores are `null` for the learner until the quiz is closed; private comments and homework reach only their owner and the class teachers; a co-teacher can teach but not rename or archive; unknown routes return `ROUTE_NOT_FOUND`.
-
-### Parity Rule
-Any change to `contracts/` must be mirrored in the mock hub in the same PR. `tests/test_contract_coverage.py` fails CI otherwise.
+### Contract changes
+A change to `contracts/` is a `contract-change` PR that updates `contracts/` and `tests/` together; the server team then implements it. `tests/test_contract_coverage.py` fails CI when an `openapi.yaml` path has no route literal in `server/backend/src` (a crude string match: it ignores the HTTP method and paths built at runtime), or an event schema is missing from `contracts/events/README.md`.
 
 ---
 
@@ -66,32 +52,24 @@ If any violation is detected, the script exits with code 1 and prints the exact 
 
 ## 4. Automated Verification Test Suite (`tests/`)
 
-All contract schemas, mock hub endpoints and guardrail scanners are covered by automated unit tests in `tests/`. So are the design tokens (`test_design_tokens.py` compares `design-system/showcase.html` with every token mirror) and the prototype (`test_prototype_sync.py` fails when `design-system/prototype.html` is stale; regenerate it with `python3 scripts/build_prototype.py`).
+All contract schemas and guardrail scanners are covered by automated unit tests in `tests/`. So are the design tokens (`test_design_tokens.py` compares `design-system/showcase.html` with every token mirror) and the prototype (`test_prototype_sync.py` fails when `design-system/prototype.html` is stale; regenerate it with `python3 scripts/build_prototype.py`).
 
 ### Running Tests Locally
 ```bash
 python3 -m unittest discover tests
 ```
 
-### Running the Hub tests against the real Hub
-`tests/test_mock_hub.py` and `tests/test_contract_coverage.py` can target an already-running Hub instead of the mock, so one suite checks both:
-```bash
-cd server/backend && cargo run          # Hub on :8080 / :8081
-LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub tests.test_contract_coverage
-```
-`LARA_HUB_WS_URL` (default `ws://<host of LARA_HUB_URL>:8081`) overrides the WebSocket address. With the switch set the tests do not start the mock, and the ones that read mock internals (`ROUTES`, `mock_hub.py` source, `server.state`) are skipped. CI does not run this mode yet: the Hub still answers `501 NOT_IMPLEMENTED` for most routes (all tests fail at login), so it would be red. The server team runs it as routes land. Preconditions the real Hub does not meet yet: the tests log in with the mock's seed accounts (`T-0001`, `123456789012`, `ADMIN-0001`, PIN `123456`) and its seed classroom and quiz ids, and the Hub has no seed accounts (admin comes from `POST /api/admin/setup`), so a fresh Hub needs equivalent data loaded first, and the tests assume a state reset the real Hub cannot do. Once the suite is green against the real Hub, the server team may drop their Rust ports of these tests.
-
-### Checking client PRs against the real Hub
-Build against the mock hub. Before you open a mobile or desktop PR, also run the PR's main flow against the real Hub on `staging`, so differences between the mock and the Hub show up in your PR instead of at the integration checkpoint.
+### Running a client against the real Hub
+Before you open a mobile or desktop PR, run the PR's main flow against the real Hub on `staging`.
 
 ```bash
 cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub
 ```
-`LARA_TEST_SEED=1` creates the mock's accounts (`ADMIN-0001`, `T-0001`, `123456789012`, `123456789013`, PIN `123456`), but not the mock's class or posts: create those through the app or the API. Delete the data folder to start fresh. Point the app at `127.0.0.1:8080` (desktop), `10.0.2.2:8080` (emulator) or the PC's LAN IP (phone).
+`LARA_TEST_SEED=1` creates the test accounts (`ADMIN-0001`, `T-0001`, `123456789012`, `123456789013`) but no class or posts: create those through the app or the API. The contract PIN is 6 digits; until #339 the server still seeds PIN `1234`, so read `server/backend/tests/seed.rs` for the current value. Delete the data folder to start fresh. Point the app at `127.0.0.1:8080` (desktop), `10.0.2.2:8080` (emulator) or the PC's LAN IP (phone).
 
-* A route the Hub has not built yet answers `501 NOT_IMPLEMENTED`. That part of your PR is mock-only: say so under Not Verified (for example "class settings: real Hub answers 501, tested on the mock only").
+* A route the Hub has not built yet answers `501 NOT_IMPLEMENTED`. Say so under Not Verified (for example "class settings: real Hub answers 501, not tested").
 * Put one screenshot or log of the flow against the real Hub in the PR's Evidence.
-* If the real Hub and the mock answer differently for the same request, the contract decides. Report the difference on the PR and tag the server team; do not code around it in the client.
+* If the Hub answers differently from the contract, the contract decides. Report the difference on the PR and tag the server team; do not code around it in the client.
 
 ### Quality Gate Rule
 * All tests in `tests/` must pass before pushing to `staging` or `main`.
