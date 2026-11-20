@@ -21,6 +21,14 @@ Windows, Node 22.19.0, npm 10.9.3, isolated `node_modules` installed by `npm ci 
 - `python -m unittest discover tests`: all 72 shared tests passed with the bundled project Python runtime, project dependency path and UTF-8 mode.
 - `git diff --check`: passed.
 
+## Native real-Hub verification
+
+The coordinating Windows run served this branch's frontend in the native Tauri window using the unchanged native binary (native source/config matches this branch). It used the real staging Hub and two approved synthetic learner classes. The current server's legacy seed PIN was used; this does not claim six-digit server acceptance (#339).
+
+Started an actual saved lesson video before each navigation action. Home, Archived classes, another class, Settings and the existing video Back action each unmounted the video, paused the previous HTML media element and displayed the expected destination. Archived navigation focused its heading. All five checks passed again with the real Hub stopped, using cached classes and the downloaded video.
+
+[Real-Hub navigation](screenshots/350-real-navigation.png), [navigation with Hub stopped](screenshots/350-offline-navigation.png).
+
 ## Not verified
 
-No native Tauri/Rust, real-Hub, physical-device or release-installer run was performed here. The App regression proves component routing; native playback shutdown and the visible destination still need the real-app check. No installed app or user data was touched.
+Linux/macOS, physical second-PC/WAN-disconnected operation and a new installer were not tested. The installed app files were not changed; native checks used synthetic task accounts and the existing task cache on this PC.
