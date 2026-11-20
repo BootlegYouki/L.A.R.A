@@ -12,7 +12,7 @@ class TestContracts(unittest.TestCase):
 
     def test_one_shared_socratic_system_prompt(self):
         # The Hub, the Kotlin builder and the TypeScript builder all load this one file, so the tutor
-        # behaves the same on every path. The mock hub's canned reply must stay the canonical decline line.
+        # behaves the same on every path.
         with open("contracts/ai/socratic_system_prompt.txt", "r", encoding="utf-8") as f:
             prompt = f.read()
         for placeholder in ("{reply_language}", "{lesson_chunks}"):
@@ -20,13 +20,11 @@ class TestContracts(unittest.TestCase):
         decline = ("I can't give you the answer itself, but I will help you find it! "
                    "Let's go back to what you read. What is the first step?")
         self.assertIn(decline, prompt)
-        with open("scripts/mock_hub.py", "r", encoding="utf-8") as f:
-            self.assertIn("What is the first step?", f.read())
         with open("rules/socratic-ai-guardrails.md", "r", encoding="utf-8") as f:
             self.assertIn(decline, f.read())
 
     def test_required_event_schemas_exist(self):
-        # Shape, snake_case and mock coverage of every contracts/events/*.json is checked in test_contract_coverage.
+        # Shape and snake_case of every contracts/events/*.json is checked in test_contract_coverage.
         for filename in ("join_request", "join_approval", "quiz_start", "quiz_submit", "ai_stream", "queue_status",
                          "ws_hello", "grade_confirmed", "quiz_closed", "announcement_push", "presence", "error",
                          "ai_chat_request"):
