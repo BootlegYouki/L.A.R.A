@@ -155,7 +155,7 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                 Text(learner?.user?.fullName ?: stringResource(R.string.review_learner), style = MaterialTheme.typography.titleMedium)
                 if (selected.fileType == "IMAGE") ReviewPhoto(container, userId, selected, online) { access = 1; scope.launch { container.setReviewDenied(assignment.id, true) } }
-                else Text(stringResource(R.string.review_document))
+                else ReviewDocument(container, userId, selected.id, online) { access = 1; scope.launch { container.setReviewDenied(assignment.id, true) } }
                 OutlinedTextField(score, { score = it }, label = { Text(stringResource(R.string.review_score, assignment.maxPoints)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = online && !archived && !busy,
                     isError = score.isNotEmpty() && validatedScore(score, assignment.maxPoints) == null, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),

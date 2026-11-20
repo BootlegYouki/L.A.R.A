@@ -427,7 +427,11 @@
     <string name="review_photo">Learner’s homework photo. Pinch to zoom and drag to move.</string>
     <string name="review_photo_error">The photo could not be opened. Please try again when the Hub is available.</string>
     <string name="review_photo_offline">The photo requires the Hub.</string>
-    <string name="review_document">This submission is a document. Document review is not available on this screen.</string>
+    <string name="review_document">Submitted document</string>
+    <string name="review_document_unavailable">This document could not be opened on this device. Ask the learner to submit a smaller PDF or Word document.</string>
+    <string name="review_document_offline">Connect to the Hub to open this document.</string>
+    <string name="review_document_previous">Previous page</string>
+    <string name="review_document_next">Next page</string>
     <string name="review_retry">Try connecting again</string>
     <string name="review_zoom_in">Zoom in</string>
     <string name="review_zoom_out">Zoom out</string>

@@ -52,7 +52,7 @@ class GradingApi(private val sessions: EnrollmentApi) {
         }
     }
 
-    suspend fun file(userId: String, submissionId: String, destination: File) = withContext(Dispatchers.IO) {
+    suspend fun file(userId: String, submissionId: String, destination: File, maxBytes: Long = 20L * 1024 * 1024) = withContext(Dispatchers.IO) {
         require(validId(submissionId))
         try {
             client.newCall(request(userId, "/api/submissions/$submissionId/file").get().build()).execute().use { response ->
@@ -65,7 +65,7 @@ class GradingApi(private val sessions: EnrollmentApi) {
                         val count = input.read(buffer)
                         if (count < 0) break
                         size += count
-                        if (size > 20L * 1024 * 1024) throw IOException("File too large")
+                        if (size > maxBytes) throw IOException("File too large")
                         output.write(buffer, 0, count)
                     }
                     if (size == 0L) throw IOException("Empty file")

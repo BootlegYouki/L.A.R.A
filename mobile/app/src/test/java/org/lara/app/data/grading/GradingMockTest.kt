@@ -82,6 +82,10 @@ class GradingMockTest {
                 GradingApi(session(otherTeacher)).list(otherTeacher.user.id, assignment)
                 fail("Expected 403")
             } catch (error: HubFailure) { assertEquals(403, error.status) }
+            try {
+                GradingApi(session(otherTeacher)).file(otherTeacher.user.id, id, downloaded)
+                fail("Expected file access to be forbidden")
+            } catch (error: HubFailure) { assertEquals(403, error.status) }
         } finally { file.delete(); downloaded.delete(); db.close() }
     }
 }
