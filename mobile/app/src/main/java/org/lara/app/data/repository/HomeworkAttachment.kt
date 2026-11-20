@@ -22,7 +22,9 @@ object HomeworkAttachment {
 
     fun maxBytes(file: File): Long = if (type(file) == "IMAGE") MAX_PHOTO_BYTES else MAX_DOCUMENT_BYTES
 
-    fun displayName(file: File): String = file.name.substringAfter('_', file.name)
+    // Photos are temp files with random names; the Hub has always seen them as homework.<ext>.
+    fun displayName(file: File): String = if (type(file) == "IMAGE") "homework.${file.extension.lowercase(Locale.ROOT)}"
+        else file.name.substringAfter('_', file.name)
 
     fun mimeType(file: File): String = when (file.extension.lowercase(Locale.ROOT)) {
         "pdf" -> "application/pdf"
