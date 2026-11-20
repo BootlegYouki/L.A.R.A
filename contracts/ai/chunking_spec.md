@@ -6,7 +6,7 @@
 
 ## 1. What this is
 
-Since 2026-11-20 **the devices parse documents, not the Hub** ([decision record](../../docs/decisions/2026-11-20-no-ai-on-hub.md)). A teacher uploads a PDF (text layer) or `.docx` as an ordinary handout. The Hub stores and syncs the *file*. Each learner and teacher device, once it has the file, extracts the text, cleans it, cuts it into chunks and keeps them in its **own** local SQLite `material_chunks` table (never synced, the Hub keeps none). The on-device tutor retrieves from those chunks.
+Since 2026-11-20 **the devices parse documents, not the Hub** ([decision record](../../docs/decisions/2026-11-20-no-ai-on-hub.md)). A teacher uploads a PDF (text layer) or `.docx` as an ordinary handout. The Hub stores and syncs the *file*. **Lazily**, when a learner taps the AI button to open the chat, the device extracts the text of the class's allowed materials (files already on the device), cleans it, cuts it into chunks and keeps them in its **own** local SQLite `tutor_chunks` table (never synced, the Hub keeps none). Nothing is parsed in the background, at sync time or on the Hub. The on-device tutor retrieves from those chunks. They are cached per material by file hash plus `spec_version`.
 
 Mobile (Kotlin) and desktop (Rust or TypeScript) are two implementations of the same job. **They must give the same chunks from the same handout**, or the tutor would answer differently on a phone and a laptop. This spec and its golden fixtures are what keeps them aligned:
 
@@ -57,7 +57,7 @@ Rules:
 
 ## 5. The chunk record
 
-Stored by each device in `material_chunks` (`contracts/schema/client_offline.sql`; the planned extra columns are in [`planned/on-device-documents.md`](../planned/on-device-documents.md)):
+Stored by each device in its local `tutor_chunks` table (planned, defined in [`planned/on-device-documents.md`](../planned/on-device-documents.md); it is not the Hub-made reader table `material_chunks` of `contracts/schema/client_offline.sql`):
 
 | Field | Rule |
 |---|---|
@@ -70,7 +70,7 @@ Stored by each device in `material_chunks` (`contracts/schema/client_offline.sql
 
 ## 6. Failure
 
-If extraction fails, finds no text or hits a limit, the document gets no chunks. The device writes one line to its own log and nothing else: no teacher or learner screen, no Hub call. A document whose file is not yet on the device has no chunks either, so the tutor cannot use it until the learner has the file.
+If extraction fails, finds no text or hits a limit, the document gets no chunks. The device writes one line to its own log and nothing else: no teacher or learner screen, no Hub call. A document whose file is not yet on the device has no chunks either: if the Hub is unreachable the learner is told to download the material first, and the tutor cannot use it until they have the file.
 
 ## 7. Fixtures
 

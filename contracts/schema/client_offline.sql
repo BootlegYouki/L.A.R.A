@@ -90,9 +90,9 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
 );
 
--- 7. Lesson text chunks for offline reading and the on-device tutor. Target (decided 2026-11-20): each device makes
--- its own rows from the handout file (contracts/ai/chunking_spec.md) and they are never synced. Until the Hub's
--- chunking is removed after the defense, rows still arrive in the pull response.
+-- 7. Hub-made lesson text chunks for READING (legacy, deprecated 2026-11-20): the desktop reader, desktop Save for Home and
+-- the mobile text fallback still read them. The tutor does not: each device makes its own client-only tutor_chunks lazily
+-- (planned, contracts/planned/on-device-documents.md). Removed after the defense, once readers read the file itself.
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,

@@ -145,7 +145,7 @@ flowchart TD
 
 ### 4.3 Module 3: Classwork, Handouts, Videos & Homework Submissions
 * **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images. `POST /api/materials` caps material uploads, including handouts and videos, at 250 MB.
-* **FR-3.2 Text Chunking (superseded 2026-11-20):** The Hub built extraction and chunking of PDF and Word handouts (#10) and syncs the chunks. The devices now do this themselves (FR-3.11, FR-3.12) and the Hub parser and chunk sync are removed after the defense. Until then clients may still read the Hub's chunks.
+* **FR-3.2 Hub-Made Reader Chunks (built, deprecated 2026-11-20):** The Hub extracts and chunks PDF and Word handouts on upload (#10) and syncs the chunks; the desktop reader, desktop Save for Home and the mobile text fallback read them. They are not the tutor's chunks (FR-3.11, FR-3.12). They are removed after the defense, once those readers read the file itself.
 * **FR-3.3 Video Upload & Byte-Range Streaming:**
  * Teachers can upload educational video files (MP4 / WebM encoded in H.264, max file size capped at 250MB).
  * Hub serves videos via HTTP `206 Partial Content`.
@@ -168,8 +168,8 @@ flowchart TD
 
 **After the defense (planned, not implemented):** the following requirements follow the 2026-11-20 decisions. Their shapes live in [`contracts/planned/on-device-documents.md`](../contracts/planned/on-device-documents.md), which is not part of the contract until a `contract-change` PR promotes it; the parsing and chunking rules and golden fixtures are the draft contract files [`contracts/ai/chunking_spec.md`](../contracts/ai/chunking_spec.md) and `contracts/ai/fixtures/` (numbers PENDING).
 * **FR-3.10 Document Upload for the Tutor:** A teacher uploads a PDF (text layer) or Word `.docx` from desktop or mobile through the existing materials upload as an ordinary handout. The Hub stores and syncs the file and does not read it. Scanned or image-only PDFs and OCR are out of scope. Teachers and learners see nothing about parsing or retrieval.
-* **FR-3.11 On-Device Extraction and Cleanup:** Each learner and teacher device, once it has the file and the teacher has allowed the tutor for it (FR-3.14), extracts the text and cleans it per the shared spec. A document with no extractable text, or a failed extraction, is written only to the device log and is simply not used by the tutor. Memory and time on 3 to 4 GB phones are not yet measured.
-* **FR-3.12 On-Device Chunking and Local Chunk Store:** The device chunks the cleaned text per the shared spec and stores the chunks in its own local `material_chunks` (not synced; the Hub keeps none), each with the spec version and the page. Both clients must pass the same golden fixtures in their own tests, and re-chunk after an app update that changes the spec.
+* **FR-3.11 Lazy On-Device Extraction and Cleanup:** Parsing is lazy: when a learner taps the AI button to open the chat, that tap extracts the text of the class's allowed materials (their PDF or `.docx` files, already on the device), cleans it per the shared spec and chunks it (FR-3.12). Nothing is parsed in the background, at sync time or on the Hub. The tap shows a cancellable progress state (parsing, then model load, one after the other, never together). The quiz lockout is checked before any parsing. If a material's file is not on the device and the Hub is unreachable, the learner is told to download it first. A document with no extractable text, or a failed extraction, is written only to the device log and is simply not used by the tutor. Memory and time on 3 to 4 GB phones are not yet measured.
+* **FR-3.12 On-Device Chunking and Local Chunk Store:** The device chunks the cleaned text per the shared spec into its own local, never-synced `tutor_chunks` table (the Hub keeps none), each chunk with the spec version and the page, cached per material by file hash plus spec version. Chunks are re-made only when the teacher replaces the file, the switch goes off and on, or the spec version changes, and deleted when the switch goes off or the material is deleted. Both clients must pass the same golden fixtures in their own tests.
 * **FR-3.13 Model File Serving:** The Hub lists and serves the tutor's model file (GGUF) over the LAN with HTTP Range so a phone can resume a download, and shows the admin which file is published. The model file is never fetched from the internet.
 * **FR-3.14 Allow AI Tutor (teacher switch):** A teacher turns the tutor on per material with the switch "Allow AI tutor". It is off by default for every new material and every existing one, and only the class's teachers (owner or co-teacher) can change it. The Hub stores it as an ordinary synced field and nothing else about AI. It is the only AI-related thing a teacher sees. The per-material granularity is to be confirmed by the Lead; a class-level master switch is an open question.
 
@@ -242,11 +242,13 @@ sequenceDiagram
 ## 5. Socratic AI Tutor System (L.A.R.A. AI)
 
 ### 5.0 The Tutor Runs on the Device, Only Where the Teacher Allows It; Using It Is Optional
-Decided 2026-11-20 ([decision record](./decisions/2026-11-20-no-ai-on-hub.md)), replacing the 2026-11-02 "Hub-only tutor" and "the Hub ships with the AI" decisions. The tutor is a small language model of about 1B parameters (a GGUF file run through `llama.cpp`) on each learner's phone or laptop. The Hub does no inference and does not read documents: it stores and serves files, including the model file. Each device makes its own lesson chunks from the handout files (FR-3.11, FR-3.12). Using the tutor is optional; nothing else in L.A.R.A depends on it.
+Decided 2026-11-20 ([decision record](./decisions/2026-11-20-no-ai-on-hub.md)), replacing the 2026-11-02 "Hub-only tutor" and "the Hub ships with the AI" decisions. The tutor is a small language model of about 1B parameters (a GGUF file run through `llama.cpp`) on each learner's phone or laptop. The Hub does no inference and does not read documents: it stores and serves files, including the model file. Each device makes its own lesson chunks, lazily, from the allowed handout files on its first AI tap (FR-3.11, FR-3.12). Using the tutor is optional; nothing else in L.A.R.A depends on it.
 
 No model is chosen. The candidates tested in the on-device prototype (PR #349) are Gemma-3-270M, Gemma-3-1B, Llama-3.2-1B and Qwen3-0.6B; the choice comes from the phone evaluation (section 10), not from assumption.
 
 The tutor exists only for materials the teacher has allowed (FR-3.14). A learner who opens it on a material that is not allowed sees a distinct message, not the "lesson does not cover" decline, and a class where nothing is allowed shows the tutor as not available. A change of the switch reaches a device at its next sync; an offline device keeps the old value.
+
+The first AI tap makes the chunks of the class's allowed materials, then loads the model (a cancellable progress state; one after the other); later taps reuse the cached chunks. The default scope of one chat is all allowed materials of the class; one chat per material is the open alternative (section 11).
 
 Once the model is on the device the tutor works with no Hub and no Wi-Fi, at school, at home and during Remote/Suspension Mode. Before the model is downloaded, clients show "The AI tutor needs the classroom Hub". If the device lacks the memory or the model fails to load, clients show "AI is not available right now" and every other feature keeps working. Past chats stay readable from the local `ai_chat_messages`. During a quiz, clients never show the chat (FR-4.3).
 
@@ -257,15 +259,20 @@ The runtime is **GGUF models through `llama.cpp`** on the device CPU. Candidates
 
 ```mermaid
 flowchart TD
- Start["Learner opens tutor on a material"] --> Quiz{"Local quiz attempt IN_PROGRESS?"}
+ Start["Learner taps the AI button"] --> Quiz{"Local quiz attempt IN_PROGRESS?"}
  Quiz -->|Yes| Locked["Chat not shown; model not loaded"]
- Quiz -->|No| Allowed{"Teacher allowed AI tutor for this material?"}
+ Quiz -->|No| Allowed{"Teacher allowed the AI tutor (this material, or anything in the class)?"}
  Allowed -->|No| NotAllowed["Your teacher has not turned on the AI tutor for this handout"]
- Allowed -->|Yes| Model{"Model file on the device?"}
+ Allowed -->|Yes| Chunks{"Chunks cached for every allowed material?"}
+ Chunks -->|No| File{"Material file on the device?"}
+ File -->|No| Download["Download this handout first"]
+ File -->|Yes| Parse["Extract, clean, chunk into tutor_chunks (progress, cancellable)"]
+ Parse --> Model
+ Chunks -->|Yes| Model{"Model file on the device?"}
  Model -->|No| Need["The AI tutor needs the classroom Hub (to download the model)"]
  Model -->|Yes| Fits{"Device can load it?"}
  Fits -->|No| Unavailable["AI is not available right now: other features keep working"]
- Fits -->|Yes| Retrieve["Pick chunks from the local material_chunks and history"]
+ Fits -->|Yes| Retrieve["Pick chunks from the local tutor_chunks and history"]
  Retrieve --> Prompt["Build prompt from the bundled file"]
  Prompt --> Infer["llama.cpp generates on the device"]
  Infer --> Reply["Page, heading, explanation, clues, source; decline sentence if not covered; store in local ai_chat_messages"]
@@ -284,10 +291,10 @@ flowchart TD
 These follow the 2026-11-20 decisions and are not implemented. The model choice they depend on stays open until the phone evaluation.
 * **FR-7.1 On-Device Tutor:** Mobile and desktop run the tutor locally through `llama.cpp`, with the behavior of sections 5.0 to 5.3 and `rules/socratic-ai-guardrails.md`. No tutor request is sent to the Hub.
 * **FR-7.2 Model Download:** A client downloads the model file from the Hub over the LAN once (resumable, verified), stores it, and works without the Hub afterwards (FR-3.13).
-* **FR-7.3 Local Retrieval:** The client picks lesson chunks from its own `material_chunks` of allowed materials with the keyword rule in `rules/socratic-ai-guardrails.md` section 3.1.
+* **FR-7.3 Local Retrieval:** The client picks lesson chunks from its own `tutor_chunks` of allowed materials with the keyword rule in `rules/socratic-ai-guardrails.md` section 3.1.
 * **FR-7.4 Quiz Lockout:** The client locks the tutor from the local `IN_PROGRESS` attempt (FR-4.3).
-* **FR-7.5 Device Limits:** The app heap stays under 250 MB on 3 to 4 GB phones, the model is loaded only while the tutor is open, parsing runs in the background one document at a time and never during a quiz, and a low-memory kill never corrupts data or leaves the tutor stuck on.
-* **FR-7.6 Allowed Materials Only:** Devices parse, store and retrieve only for materials with the switch on (FR-3.14), delete a material's chunks when it goes off or the material is deleted, and show the messages of section 5.0.
+* **FR-7.5 Device Limits:** The app heap stays under 250 MB on 3 to 4 GB phones, the model is loaded only while the tutor is open, parsing runs only on the first AI tap, one document at a time and never together with the model load, never during a quiz, and a low-memory kill never corrupts data or leaves the tutor stuck on.
+* **FR-7.6 Allowed Materials Only:** Devices parse, store and retrieve only for materials with the switch on (FR-3.14), delete a material's tutor chunks when it goes off or the material is deleted, hide or disable the AI button with the not-allowed message when nothing in the class is allowed, and show the messages of section 5.0.
 
 ---
 
@@ -319,7 +326,7 @@ erDiagram
  MATERIAL_CHUNKS ||--o{ AI_CHAT_MESSAGES : "grounds"
 ```
 
-Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only tables: `sync_state` and (target, 2026-11-20) `material_chunks`, which each device makes itself; the Hub's copy is legacy and removed after the defense. Learner mirrors never store PIN hashes, other people's LRNs or answer keys; teachers may receive LRNs in their authorized class roster (see `rules/database-and-sync.md`).
+Server-only tables: `sessions`, `sync_revisions` (the change ledger), `hub_meta` (hub id and sync epoch). Client-only tables: `sync_state` and (planned, 2026-11-20) `tutor_chunks`, which each device makes itself on its first AI tap. `material_chunks` is the Hub-made reader table: legacy, deprecated, removed after the defense. Learner mirrors never store PIN hashes, other people's LRNs or answer keys; teachers may receive LRNs in their authorized class roster (see `rules/database-and-sync.md`).
 
 ### 6.2 Delta-Sync Protocol Lifecycle
 
@@ -446,6 +453,7 @@ These gaps need a Lead decision or coordination; they do not authorize unsupport
 * **Tombstone retention:** Pruning and epoch reset are defined, but how long should deletion tombstones be retained before pruning?
 * **Privacy consent and data retention:** What learner/guardian consent process and retention periods apply to accounts, homework photos, grades, chat history and backups, within the rule that graded records must not be deleted?
 * **USB export location (open decision):** Where should users initiate export in the Hub console and teacher clients? The contract already supports a mounted USB path or a download; the design system leaves UI placement open (section 9.16).
+* **Scope of one tutor chat (open, 2026-11-20):** all allowed materials of the class (the working default) or one chat per material? How long the first-tap progress state lasts on a 3 to 4 GB phone is unmeasured.
 * **Allow AI tutor granularity (to confirm, 2026-11-20):** the switch is per material (the Lead said "for example the learning materials"). Is a class-level master switch also wanted, and what does a learner see for a chat opened with no material (not decided)?
 * **Tutor phone targets and model delivery (open, 2026-11-20):** which time-to-first-token and memory pass marks the phone evaluation uses, and how the model file reaches a phone with no Hub in range (LAN download only, or also a USB copy), are not decided.
 * **AI Tutor entry point (open decision):** Should phone and desktop reach the tutor through a tab, a Material Viewer button or another entry? Follow `design-system/design-system.md` section 9.16 and retain quiz lockout everywhere.

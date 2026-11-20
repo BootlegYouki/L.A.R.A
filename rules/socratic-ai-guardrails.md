@@ -30,7 +30,7 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12. It is Socratic, softened 
 **One system prompt, one file:** [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt). Every app **bundles that file byte for byte** and builds the prompt on-device, filling its one placeholder, `{lesson_chunks}`. No team writes its own wording. Changing the prompt is a `contract-change` PR, and the evaluation in section 5 is re-run on the new text.
 
 ### Non-Negotiable Directives:
-1. **Accuracy first, by strict grounding.** Every statement must be directly supported by a supplied passage (a chunk from `material_chunks`). No outside knowledge, no inference beyond the text, no guessing. **A wrong or invented statement is the worst failure.**
+1. **Accuracy first, by strict grounding.** Every statement must be directly supported by a supplied passage (a chunk from `tutor_chunks`). No outside knowledge, no inference beyond the text, no guessing. **A wrong or invented statement is the worst failure.**
 2. **Cite.** Name the heading and the page of the passage used, as the prompt file says (the page is omitted for a Word document, which has none).
 3. **Decline when the lesson does not cover it.** If the passages do not directly state the answer, reply with exactly: **"This lesson does not cover that question. Please return to your lesson or ask your teacher."** This includes a lesson with no passages at all (a document with no extractable text, or one not yet on the device): nothing about parsing is ever shown to the learner or the teacher.
 4. **Guide, do not hand over.** Point to the page and heading, explain the idea in simple words and give a clue from the text, in a few short sentences. A short guiding question is allowed, **not required**. There is no "one clue then one question" shape.
@@ -40,9 +40,9 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12. It is Socratic, softened 
 
 ### 3.1 Choosing which lesson chunks go into the prompt (on the device)
 
-A lesson longer than the model's context window cannot be pasted in whole, so the client picks chunks from its own local `material_chunks` on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, deterministic. (Chunk vectors are a later option and are not used by this rule.)
+A lesson longer than the model's context window cannot be pasted in whole, so the client picks chunks from its own local `tutor_chunks` on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, deterministic. (Chunk vectors are a later option and are not used by this rule.)
 
-1. **Budget:** lesson tokens = the model's context window minus the filled system prompt minus the chat history (section 3.2) minus a reserve for the reply. The window and the reserve are fixed by the phone evaluation and recorded in section 5.3. Count every part with the loaded model's own tokenizer, never a words-based estimate: words × 1.4 undercounts math text by about 8% (#73). `material_chunks.token_estimate` is only a hint and is never used for this budget.
+1. **Budget:** lesson tokens = the model's context window minus the filled system prompt minus the chat history (section 3.2) minus a reserve for the reply. The window and the reserve are fixed by the phone evaluation and recorded in section 5.3. Count every part with the loaded model's own tokenizer, never a words-based estimate: words × 1.4 undercounts math text by about 8% (#73). `tutor_chunks.token_estimate` is only a hint and is never used for this budget.
 2. **Short lesson:** if all of the lesson's chunks fit the budget, send all of them and skip steps 3 to 5.
 3. **Query words:** take the learner's message plus their previous message in this lesson's chat (so "what about the second one?" still finds the topic). Lowercase, split on anything that is not a letter or digit, drop words under 3 characters and these stopwords: `the and for are was what how why who when where which this that with from you your can does did not ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang lang din rin pa po`.
 4. **Score:** BM25 of each chunk's `heading` + `text` against the distinct query words, as in the on-device prototype (PR #349, ported from #337). Parameters, stemming and any rerank step are fixed by the phone evaluation and recorded in section 5.3; the same function runs on mobile and desktop.
@@ -55,7 +55,7 @@ The evaluation (section 5.1) includes long lessons that do not fit the window, s
 
 A Socratic tutor builds on its last hint and the learner's last answer, and a follow-up such as "and the second one?" only makes sense with the previous turns, so the client includes recent turns with each request.
 
-1. **Which turns:** the last 3 exchanges (up to 6 messages, learner and tutor) of this learner's chat about this material (same `student_id` and `material_id` in the local `ai_chat_messages`), oldest first. A chat about another material starts fresh.
+1. **Which turns:** the last 3 exchanges (up to 6 messages, learner and tutor) of this learner's chat in the current scope (the class by default, section 3.4; same `student_id` and `classroom_id` in the local `ai_chat_messages`), oldest first. A chat in another class starts fresh.
 2. **Where:** as normal chat turns after the system prompt (`user` for `USER`, `assistant` for `TUTOR`), then the new learner message. Never paste them into the system prompt file; it keeps only its one placeholder.
 3. **Budget:** at most 300 tokens, counted with the model's tokenizer as in section 3.1 (the figure is revisited with the context window in section 5.3). Drop the oldest whole message until it fits, so a long early reply never pushes out the latest one.
 4. **Who reads it:** the device reads its own `ai_chat_messages`. Chat history stays on the device and is never uploaded: the contract has no route for it.
@@ -65,15 +65,28 @@ A Socratic tutor builds on its last hint and the learner's last answer, and a fo
 
 The tutor is unavailable while the learner has an `IN_PROGRESS` quiz attempt. The rule and its honest limits live in one place: [`rules/quiz-and-anti-cheat.md`](./quiz-and-anti-cheat.md) section 1.
 
-### 3.4 Chunks are made on the device, to one shared spec, only for allowed materials
+### 3.4 Chunks are made on the device, lazily, to one shared spec, only for allowed materials
 
-The Hub does not read documents. A teacher uploads a PDF (text layer) or `.docx` as an ordinary handout; each device, once it has the file **and the teacher has allowed the tutor for it** (section 3.5), extracts the text, cleans it, chunks it and stores the chunks in its own `material_chunks`. Scanned or image PDFs and OCR are out of scope: a document with no extractable text produces no chunks and is simply not used (the decline sentence of directive 3). Teachers and learners see nothing of parsing or retrieval; a failed extraction goes to the device log only.
+The Hub does not read documents. A teacher uploads a PDF (text layer) or `.docx` as an ordinary handout; the Hub stores and syncs the file. **Parsing is lazy and on the device:** the learner's tap on the AI button to open the chat is the **only** trigger. Nothing is parsed in the background, at sync time or on the Hub. Scanned or image PDFs and OCR are out of scope: a document with no extractable text produces no chunks and is simply not used (the decline sentence of directive 3). Teachers and learners see nothing of parsing or retrieval; a failed extraction goes to the device log only.
+
+**What the first tap does, in this order** (every step but the last can stop the flow with a clear message, in English, from strings resources):
+1. **Quiz lockout first** (section 3.3): an `IN_PROGRESS` attempt stops everything before any parsing or model loading.
+2. **Allowed?** (section 3.5): nothing allowed in the class hides or disables the AI button with the not-allowed message; opened from a material that is not allowed, show the not-allowed message.
+3. **File on the device?** For each allowed material whose chunks are missing or stale, its PDF or `.docx` must already be on the device. If it is not and the Hub is unreachable, show "download the material first" (wording in the planned file's string plan).
+4. **Progress, cancellable:** show a progress state (parsing, then loading the model); the learner can cancel at any time and nothing half-made is kept.
+5. **Parse, then load the model, one after the other, never together,** to stay inside the 3 to 4 GB phone budget.
+6. **Chat locally, fully offline** with the on-device model.
+
+**Cache:** chunks are cached per material, keyed by the file's hash plus the chunking-spec version, and reused on later taps. They are re-made only when the teacher replaces the file, the switch goes off and on again, or the spec version changes (an app update). They are deleted when the switch goes off or the material is deleted.
+
+**Scope of one chat (OPEN, for the Lead):** the working default is **all allowed materials of the class** in one chat (history is per learner and class); the alternative is one chat per material. Not decided.
 
 Because two implementations (Kotlin on mobile, Rust or TypeScript on desktop) can drift and give different answers from the same handout:
-* The cleaning and chunking rules live only in [`contracts/ai/chunking_spec.md`](../contracts/ai/chunking_spec.md), with golden fixtures in [`contracts/ai/fixtures/`](../contracts/ai/fixtures/).
+* The cleaning and chunking rules live only in [`contracts/ai/chunking_spec.md`](../contracts/ai/chunking_spec.md), with golden fixtures in [`contracts/ai/fixtures/`](../contracts/ai/fixtures/) (numbers still PENDING; settling them is the first task of the clients' implementation issues).
 * **Both clients must pass the same fixtures in their own tests.** A client change to extraction, cleaning or chunking that fails a fixture does not merge.
-* Every chunk stores the spec version that made it; after an app update that changes the spec, the device re-chunks the document.
+* Every chunk stores the spec version that made it; after an app update that changes the spec, the cache is stale and the next tap re-chunks.
 * Extraction libraries must not be AGPL (for example MuPDF is excluded). The memory and time of extraction on 3 to 4 GB phones are not measured yet and are part of the phone evaluation (section 5.3).
+* **The Hub-made reader chunks are a different thing.** Today the Hub still makes `material_chunks` that the desktop reader and "Save for Home" and the mobile text fallback use. They are legacy, are not the tutor's chunks, and are never read by the tutor (decision record).
 
 ### 3.5 The teacher's switch: "Allow AI tutor" (per material)
 
@@ -81,7 +94,7 @@ Because two implementations (Kotlin on mobile, Rust or TypeScript on desktop) ca
 
 * **One switch per material,** `materials.ai_allowed` (planned: `contracts/planned/on-device-documents.md` section 4). **Default OFF for every new material**, and off for every material that exists today. Only the class's teachers (the owner or a co-teacher) can change it; the Hub authorises by class ownership like any other material edit and syncs it as an ordinary field with the usual `seq` revision. The Hub knows nothing else about the tutor.
 * **Clients enforce it.** The tutor retrieves **only** from allowed materials. A device parses and stores chunks **only** for allowed materials (this saves phone memory and time), and deletes a material's chunks when the switch goes off or the material is deleted.
-* **Messages (English only, in strings resources; wording in the planned file's string plan):** a learner who opens the tutor on a material the teacher has not allowed sees a distinct "your teacher has not turned on the AI tutor for this handout" message, **not** the decline sentence of section 3 directive 3. A class where no material is allowed shows the tutor as not available. The decline sentence is only for an allowed material that does not cover the question.
+* **Messages (English only, in strings resources; wording in the planned file's string plan):** a learner who opens the tutor from a material the teacher has not allowed sees a distinct "your teacher has not turned on the AI tutor for this handout" message, **not** the decline sentence of section 3 directive 3. A class where no material is allowed shows the tutor as not available. The decline sentence is only for an allowed material that does not cover the question.
 * **Sync latency (documented, accepted):** a change reaches a device at its next sync. An offline device keeps the old value, so it may keep using a material the teacher has just turned off, or miss one just turned on, until it syncs. This is a known, weaker limit like the quiz lockout.
 * **The switch is the only AI-related thing a teacher sees.** They still see nothing of parsing or retrieval.
 

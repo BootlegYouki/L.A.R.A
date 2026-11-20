@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS announcement_comments (
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- 6. Lesson Materials (files). Lesson text for the on-device tutor lives in material_chunks, not here.
+-- 6. Lesson Materials (files). Reader text (legacy) lives in material_chunks, not here; the tutor's chunks are made on the device.
 CREATE TABLE IF NOT EXISTS materials (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
@@ -100,8 +100,9 @@ CREATE TABLE IF NOT EXISTS materials (
     FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE
 );
 
--- 7. LEGACY (decided 2026-11-20): lesson text chunks made by the Hub's parser (#10). The Hub no longer parses documents:
--- each device makes its own chunks (contracts/ai/chunking_spec.md). Removed after the defense with the Hub parser.
+-- 7. LEGACY (decided 2026-11-20): reader chunks made by the Hub's parser (#10). The Hub no longer parses documents for
+-- the tutor: each device makes its own tutor_chunks (contracts/ai/chunking_spec.md). Removed after the defense with the
+-- Hub parser, once the desktop reader and Save for Home read the file itself.
 CREATE TABLE IF NOT EXISTS material_chunks (
     id TEXT PRIMARY KEY NOT NULL,
     material_id TEXT NOT NULL,
