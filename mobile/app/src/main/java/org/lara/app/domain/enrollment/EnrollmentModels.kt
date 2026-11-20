@@ -12,7 +12,8 @@ data class LearnerClass(val classroom: Classroom, val enrollment: Enrollment) {
 enum class EnrollmentStatus { PENDING, ACTIVE, REJECTED, REMOVED }
 
 /** Request metadata is not an enrollment and never grants class access. */
-data class EnrollmentNotice(val classroomId: String, val title: String?, val status: EnrollmentStatus)
+data class EnrollmentNotice(val classroomId: String, val title: String?, val status: EnrollmentStatus,
+    val section: String? = null, val teacherName: String? = null)
 
 interface EnrollmentNoticeRepository {
     fun notices(userId: String): kotlinx.coroutines.flow.Flow<List<EnrollmentNotice>>

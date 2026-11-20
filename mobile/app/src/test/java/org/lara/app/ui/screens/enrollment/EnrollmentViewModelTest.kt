@@ -50,7 +50,7 @@ class EnrollmentViewModelTest {
             events, reachable, notices, { hints.add(it); afterRefresh(it) }, {}).also { models.add(it) }
     }
     @Test fun joinShowsPendingAndRequestsRefreshWithoutInventingRoomMembership() = runBlocking {
-        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class"}"""))
+        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class","section":"A","teacher_name":"Teacher"}"""))
         server.enqueue(MockResponse().setBody("""[{"id":"class","name":"Science","section":"A","class_code":"K7M4QX","teacher_id":"teacher","enrollment_status":"PENDING"}]"""))
         val model = model()
         model.showJoin()
@@ -59,8 +59,24 @@ class EnrollmentViewModelTest {
         assertFalse(state.showJoinDialog)
         assertEquals(EnrollmentStatus.PENDING, state.requests.single().status)
         assertEquals("Science", state.requests.single().title)
+        assertEquals("A", state.requests.single().section)
+        assertEquals("Teacher", state.requests.single().teacherName)
         assertEquals(listOf(EnrollmentRefreshHint.MembershipChanged("class")), hints)
         assertTrue((repository.rows.value as Cached.Content).value.isEmpty())
+    }
+    @Test fun joinMetadataRemainsAvailableWhenTheFollowupRefreshFails(): Unit = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class","section":"A","teacher_name":"Teacher"}"""))
+        server.enqueue(MockResponse().setResponseCode(503))
+        val first = model()
+        first.submit("K7M4QX")
+        withTimeout(10_000) { first.state.first { !it.busy && it.error == JoinClassError.REFRESH_FAILED } }
+        reachable.value = false
+        val restored = model().state.value
+        assertEquals("A", restored.requests.single().section)
+        assertEquals("Teacher", restored.requests.single().teacherName)
+        assertNull(restored.requests.single().title)
+        assertNull(restored.openableClass("class"))
+        assertEquals(2, server.requestCount)
     }
     @Test fun offlineJoinNeverCallsHubAndSavedActiveClassRemainsReadable() = runBlocking {
         reachable.value = false
@@ -134,7 +150,7 @@ class EnrollmentViewModelTest {
         override fun notices(userId: String): Flow<List<EnrollmentNotice>> = rows
         override suspend fun save(userId: String, notice: EnrollmentNotice) {
             val old = rows.value.firstOrNull { it.classroomId == notice.classroomId }
-            rows.value = rows.value.filterNot { it.classroomId == notice.classroomId } + notice.copy(title = notice.title ?: old?.title)
+            rows.value = rows.value.filterNot { it.classroomId == notice.classroomId } + notice.copy(title = notice.title ?: old?.title, section = notice.section ?: old?.section, teacherName = notice.teacherName ?: old?.teacherName)
         }
     }
 

@@ -69,7 +69,7 @@ class AuthIntegrationTest {
     @After fun close() { server.close(); db.close() }
     @Test fun loginPersistsProfileAndRestoresAfterHubStopsEvenWhenTokenExpired() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())
-        assertEquals("STUDENT", repo.authenticate(endpoint, "123456789012", "1234", null).role)
+        assertEquals("STUDENT", repo.authenticate(endpoint, "123456789012", "123456", null).role)
         assertEquals("/api/auth/login", requestPath)
         assertFalse(requestBody.contains("full_name"))
         assertEquals("test-user", db.authDao().currentUserId())
@@ -79,13 +79,13 @@ class AuthIntegrationTest {
     }
     @Test fun sameUserCanReauthenticateAfterHubAddressChangesButDifferentUserCannot() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())
-        repo.authenticate(endpoint, "123456789012", "1234", null)
+        repo.authenticate(endpoint, "123456789012", "123456", null)
         val second = startServer()
         try {
             val hubB = requireNotNull(HubEndpoint.lan("127.0.0.1", second.localPort))
             assertNotEquals(endpoint.restBase, hubB.restBase)
             assertNull(repo.restore(hubB))
-            assertEquals("test-user", repo.authenticate(hubB, "123456789012", "1234", null).id)
+            assertEquals("test-user", repo.authenticate(hubB, "123456789012", "123456", null).id)
             assertEquals(hubB.restBase, tokens.value?.hub)
             assertEquals("test-user", db.authDao().currentUserId())
             assertEquals("test-user", repo.restore(hubB)?.id)
@@ -93,7 +93,7 @@ class AuthIntegrationTest {
 
             val saved = tokens.value
             userId = "different-user"
-            try { repo.authenticate(hubB, "123456789013", "1234", null); fail("Different user must remain blocked") }
+            try { repo.authenticate(hubB, "123456789013", "123456", null); fail("Different user must remain blocked") }
             catch (e: AuthFailure) { assertEquals(409, e.status) }
             assertEquals(saved, tokens.value)
             assertEquals("test-user", db.authDao().currentUserId())
@@ -103,19 +103,19 @@ class AuthIntegrationTest {
     }
     @Test fun registrationSendsName() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())
-        assertEquals("STUDENT", repo.authenticate(endpoint, "123456789012", "1234", "Synthetic").role)
+        assertEquals("STUDENT", repo.authenticate(endpoint, "123456789012", "123456", "Synthetic").role)
         assertEquals("/api/auth/register", requestPath)
         assertTrue(requestBody.contains("full_name"))
     }
     @Test fun teacherLoginUsesReturnedTeacherRole() = runBlocking {
         role = "TEACHER"
-        assertEquals("TEACHER", AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "T-0001", "1234", null).role)
+        assertEquals("TEACHER", AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "T-0001", "123456", null).role)
     }
     @Test fun rejectedAdminNeverReachesRoomOrTokenStorage() = runBlocking {
         role = "ADMIN"
         for (response in listOf(200, 403)) {
             status = response
-            try { AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "ADMIN-0001", "1234", null); fail() }
+            try { AuthRepository(AuthApi(), tokens, db.authDao()).authenticate(endpoint, "ADMIN-0001", "123456", null); fail() }
             catch(e: AuthFailure) { assertEquals(403, e.status) }
             assertNull(tokens.value)
             assertNull(db.authDao().currentUserId())
@@ -123,17 +123,17 @@ class AuthIntegrationTest {
     }
     @Test fun wrongPinAndRateLimitPreserveExistingCache() = runBlocking {
         val repo = AuthRepository(AuthApi(), tokens, db.authDao())
-        repo.authenticate(endpoint, "123456789012", "1234", null)
+        repo.authenticate(endpoint, "123456789012", "123456", null)
         for(code in listOf(401, 429)) {
             status = code
-            try { repo.authenticate(endpoint, "123456789012", "9999", null); fail() }
+            try { repo.authenticate(endpoint, "123456789012", "999999", null); fail() }
             catch(e: AuthFailure) { assertEquals(code, e.status); assertEquals(37L, e.retryAfterSeconds) }
             assertEquals("test-user", repo.restore(endpoint)?.id)
         }
     }
     @Test fun redirectsAreNotFollowed() = runBlocking {
         status = 307
-        try { AuthApi().authenticate(endpoint, "123456789012", "1234", null); fail() }
+        try { AuthApi().authenticate(endpoint, "123456789012", "123456", null); fail() }
         catch(e: AuthFailure) { assertEquals(307, e.status) }
         assertEquals(0, redirects)
     }

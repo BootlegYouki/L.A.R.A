@@ -1,5 +1,7 @@
 # Desktop 1.2: Hub discovery
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 > The EN/FIL screenshots and earlier wording notes below are historical #5 evidence. #225 removes the Filipino dictionary and language preference; current checks are in [english-only.md](english-only.md).
 
 Issue: #5. Discovery identifies candidate addresses; it does not authenticate a Hub or user. Connection verification, saved addresses, HTTP transport permissions and the connection screen remain #40. No account, schema, credential or network contract changes are introduced.

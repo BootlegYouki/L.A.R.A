@@ -22,16 +22,27 @@ class EnrollmentApiTest {
     }
     @After fun close() { server.shutdown() }
     @Test fun joinUsesOnlyCanonicalCodeAndBearerHeader() = runBlocking {
-        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class"}"""))
+        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class","section":"A","teacher_name":"Teacher"}"""))
         val result = api.join("learner", "k7m-4qx")
         assertEquals("class", result.classroomId)
         assertEquals("PENDING", result.status.name)
+        assertEquals("A", result.section)
+        assertEquals("Teacher", result.teacherName)
         val request = requireNotNull(server.takeRequest(3, TimeUnit.SECONDS))
         assertEquals("/api/classrooms/join", request.path)
         assertEquals("Bearer synthetic-token", request.getHeader("Authorization"))
         val body = Json.parseToJsonElement(request.body.readUtf8()).jsonObject
         assertEquals(setOf("class_code"), body.keys)
         assertEquals("K7M4QX", body["class_code"]?.jsonPrimitive?.content)
+    }
+    @Test fun joinRejectsMissingRequiredMetadata() = runBlocking {
+        for (body in listOf(
+            """{"status":"PENDING","classroom_id":"class","section":"A"}""",
+            """{"status":"PENDING","classroom_id":"class","teacher_name":"Teacher"}""")) {
+            server.enqueue(MockResponse().setBody(body))
+            try { api.join("learner", "K7M4QX"); fail("Required metadata must not be fabricated") }
+            catch (_: kotlinx.serialization.SerializationException) { }
+        }
     }
     @Test fun invalidCodePreservesServerErrorCode() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":{"code":"CLASS_CODE_INVALID","message":"synthetic"}}"""))

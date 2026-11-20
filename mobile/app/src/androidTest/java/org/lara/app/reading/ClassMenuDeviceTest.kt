@@ -98,7 +98,7 @@ class ClassMenuDeviceTest {
         val root = (context.applicationContext as LaraApp).container
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         root.endpoints.save(endpoint, "Group 7 mock Hub")
-        val user = root.auth.authenticate(endpoint, "T-0001", "1234", null)
+        val user = root.auth.authenticate(endpoint, "T-0001", "123456", null)
         val active = root.forUser(user.id)
         active.sync.pull(user.id)
         val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + kotlinx.coroutines.SupervisorJob())
@@ -158,7 +158,7 @@ class ClassMenuDeviceTest {
         val root = (context.applicationContext as LaraApp).container
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         root.endpoints.save(endpoint, "Group 7 mock Hub")
-        val user = root.auth.authenticate(endpoint, "T-0001", "1234", null)
+        val user = root.auth.authenticate(endpoint, "T-0001", "123456", null)
         val active = root.forUser(user.id)
         val classroom = active.teacherClasses(user.id).create("Group 7 control check", "Synthetic")
         active.sync.pull(user.id)

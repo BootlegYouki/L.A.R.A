@@ -1,5 +1,8 @@
 # Delta sync and roster error follow-ups (#48)
 
+> Current verification follows [real-Hub testing](real-hub-testing.md). Simulator observations below are archived historical evidence and do not prove real-Hub behavior.
+
+
 Desktop mirrors the selected Hub into its existing account-scoped SQLite database and uploads stable-ID queued comments, private comments and submitted quiz attempts. Sync starts on connect, validated WebSocket ACK/announcement hints and every 60 seconds. No new dependency, schema, endpoint, Server or Mobile code is added. Stream/Classwork authoring and media/quiz UI remain their ordered issues; this task proves the mirror through native SQLite, not a newly built feed.
 
 ## Files and flow
@@ -63,8 +66,8 @@ Screenshots `screenshots/sync-*.png` show mock/real online, interrupted pull, fa
 
 ## Repeat
 
-1. Run mock or real staging Hub with isolated synthetic data. Create a new class, join seed learner `123456789013` / seed PIN `1234`, approve through a teacher session, and sign into Desktop as that learner.
-2. Add a contracted announcement/revision (mock API; real fixture if authoring remains unavailable). Confirm the announcement and integer cursor appear together in that account's native mirror. On mock, create another announcement while connected and confirm actual WS-triggered pull.
+1. Start the real staging Hub following [real-Hub testing](real-hub-testing.md). Create a synthetic class, join a learner using the checked-out server seed credentials, approve through a teacher session and sign into Desktop as that learner.
+2. Add a contracted announcement/revision through the real Hub API. Confirm the announcement and integer cursor appear together in that account's native mirror. Create another announcement while connected and confirm actual WebSocket-triggered pull; report unavailable authoring or events as gaps.
 3. Queue synthetic stable-ID comments in that exact test account's DB. Trigger reconnect: successful receipt alone sets SYNCED; disabled comments become REJECTED with reason. Missing receipts remain queued. Never use a real school's DB for fixture writes.
 4. Interrupt the pull response, then restore it: no partial records/cursor; cached Home stays open and safe retry recovers. Native tests cover failure inside the write transaction too.
 5. Stop the Hub, fully close/reopen Desktop, check saved state without a PIN, then restart the same Hub. Switch accounts/Hubs to verify isolation.

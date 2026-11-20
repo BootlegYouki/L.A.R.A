@@ -108,7 +108,7 @@ class HomeNavigationDeviceTest {
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         container.endpoints.save(endpoint, "Synthetic test Hub")
         for ((role, id) in listOf("learner" to "123456789012", "teacher" to "T-0001")) {
-            val user = container.auth.authenticate(endpoint, id, "1234", null)
+            val user = container.auth.authenticate(endpoint, id, "123456", null)
             container.forUser(user.id).sync.pull(user.id)
             ActivityScenario.launch(MainActivity::class.java).use {
                 waitFor("Science 4")
@@ -208,7 +208,7 @@ class HomeNavigationDeviceTest {
         check(previous == null || previous.lrnOrId == id)
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         container.endpoints.save(endpoint, "Synthetic test Hub")
-        val user = container.auth.authenticate(endpoint, id, "1234", null)
+        val user = container.auth.authenticate(endpoint, id, "123456", null)
         container.forUser(user.id).sync.pull(user.id)
         ActivityScenario.launch(MainActivity::class.java).use {
             waitFor("Science 4")

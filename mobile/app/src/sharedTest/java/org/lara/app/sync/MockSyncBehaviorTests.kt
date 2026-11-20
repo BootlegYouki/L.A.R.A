@@ -25,9 +25,9 @@ abstract class MockSyncBehaviorTests {
         assumeTrue("Requires isolated local mock on 18080/18081", mockEnabled())
         val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", 18080, 18081))
         val auth = AuthApi()
-        val teacher = auth.authenticate(endpoint, "T-0001", "1234", null)
+        val teacher = auth.authenticate(endpoint, "T-0001", "123456", null)
         val syntheticId = "8" + System.nanoTime().toString().takeLast(11).padStart(11, '0')
-        val learner = auth.authenticate(endpoint, syntheticId, "1234", "Synthetic sync learner")
+        val learner = auth.authenticate(endpoint, syntheticId, "123456", "Synthetic sync learner")
         fun api(session: AuthSession): EnrollmentApi {
             val tokens = object : SessionTokenStore {
                 override fun load() = StoredToken(session.token, session.user.id, session.expiresAt, endpoint.restBase)

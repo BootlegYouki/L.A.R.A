@@ -1,5 +1,7 @@
 # Desktop 2.1 — accounts and cached Home (#45)
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 Learners can register and learners/teachers can sign in on the selected LAN Hub, then open their role-specific Home. Previously signed-in profiles and class details reopen offline without a PIN check or network requirement. This is cached access, not a new offline authentication. The admin remains Hub-PC only.
 
 Sources: OpenAPI auth/classroom schemas, the canonical client SQL, Desktop Tech Spec sections 3/6/7/10/13, design-system 5.2/5.12/5.13/9.2/9.3 and the prototype. The team follows announcements [#238](https://github.com/BootlegYouki/L.A.R.A/discussions/238) and the login-rule follow-up on [#194](https://github.com/BootlegYouki/L.A.R.A/discussions/194). These do not authorize changes outside Desktop.
@@ -87,12 +89,10 @@ The real Hub was stopped. After a full production Desktop process exit/relaunch 
 
 ## Reproduce as an end user
 
-1. Follow the real Hub run instructions in server/docs/hub_hardware.md and use isolated synthetic data. This six-digit build requires server #339 first; the current four-digit server cannot complete this test. Follow the real-Hub-only decision in #344.
-2. Connect through the existing Hub panel. With the matching server seed/reset accounts, sign in as teacher T-0001 using six-digit PIN 123456. Teaching should appear; create a synthetic class if none exists, open it, then return Home.
-3. Choose Switch account. Sign in as the seeded learner 123456789012 using the matching six-digit PIN. Use New learner to register a fresh synthetic 12-digit LRN/name/PIN; expect an empty Home unless already enrolled. Do not use a real learner's identity for testing.
-4. Sign back in as the teacher, stop the real Hub, close Desktop fully and reopen: cached teacher classes should remain accessible with the offline banner. Never delete an existing DB to obtain an empty screen.
-5. Restart the same durable Hub data and check safe reconnection. Expired or admin-reset credentials require normal sign-in; a cached profile is not a new offline authentication.
-6. Build the production executable with npm run tauri -- build --no-bundle. OS credential persistence must also be tested on each target OS before its package ships.
+Follow [real-Hub testing](real-hub-testing.md) using a fresh synthetic dataset. This six-digit client requires the matching server change #339 before sign-in or registration can pass; do not use the current server's legacy four-digit PIN as a client workaround. After that server change, use credentials from its checked-out seed implementation or administrator-reset accounts.
+
+Connect Desktop, sign in as a teacher, open the test class and switch to a learner. Register only synthetic learner identities. Stop the Hub and fully restart Desktop to check cached access, then restart the same durable Hub to verify reconnection. Test secure credential persistence on each target OS before its package ships. The historical simulator session-reset behavior above is not an expectation for the durable real Hub.
+
 
 ## Not verified
 
@@ -114,3 +114,6 @@ Real staging Hub verification is blocked by #339: six-digit teacher login return
 Screenshots: [four digits rejected](screenshots/340-four-rejected.png), [six-digit registration](screenshots/340-registration.png), [registered learner](screenshots/340-registered-home.png), [cached class with Hub stopped](screenshots/340-offline-class.png), [real-Hub dependency](screenshots/340-real-hub-blocked.png).
 
 Linux, physical LAN/WAN and installer testing were not repeated for this PIN-only change. Issue #325's pending-card section/teacher display remains separate; no comments, contracts, shared scripts or server code changed.
+
+
+Staging refresh (016ec64): resolved the authentication-guide overlap while retaining the real-Hub workflow and this branch's six-digit/server dependency. The integrated Vitest 4 suite passed all 106 tests in 22 files; lint, production build, offline invariants and 72 shared tests passed. Full npm audit reported zero vulnerabilities. The diff against staging remains Desktop-only. This refresh does not turn the blocked real-Hub six-digit flow into a pass.

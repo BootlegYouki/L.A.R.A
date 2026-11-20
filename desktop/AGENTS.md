@@ -8,12 +8,12 @@ Before starting/resuming a task and before submitting a PR, check the repository
 A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, lab PCs and teachers. Learners get the offline classroom; teachers get **every teacher feature, the same set as the mobile app** (create class, roster approval, announcements, materials, assignments, grading, quiz builder, live monitor).
 
 ## Commands (run in `desktop/`)
-`npm run build` (`tsc && vite build`) must pass with zero type errors. Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`.
+`npm run build` (`tsc && vite build`) must pass with zero type errors. Start the real Hub using [real-Hub testing](docs/real-hub-testing.md).
 
-## Build against the mock hub
-* Develop every network feature against `scripts/mock_hub.py` and `contracts/`. Seed accounts: `T-0001`, `123456789012`, `123456789013`, all PIN `1234`; class code `K7M4QX`.
+## Build against the real Hub
+* Develop and test every network feature against the real Hub and `contracts/`. Follow [real-Hub testing](docs/real-hub-testing.md), using isolated synthetic data.
 * Use interfaces matching `contracts/openapi.yaml` (snake_case keys, no `any`). Never invent a field; ask for a contract change.
-* Before opening a PR, also run its main flow against the real Hub (`rules/developer-tooling-and-testing.md` section 4, "Checking client PRs against the real Hub"). Routes the Hub answers with `501` stay mock-only; say so in the PR.
+* Before opening a PR, exercise the main flow in the native app against the real Hub, stop it and verify cached/offline behavior. Record failures and unimplemented routes.
 
 ## Rules that are easy to get wrong
 * **Offline first.** Every screen reads from local SQLite. No blocking "no connection" dialogs; show the standard offline banner and cached data.

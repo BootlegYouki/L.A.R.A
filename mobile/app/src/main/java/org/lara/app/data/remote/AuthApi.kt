@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.lara.app.domain.model.AuthPin
 import org.lara.app.data.remote.discovery.HubEndpoint
 
 @Serializable
@@ -29,7 +30,7 @@ class AuthApi {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
     suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String, name: String?): AuthSession =
         withContext(Dispatchers.IO) {
-            require(pin.matches(Regex("[0-9]{4}")))
+            require(AuthPin.isValid(pin))
             val path = if (name == null) "/api/auth/login" else "/api/auth/register"
             val body = HubClient().postAuth(endpoint, path,
                 json.encodeToString(Credentials.serializer(), Credentials(id, pin, name)))

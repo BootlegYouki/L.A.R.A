@@ -18,9 +18,9 @@ class MockAuthDeviceTest {
         assumeTrue("Supply the USB-reversed local mock endpoint", address == "127.0.0.1:8080")
         val endpoint = requireNotNull(HubEndpoint.manual(requireNotNull(address)))
         val api = AuthApi()
-        assertEquals("TEACHER", api.authenticate(endpoint, "T-0001", "1234", null).user.role)
-        assertEquals("STUDENT", api.authenticate(endpoint, "123456789012", "1234", null).user.role)
+        assertEquals("TEACHER", api.authenticate(endpoint, "T-0001", "123456", null).user.role)
+        assertEquals("STUDENT", api.authenticate(endpoint, "123456789012", "123456", null).user.role)
         val syntheticId = "9" + System.nanoTime().toString().takeLast(11).padStart(11, '0')
-        assertEquals("STUDENT", api.authenticate(endpoint, syntheticId, "1234", "Synthetic device-test learner").user.role)
+        assertEquals("STUDENT", api.authenticate(endpoint, syntheticId, "123456", "Synthetic device-test learner").user.role)
     }
 }

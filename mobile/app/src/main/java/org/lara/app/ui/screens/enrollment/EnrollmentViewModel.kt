@@ -82,7 +82,7 @@ class EnrollmentViewModel(
         viewModelScope.launch {
             try {
                 val receipt = api.join(userId, code)
-                notices.save(userId, EnrollmentNotice(receipt.classroomId, null, receipt.status))
+                notices.save(userId, EnrollmentNotice(receipt.classroomId, null, receipt.status, receipt.section, receipt.teacherName))
                 mutable.update { it.copy(showJoinDialog = false) }
                 refresh(EnrollmentRefreshHint.MembershipChanged(receipt.classroomId))
             } catch (e: CancellationException) { throw e }
@@ -104,7 +104,7 @@ class EnrollmentViewModel(
             if (loadClassrooms == null) {
                 snapshot.rows.forEach { row ->
                     val status = row.enrollmentStatus?.let { runCatching { EnrollmentStatus.valueOf(it) }.getOrNull() }
-                    if (status != null) notices.save(userId, EnrollmentNotice(row.id, row.name, status))
+                    if (status != null) notices.save(userId, EnrollmentNotice(row.id, row.name, status, row.section))
                 }
             }
             onMembershipHint(hint)
