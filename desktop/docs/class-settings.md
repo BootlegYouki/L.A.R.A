@@ -1,5 +1,7 @@
 # Desktop class settings
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 From a teaching class, the owner opens Class settings to change the name or section, or to confirm an archive. People lists the owner and co-teachers. Owners can add an active teacher by ID and remove a co-teacher. Co-teachers can read the teacher list. The ID entered in the add form is sent to the Hub and stays out of the local database.
 
 Changes require the connected Hub and use the existing bearer-authenticated classroom routes. After a successful response, Desktop refreshes its classroom snapshot and requests a sync. Public teacher names come from that account’s SQLite mirror. If the mirror has yet to receive a name, People shows the corresponding role. The Hub enforces ownership.

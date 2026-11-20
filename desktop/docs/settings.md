@@ -1,5 +1,8 @@
 # Desktop Settings and sign-out
 
+> Current verification follows [real-Hub testing](real-hub-testing.md). Simulator observations below are archived historical evidence and do not prove real-Hub behavior.
+
+
 Settings shows the selected Hub's name, address and status. **Choose another Hub** reuses the existing discovery and address picker. Settings also shows the signed-in account and the version from the Tauri app config. The current PRD §5.3 and design system use English across the app. Settings adds its copy to the English resources and keeps the existing Hub preference format.
 
 Sign-out counts queued rows across the four uploadable tables for the selected account using the same native context guard as sync. The confirmation stays disabled until the count is available. After confirmation, the app pauses sync and invalidates outstanding account callbacks. It clears the local session through the existing credential cleanup and sends the contracted logout request when it has a reachable Hub and token. If the Hub cannot be notified, the sign-in screen explains that the device signed out locally. The account's SQLite database stays available for the next sign-in, with queued work intact.

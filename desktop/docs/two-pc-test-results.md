@@ -1,5 +1,13 @@
 # Two-PC Windows Installer Test Results
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
+For current setup and acceptance checks, follow [real-Hub testing](real-hub-testing.md). The archived body records earlier implementation notes and outcomes; its old troubleshooting and setup instructions are retired.
+
+<details>
+<summary>Archived implementation notes and historical test evidence</summary>
+
+
 **Date:** November 2, 2026  
 **Tester:** Jan Kiervy  
 **Issue:** [DESKTOP 1.2] #5 - Hub Discovery
@@ -430,5 +438,7 @@ winver
 ### Start Mock Hub
 ```cmd
 cd c:\Users\Jan Kiervy\Desktop\capstone\L.A.R.A
-python scripts/mock_hub.py
+# Archived simulator launch removed; use real-hub-testing.md.
 ```
+
+</details>

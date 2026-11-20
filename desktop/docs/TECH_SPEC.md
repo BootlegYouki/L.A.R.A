@@ -204,7 +204,7 @@ Both developers work each issue together, one issue at a time. “Creates” ass
 | 2.3 | #47 | `RosterPage.tsx`, `CreateClassroomDialog.tsx`, `TopAppBar.tsx`; extend `classrooms.ts` | #46; reuse realtime/auth |
 | 2.4 | #48 | `sync.ts`, native `sync.rs`, `apply_sync_pull`, transaction/crash tests | #47; reuse DB and contract types; reset spike |
 | 2.5 | #105 | `SettingsPage.tsx`; extend existing `settings.ts` and auth logout; no language control | #48; reuse queued count and credentials |
-| 2.6 | #123 | `pages/teacher/ClassSettings.tsx`; extend classroom service, archived Home filter | #105; mock owner/co-teacher routes |
+| 2.6 | #123 | `pages/teacher/ClassSettings.tsx`; extend classroom service, archived Home filter | #105; real-Hub owner/co-teacher routes |
 
 Until #48, #45–47 persist only their explicitly fetched, validated snapshots through `db.ts`; they must not impersonate the delta engine or advance its cursor. #48 becomes the one refresh/queue owner. Remove the scaffold `foundation_note` when sign-in lands.
 
@@ -212,7 +212,7 @@ Later order: Sprint 3 #30, #55–58, #124–125; Sprint 4 #31, #62–63, #104, #
 
 ## 11. Dependencies on Other Teams
 
-Use `scripts/mock_hub.py` immediately; real backend availability must not block client work. Server supplies contract parity, permission filtering, snapshots/tombstones, byte ranges, quiz timing/redaction and scored AI evaluation. Mobile shares behavior/contracts, not desktop implementation files. Lead owns contract changes, design-system changes, CI and approval. Do not import proposed server-spec wire changes before contracts/mock/tests merge. Real-Hub integration must repeat enrollment, reset, roles, media, quiz and queue tests before release.
+Build and test against the real Hub; see [real-Hub testing](real-hub-testing.md) for isolated synthetic setup. Server supplies contract parity, permission filtering, snapshots/tombstones, byte ranges, quiz timing/redaction and scored AI evaluation. Mobile shares behavior/contracts, not desktop implementation files. Lead owns contract changes, design-system changes, CI and approval. Do not import proposed server-spec wire changes before contracts and tests merge. Real-Hub integration must repeat enrollment, reset, roles, media, quiz and queue tests before release.
 
 ## 12. Risks and Unknowns
 
@@ -232,8 +232,7 @@ Owners below are proposed team responsibilities; no personal commitment by Kierv
 From repository root, with Python 3 and PyYAML installed:
 
 ```sh
-python scripts/mock_hub.py
-# Separate terminal, same root:
+# Start the real Hub first: see real-hub-testing.md.
 python scripts/verify_invariants.py
 python -m unittest discover tests
 ```
@@ -249,23 +248,23 @@ cargo check --manifest-path src-tauri/Cargo.toml
 npm run tauri dev
 ```
 
-Use the mock's documented seed accounts (`T-0001`, enrolled learner, joining learner; PIN from root guide), never real learner data. Start with authenticated classroom list, join/approve and pull. The shared tests start/stop a mock instance themselves; a manual instance uses REST 8080/WS 8081/UDP 8888. Mock supplies UDP; real mDNS discovery still needs a real advertised service.
+Use only synthetic accounts from the checked-out server seed implementation, never real learner data. Start with authenticated classroom list, join/approve and pull. Frontend tests isolate dependencies; they do not prove native Hub traffic. Check real UDP and mDNS separately.
 
 | Deliverable | Required proof before its PR is complete |
 |---|---|
 | #29 shell | Native launch creates schema; Hub stopped gives cached/empty view; English-only shell; reopen DB and reject wrong-account rows |
 | #5 discovery | Parse malformed/wrong-app beacons, deduplicate; UDP discovery around 3 seconds; mDNS on actual LAN; Wi-Fi reconnect and scanner shutdown |
-| #40 connection | Manual address works without broadcast; invalid octets/port rejected; 401 reachability separated from login; stop mock gives banner; production HTTP/WS scope smoke test |
-| #45 accounts | Teacher/learner mock login and registration; secure token absent from SQLite/localStorage/logs; relaunch with Hub stopped; switch accounts/Hubs with queued rows and prove no cross-context access |
+| #40 connection | Manual address works without broadcast; invalid octets/port rejected; 401 reachability separated from login; stop Hub gives banner; production HTTP/WS scope smoke test |
+| #45 accounts | Teacher/learner Hub login and registration; secure token absent from SQLite/localStorage/logs; relaunch with Hub stopped; switch accounts/Hubs with queued rows and prove no cross-context access |
 | #46 join | Joining seed learner enters grouped code, sees PENDING, teacher approval unlocks without refresh; invalid/rejected/removed states and WS 4401/backoff |
 | #47 roster | Create class, join from second session, accept/reject/remove with retained scores; forbidden role checks and offline read-only roster |
-| #48 sync | Paging/tombstones and users; fail halfway through apply and kill/reopen: rows and cursor unchanged; reset with queued child/parent; duplicate receipts; rejected item; revoked access; new-member full snapshot; refresh under 1 second on mock |
+| #48 sync | Paging/tombstones and users; fail halfway through apply and kill/reopen: rows and cursor unchanged; reset with queued child/parent; duplicate receipts; rejected item; revoked access; new-member full snapshot; refresh under 1 second on the real Hub |
 | #105 settings | English-only settings and full-process relaunch; queued count warning before logout; offline logout clears local credential, preserves queued rows/context and reports unsent revocation |
 | #123 class settings | Rename/archive appears after sync, archived class read-only; add/remove seeded second teacher; co-teacher cannot manage ownership; controls disabled offline |
 
 Every feature also requires local loading/empty/offline states, English resource keys, keyboard/focus/contrast and desktop 40px controls (48px tabs, 56px quiz choices). Test service state/unit logic plus actual native boundaries; mocked SQL alone cannot prove atomicity or OS credentials.
 
-Sprint 0 evidence (2026-10-26): `python scripts/verify_invariants.py` passed; `python -m unittest discover tests` passed all 66 tests (12.237 seconds), exercising the running localhost mock. The suite emitted socket ResourceWarnings; no test failed. Guide-prompt self-review checked all ten criteria, corrected an inaccurate grade-event identifier concern, clarified preferences/context isolation, and retained the explicitly gated questions in section 14. Desktop builds/native feature tests belong to #161 and later feature PRs; do not describe them as testing this docs-only branch. Physical WAN-unplugged LAN, real-Hub, Linux/macOS native runs and Lead/Kiervy approval are not established by a localhost mock run.
+Archived Sprint 0 evidence (2026-10-26; simulator results, not real-Hub verification): `python scripts/verify_invariants.py` passed; `python -m unittest discover tests` passed all 66 tests (12.237 seconds), exercising the running localhost mock. The suite emitted socket ResourceWarnings; no test failed. Guide-prompt self-review checked all ten criteria, corrected an inaccurate grade-event identifier concern, clarified preferences/context isolation, and retained the explicitly gated questions in section 14. Desktop builds/native feature tests belong to #161 and later feature PRs; do not describe them as testing this docs-only branch. Physical WAN-unplugged LAN, real-Hub, Linux/macOS native runs and Lead/Kiervy approval are not established by a localhost mock run.
 
 ## 14. Open Questions
 

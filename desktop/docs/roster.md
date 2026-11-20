@@ -1,5 +1,7 @@
 # Teacher classrooms and roster (#47)
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 Teachers can create a class, copy its generated `XXX-XXX` code, and open People to review join requests. The current prototype/design rules supply the Home, class bar, 40px controls, 68px roster rows and Radix dialogs. Home cards never show class codes. All copy is in `src/i18n/en.json`.
 
 ## Files and data flow
@@ -27,7 +29,7 @@ CSP policies intersect and a processed meta policy cannot be relaxed by changing
 
 The physical Windows 11 Pro / B450M Steel Legend PC ran embedded `http://tauri.localhost` assets, actual native HTTP/SQLite/Windows credentials and browser WebSocket. An isolated WebView profile on G: and process-only loopback inspection were used; no debugging flag or capability ships with the app. Test accounts/data were synthetic. Original databases and queued work were not erased.
 
-### Mock Hub
+### Archived simulator verification
 
 On isolated test ports 8280/8281, the production window created a class and copied its code, showed its empty roster, received a second session's live join request and exact Pending count, accepted it and unlocked the learner via actual approval event, declined another request, cancelled then confirmed removal and observed the learner's access disappear. Rejected/Removed records stayed visible. A third Pending row, cached read-only rows and count survived stopping the Hub and a full process restart without a PIN. At 720/1200px and 100/200% root text there was no horizontal overflow. No renderer exception was captured. Dialog focus restoration/default Cancel and Escape were checked.
 
@@ -43,10 +45,10 @@ Screenshots in `screenshots/roster-*.png` cover create/code/empty, live Pending,
 
 ## Repeat
 
-1. Start `python scripts/mock_hub.py`, or the real staging Hub with `LARA_TEST_SEED=1` and a new isolated `LARA_DATA_DIR`. Connect Desktop and sign in as `T-0001` / seed PIN `1234`.
+1. Start the real staging Hub following [real-Hub testing](real-hub-testing.md). Connect Desktop using synthetic credentials from the checked-out server seed implementation.
 2. Create a class from Home. Check its generated code, Copy feedback, empty People view, and absence of codes on Home cards.
 3. In a second authenticated learner/API session (`123456789013` / seed PIN), join that code. Without reloading Desktop, expect Pending and count 1. Accept: expect Active and learner access. Repeat with another synthetic learner for Decline.
-4. For Active, open Remove, cancel/Escape first, then confirm. The mock marks Removed and locks learner access; current real staging returns the documented 501 and keeps Active.
+4. For Active, open Remove, cancel/Escape first, then confirm against the real Hub. Verify successful removal locks learner access; if the Hub rejects the request or returns an unimplemented status, verify the error remains visible and Active is retained. Record the actual revision and response rather than assuming the historical outcome.
 5. Stop the Hub, close Desktop fully, reopen it: saved rows remain read only without a PIN. Restart the same Hub data and check recovery. Switch to a learner and confirm no teacher roster is exposed.
 
 ## Not verified / limits
