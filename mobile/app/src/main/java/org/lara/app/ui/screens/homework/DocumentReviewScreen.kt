@@ -2,6 +2,7 @@ package org.lara.app.ui.screens.homework
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -43,7 +44,8 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
     var menu by remember { mutableStateOf(false) }
     val bitmap = rememberHomeworkBitmap(preview ?: source, root)
     val labels = listOf(R.string.scan_top_left, R.string.scan_top_right, R.string.scan_bottom_right, R.string.scan_bottom_left)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
+    Column(Modifier.fillMaxSize().background(LaraColors.Surface).statusBarsPadding().navigationBarsPadding()
+        .verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             IconButton(onClick = cancel, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
@@ -59,13 +61,14 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
             else -> R.string.scan_manual
         }))
         if (bitmap == null) org.lara.app.ui.components.LoadingSpinner(inline = true)
-        else Box(Modifier.fillMaxWidth().height(320.dp)) {
-            Image(bitmap.asImageBitmap(), stringResource(R.string.homework_photo_description),
-                Modifier.fillMaxSize().padding(if (preview == null && available) MinTouchTarget / 2 else 0.dp), contentScale = ContentScale.Fit)
-            if (preview == null && available) {
-                val touchRadius = with(LocalDensity.current) { (MinTouchTarget / 2).toPx() }
-                val description = stringResource(R.string.scan_drag_corners)
-                Canvas(Modifier.fillMaxSize().semantics { contentDescription = description }.pointerInput(bitmap, busy) {
+        else Surface(shape = LaraShapes.medium, color = LaraColors.SurfaceSubtle, border = androidx.compose.foundation.BorderStroke(1.dp, LaraColors.Border)) {
+            Box(Modifier.fillMaxWidth().height(260.dp)) {
+                Image(bitmap.asImageBitmap(), stringResource(R.string.homework_photo_description),
+                    Modifier.fillMaxSize().padding(if (preview == null && available) MinTouchTarget / 2 else 0.dp), contentScale = ContentScale.Fit)
+                if (preview == null && available) {
+                    val touchRadius = with(LocalDensity.current) { (MinTouchTarget / 2).toPx() }
+                    val description = stringResource(R.string.scan_drag_corners)
+                    Canvas(Modifier.fillMaxSize().semantics { contentDescription = description }.pointerInput(bitmap, busy) {
                     fun bounds(): Rect {
                         val scale = min((size.width - touchRadius * 2).coerceAtLeast(1f) / bitmap.width,
                             (size.height - touchRadius * 2).coerceAtLeast(1f) / bitmap.height)
@@ -93,7 +96,7 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
                             change.consume()
                         }
                     }
-                }) {
+                    }) {
                     val scale = min((size.width - touchRadius * 2).coerceAtLeast(1f) / bitmap.width,
                         (size.height - touchRadius * 2).coerceAtLeast(1f) / bitmap.height)
                     val left = (size.width - bitmap.width * scale) / 2
@@ -108,6 +111,7 @@ fun DocumentReviewScreen(source: String, preview: String?, root: File, initialCo
                     points.forEachIndexed { index, point ->
                         drawCircle(LaraColors.Surface, (if (index == selected) 12.dp else 8.dp).toPx(), point)
                         drawCircle(LaraColors.PrimaryDark, (if (index == selected) 12.dp else 8.dp).toPx(), point, style = Stroke(2.dp.toPx()))
+                    }
                     }
                 }
             }

@@ -26,11 +26,11 @@ WorkManager persists filenames and metadata, not bearer tokens. Every execution 
 - Material metadata supports title/topic only: no invented material description, draft scheduling, recipient selection, Drive, links, or Google-only controls.
 - Forms reuse `ClassFormDialog`; Create stays at the top left per design-system 9.5. Date/time use native Android pickers. Item deletion and abandoning edits require confirmation.
 - English and Filipino resources for this feature follow the user's explicit task instruction, an exception to the repository's English-only rule. This does not add a language selector. Existing unrelated screens still use their existing resources; default strings provide fallback.
-- Staging currently has a separate four-digit Mobile sign-in vs six-digit contract/Mock Hub PIN mismatch. Automated transport fixtures authenticate with the contract PIN without changing the Mock Hub or production authentication. This bypass is test-only; it does not establish that normal Mobile login works against the unchanged seed.
+- Mobile sign-in accepts four-digit PINs while the contract Mock Hub seed uses six digits. For phone testing, run `python3 mobile/scripts/mock_hub_4digit.py`; it changes teacher and learner seed PIN hashes to `1234` in memory after the normal seed reset. The shared `scripts/mock_hub.py` and production authentication remain unchanged. Stop the helper with Ctrl+C; a fresh run restores the normal seed and reapplies the test PIN.
 
 ## How to test (for teachers and reviewers)
 
-Ask the test operator to start the Mock Hub (`python3 scripts/mock_hub.py`) and install the Mobile APK. Use a synthetic teacher and learner account in Science 4. The operator must resolve the existing PIN mismatch or set up a documented test session; do not use real learner data.
+Start the phone-testing Mock Hub with `python3 mobile/scripts/mock_hub_4digit.py` and install the Mobile APK. Use only the synthetic seed accounts: teacher `T-0001` / PIN `1234` and enrolled learner `123456789012` / PIN `1234` in Science 4. For a USB-connected phone, run `adb reverse tcp:38080 tcp:38080` and `adb reverse tcp:38081 tcp:38081`, then use manual Hub address `127.0.0.1:38080`. Do not use real learner data.
 
 1. Open Science 4, then **Classwork → Create → Topic**. Enter “Unit 1” and save. It should appear as a heading.
 2. Choose **Create → Assignment**. Enter a title, instructions, points, due date/time, late-work choice and Unit 1. Save. On the learner's phone, refresh once: the assignment should appear.

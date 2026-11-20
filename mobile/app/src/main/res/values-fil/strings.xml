@@ -45,4 +45,15 @@
     <string name="reading_work_empty">Gumawa ng materyal o takdang-aralin para sa klase.</string>
     <string name="enrollment_cancel_action">Kanselahin</string>
     <string name="author_loading">Binubuksan ang naka-save na gawain…</string>
+    <string name="homework_attach_document">Maglakip ng PDF o Word na dokumento</string>
+    <string name="homework_work_ready">Handa na ang gawain. I-tap ang Turn in para ipadala.</string>
+    <string name="homework_turn_in_complete">Naipasa na</string>
+    <string name="homework_photo_item">Kalakip na larawan</string>
+    <string name="homework_photo_format">JPEG na larawan</string>
+    <string name="homework_attachment_name">%1$s</string>
+    <string name="homework_document_item">Kalakip na dokumento</string>
+    <string name="homework_saving">Sine-save ang iyong gawain…</string>
+    <string name="homework_save_failed">Hindi na-save o naipasa ang iyong gawain. Manatili sa screen na ito at subukan muli.</string>
+    <string name="homework_photo_hint">Magdagdag ng larawan, PDF, o Word na dokumento.</string>
+    <string name="homework_confirm_photo">Mase-save ang iyong gawain sa device na ito at ipapadala kapag nakakonekta sa classroom Hub.</string>
 </resources>

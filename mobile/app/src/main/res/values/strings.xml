@@ -226,9 +226,18 @@
     <string name="homework_take_photo">Take a photo</string>
     <string name="homework_retake">Take a new photo</string>
     <string name="homework_choose_photo">Choose a photo</string>
+    <string name="homework_attach_document">Attach a PDF or Word document</string>
     <string name="homework_turn_in">Turn in</string>
+    <string name="homework_turn_in_complete">Turned in</string>
     <string name="homework_your_work">Your work</string>
     <string name="homework_photo_ready">Photo ready. Tap Turn in to send this version.</string>
+    <string name="homework_work_ready">Work ready. Tap Turn in to send this version.</string>
+    <string name="homework_photo_item">Photo attachment</string>
+    <string name="homework_photo_format">JPEG image</string>
+    <string name="homework_attachment_name">%1$s</string>
+    <string name="homework_document_item">Document attachment</string>
+    <string name="homework_saving">Saving your work…</string>
+    <string name="homework_save_failed">Your work could not be saved or turned in. Keep this screen open and try again.</string>
     <string name="scan_review">Review document</string>
     <string name="scan_preview">Preview scan</string>
     <string name="scan_check_preview">Auto-adjusted preview. Check every line and drawing before using this photo.</string>
@@ -260,7 +269,7 @@
     <string name="homework_offline_help">Your work will turn in by itself when you are connected to the classroom Hub.</string>
     <string name="homework_preparing">Saving your photo…</string>
     <string name="homework_failed">Your photo could not be saved or turned in. Keep this screen open and try again.</string>
-    <string name="homework_photo_hint">Take a photo of your notebook page.</string>
+    <string name="homework_photo_hint">Add a photo, PDF, or Word document.</string>
     <string name="homework_photo_description">Your homework photo</string>
     <string name="homework_rejected_late">The deadline has passed. Ask your teacher whether late work can be accepted.</string>
     <string name="homework_rejected_graded">This homework has already been graded. Ask your teacher before replacing it.</string>
@@ -310,7 +319,7 @@
     <string name="homework_teacher">Teacher</string>
     <string name="homework_add_work">Add work</string>
     <string name="homework_confirm_title">Turn in your work?</string>
-    <string name="homework_confirm_photo">Your photo will be saved on this device and sent when the classroom Hub is reachable.</string>
+    <string name="homework_confirm_photo">Your work will be saved on this device and sent when the classroom Hub is reachable.</string>
     <string name="classes_details">Class details</string>
     <string name="class_info">Class info</string>
     <string name="class_info_code">Class code</string>
