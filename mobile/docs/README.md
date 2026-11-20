@@ -24,6 +24,7 @@ verification output under [evidence/41/](./evidence/41/).
 | `room_schema.md` | Entities versus `client_offline.sql`, DAOs, schema test | Sprint 1 |
 | `discovery.md` | NSD, UDP, `MulticastLock`, manual IP, reconnect | Sprint 1 |
 | `sync_worker.md` | WorkManager sync, cursor handling, `reset`, offline queue | Sprint 2 |
+| [classwork-authoring.md](./classwork-authoring.md) | Teacher materials, assignments, topics, durable uploads and non-programmer test guide | Sprint 3 |
 | [post-announcement.md](./post-announcement.md) | Teacher announcement form, Hub requirement and Stream refresh | Sprint 3 |
 | [stream-reader.md](./stream-reader.md) | Room-backed Stream, PDF/image handouts and extracted DOCX text | Sprint 3 |
 | [classroom-layout.md](./classroom-layout.md) | Shared phone class cards, class headers, teacher tools and keyboard-safe private comments | Sprint 3.1.1 |

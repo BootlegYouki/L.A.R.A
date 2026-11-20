@@ -1,0 +1,7 @@
+OPPO CPH2179 / Android 10 / physical 4 GB device / USB reverse / synthetic 220 MiB upload
+Samples: 251; period: approximately 500 ms
+Java used peak: 16094408 bytes (15.35 MiB)
+Java committed peak: 51337072 bytes (48.96 MiB)
+Native allocated peak: 16291408 bytes (15.54 MiB)
+Java used + native allocated peak: 31613720 bytes (30.15 MiB)
+Runtime/API samples; not Android Studio Profiler, not total process PSS.

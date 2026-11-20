@@ -1,0 +1,84 @@
+package org.lara.app.data.remote
+
+import java.io.File
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.*
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import org.lara.app.domain.MaterialDraft
+
+internal const val MATERIAL_LIMIT = 250L * 1024 * 1024
+
+class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
+    private val client = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
+        .retryOnConnectionFailure(false).connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).build()
+
+    suspend fun mutate(userId: String, kind: String, id: String?, method: String, payload: JsonObject?): String = withContext(Dispatchers.IO) {
+        require(kind in setOf("assignments", "materials", "topics"))
+        require(id == null || id.matches(Regex("[A-Za-z0-9-]{1,128}")))
+        require(method in setOf("POST", "PATCH", "DELETE"))
+        val c = sessions.connection(userId)
+        val url = c.endpoint.restBase + "/api/$kind" + (id?.let { "/$it" } ?: "")
+        require(isAllowedHubUrl(url))
+        val body = payload?.toString()?.toRequestBody("application/json".toMediaType())
+        execute(Request.Builder().url(url).header("Authorization", "Bearer ${c.session.token}")
+            .method(method, body).build())
+    }
+
+    suspend fun upload(userId: String, hub: String, classroomId: String, file: File, draft: MaterialDraft,
+        progress: (Int) -> Unit) = withContext(Dispatchers.IO) {
+        require(file.length() in 1..MATERIAL_LIMIT)
+        require(draft.fileType in setOf("DOCUMENT", "VIDEO", "WORKSHEET"))
+        require(draft.assignmentId == null || draft.announcementId == null)
+        val c = sessions.connection(userId)
+        require(c.endpoint.restBase == hub)
+        val url = hub + "/api/materials"
+        require(isAllowedHubUrl(url))
+        val streaming = object : RequestBody() {
+            override fun contentType() = "application/octet-stream".toMediaType()
+            override fun contentLength() = file.length()
+            override fun writeTo(sink: BufferedSink) {
+                file.inputStream().use { input ->
+                    val buffer = ByteArray(32 * 1024)
+                    var sent = 0L
+                    var last = -1
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        sink.write(buffer, 0, count)
+                        sent += count
+                        val percent = (sent * 100 / contentLength()).toInt().coerceAtMost(99)
+                        if (percent != last) { last = percent; progress(percent) }
+                    }
+                }
+            }
+        }
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("classroom_id", classroomId).addFormDataPart("title", draft.title)
+            .addFormDataPart("file_type", draft.fileType).apply {
+                draft.topicId?.let { addFormDataPart("topic_id", it) }
+                draft.assignmentId?.let { addFormDataPart("assignment_id", it) }
+                draft.announcementId?.let { addFormDataPart("announcement_id", it) }
+            }.addFormDataPart("file", file.name.substringAfter('-'), streaming).build()
+        execute(Request.Builder().url(url).header("Authorization", "Bearer ${c.session.token}").post(body).build())
+        progress(100)
+    }
+
+    private fun execute(request: Request): String = client.newCall(request).execute().use { response ->
+        val source = requireNotNull(response.body).source()
+        source.request(65_537)
+        require(source.buffer.size <= 65_536)
+        val text = source.readUtf8()
+        if (response.code != 200) {
+            val code = runCatching { Json.parseToJsonElement(text).jsonObject["error"]?.jsonObject
+                ?.get("code")?.jsonPrimitive?.content }.getOrNull() ?: "UNKNOWN"
+            throw HubFailure(response.code, code)
+        }
+        text
+    }
+}

@@ -1,0 +1,3 @@
+Test proxy: 4 MiB/s upload throttle; one full-body 503 injection; upstream unchanged Mock Hub 38080
+INJECTED 503 after reading full upload; bytes=230687386
+FORWARDED successful retry; bytes=230687386

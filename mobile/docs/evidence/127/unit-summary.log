@@ -1,0 +1,12 @@
+Debug org.lara.app.data.authoring.MaterialStreamingTest: 1 tests; 0 failures; 0 skipped
+Debug org.lara.app.ui.screens.teacher.classwork.ClassworkAuthoringViewModelTest: 1 tests; 0 failures; 0 skipped
+Debug org.lara.app.data.authoring.ClassworkMockTest: 1 tests; 0 failures; 0 skipped
+Debug org.lara.app.data.authoring.ClassworkAuthoringApiTest: 1 tests; 0 failures; 0 skipped
+Debug org.lara.app.data.authoring.AuthoringResourcesTest: 1 tests; 0 failures; 0 skipped
+Debug: 210 tests; 0 failures; 6 skipped
+Release org.lara.app.data.authoring.MaterialStreamingTest: 1 tests; 0 failures; 0 skipped
+Release org.lara.app.ui.screens.teacher.classwork.ClassworkAuthoringViewModelTest: 1 tests; 0 failures; 0 skipped
+Release org.lara.app.data.authoring.ClassworkMockTest: 1 tests; 0 failures; 0 skipped
+Release org.lara.app.data.authoring.ClassworkAuthoringApiTest: 1 tests; 0 failures; 0 skipped
+Release org.lara.app.data.authoring.AuthoringResourcesTest: 1 tests; 0 failures; 0 skipped
+Release: 210 tests; 0 failures; 6 skipped
