@@ -1,5 +1,7 @@
 # Desktop 2.1 — accounts and cached Home (#45)
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 Learners can register and learners/teachers can sign in on the selected LAN Hub, then open their role-specific Home. Previously signed-in profiles and class details reopen offline without a PIN check or network requirement. This is cached access, not a new offline authentication. The admin remains Hub-PC only.
 
 Sources: OpenAPI auth/classroom schemas, the canonical client SQL, Desktop Tech Spec sections 3/6/7/10/13, design-system 5.2/5.12/5.13/9.2/9.3 and the prototype. The team follows announcements [#238](https://github.com/BootlegYouki/L.A.R.A/discussions/238) and the login-rule follow-up on [#194](https://github.com/BootlegYouki/L.A.R.A/discussions/194). These do not authorize changes outside Desktop.
@@ -87,12 +89,7 @@ The real Hub was stopped. After a full production Desktop process exit/relaunch 
 
 ## Reproduce as an end user
 
-1. From repo root start `python scripts/mock_hub.py`. In `desktop/`, run `npm ci`, `npm test`, `npm run lint`, `npm run build`, then `npm run tauri dev` with native prerequisites installed.
-2. Connect to the mock through the existing Hub panel. Sign in as teacher `T-0001` / PIN `1234`: Teaching and Science 4 appear. Open the card, then return Home.
-3. Choose Switch account from the account button. Sign in as `123456789012` / `1234`: Enrolled appears. Use New learner to register a fresh synthetic 12-digit LRN/name/PIN; expect an empty Home. Do not use a real learner's identity for testing.
-4. Sign back in as the seeded teacher, stop the mock, close Desktop fully and reopen: cached teacher classes remain accessible with the offline banner. Never delete an existing DB to create a clean screenshot.
-5. Restarting the mock creates new sessions/accounts and invalidates its old tokens. Expect sign-in to be requested. A production Hub's durable sessions behave according to its own contract.
-6. Build the production executable with `npm run tauri -- build --no-bundle`. OS credential persistence must also be tested on each target OS before its package ships.
+Follow [real-Hub testing](real-hub-testing.md) using a fresh synthetic dataset and the credentials from the checked-out server seed implementation. Connect Desktop, sign in as a teacher, open the test class and switch to a learner. Register only synthetic learner identities. Stop the Hub and fully restart Desktop to check cached access, then restart the same Hub to verify reconnection. Test secure credential persistence on each target OS before its package ships. The historical simulator session-reset behavior above is not an expectation for the durable real Hub.
 
 ## Not verified
 

@@ -1,5 +1,7 @@
 # Desktop scaffold — issue #29
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 ## Purpose and scope
 The Tauri 2 desktop window hosts a React 19 / strict TypeScript / Tailwind 4 shell. It opens the canonical client SQLite database without contacting a Hub, reads the current account's saved classes, and uses English only (#223/#225). This is the foundation for later desktop steps, not a working sign-in or connection screen.
 
@@ -58,7 +60,7 @@ python scripts/verify_invariants.py
 ### How to test as an end user
 1. Start the desktop app with `npm run tauri dev`. No account or running Hub is required for this scaffold. On a new database, the window shows Home, the Hub-disconnected notice, and an empty classes message.
 2. Confirm the shell is English with no language control in the top bar. Old browser language preferences do not affect the UI.
-3. Leave the Hub stopped. The app remains usable; no connection dialog blocks it. Starting/stopping the mock Hub should not change this notice yet, because discovery and sign-in are outside #29.
+3. Leave the Hub stopped. The app remains usable; no connection dialog blocks it. For current discovery and sign-in checks, follow [real-Hub testing](real-hub-testing.md); this section describes the original #29 scaffold.
 4. The database is created at the app-config path for `org.lara.desktop` as `lara_client.db`. It contains the 16 canonical client tables plus SQLx's migration bookkeeping. Do not delete an existing database to retest.
 5. `npm test` uses temporary databases to verify reopening preserves queued comments, foreign keys reject an orphan, and another account's or pending/removed learner's classes stay out of the result. No real learner data is used.
 6. After sign-in/sync are implemented, a saved current user's classes appear here from SQLite. This scaffold deliberately does not provide a manual fixture-import or account-switch UI.

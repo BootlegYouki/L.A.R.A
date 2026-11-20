@@ -11,7 +11,7 @@
 | :--- | :--- |
 | 1 | Read the root [`AGENTS.md`](../AGENTS.md), then [`desktop/AGENTS.md`](./AGENTS.md) (this team's agent and developer guide). |
 | 2 | Write [`docs/TECH_SPEC.md`](./docs/TECH_SPEC.md) from the template ([#37](https://github.com/BootlegYouki/L.A.R.A/issues/37)). The Lead approves it before Sprint 1 work merges. |
-| 3 | Run the Hub simulator from the repo root: `python3 scripts/mock_hub.py`. Seed accounts (PIN `1234`): `T-0001` teacher (class code `K7M4QX`), `123456789012` learner, `123456789013` learner (join with the code), `ADMIN-0001`. |
+| 3 | Start the real Hub with isolated synthetic data; follow [real-Hub testing](docs/real-hub-testing.md). |
 | 4 | Take the next issue whose dependencies are merged: [all desktop issues](https://github.com/BootlegYouki/L.A.R.A/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22scope%3Adesktop%22). One issue = one PR. Or use the [sprint board](https://github.com/users/BootlegYouki/projects/2) (filter Team = Desktop). The sprint-by-sprint roadmap is in section 5. |
 | 5 | Scaffold first: [#29](https://github.com/BootlegYouki/L.A.R.A/issues/29) (Tauri + React + SQLite + tokens). Copy `design-system/assets/` to `desktop/src/assets/design-system/` and import the font and icon CSS from `index.css`. |
 | 6 | Before every PR: run the commands in [`desktop/AGENTS.md`](./AGENTS.md), `python3 scripts/verify_invariants.py` and `python3 -m unittest discover tests`; fill the PR template; update `desktop/docs/`. |
@@ -38,10 +38,7 @@
    * Configure Tailwind from `design-system/desktop/tailwind.theme.ts`; Nunito and Phosphor come from `design-system/assets/`. No invented colors, no gradients.
    * Click targets follow Google Classroom: 40px buttons and icon buttons, 48px tabs and drawer items, contrast ratio ≥ 4.5:1.
    * Keep all user-facing strings in `src/i18n/en.json`; the app is English only, with no language toggle.
-6. **Local Testing via Mock Hub:** Do not wait for the Server team. Start the standalone Local Hub simulator from the repo root:
-   ```bash
-   python3 ../scripts/mock_hub.py
-   ```
+6. **Local testing:** Use the real Hub with isolated synthetic data; see [setup and verification](docs/real-hub-testing.md).
 7. **Pre-Push Linter:** Run the invariant scanner before opening any PR:
    ```bash
    python3 ../scripts/verify_invariants.py
@@ -128,7 +125,7 @@ desktop/
 │   ├── index.css                     # Tailwind CSS and the design tokens
 │   ├── components/                   # Reusable cards, buttons, video player
 │   ├── pages/                        # Stream, Classwork, Quiz, Teacher Dashboard
-│   ├── services/                     # Tauri SQL DB, WebSocket, Mock Hub client
+│   ├── services/                     # Tauri SQL DB, WebSocket, Hub client
 │   ├── store/                        # Zustand global state stores
 │   ├── i18n/                         # Single English dictionary and typed lookup
 │   └── assets/design-system/         # Nunito + Phosphor copied from design-system/assets/

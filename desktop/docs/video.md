@@ -1,5 +1,13 @@
 # Video Lesson Player
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
+For current setup and acceptance checks, follow [real-Hub testing](real-hub-testing.md). The archived body records earlier implementation notes and outcomes; its old troubleshooting and setup instructions are retired.
+
+<details>
+<summary>Archived implementation notes and historical test evidence</summary>
+
+
 ## Purpose
 
 HTML5 video player with offline caching capabilities for L.A.R.A desktop app. Allows learners to stream video lessons from the Hub or play downloaded videos completely offline.
@@ -153,7 +161,7 @@ Response: 200 OK
 ```powershell
 # Start mock hub
 cd C:\Users\Jan Kiervy\Desktop\capstone\L.A.R.A
-python scripts/mock_hub.py
+# Archived simulator launch removed; use real-hub-testing.md.
 
 # Navigate to video in app
 # Test: Play, pause, scrub, volume, fullscreen
@@ -314,7 +322,7 @@ cd C:\Users\Jan Kiervy\Desktop\capstone\L.A.R.A
 ### Step 1: Start the Mock Hub
 ```powershell
 # Terminal 1: Start mock hub (leave this running)
-python scripts/mock_hub.py
+# Archived simulator launch removed; use real-hub-testing.md.
 ```
 
 You should see:
@@ -397,7 +405,7 @@ Navigate through the Stream or Classwork page to find a video material and open 
 **This is the most common issue!** The video material needs to sync from the Hub first.
 
 **Solution:**
-1. **Make sure mock hub is running** (`python scripts/mock_hub.py`)
+1. Archived simulator startup instruction retired; use [real-Hub testing](real-hub-testing.md).
 2. **Wait 5-10 seconds after login** for initial sync
 3. Watch the **mock hub terminal** - you should see:
    ```
@@ -412,7 +420,7 @@ Navigate through the Stream or Classwork page to find a video material and open 
 taskkill /F /IM python.exe
 
 # Restart mock hub
-python scripts/mock_hub.py
+# Archived simulator launch removed; use real-hub-testing.md.
 ```
 
 ### Desktop app won't start
@@ -743,3 +751,5 @@ The Windows development build played the test lesson against a local mock Hub. T
 [Online](screenshots/284-online.png) · [Saved](screenshots/284-saved.png) · [Offline](screenshots/284-offline.png)
 
 The staging Hub's automated range test passed separately. A physical Wi-Fi interruption against the real Hub and Linux playback remain unverified.
+
+</details>
