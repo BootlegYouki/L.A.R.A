@@ -53,86 +53,69 @@ metadata. With the Hub unreachable or after reopening Room, saved notices remain
 readable and class access still requires canonical ACTIVE membership. Offline join
 requests are not fabricated or queued; the existing Hub-unreachable state remains.
 
-## Validation
+## Current validation and staging integration
 
-Tests cover
-both auth modes, ASCII-only six-digit validation, retry gating, disconnected auth,
+The original implementation baseline was `dcb65f1`. Before publication MOBILE 3.5
+PR #338 was integrated at `92639e3`. The inherited homework filename test and
+three lint errors were then resolved by merged PR #342; that staging baseline
+`6f977e8ece6980374ae389db3f8cec9608b393eb` is now integrated without conflicts.
+Those shared staging fixes are not duplicated in this PR's diff. Class-comment
+code and the original MOBILE 3.5 checkout remain untouched.
+
+On 2026-11-20 (Asia/Manila), the full command passed:
+
+```text
+./gradlew --max-workers=2 --init-script /private/tmp/lara-326-unit.init.gradle test lint assembleDebug
+BUILD SUCCESSFUL in 2m 8s
+90 actionable tasks: 43 executed, 47 up-to-date
+```
+
+- Debug and release: **214 tests each, zero failures/errors, seven opt-in skips**.
+- Lint: **zero errors, 80 warnings**; no new suppression or baseline added here.
+- Shared contract/mock Hub suite: **72 passed**.
+- Offline invariants and `git diff --check`: **passed**.
+- Earlier isolated app/instrumentation APK build and OPPO CPH2179 / Android 10:
+  **three focused phone tests passed**, covering keyboard presentation, masking,
+  focus, deletion/replacement, submission in both forms, offline pending metadata
+  and denied pending access. The regular installed app/data were preserved and
+  the isolated test packages were removed. This was before the final staging
+  integration; it is not a claim of a new phone run of the integrated APK.
+
+Tests cover six ASCII digits in both auth modes, retry gating, disconnected auth,
 required receipt fields, failed follow-up refresh, legacy saved notices,
-account/Hub scoping and file-backed Room reopen without invented memberships.
-Existing authentication fixtures use the new seed PIN; hardware keyboard tests
-also check masking and deleting/replacing the sixth digit. Submission revalidates
-the current PIN so an immediate Enter after deletion cannot use a stale Compose
-callback eligibility value.
+account/Hub scoping and file-backed Room reopen without fabricated memberships.
+Submission reads the current PIN so immediate Enter after deletion cannot use
+stale Compose eligibility. The phone harness refocuses after invalid Enter
+correctly dismisses the keyboard.
 
-Initial results against `dcb65f1` on 2026-11-20 (Asia/Manila):
+The temporary Gradle init script sets test `java.io.tmpdir` to
+`/private/tmp/lara-326-unit`, following the existing macOS workaround in
+`evidence/266-group-8/unit.init.gradle`. This avoids `/var` versus `/private/var`
+path-comparison failures; it does not suppress or skip tests. PyYAML for the
+shared suite is installed in a temporary virtual environment.
 
-- Shared contract/mock suite: **72 passed**. PyYAML was installed in a temporary
-  virtual environment; the system Python initially lacked it.
-- Offline invariants: **passed**. `git diff --check`: **passed**.
-- `./gradlew --init-script /private/tmp/lara-326-unit.init.gradle test lint`:
-  debug and release each ran **210 tests, zero failures/errors, six opt-in skips**.
-  The init script sets test `java.io.tmpdir` to `/private/tmp/lara-326-unit`, following
-  the existing macOS workaround in `evidence/266-group-8/unit.init.gradle`.
-  Without it, unrelated path comparisons see `/var` versus `/private/var`.
-- The full required command **fails lint**: three errors and 78 warnings.
-  `VideoPlayerScreen.kt:116` reports API 29 AutoCloseable use with minSdk 26;
-  `VideoPlayerScreen.kt:113` and `MaterialReader.kt:331` report
-  `ProduceStateDoesNotAssignValue`. Both files are byte-identical to the staging
-  baseline. No suppression, baseline or unrelated fix was added in this issue.
-- Isolated app and instrumentation APKs: **build passed**. OPPO CPH2179 / Android
-  10: **three focused tests passed** (masking, deletion/replacement, keyboard focus
-  and submission in both forms, keyboard presentation, offline pending metadata
-  and denied class access). The regular installed app/data were not replaced.
-- An exploratory broader device test passed its authentication assertions, then
-  failed at the unchanged teacher-approval callback assertion. It was not fixed
-  under this issue. Its log also records the earlier harness refocus problem;
-  the final focused run uses the corrected refocus step and passes.
-- Real-Hub integration remains **not verified**; server follow-up #324 is still
-  open. Normal-entry app process restart with Hub down, physical WAN-unplugged
-  router, 200% font and TalkBack checks are not verified; Room reopen and rendered
-  offline states are the verified persistence/UI evidence.
-
-[Shared output](evidence/326/shared-tests.txt),
-[test/lint output](evidence/326/test-lint.txt),
-[lint diagnostics](evidence/326/lint.txt),
-[final focused phone run](evidence/326/device-focused.txt),
-[broader phone run and limitations](evidence/326/device-broad.txt),
-[device build](evidence/326/device-build.txt),
-[check summary](evidence/326/checks.txt),
+[Current check summary](evidence/326/checks.txt),
+[current test/lint/build output](evidence/326/ready-test-lint-build.txt),
+[current lint diagnostics](evidence/326/ready-lint.txt),
+[current shared tests](evidence/326/ready-shared-tests.txt),
+[focused phone run](evidence/326/device-focused.txt),
 [PIN screenshot](evidence/326/six-digit-pin-keyboard.png),
-[pending offline card screenshot](evidence/326/pending-class-offline.png).
+[offline pending screenshot](evidence/326/pending-class-offline.png).
 
-## Integration for publication
+## Remaining verification limits
 
-Before publication, merged MOBILE 3.5 PR #338 was verified merged on GitHub and
-`origin/staging` was fetched at `92639e36faf5fbce0cc295952a6d26835982a0db`.
-That baseline was merged into this separate issue branch without conflicts.
-Only this issue's mobile changes remain in the PR diff. The original MOBILE 3.5
-checkout and the local `staging`/`main` branches were not modified.
+Real Rust Hub integration (#324 remains open), normal-entry app restart with Hub
+down, physical WAN-unplugged router, 200% font, TalkBack and memory profiling are
+not verified. Room file reopen and explicit offline UI states are the verified
+persistence/UI evidence. An exploratory broader phone test passed its auth
+assertions, then failed at the unchanged teacher-approval callback assertion
+([log](evidence/326/device-broad.txt)); it was not repaired under this issue.
 
-Checks repeated on the integrated branch:
-
-- Shared contract/mock suite: **72 passed**; offline invariants and diff check pass.
-- Debug and release each run **215 tests: one failure, zero errors, seven opt-in
-  skips**. All 21 focused AuthViewModel, EnrollmentViewModel, EnrollmentApi and
-  enrollment notice persistence tests pass per variant.
-- The failure is the multipart filename assertion in
-  `HomeworkTransportTest.streamsMultipartAndAcceptsTheHubsCanonicalSubmissionId`.
-  The test expects `filename="homework.jpg"`. Both the test and HomeworkApi are
-  byte-identical to current staging; neither is edited by this issue.
-- Lint reports the same **three errors**, now **80 warnings**, in unchanged
-  MaterialReader and VideoPlayerScreen files. No lint suppression is added here.
-- Integrated `assembleDebug`: **BUILD SUCCESSFUL**.
-- These failed checks and missing integration/screen evidence remain blockers to
-  merge readiness. Publication is a **draft PR**, with no merge requested.
-
-The earlier passing phone checks cover the issue's production components before
-staging integration, not a new phone run of the integrated APK.
-
-[Integrated APK build](evidence/326/integrated-build.txt),
-[Integrated test/lint log](evidence/326/integrated-test-lint.txt),
-[integrated lint diagnostics](evidence/326/integrated-lint.txt),
-[integrated shared suite](evidence/326/integrated-shared-tests.txt).
+The older `integrated-*`, `test-lint.txt`, `lint.txt` and `shared-tests.txt` logs
+remain as historical evidence. Their test/lint failures are superseded by the
+passing `ready-*` logs after integrating #342. Current validation no longer
+requires draft status; the remaining verification limits remain explicit for
+review and do not claim production integration or approval to merge.
 
 ## Exact files changed
 
@@ -177,6 +160,9 @@ staging integration, not a new phone run of the integrated APK.
 - `mobile/docs/evidence/326/integrated-test-lint.txt`
 - `mobile/docs/evidence/326/lint.txt`
 - `mobile/docs/evidence/326/pending-class-offline.png`
+- `mobile/docs/evidence/326/ready-lint.txt`
+- `mobile/docs/evidence/326/ready-shared-tests.txt`
+- `mobile/docs/evidence/326/ready-test-lint-build.txt`
 - `mobile/docs/evidence/326/shared-tests.txt`
 - `mobile/docs/evidence/326/six-digit-pin-keyboard.png`
 - `mobile/docs/evidence/326/test-lint.txt`
