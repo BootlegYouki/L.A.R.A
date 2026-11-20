@@ -28,3 +28,29 @@ it('shows the read-only notice when a learner opens an archived class', async ()
   expect(renderer.root.findByProps({role:'status',className:'hub-status-banner banner-info'}).children)
     .toContain('This class is archived and read-only.');
 });
+it('saves cached handout text offline and prevents another save while pending', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  const lesson = {id:'handout',title:'Food chain',file_type:'DOCUMENT',saved:false,chunks:[{heading:null,text:'Cached lesson text'}]};
+  const content = {announcements:[],materials:[lesson]};
+  let finish!: (value: unknown) => void;
+  invoke.mockReset().mockResolvedValueOnce(content).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  await act(async () => { renderer = create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()})); });
+  await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  await act(async () => renderer.root.findByProps({className:'material-row'}).props.onClick());
+  expect(renderer.root.findByProps({className:'control tonal-button'}).props.disabled).toBe(false);
+  await act(async () => renderer.root.findByProps({className:'control tonal-button'}).props.onClick());
+  expect(renderer.root.findByProps({className:'control tonal-button'}).props.disabled).toBe(true);
+  expect(invoke).toHaveBeenLastCalledWith('read_class_content',{hub:account.hub,userId:'teacher',classroomId:'class',saveHandout:'handout'});
+  await act(async () => finish({...content,materials:[{...lesson,saved:true}]}));
+  expect(renderer.root.findByProps({role:'status'}).children).toContain('Saved on this device');
+});
+
+it('keeps saving disabled offline when no handout text is cached', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  invoke.mockReset().mockResolvedValue({announcements:[],materials:[{id:'handout',title:'Food chain',file_type:'DOCUMENT',saved:false,chunks:[]}]});
+  await act(async () => { renderer = create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()})); });
+  await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  await act(async () => renderer.root.findByProps({className:'material-row'}).props.onClick());
+  expect(renderer.root.findByProps({className:'control tonal-button'}).props.disabled).toBe(true);
+  expect(invoke).toHaveBeenCalledTimes(1);
+});

@@ -6,7 +6,7 @@ import type { CachedAccount, Classroom } from '../services/auth';
 interface Lesson { id: string; title: string; file_type: string; saved: boolean; chunks: {heading: string | null; text: string}[] }
 interface Content { announcements: {id: string; title: string; content: string; created_at: number}[]; materials: Lesson[] }
 interface Props { account: CachedAccount; classroom: Classroom; offline: boolean; people?: ReactNode; onVideo: (id: string) => void }
-export default function ClassPage({account, classroom, offline, people, onVideo}: Props) {
+export default function ClassPage({account, classroom, people, onVideo}: Props) {
   const [tab, setTab] = useState('stream');
   const [content, setContent] = useState<Content | null>(null);
   const [error, setError] = useState(false);
@@ -33,7 +33,7 @@ export default function ClassPage({account, classroom, offline, people, onVideo}
   if (lesson) return <section className="lesson-reader">
     <button type="button" className="control text-button" onClick={() => setLessonId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.classwork}</button>
     <h1>{lesson.title}</h1>
-    {lesson.saved ? <p role="status">{t.lesson_saved}</p> : <button type="button" className="control tonal-button" disabled={offline || saving || !lesson.chunks.length} onClick={() => void save(lesson)}>{saving ? t.auth_working : t.lesson_save}</button>}
+    {lesson.saved ? <p role="status">{t.lesson_saved}</p> : <button type="button" className="control tonal-button" disabled={saving || !lesson.chunks.length} onClick={() => void save(lesson)}>{saving ? t.auth_working : t.lesson_save}</button>}
     {saveError && <p role="alert">{t.lesson_save_error}</p>}
     {lesson.chunks.length ? lesson.chunks.map((chunk, index) => <section key={index}>{chunk.heading && <h2>{chunk.heading}</h2>}<p className="lesson-text">{chunk.text}</p></section>) : <p>{t.lesson_text_missing}</p>}
   </section>;
