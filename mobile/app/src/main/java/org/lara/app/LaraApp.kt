@@ -76,6 +76,16 @@ class AppContainer private constructor(private val services: AppServices, privat
     val settings by lazy { org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load) }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
     val announcements by lazy { org.lara.app.data.remote.AnnouncementApi(enrollmentApi, hubClient) }
+    val materialAuthoringApi by lazy { org.lara.app.data.remote.ClassworkAuthoringApi(enrollmentApi) }
+    val classworkAuthoring: org.lara.app.domain.ClassworkAuthoringRepository by lazy {
+        val owner = requireNotNull(accountId)
+        org.lara.app.data.repository.ClassworkAuthoringRepository(services.context, owner, enrollmentApi, materialAuthoringApi) {
+            syncScheduler.enqueueNow()
+            try { sync.pull(owner) }
+            catch (error: kotlinx.coroutines.CancellationException) { throw error }
+            catch (_: Exception) { /* A successful mutation must not be repeated when its refresh fails. */ }
+        }
+    }
     fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
     fun teacherClasses(userId: String) = org.lara.app.data.remote.TeacherClassApi(userId, enrollmentApi, hubClient)

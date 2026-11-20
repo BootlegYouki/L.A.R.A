@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -51,6 +53,7 @@ import org.lara.app.AppContainer
 import org.lara.app.R
 import org.lara.app.domain.model.Assignment
 import org.lara.app.domain.Cached
+import org.lara.app.data.repository.HomeworkAttachment
 import org.lara.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +79,9 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     val context = LocalContext.current
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { model.choose(context.applicationContext, it) }
+    }
+    val documents = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { model.chooseDocument(context.applicationContext, it) }
     }
     BackHandler {
         if (camera) camera = false
@@ -107,7 +113,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         return
     }
     val path = draft ?: submission?.filePath
-    val status = if (draft != null) R.string.homework_photo_ready else when (submission?.syncStatus) {
+    val status = if (draft != null) R.string.homework_work_ready else when (submission?.syncStatus) {
         "QUEUED_FOR_SYNC" -> R.string.homework_queued
         "REJECTED" -> R.string.homework_rejected
         "SYNCED" -> R.string.homework_turned_in
@@ -192,11 +198,11 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                         }
                         if (busy) {
                             LinearProgressIndicator(Modifier.fillMaxWidth())
-                            Text(stringResource(R.string.homework_preparing))
+                            Text(stringResource(R.string.homework_saving))
                         }
-                        if (error) Text(stringResource(R.string.homework_failed), color = LaraColors.DangerDark)
+                        if (error) Text(stringResource(R.string.homework_save_failed), color = LaraColors.DangerDark)
                         Text(stringResource(R.string.homework_attachments), style = MaterialTheme.typography.titleMedium)
-                        PhotoPreview(path, container.homeworkPhotos)
+                        HomeworkAttachmentPreview(path, container.homeworkPhotos)
                         if (submission?.syncStatus == "REJECTED") {
                             when (submission?.syncRejectReason) {
                                 "LATE_SUBMISSION" -> Text(stringResource(R.string.homework_rejected_late))
@@ -233,7 +239,12 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                             }
                         })
             }
-            if (submission?.score == null) {
+            if (submission != null) {
+                Button(onClick = {}, enabled = false, shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                    Text(stringResource(R.string.homework_turn_in_complete))
+                }
+            } else {
                 Button(onClick = { adding = true }, enabled = !busy, shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                     Text(stringResource(R.string.homework_add_work))
@@ -255,13 +266,22 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
-                Text(stringResource(if (path.isNullOrEmpty()) R.string.homework_take_photo else R.string.homework_retake))
+                val hasPhoto = !path.isNullOrEmpty() && HomeworkAttachment.type(File(path)) == "IMAGE"
+                Text(stringResource(if (hasPhoto) R.string.homework_retake else R.string.homework_take_photo))
             }
             TextButton(onClick = { adding = false; gallery.launch("image/*") }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_image), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 Text(stringResource(R.string.homework_choose_photo))
+            }
+            TextButton(onClick = {
+                adding = false
+                documents.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+            }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp))
+                Spacer(Modifier.width(LaraSpacing.S3))
+                Text(stringResource(R.string.homework_attach_document))
             }
         }
     }
@@ -271,10 +291,29 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
 }
 
 @Composable
-private fun PhotoPreview(path: String?, root: File) {
-    val current = rememberHomeworkBitmap(path, root)
-    if (current == null) Text(stringResource(R.string.homework_photo_hint))
-    else Image(current.asImageBitmap(), stringResource(R.string.homework_photo_description), Modifier.fillMaxWidth().heightIn(max = 280.dp))
+private fun HomeworkAttachmentPreview(path: String?, root: File) {
+    if (path.isNullOrEmpty()) {
+        Text(stringResource(R.string.homework_photo_hint), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+        return
+    }
+    val file = remember(path) { File(path) }
+    val isPhoto = HomeworkAttachment.type(file) == "IMAGE"
+    val bitmap = if (isPhoto) rememberHomeworkBitmap(path, root) else null
+    Surface(shape = LaraShapes.medium, color = LaraColors.Surface, border = BorderStroke(1.dp, LaraColors.Border)) {
+        Row(Modifier.fillMaxWidth().padding(LaraSpacing.S3), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+            if (bitmap != null) Image(bitmap.asImageBitmap(), stringResource(R.string.homework_photo_description),
+                Modifier.size(56.dp).clip(LaraShapes.small), contentScale = ContentScale.Crop)
+            else Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
+                Text(stringResource(if (isPhoto) R.string.homework_photo_item else R.string.homework_document_item),
+                    style = MaterialTheme.typography.titleSmall, color = LaraColors.TextPrimary)
+                Text(if (isPhoto) stringResource(R.string.homework_photo_format)
+                    else stringResource(R.string.homework_attachment_name, HomeworkAttachment.displayName(file)), style = MaterialTheme.typography.bodySmall,
+                    color = LaraColors.TextSecondary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            }
+        }
+    }
 }
 
 @Composable

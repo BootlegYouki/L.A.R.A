@@ -53,8 +53,6 @@ import org.lara.app.ui.theme.*
 import org.lara.app.ui.screens.teacher.classes.teacherIds
 import org.lara.app.ui.screens.teacher.PostAnnouncement
 import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Date
 
 
@@ -165,9 +163,20 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         } else page()
         return
     }
-    if (posts == Cached.Loading || work == Cached.Loading) { org.lara.app.ui.components.LoadingSpinner(); return }
+    if (posts == Cached.Loading || work == Cached.Loading) {
+        if (teacherHubReachable != null && destination == ShellDestination.CLASSWORK) org.lara.app.ui.screens.teacher.classwork.ClassworkAuthoringSkeleton()
+        else org.lara.app.ui.components.LoadingSpinner()
+        return
+    }
     val announcements = (posts as? Cached.Content)?.value.orEmpty()
     val topics = (work as? Cached.Content)?.value?.topics.orEmpty()
+    if (destination == ShellDestination.CLASSWORK && teacherHubReachable != null && userId in classroom.teacherIds()) {
+        org.lara.app.ui.components.PullRefresh(reload) {
+            org.lara.app.ui.screens.teacher.classwork.TeacherClasswork(container.classworkAuthoring, userId, classroom,
+                requireNotNull((work as? Cached.Content)?.value), announcements, teacherHubReachable, openMaterial)
+        }
+        return
+    }
     val canCompose = teacherHubReachable != null && destination == ShellDestination.STREAM &&
         userId in classroom.teacherIds() && classroom.archivedAt == null
     Box(Modifier.fillMaxSize()) {
@@ -194,23 +203,19 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             val learner = userId !in classroom.teacherIds()
             val handouts = materials.filter { it.assignmentId == null }
             val allAssignments = if (learner) assignments else emptyList()
-            // Items without a topic are grouped by the month they were posted, newest month first.
-            fun month(millis: Long) = SimpleDateFormat("yyyy-MM", Locale.US).format(Date(millis))
-            fun monthName(key: String) = SimpleDateFormat("MMMM", Locale.getDefault()).format(SimpleDateFormat("yyyy-MM", Locale.US).parse(key)!!)
             val topicIds = (handouts.mapNotNull { it.topicId } + allAssignments.mapNotNull { it.topicId }).toSet()
-            val months = (handouts.filter { it.topicId == null }.map { month(it.createdAt) } +
-                allAssignments.filter { it.topicId == null }.map { month(it.createdAt) }).toSet().sortedDescending()
-            val ordered = (topics.map { it.id }.filter { it in topicIds } + topicIds.filter { id -> topics.none { it.id == id } }).map { "t$it" } + months.map { "m$it" }
+            val ungrouped = handouts.any { it.topicId == null } || allAssignments.any { it.topicId == null }
+            val ordered = (topics.map { it.id }.filter { it in topicIds } + topicIds.filter { id -> topics.none { it.id == id } }).map { "t$it" } + if (ungrouped) listOf("none") else emptyList()
             val shown = ordered
             if (shown.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
             shown.forEach { section ->
                 val isTopic = section.startsWith("t")
                 val key = section.drop(1)
-                val rowAssignments = allAssignments.filter { if (isTopic) it.topicId == key else it.topicId == null && month(it.createdAt) == key }
-                val rowMaterials = handouts.filter { if (isTopic) it.topicId == key else it.topicId == null && month(it.createdAt) == key }
+                val rowAssignments = allAssignments.filter { if (isTopic) it.topicId == key else it.topicId == null }
+                val rowMaterials = handouts.filter { if (isTopic) it.topicId == key else it.topicId == null }
                 item(key = "section-$section") {
                     Column(Modifier.padding(top = LaraSpacing.S2), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                        Text(if (isTopic) topics.find { it.id == key }?.name ?: stringResource(R.string.reading_no_topic) else monthName(key),
+                        Text(if (isTopic) topics.find { it.id == key }?.name ?: stringResource(R.string.reading_no_topic) else stringResource(R.string.reading_no_topic),
                             style = MaterialTheme.typography.titleMedium, color = LaraColors.PrimaryDark)
                         HorizontalDivider(color = LaraColors.Border)
                     }
