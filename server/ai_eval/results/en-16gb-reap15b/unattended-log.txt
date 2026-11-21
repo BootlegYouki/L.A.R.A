@@ -1,0 +1,14 @@
+﻿2026-11-01 23:19:09  Started. Available RAM: 4.6 GB
+2026-11-01 23:19:09  VS Code closes in 45 seconds. Unsaved files come back when it reopens.
+2026-11-01 23:19:54  Asked Steam to quit
+2026-11-01 23:19:54  Asked OneDrive to quit
+2026-11-01 23:20:01  Closed the Claude desktop app
+2026-11-01 23:20:01  Asked VS Code to close
+2026-11-01 23:20:06  VS Code is closed
+2026-11-01 23:20:22  Available RAM before the test: 7 GB (the model needs about 10.2 GB at 1 learner, 11.5 GB at 6)
+2026-11-01 23:20:22  Running 1, 2, 4 and 6 learners. This takes a while: leave the laptop plugged in and alone.
+2026-11-01 23:49:02  The test finished.
+2026-11-01 23:49:03  Available RAM after the test: 9.3 GB
+2026-11-01 23:50:06  Started Oracle again
+2026-11-01 23:50:06  Started OneDrive again
+2026-11-01 23:50:06  Reopened VS Code. Open the conversation again in Claude Code and say: run finished
