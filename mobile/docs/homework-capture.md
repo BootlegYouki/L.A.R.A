@@ -69,3 +69,5 @@ The contract update, Room migration and ARM release builds passed 166 Debug and 
 The Lead-approved 3 GB emulator alternative passed CameraX capture, document processing and compression. Peak combined allocated Java/native heap was 143,334,624 bytes, sampled every 5 ms. Camera JPEG encoding took 13.367 ms, scanned 12 MP JPEG encoding 48.358 ms, and direct 12 MP decode/resize/JPEG compression took 90.579, 72.445 and 60.094 ms. Normalize, detect and render took 508 ms for the camera image and 1,583 ms for the 12 MP synthetic page. These processing times are separate from JPEG compression.
 
 [Reproduction steps, raw results and remaining integration checks](evidence/9/lead-review-2026-11-08/README.md)
+
+Assignment private comments display the saved queued or rejected status alongside the comment.
