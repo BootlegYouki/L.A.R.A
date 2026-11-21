@@ -1,9 +1,5 @@
 package org.lara.app.ui.screens.homework
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -37,36 +33,32 @@ import org.lara.app.ui.theme.*
 fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current
-    var granted by remember { mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
     val view = remember { PreviewView(context).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE } }
     val capture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build() }
     var ready by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
-    DisposableEffect(granted, lifecycle) {
+    DisposableEffect(lifecycle) {
         var active = true
         var provider: ProcessCameraProvider? = null
         val preview = Preview.Builder().build()
-        if (granted) {
-            val future = ProcessCameraProvider.getInstance(context)
-            future.addListener({
-                if (active) try {
-                    val camera = future.get()
-                    provider = camera
-                    preview.setSurfaceProvider(view.surfaceProvider)
-                    camera.bindToLifecycle(lifecycle, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture)
-                    ready = true
-                } catch (_: Exception) { failed = true }
-            }, ContextCompat.getMainExecutor(context))
-        }
+        val future = ProcessCameraProvider.getInstance(context)
+        future.addListener({
+            if (active) try {
+                val camera = future.get()
+                provider = camera
+                preview.setSurfaceProvider(view.surfaceProvider)
+                camera.bindToLifecycle(lifecycle, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture)
+                ready = true
+            } catch (_: Exception) { failed = true }
+        }, ContextCompat.getMainExecutor(context))
         onDispose {
             active = false
             ready = false
             provider?.unbind(preview, capture)
         }
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
+    Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             IconButton(onClick = close, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
@@ -74,7 +66,7 @@ fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
             }
             Text(stringResource(R.string.homework_camera_title), style = MaterialTheme.typography.titleLarge)
         }
-        if (granted) Box(Modifier.fillMaxWidth().height(320.dp).clipToBounds().background(LaraColors.TextPrimary), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().height(320.dp).clipToBounds().background(LaraColors.TextPrimary), contentAlignment = Alignment.Center) {
             AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
             Canvas(Modifier.fillMaxSize().padding(LaraSpacing.S5)) {
                 drawRect(LaraColors.Primary, topLeft = Offset.Zero, size = Size(size.width, size.height),
@@ -84,14 +76,9 @@ fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
                 Text(stringResource(R.string.homework_frame),
                     Modifier.padding(LaraSpacing.S2), color = LaraColors.Surface)
             }
-        } else {
-            Text(stringResource(R.string.homework_permission))
-            Button(onClick = { permission.launch(Manifest.permission.CAMERA) }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) {
-                Text(stringResource(R.string.homework_allow_camera))
-            }
         }
         if (failed) Text(stringResource(R.string.homework_camera_failed))
-        if (granted && !ready && !failed) org.lara.app.ui.components.LoadingSpinner(inline = true)
+        if (!ready && !failed) org.lara.app.ui.components.LoadingSpinner(inline = true)
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         Button(enabled = ready && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
             colors = ButtonDefaults.buttonColors(containerColor = LaraColors.Surface, contentColor = LaraColors.PrimaryDark),

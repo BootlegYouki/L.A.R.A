@@ -11,6 +11,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
@@ -91,6 +94,22 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     var adding by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var confirming by rememberSaveable(assignment.id) { mutableStateOf(false) }
     val context = LocalContext.current
+    var requestCamera by remember { mutableStateOf(false) }
+    var cameraPermissionDenied by rememberSaveable(assignment.id) { mutableStateOf(false) }
+    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        cameraPermissionDenied = !granted
+        camera = granted
+    }
+    LaunchedEffect(requestCamera) {
+        if (!requestCamera) return@LaunchedEffect
+        requestCamera = false
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionDenied = false
+            camera = true
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { model.choose(context.applicationContext, it) }
     }
@@ -225,6 +244,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                             Text(stringResource(R.string.homework_saving))
                         }
                         if (error) Text(stringResource(R.string.homework_save_failed), color = LaraColors.DangerDark)
+                        if (cameraPermissionDenied) Text(stringResource(R.string.homework_permission))
                         Text(stringResource(R.string.homework_attachments), style = MaterialTheme.typography.titleMedium)
                         HomeworkAttachmentPreview(path, container.homeworkPhotos)
                         if (submission?.syncStatus == "REJECTED") {
@@ -290,7 +310,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             Text(stringResource(R.string.homework_add_work), style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = { adding = false; camera = true }, enabled = !busy,
+            TextButton(onClick = { adding = false; requestCamera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))

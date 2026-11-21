@@ -71,3 +71,5 @@ The Lead-approved 3 GB emulator alternative passed CameraX capture, document pro
 [Reproduction steps, raw results and remaining integration checks](evidence/9/lead-review-2026-11-08/README.md)
 
 Assignment private comments display the saved queued or rejected status alongside the comment.
+
+The assignment screen checks Android camera permission before opening the capture screen. It requests access after dismissing the attachment sheet and keeps the assignment visible if access is denied. An existing Android grant opens the camera directly.
