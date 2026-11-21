@@ -371,3 +371,16 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .material-detail-page { max-width: 1048px; padding: 0; }
 .material-back { align-self: flex-start; }
 @media (max-width: 1100px) { .material-detail-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.lesson-text-card { padding: 20px; border-radius: 12px; background: var(--color-lara-subtle); }
+.lesson-text-card > section { margin: 16px 0; }
+.lesson-text-card > section:first-child { margin-top: 0; }
+.lesson-text-card > section:last-child { margin-bottom: 0; }
+
+.app-shell:not(.auth-shell) { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+.app-shell:not(.auth-shell) .shell-body { position: relative; min-height: 0; }
+.app-shell:not(.auth-shell) .drawer { min-height: 0; overflow-y: auto; }
+.app-shell:not(.auth-shell) .content-sheet { min-height: 0; overflow-y: auto; }
+@media (max-width: 759px) {
+  .app-shell:not(.auth-shell) .drawer { top: 0; bottom: 0; }
+}

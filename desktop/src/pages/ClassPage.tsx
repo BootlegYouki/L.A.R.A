@@ -35,7 +35,7 @@ export default function ClassPage({account, classroom, people, onVideo}: Props) 
     <button type="button" className="control text-button" onClick={() => setLessonId(undefined)}><i className="ph ph-arrow-left" aria-hidden="true" />{t.classwork}</button>
     <div className="material-detail-layout">
       <article className="material-detail-content"><header className="material-detail-heading"><span className="class-type-icon"><i className="ph ph-file-text" aria-hidden="true" /></span><div><h1>{lesson.title}</h1><p>{t.class_handout} / {classroom.name}</p></div></header>
-        {lesson.chunks.length ? lesson.chunks.map((chunk, index) => <section key={index}>{chunk.heading && <h2>{chunk.heading}</h2>}{chunk.text.split(/\r?\n\s*\r?\n/).map((text, paragraph) => <p className="lesson-text" key={paragraph}>{text}</p>)}</section>) : <p>{t.lesson_text_missing}</p>}
+        <div className="lesson-text-card">{lesson.chunks.length ? lesson.chunks.map((chunk, index) => <section key={index}>{chunk.heading && <h2>{chunk.heading}</h2>}{chunk.text.split(/\r?\n\s*\r?\n/).map((text, paragraph) => <p className="lesson-text" key={paragraph}>{text}</p>)}</section>) : <p>{t.lesson_text_missing}</p>}</div>
       </article>
       <aside className="material-detail-actions" aria-label={t.class_home_study}><h2>{t.class_home_study}</h2><p className="material-save-help">{t.class_save_help}</p>
         {lesson.saved ? <p role="status">{t.lesson_saved}</p> : <button type="button" className="control tonal-button" disabled={saving || !lesson.chunks.length} onClick={() => void save(lesson)}>{saving ? t.auth_working : t.lesson_save}</button>}
