@@ -25,6 +25,13 @@ it('keeps loading, failed and empty states distinct with disabled role actions',
   expect(home()).toMatch(/disabled=""[^>]*>.*Create class/s);
   expect(home({ user: { ...user, role: 'STUDENT' } })).toContain('Join class');
 });
+it('shows decorative owl art and keeps Home empty actions connected to the existing callbacks', () => {
+  const html = home({ onCreate: noop });
+  expect(html).toContain('class="empty-state empty-home"');
+  expect(html).toContain('alt=""');
+  expect(html).toMatch(/<button[^>]*>.*Create class/s);
+  expect(home({ user: { ...user, role: 'STUDENT' }, onJoin: noop })).toMatch(/<button[^>]*>.*Join class/s);
+});
 it('disables classroom retries during the server cooldown while keeping cached cards', () => {
   const html = home({ classrooms: [classroom], error: 'Wait', retryAfter: 17 });
   expect(html).toContain('17 seconds');

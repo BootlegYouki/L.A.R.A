@@ -28,6 +28,18 @@ it('shows the read-only notice when a learner opens an archived class', async ()
   expect(renderer.root.findByProps({role:'status',className:'hub-status-banner banner-info'}).children)
     .toContain('This class is archived and read-only.');
 });
+it('shows decorative owl empty states for Stream and Classwork', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[]});
+  await act(async () => {renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}));});
+  const stream = renderer.root.findByProps({className:'empty-state empty-stream'});
+  expect(stream.findByType('img').props.alt).toBe('');
+  expect(stream.findByType('h2').children).toContain('No announcements yet');
+  await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  const classwork = renderer.root.findByProps({className:'empty-state empty-center'});
+  expect(classwork.findByType('img').props.alt).toBe('');
+  expect(classwork.findByType('p').children).toContain('Materials shared by your teacher will appear here.');
+});
 it('saves cached handout text offline and prevents another save while pending', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const lesson = {id:'handout',title:'Food chain',file_type:'DOCUMENT',saved:false,chunks:[{heading:null,text:'Cached lesson text'}]};
