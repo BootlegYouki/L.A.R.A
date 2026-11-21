@@ -16,13 +16,13 @@ The window uses REST directly, as TECH_SPEC section 2 requires. It adds no Tauri
 
 Creation and reset hash PINs through the existing bounded `PinHasher` before taking a write lock. A short `BEGIN IMMEDIATE` transaction commits the account change and its non-admin `sync_revisions` entry together. The admin gets no sync revision. Reset deletes every session the user holds in the same transaction (`sessions::close_all`, #230), because a reset is how the admin answers a leaked PIN: whoever was signed in with the old PIN gets `401 UNAUTHORIZED` on their next request and must sign in with the new one. The admin's own session and other users' sessions are untouched. The mock keeps sessions on reset; no client flow depends on either behavior. A WebSocket that is already open stays connected until it reconnects, as after logout (see `auth_sessions.md`).
 
-The real create/reset handlers validate four ASCII PIN digits as the contract requires; the mock is more permissive for malformed create/reset requests. The native window lockfile now also includes the backend's existing hashing dependencies, which were missing from that lockfile.
+The real create/reset handlers validate six ASCII PIN digits as the contract requires; the mock is more permissive for malformed create/reset requests. The native window lockfile now also includes the backend's existing hashing dependencies, which were missing from that lockfile.
 
 ## State and failure handling
 
 The table holds the last successful account list in memory while signed in. A failed refresh keeps that list visible, marks the Hub unavailable and disables creation/reset. Open forms retain their inputs. Refresh retries every five seconds, with a manual refresh button. Failed writes never retry automatically: the outcome may be uncertain if a connection drops after commit. The banner tells the admin to refresh before retrying.
 
-PIN inputs are four masked boxes with digit advance, backspace and whole-PIN paste. The boxes are not `required`: submitting a short PIN shows "The PIN must be 4 digits." in the form's error area instead of the browser's bubble, and typing a letter shows "Digits only." in the help line (#230). A successful create/reset shows the typed PIN once in a dialog. Dismissal, Escape, sign-out and session expiry remove it. PINs, tokens and account lists are never written to browser storage. Logout forgets the local session even if the Hub cannot be reached; any server session that could not be revoked retains its normal expiry.
+PIN inputs are six masked boxes with digit advance, backspace and whole-PIN paste. The boxes are not `required`: submitting a short PIN shows "The PIN must be 6 digits." in the form's error area instead of the browser's bubble, and typing a letter shows "Digits only." in the help line (#230). A successful create/reset shows the typed PIN once in a dialog. Dismissal, Escape, sign-out and session expiry remove it. PINs, tokens and account lists are never written to browser storage. Logout forgets the local session even if the Hub cannot be reached; any server session that could not be revoked retains its normal expiry.
 
 The sole browser-storage value, `lara:admin-configured`, is a boolean navigation hint. A fresh window profile shows setup; a successful setup/login or `ADMIN_EXISTS` switches to login. If the Hub data directory or window profile changes, the explicit setup/sign-in link handles the mismatch. This avoids inventing an admin-status API or opening the database from the window. The Hub remains the authority for setup and authentication. Reopening the window requires sign-in; account data is not exposed before authentication when the Hub is unavailable.
 
@@ -32,7 +32,7 @@ The page uses the existing Hub address panel above the account table. Dialogs us
 
 Ask a developer to start the Hub window with a temporary, empty Hub data folder. Do not use a school database for these checks.
 
-1. On **Set the admin PIN**, enter your name and a four-digit test PIN. Select **Set admin PIN**. The Accounts screen opens with the admin listed.
+1. On **Set the admin PIN**, enter your name and a six-digit test PIN. Select **Set admin PIN**. The Accounts screen opens with the admin listed.
 2. Select **Sign out**, close and reopen the window, and enter the admin PIN. Accounts must remain hidden until sign-in succeeds. A wrong PIN must show a readable error.
 3. Select **Create account**. Enter a test teacher's full name and unique ID, choose **Teacher**, enter a PIN with a leading zero, and save. Record the PIN privately, then dismiss the confirmation. It must disappear.
 4. Sign in to a test learner/teacher app with that teacher ID and PIN. It should sign in as a teacher. Repeat account creation with **Learner** and a test LRN.

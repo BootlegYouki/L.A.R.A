@@ -303,10 +303,10 @@ async fn outsiders_cannot_read_a_quiz() {
     let class = Class::start().await;
     let id = draft(&class).await["id"].as_str().unwrap().to_owned();
     set_status(&class, &id, "ACTIVE").await;
-    let outsider = class.hub.seed_user("123456789098", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789098", "Outsider", lara_hub::auth::Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (_, other_teacher) = class.other_class().await;
-    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "1234").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "123456").await;
     let admin = class.hub.open_session(admin).await;
     for token in [&outsider, &other_teacher, &admin] {
         assert_eq!(get_quiz(&class, &id, token).await.0, 403);

@@ -78,7 +78,7 @@ impl Class {
 
     /// A learner who asked to join; `approve` makes them `ACTIVE`, otherwise they stay `PENDING`.
     pub async fn add_learner(&self, lrn: &str, approve: bool) -> (String, String) {
-        let user = self.hub.seed_user(lrn, "Learner", Role::Student, "1234").await;
+        let user = self.hub.seed_user(lrn, "Learner", Role::Student, "123456").await;
         let id = user.id.clone();
         let token = self.hub.open_session(user).await;
         let (status, body) = self.hub.post_json("/api/classrooms/join", &json!({"class_code": self.code}), Some(&token)).await;
@@ -92,7 +92,7 @@ impl Class {
     }
 
     pub async fn teacher_token(&self, lrn: &str) -> (String, String) {
-        let user = self.hub.seed_user(lrn, "Other Teacher", Role::Teacher, "1234").await;
+        let user = self.hub.seed_user(lrn, "Other Teacher", Role::Teacher, "123456").await;
         let id = user.id.clone();
         (id, self.hub.open_session(user).await)
     }

@@ -17,7 +17,7 @@ use tempfile::TempDir;
 pub struct TestHub {
     hub: HubHandle,
     client: reqwest::Client,
-    /// A session for the mock's teacher `T-0001` (PIN `1234`), seeded in the database.
+    /// A session for the mock's teacher `T-0001` (PIN `123456`), seeded in the database.
     teacher_token: String,
     _data_dir: TempDir,
 }
@@ -28,7 +28,7 @@ impl TestHub {
         let config = HubConfig { http_port: 0, ws_port: 0, ..HubConfig::new(data_dir.path()) };
         let hub = lara_hub::serve(config).await.unwrap();
         let mut test_hub = Self { hub, client: reqwest::Client::new(), teacher_token: String::new(), _data_dir: data_dir };
-        let teacher = test_hub.seed_user("T-0001", "Teacher", Role::Teacher, "1234").await;
+        let teacher = test_hub.seed_user("T-0001", "Teacher", Role::Teacher, "123456").await;
         test_hub.teacher_token = test_hub.open_session(teacher).await;
         test_hub
     }

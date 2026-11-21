@@ -17,7 +17,7 @@ pub const MOCK_ACCOUNTS: [(&str, &str, Role); 4] = [
     ("123456789012", "Juan dela Cruz", Role::Student),
     ("123456789013", "Ana Reyes", Role::Student),
 ];
-pub const MOCK_PIN: &str = "1234";
+pub const MOCK_PIN: &str = "123456";
 
 /// Creates the mock accounts that do not exist yet, so restarting with the setting keeps working.
 pub async fn mock_accounts(db: &SqlitePool, pins: &PinHasher, now_ms: i64) -> Result<(), StartError> {

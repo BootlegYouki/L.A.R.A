@@ -14,11 +14,11 @@
   "admin_login_title": "Admin sign in",
   "admin_login_help": "Enter the PIN for ADMIN-0001 on this Hub PC.",
   "admin_full_name": "Full name",
-  "admin_pin": "4-digit PIN",
+  "admin_pin": "6-digit PIN",
   "admin_pin_digit": "PIN digit {digit}",
-  "admin_pin_help": "Use four digits, including any leading zeros.",
+  "admin_pin_help": "Use six digits, including any leading zeros.",
   "admin_pin_digits_only": "Digits only.",
-  "admin_pin_short": "The PIN must be 4 digits.",
+  "admin_pin_short": "The PIN must be 6 digits.",
   "admin_setup_action": "Set admin PIN",
   "admin_login_action": "Sign in",
   "admin_existing_action": "Admin already set up? Sign in",
@@ -54,6 +54,6 @@
   "admin_rate_limit": "Too many PIN attempts. Wait a minute before trying again.",
   "admin_not_found": "That account was not found. Refresh accounts and try again.",
   "admin_forbidden": "Only the Hub admin on the Hub PC can use this console.",
-  "admin_invalid": "Check the account details and enter a 4-digit PIN.",
+  "admin_invalid": "Check the account details and enter a 6-digit PIN.",
   "admin_error": "The Hub could not confirm this change. Refresh accounts before trying again."
 }

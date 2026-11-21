@@ -262,7 +262,7 @@ async fn non_members_cannot_read_or_write_comments() {
     let class = Class::start().await;
     let ann = announce(&class, class.teacher()).await;
     let id = ann["id"].as_str().unwrap();
-    let outsider = class.hub.seed_user("123456789014", "Outsider", Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789014", "Outsider", Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (_, pending) = class.add_learner("123456789013", false).await;
     let (_, other_teacher) = class.other_class().await;

@@ -7,6 +7,7 @@ import java.io.File
 import java.io.IOException
 import java.util.Locale
 import java.util.UUID
+import java.util.zip.ZipFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,6 +33,19 @@ object HomeworkAttachment {
         "png" -> "image/png"
         else -> "image/jpeg"
     }
+
+    internal fun hasExpectedDocumentContent(file: File): Boolean = try {
+        when (file.extension.lowercase(Locale.ROOT)) {
+            "pdf" -> file.inputStream().use { input ->
+                val header = ByteArray(5)
+                input.read(header) == header.size && header.contentEquals("%PDF-".toByteArray(Charsets.US_ASCII))
+            }
+            "docx" -> ZipFile(file).use { zip ->
+                zip.getEntry("[Content_Types].xml") != null && zip.getEntry("word/document.xml") != null
+            }
+            else -> false
+        }
+    } catch (_: IOException) { false }
 
     suspend fun copyDocument(context: Context, uri: Uri, directory: File): File = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
@@ -69,6 +83,7 @@ object HomeworkAttachment {
                     require(total > 0)
                 }
             }
+            require(hasExpectedDocumentContent(target))
             target
         } catch (error: Throwable) {
             target.delete()

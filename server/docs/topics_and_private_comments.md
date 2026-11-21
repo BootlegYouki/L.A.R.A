@@ -71,7 +71,7 @@ Every write is the role guard, then one `begin_immediate` transaction (lookup, c
   - pushing the same queued comment twice stores it once
 
 ## Manual check (WAN unplugged)
-1. Start the Hub. As teacher `T-0001` (PIN `1234`), create a class, have learner `123456789012` join, and approve them. Create an assignment.
+1. Start the Hub. As teacher `T-0001` (PIN `123456`), create a class, have learner `123456789012` join, and approve them. Create an assignment.
 2. Create topics "Unit 1" and "Unit 2": they come back with places 1 and 2. Move the assignment into "Unit 1" (`PATCH /api/assignments/{id}` `{"topic_id": ...}`).
 3. Delete "Unit 1". The assignment is still there, with no topic, and the learner's next sync shows it unfiled.
 4. As the learner, post a private comment on the assignment. As the teacher, read it with `?student_id=<learner id>` and reply.

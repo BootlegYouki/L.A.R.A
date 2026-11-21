@@ -297,3 +297,5 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .material-row > .ph { font-size: 24px; color: var(--color-lara-primary-dark); }
 .lesson-reader h1, .class-page h1 { margin: 16px 0; }
 .lesson-reader > section { margin: 24px 0; }
+
+.stream-post h2 { font-weight: 800; }
