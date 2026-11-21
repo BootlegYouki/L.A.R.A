@@ -61,7 +61,7 @@
   * WebSockets: Native browser `WebSocket` connecting to Local Hub port 8081.
   * Discovery: Rust background thread for mDNS browsing (`_lara._tcp.local`) and UDP subnet broadcast listening on port 8888.
 * **Media Player:** HTML5 `<video>` element styled with design-system controls, supporting HTTP 206 Byte-Range streaming and offline local disk caching.
-* **Hub AI Client:** Sends learner messages and renders queue status and streamed hints over WebSocket.
+* **On-device AI Client:** Downloads the model from the Hub, runs it locally and renders streamed hints.
 * **Target Platforms:** Windows 10/11 (64-bit), Ubuntu/Debian Linux (DepEd lab PCs), and macOS.
 
 ---
@@ -88,10 +88,10 @@
   * **Live Quiz Submission Matrix:** real-time grid showing which learners are answering and their auto-graded scores.
   * **Gradebook:** matrix of learners by assignment and quiz, with points only.
 
-### 2.3 Hub Socratic AI Client
-* Every laptop and lab PC sends the learner's message over `EVENT_AI_CHAT_REQUEST` and renders `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`.
-* Only the Hub builds prompts and runs inference. Quiz lockout removes the chat UI during an active attempt.
-* When the Hub is unreachable, show "The AI tutor needs the classroom Hub".
+### 2.3 On-device Socratic AI Client
+* Every laptop and lab PC downloads the model file from the Hub (HTTP `:8080`, resumable) and runs inference on the device, offline (decided 2026-11-21). The Hub does no inference.
+* The app builds the prompt from the contract prompt file. Quiz lockout removes the chat UI during an active attempt. Minimum device RAM and model size are open.
+* Without the model show "Download the AI model from the Hub"; if the device cannot run it, show "The AI tutor is not available on this device".
 
 ---
 

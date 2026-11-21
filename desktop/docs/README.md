@@ -13,7 +13,7 @@ Maintained by the **Desktop Team**. This folder is where the Lead Developer and 
 | [`realtime.md`](./realtime.md) | Join dialog, durable status, WebSocket handshake/reconnect and verification | Sprint 2 (#46) |
 | `video_player.md` | Range streaming with `?token=`, disk download, local playback | Sprint 3 |
 | `quiz_runner.md` | Countdown with server offset, auto-submit, offline finish | Sprint 4 |
-| `ai_chat.md` | Hub chat client, token stream, quiz lockout | Sprint 5 |
+| `ai_chat.md` | Model download from the Hub, on-device inference, quiz lockout | Sprint 5 |
 | `ux_audit.md` | Section 8 checklist results and fixes | Sprint 6 |
 
 ## What every document must include
