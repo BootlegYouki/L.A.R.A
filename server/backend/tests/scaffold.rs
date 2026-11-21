@@ -67,7 +67,6 @@ const ROLE_ROUTES: &[(&str, &str, Role)] = &[
     ("PATCH", "/api/classrooms/{id}", Role::Teacher),
     ("POST", "/api/classrooms/{id}/teachers", Role::Teacher),
     ("DELETE", "/api/classrooms/{id}/teachers/{teacher_id}", Role::Teacher),
-    ("POST", "/api/sync/push", Role::Student),
     ("POST", "/api/announcements", Role::Teacher),
     ("PATCH", "/api/announcements/{id}", Role::Teacher),
     ("DELETE", "/api/announcements/{id}", Role::Teacher),

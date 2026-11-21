@@ -56,8 +56,20 @@ pub async fn is_archived(conn: &mut SqliteConnection, classroom_id: &str) -> Res
 /// the owner and co-teachers, and learners whose enrollment is `ACTIVE`. The admin is not a member.
 pub async fn require_member(conn: &mut SqliteConnection, user: &AuthUser, classroom_id: &str) -> Result<(), ApiError> {
     require_class(conn, classroom_id).await?;
-    let member: bool = match user.role {
-        Role::Teacher => teaches(conn, classroom_id, &user.id).await?,
+    if is_member(conn, user, classroom_id).await? {
+        Ok(())
+    } else {
+        Err(ApiError::forbidden("Not your class"))
+    }
+}
+
+pub(crate) async fn is_member(
+    conn: &mut SqliteConnection,
+    user: &AuthUser,
+    classroom_id: &str,
+) -> Result<bool, sqlx::Error> {
+    match user.role {
+        Role::Teacher => teaches(conn, classroom_id, &user.id).await,
         Role::Student => {
             sqlx::query_scalar(
                 "SELECT EXISTS (SELECT 1 FROM enrollments WHERE classroom_id = ? AND student_id = ? AND status = 'ACTIVE')",
@@ -65,14 +77,10 @@ pub async fn require_member(conn: &mut SqliteConnection, user: &AuthUser, classr
             .bind(classroom_id)
             .bind(&user.id)
             .fetch_one(&mut *conn)
-            .await?
+            .await
         }
-        Role::Admin => false,
-    };
-    if !member {
-        return Err(ApiError::forbidden("Not your class"));
+        Role::Admin => Ok(false),
     }
-    Ok(())
 }
 
 async fn require_class(conn: &mut SqliteConnection, classroom_id: &str) -> Result<(), ApiError> {
