@@ -14,7 +14,7 @@ use common::uploads::{material_form, Class, MP4};
 const RATE: f64 = 2_000_000.0;
 const BURST: f64 = 64.0 * 1024.0;
 
-/// The mock Hub's lesson clip: 30 seconds of real H.264 in an MP4.
+/// The test lesson clip: 30 seconds of real H.264 in an MP4.
 fn lesson_video() -> Vec<u8> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../scripts/fixtures/lesson-video.mp4");
     std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))

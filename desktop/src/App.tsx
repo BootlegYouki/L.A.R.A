@@ -46,7 +46,6 @@ export default function App() {
   const [connection, setConnection] = useState<HubConnectionState>({ status: 'offline', hub: null, persisted: true });
   const [loginVisible, setLoginVisible] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [archiveVisit, setArchiveVisit] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [videoMaterialId, setVideoMaterialId] = useState<string | undefined>(undefined);
   const [videoToken, setVideoToken] = useState<string>('');
@@ -336,7 +335,6 @@ export default function App() {
       publishAccount(next);
       if (updated?.archived_at != null) {
         setSelectedId(undefined);
-        setArchiveVisit(visit => visit + 1);
       }
       await refresh(next);
       syncController.current?.trigger();
@@ -412,9 +410,10 @@ export default function App() {
   const offline = connection.status !== 'connected';
   const settingsBlocked = offline || creating || rosterBusy || retryAfter > 0;
   const hubPicker = <fieldset disabled={busy || joining || creating || rosterBusy} className="connection-fieldset"><ConnectionPage t={t} hubs={hubs} failed={discoveryFailed} searching={searching} connection={connection} onConnect={(next) => controller.current?.select(next)} /></fieldset>;
-  return <div className={`app-shell ${drawerOpen ? '' : 'drawer-rail'}`}>
+  const authScreen = !activeAccount || loginVisible;
+  return <div className={`app-shell ${authScreen ? 'auth-shell' : drawerOpen ? '' : 'drawer-rail'}`}>
     <a href="#content" className="skip-link">{t.skip_content}</a>
-    <header className="top-bar">
+    {!authScreen && <header className="top-bar">
       <button type="button" className="icon-button menu-button" aria-label={t.toggle_menu} aria-expanded={drawerOpen} aria-controls="navigation" onClick={() => setDrawerOpen(!drawerOpen)}><i className="ph ph-list" aria-hidden="true" /></button>
       <span className="brand">{t.app_title}</span>
       <div className="top-actions">
@@ -422,22 +421,21 @@ export default function App() {
         <button type="button" className="icon-button" aria-label={activeAccount?.user.role === 'TEACHER' ? t.create_class : t.join_class} disabled={!activeAccount || busy || joining || creating || rosterBusy || loginVisible} onClick={() => activeAccount?.user.role === 'TEACHER' ? openCreate() : openJoin()}><i className="ph ph-plus" aria-hidden="true" /></button>
         {activeAccount ? <button type="button" className="avatar-placeholder icon-button" disabled={busy || joining || creating || rosterBusy} aria-label={t.auth_switch_account} title={activeAccount.user.full_name} onClick={() => { setAuthError(null); setLoginVisible(true); }}><i className="ph ph-user" aria-hidden="true" /></button> : <span className="avatar-placeholder" role="img" aria-label={t.account_placeholder}><i className="ph ph-user" aria-hidden="true" /></span>}
       </div>
-    </header>
+    </header>}
     <div className="shell-body">
-      <Sidebar user={activeAccount?.user ?? null} classrooms={activeAccount?.classrooms ?? []} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setVideoMaterialId(undefined); setSettingsOpen(false); setSelectedId(undefined); setArchiveVisit(0); setAuthError(null); }} onArchived={activeAccount && !loginVisible ? () => { setVideoMaterialId(undefined); setSettingsOpen(false); setSelectedId(undefined); setArchiveVisit(visit => visit + 1); } : undefined} onOpen={id => { setVideoMaterialId(undefined); setSettingsOpen(false); setSelectedId(id); }} onSettings={activeAccount && !loginVisible && !busy && !joining && !creating && !rosterBusy ? () => { setVideoMaterialId(undefined); setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} />
+      {!authScreen && <Sidebar user={activeAccount.user} classrooms={activeAccount.classrooms} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setVideoMaterialId(undefined); setSettingsOpen(false); setSelectedId(undefined); setAuthError(null); }} onOpen={id => { setVideoMaterialId(undefined); setSettingsOpen(false); setSelectedId(id); }} onSettings={!busy && !joining && !creating && !rosterBusy ? () => { setVideoMaterialId(undefined); setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} />}
       <main id="content" className="content-sheet" tabIndex={-1}><div className="content-wrap">
         <HubStatusBanner t={t} connection={connection} />
         {logoutNotice && !activeAccount && <p role="status" className="hub-status-banner banner-info">{logoutNotice}</p>}
         {activeAccount&&syncError&&<p className="hub-status-banner banner-warning" role="status">{t.sync_error}</p>}
         {activeAccount && !activeAccount.persistent && <p role="status" className="auth-session-note">{t.auth_session_only}</p>}
         {status === 'error' && <section className="database-error" role="alert"><h2>{t.database_error_title}</h2><p>{t.database_error_body}</p><button type="button" className="control tonal-button" onClick={() => { void loadAccount(hub); }}>{t.retry}</button></section>}
-        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : videoMaterialId ? <VideoLessonPage key={identity + "/" + videoMaterialId} materialId={videoMaterialId} hub={hub} userId={activeAccount.user.id} token={videoToken} offline={connection.status !== 'connected'} onBack={() => setVideoMaterialId(undefined)} /> : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => { setArchiveVisit(0); setSelectedId(undefined); }} settings={
+        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount && connection.status !== 'connected' ? <div className="startup-connection">{hubPicker}</div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : videoMaterialId ? <VideoLessonPage key={identity + "/" + videoMaterialId} materialId={videoMaterialId} hub={hub} userId={activeAccount.user.id} token={videoToken} offline={connection.status !== 'connected'} onBack={() => setVideoMaterialId(undefined)} />  : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => { setSelectedId(undefined); }} settings={
           selectedClass.teacher_id === activeAccount.user.id && selectedClass.archived_at == null &&
           <ClassSettingsDialog key={selectedClass.id} classroom={selectedClass} offline={offline} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
         } /><ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} onVideo={setVideoMaterialId} people={<RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} teachers={
           <ClassTeachers account={activeAccount} classroom={selectedClass} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
-        } roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} />} /></> : selectedClass ? <ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} onVideo={setVideoMaterialId} /> : <HomePage archiveVisit={archiveVisit} user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'}  />}
-        {(!settingsOpen || !activeAccount || loginVisible) && <details className="hub-connection-details" open={!activeAccount || undefined}><summary>{t.auth_hub_settings}</summary>{hubPicker}</details>}
+        } roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} />} /></> : selectedClass ? <ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} onVideo={setVideoMaterialId} /> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'}  />}
         {activeAccount?.user.role === 'TEACHER' && !loginVisible && <CreateClassroomDialog open={createOpen} onOpenChange={setCreateOpen} busy={creating || rosterBusy} offline={connection.status !== 'connected'} error={createError} retryAfter={retryAfter} result={createdClass} onCreate={(name, section) => { void submitCreate(name, section); }} />}
         {activeAccount?.user.role === 'STUDENT' && !loginVisible && <JoinClassModal open={joinOpen} onOpenChange={setJoinOpen} fullName={activeAccount.user.full_name} busy={joining} offline={connection.status !== 'connected'} error={joinError} retryAfter={retryAfter} onJoin={(code) => { void submitJoin(code); }} />}
       </div></main>

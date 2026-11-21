@@ -52,7 +52,7 @@ pub async fn is_archived(conn: &mut SqliteConnection, classroom_id: &str) -> Res
     Ok(archived.is_some())
 }
 
-/// The mock's `member_of`, for class content any member may read or a learner may submit to:
+/// Membership check for class content any member may read or a learner may submit to:
 /// the owner and co-teachers, and learners whose enrollment is `ACTIVE`. The admin is not a member.
 pub async fn require_member(conn: &mut SqliteConnection, user: &AuthUser, classroom_id: &str) -> Result<(), ApiError> {
     require_class(conn, classroom_id).await?;

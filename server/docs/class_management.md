@@ -39,9 +39,9 @@ Learners and teachers from other classes get 403 on all of these. An unknown cla
 
 ## Decisions for the Lead to check
 
-1. **Teacher management on an archived class is allowed.** The issue says every write route answers 403, but `tests/test_mock_hub.py::test_removed_learner_loses_the_class_and_co_teacher_gains_it` removes a co-teacher from a class it has just archived, and the contract lists 403 only for remove, approve and reject. The Hub follows the test and the contract.
-2. **Renaming an archived class is refused.** The mock allows it, but the contract says an archived class is read-only for everyone, and no mock test renames one. Clearing the archive in the same request is allowed, or the class could never be reopened.
-3. **Pushes to an archived class are refused.** The mock doesn't check this. It follows from the issue's "every write route" rule.
+1. **Teacher management on an archived class is allowed.** The contract lists archive-related 403 only for remove, approve and reject; `backend/tests/classrooms.rs` checks co-teacher removal after archiving.
+2. **Renaming an archived class is refused.** The contract says an archived class is read-only for everyone. Clearing the archive in the same request is allowed, or the class could never be reopened.
+3. **Pushes to an archived class are refused.** This follows the issue's rule that every write route checks whether the class is archived.
 
 ## Not covered yet
 

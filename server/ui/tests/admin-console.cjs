@@ -5,10 +5,9 @@ const path = require('node:path');
 const { chromium } = require(process.env.LARA_PLAYWRIGHT_PACKAGE || 'playwright');
 
 const root = path.resolve(__dirname, '../../..');
-const mode = process.argv[2];
-assert(['mock', 'real'].includes(mode), 'Choose mock or real; use an isolated development Hub.');
+assert([undefined, 'real'].includes(process.argv[2]), 'Use an isolated real development Hub.');
 const base = 'http://127.0.0.1:8080';
-const evidence = path.join(root, 'server/docs/evidence/339');
+const evidence = path.join(root, 'server/docs/evidence/345');
 
 async function main() {
   try {
@@ -18,12 +17,13 @@ async function main() {
     if (error.message.startsWith('Port 8080')) throw error;
   }
   fs.mkdirSync(evidence, { recursive: true });
-  const dataDir = fs.mkdtempSync(path.join(root, 'server/backend/target/admin-console-'));
-  const hub = mode === 'mock'
-    ? spawn(process.env.LARA_PYTHON || 'python3', [path.join(root, 'scripts/mock_hub.py')], { cwd: root, stdio: 'ignore' })
-    : spawn(path.join(root, `server/backend/target/debug/lara-hub${process.platform === 'win32' ? '.exe' : ''}`), [], {
-      cwd: root, stdio: 'ignore', env: { ...process.env, LARA_DATA_DIR: dataDir, LARA_TEST_SEED: '0' },
-    });
+  const target = path.join(root, 'server/backend/target');
+  fs.mkdirSync(target, { recursive: true });
+  const dataDir = fs.mkdtempSync(path.join(target, 'admin-console-'));
+  const binary = process.env.LARA_HUB_BINARY || path.join(target, `debug/lara-hub${process.platform === 'win32' ? '.exe' : ''}`);
+  const hub = spawn(binary, [], {
+    cwd: root, stdio: 'ignore', env: { ...process.env, LARA_DATA_DIR: dataDir, LARA_TEST_SEED: '1' },
+  });
   let browser;
   let page;
   let releaseUsers = () => {};
@@ -74,14 +74,12 @@ async function main() {
     assert.deepEqual(await page.locator('input[type="password"]').evaluateAll(inputs => inputs.map(input => input.value)), ['1', '2', '3', '4', '5', '6']);
     assert(await page.getByLabel('PIN digit 6', { exact: true }).evaluate(input => input === document.activeElement));
     await page.getByRole('button', { name: 'Set admin PIN', exact: true }).click();
-    if (mode === 'mock') {
-      await visible(page.getByRole('heading', { name: 'Admin sign in' }));
-      await pin('123456');
-      await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    }
+    await visible(page.getByRole('heading', { name: 'Admin sign in' }));
+    await pin('123456');
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await visible(page.getByRole('heading', { name: 'Accounts', exact: true }));
     await visible(page.getByRole('status', { name: 'Loading accounts' }));
-    await page.screenshot({ path: path.join(evidence, `issue-43-${mode}-loading.png`), fullPage: true });
+    await page.screenshot({ path: path.join(evidence, 'loading.png'), fullPage: true });
     releaseUsers();
     await page.unrouteAll({ behavior: 'wait' });
     await visible(page.getByRole('cell', { name: 'ADMIN-0001', exact: true }));
@@ -114,7 +112,7 @@ async function main() {
     for (const [value, status] of [['028456', 401], ['090756', 200]]) {
       assert.equal((await context.request.post(`${base}/api/auth/login`, { data: { lrn_or_id: 'T-ADMIN-UI', pin: value } })).status(), status);
     }
-    await page.screenshot({ path: path.join(evidence, `issue-43-${mode}-accounts.png`), fullPage: true });
+    await page.screenshot({ path: path.join(evidence, 'accounts.png'), fullPage: true });
     console.log('PASS PIN reset and old/new login checks');
 
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
@@ -123,7 +121,7 @@ async function main() {
     await visible(page.getByText('Hub unavailable', { exact: false }));
     assert.equal(await page.getByLabel('Full name', { exact: true }).inputValue(), 'Unsaved account');
     assert(await page.getByRole('button', { name: 'Create account', exact: true }).last().isDisabled());
-    await page.screenshot({ path: path.join(evidence, `issue-43-${mode}-offline.png`), fullPage: true });
+    await page.screenshot({ path: path.join(evidence, 'offline.png'), fullPage: true });
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     assert(await page.getByRole('cell', { name: 'T-ADMIN-UI', exact: true }).isVisible());
     await page.unroute('http://127.0.0.1:8080/**');
@@ -134,6 +132,7 @@ async function main() {
     await page.route('http://127.0.0.1:8080/api/admin/users', route => route.fulfill({ json: [] }));
     await page.getByRole('button', { name: 'Refresh accounts' }).click();
     await visible(page.getByRole('heading', { name: 'No accounts to show' }));
+    await page.screenshot({ path: path.join(evidence, 'empty.png'), fullPage: true });
     await page.unroute('http://127.0.0.1:8080/api/admin/users');
     await page.getByRole('button', { name: 'Refresh accounts' }).click();
     await visible(page.getByRole('cell', { name: 'T-ADMIN-UI', exact: true }));

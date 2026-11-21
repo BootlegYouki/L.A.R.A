@@ -1,5 +1,5 @@
 //! The single Hub admin (PRD FR-1.0): `POST /api/admin/setup` creates it once, and it signs in,
-//! only from the Hub PC itself. Ported from the mock's
+//! only from the Hub PC itself. Covers
 //! `test_admin_is_its_own_account_and_setup_runs_once` and `test_admin_login_is_hub_pc_only`.
 
 mod common;
@@ -26,7 +26,7 @@ async fn admin_count(hub: &TestHub) -> i64 {
     sqlx::query_scalar("SELECT COUNT(*) FROM users WHERE role = 'ADMIN'").fetch_one(&hub.state().db).await.unwrap()
 }
 
-/// Contract PR #197, as the mock's `test_admin_login_is_hub_pc_only`.
+/// Contract PR #197, Hub-PC-only admin login.
 #[tokio::test]
 async fn admin_login_is_hub_pc_only() {
     let hub = TestHub::start().await;

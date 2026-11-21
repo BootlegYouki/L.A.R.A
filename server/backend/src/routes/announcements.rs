@@ -94,7 +94,7 @@ async fn comments(State(app): State<AppState>, user: AuthUser, Path(id): Path<St
 }
 
 /// The post is read under the write lock, so a comment on a post deleted a moment ago is 404, never a
-/// foreign-key error. Teachers are members too, and `allow_comments` stops them as well (the mock).
+/// foreign-key error. Teachers are members too, and `allow_comments` stops them as well.
 async fn comment(
     State(app): State<AppState>,
     user: AuthUser,

@@ -24,7 +24,7 @@ cargo test --test websocket -- --nocapture
 
 The last command starts a temporary Hub automatically and checks learner/teacher delivery. A successful run prints `test result: ok`. It requires no school accounts, installs nothing and leaves school data untouched. The queue isolation test runs with `cargo test full_and_closed_queues_do_not_delay_a_healthy_device`.
 
-From the repository root, run `python3 -m unittest discover tests` and `python3 scripts/verify_invariants.py`. These check the mock Hub and shared guardrails; they do not prove that unfinished classroom and quiz routes work on the real Hub.
+From the repository root, run `python3 -m unittest discover tests` and `python3 scripts/verify_invariants.py`. These check contracts and shared guardrails; they do not prove that unfinished classroom and quiz routes work on the real Hub.
 
 On this Windows machine the working interpreter is `C:/Users/QCU/AppData/Local/Programs/Python/Python313/python.exe`; `python3` resolves to an unavailable Windows app alias. Set `$env:PYTHONUTF8 = '1'` in PowerShell before running the Python checks so scanner subprocesses can print their Unicode status messages.
 
@@ -38,7 +38,7 @@ Verification recorded on 2026-11-03, based on staging merge `a1e32c1` (#213):
 | Emitted schema conformance | `emitted_push_frames_match_the_contract_schemas`, `error_frames_match_error_json`, `hello_ack_has_the_handshake_keys`: all currently emitted payload variants and presence/enrollment enum values. |
 | No replay after #213 | `reconnect_does_not_replay_missed_events`: a hint sent while disconnected is absent after HELLO_ACK. |
 | Team check | `cargo check --all-targets`: exit 0, Finished dev profile. `cargo test`: exit 0, 120 passed across unit/integration suites, 0 failed. |
-| Contract/mock Hub reference | Python discovery: `Ran 66 tests ... OK`, including join/approval WebSocket pushes, grading event and bad-token close. These run against the mock. Existing Rust handshake tests verify ACK, 4401 and shutdown against the real Hub; full REST-to-event parity awaits the route implementations. |
+| Historical shared contract checks | Python discovery: `Ran 66 tests ... OK`, including join/approval WebSocket pushes, grading event and bad-token close. These run in the historical shared suite. Existing Rust handshake tests verify ACK, 4401 and shutdown against the real Hub; full REST-to-event parity awaits the route implementations. |
 | Offline/localization guardrails | `verify_invariants.py`: exit 0, all offline invariants and localization rules PASSED. |
 | Manual LAN smoke check (reported by Yaji) | Browser reached the real Hub at `10.24.228.235:8080`; unauthenticated `GET /api/classrooms` returned 401. WebSocket connected on port 8081 and an invalid HELLO token closed with 4401. Attach the browser screenshots to the PR and record whether the WAN cable was unplugged. This checks reachability and authentication only. |
 | Physical classroom | Full classroom flows, 40-device latency and a physical Hub-unreachable client check remain unverified. The manual steps below remain required. |

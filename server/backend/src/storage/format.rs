@@ -212,7 +212,7 @@ mod tests {
         for (head, format) in cases {
             assert_eq!(FileFormat::sniff(head), Some(format));
         }
-        // HTML, a Windows program, the mock's placeholder bodies, nothing at all, and ISO media that
+        // HTML, a Windows program, placeholder bodies, nothing at all, and ISO media that
         // is not MP4 video: QuickTime, a HEIC photo, AAC audio.
         let refused: [&[u8]; 8] = [
             b"<html><body>",

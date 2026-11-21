@@ -79,7 +79,7 @@ async fn setup(
         return Err(ApiError::forbidden("Only on the Hub PC"));
     }
     body.need(&["full_name", "pin"])?;
-    // Before the PIN check, so a second setup answers 409 whatever it sends, as in the mock.
+    // Before the PIN check, so a second setup answers 409 whatever it sends.
     if admin_exists(&mut *app.db.acquire().await?).await? {
         return Err(admin_already_set_up());
     }

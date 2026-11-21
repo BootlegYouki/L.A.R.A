@@ -47,7 +47,7 @@ pub enum Block {
 /// One `material_chunks` row before it gets an id.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ChunkDraft {
-    /// 1, 2, 3, ... as in the mock.
+    /// 1, 2, 3, ... in reading order.
     pub order_index: i64,
     pub heading: Option<String>,
     pub text: String,

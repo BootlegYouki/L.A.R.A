@@ -43,7 +43,7 @@ async fn push(
     let input: SyncPushInput = serde_json::from_value(body.0.into())
         .map_err(|_| ApiError::bad_request("Invalid sync push"))?;
     let mut receipts = Vec::new();
-    // First, in order, as the mock does: a finished quiz is the most time-sensitive item a device queues.
+    // First, in order does: a finished quiz is the most time-sensitive item a device queues.
     for item in &input.quiz_attempts {
         receipts.push(quiz_attempt(&app, &user, item).await?);
     }
