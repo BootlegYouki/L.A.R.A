@@ -343,7 +343,11 @@ fn normalize(entity: Entity, mut row: Map<String, Value>, user: &User) -> Map<St
             default(&mut row, "created_at", json!(0));
             default(&mut row, "updated_at", json!(0));
         }
-        "enrollments" => default(&mut row, "joined_at", json!(0)),
+        "enrollments" => {
+            default(&mut row, "joined_at", json!(0));
+            let created = row["joined_at"].clone();
+            default(&mut row, "created_at", created);
+        }
         "announcements" => default(&mut row, "allow_comments", json!(true)),
         "assignments" => {
             default(&mut row, "instructions", json!(""));
@@ -365,6 +369,8 @@ fn normalize(entity: Entity, mut row: Map<String, Value>, user: &User) -> Map<St
         }
         "material_chunks" => {
             default(&mut row, "updated_at", json!(0));
+            let created = row["updated_at"].clone();
+            default(&mut row, "created_at", created);
             default(&mut row, "heading", Value::Null);
         }
         "quizzes" => {
@@ -373,6 +379,8 @@ fn normalize(entity: Entity, mut row: Map<String, Value>, user: &User) -> Map<St
             default(&mut row, "updated_at", json!(0));
         }
         "assignment_submissions" => {
+            let created = row["submitted_at"].clone();
+            default(&mut row, "created_at", created);
             row.insert("sync_status".into(), json!("SYNCED"));
             row.insert("file_path".into(), json!(""));
             default(&mut row, "score", Value::Null);
@@ -1297,6 +1305,8 @@ mod tests {
             .execute(&mut db)
             .await
             .unwrap();
+        sqlx::raw_sql(include_str!("../migrations/004_audit_created_at.sql"))
+            .execute(&mut db).await.unwrap();
         (db, root)
     }
     #[tokio::test]
@@ -1339,7 +1349,7 @@ mod tests {
         sqlx::query("INSERT INTO quizzes(id,classroom_id,title,time_limit_minutes,created_at,updated_at) VALUES(?,?,'Quiz',10,0,0)").bind(QUIZ).bind(CLASS).execute(&mut *db).await.unwrap();
         sqlx::query("INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES(?,?,?,'queued',0,0,'QUEUED_FOR_SYNC')").bind(COMMENT).bind(ANN).bind(USER).execute(&mut *db).await.unwrap();
         sqlx::query("INSERT INTO private_comments(id,assignment_id,student_id,author_id,content,created_at,updated_at,sync_status,sync_reject_reason) VALUES(?,?,?,?,'rejected',0,0,'REJECTED','FORBIDDEN')").bind(PRIVATE).bind(ASSIGN).bind(USER).bind(USER).execute(&mut *db).await.unwrap();
-        sqlx::query("INSERT INTO quiz_attempts(id,quiz_id,student_id,started_at,updated_at) VALUES(?,?,?,0,0)").bind(ATTEMPT).bind(QUIZ).bind(USER).execute(&mut *db).await.unwrap();
+        sqlx::query("INSERT INTO quiz_attempts(id,quiz_id,student_id,started_at,created_at,updated_at) VALUES(?,?,?,0,0,0)").bind(ATTEMPT).bind(QUIZ).bind(USER).execute(&mut *db).await.unwrap();
     }
     async fn finish(db: SqliteConnection, root: std::path::PathBuf) {
         db.close().await.unwrap();
@@ -1353,7 +1363,7 @@ mod tests {
             .unwrap();
         seed(&mut db).await;
         sqlx::query("INSERT INTO materials(id,classroom_id,title,file_type,file_size_bytes,local_file_path,created_at,updated_at) VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',?,'cached','VIDEO',1,'G:/cached.mp4',0,0)").bind(CLASS).execute(&mut db).await.unwrap();
-        sqlx::query("INSERT INTO assignment_submissions(id,assignment_id,student_id,file_path,submitted_at,updated_at,sync_status) VALUES('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',?,?,'G:/photo.jpg',0,0,'REJECTED')").bind(ASSIGN).bind(USER).execute(&mut db).await.unwrap();
+        sqlx::query("INSERT INTO assignment_submissions(id,assignment_id,student_id,file_path,submitted_at,created_at,updated_at,sync_status) VALUES('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',?,?,'G:/photo.jpg',0,0,0,'REJECTED')").bind(ASSIGN).bind(USER).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO ai_chat_messages(id,classroom_id,student_id,role,content,created_at) VALUES('cccccccc-cccc-4ccc-8ccc-cccccccccccc',?,?,'USER','history',0)").bind(CLASS).bind(USER).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO announcements VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd',?,'ordinary','removed',1,0,0)").bind(CLASS).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO quiz_questions(id,quiz_id,order_index,question_text,question_type,points,created_at,updated_at) VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',?,0,'Keep this question','IDENTIFICATION',1,0,0)").bind(QUIZ).execute(&mut db).await.unwrap();
@@ -1579,9 +1589,20 @@ mod tests {
         p["private_comments"] = json!([{"id":PRIVATE,"assignment_id":ASSIGN,"student_id":USER,"author_id":USER,"content":"Private","created_at":0}]);
         p["submissions"] = json!([{"id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","assignment_id":ASSIGN,"student_id":USER,"file_type":"IMAGE","submitted_at":0,"received_at":2,"score":null,"teacher_feedback":null,"file_path":"SECRET_SERVER_PHOTO"}]);
         p["quiz_attempts"] = json!([{"attempt_id":ATTEMPT,"quiz_id":QUIZ,"student_id":USER,"score":null,"total_points":10,"submitted_at":0}]);
-        apply(&mut db, &user(), &SyncState::default(), p)
+        p["enrollments"][0]["joined_at"] = json!(42);
+        p["submissions"][0]["submitted_at"] = json!(17);
+        apply(&mut db, &user(), &SyncState::default(), p.clone())
             .await
             .unwrap();
+        p["next_cursor"] = json!(2);
+        p["enrollments"][0]["joined_at"] = json!(99);
+        p["submissions"][0]["submitted_at"] = json!(99);
+        let state = read_state(&mut db).await.unwrap();
+        apply(&mut db, &user(), &state, p).await.unwrap();
+        for (table, created) in [("enrollments", 42), ("material_chunks", 0), ("assignment_submissions", 17)] {
+            assert_eq!(sqlx::query_scalar::<_, i64>(&format!("SELECT created_at FROM {table}"))
+                .fetch_one(&mut db).await.unwrap(), created);
+        }
         for e in ENTITIES {
             if e.table == "quiz_attempts" {
                 continue;
@@ -1684,7 +1705,7 @@ mod tests {
         let roster: HashMap<String, Vec<account::RosterEntry>> =
             json_state(&mut db, "account_rosters").await.unwrap();
         assert_eq!(roster[CLASS][0].status, "PENDING");
-        sqlx::query("INSERT INTO quiz_attempts(id,quiz_id,student_id,status,started_at,submitted_at,updated_at,sync_status) VALUES(?,?,?,'SUBMITTED',3,10,10,'SYNCED')").bind(ATTEMPT).bind(QUIZ).bind(USER).execute(&mut db).await.unwrap();
+        sqlx::query("INSERT INTO quiz_attempts(id,quiz_id,student_id,status,started_at,created_at,submitted_at,updated_at,sync_status) VALUES(?,?,?,'SUBMITTED',3,3,10,10,'SYNCED')").bind(ATTEMPT).bind(QUIZ).bind(USER).execute(&mut db).await.unwrap();
         let p = json!({"server_time":0,"hub_id":"test-hub","sync_epoch":1,"next_cursor":2,"has_more":false,"reset":false,"users":[{"id":USER,"full_name":"Renamed","role":"STUDENT"}],"enrollments":[{"id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","classroom_id":CLASS,"student_id":USER,"status":"ACTIVE","updated_at":1}]});
         let expected = read_state(&mut db).await.unwrap();
         apply(&mut db, &teacher, &expected, p).await.unwrap();

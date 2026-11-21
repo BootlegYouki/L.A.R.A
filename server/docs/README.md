@@ -7,6 +7,7 @@ Maintained by the **Server Team**. This folder is where the Lead Developer and f
 | :--- | :--- | :--- |
 | [`TECH_SPEC.md`](./TECH_SPEC.md) | Architecture, file map, build order, risks, test plan. Approved by the Lead before Sprint 1 PRs merge. | Sprint 0 |
 | [`scaffold.md`](./scaffold.md) | Process model, `serve`, migration runner, error envelope, route stubs, WebSocket handshake, Hub window | Sprint 1 (#39) |
+| [`real_hub_testing.md`](./real_hub_testing.md) | Seeded real-Hub development, contract role coverage, browser acceptance and simulator-free verification | #345 |
 | [`portal.md`](./portal.md) | Captive `GET /download` portal: English 3-step sideload guide, bundled assets, installer serving, path-traversal guard | Sprint 1 (#3) |
 | `discovery_mdns_udp.md` | mDNS and UDP beacon behavior, LAN IP detection, AP-isolation notes | Sprint 1 |
 | [`database_sync.md`](./database_sync.md) | Migrations, `sync_revisions` writes, `hub_meta` (hub id, epoch), reset rules, backup and restore | Sprint 1 and 2 |

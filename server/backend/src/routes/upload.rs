@@ -27,7 +27,7 @@ pub struct UploadForm {
 }
 
 impl UploadForm {
-    /// The mock's `need`: one 400 naming every missing text field.
+    /// One 400 naming every missing text field.
     pub fn need(&self, keys: &[&str]) -> Result<(), ApiError> {
         let missing: Vec<&str> = keys.iter().copied().filter(|k| !self.fields.contains_key(*k)).collect();
         if missing.is_empty() {
@@ -42,7 +42,7 @@ impl UploadForm {
         self.fields.get(key).map(String::as_str).filter(|v| !v.is_empty())
     }
 
-    /// The mock's second check, after the text fields.
+    /// Validate the uploaded file after the text fields.
     pub fn take_file(&mut self) -> Result<Received, ApiError> {
         self.file.take().ok_or_else(|| ApiError::bad_request("Missing file"))
     }

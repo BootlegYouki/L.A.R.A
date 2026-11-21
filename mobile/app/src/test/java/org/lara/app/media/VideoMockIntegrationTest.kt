@@ -31,7 +31,7 @@ class VideoMockIntegrationTest {
     @Test fun actualMobileDataSourceReadsMockRangesAndRejectsPlaceholderDownload(): Unit = runBlocking {
         assumeTrue(System.getenv("LARA_SYNC_MOCK") == "1")
         val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", 18080, 18081))
-        val session = AuthApi().authenticate(endpoint, "123456789012", "1234", null)
+        val session = AuthApi().authenticate(endpoint, "123456789012", "123456", null)
         val tokens = object : SessionTokenStore {
             override fun load() = StoredToken(session.token, session.user.id, session.expiresAt, endpoint.restBase)
             override fun save(value: StoredToken) = Unit

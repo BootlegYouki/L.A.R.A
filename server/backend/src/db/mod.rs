@@ -86,13 +86,71 @@ mod tests {
     }
 
     async fn schema_of(pool: &SqlitePool) -> Vec<(String, String, String, Option<String>)> {
-        sqlx::query_as(
+        let rows: Vec<(String, String, String, Option<String>)> = sqlx::query_as(
             "SELECT type, name, tbl_name, sql FROM sqlite_master
              WHERE tbl_name <> '_sqlx_migrations' ORDER BY type, name",
         )
         .fetch_all(pool)
         .await
-        .unwrap()
+        .unwrap();
+        rows.into_iter().map(|(kind, name, table, sql)| {
+            (kind, name, table, sql.map(|sql| without_sql_comments(&sql)))
+        }).collect()
+    }
+
+    // sqlite_master preserves comments from applied migrations. Compare executable SQL while
+    // keeping quoted values intact, so historical wording cannot fail contract parity.
+    fn without_sql_comments(sql: &str) -> String {
+        let mut chars = sql.chars().peekable();
+        let mut result = String::new();
+        while let Some(ch) = chars.next() {
+            match ch {
+                '\'' | '"' | '`' | '[' => {
+                    let end = if ch == '[' { ']' } else { ch };
+                    result.push(ch);
+                    while let Some(quoted) = chars.next() {
+                        result.push(quoted);
+                        if quoted == end {
+                            if ch != '[' && chars.peek() == Some(&end) {
+                                result.push(chars.next().unwrap());
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                '-' if chars.peek() == Some(&'-') => {
+                    chars.next();
+                    for comment in chars.by_ref() {
+                        if comment == '\n' { break; }
+                    }
+                    result.push(' ');
+                }
+                '/' if chars.peek() == Some(&'*') => {
+                    chars.next();
+                    while let Some(comment) = chars.next() {
+                        if comment == '*' && chars.peek() == Some(&'/') {
+                            chars.next();
+                            break;
+                        }
+                    }
+                    result.push(' ');
+                }
+                _ => result.push(ch),
+            }
+        }
+        result
+    }
+
+    #[test]
+    fn schema_comparison_ignores_comments_but_preserves_quoted_sql() {
+        assert_eq!(without_sql_comments("TEXT -- old PIN wording\nNOT NULL"), "TEXT  NOT NULL");
+        assert_eq!(without_sql_comments("TEXT /* old PIN wording */ NOT NULL"), "TEXT   NOT NULL");
+        for quoted in ["'-- literal'", "'it''s /* literal */'", "\"-- column\"", "`/* column */`", "[-- column]"] {
+            assert_eq!(without_sql_comments(quoted), quoted);
+        }
+        assert_ne!(without_sql_comments("TEXT NOT NULL"), without_sql_comments("TEXT"));
+        assert_ne!(without_sql_comments("DEFAULT '-- one'"), without_sql_comments("DEFAULT '-- two'"));
     }
 
     #[tokio::test]
@@ -146,6 +204,50 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(row, ("sub".into(), "submissions/a.jpg".into(), 5, 5, Some(8), Some("Good".into()), 6));
+        assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
+    }
+
+    /// Migration 005: a Hub that already holds announcements, comments, handouts, chunks and tutor
+    /// messages keeps every row, with comments switched on, and no foreign key breaks.
+    #[tokio::test]
+    async fn upgrading_to_public_comments_keeps_every_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let pool = connect(dir.path()).await.unwrap();
+        let mut before = sqlx::migrate!("src/db/migrations");
+        before.migrations = before.migrations.iter().filter(|m| m.version <= 4).cloned().collect::<Vec<_>>().into();
+        before.run(&pool).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO users (id, lrn_or_id, full_name, role, pin_hash, created_at, updated_at)
+                 VALUES ('t', 'T-0001', 'Owner', 'TEACHER', 'x', 1, 1), ('s', '123456789012', 'Ana', 'STUDENT', 'x', 1, 1);
+             INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
+                 VALUES ('c', 'Science 4', 'A', 'K7M4QX', 't', 1, 1);
+             INSERT INTO announcements (id, classroom_id, title, content, created_at, updated_at) VALUES ('a', 'c', 'Hi', 'Body', 2, 3);
+             INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at) VALUES ('ac', 'a', 's', 'Thanks', 4, 5);
+             INSERT INTO materials (id, classroom_id, title, file_type, file_path, file_size_bytes, uploaded_by, announcement_id, created_at, updated_at)
+                 VALUES ('m', 'c', 'Lesson', 'DOCUMENT', 'materials/a.pdf', 10, 't', 'a', 6, 6);
+             INSERT INTO material_chunks (id, material_id, order_index, text, created_at, updated_at) VALUES ('ch', 'm', 0, 'Plants', 7, 7);
+             INSERT INTO ai_chat_messages (id, classroom_id, student_id, material_id, chunk_id, role, content, created_at)
+                 VALUES ('ai', 'c', 's', 'm', 'ch', 'TUTOR', 'What do plants need?', 8);",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        migrate(&pool).await.unwrap();
+        let row: (String, i64, i64, i64) = sqlx::query_as("SELECT title, allow_comments, created_at, updated_at FROM announcements WHERE id = 'a'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(row, ("Hi".into(), 1, 2, 3));
+        let comment: (String, String, i64) = sqlx::query_as("SELECT announcement_id, content, updated_at FROM announcement_comments WHERE id = 'ac'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(comment, ("a".into(), "Thanks".into(), 5));
+        let material: (Option<String>, String) = sqlx::query_as("SELECT announcement_id, uploaded_by FROM materials WHERE id = 'm'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(material, (Some("a".into()), "t".into()));
+        let chat: (Option<String>, Option<String>) =
+            sqlx::query_as("SELECT material_id, chunk_id FROM ai_chat_messages WHERE id = 'ai'").fetch_one(&pool).await.unwrap();
+        assert_eq!(chat, (Some("m".into()), Some("ch".into())), "the rebuild must not fire ON DELETE SET NULL");
+        let chunks: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM material_chunks").fetch_one(&pool).await.unwrap();
+        assert_eq!(chunks, 1, "the rebuild must not cascade into chunks");
         assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
     }
 

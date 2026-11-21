@@ -29,12 +29,12 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const [lettersRefused, setLettersRefused] = useState(false);
   function digit(index: number, next: string) {
-    const digits = value.padEnd(4, ' ').split('');
+    const digits = value.padEnd(6, ' ').split('');
     digits[index] = next || ' ';
     change(digits.join(''));
   }
   return <fieldset className="flex flex-col gap-2"><legend className="mb-2 font-extrabold">{t.admin_pin}</legend>
-    <div className="flex gap-2">{[0, 1, 2, 3].map(index => <input key={index} ref={node => { inputs.current[index] = node; }}
+    <div className="flex gap-2">{[0, 1, 2, 3, 4, 5].map(index => <input key={index} ref={node => { inputs.current[index] = node; }}
       className="admin-pin-digit" aria-label={t.admin_pin_digit.replace('{digit}', String(index + 1))}
       aria-describedby="pin-help" type="password" inputMode="numeric" pattern="[0-9]" maxLength={1}
       autoComplete="off" value={value[index]?.trim() ?? ''}
@@ -51,8 +51,8 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
         }
       }} onPaste={event => {
         const pasted = event.clipboardData.getData('text');
-        if (/^[0-9]{4}$/.test(pasted)) {
-          event.preventDefault(); change(pasted); inputs.current[3]?.focus();
+        if (/^[0-9]{6}$/.test(pasted)) {
+          event.preventDefault(); change(pasted); inputs.current[5]?.focus();
         }
       }} />)}</div>
     <p id="pin-help" className="text-sm text-lara-ink-2" aria-live="polite">
@@ -124,7 +124,7 @@ export default function AdminUsers() {
   // The digit boxes are not `required`, so a short PIN gets this message in the form's error area
   // instead of the browser's "Please fill out this field." bubble on one box.
   function pinComplete() {
-    if (/^[0-9]{4}$/.test(pin)) return true;
+    if (/^[0-9]{6}$/.test(pin)) return true;
     setError(t.admin_pin_short);
     return false;
   }

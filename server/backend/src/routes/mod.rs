@@ -48,7 +48,7 @@ pub fn router(app: AppState) -> Router {
         .merge(quizzes::router())
         .merge(sync::router())
         .merge(topics::router())
-        // The mock matches method and path together, so a wrong method is also ROUTE_NOT_FOUND.
+        // A wrong method uses the same ROUTE_NOT_FOUND envelope as an unknown path.
         .fallback(route_not_found)
         .method_not_allowed_fallback(route_not_found)
         // Path only: media routes will carry `?token=`, which must never reach a log.
@@ -82,7 +82,7 @@ async fn route_not_found(method: Method, uri: Uri) -> ApiError {
     ApiError::route_not_found(&method, uri.path())
 }
 
-/// Stubs for routes with a role in the mock (`@route(..., role=...)`): 401, then the mock's 403.
+/// Role-restricted stubs: require a valid session, then the contract role.
 async fn not_implemented_teacher(user: AuthUser, method: Method, uri: Uri) -> ApiError {
     stub_for(&user, Role::Teacher, &method, &uri)
 }

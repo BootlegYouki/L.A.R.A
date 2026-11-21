@@ -1,4 +1,5 @@
 mod account;
+mod migrations;
 mod discovery;
 mod sync;
 mod video;
@@ -14,6 +15,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            migrations::prepare_client_database,
             discovery::get_discovered_hubs,
             account::restore_account_session,
             account::save_account_session,
@@ -38,32 +40,9 @@ pub fn run() {
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
                     "sqlite:lara_client.db",
-                    vec![
-                        Migration {
-                            version: 1,
-                            description: "client_offline_schema",
-                            sql: include_str!("../migrations/001_client_offline.sql"),
-                            kind: MigrationKind::Up,
-                        },
-                        Migration {
-                            version: 2,
-                            description: "sync_rejections",
-                            sql: include_str!("../migrations/002_sync_rejections.sql"),
-                            kind: MigrationKind::Up,
-                        },
-                        Migration {
-                            version: 3,
-                            description: "submission_received_at",
-                            sql: include_str!("../migrations/003_submission_received_at.sql"),
-                            kind: MigrationKind::Up,
-                        },
-                        Migration {
-                            version: 4,
-                            description: "audit_created_at",
-                            sql: include_str!("../migrations/004_audit_created_at.sql"),
-                            kind: MigrationKind::Up,
-                        },
-                    ],
+                    migrations::SQL.iter().map(|&(version, description, sql)| Migration {
+                        version, description, sql, kind: MigrationKind::Up,
+                    }).collect(),
                 )
                 .build(),
         )

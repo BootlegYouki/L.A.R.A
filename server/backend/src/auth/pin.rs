@@ -1,4 +1,4 @@
-//! 4-digit PINs, hashed with argon2id (19 MiB, 2 passes: the crate's defaults, the OWASP
+//! 6-digit PINs, hashed with argon2id (19 MiB, 2 passes: the crate's defaults, the OWASP
 //! minimum). Hashing runs on the blocking pool so it never stalls the async runtime, and a
 //! semaphore caps how many run at once: 40 learners signing in together would otherwise need
 //! 40 × 19 MiB on a 4 GB Hub PC that also holds the AI model.
@@ -14,9 +14,9 @@ use tokio::sync::Semaphore;
 
 use crate::error::{ApiError, ErrorCode};
 
-/// Exactly four ASCII digits, as the contract's `^[0-9]{4}$`.
+/// Exactly six ASCII digits, as the contract's `^[0-9]{6}$`.
 pub fn is_valid_pin(pin: &str) -> bool {
-    pin.len() == 4 && pin.bytes().all(|b| b.is_ascii_digit())
+    pin.len() == 6 && pin.bytes().all(|b| b.is_ascii_digit())
 }
 
 pub struct PinHasher {
@@ -80,10 +80,10 @@ mod tests {
 
     #[test]
     fn valid_pins() {
-        for pin in ["0000", "1234", "9999"] {
+        for pin in ["000000", "000056", "123456", "999999"] {
             assert!(is_valid_pin(pin), "{pin:?}");
         }
-        for pin in ["", "123", "12345", "12a4", "١٢٣٤", " 1234", "1234 "] {
+        for pin in ["", "123", "1234", "12345", "1234567", "12a456", "١٢٣٤٥٦", "１２３４５６", " 123456", "123456 "] {
             assert!(!is_valid_pin(pin), "{pin:?}");
         }
     }
@@ -91,23 +91,23 @@ mod tests {
     #[tokio::test]
     async fn hash_is_argon2id_and_verifies() {
         let pins = PinHasher::default();
-        let stored = pins.hash("4821").await.unwrap();
+        let stored = pins.hash("482156").await.unwrap();
         assert!(stored.starts_with("$argon2id$v=19$m=19456,t=2,p=1$"), "{stored}");
-        assert!(pins.verify("4821", &stored).await.unwrap());
-        assert!(!pins.verify("4822", &stored).await.unwrap());
+        assert!(pins.verify("482156", &stored).await.unwrap());
+        assert!(!pins.verify("482256", &stored).await.unwrap());
     }
 
     #[tokio::test]
     async fn two_hashes_of_one_pin_differ() {
         let pins = PinHasher::default();
-        assert_ne!(pins.hash("1234").await.unwrap(), pins.hash("1234").await.unwrap());
+        assert_ne!(pins.hash("123456").await.unwrap(), pins.hash("123456").await.unwrap());
     }
 
     #[tokio::test]
     async fn verify_against_garbage_is_false() {
         let pins = PinHasher::default();
-        for stored in ["", "1234", "$argon2id$broken"] {
-            assert!(!pins.verify("1234", stored).await.unwrap(), "{stored:?}");
+        for stored in ["", "123456", "$argon2id$broken"] {
+            assert!(!pins.verify("123456", stored).await.unwrap(), "{stored:?}");
         }
     }
 
@@ -116,7 +116,7 @@ mod tests {
     #[tokio::test]
     async fn a_cancelled_hash_keeps_its_permit_until_the_work_ends() {
         let pins = PinHasher::with_permits(1);
-        let cancelled = tokio::time::timeout(std::time::Duration::from_millis(1), pins.hash("1234")).await;
+        let cancelled = tokio::time::timeout(std::time::Duration::from_millis(1), pins.hash("123456")).await;
         assert!(cancelled.is_err(), "the hash should still be running after 1 ms");
         assert_eq!(pins.permits.available_permits(), 0, "the running hash still holds the permit");
         for _ in 0..200 {
@@ -131,7 +131,7 @@ mod tests {
     #[tokio::test]
     async fn sixteen_concurrent_hashes_all_finish() {
         let pins = PinHasher::with_permits(2);
-        let results = futures_util::future::join_all((0..16).map(|_| pins.hash("1234"))).await;
+        let results = futures_util::future::join_all((0..16).map(|_| pins.hash("123456"))).await;
         assert!(results.iter().all(Result::is_ok));
     }
 }

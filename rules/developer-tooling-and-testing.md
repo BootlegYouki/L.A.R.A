@@ -29,7 +29,7 @@ Run from the repository root:
 ```bash
 python3 scripts/mock_hub.py
 ```
-State is in memory and resets on restart. Seeded accounts (PIN `1234`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (not enrolled, use for the join and approval flow), and the Hub admin `ADMIN-0001` (role `ADMIN`, not a teacher; the only account accepted by `/api/admin/*`, backup and restore).
+State is in memory and resets on restart. Seeded accounts (PIN `123456`): teacher `T-0001` (owns Science 4, class code `K7M4QX`), learner `123456789012` (enrolled), learner `123456789013` (not enrolled, use for the join and approval flow), and the Hub admin `ADMIN-0001` (role `ADMIN`, not a teacher; the only account accepted by `/api/admin/*`, backup and restore).
 
 ### What It Simulates
 1. **UDP Discovery Beacon (`255.255.255.255:8888`):** every 3 seconds.
@@ -79,7 +79,7 @@ python3 -m unittest discover tests
 cd server/backend && cargo run          # Hub on :8080 / :8081
 LARA_HUB_URL=http://127.0.0.1:8080 python3 -m unittest tests.test_mock_hub tests.test_contract_coverage
 ```
-`LARA_HUB_WS_URL` (default `ws://<host of LARA_HUB_URL>:8081`) overrides the WebSocket address. With the switch set the tests do not start the mock, and the ones that read mock internals (`ROUTES`, `mock_hub.py` source, `server.state`) are skipped. CI does not run this mode yet: the Hub still answers `501 NOT_IMPLEMENTED` for most routes (all tests fail at login), so it would be red. The server team runs it as routes land. Preconditions the real Hub does not meet yet: the tests log in with the mock's seed accounts (`T-0001`, `123456789012`, `ADMIN-0001`, PIN `1234`) and its seed classroom and quiz ids, and the Hub has no seed accounts (admin comes from `POST /api/admin/setup`), so a fresh Hub needs equivalent data loaded first, and the tests assume a state reset the real Hub cannot do. Once the suite is green against the real Hub, the server team may drop their Rust ports of these tests.
+`LARA_HUB_WS_URL` (default `ws://<host of LARA_HUB_URL>:8081`) overrides the WebSocket address. With the switch set the tests do not start the mock, and the ones that read mock internals (`ROUTES`, `mock_hub.py` source, `server.state`) are skipped. CI does not run this mode yet: the Hub still answers `501 NOT_IMPLEMENTED` for most routes (all tests fail at login), so it would be red. The server team runs it as routes land. Preconditions the real Hub does not meet yet: the tests log in with the mock's seed accounts (`T-0001`, `123456789012`, `ADMIN-0001`, PIN `123456`) and its seed classroom and quiz ids, and the Hub has no seed accounts (admin comes from `POST /api/admin/setup`), so a fresh Hub needs equivalent data loaded first, and the tests assume a state reset the real Hub cannot do. Once the suite is green against the real Hub, the server team may drop their Rust ports of these tests.
 
 ### Checking client PRs against the real Hub
 Build against the mock hub. Before you open a mobile or desktop PR, also run the PR's main flow against the real Hub on `staging`, so differences between the mock and the Hub show up in your PR instead of at the integration checkpoint.
@@ -87,7 +87,7 @@ Build against the mock hub. Before you open a mobile or desktop PR, also run the
 ```bash
 cd server/backend && LARA_TEST_SEED=1 LARA_DATA_DIR=/tmp/lara-test cargo run --bin lara-hub
 ```
-`LARA_TEST_SEED=1` creates the mock's accounts (`ADMIN-0001`, `T-0001`, `123456789012`, `123456789013`, PIN `1234`), but not the mock's class or posts: create those through the app or the API. Delete the data folder to start fresh. Point the app at `127.0.0.1:8080` (desktop), `10.0.2.2:8080` (emulator) or the PC's LAN IP (phone).
+`LARA_TEST_SEED=1` creates the mock's accounts (`ADMIN-0001`, `T-0001`, `123456789012`, `123456789013`, PIN `123456`), but not the mock's class or posts: create those through the app or the API. Delete the data folder to start fresh. Point the app at `127.0.0.1:8080` (desktop), `10.0.2.2:8080` (emulator) or the PC's LAN IP (phone).
 
 * A route the Hub has not built yet answers `501 NOT_IMPLEMENTED`. That part of your PR is mock-only: say so under Not Verified (for example "class settings: real Hub answers 501, tested on the mock only").
 * Put one screenshot or log of the flow against the real Hub in the PR's Evidence.

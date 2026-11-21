@@ -110,10 +110,14 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
                 Text(material?.title ?: stringResource(R.string.video_title), style = MaterialTheme.typography.headlineMedium)
                 Text(stringResource(R.string.material_attachments), style = MaterialTheme.typography.titleMedium)
                 // A frame can only be read from the saved file; a streamed video shows a dark card with a play button.
-                val frame by produceState<android.graphics.Bitmap?>(null, state.source) {
+                var frame by remember(state.source) { mutableStateOf<android.graphics.Bitmap?>(null) }
+                LaunchedEffect(state.source) {
                     val path = (state.source as? VideoSource.Local)?.path
-                    value = if (path == null) null else withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { android.media.MediaMetadataRetriever().use { it.setDataSource(path); it.getFrameAtTime(0) } }.getOrNull()
+                    frame = if (path == null) null else withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        // MediaMetadataRetriever is AutoCloseable only from API 29; minSdk is 26.
+                        val retriever = android.media.MediaMetadataRetriever()
+                        try { runCatching { retriever.setDataSource(path); retriever.getFrameAtTime(0) }.getOrNull() }
+                        finally { retriever.release() }
                     }
                 }
                 if (state.source != null) Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {

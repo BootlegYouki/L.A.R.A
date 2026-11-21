@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 
 export interface SavedClassroom {
@@ -23,7 +24,7 @@ export async function withDatabaseTimeout<T>(operation: Promise<T>): Promise<T> 
 }
 
 export function openDatabase(): Promise<Database> {
-  connection ??= withDatabaseTimeout(Database.load('sqlite:lara_client.db').then(async (db) => {
+  connection ??= withDatabaseTimeout(invoke('prepare_client_database').then(() => Database.load('sqlite:lara_client.db')).then(async (db) => {
     await db.execute('PRAGMA foreign_keys = ON');
     return db;
   })).catch((error: unknown) => {

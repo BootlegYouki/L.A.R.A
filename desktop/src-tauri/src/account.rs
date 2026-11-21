@@ -205,34 +205,8 @@ pub(crate) async fn database(root: &Path, key: &str) -> Result<SqliteConnection,
     let mut db = SqliteConnection::connect_with(&options)
         .await
         .map_err(|_| ERROR)?;
-    // Reuse the exact immutable plugin migrations, including SQLx's checksummed migration ledger.
-    let migrations = sqlx::migrate::Migrator {
-        migrations: std::borrow::Cow::Owned(vec![
-            sqlx::migrate::Migration::new(
-                1,
-                "client_offline_schema".into(),
-                sqlx::migrate::MigrationType::ReversibleUp,
-                include_str!("../migrations/001_client_offline.sql").into(),
-                false,
-            ),
-            sqlx::migrate::Migration::new(
-                2,
-                "sync_rejections".into(),
-                sqlx::migrate::MigrationType::ReversibleUp,
-                include_str!("../migrations/002_sync_rejections.sql").into(),
-                false,
-            ),
-            sqlx::migrate::Migration::new(
-                3,
-                "submission_received_at".into(),
-                sqlx::migrate::MigrationType::ReversibleUp,
-                include_str!("../migrations/003_submission_received_at.sql").into(),
-                false,
-            ),
-        ]),
-        ..sqlx::migrate::Migrator::DEFAULT
-    };
-    migrations.run_direct(&mut db).await.map_err(|_| ERROR)?;
+    crate::migrations::normalize_checksums(&mut db).await.map_err(|_| ERROR)?;
+    crate::migrations::migrator().run_direct(&mut db).await.map_err(|_| ERROR)?;
     Ok(db)
 }
 pub(crate) async fn state(
@@ -969,6 +943,50 @@ mod tests {
         let p = std::env::temp_dir().join(format!("lara-account-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&p).unwrap();
         p
+    }
+    #[tokio::test]
+    async fn account_database_has_audit_columns_after_reopen() {
+        let root = temporary();
+        let options = SqliteConnectOptions::new()
+            .filename(root.join("account-audit-test.db")).create_if_missing(true).foreign_keys(true);
+        let mut old = SqliteConnection::connect_with(&options).await.unwrap();
+        let migrations = sqlx::migrate::Migrator {
+            migrations: std::borrow::Cow::Owned([
+                (1, "client_offline_schema", include_str!("../migrations/001_client_offline.sql")),
+                (2, "sync_rejections", include_str!("../migrations/002_sync_rejections.sql")),
+                (3, "submission_received_at", include_str!("../migrations/003_submission_received_at.sql")),
+            ].into_iter().map(|(version, name, sql)| {
+                let sql = if version == 2 {
+                    if sql.contains("\r\n") { sql.replace("\r\n", "\n") } else { sql.replace("\n", "\r\n") }
+                } else { sql.to_owned() };
+                sqlx::migrate::Migration::new(
+                    version, name.into(), sqlx::migrate::MigrationType::ReversibleUp, sql.into(), false
+                )
+            }).collect()),
+            ..sqlx::migrate::Migrator::DEFAULT
+        };
+        migrations.run_direct(&mut old).await.unwrap();
+        sqlx::raw_sql("INSERT INTO classrooms(id,name,section,class_code,teacher_id,created_at,updated_at) VALUES('class','Science','A','ABC234','teacher',1,1);
+            INSERT INTO enrollments(id,classroom_id,student_id,joined_at,updated_at) VALUES('enrollment','class','learner',42,50);
+            INSERT INTO announcements VALUES('post','class','Title','Body',1,1,1);
+            INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('queued','post','learner','Keep this work',1,1,'QUEUED_FOR_SYNC');")
+            .execute(&mut old).await.unwrap();
+        put(&mut old, "cursor", "7").await.unwrap();
+        old.close().await.unwrap();
+        for _ in 0..2 {
+            let mut db = database(&root, "audit-test").await.unwrap();
+            assert_eq!(sqlx::query_scalar::<_, i64>("SELECT created_at FROM enrollments WHERE id='enrollment'").fetch_one(&mut db).await.unwrap(), 42);
+            assert_eq!(state(&mut db, "cursor").await.unwrap().as_deref(), Some("7"));
+            assert_eq!(sqlx::query_scalar::<_, String>("SELECT content FROM announcement_comments WHERE sync_status='QUEUED_FOR_SYNC'").fetch_one(&mut db).await.unwrap(), "Keep this work");
+            for table in ["enrollments", "material_chunks", "assignment_submissions", "quiz_attempts"] {
+                let required: i64 = sqlx::query_scalar(&format!(
+                    "SELECT \"notnull\" FROM pragma_table_info('{table}') WHERE name='created_at'"
+                )).fetch_one(&mut db).await.unwrap();
+                assert_eq!(required, 1, "{table}.created_at must be required");
+            }
+            db.close().await.unwrap();
+        }
+        std::fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn validates_boundary_and_context_identity() {

@@ -1,5 +1,7 @@
 # Desktop English-only cleanup — #225
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 The Lead's English-only decision (#223) removes the remaining Filipino UI infrastructure after #40. This change stays in Desktop and does not change routes, discovery, Hub settings, SQL migrations or classroom queries.
 
 ## Files and data flow
@@ -41,7 +43,7 @@ The screenshots below are current #225 native WebView captures, excluding the OS
 
 ## Reproduce
 
-Run the automated commands above. Start the mock Hub from repo root, then `npm run tauri dev` in Desktop. Verify English navigation, top bar, manual address form and connection banner with no language toggle. Stop the mock and confirm Home stays usable. For legacy-preference testing use a disposable WebView profile; do not clear an existing database or preferences to manufacture a clean result.
+Run the automated commands above. Start the real Hub using [the current setup](real-hub-testing.md), then `npm run tauri dev` in Desktop. Verify English navigation, top bar, manual address form and connection banner with no language toggle. Stop the Hub and confirm Home stays usable. For legacy-preference testing use a disposable WebView profile; do not clear an existing database or preferences to manufacture a clean result.
 
 ## Limits
 

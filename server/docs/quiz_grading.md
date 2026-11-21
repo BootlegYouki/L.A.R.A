@@ -40,7 +40,7 @@ The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/qu
    - **A device clock behind the Hub** gives a finish before the Hub's start. Then the elapsed time is the device's own duration (its `started_at` to its `submitted_at`, so a constant offset cancels). For a WebSocket submit, which is live and carries no start, it is the time since the Hub's start. Without this, the elapsed time would be 0, and a late finish would pass (review of #12).
    - **Clients must send Hub-synchronized times** (mobile and desktop TECH_SPECs: the offset from `EVENT_HELLO_ACK`). A device clock *ahead* of the Hub, on an offline finish pushed later, can still be refused wrongly. Trusting the device's duration there would let any device shorten its time.
 3. **After commit:**
-   - `EVENT_GRADE_CONFIRMED` `{quiz_id, attempt_id, score, total_points, timestamp}` goes to the learner when scores are released, or the quiz is `CLOSED` (a replacement after the close; mock parity).
+   - `EVENT_GRADE_CONFIRMED` `{quiz_id, attempt_id, score, total_points, timestamp}` goes to the learner when scores are released, or the quiz is `CLOSED` (a replacement after the close; current Hub behavior).
    - `EVENT_PRESENCE` `SUBMITTED` goes to the class teachers.
    - A repeat sends neither.
 4. **Receipts and the pull:**
@@ -50,9 +50,9 @@ The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/qu
 5. **Queued push:** each `quiz_attempts` item gets its own receipt, first and in order: `SYNCED`, or `REJECTED` with `reason` set to the error code (`BAD_REQUEST`, `NOT_FOUND`, `FORBIDDEN`, `TIME_LIMIT_EXCEEDED`). Only a Hub failure fails the whole push.
 6. **WebSocket:**
    - `EVENT_QUIZ_SUBMIT` `{quiz_id, submitted_at, answers}` is accepted only after `EVENT_HELLO`, and its `student_id` is ignored (TECH_SPEC Q2).
-   - A refusal is `EVENT_ERROR` `BAD_REQUEST` with the code as the message, the mock's choice: `error.json` lists no quiz codes. A malformed frame is answered too, not ignored.
+   - A refusal is `EVENT_ERROR` `BAD_REQUEST` with the code as the message: `error.json` lists no quiz codes. A malformed frame is answered too, not ignored.
    - It carries no `started_at`, so a learner with no attempt row (no `/begin`) is refused with message `BAD_REQUEST` ("Missing: started_at" on REST).
-   - A WebSocket submit on a held-scores quiz, and any repeat, gets no reply at all (mock parity). Clients confirm through the pull.
+   - A WebSocket submit on a held-scores quiz, and any repeat, gets no reply at all (current Hub behavior). Clients confirm through the pull.
 
 ## Grading
 - **Multiple choice, true/false:** `selected_option` must equal `correct_answer` exactly. There is no index matching: the contract's `selected_option` is text, and an index would be ambiguous when the options are numbers.
@@ -67,7 +67,7 @@ The contract routes and events are `POST /api/quizzes/{id}/submit`, `GET /api/qu
 | Results | The class's teachers. One row per `ACTIVE` learner (`NOT_STARTED`, `IN_PROGRESS` or `SUBMITTED`), by name, with real scores only once submitted |
 
 ## Gotchas
-- **A `CLOSED` quiz still accepts an on-time submission** that was queued offline (FR-4.5, as in the mock). It must pass the time check, and it must have finished no later than 60 s after `closed_at` (`CLOSE_GRACE_MS`, contract #294). That close limit holds both for a replacement of the close's auto-submit and for a learner who never reached `/begin` (review of #11; the mock checks only the replacement).
+- **A `CLOSED` quiz still accepts an on-time submission** that was queued offline (FR-4.5). It must pass the time check, and it must have finished no later than 60 s after `closed_at` (`CLOSE_GRACE_MS`, contract #294). That close limit holds both for a replacement of the close's auto-submit and for a learner who never reached `/begin` (review of #11).
 - **One attempt per learner per quiz:** two submits at once are serialized by the write lock and give the same attempt.
 - **Closing (step 4.1) is in [`quiz_control.md`](./quiz_control.md).** It auto-submits through `db::quizzes::store_submission`, not `submit`: `submit` is learner-only, runs the time check and sends presence. It writes a new revision for each released held score, so a learner who pulled `score: null` gets the score. The Lead settled FR-4.4 against FR-4.5 (#11, contract #293 and #294): the close auto-submits, and on-time work replaces that once.
 - **For step 5.1, the AI lockout:** a learner whose submit was refused (422) keeps an `IN_PROGRESS` attempt. A lockout that ends only at `SUBMITTED` keeps the tutor off until the teacher closes the quiz, or forever if they never do. Lock only while the quiz is `ACTIVE`, or within the time limit plus grace.

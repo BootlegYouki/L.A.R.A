@@ -14,7 +14,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
 | `backend/src/routes/assignments.rs` | Submit and submission-file handlers |
 | `backend/src/db/materials.rs`, `db/submissions.rs` | Rows and their `sync_revisions` entries. A material records `uploaded_by` (the signed-in owner or co-teacher, #274); it is never sent to clients |
 | `backend/src/auth/mod.rs` | `MediaUser`: `AuthUser` that also accepts `?token=`, on the two download routes only |
-| `backend/src/services/class_access.rs` | `require_member`, the mock's `member_of`: class teachers and `ACTIVE` learners |
+| `backend/src/services/class_access.rs` | `require_member`, class teachers and `ACTIVE` learners |
 | `backend/tests/materials.rs`, `tests/submissions.rs`, `tests/common/uploads.rs` | Real-Hub flows, access rules, cleanup checks, a raw-socket 300 MB upload |
 
 ## Data flow
@@ -35,7 +35,7 @@ Teachers upload lesson files and post attachments, and learners hand in homework
    - submissions: `Scope::student`, so only that learner and the class's teachers pull it.
 
    If any check refuses, the transaction rolls back and dropping `StoredFile` deletes the renamed file. No file I/O happens under the write lock.
-5. **Homework rules (contract #257),** checked in the mock's order (`submission_create` in `scripts/mock_hub.py`):
+5. **Homework rules (contract #257),** checked in contract order:
    1. **Identical retry:** the same `submission_id` with the same bytes gets the stored row back unchanged, even after grading or the due date. The upload's SHA-256 is computed while it streams; the stored file is read back only when its size matches, before the transaction. Inside it, the row must still name the file compared.
    2. **Graded is final:** any other file once a score exists gets 409 `ALREADY_GRADED`.
    3. **Late:** with `allow_late` off, work turned in after `due_date` gets 409 `LATE_SUBMISSION`.
@@ -43,12 +43,12 @@ Teachers upload lesson files and post attachments, and learners hand in homework
    The optional `turned_in_at` field is when the learner pressed Turn in (epoch ms). `submitted_at` is `min(turned_in_at, arrival)`, so work finished offline before the deadline still counts and a device clock ahead of the Hub cannot postdate it; without the field it is the arrival. `received_at` is always the arrival.
 6. **Replace.** Before grading, a new file replaces the learner's earlier one. Under the same id the row is updated; under a new id the old row is deleted with a `DELETE` revision (same learner and teachers) and the row takes the new id. The old file is deleted only after the commit, so a failed resubmission still serves the work handed in before.
 7. **Serve.** `ServeFile` streams from disk. Both routes send `X-Content-Type-Options: nosniff`. Every file sent counts against the user's 2.0 MB/s (step 3.2, `streaming_rate_limit.md`).
-   - Material downloads are `application/octet-stream`, as the contract and the mock send them.
+   - Material downloads are `application/octet-stream`, as contracted.
    - **VIDEO downloads resume** (contract #259): `Range` gets 206 with `Content-Range`, a range past the end gets 416 with `Content-Range: bytes */<size>`, and every answer carries `Accept-Ranges: bytes` and an `ETag`. With `If-Range`, a tag that no longer matches gets the whole file as 200, so Save for Home starts over when the file changed. `ServeFile` ignores `If-Range`, so `serve_stored` checks it and drops `Range` when it is stale. The `ETag` is a hash of the stored name; stored files are never changed in place, so it changes only with the file.
    - **`If-Match` works too** (step 3.2): Android's download manager and Chrome resume with `If-Match` and the Hub's `ETag`. The Hub checks it against its own tag, since `ServeFile` would compare it with a tag clients never see and always answer 412. A stale tag is 412, so the client starts over.
    - **Other material downloads** come whole (200) whatever `Range` asks for, with `Accept-Ranges: none` (the contract makes `Range` VIDEO only).
    - Submission files answer `Range` as `ServeFile` does; the contract says nothing more for them.
-   - Submission files carry their real type, as the mock does, so image views can show the photo.
+   - Submission files carry their real type, so image views can show the photo.
 
 On start, the Hub creates the folders and empties `tmp/`. Anything there is an upload a crash interrupted.
 
@@ -73,13 +73,13 @@ On start, the Hub creates the folders and empties `tmp/`. Anything there is an u
 
 ## Decisions for the Lead
 
-These are calls where the contract and mock are silent. Each is listed in the PR.
+These are calls where the contract is silent. Each is listed in the PR.
 
 1. **Formats, from the file's bytes:** as in Data flow step 2. An unsupported file gets 400 `BAD_REQUEST`, since the contract has no code for it. Two calls follow PRD FR-3.1 and FR-3.3 strictly: an iPhone `.mov` video is refused (MP4 or WebM only), and so is any ZIP that is not a Word document.
-2. **Placeholder bytes in the mock tests:** settled by the Lead in #257, which gave those flows real `%PDF` and JPEG headers. Since #290, `submission_id` must be a lowercase UUID (400 "submission_id must be a UUID"), because every teacher's desktop pulls it. A label such as `sub-1` is refused, and the mock's flows still use labels (raised with the Lead in the #290 PR).
+2. **Real document bytes:** fixture uploads use valid PDF and JPEG content. Since #290, `submission_id` must be a lowercase UUID (400 "submission_id must be a UUID"), because every teacher's desktop pulls it. A label such as `sub-1` is refused.
 3. **Homework cap (TECH_SPEC Q10):** the same 250 MB as materials.
 4. **Archived class:** uploads and new homework get 403. A retry of a stored submission (same id, learner and assignment) gets 200 with the stored row, unchanged, following #235's sync-push rule.
-5. **Submission id clash:** an id that already names another learner's or assignment's work gets 403. The mock would overwrite it.
+5. **Submission id clash:** an id that already names another learner's or assignment's work gets 403.
 6. **Late work, grades and retries:** settled by the Lead in contract #257 (Data flow step 5). The Hub records `received_at` as well as `submitted_at`.
 7. **Content types:** see Data flow step 6.
 8. **Empty optional ids** (`topic_id=""`) count as not sent, and an empty `submission_id` counts as missing.
@@ -88,7 +88,7 @@ These are calls where the contract and mock are silent. Each is listed in the PR
 
 | Criterion | Evidence |
 |---|---|
-| Flows match the mock for upload, download and resubmission | `teacher_uploads_a_pdf_and_gets_the_contract_material`, `attachments_link_to_their_post`, `members_download_the_bytes_with_a_token`, `a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it`, `before_grading_new_work_replaces_the_old_row_and_its_id` |
+| Real-Hub upload, download and resubmission | `teacher_uploads_a_pdf_and_gets_the_contract_material`, `attachments_link_to_their_post`, `members_download_the_bytes_with_a_token`, `a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it`, `before_grading_new_work_replaces_the_old_row_and_its_id` |
 | Contract #257: late work, graded work, identical retries, `turned_in_at` and `received_at` | `late_work_is_refused_unless_the_assignment_allows_it`, `graded_work_cannot_be_replaced`, `an_identical_retry_gets_the_stored_row_even_after_grading_and_the_deadline`, `a_submission_records_when_it_was_turned_in_and_when_it_arrived`; migration: `migrations_reproduce_the_server_master_contract`, `upgrading_keeps_handed_in_work_and_fills_received_at` |
 | Contract #259: resumable VIDEO downloads, whole other files, `/stream` refuses a non-video | `a_video_download_resumes_with_range_and_if_range`, `a_document_download_sends_the_whole_file_whatever_the_range`, `the_stream_route_refuses_a_material_that_is_not_a_video` |
 | A 300 MB upload is rejected without filling the disk | `a_300_mb_upload_is_refused_and_leaves_no_file`, with a declared `Content-Length` and chunked: 413, no row, no revision, empty `tmp/` and `materials/` |

@@ -1,5 +1,5 @@
 //! The captive download portal (`GET /download`): an English 3-step sideloading guide served
-//! with no token, plus the bundled page assets and the client installers. Matches the mock's
+//! with no token, plus the bundled page assets and the client installers. Covers the
 //! Sprint 1 flow (200 HTML on `/download`).
 
 mod common;

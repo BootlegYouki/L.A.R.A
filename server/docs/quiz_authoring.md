@@ -21,7 +21,7 @@ The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`
   - a `DRAFT` is 404;
   - then the caller must be a member;
   - then they get `StudentQuiz`, which `student_view` builds from queries that never select `correct_answer` or `synonyms_json`.
-- **Active:** the most recently started `ACTIVE` quiz in the caller's classes, always as the learner view (teachers too, as in the mock).
+- **Active:** the most recently started `ACTIVE` quiz in the caller's classes, always as the learner view (teachers too,).
 - **Begin:**
   - Inside the write lock, it finds the learner's attempt or inserts an `IN_PROGRESS` one (`UNIQUE(quiz_id, student_id)`), with a learner-scoped `quiz_attempts` revision.
   - After commit, a new attempt sends `EVENT_PRESENCE` `ANSWERING_QUIZ` to the class teachers.
@@ -39,10 +39,10 @@ The contract routes are `POST /api/quizzes`, `PATCH` and `GET /api/quizzes/{id}`
 - 409 `QUIZ_NOT_DRAFT` "A quiz can be edited only before it starts".
 - 409 `QUIZ_CLOSED` "This quiz is closed", for beginning a quiz that is not `ACTIVE`. Listed in the contract since #291, with an English message.
 
-## Gotchas and calls beyond the mock
+## Gotchas and implementation decisions
 - **Redaction is enforced twice:** by type (no answer field on the learner structs) and by `tests/redaction.rs`. If a new learner route carries a quiz, add it to that test.
 - **Answers must be gradeable.** For multiple choice and true/false, `correct_answer` must be one of the `options` (400). Step 4.2 grades by exact match, so any other answer could never be marked right.
-- **Shuffle per learner** (FR-4.1; the mock does not shuffle).
+- **Shuffle per learner** (FR-4.1).
   - With `shuffle_questions` on, each learner gets their own order: a Fisher–Yates shuffle seeded by the FNV-1a hash of `quiz_id:student_id`. It's the same order on every request.
   - The learner's questions are numbered 1..n (`order_index`) in that order. Clients sort by `order_index` (the mobile quiz cache), so keeping the teacher's numbers would undo the shuffle (review of #61).
   - Teachers see `order_index` order.

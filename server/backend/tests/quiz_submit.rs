@@ -190,7 +190,7 @@ async fn who_may_submit() {
     let (draft, _) = draft_quiz(&class, true).await;
     let (status, body) = submit(&class, &draft, &class.learner_token, now, now, json!([])).await;
     assert_eq!((status, message(&body)), (404, "Quiz not found"));
-    let outsider = class.hub.seed_user("123456789098", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789098", "Outsider", lara_hub::auth::Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (_, pending) = class.add_learner("123456789013", false).await;
     for token in [outsider.as_str(), pending.as_str(), class.teacher()] {

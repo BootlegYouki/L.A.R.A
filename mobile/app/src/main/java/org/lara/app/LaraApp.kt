@@ -45,6 +45,13 @@ class AppContainer private constructor(private val services: AppServices, privat
     val discovery get() = services.discovery
     val syncScheduler get() = services.scheduler
     private val database get() = services.accounts.prepared(requireNotNull(accountId))
+    fun reviewSubmissions(assignmentId: String) = database.classworkDao().observeSubmissions(assignmentId)
+    suspend fun reviewDenied(assignmentId: String) = database.syncStateDao().get("review_denied:$assignmentId")?.value == "1"
+    suspend fun setReviewDenied(assignmentId: String, denied: Boolean) {
+        database.syncStateDao().put(org.lara.app.data.local.entities.SyncStateEntity("review_denied:$assignmentId", if (denied) "1" else "0", System.currentTimeMillis()))
+    }
+    suspend fun saveReviewGrade(id: String, score: Long?, feedback: String?) = database.syncDao().applySubmissionGrade(id, score, feedback)
+    val gradingApi by lazy { org.lara.app.data.remote.GradingApi(enrollmentApi) }
     fun privateComments(assignmentId: String) = database.streamDao().observePrivateComments(assignmentId)
     suspend fun addPrivateComment(assignmentId: String, studentId: String, content: String) {
         require(content.isNotBlank())
@@ -75,6 +82,17 @@ class AppContainer private constructor(private val services: AppServices, privat
     }
     val settings by lazy { org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load) }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
+    val announcements by lazy { org.lara.app.data.remote.AnnouncementApi(enrollmentApi, hubClient) }
+    val materialAuthoringApi by lazy { org.lara.app.data.remote.ClassworkAuthoringApi(enrollmentApi) }
+    val classworkAuthoring: org.lara.app.domain.ClassworkAuthoringRepository by lazy {
+        val owner = requireNotNull(accountId)
+        org.lara.app.data.repository.ClassworkAuthoringRepository(services.context, owner, enrollmentApi, materialAuthoringApi) {
+            syncScheduler.enqueueNow()
+            try { sync.pull(owner) }
+            catch (error: kotlinx.coroutines.CancellationException) { throw error }
+            catch (_: Exception) { /* A successful mutation must not be repeated when its refresh fails. */ }
+        }
+    }
     fun classManagement(userId: String): org.lara.app.data.remote.ClassManagementRepository =
         org.lara.app.data.remote.HubClassManagementRepository(userId, enrollmentApi, hubClient)
     fun teacherClasses(userId: String) = org.lara.app.data.remote.TeacherClassApi(userId, enrollmentApi, hubClient)

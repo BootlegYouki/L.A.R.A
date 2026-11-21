@@ -1,5 +1,7 @@
 # Desktop 2.1 — accounts and cached Home (#45)
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 Learners can register and learners/teachers can sign in on the selected LAN Hub, then open their role-specific Home. Previously signed-in profiles and class details reopen offline without a PIN check or network requirement. This is cached access, not a new offline authentication. The admin remains Hub-PC only.
 
 Sources: OpenAPI auth/classroom schemas, the canonical client SQL, Desktop Tech Spec sections 3/6/7/10/13, design-system 5.2/5.12/5.13/9.2/9.3 and the prototype. The team follows announcements [#238](https://github.com/BootlegYouki/L.A.R.A/discussions/238) and the login-rule follow-up on [#194](https://github.com/BootlegYouki/L.A.R.A/discussions/194). These do not authorize changes outside Desktop.
@@ -10,7 +12,7 @@ Sources: OpenAPI auth/classroom schemas, the canonical client SQL, Desktop Tech 
 - `services/auth.ts`: validates and filters public auth/classroom payloads, rejects admin sessions, and bridges the native account commands. Tokens exist transiently in memory for authenticated requests, never in React's persisted state. Native cache/credential calls share the existing 15-second initialization timeout; this bounds UI waiting, not native execution. A cleanup failure cannot hide a confirmed 401.
 - `src-tauri/src/account.rs`: keyring-backed credentials and native SQLx account snapshots. Windows Credential Manager, macOS Keychain and Linux Secret Service are selected through target-specific keyring features. If secure storage fails, the current token remains only in session memory and the UI explains that sign-in is not remembered. There is no plaintext token fallback.
 - `store/app.ts`: the existing Zustand store now restores an account for the selected Hub, deduplicates matching restores, permits retry after failure and ignores late results from a different context. App additionally hides another Hub's account in the render that changes the address, before effects finish. SQLite/error/retry behavior remains independent of network reachability.
-- `LoginPage`: sign-in and learner-only registration. Name and ID are trimmed, registration requires a 12-digit LRN, PIN is four masked digits, teacher accounts come from the Hub admin. Inputs/submission are disabled while a request runs. No PIN persistence or offline PIN verification.
+- `LoginPage`: sign-in and learner-only registration. Name and ID are trimmed, registration requires a 12-digit LRN, PIN is six masked digits, teacher accounts come from the Hub admin. Inputs/submission are disabled while a request runs. No PIN persistence or offline PIN verification.
 - `HomePage`, `Sidebar`, `ClassroomCard`: teacher Teaching versus learner Enrolled navigation, cached class grid, loading/empty/error states and explicit retry. Class cards open a read-only metadata overview. Enrollment, teacher authoring, Stream and sync remain their later issues; unfinished controls stay disabled and do not pretend to succeed.
 - `App.tsx`: handles login/restore/refresh, aborts obsolete requests, preserves cached cards through network failures, and requests sign-in after a real authenticated 401. Reconnect retries safe class reads, never submitted credentials. Hub reachability 401 and expired-session 401 are deliberately different outcomes.
 
@@ -87,15 +89,31 @@ The real Hub was stopped. After a full production Desktop process exit/relaunch 
 
 ## Reproduce as an end user
 
-1. From repo root start `python scripts/mock_hub.py`. In `desktop/`, run `npm ci`, `npm test`, `npm run lint`, `npm run build`, then `npm run tauri dev` with native prerequisites installed.
-2. Connect to the mock through the existing Hub panel. Sign in as teacher `T-0001` / PIN `1234`: Teaching and Science 4 appear. Open the card, then return Home.
-3. Choose Switch account from the account button. Sign in as `123456789012` / `1234`: Enrolled appears. Use New learner to register a fresh synthetic 12-digit LRN/name/PIN; expect an empty Home. Do not use a real learner's identity for testing.
-4. Sign back in as the seeded teacher, stop the mock, close Desktop fully and reopen: cached teacher classes remain accessible with the offline banner. Never delete an existing DB to create a clean screenshot.
-5. Restarting the mock creates new sessions/accounts and invalidates its old tokens. Expect sign-in to be requested. A production Hub's durable sessions behave according to its own contract.
-6. Build the production executable with `npm run tauri -- build --no-bundle`. OS credential persistence must also be tested on each target OS before its package ships.
+Follow [real-Hub testing](real-hub-testing.md) using a fresh synthetic dataset. This six-digit client requires the matching server change #339 before sign-in or registration can pass; do not use the current server's legacy four-digit PIN as a client workaround. After that server change, use credentials from its checked-out seed implementation or administrator-reset accounts.
+
+Connect Desktop, sign in as a teacher, open the test class and switch to a learner. Register only synthetic learner identities. Stop the Hub and fully restart Desktop to check cached access, then restart the same durable Hub to verify reconnection. Test secure credential persistence on each target OS before its package ships. The historical simulator session-reset behavior above is not an expectation for the durable real Hub.
+
 
 ## Not verified
 
 No new installer package/installation, physical second-PC real-Hub auth, WAN-disconnected run, Linux/macOS credentials/runtime, full screen-reader audit or low-spec performance measurement is claimed. Real-Hub end-to-end auth/class flows belong to the announced Round 2 integration, and classroom WAN/physical checks remain tracked in the integration report. Existing local/native tests do not turn those gaps into passes. Enrollment, roster, sync, class materials, quizzes and AI remain later issues.
 
 Teacher roster snapshots added by #47 retain only canonical enrollment/student UUIDs, public names/statuses and optional joined time in the existing account-scoped state. Learner restoration never returns rosters; LRNs and secrets are discarded. See [roster storage and native checks](roster.md).
+
+
+## Six-digit contract update (#340, 20 November 2026)
+
+Sign-in and registration now require exactly six ASCII digits in both LoginPage and the authentication service. The password input stays numeric, masked and capped at six characters; leading zeros are preserved. Labels, help and validation messages use the English resource dictionary. Desktop has no Hub-admin setup/reset screen. Existing four-digit accounts require an administrator reset on the Hub; the client never pads or migrates a PIN. Cached offline access does not perform a new PIN check.
+
+The six-digit seed/reset-account target is 123456 for the synthetic checks, pending server #339. Earlier recorded results and screenshots describe their original test builds. PR #344 records the Lead decision to remove the mock; acceptance testing is against the real Hub only. Mock results below were diagnostic checks completed before discovering that new decision and do not satisfy real-Hub acceptance.
+
+Verification: 101 Desktop tests passed, including rejection of four/five/seven digits, non-ASCII digits and invalid characters, plus service rejection before any network call. Production frontend build and lint passed. Offline invariants and all 72 shared tests passed. The native Windows walkthrough passed six-digit teacher sign-in, learner registration/sign-in with a leading-zero PIN, masked six-character entry, and local four-digit rejection. With the correctly advertised mock HTTP/WebSocket pair selected and the mock stopped, the cached class opened offline.
+
+Real staging Hub verification is blocked by #339: six-digit teacher login returned 401 UNAUTHORIZED and six-digit learner registration returned 400 BAD_REQUEST. The unmodified server still validates four digits and seeds PIN 1234. A screenshot records its login error; this is not claimed as a successful real-Hub auth run. Retest against fresh six-digit server seed/reset accounts when #339 merges. Existing server data was not reset or changed.
+
+Screenshots: [four digits rejected](screenshots/340-four-rejected.png), [six-digit registration](screenshots/340-registration.png), [registered learner](screenshots/340-registered-home.png), [cached class with Hub stopped](screenshots/340-offline-class.png), [real-Hub dependency](screenshots/340-real-hub-blocked.png).
+
+Linux, physical LAN/WAN and installer testing were not repeated for this PIN-only change. Issue #325's pending-card section/teacher display remains separate; no comments, contracts, shared scripts or server code changed.
+
+
+Staging refresh (016ec64): resolved the authentication-guide overlap while retaining the real-Hub workflow and this branch's six-digit/server dependency. The integrated Vitest 4 suite passed all 106 tests in 22 files; lint, production build, offline invariants and 72 shared tests passed. Full npm audit reported zero vulnerabilities. The diff against staging remains Desktop-only. This refresh does not turn the blocked real-Hub six-digit flow into a pass.

@@ -229,13 +229,13 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
     }
 }
 
-private sealed interface DocBlock {
+internal sealed interface DocBlock {
     data class Para(val text: String) : DocBlock
     class Pic(val bitmap: Bitmap) : DocBlock
 }
 
 /** A .docx is a zip; the body is word/document.xml. shortcut: paragraphs and inline pictures only (no tables, fonts or layout), upgrade if handouts need them. */
-private fun docxBlocks(file: File): List<DocBlock> = java.util.zip.ZipFile(file).use { zip ->
+internal fun docxBlocks(file: File): List<DocBlock> = java.util.zip.ZipFile(file).use { zip ->
     fun read(name: String) = zip.getEntry(name)?.let { zip.getInputStream(it).readBytes() }
     val xml = String(requireNotNull(read("word/document.xml")))
     val targets = read("word/_rels/document.xml.rels")?.let { String(it) }
@@ -328,8 +328,9 @@ private fun PageViewer(file: File, material: Material, pages: Int, onAi: (() -> 
 
 @Composable
 private fun PdfPage(file: File, pdf: Boolean, index: Int, title: String) {
-    val raster by produceState<HandoutRaster?>(null, file, index) {
-        value = try { withContext(Dispatchers.IO) { renderHandout(file, pdf, index) } }
+    var raster by remember(file, index) { mutableStateOf<HandoutRaster?>(null) }
+    LaunchedEffect(file, index) {
+        raster = try { withContext(Dispatchers.IO) { renderHandout(file, pdf, index) } }
         catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
     val bitmap = raster?.bitmap

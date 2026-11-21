@@ -37,9 +37,9 @@ class HomeworkMockTest {
             }
             return EnrollmentApi(HubClient(), tokens, { hub })
         }
-        val teacher = AuthApi().authenticate(hub, "T-0001", "1234", null)
+        val teacher = AuthApi().authenticate(hub, "T-0001", "123456", null)
         val classroom = TeacherClassApi(teacher.user.id, api(teacher), HubClient()).create("Synthetic homework", "Test")
-        val learner = AuthApi().authenticate(hub, "7" + System.nanoTime().toString().takeLast(11).padStart(11, '0'), "1234", "Synthetic homework learner")
+        val learner = AuthApi().authenticate(hub, "7" + System.nanoTime().toString().takeLast(11).padStart(11, '0'), "123456", "Synthetic homework learner")
         val learnerApi = api(learner)
         learnerApi.join(learner.user.id, classroom.classCode)
         HubClassManagementRepository(teacher.user.id, api(teacher), HubClient()).decide(classroom.id, learner.user.id, true)

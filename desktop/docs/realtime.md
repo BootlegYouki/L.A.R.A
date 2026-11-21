@@ -1,5 +1,8 @@
 # Joining classes and live approval (#46)
 
+> Current verification follows [real-Hub testing](real-hub-testing.md). Simulator observations below are archived historical evidence and do not prove real-Hub behavior.
+
+
 Learners enter the teacher's six-character class code in a Radix dialog. Six boxes support capitalization, whole-code paste, arrows and backspace. The service removes separators and validates the contract alphabet. English resources and existing design tokens supply the UI; the approved Home layout remains intact.
 
 ## Files and flow
@@ -48,11 +51,7 @@ The final optimized build completed in 37.34 seconds. No Server source, shared c
 
 ## Repeat the checks
 
-1. Start the mock from repo root. Run Desktop with native prerequisites; connect to the mock.
-2. Sign in as seed joining learner `123456789013` / PIN `1234`. Open Join class, enter `K7M-4QX`, and expect Waiting for approval with no Open class.
-3. From a separate teacher/API session (`T-0001` / `1234`), approve that learner. Expect the card to unlock without a refresh. Remove/reject through the existing teacher API to check status lockout; teacher UI is #47.
-4. Rejoin to Pending, stop the mock, close Desktop fully and reopen: Pending stays and no PIN or blocking offline dialog appears.
-5. Repeat join/approve/reject against a seeded real Hub with isolated test data. Create the fixture class through the API. Confirm actual WebSocket frames, stop/restart the Hub, and inspect the production console when opening the dialog.
+Follow [real-Hub testing](real-hub-testing.md). Create a synthetic class through the real Hub API and use its returned class code; do not assume historical seed class codes. Join with a synthetic learner, approve from a separate teacher session and check that the card unlocks without refresh. Exercise rejection/removal and rejoin-to-Pending. Stop the Hub, fully restart Desktop and verify Pending persists, then restart the same Hub and inspect actual WebSocket-driven updates. Record unsupported operations as failures or gaps.
 
 ## Not verified
 

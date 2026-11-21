@@ -31,7 +31,7 @@ it('does not restore teacher rows after switching to a learner while roster read
  await act(async()=>{renderer=create(createElement(App))});
  await act(async()=>renderer.root.findByProps({'aria-label':'Switch account'}).props.onClick());
  mocks.signIn.mockResolvedValue({...account,user:{...account.user,id:rooms[0].id,role:'STUDENT'},classrooms:[],rosters:{}});
- await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'1234'},false));
+ await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'123456'},false));
  await act(async()=>{for(const room of rooms)releases.get(room.id)!(rows(room.id));});
  expect(useStore.getState().account?.user.role).toBe('STUDENT');expect(useStore.getState().account?.rosters).toEqual({});
 });
@@ -48,5 +48,5 @@ it('reloads committed sync from the native account context but never restores a 
  mocks.restore.mockResolvedValue({...account,classrooms:[rooms[0]]});await act(async()=>commit());expect(useStore.getState().account?.classrooms).toHaveLength(1);
  let release!:(v:CachedAccount)=>void;mocks.restore.mockReturnValue(new Promise<CachedAccount>(resolve=>release=resolve));let pending!:Promise<void>;await act(async()=>{pending=commit()});
  await act(async()=>renderer.root.findByProps({'aria-label':'Switch account'}).props.onClick());mocks.signIn.mockResolvedValue({...account,user:{...account.user,id:rooms[0].id,role:'STUDENT'},classrooms:[],rosters:{}});
- await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'1234'},false));await act(async()=>{release(account);await pending});expect(useStore.getState().account?.user.role).toBe('STUDENT');
+ await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'123456'},false));await act(async()=>{release(account);await pending});expect(useStore.getState().account?.user.role).toBe('STUDENT');
 });

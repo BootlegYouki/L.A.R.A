@@ -31,7 +31,7 @@ impl Class {
             .await;
         assert_eq!(status, 200, "{room}");
         let learner = hub
-            .seed_user("123456789012", "Juan", Role::Student, "1234")
+            .seed_user("123456789012", "Juan", Role::Student, "123456")
             .await;
         let student = learner.id.clone();
         let token = hub.open_session(learner).await;
@@ -290,13 +290,13 @@ async fn newly_visible_class_arrives_with_older_rows_for_learner_and_co_teacher_
     class.announcements(620, 100).await;
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
     let teacher = class
         .hub
-        .seed_user("T-0002", "Jose", Role::Teacher, "1234")
+        .seed_user("T-0002", "Jose", Role::Teacher, "123456")
         .await;
     let teacher_id = teacher.id.clone();
     let teacher_token = class.hub.open_session(teacher).await;
@@ -465,7 +465,7 @@ async fn push_validation_ownership_and_quiz_attempts_stay_separate() {
     assert_eq!(count, 0);
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
@@ -644,14 +644,14 @@ async fn pull_redacts_secrets_and_scopes_every_supported_entity() {
     class.assignment().await;
     let ana = class
         .hub
-        .seed_user("123456789013", "Ana", Role::Student, "1234")
+        .seed_user("123456789013", "Ana", Role::Student, "123456")
         .await;
     let ana_id = ana.id.clone();
     let ana_token = class.hub.open_session(ana).await;
     class.enroll(&ana_token, &ana_id).await;
     let admin = class
         .hub
-        .seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234")
+        .seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456")
         .await;
     let admin_token = class.hub.open_session(admin).await;
     let mut tx = db::begin_immediate(&class.hub.state().db).await.unwrap();
@@ -829,7 +829,7 @@ impl Class {
     }
 
     async fn add_co_teacher(&self, lrn: &str) -> (String, String) {
-        let teacher = self.hub.seed_user(lrn, "Jose", Role::Teacher, "1234").await;
+        let teacher = self.hub.seed_user(lrn, "Jose", Role::Teacher, "123456").await;
         let id = teacher.id.clone();
         let token = self.hub.open_session(teacher).await;
         let (status, body) = self
@@ -912,7 +912,7 @@ async fn a_learner_removed_through_the_route_gets_the_enrollment_and_nothing_els
 async fn an_added_co_teacher_gets_the_older_rows_and_the_learners_see_them_listed() {
     let class = Class::start().await;
     class.announcements(3, 1).await;
-    let teacher = class.hub.seed_user("T-0002", "Jose", Role::Teacher, "1234").await;
+    let teacher = class.hub.seed_user("T-0002", "Jose", Role::Teacher, "123456").await;
     let teacher_token = class.hub.open_session(teacher.clone()).await;
     let position = drain(&class.hub, &teacher_token).await;
     let learner_position = drain(&class.hub, &class.token).await;
@@ -1014,5 +1014,52 @@ async fn pushes_to_an_archived_class_are_refused_but_a_retry_of_saved_work_is_no
         .await
         .unwrap();
     assert_eq!(count, 1);
+    class.hub.stop().await;
+}
+
+#[tokio::test]
+async fn class_comment_sync_accepts_teachers_of_the_class_and_retries_once() {
+    let class = Class::start().await;
+    class.announcements(1, 1).await;
+    let (co_teacher, co_token) = class.add_co_teacher("T-0002").await;
+    let outsider = class.hub.seed_user("T-0003", "Other teacher", Role::Teacher, "123456").await;
+    let outsider_token = class.hub.open_session(outsider).await;
+
+    let owner_payload = json!({"comments":[comment("owner-comment")]});
+    let owner_receipts = json!([{"id":uid("owner-comment"),"status":"SYNCED"}]);
+    for _ in 0..2 {
+        let (status, body) = class.hub.post_json("/api/sync/push", &owner_payload, Some(class.hub.teacher_token())).await;
+        assert_eq!(status, 200, "{body}");
+        assert_eq!(body["receipts"], owner_receipts);
+    }
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push", &json!({"comments":[comment("co-comment")]}), Some(&co_token),
+    ).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["receipts"], json!([{"id":uid("co-comment"),"status":"SYNCED"}]));
+
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push", &json!({"comments":[comment("foreign-comment")]}), Some(&outsider_token),
+    ).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["receipts"], json!([{"id":uid("foreign-comment"),"status":"REJECTED","reason":"FORBIDDEN"}]));
+
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push",
+        &json!({"comments":[comment("mixed-comment")],"private_comments":[private("teacher-private")]}),
+        Some(&co_token),
+    ).await;
+    assert_eq!(status, 403, "{body}");
+    assert_eq!(body["error"]["code"], "FORBIDDEN");
+
+    let pulled = pull(&class.hub, &class.token, 0).await;
+    let comments = pulled["comments"].as_array().unwrap();
+    assert_eq!(comments.len(), 2);
+    assert!(comments.iter().any(|c| c["id"] == uid("owner-comment")));
+    assert!(comments.iter().any(|c| c["id"] == uid("co-comment") && c["author_id"] == co_teacher));
+    let revisions: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM sync_revisions WHERE entity_table = 'announcement_comments'",
+    ).fetch_one(&class.hub.state().db).await.unwrap();
+    assert_eq!(revisions, 2);
     class.hub.stop().await;
 }

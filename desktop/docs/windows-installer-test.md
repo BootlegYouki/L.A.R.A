@@ -1,5 +1,13 @@
 # Windows Installer Test Report
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
+For current setup and acceptance checks, follow [real-Hub testing](real-hub-testing.md). The archived body records earlier implementation notes and outcomes; its old troubleshooting and setup instructions are retired.
+
+<details>
+<summary>Archived implementation notes and historical test evidence</summary>
+
+
 > Historical installer report: language-toggle checks below describe the earlier build. The current UI is English only under #223/#225; see [english-only.md](english-only.md).
 
 **Date:** October 2026 (Single-PC test)  
@@ -214,3 +222,5 @@ Set-NetConnectionProfile -Name "YourNetworkName" -NetworkCategory Public
 $env:LARA_TEST_REAL_HUB_IP = '192.168.100.13'
 cargo test --locked --manifest-path src-tauri/Cargo.toml --lib real_hub_mdns_without_udp -- --ignored --nocapture
 ```
+
+</details>

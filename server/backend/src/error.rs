@@ -12,14 +12,14 @@ pub enum ErrorCode {
     Forbidden,
     NotFound,
     ClassCodeInvalid,
-    /// Mock code, not yet in the contract (TECH_SPEC section 14, Q8).
+    /// Hub error code tracked by TECH_SPEC section 14, Q8.
     AlreadyExists,
     AdminExists,
     /// 429 with `Retry-After` (contract PR #197, TECH_SPEC section 14, Q7).
     TooManyAttempts,
     /// 403: the admin signs in only on the Hub PC (contract PR #197).
     AdminLocalOnly,
-    /// Mock code, not yet in the contract (TECH_SPEC section 14, Q8).
+    /// Hub error code tracked by TECH_SPEC section 14, Q8.
     RouteNotFound,
     /// 413: an upload over 250 MB (contract `POST /api/materials`).
     FileTooLarge,
@@ -138,22 +138,22 @@ impl ApiError {
         Self::new(StatusCode::FORBIDDEN, ErrorCode::AdminLocalOnly, "The admin signs in on the Hub PC only")
     }
 
-    /// The mock's message. Uploads are refused before the file is kept (`storage`).
+    /// Uploads are refused before the file is kept (`storage`).
     pub fn file_too_large() -> Self {
         Self::new(StatusCode::PAYLOAD_TOO_LARGE, ErrorCode::FileTooLarge, "Max 250MB")
     }
 
-    /// The mock's message (`submission_create` in `scripts/mock_hub.py`).
+    /// Refuses late homework when the assignment disallows it.
     pub fn late_submission() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::LateSubmission, "This assignment does not accept late submissions")
     }
 
-    /// The mock's message (`submission_create` in `scripts/mock_hub.py`).
+    /// Refused homework submission; the existing graded work stays unchanged.
     pub fn already_graded() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::AlreadyGraded, "This submission has already been graded")
     }
 
-    /// English, unlike the mock's "Naka-off ang komento": the apps are English only (AGENTS.md 1.4).
+    /// The apps use English only (AGENTS.md 1.4).
     pub fn comments_disabled() -> Self {
         Self::new(StatusCode::FORBIDDEN, ErrorCode::CommentsDisabled, "Comments are turned off for this post")
     }
@@ -162,12 +162,12 @@ impl ApiError {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotDraft, "A quiz can be edited only before it starts")
     }
 
-    /// English, unlike the mock's "Sarado na ang pagsusulit": the apps are English only.
+    /// The apps use English only.
     pub fn quiz_closed() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizClosed, "This quiz is closed")
     }
 
-    /// Starting a quiz that is no longer a `DRAFT` (contract #294, the mock's message).
+    /// Starting a quiz that is no longer a `DRAFT` (contract #294).
     pub fn quiz_already_started() -> Self {
         Self::new(StatusCode::CONFLICT, ErrorCode::QuizNotDraft, "This quiz has already been started")
     }
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn auth_codes_use_the_mock_strings() {
+    fn auth_codes_use_the_contract_strings() {
         let codes = [
             (ErrorCode::Forbidden, "FORBIDDEN"),
             (ErrorCode::AlreadyExists, "ALREADY_EXISTS"),
@@ -276,7 +276,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn wrong_credentials_is_the_mocks_401() {
+    async fn wrong_credentials_is_401() {
         let response = ApiError::wrong_credentials().into_response();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
         let body = body_json(response).await;

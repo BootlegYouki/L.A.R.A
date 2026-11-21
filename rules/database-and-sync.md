@@ -31,7 +31,7 @@ A learner can open their own phone's SQLite file, so the client schema is public
 
 | Never on a client | Why |
 |---|---|
-| `users.pin_hash` | A 4-digit PIN hash is brute-forced instantly |
+| `users.pin_hash` | Even a 6-digit PIN hash is brute-forced quickly offline |
 | Other people's `lrn_or_id` | Learner Reference Numbers are personal data of minors. Only the signed-in user's own LRN and (for teachers) their roster's |
 | `quiz_questions.correct_answer`, `synonyms_json` | Answer keys |
 | `materials.file_path`, `assignment_submissions.file_path` (server paths) | Server disk layout. Clients use `download_url` and their own local paths |

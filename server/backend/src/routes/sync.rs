@@ -39,11 +39,16 @@ async fn push(
     user: AuthUser,
     body: JsonBody,
 ) -> Result<Json<SyncPushResponse>, ApiError> {
-    require_role(&user, Role::Student)?;
+    if user.role == Role::Admin {
+        return Err(ApiError::forbidden("Only learners and teachers can sync classroom work"));
+    }
     let input: SyncPushInput = serde_json::from_value(body.0.into())
         .map_err(|_| ApiError::bad_request("Invalid sync push"))?;
+    if !input.quiz_attempts.is_empty() || !input.private_comments.is_empty() {
+        require_role(&user, Role::Student)?;
+    }
     let mut receipts = Vec::new();
-    // First, in order, as the mock does: a finished quiz is the most time-sensitive item a device queues.
+    // First, in order does: a finished quiz is the most time-sensitive item a device queues.
     for item in &input.quiz_attempts {
         receipts.push(quiz_attempt(&app, &user, item).await?);
     }
@@ -54,7 +59,7 @@ async fn push(
         }
         let mut tx = db::begin_immediate(&app.db).await?;
         let receipt =
-            sync_revisions::push_comment(&mut tx, &user.id, &comment, app.clock.now_ms()).await?;
+            sync_revisions::push_comment(&mut tx, &user, &comment, app.clock.now_ms()).await?;
         tx.commit().await?;
         receipts.push(receipt);
     }

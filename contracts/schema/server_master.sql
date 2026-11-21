@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     lrn_or_id TEXT UNIQUE NOT NULL,            -- 12-digit LRN (learner) or teacher/admin ID
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('TEACHER', 'STUDENT', 'ADMIN')),   -- one ADMIN row, created by POST /api/admin/setup; never synced
-    pin_hash TEXT NOT NULL,                    -- argon2id of the 4-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
+    pin_hash TEXT NOT NULL,                    -- argon2id of the 6-digit PIN. Rate-limit logins; a leaked hash is brute-forceable.
     is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0, 1)),
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL

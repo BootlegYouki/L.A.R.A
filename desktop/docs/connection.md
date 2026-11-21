@@ -1,5 +1,7 @@
 # Desktop #40: Hub connection
 
+> Current verification uses the [real-Hub workflow](real-hub-testing.md). Historical simulator observations and screenshots below are archived evidence only; they do not establish real-Hub behavior. Old simulator commands, seed credentials and limitations are not current test instructions.
+
 Issue #40 builds on merged discovery #5. It verifies a selected LAN Hub, remembers its nonsecret REST/WebSocket addresses and reconnects without hiding cached Home. Reachable does not mean signed in; accounts remain #45.
 
 ## Files and flow
@@ -24,7 +26,7 @@ Existing prototype Home/nav preserved. The prototype has no connection screen; t
 ## Test commands
 In desktop/: `npm run lint`, `npm test`, `npm run build`, `cargo test --locked --manifest-path src-tauri/Cargo.toml --lib`, `cargo check --locked --manifest-path src-tauri/Cargo.toml --all-targets`.
 From root: `python scripts/verify_invariants.py`, `python -m unittest discover tests`.
-Native: start `python scripts/mock_hub.py` then `npm run tauri dev`. Confirm automatic connection, stop/restart Hub, invalid/manual entry with discovery unavailable, saved endpoint on restart and offline cached Home.
+Native: follow [real-Hub setup](real-hub-testing.md), then `npm run tauri dev`. Confirm automatic connection, stop/restart Hub, invalid/manual entry with discovery unavailable, saved endpoint on restart and offline cached Home.
 
 ## Evidence (2026-11-04, Windows)
 - 31 Desktop tests pass, lint and strict production build pass (49 modules, 1.38 seconds).

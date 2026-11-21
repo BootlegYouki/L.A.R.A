@@ -4,7 +4,7 @@
 //! on the same subnet can find it without any configuration. Routers with AP isolation drop these
 //! packets, which is why every client also keeps a manual IP box (Countermeasure 1).
 //!
-//! The payload keys match `scripts/mock_hub.py` exactly: `app`, `version`, `name`, `ip`,
+//! The discovery payload keys are `app`, `version`, `name`, `ip`,
 //! `http_port`, `ws_port`.
 //!
 //! The socket is bound to the classroom adapter's address (`lan_ip()`), not `0.0.0.0` (#200). With
@@ -123,10 +123,10 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
-    /// The beacon payload must match `scripts/mock_hub.py` key for key: clients parse these names.
+    /// Clients parse the documented discovery keys and values.
     /// A renamed or dropped field silently breaks discovery, so pin the exact shape here.
     #[test]
-    fn beacon_has_the_mock_hub_keys_and_values() {
+    fn beacon_has_the_documented_keys_and_values() {
         let beacon = Beacon {
             app: "lara",
             version: "9.9.9",

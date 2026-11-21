@@ -18,7 +18,7 @@ New sessions use the saved Sprint 1.2 Hub endpoint. Connecting to a Hub and sign
 
 ## Safety and boundaries
 
-PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English resources. Both forms use a standard Android text field with `KeyboardType.NumberPassword`, password semantics, ASCII digit filtering and a four-digit limit. ID/LRN → name (registration only) → PIN follows Next/Tab focus order. Done/Enter submits only when the same busy/rate-limit/form gate as the button allows it; Back dismisses the keyboard. The 56dp action footer returns when the keyboard closes. In landscape, the app bar also hides while the keyboard is open to leave space for enlarged field text. PIN state also clears on mode changes. No app-rendered keypad remains.
+PIN values exist only during the form/request and are cleared on submission. They are not saved in instance state, Room, preferences, or logs. All UI text has English resources. Both forms use a standard Android text field with `KeyboardType.NumberPassword`, password semantics, ASCII digit filtering and a six-digit limit. ID/LRN → name (registration only) → PIN follows Next/Tab focus order. Done/Enter submits only when the same busy/rate-limit/form gate as the button allows it; Back dismisses the keyboard. The 56dp action footer returns when the keyboard closes. In landscape, the app bar also hides while the keyboard is open to leave space for enlarged field text. PIN state also clears on mode changes. No app-rendered keypad remains.
 
 The session host collects Sprint 1.3 `QuizRepository.hasInProgressAttempt(userId)`, starting locked until Room emits. Learner AI stays unavailable during any cached active attempt. The role shell reads its offline state independently of auth; a public portal probe supplies only reachability, never authentication or authorization.
 
@@ -37,3 +37,9 @@ For manual mock-Hub testing, run `python scripts/mock_hub.py`. On a USB phone us
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+## Six-digit PIN contract (#326)
+
+`AuthPin` centralizes the six ASCII digit rule for the form, ViewModel and API.
+Old four-digit accounts require a Hub admin reset; Mobile never pads a PIN.
+See [dependency verification, pending-class behavior and validation](auth-pin-pending-join.md).

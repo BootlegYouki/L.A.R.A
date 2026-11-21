@@ -69,7 +69,7 @@ async fn a_learner_cannot_write_into_a_classmates_thread() {
 #[tokio::test]
 async fn a_teacher_writes_only_to_a_learner_of_the_class() {
     let (class, _, _) = class_with_assignment().await;
-    let stranger = class.hub.seed_user("123456789099", "Stranger", Role::Student, "1234").await;
+    let stranger = class.hub.seed_user("123456789099", "Stranger", Role::Student, "123456").await;
     let (pending, _) = class.add_learner("123456789014", false).await;
     for student in [stranger.id.as_str(), "00000000-0000-4000-8000-000000000000", pending.as_str()] {
         let (status, body) = post(&class, class.teacher(), json!({"content": "x", "student_id": student})).await;
@@ -103,12 +103,12 @@ async fn removed_co_teacher_cannot_read_or_write_threads() {
 #[tokio::test]
 async fn outsiders_and_bad_requests() {
     let (class, _, _) = class_with_assignment().await;
-    let outsider = class.hub.seed_user("123456789098", "Outsider", Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789098", "Outsider", Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (status, body) = thread(&class, &outsider, None).await;
     assert_eq!((status, message(&body)), (403, "Not your class"));
     assert_eq!(post(&class, &outsider, json!({"content": "x"})).await.0, 403);
-    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "1234").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", Role::Admin, "123456").await;
     let admin = class.hub.open_session(admin).await;
     assert_eq!(thread(&class, &admin, Some(&class.learner)).await.0, 403);
 

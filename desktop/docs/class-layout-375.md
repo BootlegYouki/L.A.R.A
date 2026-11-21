@@ -1,0 +1,42 @@
+# Classroom-reference class layouts — #375
+
+21 November 2026. Based on staging `241e778`. User supplied Classroom references for Stream, expandable Classwork and an opened assignment/material, and requested layout changes while keeping L.A.R.A.'s theme. This is UI polish within [the freeze](https://github.com/BootlegYouki/L.A.R.A/discussions/297).
+
+## Presentation
+
+Tabs now precede content. Stream keeps the green class banner, a supporting Classwork overview and clearer announcement cards with actual titles/dates/text. Classwork uses a narrower material list with native keyboard-accessible disclosure rows, cached-text previews, material type, saved status and explicit Open handout/Watch video actions.
+
+Opened handouts and videos use a title/content column and a separate Home study action card, stacking on small windows. Existing local handout-save and video download/progress/resume/error/saved behavior stays in place. No networking, native authorization, schema, dependencies or theme tokens changed.
+
+The references include features outside the implemented scope. The UI does not invent author names, due dates, topics, grades, submission/completion actions, comments or Meet/Drive buttons. The supporting Stream card uses the real material count instead of an unsupported Upcoming list. All new wording lives in the English dictionary. This is a deliberate layout adaptation to the existing feature/data scope, not an implementation of the assignment screens shown in the reference.
+
+## Checks
+
+- Regressions failed before implementation for tabs-before-banner, disclosure Classwork and the opened-handout action card. **113 Desktop tests in 22 files**, lint and production build pass.
+- Offline invariant scanner and **73 shared Python tests** pass. The shared suite still uses the historical simulator pending #344; native integration below used the actual Rust Hub.
+- Windows native app used the changed frontend and unchanged native source; no `desktop/src-tauri` differences from the reused binary. Actual six-digit Rust Hub with isolated synthetic accounts/class/PDF/video, HTTP 8080 and WebSocket 8081.
+- Learner real-Hub Stream, quick Classwork navigation/focus, expanded preview, open cached handout, Save for Home, video playback/download and Back: pass. Teacher People/roster access remains available.
+- 720px layouts, keyboard tabs and Enter on disclosure rows, 200% Classwork text with reachable Open action, and small-window handout/action-card reflow: pass, no horizontal overflow.
+- With the real Hub stopped: cached Stream, expanded Classwork, saved handout detail and saved video playback pass. Reconnection was observed after restarting the same Hub. Final screenshots use a distinct per-Hub account context so the user's concurrent QA exploration cannot alter the verification state.
+
+## Screenshots
+
+| Learner Stream | Expanded Classwork |
+| --- | --- |
+| ![Stream](screenshots/375-student-stream.png) | ![Classwork](screenshots/375-student-classwork.png) |
+
+| Opened handout | Opened video |
+| --- | --- |
+| ![Handout detail](screenshots/375-handout-detail.png) | ![Video detail](screenshots/375-video-detail.png) |
+
+Additional evidence: [teacher Stream](screenshots/375-teacher-stream.png), [small Classwork](screenshots/375-classwork-small.png), [enlarged text](screenshots/375-classwork-large-text.png), [small handout](screenshots/375-handout-small.png), [offline handout](screenshots/375-handout-offline.png), [offline saved video](screenshots/375-video-offline.png).
+
+## Limits
+
+No new installer/upgrade, Linux/macOS, physical second-PC/WAN, screen-reader audit or repeated interrupted-download stress test is claimed. Secure credential persistence was unavailable in this runtime; cached reading and saved video playback were verified separately. The existing prerelease installer predates this redesign.
+
+Compact follow-up: extracted blank-line-separated paragraphs render as separate semantic paragraphs with 8px spacing and 1.5 line height; text content is preserved. Section/header spacing is tighter. Existing material-opening actions render as compact 336px attachment cards with real title/type and a type icon (no fabricated preview image). Accessible names include the action and material title. Native keyboard opening, handout save, video routing and small-window checks pass. [Attachment cards](screenshots/375-attachment-card.png), [compact handout](screenshots/375-compact-handout.png).
+
+Spacing follow-up: material cards have a 16px gap. Expanded rows separate the summary from preview content with a divider and 16px breathing room; compact paragraph spacing stays unchanged. Production build passes.
+
+Reading/scroll follow-up: text-only lessons use the same subtle token background as Home study, with a rounded reading card. The authenticated shell fills the viewport and scrolls only its content pane; navigation remains available and a long sidebar can scroll independently. Auth screens retain natural scrolling. Actual stylesheet checks at 1200x600 and 720x600 confirm content scrollTop=500, stable sidebar position, document scrollTop=0 and no horizontal overflow; production build passes.

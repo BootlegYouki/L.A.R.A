@@ -94,7 +94,7 @@ export async function restoreAccount(hub: HubInfo): Promise<CachedAccount | null
 export async function signIn(hub: HubInfo, input: Credentials, register: boolean, signal?: AbortSignal): Promise<CachedAccount> {
   const fields = { lrn_or_id: input.lrn_or_id.trim(), pin: input.pin,
     ...(register ? { full_name: input.full_name?.trim() } : {}) };
-  if (!fields.lrn_or_id || [...fields.lrn_or_id].length > 32 || !/^[0-9]{4}$/.test(fields.pin)
+  if (!fields.lrn_or_id || [...fields.lrn_or_id].length > 32 || !/^[0-9]{6}$/.test(fields.pin)
     || (register && (!/^[0-9]{12}$/.test(fields.lrn_or_id) || !fields.full_name || [...fields.full_name].length > 100))) {
     throw new ApiError('invalid_fields');
   }
