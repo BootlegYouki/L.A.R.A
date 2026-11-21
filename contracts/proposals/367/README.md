@@ -1,8 +1,8 @@
 # Proposed private Hub activity history (#367)
 
-**Draft for Lead review. Not an active contract or an implemented feature.** Implements the specification step of proposal #366 and supplies concrete definitions for the blocked server issue #368. The running Hub is unchanged.
+**Draft for consuming-team review. Not an active contract or an implemented feature.** Implements the specification step of proposal #366 and supplies concrete definitions for server issue #368. The running Hub is unchanged.
 
-The proposed route/schema/DDL live beside this document, separate from canonical contracts. Proposal #366 has no Lead decision yet, #364 is open, and #344 still changes the shared testing architecture. This separation avoids advertising a route which neither the real Hub nor the current simulator serves. Before feature work, the Lead must approve the decisions below, promote these definitions into the canonical contract/docs in this same contract PR, supply the then-required shared acceptance coverage, and merge it. A merge of these proposal files alone does not authorize server implementation.
+The proposed route/schema/DDL live beside this document, separate from canonical contracts. Governance commit `7bed6b3` permits any team member to author contract changes and their tests without prior Tech Lead approval. This additive Hub-only route/table change needs written OK from the consuming Server team; the co-lead checks tests/invariants and merges. The independent UI proposal #366 and Lead-owned PRD/design-system changes are not automatically accepted by that governance change. #364 has merged (`4269790`), while #344 still changes the shared testing architecture. This separation avoids advertising a route which neither the real Hub nor the current simulator serves. Before feature work, obtain the consuming-team OK, promote approved definitions into the canonical contracts with the required coverage, and merge the contract PR. A merge of these proposal files alone does not authorize server implementation. The repository owner separately requested that #370 remain post-defense in the 2026-11-21 PR comment.
 
 ## Confirmed user behavior
 
@@ -10,7 +10,7 @@ An admin-only Tauri console with Overview, Accounts and Activity logs; searchabl
 
 The logs describe backend operations, including those initiated by mobile/desktop clients and headless runs. They are **not** a complete personal-data access audit. No external logging, log export or clear-history command is added. No AI/port/device statistics, backup, export or tunnel feature is added. #66 owns full health metrics; #329 is a separate host-architecture proposal.
 
-## Proposed decisions requiring Lead acceptance
+## Proposed decisions requiring consuming-team acceptance
 
 | Decision | Concrete proposal | Reason / practical limit |
 |---|---|---|
@@ -26,7 +26,7 @@ The logs describe backend operations, including those initiated by mobile/deskto
 | Restart | Mark `clean_shutdown=0` before serving; if already dirty emit UNCLEAN_RESTART. Flush HUB_STOPPING and set clean only after successful drain within 2 seconds | Shutdown is best-effort; power loss cannot create a guaranteed shutdown entry. Startup marker failure leaves the recorder degraded and other features usable |
 | Restore | Regenerate `history_id` whenever the database is initialized or restored; stale read cursors get 409 ACTIVITY_LOG_RESET | Sequence values can repeat after a restore; clients must reset history pages, not merge different generations |
 
-These numerical safety limits are proposals, not silently accepted product requirements. The Lead can change them before promotion, with the acceptance tests/spec updated together. No success/error entry contains a subject name, account/resource ID, filename, raw exception message, IP address or request URL.
+These numerical safety limits are proposals, not silently accepted product requirements. Consuming-team reviewers can request changes before promotion, with the acceptance tests/spec updated together. No success/error entry contains a subject name, account/resource ID, filename, raw exception message, IP address or request URL.
 
 ## Safe entry and event catalog
 
@@ -70,17 +70,17 @@ Return Cache-Control: no-store. No browser persistent storage for the bearer, ro
 
 ## Promotion and implementation gates
 
-1. Lead records acceptance/changes on #366 and approves this proposed API, catalog and safety bounds.
-2. Update PRD section 1.1 with accepted behavior and Hub design guidance for three admin pages (no change to brand tokens). Promote the route/schemas to canonical OpenAPI, SQL tables to server_master.sql and private naming/sync exclusions to the contract docs. Keep server migration/runtime code out of this contract PR.
+1. Any team member may prepare/promote the additive contract under `AGENTS.md` section 1.3 and workflow section 1.1.2; request review from both consuming Server developers and obtain that team's written OK for the API, catalog and safety bounds. No separate prior Tech Lead approval is required for authoring the contract. Changes to an invariant or section 1.4 decision still require a Design Proposal.
+2. Coordinate the outstanding UI proposal #366 and any Lead-owned PRD/design-system changes separately. Promote the route/schemas to canonical OpenAPI, SQL tables to server_master.sql and private naming/sync exclusions to the contract docs. Keep server migration/runtime code out of this contract PR.
 3. Coordinate shared checks with #344: do not add new simulator dependencies to the planned real-Hub workflow. The active root rules still require simulator parity; before promotion, the Lead must resolve this shared-rule transition in #344 or explicitly provide the required interim simulator coverage. Do not weaken coverage or mark an unimplemented route as working.
-4. Run shared contract/schema tests and verify_invariants.py. Merge the approved contract PR, then branch the server work from staging containing it and #364, after the freeze and in Lead-approved queue order.
+4. Run shared contract/schema tests and verify_invariants.py. The co-lead checks tests/invariants and merges the consuming-team-approved contract. Then branch server work from staging containing the merged contract and #364, respecting the explicit post-defense hold on #370 and the server queue.
 5. Implement #368 with temporary databases and a real Hub. Verify role/locality, capture/redaction, restart/expiry/cap/overflow, graceful recording failure, paging during bursts/pruning/restore, display pause, UI offline states and native screenshots. No runtime implementation is present in this draft.
 
 ## Acceptance and remaining limits
 
 `test_contract.py` checks executable proposed SQL, allowlisted enum parity, strict payload bounds, private/unknown-field rejection, valid response examples and a paging fixture illustrating the >100-arrival contract. These validate a proposal, not a working backend. Run with `uv run --python 3.12 --with pyyaml --with jsonschema python -m unittest discover -s contracts/proposals/367 -p test_contract.py` from the repository root. Its development-only schema validator is supplied by uv, so no runtime or current CI dependency is added. The full existing shared test suite remains unchanged in behavior.
 
-The Lead decision, canonical promotion, #344 coordination, contract merge, server implementation and hardware validation remain outstanding. No production database is migrated and the running Hub GUI is unchanged.
+Consuming-team acceptance, canonical promotion, #344 coordination, contract merge, server implementation and hardware validation remain outstanding. The separate UI proposal #366 also has no recorded Lead decision. No production database is migrated and the running Hub GUI is unchanged.
 
 Pre-PR validation, 2026-11-21, isolated worktree based on staging `02e6bec5`:
 
