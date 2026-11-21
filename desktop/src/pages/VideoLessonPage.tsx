@@ -316,32 +316,13 @@ export default function VideoLessonPage({
 
   // Main video player view
   return (
-    <div className="video-lesson-page">
-      <div className="video-header">
-        <button
-          type="button"
-          className="icon-button back-button"
-          onClick={onBack}
-          aria-label={t.back}
-        >
-          <i className="ph ph-arrow-left" aria-hidden="true" />
-        </button>
-        <h1>{material.title}</h1>
-      </div>
-
-      {offline && !local && (
-        <p role="status" className="hub-status-banner banner-amber">
-          <i className="ph ph-wifi-slash" aria-hidden="true" />
-          {t.video_offline_not_saved}
-        </p>
-      )}
-
-      <div className="video-container">
-        <VideoPlayer
-          src={videoSrc}
-          title={material.title}
-        />
-        
+    <div className="video-lesson-page material-detail-page">
+      <button type="button" className="control text-button material-back" onClick={onBack}><i className="ph ph-arrow-left" aria-hidden="true" />{t.back}</button>
+      <div className="material-detail-layout">
+        <article className="material-detail-content"><header className="material-detail-heading"><span className="class-type-icon"><i className="ph ph-play-circle" aria-hidden="true" /></span><div><h1>{material.title}</h1><p>{t.class_video}</p></div></header>
+          <div className="video-container"><VideoPlayer src={videoSrc} title={material.title} /></div>
+        </article>
+        <aside className="material-detail-actions" aria-label={t.class_home_study}><h2>{t.class_home_study}</h2><p className="material-save-help">{t.class_save_help}</p>
         {/* Download error banner - show when download fails */}
         {downloadError && (
           <div className="hub-status-banner banner-amber video-download-banner">
@@ -388,6 +369,7 @@ export default function VideoLessonPage({
             {t.video_download_complete}
           </div>
         )}
+        </aside>
       </div>
     </div>
   );
