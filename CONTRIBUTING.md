@@ -13,7 +13,7 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 | **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
 | **Lead Developer** | all | 1 | Reviews every PR, owns `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` |
 
-You only edit your own team's folder. Shared paths are Lead-owned (see `.github/CODEOWNERS`).
+You only edit your own team's folder. `design-system/`, `rules/`, `scripts/` and `.github/` are Lead-owned; `contracts/` changes go in their own `contract-change` PR written by any team member and reviewed by the teams it affects (see `.github/CODEOWNERS` and `rules/team-workflow-and-prs.md` section 1).
 
 ---
 
@@ -113,7 +113,7 @@ git rebase origin/staging          # or: git merge origin/staging if rebasing wo
 git add <fixed-file>
 git rebase --continue              # (merge users: git commit)
 ```
-Re-run your tests after resolving. If the conflict is in `contracts/`, `rules/` or another Lead-owned file, **stop and tell the Lead**: you should not be editing those files in a feature branch. If you pushed before rebasing, update the branch with `git push --force-with-lease` (only on your own branch, never on `staging` or `main`).
+Re-run your tests after resolving. If the conflict is in `contracts/`, `rules/` or another shared file, **stop**: you should not be editing those files in a feature branch (a contract change goes in its own `contract-change` PR; `rules/` and the other Lead-owned paths: tell the Lead). If you pushed before rebasing, update the branch with `git push --force-with-lease` (only on your own branch, never on `staging` or `main`).
 
 ### Step 5: Check your work before you push
 Run these from the repository root and your team folder; all must pass:
@@ -219,7 +219,7 @@ Closes #6
 * Opening the PR against `main` instead of `staging`.
 * Leaving the template sections empty or deleting them.
 * No `Closes #n`, or one PR that closes several unrelated issues.
-* Touching another team's folder or a Lead-owned path (`contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`).
+* Touching another team's folder or `contracts/` or a Lead-owned path (`rules/`, `design-system/`, `scripts/`, `.github/`) inside a feature PR.
 * No evidence, or evidence from the happy path only (nothing offline, nothing for the error case).
 * Forgetting the Filipino strings, or hardcoding a hex color or English text in a screen.
 * Committing build output, `node_modules`, `.env` files or large model files.
