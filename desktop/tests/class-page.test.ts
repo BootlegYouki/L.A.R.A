@@ -67,5 +67,14 @@ it('puts tabs before the Stream banner and uses expandable Classwork material ro
   await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   expect(renderer.root.findAllByProps({className:'class-banner'})).toHaveLength(0);
   expect(renderer.root.findByType('details').findByType('summary').props.className).toBe('material-row');
-  expect(renderer.root.findByProps({className:'control text-button material-open'}).children).toContain('Open handout');
+  expect(renderer.root.findByProps({className:'control text-button material-open'}).props['aria-label']).toBe('Open handout: Food chain');
+});
+
+it('keeps extracted paragraphs separate without blank-line spacer text', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockReset().mockResolvedValue({announcements:[],materials:[{id:'handout',title:'Food chain',file_type:'DOCUMENT',saved:false,chunks:[{heading:null,text:'First paragraph.\n\nSecond paragraph.'}]}]});
+  await act(async () => {renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}));});
+  await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  await act(async () => renderer.root.findByProps({className:'control text-button material-open'}).props.onClick());
+  expect(renderer.root.findAllByProps({className:'lesson-text'}).map(node => node.children.join(''))).toEqual(['First paragraph.','Second paragraph.']);
 });

@@ -12,7 +12,7 @@ The references include features outside the implemented scope. The UI does not i
 
 ## Checks
 
-- Regressions failed before implementation for tabs-before-banner, disclosure Classwork and the opened-handout action card. **112 Desktop tests in 22 files**, lint and production build pass.
+- Regressions failed before implementation for tabs-before-banner, disclosure Classwork and the opened-handout action card. **113 Desktop tests in 22 files**, lint and production build pass.
 - Offline invariant scanner and **73 shared Python tests** pass. The shared suite still uses the historical simulator pending #344; native integration below used the actual Rust Hub.
 - Windows native app used the changed frontend and unchanged native source; no `desktop/src-tauri` differences from the reused binary. Actual six-digit Rust Hub with isolated synthetic accounts/class/PDF/video, HTTP 8080 and WebSocket 8081.
 - Learner real-Hub Stream, quick Classwork navigation/focus, expanded preview, open cached handout, Save for Home, video playback/download and Back: pass. Teacher People/roster access remains available.
@@ -34,3 +34,5 @@ Additional evidence: [teacher Stream](screenshots/375-teacher-stream.png), [smal
 ## Limits
 
 No new installer/upgrade, Linux/macOS, physical second-PC/WAN, screen-reader audit or repeated interrupted-download stress test is claimed. Secure credential persistence was unavailable in this runtime; cached reading and saved video playback were verified separately. The existing prerelease installer predates this redesign.
+
+Compact follow-up: extracted blank-line-separated paragraphs render as separate semantic paragraphs with 8px spacing and 1.5 line height; text content is preserved. Section/header spacing is tighter. Existing material-opening actions render as compact 336px attachment cards with real title/type and a type icon (no fabricated preview image). Accessible names include the action and material title. Native keyboard opening, handout save, video routing and small-window checks pass. [Attachment cards](screenshots/375-attachment-card.png), [compact handout](screenshots/375-compact-handout.png).
