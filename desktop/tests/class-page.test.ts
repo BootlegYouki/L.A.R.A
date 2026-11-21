@@ -2,7 +2,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { createElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
-vi.mock('@tauri-apps/api/core', () => ({ invoke }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (command:string,...args:unknown[]) => command==='list_uploads'?Promise.resolve([]):invoke(command,...args) }));
 import ClassPage from '../src/pages/ClassPage';
 import type { CachedAccount } from '../src/services/auth';
 const room = {id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_id:'teacher'};
@@ -73,8 +73,9 @@ it('puts tabs before the Stream banner and uses expandable Classwork material ro
   invoke.mockReset().mockResolvedValue({announcements:[{id:'post',title:'Read the lesson',content:'Bring your notes.',created_at:1}],materials:[{id:'handout',title:'Food chain',file_type:'DOCUMENT',saved:false,chunks:[{heading:null,text:'Cached lesson text'}]}]});
   await act(async () => {renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}));});
   const page=renderer.root.findByProps({className:'class-page'});
-  const first = page.children[0];
-  expect(typeof first === 'string' ? null : first.props.role).toBe('tablist');
+  expect(page.findByProps({role:'tablist'})).toBeTruthy();
+  const order=JSON.stringify(renderer.toJSON());
+  expect(order.indexOf('"role":"tablist"')).toBeLessThan(order.indexOf('"className":"class-banner"'));
   expect(renderer.root.findAllByProps({className:'class-banner'})).toHaveLength(1);
   await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   expect(renderer.root.findAllByProps({className:'class-banner'})).toHaveLength(0);
@@ -121,4 +122,16 @@ it('filters cached work by its real topic while retaining unassigned work in All
   await act(async()=>renderer.root.findByProps({id:'class-topic-filter'}).props.onChange({target:{value:'t'}}));
   expect(JSON.stringify(renderer.toJSON())).toContain('In unit');
   expect(JSON.stringify(renderer.toJSON())).not.toContain('Outside unit');
+});
+it('keeps assignment attachments under their parent instead of duplicating them as standalone work',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ invoke.mockResolvedValue({announcements:[],materials:[{id:'file',title:'Attached sheet',assignment_id:'assignment',file_type:'DOCUMENT',saved:false,chunks:[]},{id:'standalone',title:'Independent lesson',file_type:'DOCUMENT',saved:false,chunks:[]}],assignments:[{id:'assignment',title:'Assignment',instructions:'Read',due_date:1,max_points:100,allow_late:true}],topics:[],quizzes:[]});
+ await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:false,onVideo:vi.fn()}));});
+ await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+ const list=renderer.root.findByProps({className:'material-list'});
+ expect(JSON.stringify(list.findAllByType('strong').map(node=>node.children))).not.toContain('Attached sheet');
+ expect(JSON.stringify(list.findAllByType('strong').map(node=>node.children))).toContain('Independent lesson');
+ const assignment=renderer.root.findByProps({className:'material-item assignment-preview'});
+ expect(assignment.findByProps({'aria-label':'Open handout: Attached sheet'})).toBeTruthy();
+ expect(assignment.findAllByType('button').some(node=>node.children.includes('Add attachment'))).toBe(true);
 });

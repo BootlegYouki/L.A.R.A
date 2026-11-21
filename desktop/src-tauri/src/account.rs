@@ -69,8 +69,8 @@ pub struct CachedAccount {
     pub rosters: HashMap<String, Vec<RosterEntry>>,
 }
 #[derive(Deserialize, Serialize)]
-struct Profile {
-    user: User,
+pub(crate) struct Profile {
+    pub(crate) user: User,
     expires_at: i64,
     credential_id: String,
 }
@@ -227,7 +227,7 @@ pub(crate) async fn put(
     sqlx::query("INSERT INTO sync_state(key,value,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(key).bind(value).bind(now()).execute(db).await.map_err(|_|ERROR)?;
     Ok(())
 }
-async fn profile(db: &mut SqliteConnection, id: &str) -> Result<Profile, &'static str> {
+pub(crate) async fn profile(db: &mut SqliteConnection, id: &str) -> Result<Profile, &'static str> {
     let p: Profile = serde_json::from_str(&state(db, "account_profile").await?.ok_or(ERROR)?)
         .map_err(|_| ERROR)?;
     validate_user(&p.user)?;
@@ -726,17 +726,25 @@ pub async fn account_token(
     hub: HubInfo,
     user_id: String,
 ) -> Result<Option<String>, &'static str> {
-    validate_hub(&hub)?;
+    secure_token(&app, &accounts, &hub, &user_id).await
+}
+pub(crate) async fn secure_token(
+    app: &tauri::AppHandle,
+    accounts: &Accounts,
+    hub: &HubInfo,
+    user_id: &str,
+) -> Result<Option<String>, &'static str> {
+    validate_hub(hub)?;
     if !uuid(&user_id) {
         return Err(INVALID);
     }
     let user_id = user_id.to_ascii_lowercase();
     let memory = accounts.0.lock().await;
-    let root = root(&app)?;
-    if active(&root, &hub)?.as_deref() != Some(&user_id) {
+    let root = root(app)?;
+    if active(&root, hub)?.as_deref() != Some(&user_id) {
         return Ok(None);
     }
-    let key = context(&hub, &user_id);
+    let key = context(hub, &user_id);
     let mut db = database(&root, &key).await?;
     let p = profile(&mut db, &user_id).await?;
     Ok(token_for(&p, &memory, &key))
@@ -766,7 +774,7 @@ pub async fn read_class_content(
         .ok_or(INVALID)?;
     let posts = sqlx::query("SELECT id,title,content,created_at FROM announcements WHERE classroom_id=? ORDER BY created_at DESC,id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
-    let materials = sqlx::query("SELECT id,title,file_type,topic_id,local_file_path,updated_at FROM materials WHERE classroom_id=? ORDER BY created_at DESC,id")
+    let materials = sqlx::query("SELECT id,title,file_type,topic_id,assignment_id,announcement_id,local_file_path,updated_at FROM materials WHERE classroom_id=? ORDER BY created_at DESC,id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
     let chunks = sqlx::query("SELECT c.material_id,c.heading,c.text FROM material_chunks c JOIN materials m ON m.id=c.material_id WHERE m.classroom_id=? ORDER BY c.material_id,c.order_index,c.id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
@@ -794,7 +802,7 @@ pub async fn read_class_content(
                 .is_some_and(|revision| revision == row.get::<i64,_>("updated_at").to_string())
         };
         lessons.push(serde_json::json!({
-            "id": id, "title": row.get::<String,_>("title"), "file_type": kind, "saved": saved, "topic_id": row.get::<Option<String>,_>("topic_id"),
+            "id": id, "title": row.get::<String,_>("title"), "file_type": kind, "saved": saved, "topic_id": row.get::<Option<String>,_>("topic_id"), "assignment_id": row.get::<Option<String>,_>("assignment_id"), "announcement_id": row.get::<Option<String>,_>("announcement_id"),
             "chunks": chunks.iter().filter(|chunk| chunk.get::<String,_>("material_id") == id)
                 .map(|chunk| serde_json::json!({"heading": chunk.get::<Option<String>,_>("heading"), "text": chunk.get::<String,_>("text")})).collect::<Vec<_>>()
         }));
@@ -805,8 +813,8 @@ pub async fn read_class_content(
             "content": row.get::<String,_>("content"), "created_at": row.get::<i64,_>("created_at")
         })).collect::<Vec<_>>(),
         "materials": lessons,
-        "assignments": sqlx::query("SELECT id,title,instructions,due_date,max_points,topic_id FROM assignments WHERE classroom_id=? ORDER BY due_date,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"title":row.get::<String,_>("title"),"instructions":row.get::<Option<String>,_>("instructions"),"due_date":row.get::<i64,_>("due_date"),"max_points":row.get::<i64,_>("max_points"),"topic_id":row.get::<Option<String>,_>("topic_id")})).collect::<Vec<_>>(),
-        "topics": sqlx::query("SELECT id,name FROM topics WHERE classroom_id=? ORDER BY order_index,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"name":row.get::<String,_>("name")})).collect::<Vec<_>>(),
+        "assignments": sqlx::query("SELECT id,title,instructions,due_date,max_points,allow_late,topic_id FROM assignments WHERE classroom_id=? ORDER BY due_date,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"title":row.get::<String,_>("title"),"instructions":row.get::<Option<String>,_>("instructions"),"due_date":row.get::<i64,_>("due_date"),"max_points":row.get::<i64,_>("max_points"),"allow_late":row.get::<i64,_>("allow_late") != 0,"topic_id":row.get::<Option<String>,_>("topic_id")})).collect::<Vec<_>>(),
+        "topics": sqlx::query("SELECT id,name,order_index FROM topics WHERE classroom_id=? ORDER BY order_index,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"name":row.get::<String,_>("name"),"order_index":row.get::<i64,_>("order_index")})).collect::<Vec<_>>(),
         "quizzes": sqlx::query("SELECT id,title,topic_id FROM quizzes WHERE classroom_id=? ORDER BY created_at DESC,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"title":row.get::<String,_>("title"),"topic_id":row.get::<Option<String>,_>("topic_id")})).collect::<Vec<_>>()
     }))
 }

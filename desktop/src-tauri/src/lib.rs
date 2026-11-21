@@ -3,6 +3,7 @@ mod migrations;
 mod discovery;
 mod sync;
 mod video;
+mod uploads;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn run() {
@@ -10,6 +11,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .manage(discovery::Discovery::default())
         .manage(account::Accounts::default())
+        .manage(uploads::UploadTasks::default())
         .setup(|app| {
             discovery::start(app.handle().clone());
             Ok(())
@@ -34,7 +36,14 @@ pub fn run() {
             account::forget_account_session,
             video::get_material_by_id,
             video::download_video_for_offline,
-            video::check_partial_download
+            video::check_partial_download,
+            uploads::begin_upload,
+            uploads::append_upload,
+            uploads::finish_upload,
+            uploads::start_upload,
+            uploads::retry_upload,
+            uploads::list_uploads,
+            uploads::cancel_upload
         ])
         .plugin(
             tauri_plugin_sql::Builder::default()
@@ -109,6 +118,9 @@ mod permissions {
                     "/api/topics",
                     "/api/materials",
                     "/api/quizzes",
+                    "/api/assignments/11111111-1111-4111-8111-111111111111",
+                    "/api/materials/11111111-1111-4111-8111-111111111111",
+                    "/api/topics/11111111-1111-4111-8111-111111111111",
                 ] {
                     let url: tauri_plugin_http::reqwest::Url =
                         format!("http://{ip}:{port}{path}").parse().unwrap();
@@ -131,7 +143,7 @@ mod permissions {
             "http://8.8.8.8:8080/api/auth/logout",
             "http://192.168.1.2:8080/api/sync/pull/extra",
             "http://192.168.1.2:8080/api/sync/other",
-            "http://192.168.1.2:8080/api/topics/11111111-1111-4111-8111-111111111111",
+            "http://192.168.1.2:8080/api/topics/11111111-1111-4111-8111-111111111111/extra",
             "http://192.168.1.2:8080/api/materials/11111111-1111-4111-8111-111111111111/download",
             "http://8.8.8.8:8080/api/sync/push",
             "http://8.8.8.8:8080/api/auth/login",

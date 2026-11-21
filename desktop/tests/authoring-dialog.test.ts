@@ -9,7 +9,7 @@ import type { CachedAccount } from '../src/services/auth';
 it('keeps a live request signal after StrictMode effect replay',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);post.mockResolvedValue('created');
  const closed=vi.fn(),created=vi.fn();
- const account={} as CachedAccount;
+ const account={user:{id:'teacher'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
  let r!:ReturnType<typeof create>;
  await act(async()=>{r=create(createElement(StrictMode,null,createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:closed,onCreated:created})));});
  await act(async()=>r.root.findByProps({id:'post-title'}).props.onChange({target:{value:'Class news'}}));
