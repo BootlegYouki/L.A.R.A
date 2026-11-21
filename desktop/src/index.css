@@ -371,3 +371,8 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .material-detail-page { max-width: 1048px; padding: 0; }
 .material-back { align-self: flex-start; }
 @media (max-width: 1100px) { .material-detail-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.lesson-text-card { padding: 20px; border-radius: 12px; background: var(--color-lara-subtle); }
+.lesson-text-card > section { margin: 16px 0; }
+.lesson-text-card > section:first-child { margin-top: 0; }
+.lesson-text-card > section:last-child { margin-bottom: 0; }
