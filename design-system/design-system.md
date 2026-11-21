@@ -238,7 +238,7 @@ Screen layouts are in section 9. These are the parts they are built from.
 - **Class banner:** Dark Green, 240 high, radius 12, class name (36 Black), section (22 Bold, Light Green), a 120 px subject icon in a white 18% circle, a 40 px info button. No picture, no gradient.
 - **Class tabs:** 48 high, 14 ExtraBold, selected is Dark Green text with a 4 px Primary Green bar rounded on top, 1 px Border under the bar. Learners: Stream, Classwork, People. Teachers add Grades.
 - **Side card (Upcoming, Class code):** white, 1 px Border, radius 12, 16 padding, title 16 Black. The class code is shown large (22 Black, 1 px letter spacing) as `K7M-4QX` and only to teachers.
-- **New announcement (teacher):** a tonal button (Light Green, Dark Green text, 40 high pill) beside a text Repost button. It opens the announcement dialog (9.4). Learners do not post.
+- **New announcement:** a tonal button (Light Green, Dark Green text, 40 high pill) that opens the announcement dialog (9.4). Teachers also see a text Repost button.
 - **Stream post:** Surface Subtle fill, radius 12, no border. Avatar, name, date, kebab; 14 Bold body; one level of comments; a text Add comment button that opens a 40 high pill reply box. Comments show Saved or Queued for sync. New classwork appears as a 72 high one-line row with a 40 px type circle.
 - **Topic header and work row:** topic header is 64 high, Heading 2 (22 Black), item count, caret, 2 px Primary Green rule. A work row is at least 72 high with a 44 px type tile (radius 12): Light Green for homework, Light Blue for handouts and videos, Light Amber for quizzes. Title 16 ExtraBold, a 13 Bold meta line, then due date, status badge and Save for home (learner) or kebab (teacher). An opened row sits on Canvas.
 - **Person row (teacher):** at least 68 high, 40 px initials avatar, name (16 ExtraBold), status badge, Accept and Decline (small) for `PENDING_APPROVAL`.
@@ -437,7 +437,7 @@ The drawer is hidden below 760 px of width until the phone layouts are supplied 
  | banner: Dark Green, 240 high, name 36, section 22   [Customize]*|
  |                                  (subject icon)           (i) |
  +----------------+---------------------------------------------+
- | Class code *   | [New announcement] * [Repost] *              |   * teacher only
+ | Class code *   | [New announcement] [Repost] *                |   * teacher only
  | Upcoming       | row: quiz / material / assignment posted     |
  | View all       | post: avatar, name, date, text               |
  |                |       comments (one level) [Add comment]     |
@@ -449,7 +449,7 @@ The drawer is hidden below 760 px of width until the phone layouts are supplied 
 - **L.A.R.A.:**
   - **Banner:** Dark Green, 240 high, radius 12, class name 36 Black, section 22 Bold in Light Green, a 120 px subject icon in a white 18% circle at the right, a 40 px info button at the bottom right. No picture. Teachers get a white pill "Customize" at the top right.
   - **Left column, 220 wide:** teacher sees the **Class code** card first (title 16 Black with a kebab, the code `K7M-4QX` at 22 Black with 1 px letter spacing, a hint that learners must be approved). **Upcoming** card for everyone: the next due item for learners, "No work due soon" for a teacher with nothing, and a View all link. Both cards are white, 1 px Border, radius 12, 16 padding.
-  - **Teacher bar:** a tonal **New announcement** button (Light Green fill, Dark Green text, 40 high pill, pencil icon) and a text **Repost** button. Learners have no bar: they comment, they do not post.
+  - **Stream actions:** class teachers and active learners see a tonal **New announcement** button (Light Green fill, Dark Green text, 40 high pill, pencil icon). Teachers also see a text **Repost** button.
   - **New announcement dialog:** 640 wide, radius 24, `shadow-modal`, 24 padding, over a dimmed sheet. Title "Announcement" (24 Black), two neutral chips (the class and "All learners"), a text area "Announce something to your class", attach and link icon buttons, Cancel and Post. Post is disabled while the Hub is unreachable, with the hint "Waiting for the Hub. Posting needs the classroom network."
   - **Classwork rows:** 72 high, Surface Subtle, radius 12, no border. A 40 px circle (Amber for a quiz, Light Blue for a material, Light Green for an assignment), "Ms. Reyes posted a new quiz: Quiz #2" (14 ExtraBold), the date under it, a 40 px kebab. The row opens the work (next slice).
   - **Announcement card:** Surface Subtle, radius 12, no border. Header: 40 px initials avatar, name, date, kebab. Body 14 Bold. A rule, then comments (one level, 12 gap, a 32 px avatar, first name only), a text **Add comment** button that opens a pill reply box (40 high) with a Send icon button.
@@ -620,7 +620,7 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 | To-do (learner) | Three tabs (Assigned, Missing, Done), a class filter select, an empty state "Nothing on your to-do list right now / Check back later for new assignments" |
 | People | Teachers and Students sections (28 heading, 2 px rule) each with an Invite icon button. Students: a select-all checkbox, an Actions button, a sort button, 61 high rows with a checkbox, 32 px avatar, name and a kebab. Empty: "Add students to this class" with Invite students |
 | Grades (teacher) | A table: a "Sort by last name" select over the learner column, one column per assignment (due date line, title link, "out of 100", a header menu), a "Class average" row and one row per learner with "__/100" cells. Empty: "This is where you'll view and manage grades". A first-visit dialog explains draft grades for missing work |
-| Class settings | Full-window page of cards: Class Details (name, description, section, levels, subject, room), General (Invite codes with an invite link and class code, Stream: "Students can post and comment" or stricter, Classwork on the Stream, Show deleted items), Grading (draft grade for missing work, overall grade calculation, grade categories). **L.A.R.A. departs:** no Meet link, no categories, and learners cannot post to the Stream |
+| Class settings | Full-window page of cards: Class Details (name, description, section, levels, subject, room), General (Invite codes with an invite link and class code, Stream: "Students can post and comment" or stricter, Classwork on the Stream, Show deleted items), Grading (draft grade for missing work, overall grade calculation, grade categories). **L.A.R.A. departs:** no Meet link, no categories, and comment moderation is per post |
 
 ### 9.16 Decisions
 
@@ -628,7 +628,7 @@ Read on 2026-10-11 from a teacher and a learner account at 1440 px, for the scre
 
 - **Learner People tab:** the tab shows for both roles. Learners see the Teachers section only. The learner list with Accept and Decline is the teacher's view (9.6).
 - **No Quizzes tab (desktop; the phone layouts follow when the Lead supplies them):** quizzes are reached from the Stream rows and from Classwork (Create, Quiz assignment), as in Classroom. The class tabs are Stream, Classwork, People and, for teachers, Grades (9.2).
-- **Teacher posting while the Hub is unreachable:** Post is disabled with the hint "Waiting for the Hub. Posting needs the classroom network." Comments queue as `QUEUED_FOR_SYNC` and show a "Queued for sync" badge; announcements do not queue (9.4).
+- **Posting while the Hub is unreachable:** Post is disabled with the hint "Waiting for the Hub. Posting needs the classroom network." The draft and its attachments stay on the device until the author posts. Comments queue as `QUEUED_FOR_SYNC` and show a "Queued for sync" badge (9.4).
 - **Who may post by default:** the teacher posts, learners comment only (no learner posts to the stream), as stated in the PRD scope.
 
 **Left to the developers.** The prototype does not answer these, and the Lead does not need to settle them first. The team that builds the screen decides, follows the fixed rules, and reports the choice in the PR (or opens a Design Proposal if it is wider than one screen):
