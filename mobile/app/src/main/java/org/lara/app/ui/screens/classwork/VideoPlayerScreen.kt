@@ -114,12 +114,11 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
                 LaunchedEffect(state.source) {
                     val path = (state.source as? VideoSource.Local)?.path
                     frame = if (path == null) null else withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        // MediaMetadataRetriever is AutoCloseable only from API 29; minSdk is 26.
-                        val retriever = android.media.MediaMetadataRetriever()
-                        try { runCatching { retriever.setDataSource(path); retriever.getFrameAtTime(0) }.getOrNull() }
-                        finally { retriever.release() }
+                        readVideoThumbnail(path)
                     }
                 }
+                val thumbnail = frame
+                DisposableEffect(thumbnail) { onDispose { thumbnail?.recycle() } }
                 if (state.source != null) Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                 AttachmentThumb(frame, R.drawable.ic_play, play = true) { open = true }
                 if (state.source != null) Row(Modifier.fillMaxWidth().clickable { open = true }.heightIn(min = 40.dp),
@@ -347,4 +346,19 @@ private fun Context.activity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.activity()
     else -> null
+}
+
+internal fun readVideoThumbnail(path: String): android.graphics.Bitmap? {
+    if (android.os.Build.VERSION.SDK_INT < 27) return null
+    val retriever = android.media.MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(path)
+        retriever.getScaledFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 512, 512)
+    } catch (_: RuntimeException) {
+        null
+    } catch (_: java.io.IOException) {
+        null
+    } finally {
+        runCatching { retriever.release() }
+    }
 }
