@@ -318,9 +318,10 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .classwork-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px 24px; }
 .classwork-heading h1 { font-size: 1.5rem; font-weight: 800; }
 .classwork-heading p { margin-top: 4px; color: var(--color-lara-ink-2); font-size: .875rem; overflow-wrap: anywhere; }
-.material-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-lara-border); }
+.material-list { display: grid; gap: 16px; list-style: none; margin: 0; padding: 0; }
 .material-item { border-bottom: 1px solid var(--color-lara-border); }
 .material-item[open] { border-radius: 12px; background: var(--color-lara-subtle); }
+.material-item[open] > .material-row { border-bottom: 1px solid var(--color-lara-border); margin-bottom: 16px; }
 .material-row { min-height: 80px; box-sizing: border-box; display: flex; align-items: center; gap: 16px; padding: 16px; text-align: left; list-style: none; cursor: pointer; }
 .material-row::-webkit-details-marker { display: none; }
 .material-row:hover { background: var(--color-lara-subtle); }
@@ -329,9 +330,14 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .material-saved { padding: 4px 10px; border-radius: 9999px; background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); font-size: .75rem; font-weight: 800; }
 .material-caret { flex-shrink: 0; color: var(--color-lara-ink-2); font-size: 20px; }
 .material-item[open] .material-caret { transform: rotate(180deg); }
-.material-preview { padding: 0 24px 20px 76px; }
+.material-preview { padding: 0 24px 24px 76px; }
 .material-excerpt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; font-size: .875rem; }
-.material-preview .material-open { margin-top: 16px; padding: 0; }
+.material-preview .material-open { width: 336px; max-width: 100%; min-height: 88px; margin-top: 12px; padding: 0; gap: 0; justify-content: flex-start; border: 1px solid var(--color-lara-border); border-radius: 12px; background: white; overflow: hidden; text-align: left; }
+.attachment-file-info { min-width: 0; flex: 1; padding: 12px 16px; }
+.attachment-file-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: underline; font-size: .9375rem; font-weight: 800; }
+.attachment-file-info small { display: block; margin-top: 4px; font-size: .8125rem; font-weight: 400; color: var(--color-lara-ink-2); }
+.attachment-file-art { display: flex; align-items: center; justify-content: center; align-self: stretch; flex: 0 0 80px; border-left: 1px solid var(--color-lara-border); background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); }
+.attachment-file-art i { font-size: 32px; }
 .lesson-reader { max-width: 1048px; margin: 0 auto; }
 .lesson-reader h1 { margin: 16px 0; font-size: 1.75rem; font-weight: 900; overflow-wrap: anywhere; }
 .lesson-reader > section { margin: 24px 0; }
@@ -350,12 +356,13 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 
 .material-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; align-items: start; margin-top: 20px; }
 .material-detail-content { min-width: 0; }
-.material-detail-heading { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--color-lara-border); }
+.material-detail-heading { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--color-lara-border); }
 .material-detail-heading > div { min-width: 0; }
 .material-detail-heading h1 { margin: 0 0 8px; font-size: 2rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
 .material-detail-heading p { color: var(--color-lara-ink-2); font-size: .875rem; overflow-wrap: anywhere; }
-.material-detail-content > section { margin: 24px 0; }
-.material-detail-content > section h2 { margin-bottom: 8px; font-size: 1.125rem; font-weight: 800; }
+.material-detail-content > section { margin: 16px 0; }
+.material-detail-content .lesson-text { margin: 8px 0; font-size: .9375rem; line-height: 1.5; }
+.material-detail-content > section h2 { margin-bottom: 4px; font-size: 1.125rem; font-weight: 800; }
 .material-detail-actions { padding: 20px; border-radius: 12px; background: var(--color-lara-subtle); overflow-wrap: anywhere; }
 .material-detail-actions h2 { margin-bottom: 12px; font-size: 1.125rem; font-weight: 800; }
 .material-save-help { margin-bottom: 16px; font-size: .875rem; line-height: 1.6; color: var(--color-lara-ink-2); }
