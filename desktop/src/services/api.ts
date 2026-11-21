@@ -8,18 +8,21 @@ export class ApiError extends Error {
 
 type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
   | '/api/announcements' | '/api/assignments' | '/api/topics' | '/api/materials' | '/api/quizzes'
+  | `/api/assignments/${string}` | `/api/materials/${string}` | `/api/topics/${string}`
   | `/api/classrooms/${string}` | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
 export interface ClassroomChange { name?: string; section?: string; archived?: boolean }
+export interface ClassworkMutationBody { name?: string; order_index?: number; title?: string; instructions?: string; max_points?: number; due_date?: number; allow_late?: boolean; topic_id?: string | null }
 export type AuthoringBody = {classroom_id: string; title: string; content: string; allow_comments?: boolean}
   | {classroom_id: string; title: string; instructions?: string; max_points: number; due_date: number; allow_late?: boolean; topic_id?: string}
   | {classroom_id: string; name: string}
   | {classroom_id: string; title: string; instructions?: string; time_limit_minutes: number; shuffle_questions?: boolean; release_scores_immediately?: boolean; topic_id?: string | null; questions: {id: string; order_index: number; question_text: string; question_type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION'; options: string[]; points: number; image_url?: string; correct_answer: string; synonyms?: string[]}[]};
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush | AuthoringBody; form?: FormData; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE';
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush | ClassworkMutationBody | AuthoringBody; form?: FormData; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE';
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
   const classroomId = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+  const itemRoute=new RegExp('^/api/(assignments|materials|topics)/'+classroomId+'$','i');
   const classRoute = new RegExp('^/api/classrooms/' + classroomId + '$', 'i');
   const teacherRoute = new RegExp('^/api/classrooms/' + classroomId + '/teachers/' + classroomId + '$', 'i');
   const standardRoute = new RegExp('^/api/classrooms/' + classroomId + '/(roster|approve|reject|remove|teachers)$', 'i');
@@ -27,8 +30,8 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   const allowed = options.form ? path === '/api/materials' && !options.body && !options.method
     : path === '/api/materials' ? false
     : createRoute ? !!options.body && !options.method
-    : options.method === 'PATCH' ? classRoute.test(path)
-    : options.method === 'DELETE' ? teacherRoute.test(path)
+    : options.method === 'PATCH' ? classRoute.test(path)||itemRoute.test(path)
+    : options.method === 'DELETE' ? teacherRoute.test(path)||itemRoute.test(path)
     : standardRoute.test(path) || ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/classrooms',
       '/api/classrooms/join', '/api/sync/pull', '/api/sync/push'].includes(path);
   if (!allowed) throw new ApiError('invalid_fields');

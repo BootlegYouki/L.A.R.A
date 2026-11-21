@@ -413,3 +413,19 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .class-topic-filter { max-width: 360px; margin-bottom: 24px; }
 .class-create-menu button { display: flex; align-items: center; gap: 12px; }
 .class-create-menu button i { font-size: 1.25rem; }
+.classwork-item-shell { position: relative; }
+.classwork-actions { position: absolute; top: 8px; right: 8px; z-index: 2; }
+.classwork-actions > summary { list-style: none; cursor: pointer; }
+.classwork-actions > summary::-webkit-details-marker { display: none; }
+.classwork-actions > div { position: absolute; right: 0; min-width: 160px; padding: 8px; border: 1px solid var(--color-lara-border); border-radius: 12px; background: white; box-shadow: var(--shadow-card); }
+.classwork-actions button { display: block; width: 100%; min-height: 40px; padding: 8px 16px; border: 0; border-radius: 8px; text-align: left; background: transparent; }
+.classwork-actions button:hover:not(:disabled) { background: var(--color-lara-subtle); }
+.classwork-actions + .material-item > .material-row { padding-right: 80px; }
+.attachment-entry { position: relative; display: flex; align-items: center; gap: 8px; max-width: 100%; }
+.attachment-entry > .classwork-actions, .topic-actions > .classwork-actions { position: relative; top: auto; right: auto; flex-shrink: 0; }
+.attachment-entry .material-open { min-width: 0; }
+.topic-actions { display: flex; justify-content: flex-end; }
+section[aria-labelledby="upload-jobs-title"] { margin: 16px 0; padding: 16px; border: 1px solid var(--color-lara-border); border-radius: 12px; background: var(--color-lara-subtle); }
+section[aria-labelledby="upload-jobs-title"] h2 { font-size: 1rem; font-weight: 800; margin-bottom: 8px; }
+section[aria-labelledby="upload-jobs-title"] li { padding: 8px 0; overflow-wrap: anywhere; }
+section[aria-labelledby="upload-jobs-title"] progress { display: block; width: min(100%, 360px); margin: 8px 0; accent-color: var(--color-lara-primary-dark); }
