@@ -59,7 +59,8 @@ button:disabled { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 @media (max-width: 759px) {
   .shell-body, .drawer-rail .shell-body { grid-template-columns: minmax(0, 1fr); }
-  .drawer, .menu-button { display: none; }
+  .drawer { position: absolute; top: 64px; left: 0; z-index: 2; display: block; width: min(260px, 100%); min-height: calc(100vh - 64px); box-sizing: border-box; border-right: 1px solid var(--color-lara-border); background: var(--color-lara-canvas); }
+  .drawer-rail .drawer { display: none; }
   .hub-pill { padding: 0 10px; }
   .empty-state { flex-direction: column; text-align: center; padding: 24px; gap: 20px; }
   .top-bar { padding: 0 8px; }
@@ -95,7 +96,13 @@ button:disabled { cursor: default; }
 /* Connection Page */
 .connection-page { max-width: 800px; margin: 0 auto; }
 
-/* Account screens use the existing desktop shell and bundled design tokens. */
+/* Authentication uses the same bundled tokens without the signed-in shell. */
+.auth-shell { min-height: 100vh; background: white; }
+.auth-shell .shell-body { display: block; min-height: 100vh; }
+.auth-shell .content-sheet { border: 0; border-radius: 0; }
+.auth-shell .content-wrap { max-width: none; padding: 16px; }
+.startup-connection { max-width: 480px; margin: 32px auto; }
+.startup-connection .discovery-panel { margin: 0; padding: 32px; }
 .auth-panel { width: 100%; max-width: 480px; box-sizing: border-box; margin: 32px auto; padding: 32px; border: 1px solid var(--color-lara-border); border-radius: 16px; background: white; }
 .auth-heading { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
 .auth-heading .empty-art { width: 64px; height: 64px; font-size: 2rem; }
@@ -126,13 +133,12 @@ button:disabled { cursor: default; }
 .drawer-class-label small { font-size: 0.75rem; font-weight: 700; }
 .drawer-rail .drawer-classes { display: none; }
 .refresh-status { color: var(--color-lara-ink-2); font-size: 0.875rem; margin-top: 16px; }
-@media (max-width: 759px) { .auth-panel { padding: 20px; } .auth-heading { align-items: flex-start; } }
+@media (max-width: 759px) { .auth-panel, .startup-connection .discovery-panel { padding: 20px; } .auth-heading { align-items: flex-start; } }
 
 .class-banner { min-height: 240px; padding: 32px; margin: 16px 0; border-radius: 12px; background: var(--color-lara-primary-dark); color: white; overflow-wrap: anywhere; }
 .class-banner h1 { font-size: 2.25rem; font-weight: 900; }
 .class-banner p { font-size: 1.375rem; font-weight: 700; color: var(--color-lara-primary-light); }
 .connection-fieldset { margin: 0; padding: 0; min-width: 0; border: 0; }
-.hub-connection-details summary { min-height: 40px; padding: 8px 0; cursor: pointer; }
 
 button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara-ink-2); background: var(--color-lara-subtle); opacity: 0.65; cursor: default; box-shadow: none; }
 .join-scrim { position: fixed; inset: 0; z-index: 10; background: color-mix(in srgb, var(--color-lara-ink) 50%, transparent); }
