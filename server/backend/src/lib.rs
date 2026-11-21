@@ -27,13 +27,14 @@ use tokio::task::JoinHandle;
 use auth::limiter::LoginLimiter;
 use auth::pin::PinHasher;
 use clock::{Clock, SystemClock};
-use services::bandwidth::BandwidthLimiter;
 pub use config::HubConfig;
+use services::bandwidth::BandwidthLimiter;
 use storage::Storage;
 use websocket::broker::Broker;
 
 #[derive(Clone)]
 pub struct AppState {
+    pub activity: Arc<services::activity::Recorder>,
     pub db: SqlitePool,
     pub broker: Arc<Broker>,
     /// argon2id with a cap on concurrent hashes (`auth::pin`).
@@ -102,6 +103,7 @@ impl HubHandle {
         for task in self.tasks {
             let _ = task.await;
         }
+        self.state.activity.shutdown().await;
         self.state.db.close().await;
     }
 }
@@ -115,13 +117,16 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let db = db::connect(&config.data_dir).await?;
     db::migrate(&db).await?;
     let meta = db::load_hub_meta(&db).await?;
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let activity = services::activity::Recorder::start(db.clone(), Arc::clone(&clock)).await;
 
     let state = AppState {
+        activity,
         db,
         broker: Arc::default(),
         pins: Arc::default(),
         login_limiter: Arc::default(),
-        clock: Arc::new(SystemClock),
+        clock,
         hub_id: meta.hub_id.into(),
         sync_epoch: meta.sync_epoch,
         releases_dir: Arc::from(config.data_dir.join("releases").as_path()),
@@ -131,15 +136,45 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     };
     // Before the listeners open, so no request finds the accounts missing.
     if config.test_seed {
-        db::seed::test_accounts(&state.db, &state.pins, state.clock.now_ms()).await?;
+        if let Err(error) = db::seed::test_accounts(&state.db, &state.pins, state.clock.now_ms()).await {
+            state.activity.shutdown().await;
+            return Err(error);
+        }
     }
 
-    let (http, http_addr) = bind(config.http_port).await?;
-    let (ws, ws_addr) = bind(config.ws_port).await?;
+    let (http, http_addr) = match bind(config.http_port).await {
+        Ok(bound) => bound,
+        Err(error) => {
+            state.activity.record(
+                services::activity::Event::new(
+                    services::activity::Code::ServiceUnavailable,
+                    services::activity::Service::Http,
+                )
+                .reason(services::activity::Reason::PortInUse),
+            );
+            state.activity.shutdown().await;
+            return Err(error);
+        }
+    };
+    let (ws, ws_addr) = match bind(config.ws_port).await {
+        Ok(bound) => bound,
+        Err(error) => {
+            state.activity.record(
+                services::activity::Event::new(
+                    services::activity::Code::ServiceUnavailable,
+                    services::activity::Service::Websocket,
+                )
+                .reason(services::activity::Reason::PortInUse),
+            );
+            state.activity.shutdown().await;
+            return Err(error);
+        }
+    };
     let (shutdown, stop) = watch::channel(false);
 
     let router = routes::router(state.clone());
     let mut http_stop = stop.clone();
+    let http_activity = Arc::clone(&state.activity);
     let http_task = tokio::spawn(async move {
         // Connect info lets admin setup and admin login (step 2.0) tell the Hub PC from the network.
         let served = axum::serve(http, router.into_make_service_with_connect_info::<SocketAddr>())
@@ -149,6 +184,13 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
             .await;
         if let Err(e) = served {
             tracing::error!(error = %e, "HTTP listener stopped");
+            http_activity.record(
+                services::activity::Event::new(
+                    services::activity::Code::ServiceUnavailable,
+                    services::activity::Service::Http,
+                )
+                .reason(services::activity::Reason::InternalFailure),
+            );
         }
     });
     let ws_task = tokio::spawn(websocket::run(ws, state.clone(), stop.clone()));
@@ -161,18 +203,23 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
         http_port: http_addr.port(),
         ws_port: ws_addr.port(),
     };
-    let beacon_task = tokio::spawn(discovery::udp::run(beacon_info, stop));
+    let beacon_task = tokio::spawn(discovery::udp::run(beacon_info, stop, Arc::clone(&state.activity)));
     let mdns = discovery::mdns::start(&config.hub_name, http_addr.port(), discovery::lan_ip());
+    if mdns.is_none() {
+        state.activity.record(
+            services::activity::Event::new(
+                services::activity::Code::ConnectionProblem,
+                services::activity::Service::Discovery,
+            )
+            .reason(services::activity::Reason::NetworkUnavailable),
+        );
+    }
 
     tracing::info!(%http_addr, %ws_addr, "Hub listening");
-    Ok(HubHandle {
-        state,
-        http_addr,
-        ws_addr,
-        shutdown,
-        tasks: vec![http_task, ws_task, beacon_task],
-        _mdns: mdns,
-    })
+    state
+        .activity
+        .record(services::activity::Event::new(services::activity::Code::HubStarted, services::activity::Service::Hub));
+    Ok(HubHandle { state, http_addr, ws_addr, shutdown, tasks: vec![http_task, ws_task, beacon_task], _mdns: mdns })
 }
 
 async fn bind(port: u16) -> Result<(TcpListener, SocketAddr), StartError> {

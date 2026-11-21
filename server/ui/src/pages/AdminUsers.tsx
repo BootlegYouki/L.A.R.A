@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { HubError, request, setupCompleted, type AuthSession, type User } from '../admin';
 import { useStrings } from '../i18n';
+import ActivityLogs from './ActivityLogs';
 
 function Dialog({ title, close, children, busy = false }: {
   title: string; close: () => void; children: ReactNode; busy?: boolean;
@@ -61,9 +62,11 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
   </fieldset>;
 }
 
-export default function AdminUsers() {
+export default function AdminUsers({ overview }: { overview: ReactNode }) {
   const { t } = useStrings();
   const [session, setSession] = useState<AuthSession | null>(null);
+  const currentSession = useRef(session);
+  currentSession.current = session;
   const [setup, setSetup] = useState(() => !setupCompleted());
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +80,12 @@ export default function AdminUsers() {
   const [pin, setPin] = useState('');
   const [id, setId] = useState('');
   const [role, setRole] = useState<'TEACHER' | 'STUDENT'>('TEACHER');
+  const [page, setPage] = useState<'overview' | 'accounts' | 'activity'>('overview');
+  const [accountSearch, setAccountSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  useEffect(() => { if (!session) { setAccountSearch(''); setRoleFilter(''); setPage('overview'); } }, [session]);
+  const visibleUsers = users.filter(user => (!roleFilter || user.role === roleFilter)
+    && `${user.full_name} ${user.lrn_or_id}`.toLowerCase().includes(accountSearch.trim().toLowerCase()));
 
   const fail = useCallback((cause: unknown) => {
     const code = cause instanceof HubError ? cause.code : 'UNKNOWN';
@@ -99,9 +108,10 @@ export default function AdminUsers() {
     if (!session) return;
     try {
       const data = await request<User[]>('/api/admin/users', session.token);
+      if (currentSession.current?.token !== session.token) return;
       setUsers(data); setOffline(false);
-    } catch (cause) { fail(cause); }
-    finally { setLoading(false); }
+    } catch (cause) { if (currentSession.current?.token === session.token) fail(cause); }
+    finally { if (currentSession.current?.token === session.token) setLoading(false); }
   }, [session, fail]);
 
   useEffect(() => {
@@ -200,12 +210,17 @@ export default function AdminUsers() {
     </form>
   </section>;
 
-  return <section className="flex flex-col gap-4" aria-labelledby="admin-title">
+  return <div className="hub-shell"><aside className="hub-sidebar"><nav aria-label={t.console_navigation} className="flex flex-wrap gap-2 min-[900px]:flex-col">
+    {([['overview', 'ph-squares-four', t.console_overview], ['accounts', 'ph-users', t.admin_accounts], ['activity', 'ph-list-dashes', t.activity_title]] as const).map(([key, icon, label]) => <button key={key} type="button" className={`hub-nav ${page === key ? 'hub-nav-active' : ''}`} aria-current={page === key ? 'page' : undefined} onClick={() => setPage(key)}><i className={`ph ${icon} text-xl`} aria-hidden="true" />{label}</button>)}
+    </nav><button type="button" className="admin-secondary mt-4" disabled={busy} onClick={() => void signOut()}><i className="ph ph-sign-out" aria-hidden="true" />{t.admin_sign_out}</button></aside>
+    <div className="min-w-0"><div hidden={page !== 'overview'} className="flex flex-col gap-4"><h1 className="text-2xl font-black">{t.console_overview}</h1><p className="text-sm text-lara-ink-2">{t.console_overview_help}</p>{overview}</div>
+    <div hidden={page !== 'activity'}><ActivityLogs token={session.token} active={page === 'activity'} expired={() => fail(new HubError('UNAUTHORIZED', 401))} /></div>
+    <section hidden={page !== 'accounts'} className="flex flex-col gap-4" aria-labelledby="admin-title">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 id="admin-title" className="text-2xl font-black">{t.admin_accounts}</h1><p className="text-sm text-lara-ink-2">{t.admin_accounts_help}</p></div>
-      <button type="button" className="admin-secondary" disabled={busy} onClick={() => void signOut()}>{t.admin_sign_out}</button>
     </div>
     {!form && feedback}
+    <div className="grid gap-3 sm:grid-cols-2"><label className="admin-label">{t.accounts_search}<input type="search" value={accountSearch} onChange={event => setAccountSearch(event.target.value)} /></label><label className="admin-label">{t.admin_role}<select value={roleFilter} onChange={event => setRoleFilter(event.target.value)}><option value="">{t.accounts_all_roles}</option><option value="TEACHER">{t.admin_role_teacher}</option><option value="STUDENT">{t.admin_role_learner}</option></select></label></div>
     <div className="flex flex-wrap gap-2">
       <button type="button" className="admin-primary" disabled={offline || busy} onClick={() => {
         setError(''); setPin(''); setName(''); setId(''); setRole('TEACHER'); setForm('create');
@@ -219,7 +234,7 @@ export default function AdminUsers() {
     </div> : <div className="overflow-x-auto rounded-lg border border-lara-border bg-white">
       <table className="admin-table"><caption className="sr-only">{t.admin_accounts}</caption>
         <thead><tr><th scope="col">{t.admin_full_name}</th><th scope="col">{t.admin_id}</th><th scope="col">{t.admin_role}</th><th scope="col">{t.admin_action}</th></tr></thead>
-        <tbody>{users.map(user => <tr key={user.id}><th scope="row">{user.full_name}</th><td>{user.lrn_or_id}</td>
+        <tbody>{visibleUsers.length === 0 && <tr><td colSpan={4}>{t.accounts_no_matches}</td></tr>}{visibleUsers.map(user => <tr key={user.id}><th scope="row">{user.full_name}</th><td>{user.lrn_or_id}</td>
           <td>{user.role === 'ADMIN' ? t.admin_role_admin : user.role === 'TEACHER' ? t.admin_role_teacher : t.admin_role_learner}</td>
           <td>{user.role !== 'ADMIN' && <button className="admin-secondary" type="button" disabled={offline || busy}
             aria-label={`${t.admin_reset} ${user.full_name}`} onClick={() => { setPin(''); setError(''); setForm(user); }}>{t.admin_reset}</button>}</td>
@@ -248,5 +263,5 @@ export default function AdminUsers() {
       <p className="mb-6 text-3xl font-black tracking-widest">{receipt.pin}</p>
       <button className="admin-primary" type="button" onClick={() => setReceipt(null)}>{t.admin_pin_dismiss}</button>
     </Dialog>}
-  </section>;
+  </section></div></div>;
 }

@@ -40,6 +40,7 @@ async fn start(State(app): State<AppState>, user: AuthUser, Path(id): Path<Strin
     }
     quizzes::start(&mut tx, &id, &quiz.classroom_id, now).await?;
     tx.commit().await?;
+    app.activity.record(crate::services::activity::Event::new(crate::services::activity::Code::QuizStarted, crate::services::activity::Service::Quizzes));
 
     let duration_seconds = quiz.time_limit_minutes * 60;
     let event = ServerEvent::QuizStart { quiz_id: id, title: quiz.title, start_epoch_ms: now, duration_seconds };
@@ -65,6 +66,7 @@ async fn close(State(app): State<AppState>, user: AuthUser, Path(id): Path<Strin
     let key = quizzes::grading_key(&mut tx, &id).await?;
     let released = quizzes::close(&mut tx, &id, &quiz, &key, now).await?;
     tx.commit().await?;
+    app.activity.record(crate::services::activity::Event::new(crate::services::activity::Code::QuizClosed, crate::services::activity::Service::Quizzes));
 
     quiz_hub::announce_close(&app, &quiz.classroom_id, &id, &released, now).await;
     Ok(Json(json!({"success": true})))

@@ -5,7 +5,7 @@
   :focus-visible { outline: 3px solid var(--color-lara-primary-dark); outline-offset: 2px; }
   .admin-auth { @apply mx-auto flex w-full max-w-lg flex-col gap-4 rounded-lg border border-lara-border bg-white p-6; }
   .admin-label { @apply flex flex-col gap-2 font-extrabold; }
-  .admin-label input { @apply min-h-touch w-full rounded-md border-2 border-lara-ink-2 bg-white px-4 text-base font-medium text-lara-ink; }
+  .admin-label input, .admin-label select { @apply min-h-touch w-full rounded-md border-2 border-lara-ink-2 bg-white px-4 text-base font-medium text-lara-ink; }
   .admin-pin-digit { @apply h-15 w-touch rounded-md border-2 border-lara-ink-2 bg-white text-center text-2xl font-black; }
   .admin-primary, .admin-secondary { @apply inline-flex min-h-control items-center justify-center gap-2 rounded-full px-6 text-sm font-extrabold; }
   .admin-primary { @apply bg-lara-primary-dark text-white; }
@@ -34,4 +34,13 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+
+@layer components {
+  .hub-shell { @apply grid min-w-0 gap-6 min-[900px]:grid-cols-[168px_minmax(0,1fr)]; }
+  .hub-sidebar { @apply self-start rounded-lg border border-lara-border bg-white p-3; }
+  .hub-nav { @apply flex min-h-12 items-center gap-3 rounded-md px-3 text-left text-sm font-extrabold text-lara-ink-2 hover:bg-lara-subtle; }
+  .hub-nav-active { @apply bg-lara-primary-light text-lara-primary-dark; }
+  [hidden] { display: none !important; }
+  summary:focus-visible, .hub-nav:focus-visible { @apply outline-2 outline-offset-2 outline-lara-primary-dark; }
 }

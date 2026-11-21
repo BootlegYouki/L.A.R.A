@@ -55,6 +55,7 @@ async fn open_routes_need_no_token() {
 }
 
 const ROLE_ROUTES: &[(&str, &str, Role)] = &[
+    ("GET", "/api/admin/activity-logs", Role::Admin),
     ("GET", "/api/admin/users", Role::Admin),
     ("POST", "/api/admin/users", Role::Admin),
     ("POST", "/api/admin/users/{id}/reset-pin", Role::Admin),
