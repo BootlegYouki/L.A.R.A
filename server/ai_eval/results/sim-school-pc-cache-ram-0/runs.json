@@ -1,0 +1,90 @@
+{
+  "prompt_set_version": 1,
+  "filipino_reviewer": null,
+  "system_prompt_sha256": "37e3e27de313054722da54bf34688b09030954cbdeb2285b7bfdb9c4b3919979",
+  "settings": {
+    "context_tokens_per_slot": 2048,
+    "max_tokens": 256,
+    "temperature": 0.2,
+    "seed": 42,
+    "gpu_layers": 0,
+    "threads": 4
+  },
+  "hardware": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu": "AMD Ryzen 5 7535HS with Radeon Graphics",
+    "logical_cpus": 12,
+    "ram_bytes": 16329924608
+  },
+  "llama_server_version": "version: 0.7.0-dev (build 11938, commit 19cce6919) | built with Clang 20.1.8 for Windows x86_64",
+  "models": {
+    "smollm2-1.7b": {
+      "file": "smollm2-1.7b-instruct-q4_k_m.gguf",
+      "size_bytes": 1055609536,
+      "sha256": "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33",
+      "merge_system": false,
+      "chat_template_kwargs": {}
+    },
+    "qwen2.5-1.5b": {
+      "file": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 1117320736,
+      "sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+      "merge_system": false,
+      "chat_template_kwargs": {}
+    }
+  },
+  "runs": {
+    "smollm2-1.7b@1": {
+      "model": "smollm2-1.7b",
+      "slots": 1,
+      "n_ctx_per_slot": 2048,
+      "peak_ram_bytes": 2334310400,
+      "wall_seconds": 420.3,
+      "completion_tokens": 3325,
+      "throughput_tps": 7.91,
+      "errors": 0,
+      "server_args": [
+        "-m",
+        "C:\\models\\hub\\smollm2-1.7b-instruct-q4_k_m.gguf",
+        "-c",
+        "2048",
+        "-np",
+        "1",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "64700",
+        "-ngl",
+        "0",
+        "-t",
+        "4"
+      ]
+    },
+    "qwen2.5-1.5b@1": {
+      "model": "qwen2.5-1.5b",
+      "slots": 1,
+      "n_ctx_per_slot": 2048,
+      "peak_ram_bytes": 1819975680,
+      "wall_seconds": 273.2,
+      "completion_tokens": 2551,
+      "throughput_tps": 9.34,
+      "errors": 0,
+      "server_args": [
+        "-m",
+        "C:\\models\\hub\\qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        "-c",
+        "2048",
+        "-np",
+        "1",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "56554",
+        "-ngl",
+        "0",
+        "-t",
+        "4"
+      ]
+    }
+  }
+}
