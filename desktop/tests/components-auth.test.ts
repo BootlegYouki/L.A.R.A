@@ -38,12 +38,22 @@ it('uses role labels and current navigation without class codes', () => {
 });
 it('masks the PIN and disables submission until a Hub is selected', () => {
   const html = renderToStaticMarkup(createElement(LoginPage, { hub: null, busy: false, error: null, retryAfter: 9, onSubmit: noop }));
-  expect(html).toContain('type="password"'); expect(html).toContain('9 seconds'); expect(html).toContain('Select a Hub address'); expect(html).toContain('disabled=""');
+  expect(html).toContain('type="password"'); expect(html).toContain('maxLength="6"'); expect(html).toContain('Six-digit PIN'); expect(html).toContain('9 seconds'); expect(html).toContain('Select a Hub address'); expect(html).toContain('disabled=""');
 });
 it('validates registration and sign-in fields before submission', () => {
-  expect(validateLoginFields({ lrn_or_id: 'T-0001', pin: '1234' }, false)).toEqual({});
+  expect(validateLoginFields({ lrn_or_id: 'T-0001', pin: '123456' }, false)).toEqual({});
   expect(validateLoginFields({ lrn_or_id: '1', pin: '123', full_name: ' ' }, true)).toHaveProperty('full_name');
-  expect(validateLoginFields({ lrn_or_id: '1', pin: '1234', full_name: 'Learner' }, true)).toHaveProperty('lrn_or_id');
-  expect(validateLoginFields({ lrn_or_id: '123456789012', pin: '1234', full_name: ' Learner ' }, true)).toEqual({});
+  expect(validateLoginFields({ lrn_or_id: '1', pin: '123456', full_name: 'Learner' }, true)).toHaveProperty('lrn_or_id');
+  expect(validateLoginFields({ lrn_or_id: '123456789012', pin: '123456', full_name: ' Learner ' }, true)).toEqual({});
   expect(validateLoginFields({ lrn_or_id: 'x'.repeat(33), pin: 'abcd' }, false)).toHaveProperty('pin');
+});
+
+it('requires exactly six ASCII digits for sign-in and registration', () => {
+  for (const register of [false, true]) {
+    const fields = { lrn_or_id: register ? '123456789012' : 'T-0001', full_name: 'Learner' };
+    for (const pin of ['123456', '000001']) expect(validateLoginFields({ ...fields, pin }, register)).toEqual({});
+    for (const pin of ['', '1234', '12345', '1234567', '12a456', '１２３４５６', ' 123456']) {
+      expect(validateLoginFields({ ...fields, pin }, register)).toHaveProperty('pin');
+    }
+  }
 });

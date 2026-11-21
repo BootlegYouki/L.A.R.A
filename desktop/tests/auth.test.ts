@@ -47,24 +47,24 @@ it('does not report success when native credential cleanup fails', async () => {
 it('stores a validated session natively without persisting the PIN or arbitrary server fields', async () => {
   fetch.mockResolvedValue(response(200, { token: 'test-token', expires_at: account.expires_at, user: { ...user, pin_hash: 'must-not-persist' } }));
   invoke.mockResolvedValue(account);
-  await expect(signIn(hub, { lrn_or_id: ' T-0001 ', pin: '1234' }, false)).resolves.toEqual(account);
+  await expect(signIn(hub, { lrn_or_id: ' T-0001 ', pin: '123456' }, false)).resolves.toEqual(account);
   expect(invoke).toHaveBeenCalledWith('save_account_session', { hub, session: { token: 'test-token', expires_at: account.expires_at, user } });
   expect(fetch).toHaveBeenCalledWith('http://192.168.1.50:8080/api/auth/login', expect.objectContaining({
-    body: JSON.stringify({ lrn_or_id: 'T-0001', pin: '1234' }), redirect: 'error', maxRedirections: 0, credentials: 'omit',
+    body: JSON.stringify({ lrn_or_id: 'T-0001', pin: '123456' }), redirect: 'error', maxRedirections: 0, credentials: 'omit',
   }));
 });
 
 it('rejects malformed/admin sessions and invalid local input before saving anything', async () => {
   expect(() => parseSession({ token: 'x', expires_at: account.expires_at, user: { ...user, role: 'ADMIN' } })).toThrow(AuthError);
   await expect(signIn(hub, { lrn_or_id: 'x', pin: '12' }, false)).rejects.toMatchObject({ code: 'invalid_fields' });
-  await expect(signIn(hub, { lrn_or_id: 'ADMIN-0001', pin: '1234' }, false)).rejects.toMatchObject({ code: 'ADMIN_LOCAL_ONLY' });
-  await expect(signIn({ ...hub, ip: '8.8.8.8' }, { lrn_or_id: 'T-0001', pin: '1234' }, false)).rejects.toMatchObject({ code: 'network' });
+  await expect(signIn(hub, { lrn_or_id: 'ADMIN-0001', pin: '123456' }, false)).rejects.toMatchObject({ code: 'ADMIN_LOCAL_ONLY' });
+  await expect(signIn({ ...hub, ip: '8.8.8.8' }, { lrn_or_id: 'T-0001', pin: '123456' }, false)).rejects.toMatchObject({ code: 'network' });
   expect(fetch).not.toHaveBeenCalled(); expect(invoke).not.toHaveBeenCalled();
 });
 
 it('honors login rate limits without an automatic retry', async () => {
   fetch.mockResolvedValue(response(429, { error: { code: 'TOO_MANY_ATTEMPTS', message: 'ignored' } }, undefined, '42'));
-  await expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '1234' }, false)).rejects.toMatchObject({ code: 'TOO_MANY_ATTEMPTS', retryAfter: 42 });
+  await expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '123456' }, false)).rejects.toMatchObject({ code: 'TOO_MANY_ATTEMPTS', retryAfter: 42 });
   expect(fetch).toHaveBeenCalledTimes(1); expect(invoke).not.toHaveBeenCalled();
 });
 
@@ -97,9 +97,15 @@ it('bounds a stalled native account restore and permits a fresh retry', async ()
 
 it('bounds stalled metadata calls and respects cancellation before persistence', async () => {
   vi.useFakeTimers(); fetch.mockReturnValue(new Promise(() => {}));
-  const failure = expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '1234' }, false)).rejects.toMatchObject({ code: 'network' });
+  const failure = expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '123456' }, false)).rejects.toMatchObject({ code: 'network' });
   await vi.advanceTimersByTimeAsync(10000); await failure;
   const controller = new AbortController(); controller.abort();
-  await expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '1234' }, false, controller.signal)).rejects.toMatchObject({ code: 'cancelled' });
+  await expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '123456' }, false, controller.signal)).rejects.toMatchObject({ code: 'cancelled' });
+  expect(invoke).not.toHaveBeenCalled();
+});
+
+it('rejects legacy four-digit PINs before making a request', async () => {
+  await expect(signIn(hub, { lrn_or_id: 'T-0001', pin: '1234' }, false)).rejects.toMatchObject({ code: 'invalid_fields' });
+  expect(fetch).not.toHaveBeenCalled();
   expect(invoke).not.toHaveBeenCalled();
 });
