@@ -11,9 +11,9 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 | **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3 |
 | **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, Hub AI stream |
 | **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue |
-| **Lead Developer** | all | 1 | Reviews every PR, owns `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/` |
+| **Lead Developer** | all | 1 | Reviews every PR, owns `rules/` and `.github/`; the shared files (`contracts/`, PRD, `design-system/`, `scripts/`, `tests/`) go through `contract-change` PRs |
 
-You only edit your own team's folder. `design-system/`, `rules/`, `scripts/` and `.github/` are Lead-owned; `contracts/` changes go in their own `contract-change` PR written by any team member and reviewed by the teams it affects (see `.github/CODEOWNERS` and `rules/team-workflow-and-prs.md` section 1).
+You only edit your own team's folder. `rules/` and `.github/` are Lead-owned; `contracts/`, `docs/PRD.md`, `design-system/` and `scripts/` change only in their own `contract-change` PR written by any team member and reviewed by the teams it affects (see `.github/CODEOWNERS` and `rules/team-workflow-and-prs.md` section 1).
 
 ---
 
@@ -219,7 +219,7 @@ Closes #6
 * Opening the PR against `main` instead of `staging`.
 * Leaving the template sections empty or deleting them.
 * No `Closes #n`, or one PR that closes several unrelated issues.
-* Touching another team's folder or `contracts/` or a Lead-owned path (`rules/`, `design-system/`, `scripts/`, `.github/`) inside a feature PR.
+* Touching another team's folder or `contracts/` or a Lead-owned path (`rules/`, `.github/`), the PRD, `design-system/` or `scripts/` inside a feature PR.
 * No evidence, or evidence from the happy path only (nothing offline, nothing for the error case).
 * Forgetting the Filipino strings, or hardcoding a hex color or English text in a screen.
 * Committing build output, `node_modules`, `.env` files or large model files.
