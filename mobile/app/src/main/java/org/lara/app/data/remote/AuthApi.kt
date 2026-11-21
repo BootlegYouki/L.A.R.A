@@ -16,8 +16,7 @@ data class AuthSession(val token: String, @SerialName("expires_at") val expiresA
     override fun toString() = "AuthSession([redacted])"
 }
 @Serializable
-private data class Credentials(@SerialName("lrn_or_id") val id: String, val pin: String,
-    @SerialName("full_name") val name: String? = null)
+private data class Credentials(@SerialName("lrn_or_id") val id: String, val pin: String)
 
 class AuthFailure(val status: Int, val retryAfterSeconds: Long = 0) : Exception()
 
@@ -28,12 +27,11 @@ class AuthApi {
         Unit
     }
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
-    suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String, name: String?): AuthSession =
+    suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String): AuthSession =
         withContext(Dispatchers.IO) {
             require(AuthPin.isValid(pin))
-            val path = if (name == null) "/api/auth/login" else "/api/auth/register"
-            val body = HubClient().postAuth(endpoint, path,
-                json.encodeToString(Credentials.serializer(), Credentials(id, pin, name)))
+            val body = HubClient().postAuth(endpoint,
+                json.encodeToString(Credentials.serializer(), Credentials(id, pin)))
                 json.decodeFromString(AuthSession.serializer(), body).also {
                     if (it.user.role !in setOf("STUDENT", "TEACHER")) throw AuthFailure(403)
                     require(it.token.isNotBlank() && it.user.id.isNotBlank())

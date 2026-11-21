@@ -108,7 +108,7 @@ class ClassworkAuthoringDeviceTest {
         finally { bitmap.recycle() }
     }
     private fun login(hub: HubEndpoint): AuthSession = runBlocking {
-        val response = HubClient().postAuth(hub, "/api/auth/login", buildJsonObject {
+        val response = HubClient().postAuth(hub, buildJsonObject {
             put("lrn_or_id", "T-0001"); put("pin", "123456")
         }.toString())
         Json { ignoreUnknownKeys = true }.decodeFromString(AuthSession.serializer(), response)
@@ -146,7 +146,7 @@ class ClassworkAuthoringDeviceTest {
                             androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(insets)) {
                                 (work as? Cached.Content)?.value?.let { TeacherClasswork(account.classworkAuthoring, session.user.id, classroom,
                                     if (empty) Classwork(emptyList(), emptyList(), emptyList(), emptyList()) else it,
-                                    (posts as? Cached.Content)?.value.orEmpty(), online) {} }
+                                    (posts as? Cached.Content)?.value.orEmpty(), online, openMaterial = {}, openReview = {}) }
                             }
                         }
                     } }

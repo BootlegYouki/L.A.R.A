@@ -52,8 +52,8 @@ class ClassroomUiEvidenceTest {
                     bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
                 } } finally { bitmap.recycle() }
             }
-            show("signin") { AuthScreen(AuthState(restoring = false), { _, _, _ -> }, {}) }
-            show("signin-hub-step") { AuthScreen(AuthState(restoring = false, error = org.lara.app.R.string.auth_hub_required), { _, _, _ -> }, {}) }
+            show("signin") { AuthScreen(AuthState(restoring = false), { _, _ -> }, {}) }
+            show("signin-hub-step") { AuthScreen(AuthState(restoring = false, error = org.lara.app.R.string.auth_hub_required), { _, _ -> }, {}) }
             val discovery = DiscoveryViewModel(object : HubDiscovery {
                 override fun observe() = flowOf(DiscoverySnapshot(wifiAvailable = true,
                     hubs = listOf(DiscoveredHub("Synthetic classroom Hub", "192.168.1.50", 8080, 8081))))

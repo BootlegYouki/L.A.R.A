@@ -44,9 +44,8 @@ class HubClient {
         require(session.token.isNotBlank() && session.token.none(Char::isWhitespace))
         return exchange(endpoint, "/api/auth/logout", "POST", "{}", session.token)
     }
-    internal fun postAuth(endpoint: HubEndpoint, path: String, payload: String): String {
-        require(path in setOf("/api/auth/login", "/api/auth/register"))
-        return try { exchange(endpoint, path, "POST", payload, null) }
+    internal fun postAuth(endpoint: HubEndpoint, payload: String): String {
+        return try { exchange(endpoint, "/api/auth/login", "POST", payload, null) }
         catch (e: HubFailure) { throw AuthFailure(e.status, e.retryAfterSeconds) }
     }
 

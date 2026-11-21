@@ -101,7 +101,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 
 | Contract route or event | Our module | On error codes | On timeout or Hub unreachable |
 |---|---|---|---|
-| `POST /api/auth/login`, `register` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); register 409 `ALREADY_EXISTS` | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
+| `POST /api/auth/login` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); accounts and PIN resets come from the Hub admin | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
 | `POST /api/auth/logout` | `AuthApi` (Settings) | any: still clear local token after queued-row check | Clear locally, ignore failure |
 | `GET/POST /api/classrooms` | `ClassroomRepository` | 403 | Room data; create is needs Hub |
 | `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` English message | Disabled with helper line |

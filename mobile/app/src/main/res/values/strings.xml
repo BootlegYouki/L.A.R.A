@@ -55,14 +55,11 @@
     <string name="discovery_beacon_none">No Hubs found</string>
     <string name="discovery_beacon_disconnected">Not connected</string>
     <string name="auth_login">Sign in</string>
-    <string name="auth_register">Create learner account</string>
     <string name="auth_id">LRN or teacher ID</string>
-    <string name="auth_name">Full name</string>
+    <string name="auth_account_help">Ask your teacher or Hub admin for an account</string>
     <string name="auth_pin">6-digit PIN</string>
     <string name="auth_checking">Signing in to your classroom Hub...</string>
     <string name="auth_restoring">Opening your saved classroom...</string>
-    <string name="auth_register_instead">New learner? Create an account</string>
-    <string name="auth_login_instead">Already registered? Sign in</string>
     <string name="auth_invalid">Enter your ID and a 6-digit PIN.</string>
     <string name="auth_hub_required">Connect to your Hub first.</string>
     <string name="auth_hub_connected">Connected to %1$s</string>
@@ -74,7 +71,7 @@
     <string name="reading_saved_device_badge">Saved on this device</string>
     <string name="auth_wrong_pin">ID or PIN did not match.</string>
     <string name="auth_admin">Hub account: Administrators sign in on the Hub computer.</string>
-    <string name="auth_exists">Account unavailable: This learner may already be registered, or this device has another saved account. Ask your teacher for help.</string>
+    <string name="auth_exists">This device has another saved account. Sign out before switching accounts.</string>
     <string name="auth_wait">Too many attempts. Wait a minute.</string>
     <string name="auth_unreachable">Hub unreachable. Check the classroom Wi-Fi or change Hub.</string>
     <string name="auth_failed">Could not sign in. Try again.</string>
@@ -327,8 +324,6 @@
     <string name="classes_save">Save</string>
     <string name="classes_archive_help">Make this class read-only for everyone. Materials, work and grades are kept.</string>
     <string name="classes_add_action">Add</string>
-    <string name="auth_lrn">Learner Reference Number (LRN)</string>
-    <string name="auth_lrn_help">Enter your 12-digit LRN.</string>
     <string name="approval_review_help">Check the learner before accepting or declining their request.</string>
     <string name="approval_updating">Updating this join request...</string>
     <string name="ai_tutor_open">Ask the AI tutor</string>
