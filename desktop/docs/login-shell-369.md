@@ -38,3 +38,5 @@ Additional screenshots: [registration](screenshots/369-register.png), [validatio
 Windows native frontend verification does not establish Linux/macOS, physical WAN isolation, an installed release-package upgrade, or screen-reader behavior. Secure credential persistence was unavailable in this task runtime; cached access passed, but no OS secure-store claim is made. The previously uploaded `desktop-six-pin-370e620` installer predates this UI fix.
 
 Final compact-stack check: the current native 1920×1009 view has a 480px connection banner and 480px Hub card, centered together vertically and horizontally. Production frontend build passes. [Compact status and card](screenshots/369-compact-status.png).
+
+Login centering confirmation: the shared authentication layout also centers the login form and its status banner as a group. Native checks against the real Hub pass at 1200×884, 800×1200 and 720×480 (scrolling on the short window). [Centered login](screenshots/369-login-centered.png). The user's active test window and Hub selection were left untouched.
