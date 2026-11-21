@@ -1,14 +1,16 @@
 # Auth and Sessions (step 2.0, #42)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 Six-digit PIN rollout (#339): [verification output and screenshots](evidence/339/verification.md).
 
 ## Purpose
-Gives every client an identity on the Hub: learners register themselves, everyone signs in with an LRN or ID and a 6-digit PIN, and later routes and WebSockets authorize that identity and role. Behavior is defined by `contracts/openapi.yaml` and PRD FR-1.0/FR-1.1. The single Hub admin is created once, from the Hub PC itself.
+The Hub admin creates teacher and learner accounts in the Hub dashboard (#329); clients sign in with the assigned ID/LRN and six-digit PIN. The first Hub admin account is set up on the Hub PC. The Hub admin resets forgotten PINs.
 
 ## Key files and entry points
 | File | What it does |
 |---|---|
-| `backend/src/routes/auth.rs` | `POST /api/auth/register` (learners only), `/login`, `/logout` |
+| `backend/src/routes/auth.rs` | `POST /api/auth/login`, `POST /api/auth/logout` |
 | `backend/src/routes/admin.rs` | `POST /api/admin/setup` (Hub PC only); `/api/admin/users` stays an admin-only stub until 2.3 |
 | `backend/src/auth/mod.rs` | `AuthUser` extractor (bearer token → `{ id, role }`), `Role`, `require_role` (403 messages), `is_hub_pc` (loopback and no `Cf-Connecting-IP`) |
 | `backend/src/auth/sessions.rs` | `open` (in the caller's transaction), `user_for_token` (REST and `EVENT_HELLO`), `close`, `close_all` (an admin PIN reset, #230) |
@@ -22,7 +24,7 @@ Gives every client an identity on the Hub: learners register themselves, everyon
 | `backend/src/routes/mod.rs` | Area stubs with the contract role guards (`not_implemented_teacher` / `_student` / `_admin`) |
 
 ## Data flow and state
-* **Register:** check fields; trim `lrn_or_id` and `full_name` and require 1-32 and 1-100 characters (`400 LRN and name must be 1-32 and 1-100 characters`, contract PR #197); then the PIN (`400 PIN must be 6 digits`); hash it (outside any transaction), then one `begin_immediate` transaction: insert the `STUDENT` row, `record_revision(Scope::global(), "users", ...)`, open the session. A taken `lrn_or_id` (a learner's or a teacher's) is `409 ALREADY_EXISTS`; two registrations of one LRN at once give one 200 and one 409. `ADMIN-0001` is always taken, even before setup, so no learner can block the admin account.
+* **Account creation:** The Hub admin uses `POST /api/admin/users` with ID/LRN, full name, role and six-digit PIN. Hash PINs off the async executor and outside the write transaction. The account uses the separate sign-in operation.
 * **Login:** `ADMIN-0001` from anywhere but the Hub PC answers `403 ADMIN_LOCAL_ONLY` (or 429 while that ID is locked out) and is not counted (contract PR #197). Everyone else: `LoginLimiter::try_attempt` first (429 `TOO_MANY_ATTEMPTS`, `Retry-After` 1 to 60 s), then the account. Unknown LRN, deactivated account and wrong PIN all answer `401 Wrong LRN or PIN`. Success resets the LRN's count and opens a session.
 * **Session:** `sessions` row `(token_hash, user_id, created_at, expires_at = now + 12 h)`. The raw token goes to the client only. Opening a session also deletes expired rows.
 * **Every signed-in request and `EVENT_HELLO`:** `user_for_token` joins `sessions` and `users`; a token works while `expires_at >= now` and `users.is_active = 1`. So logout, expiry and deactivation take effect on the next REST request and the next `EVENT_HELLO`. A WebSocket that is already open stays registered in `Broker` until it reconnects: 2.3 (deactivation) and 2.4 (broker) should close a user's sockets when the account is deactivated, and the token's socket on logout. Sessions are in SQLite, so a Hub restart keeps everyone signed in.
@@ -33,15 +35,15 @@ Gives every client an identity on the Hub: learners register themselves, everyon
 * **Test seed (`LARA_TEST_SEED=1`, development only):** before the listeners open, `db::seed::test_accounts` creates missing accounts with PIN `123456`: `ADMIN-0001` "Hub Admin", `T-0001` "Maria Santos", `123456789012` "Juan dela Cruz", `123456789013` "Ana Reyes". No classes or posts are seeded; create them through the API. Restarting does not overwrite existing accounts. Without the setting nothing is seeded; never enable it on a school Hub.
 
 ## Gotchas and edge cases
-* **Six-digit PIN rollout (#339, contract #327):** setup, registration, account creation and reset accept exactly six ASCII digits, including leading zeros. Login rejects four-digit PINs with the usual `401 UNAUTHORIZED`. Existing hashes are not migrated, padded or rehashed automatically: the Hub admin resets each old account to a six-digit PIN. Existing sessions keep their normal expiry until reset; the reset revokes all sessions in the same transaction. Applied migrations remain unchanged to preserve SQLx checksums; their historical four-digit comment does not define current validation.
+* **Six-digit PIN rollout (#339, contract #327):** Setup, admin account creation and reset accept exactly six ASCII digits, including leading zeros. Login rejects four-digit PINs. The Hub admin resets old accounts; reset revokes their sessions in the same transaction.
 * **Test data:** `LARA_TEST_SEED=1` uses `123456` for newly created accounts. Existing seed accounts are kept unchanged on restart, so an old test database needs an admin PIN reset or a fresh test data directory. `tests/six_digit_pin.rs` covers all PIN write routes, leading zeros and recovery of a legacy four-digit account.
 * **The limiter counts attempts when they start.** Counting failures after the PIN check would let 40 parallel guesses all pass before the first failure lands (argon2 takes about 20 ms). Recording each attempt up front and clearing on success gives the same "failed attempts only" result (TECH_SPEC Q7) without that hole. A refused attempt is not recorded, so retrying while locked never extends the wait.
 * **Refused remote admin logins are not counted.** They never reach the PIN check, so they are not guesses; counting them would let any device on the network keep the admin locked out at the Hub PC. They still answer 429 while the ID is locked out, as the contract says every attempt does. The check matches the ID `ADMIN-0001` (`users.lrn_or_id` compares case-sensitively), so it runs before the limiter and the database. If a later step ever allows a second `ADMIN` account, check the role instead.
 * **Before setup, a remote `ADMIN-0001` login is also 403**. It tells nothing: the ID is fixed and public.
 * **A clock set back does not lock anyone out for hours.** The Hub PC has no internet to correct its clock; attempts dated after "now" are dropped, so a lockout stays under a minute.
-* **Only register limits `lrn_or_id` (32 characters, after trimming); login takes it as sent,** The limiter keys on its first 64 characters, so a huge value cannot grow the map without bound. Lengths count characters, not bytes, so a name with `ñ` gets the full 100.
+* **Login limiter:** The limiter keys on the first 64 characters of the supplied ID to bound the map.
 * **Hashing memory:** each argon2id hash holds 19 MiB. `PinHasher` allows one hash per logical CPU at a time (`available_parallelism`): 4 × 19 MiB on a 4-core, 4-thread PC, 8 × 19 MiB on 4 cores with 8 threads. Without the cap, 40 learners signing in at once would need about 760 MB on a 4 GB PC that also runs the AI model.
-* **The permit lives inside the blocking task.** A client that disconnects drops its request, but a blocking hash cannot be cancelled. If the permit were released with the request, a loop of register-and-disconnect could pile up hashes past the cap; holding it until the hash really ends keeps the bound (`a_cancelled_hash_keeps_its_permit_until_the_work_ends`).
+* **The permit lives inside the blocking task.** A disconnected request cannot cancel a blocking hash, so the task holds the permit until the hash exits.
 * **Debug builds:** `[profile.dev.package.argon2] opt-level = 3` in `Cargo.toml`. Unoptimized, one hash takes about 430 ms instead of about 20 ms, which makes every auth test slow.
 * **Remote/Suspension Mode and loopback:** `cloudflared` reaches the Hub from 127.0.0.1, so loopback alone does not mean the Hub PC. Cloudflare adds `Cf-Connecting-IP` to every tunnelled request, and `is_hub_pc` refuses any request that carries it (contract PR #197), so admin setup and admin login stay on the Hub PC even with the tunnel on. A LAN device cannot pretend to be loopback; sending the header only makes it look more remote.
 * **Logs:** the request span records method and path only, SQLx logs SQL text without bound values, and no handler logs a PIN, token or LRN. Checked at `RUST_LOG=debug` (see Measured below).
@@ -54,7 +56,7 @@ Ryzen 5 7535HS (12 logical cores, so 12 hashes at once), 16 GB. `lara-hub` on a 
 
 | Load | Result | Wall time | p50 | p95 |
 |---|---|---|---|---|
-| 40 registrations at once | 40/40 ok | 1235 ms | 1066 ms | 1211 ms |
+| 40 registrations at once (historical) | 40/40 ok | 1235 ms | 1066 ms | 1211 ms |
 | 40 logins at once | 40/40 ok | 414 ms | 239 ms | 402 ms |
 
 Process working set: 16 MB idle, **peak 245 MB** during the load (12 × 19 MiB of hashing plus the idle Hub), back to 18 MB after. On the 4-core reference Hub the cap is 4 hashes (about 76 MiB of hashing) if it has 4 threads, 8 if it has 8, and logins queue longer; measure there on integration day (TECH_SPEC section 12).
