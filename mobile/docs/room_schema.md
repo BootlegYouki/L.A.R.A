@@ -73,7 +73,7 @@ Room warns about three unindexed foreign keys already present in the contract
 
 ## Entry points and data flow
 
-`data/local/LaraDatabase.kt` registers all entities at version 4, exports the
+`data/local/LaraDatabase.kt` registers all entities at version 5, exports the
 schema, uses private `lara.db` storage and WAL, and also exposes the later auth/sync DAOs. It has no
 main-thread queries or destructive migration fallback. The existing manual
 `LaraApp.AppContainer` scopes repositories to the selected account's database; shared services remain application-owned. `AccountDatabases` retains the original lara.db for its owner and uses private hashed filenames for other accounts, preserving separate mirrors/cursors rather than clearing work on sign-out. No dependency injection framework is introduced. See settings.md for the 2.6 account-switch policy.
