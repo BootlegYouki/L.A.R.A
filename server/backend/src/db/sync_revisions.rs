@@ -285,21 +285,28 @@ async fn class_archived(conn: &mut SqliteConnection, classroom_id: &str) -> Resu
 
 pub async fn push_comment(
     conn: &mut SqliteConnection,
-    student_id: &str,
+    author: &AuthUser,
     comment: &CommentPush,
     now: i64,
 ) -> Result<SyncReceipt, sqlx::Error> {
     let announcement: Option<(String, bool)> = sqlx::query_as(
-        "SELECT a.classroom_id, a.allow_comments FROM announcements a JOIN enrollments e
-         ON e.classroom_id = a.classroom_id WHERE a.id = ? AND e.student_id = ? AND e.status = 'ACTIVE'",
-    ).bind(&comment.announcement_id).bind(student_id).fetch_optional(&mut *conn).await?;
+        "SELECT classroom_id, allow_comments FROM announcements WHERE id = ?",
+    )
+    .bind(&comment.announcement_id)
+    .fetch_optional(&mut *conn)
+    .await?;
+    let Some((classroom_id, allow_comments)) = announcement else {
+        return Ok(receipt(&comment.id, Some("FORBIDDEN")));
+    };
+    if !crate::services::class_access::is_member(conn, author, &classroom_id).await? {
+        return Ok(receipt(&comment.id, Some("FORBIDDEN")));
+    }
     let existing: Option<(String, String, String, i64)> = sqlx::query_as(
         "SELECT author_id, announcement_id, content, created_at FROM announcement_comments WHERE id = ?",
     ).bind(&comment.id).fetch_optional(&mut *conn).await?;
     if existing
         .as_ref()
-        .is_some_and(|e| e.0 != student_id || e.1 != comment.announcement_id)
-        || announcement.is_none()
+        .is_some_and(|e| e.0 != author.id || e.1 != comment.announcement_id)
     {
         return Ok(receipt(&comment.id, Some("FORBIDDEN")));
     }
@@ -309,9 +316,6 @@ pub async fn push_comment(
     {
         return Ok(receipt(&comment.id, None));
     }
-    let Some((classroom_id, allow_comments)) = announcement else {
-        return Ok(receipt(&comment.id, Some("FORBIDDEN")));
-    };
     if class_archived(conn, &classroom_id).await? {
         return Ok(receipt(&comment.id, Some("FORBIDDEN")));
     }
@@ -321,7 +325,7 @@ pub async fn push_comment(
     sqlx::query(
         "INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at",
-    ).bind(&comment.id).bind(&comment.announcement_id).bind(student_id).bind(&comment.content).bind(comment.created_at).bind(now)
+    ).bind(&comment.id).bind(&comment.announcement_id).bind(&author.id).bind(&comment.content).bind(comment.created_at).bind(now)
         .execute(&mut *conn).await?;
     record_revision(
         conn,

@@ -1016,3 +1016,50 @@ async fn pushes_to_an_archived_class_are_refused_but_a_retry_of_saved_work_is_no
     assert_eq!(count, 1);
     class.hub.stop().await;
 }
+
+#[tokio::test]
+async fn class_comment_sync_accepts_teachers_of_the_class_and_retries_once() {
+    let class = Class::start().await;
+    class.announcements(1, 1).await;
+    let (co_teacher, co_token) = class.add_co_teacher("T-0002").await;
+    let outsider = class.hub.seed_user("T-0003", "Other teacher", Role::Teacher, "123456").await;
+    let outsider_token = class.hub.open_session(outsider).await;
+
+    let owner_payload = json!({"comments":[comment("owner-comment")]});
+    let owner_receipts = json!([{"id":uid("owner-comment"),"status":"SYNCED"}]);
+    for _ in 0..2 {
+        let (status, body) = class.hub.post_json("/api/sync/push", &owner_payload, Some(class.hub.teacher_token())).await;
+        assert_eq!(status, 200, "{body}");
+        assert_eq!(body["receipts"], owner_receipts);
+    }
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push", &json!({"comments":[comment("co-comment")]}), Some(&co_token),
+    ).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["receipts"], json!([{"id":uid("co-comment"),"status":"SYNCED"}]));
+
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push", &json!({"comments":[comment("foreign-comment")]}), Some(&outsider_token),
+    ).await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["receipts"], json!([{"id":uid("foreign-comment"),"status":"REJECTED","reason":"FORBIDDEN"}]));
+
+    let (status, body) = class.hub.post_json(
+        "/api/sync/push",
+        &json!({"comments":[comment("mixed-comment")],"private_comments":[private("teacher-private")]}),
+        Some(&co_token),
+    ).await;
+    assert_eq!(status, 403, "{body}");
+    assert_eq!(body["error"]["code"], "FORBIDDEN");
+
+    let pulled = pull(&class.hub, &class.token, 0).await;
+    let comments = pulled["comments"].as_array().unwrap();
+    assert_eq!(comments.len(), 2);
+    assert!(comments.iter().any(|c| c["id"] == uid("owner-comment")));
+    assert!(comments.iter().any(|c| c["id"] == uid("co-comment") && c["author_id"] == co_teacher));
+    let revisions: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM sync_revisions WHERE entity_table = 'announcement_comments'",
+    ).fetch_one(&class.hub.state().db).await.unwrap();
+    assert_eq!(revisions, 2);
+    class.hub.stop().await;
+}
