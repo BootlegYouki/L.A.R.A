@@ -95,7 +95,6 @@
   "auth_request_error": "The request could not be completed. Try again when the Hub is available.",
   "auth_session_expired": "Your session is no longer valid. Sign in again; your saved work has not been cleared.",
   "auth_switch_account": "Switch account",
-  "auth_session_only": "Your sign-in is not remembered securely on this device. Cached classes remain available offline.",
   "auth_hub_settings": "Classroom Hub connection",
   "join_submit": "Join",
   "join_pending_body": "Your teacher will review your request. You can keep using your saved classes.",
