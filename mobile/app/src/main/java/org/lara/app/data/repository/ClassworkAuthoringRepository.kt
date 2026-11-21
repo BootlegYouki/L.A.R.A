@@ -53,6 +53,7 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
     override suspend fun upload(classroomId: String, uri: String, draft: MaterialDraft) = withContext(Dispatchers.IO) {
         require(draft.title.isNotBlank())
         val connection = sessions.connection(userId)
+        val hubId = api.uploadHubId(connection)
         val selected = Uri.parse(uri)
         require(selected.scheme == "content")
         var name = "attachment"
@@ -72,7 +73,7 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
                 file.outputStream().use { output -> copyMaterial(input, output) }
             }
             require(file.length() > 0)
-            val data = workDataOf("owner" to userId, "hub" to connection.endpoint.restBase,
+            val data = workDataOf("owner" to userId, "hub" to connection.endpoint.restBase, "hub_id" to hubId,
                 "class" to classroomId, "file" to file.name, "title" to draft.title, "type" to draft.fileType,
                 "topic" to draft.topicId, "assignment" to draft.assignmentId, "announcement" to draft.announcementId)
             manager.enqueue(request(data)).result.get()

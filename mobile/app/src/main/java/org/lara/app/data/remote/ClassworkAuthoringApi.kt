@@ -30,14 +30,28 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
             .method(method, body).build())
     }
 
+    private val hubClient = HubClient()
+
+    internal suspend fun uploadHubId(connection: EnrollmentConnection): String = withContext(Dispatchers.IO) {
+        readHubId(connection)
+    }
+
+    private fun readHubId(connection: EnrollmentConnection): String {
+        val response = hubClient.sync(connection, "pull", """{"cursor":0}""")
+        return requireNotNull(Json.parseToJsonElement(response).jsonObject["hub_id"]?.jsonPrimitive?.contentOrNull)
+            .also { require(it.isNotBlank()) }
+    }
+
     suspend fun upload(userId: String, hub: String, classroomId: String, file: File, draft: MaterialDraft,
-        progress: (Int) -> Unit) = withContext(Dispatchers.IO) {
+        hubId: String? = null, progress: (Int) -> Unit) = withContext(Dispatchers.IO) {
         require(file.length() in 1..MATERIAL_LIMIT)
         require(draft.fileType in setOf("DOCUMENT", "VIDEO", "WORKSHEET"))
         require(draft.assignmentId == null || draft.announcementId == null)
         val c = sessions.connection(userId)
-        require(c.endpoint.restBase == hub)
-        val url = hub + "/api/materials"
+        val currentAddress = c.endpoint.restBase
+        if (hubId != null) require(readHubId(c) == hubId)
+        else require(currentAddress == hub)
+        val url = currentAddress + "/api/materials"
         require(isAllowedHubUrl(url))
         val streaming = object : RequestBody() {
             override fun contentType() = "application/octet-stream".toMediaType()
