@@ -1,5 +1,7 @@
 # Delta sync - MOBILE 2.5 (#52)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 ## Base and implementation
 
 Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a6` and now includes `d140e77`, the independent REST approval fixes, including Mobile 2.3 `adade1a` and the Lead's roster `enrollment_id` contract update. The integration adds no shared API or schema changes.

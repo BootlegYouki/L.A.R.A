@@ -1,5 +1,7 @@
 # Settings — MOBILE 2.6 (#106)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 The branch includes merged staging 56d4650: contracts #196/#197 and mobile migration #198. Its feature diff is Settings, safe session/account handling and a small visual cleanup; no shared files or APIs are redefined.
 
 ## Screen and language

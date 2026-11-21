@@ -6,7 +6,7 @@ info:
 
     Conventions (see contracts/naming_rules.md):
     - All JSON keys are snake_case. All timestamps are epoch milliseconds (integer).
-    - All routes except /download, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
+    - All routes except /download, first-run /api/admin/setup and /api/auth/login require `Authorization: Bearer <token>`.
     - Errors always use the Error envelope: {"error": {"code": "...", "message": "..."}}.
     - correct_answer is returned ONLY to the teacher who owns the quiz. Student responses never contain it.
     - Realtime events are on ws://{hub_ip}:8081 (see contracts/events/README.md).
@@ -35,46 +35,6 @@ paths:
                 type: string
 
   # ---------------------------------------------------------------- AUTH
-  /api/auth/register:
-    post:
-      summary: Self-register a learner account (teacher accounts are created by the Hub admin)
-      security: []
-      tags: [auth]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [lrn_or_id, full_name, pin]
-              properties:
-                lrn_or_id:
-                  type: string
-                  minLength: 1
-                  maxLength: 32
-                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
-                  example: "123456789012"
-                full_name:
-                  type: string
-                  minLength: 1
-                  maxLength: 100
-                  description: Trimmed by the Hub; empty after trimming answers 400 BAD_REQUEST.
-                  example: "Juan dela Cruz"
-                pin:
-                  type: string
-                  pattern: "^[0-9]{6}$"
-      responses:
-        "200":
-          description: Account created and session opened
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthSession"
-        "400":
-          $ref: "#/components/responses/Error"
-        "409":
-          $ref: "#/components/responses/Error"
-
   /api/auth/login:
     post:
       summary: Log in with LRN/ID and 6-digit PIN
@@ -175,6 +135,7 @@ paths:
                   $ref: "#/components/schemas/User"
     post:
       summary: Create a teacher or learner account (admin)
+      description: The Hub admin creates accounts in the Hub dashboard. This is the only creation operation for teacher and learner accounts. Each request creates one account.
       tags: [admin]
       requestBody:
         required: true

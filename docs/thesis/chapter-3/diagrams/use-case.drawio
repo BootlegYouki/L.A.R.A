@@ -19,7 +19,7 @@
         <mxCell id="6" value="USB storage" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=16;fontColor=#152a38;" vertex="1" parent="1">
           <mxGeometry x="1740" y="1470" width="90" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="7" value="Register / sign in" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#152a38;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
+        <mxCell id="7" value="Sign in with ID/LRN and PIN" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#152a38;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">
           <mxGeometry x="200.0" y="305" width="360" height="64" as="geometry" />
         </mxCell>
         <mxCell id="8" value="Validate identity / create session" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#152a38;fontSize=14;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="1">

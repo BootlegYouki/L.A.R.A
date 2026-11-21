@@ -1,5 +1,7 @@
 # Six-digit authentication PIN and pending-class metadata (#326)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 Reference: #321. Baseline: `staging` / `origin/staging` at
 `dcb65f158e5dcc042d8ccaeec00788a2f83188ec`, verified against GitHub before editing.
 This work is isolated from MOBILE 3.5 in branch `mobile/326-pin-pending-join`.
