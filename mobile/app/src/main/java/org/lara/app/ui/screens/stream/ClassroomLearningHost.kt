@@ -161,7 +161,9 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
         SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
             ClassDiscussion(container, userId, selectedPost, classroom.archivedAt != null, reload, { openedPost = null }) {
-                materials.filter { it.announcementId == selectedPost.id }.forEach { material -> MaterialRow(material) { openMaterial(material.id) } }
+                AnnouncementActions(container, userId, classroom, selectedPost,
+                    materials.filter { it.announcementId == selectedPost.id }, hubReachable == true, reload,
+                    close = { openedPost = null }, openMaterial = { openMaterial(it) })
             } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }

@@ -6,7 +6,7 @@ data class AssignmentDraft(val title: String, val instructions: String, val maxP
     val dueDate: Long, val allowLate: Boolean, val topicId: String?)
 data class MaterialDraft(val title: String, val fileType: String, val topicId: String? = null,
     val assignmentId: String? = null, val announcementId: String? = null)
-data class AuthoringUpload(val id: String, val title: String, val state: String, val percent: Int)
+data class AuthoringUpload(val id: String, val title: String, val state: String, val percent: Int, val announcementId: String? = null)
 
 interface ClassworkAuthoringRepository {
     suspend fun saveAssignment(classroomId: String, id: String?, draft: AssignmentDraft): String

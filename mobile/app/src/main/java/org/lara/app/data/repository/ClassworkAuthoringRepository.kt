@@ -83,7 +83,8 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
         val superseded = rows.flatMap { it.tags }.filter { it.startsWith("retry-of:") }.map { it.removePrefix("retry-of:") }.toSet()
         rows.filterNot { it.id.toString() in superseded }.sortedBy { it.id.toString() }.map { row -> AuthoringUpload(row.id.toString(),
             row.progress.getString("title") ?: row.outputData.getString("title").orEmpty(),
-            row.state.name, if (row.state == WorkInfo.State.SUCCEEDED) 100 else row.progress.getInt("percent", 0)) }
+            row.state.name, if (row.state == WorkInfo.State.SUCCEEDED) 100 else row.progress.getInt("percent", 0),
+            row.tags.firstOrNull { it.startsWith("announcement:") }?.removePrefix("announcement:")) }
     }
     override suspend fun retry(uploadId: String) = withContext(Dispatchers.IO) {
         val old = manager.getWorkInfoById(UUID.fromString(uploadId)).get() ?: return@withContext
@@ -93,7 +94,10 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
         manager.enqueueUniqueWork("authoring-retry-$uploadId", ExistingWorkPolicy.KEEP, request(data, uploadId)).result.get()
     }
     private fun request(data: Data, retryOf: String? = null) = OneTimeWorkRequestBuilder<MaterialUploadWorker>()
-        .apply { retryOf?.let { addTag("retry-of:$it") } }.setInputData(data).addTag("authoring-$userId").addTag("authoring-$userId-${data.getString("class")}")
+        .apply {
+            retryOf?.let { addTag("retry-of:$it") }
+            data.getString("announcement")?.let { addTag("announcement:$it") }
+        }.setInputData(data).addTag("authoring-$userId").addTag("authoring-$userId-${data.getString("class")}")
         .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build()
 }
 

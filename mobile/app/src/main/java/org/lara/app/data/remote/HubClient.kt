@@ -9,10 +9,10 @@ class HubFailure(val status: Int, val code: String, val retryAfterSeconds: Long 
 
 /** Fixed route groups and no redirects: credentials remain on the selected LAN Hub. */
 class HubClient {
-    internal fun postAnnouncement(c: EnrollmentConnection, payload: String) {
+    internal fun postAnnouncement(c: EnrollmentConnection, payload: String): String {
         require(c.session.hub == c.endpoint.restBase)
         require(c.session.token.isNotBlank() && c.session.token.none(Char::isWhitespace))
-        exchange(c.endpoint, "/api/announcements", "POST", payload, c.session.token, maxBytes = null)
+        return exchange(c.endpoint, "/api/announcements", "POST", payload, c.session.token)
     }
 
     internal fun manageClass(c: EnrollmentConnection, classroomId: String?, action: String?,

@@ -19,7 +19,7 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
         .readTimeout(120, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).build()
 
     suspend fun mutate(userId: String, kind: String, id: String?, method: String, payload: JsonObject?): String = withContext(Dispatchers.IO) {
-        require(kind in setOf("assignments", "materials", "topics"))
+        require(kind in setOf("assignments", "materials", "topics", "announcements"))
         require(id == null || id.matches(Regex("[A-Za-z0-9-]{1,128}")))
         require(method in setOf("POST", "PATCH", "DELETE"))
         val c = sessions.connection(userId)
