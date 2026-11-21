@@ -52,9 +52,13 @@ class ActivityContractProposal(unittest.TestCase):
         self.assertEqual(parameters["limit"], {"type": "integer", "minimum": 1, "maximum": 100, "default": 100})
         self.assertEqual(parameters["q"]["maxLength"], 64)
         self.assertIn("history_id", parameters)
-        # The new route is deliberately not advertised by the current canonical API.
+        # The promoted contract must preserve this draft's safe DTO shapes.
         canonical = yaml.safe_load((ROOT.parents[1] / "openapi.yaml").read_text(encoding="utf-8"))
-        self.assertNotIn("/api/admin/activity-logs", canonical["paths"])
+        self.assertIn("/api/admin/activity-logs", canonical["paths"])
+        canonical_definitions = canonical["components"]["schemas"]
+        for name, definition in DEFINITIONS.items():
+            expected = json.loads(json.dumps(definition).replace('#/$defs/', '#/components/schemas/'))
+            self.assertEqual(canonical_definitions[name], expected)
 
     def test_sql_is_executable_and_private_tables_have_no_foreign_keys(self):
         names = {row[0] for row in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}

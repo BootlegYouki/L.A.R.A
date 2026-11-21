@@ -33,6 +33,7 @@ import threading
 import time
 import uuid
 import zipfile
+from urllib.parse import parse_qs, urlsplit
 
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 GRACE_MS = 60_000
@@ -83,6 +84,13 @@ class HubState:
         self.seq = 0
         self.hub_id = new_id()
         self.sync_epoch = 1
+        self.activity_history_id = new_id()
+        self.activity_entries = []
+        self.activity_seq = 0
+        self.activity_pruned_through_seq = 0
+        self.activity_dropped_total = 0
+        self.activity_recording_state = "ACTIVE"
+        self.activity_readable = True
         self.ws_clients = []
         self._seed()
 
@@ -302,7 +310,9 @@ class MockHttpHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def log_message(self, format, *args):
-        sys.stdout.write(f"[HTTP] {self.address_string()} - {format % args}\n")
+        # Query values can contain credentials or user-entered search text.
+        message = re.sub(r'\?[^ "\r\n]*', '', format % args)
+        sys.stdout.write(f"[HTTP] {self.address_string()} - {message}\n")
         sys.stdout.flush()
 
     def _cors(self):
@@ -541,6 +551,101 @@ def admin_reset(req):
     user["pin_hash"] = hash_pin(str(req.json().get("pin", "")))
     user["updated_at"] = now_ms()
     return {"success": True}
+
+
+# ---- private Hub activity contract reference
+@route("GET", r"/api/admin/activity-logs", role="ADMIN")
+def admin_activity_logs(req):
+    """Bounded in-memory contract reference; production persistence belongs to #368."""
+    if not req.handler.headers.get("Authorization", "").startswith("Bearer "):
+        raise ApiError(401, "UNAUTHORIZED", "A bearer header is required")
+    if not is_hub_pc(req):
+        raise ApiError(403, "ADMIN_LOCAL_ONLY", "Activity history is available on the Hub PC only")
+    if not STATE.activity_readable:
+        raise ApiError(503, "ACTIVITY_LOG_UNAVAILABLE", "Activity history is unavailable")
+
+    raw_query = urlsplit(req.handler.path).query
+    try:
+        if re.search(r'%(?![0-9a-fA-F]{2})', raw_query):
+            raise ValueError()
+        query = parse_qs(raw_query, keep_blank_values=True, strict_parsing=True, errors="strict") if raw_query else {}
+    except (ValueError, UnicodeError):
+        raise ApiError(400, "BAD_REQUEST", "Invalid activity filters")
+    allowed = {"limit", "before_seq", "after_seq", "snapshot_seq", "history_id", "from_time", "to_time", "severity", "q"}
+    if set(query) - allowed or any(len(values) != 1 for values in query.values()):
+        raise ApiError(400, "BAD_REQUEST", "Invalid activity filters")
+    query = {key: values[0] for key, values in query.items()}
+    if "before_seq" in query and "after_seq" in query:
+        raise ApiError(400, "BAD_REQUEST", "Choose one activity cursor")
+    numbers = {}
+    for key in ("limit", "before_seq", "after_seq", "snapshot_seq", "from_time", "to_time"):
+        if key not in query:
+            continue
+        value = query[key]
+        minimum, maximum = (1, 100) if key == "limit" else (1 if key == "before_seq" else 0, 9007199254740991)
+        if not re.fullmatch(r"[0-9]+", value) or len(value) > 16:
+            raise ApiError(400, "BAD_REQUEST", "Invalid activity cursor or bound")
+        numbers[key] = int(value)
+        if not minimum <= numbers[key] <= maximum:
+            raise ApiError(400, "BAD_REQUEST", "Invalid activity cursor or bound")
+    if {"from_time", "to_time"} <= numbers.keys() and numbers["from_time"] >= numbers["to_time"]:
+        raise ApiError(400, "BAD_REQUEST", "Invalid activity date range")
+    if {"before_seq", "after_seq", "snapshot_seq"} & query.keys() and "history_id" not in query:
+        raise ApiError(400, "BAD_REQUEST", "Activity history id is required")
+    if "history_id" in query:
+        try:
+            history_id = str(uuid.UUID(query["history_id"]))
+        except ValueError:
+            raise ApiError(400, "BAD_REQUEST", "Invalid activity history id")
+        if history_id != STATE.activity_history_id:
+            raise ApiError(409, "ACTIVITY_LOG_RESET", "Activity history changed; reload it")
+    if "severity" in query and query["severity"] not in ("INFO", "WARNING", "ERROR"):
+        raise ApiError(400, "BAD_REQUEST", "Invalid activity severity")
+    if len(query.get("q", "")) > 64:
+        raise ApiError(400, "BAD_REQUEST", "Activity search is too long")
+
+    current_time = now_ms()
+    kept = sorted((item for item in STATE.activity_entries if item["occurred_at"] >= current_time - 7 * 86400000), key=lambda item: item["seq"])[-20000:]
+    retained_seq = {item["seq"] for item in kept}
+    removed = [item["seq"] for item in STATE.activity_entries if item["seq"] not in retained_seq]
+    STATE.activity_pruned_through_seq = max([STATE.activity_pruned_through_seq] + removed)
+    STATE.activity_entries = kept
+    high_water = numbers.get("snapshot_seq", STATE.activity_seq)
+    if high_water > STATE.activity_seq:
+        raise ApiError(400, "BAD_REQUEST", "Activity snapshot is ahead of history")
+    search = query.get("q", "").strip().replace("_", " ").casefold()
+    selected = []
+    for item in kept:
+        if item["seq"] > high_water:
+            continue
+        if "before_seq" in numbers and item["seq"] >= numbers["before_seq"]:
+            continue
+        if "after_seq" in numbers and item["seq"] <= numbers["after_seq"]:
+            continue
+        if "from_time" in numbers and item["occurred_at"] < numbers["from_time"]:
+            continue
+        if "to_time" in numbers and item["occurred_at"] >= numbers["to_time"]:
+            continue
+        if "severity" in query and item["severity"] != query["severity"]:
+            continue
+        words = " ".join(str(item[key]) for key in ("event_code", "service", "result")) + " " + item["details"].get("reason", "")
+        if search not in words.replace("_", " ").casefold():
+            continue
+        selected.append(item)
+    newer = "after_seq" in numbers
+    selected.sort(key=lambda item: item["seq"], reverse=not newer)
+    limit = numbers.get("limit", 100)
+    page = selected[:limit]
+    more = len(selected) > limit
+    entries = sorted(page, key=lambda item: item["seq"], reverse=True)
+    result = {
+        "history_id": STATE.activity_history_id, "entries": entries, "high_water_seq": high_water,
+        "next_before_seq": min(item["seq"] for item in page) if more and not newer else None,
+        "next_after_seq": max(item["seq"] for item in page) if more and newer else None,
+        "pruned_through_seq": STATE.activity_pruned_through_seq, "dropped_total": STATE.activity_dropped_total,
+        "recording_state": STATE.activity_recording_state, "server_time": current_time,
+    }
+    return Raw(json.dumps(result).encode("utf-8"), "application/json", headers={"Cache-Control": "no-store"})
 
 
 # ---- classrooms
