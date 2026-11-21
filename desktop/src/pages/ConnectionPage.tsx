@@ -17,7 +17,7 @@ export default function ConnectionPage({ t, hubs, failed, searching, connection,
     <div role="status">
       {failed ? <p><i className="ph ph-warning-circle" aria-hidden="true" /> {t.discovery_error}</p>
         : hubs.length === 0 && searching ? <div aria-label={t.discovery_loading} className="skeleton hub-skeleton" />
-        : hubs.length === 0 ? <p>{t.discovery_empty}</p>
+        : hubs.length === 0 ? <p className="discovery-empty">{t.discovery_empty}</p>
         : <ul className="hub-list">{hubs.map((hub) => <li key={`${hub.ip}:${hub.http_port}`}>
           <div><strong>{hub.name}</strong><p>{hub.ip}:{hub.http_port}</p></div>
           <button type="button" className="control tonal-button" disabled={connecting}

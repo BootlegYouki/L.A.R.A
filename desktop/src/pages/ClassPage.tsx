@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from '../i18n';
+import OwlEmptyState from '../components/OwlEmptyState';
+import streamOwl from '../assets/owls/owl-03.webp';
+import classworkOwl from '../assets/owls/owl-11.webp';
 import type { CachedAccount, Classroom } from '../services/auth';
 
 interface Lesson { id: string; title: string; file_type: string; saved: boolean; chunks: {heading: string | null; text: string}[] }
@@ -64,14 +67,14 @@ export default function ClassPage({account, classroom, people, onVideo}: Props) 
           <div className="stream-layout">
             <aside className="stream-sidebar" aria-labelledby="stream-classwork-title"><div><h2 id="stream-classwork-title">{t.classwork}</h2>{content && <p className="stream-material-count">{content.materials.length === 1 ? t.class_materials_one : t.class_materials_many.replace('{count}', String(content.materials.length))}</p>}</div><button type="button" className="control text-button" onClick={() => {setTab('classwork'); classworkTab.current?.focus();}}>{t.class_open_classwork}<i className="ph ph-arrow-right" aria-hidden="true" /></button></aside>
             <div className="stream-feed">{content && (content.announcements.length ? content.announcements.map(post =>
-              <article className="stream-post" key={post.id}><header className="stream-post-header"><span className="class-type-icon"><i className="ph ph-megaphone" aria-hidden="true" /></span><div><h2>{post.title}</h2><time dateTime={new Date(post.created_at).toISOString()}>{new Date(post.created_at).toLocaleDateString('en')}</time></div></header><p className="lesson-text stream-post-body">{post.content}</p></article>) : <p className="empty-state">{t.stream_empty}</p>)}</div>
+              <article className="stream-post" key={post.id}><header className="stream-post-header"><span className="class-type-icon"><i className="ph ph-megaphone" aria-hidden="true" /></span><div><h2>{post.title}</h2><time dateTime={new Date(post.created_at).toISOString()}>{new Date(post.created_at).toLocaleDateString('en')}</time></div></header><p className="lesson-text stream-post-body">{post.content}</p></article>) : <OwlEmptyState variant="stream" image={streamOwl} title={t.stream_empty} />)}</div>
           </div>
         </> : <section className="classwork-section" aria-labelledby="classwork-title">
           <header className="classwork-heading"><div><h1 id="classwork-title">{t.classwork}</h1><p>{classroom.name} / {classroom.section}</p></div>{content && <p>{content.materials.length === 1 ? t.class_materials_one : t.class_materials_many.replace('{count}', String(content.materials.length))}</p>}</header>
           {content && (content.materials.length ? <ul className="material-list">{content.materials.map(item => <li key={item.id}>
             <details className="material-item"><summary className="material-row"><span className="class-type-icon"><i className={'ph '+(item.file_type === 'VIDEO' ? 'ph-play-circle' : 'ph-file-text')} aria-hidden="true" /></span><span className="material-name">{item.title}<span className="material-meta">{item.file_type === 'VIDEO' ? t.class_video : t.class_handout}</span></span>{item.saved && <small className="material-saved">{t.lesson_saved}</small>}<i className="ph ph-caret-down material-caret" aria-hidden="true" /></summary>
               <div className="material-preview"><p className="material-excerpt">{item.file_type === 'VIDEO' ? t.class_video_help : item.chunks[0]?.text || t.lesson_text_missing}</p><button type="button" className="control text-button material-open" aria-label={(item.file_type === 'VIDEO' ? t.class_open_video : t.class_open_handout)+': '+item.title} onClick={() => {setSaveError(false); if (item.file_type === 'VIDEO') onVideo(item.id); else setLessonId(item.id);}}><span className="attachment-file-info"><strong>{item.title}</strong><small>{item.file_type === 'VIDEO' ? t.class_video : t.class_handout}</small></span><span className="attachment-file-art" aria-hidden="true"><i className={'ph '+(item.file_type === 'VIDEO' ? 'ph-play-circle' : 'ph-file-text')} /></span></button></div>
-            </details></li>)}</ul> : <p className="empty-state">{t.classwork_empty}</p>)}
+            </details></li>)}</ul> : <OwlEmptyState variant="center" image={classworkOwl} title={t.classwork_empty} body={t.classwork_empty_help} />)}
         </section>}
 
       </>}

@@ -216,6 +216,7 @@
   "class_tabs": "Class navigation",
   "stream_empty": "No announcements yet",
   "classwork_empty": "No lesson materials yet",
+  "classwork_empty_help": "Materials shared by your teacher will appear here.",
   "class_content_error": "Saved class content could not be opened.",
   "lesson_saved": "Saved on this device",
   "lesson_save": "Save for Home",
