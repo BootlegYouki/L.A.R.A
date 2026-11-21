@@ -1,0 +1,84 @@
+[
+ {
+  "name": "Qwen3-4B-Instruct-2507",
+  "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+  "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+  "size_bytes": 2497281120,
+  "role": "baseline",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "Gemma-3-4B-it",
+  "repo": "unsloth/gemma-3-4b-it-GGUF",
+  "file": "gemma-3-4b-it-Q4_K_M.gguf",
+  "size_bytes": 2489894016,
+  "role": "candidate",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "Phi-4-mini-instruct",
+  "repo": "unsloth/Phi-4-mini-instruct-GGUF",
+  "file": "Phi-4-mini-instruct-Q4_K_M.gguf",
+  "size_bytes": 2491874272,
+  "role": "candidate",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "Qwen3-8B",
+  "repo": "unsloth/Qwen3-8B-GGUF",
+  "file": "Qwen3-8B-Q4_K_M.gguf",
+  "size_bytes": 5027784512,
+  "role": "candidate",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "Granite-4.0-H-Tiny",
+  "repo": "unsloth/granite-4.0-h-tiny-GGUF",
+  "file": "granite-4.0-h-tiny-Q4_K_M.gguf",
+  "size_bytes": 4254815392,
+  "role": "candidate",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "LFM2-8B-A1B",
+  "repo": "LiquidAI/LFM2-8B-A1B-GGUF",
+  "file": "LFM2-8B-A1B-Q4_K_M.gguf",
+  "size_bytes": 5044779712,
+  "role": "candidate",
+  "moe": false,
+  "optional": false
+ },
+ {
+  "name": "Qwen3-30B-A3B-REAP-15B",
+  "repo": "12bitmisfit/Qwen3-30B-A3B-Instruct-2507_Pruned_REAP-15B-A3B-GGUF",
+  "file": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+  "size_bytes": 9754937408,
+  "role": "optional comparison (the Lead's current CPU model)",
+  "moe": true,
+  "optional": true,
+  "save_as": "Qwen3-30B-A3B-Instruct-2507-REAP-15B-A3B-Q4_K_M.gguf"
+ },
+ {
+  "name": "Qwen3-30B-A3B-Instruct-2507",
+  "repo": "unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF",
+  "file": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+  "size_bytes": 18556686752,
+  "role": "optional, experts in system RAM",
+  "moe": true,
+  "optional": true
+ },
+ {
+  "name": "nomic-embed-text-v1.5",
+  "repo": "nomic-ai/nomic-embed-text-v1.5-GGUF",
+  "file": "nomic-embed-text-v1.5.Q8_0.gguf",
+  "size_bytes": 146146432,
+  "role": "embedder (always kept)",
+  "moe": false,
+  "optional": false
+ }
+]

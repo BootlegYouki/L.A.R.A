@@ -1,0 +1,94 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L.A.R.A RAG prototype</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mute:#667085;--line:#e1e4ea;--pri:#1a73e8;--ai:#7b3fe4}
+*{box-sizing:border-box}body{margin:0;font:16px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:10px 12px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+h1{font-size:17px;margin:0 0 6px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0}
+button,select,input[type=text]{font:inherit;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:0 12px;background:var(--card)}
+button.p{background:var(--pri);color:#fff;border:0}button:disabled{opacity:.5}
+small,.mute{color:var(--mute);font-size:13px}main{padding:12px;max-width:760px;margin:auto;padding-bottom:90px}
+.msg{margin:10px 0;padding:10px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}
+.u{background:#e8f0fe;margin-left:15%}.a{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ai);margin-right:5%}
+.src{margin:6px 0 14px;font-size:13px;color:var(--mute)}.src .c{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:6px 8px;margin:4px 0}
+.g{border-color:var(--ai)!important}.src pre{white-space:pre-wrap;margin:6px 0 0;color:var(--ink);font:13px/1.4 system-ui}
+form{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);padding:8px 12px;display:flex;gap:8px}
+form input{flex:1;min-width:0}summary{cursor:pointer;padding:4px 0}
+</style></head><body>
+<header><h1>L.A.R.A RAG prototype <small id=st>…</small></h1>
+<div class=row><button id=sample>Load the sample lesson</button><input type=file id=file accept=application/pdf><small id=ing></small></div>
+<div class=row><select id=ret aria-label=Retriever><option>hybrid<option>bm25<option>vector<option>keyword</select>
+<select id=mdl aria-label=Model><option>…</select>
+<select id=rr aria-label="Sentence rerank"><option value=off>Sentence rerank: off<option value=on>Sentence rerank: on<option value=compress>Sentence rerank: compress</select>
+<select id=var aria-label="Prompt variant"><option value=V1>Prompt V1 (contract)<option value=V0>V0 plain QA - diagnostic only<option value=V2>Prompt V2<option value=V3>Prompt V3<option value=V4>Prompt V4 (find it yourself)<option value=V5>Prompt V5 (short: page only)<option value=V6>Prompt V6 (V5 + extras)<option value=V7>Prompt V7 (stronger grounding)</select>
+<label>Not-covered threshold <b id=thv></b> <input type=range id=th min=0 max=1 step=0.01></label>
+<label><input type=checkbox id=teacher checked> Teacher view</label><button id=new>New chat</button></div></header>
+<main id=log></main>
+<form id=f><input type=text id=q placeholder="Ask about the lesson…" autocomplete=off><button class=p id=go>Send</button></form>
+<script>
+const RETR=['keyword','bm25','vector','hybrid'];let hist=[],busy=false;const $=id=>document.getElementById(id),log=$('log');
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function status(){const s=await (await fetch('/api/status')).json();
+ $('st').textContent=(s.chunks?`${s.pages} pages · ${s.chunks} chunks`:'no lesson loaded')+` · embedder ${s.embedder} · LLM ${s.llm_up?(s.model||'up'):'DOWN'}`;
+ if(s.llm_up&&s.model&&!$('mdl').matches(':focus'))$('mdl').value=s.model;
+ if(s.defaults&&!window._dflt){window._dflt=1;applyDefaults(s.defaults)}
+ if(s.ingesting){const p=s.progress||{};$('ing').textContent='Loading the lesson: '+(p.stage||'')+(p.total?` ${p.done}/${p.total}`:'')+'…'}
+ else if(s.ingest_error)$('ing').textContent='Could not load the lesson: '+s.ingest_error}
+const store=(k,v)=>{try{sessionStorage.setItem('rag_'+k,v)}catch(e){}},load=k=>{try{return sessionStorage.getItem('rag_'+k)}catch(e){return null}};
+function applyDefaults(d){/* a fresh load shows the defaults; a change made in this browser tab survives a reload of that tab only */
+ const pick=(id,key,val)=>{const el=$(id);const v=load(key)??val;if([...el.options||[]].length&&![...el.options].some(o=>o.value===String(v)||o.text===String(v)))return;el.value=String(v);el.addEventListener('change',()=>store(key,el.value))};
+ pick('ret','ret',d.retriever);pick('rr','rr',d.rerank);pick('var','var',d.prompt);
+ const th=load('th')??d.threshold;$('th').value=th;$('thv').textContent=th;$('th').addEventListener('input',()=>store('th',$('th').value));
+ const tv=load('tv');$('teacher').checked=tv===null?d.teacher_view:tv==='1';$('teacher').addEventListener('change',()=>store('tv',$('teacher').checked?'1':'0'));
+ document.querySelectorAll('.src').forEach(e=>e.hidden=!$('teacher').checked)}
+$('th').oninput=()=>$('thv').textContent=$('th').value;
+async function ingest(url,body){$('ing').textContent='Sending the lesson…';
+ const r=await fetch(url,{method:'POST',body});const j=await r.json();
+ if(!r.ok){$('ing').textContent=j.error;return}
+ const t=setInterval(async()=>{try{const s=await (await fetch('/api/status')).json();status();if(!s.ingesting){clearInterval(t);$('ing').textContent=s.ingest_error?'Could not load the lesson: '+s.ingest_error:`${s.pages} pages, ${s.chunks} chunks`;status()}}catch(e){}},2000)}
+$('sample').onclick=()=>ingest('/api/ingest?sample=1');
+$('file').onchange=e=>e.target.files[0]&&ingest('/api/ingest',e.target.files[0]);
+$('new').onclick=()=>{hist=[];log.innerHTML=''};
+$('teacher').onchange=()=>document.querySelectorAll('.src').forEach(e=>e.hidden=!$('teacher').checked);
+const PROMPTS=[];
+function copyPrompt(i){const t=PROMPTS[i];if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t);
+ else{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}}
+const sec=(t,body,open)=>`<details ${open?'open':''}><summary><b>${t}</b></summary>${body}</details>`;
+function srcHtml(b,st){const T=b.trace,g=T.guard,q=T.query,bu=T.budget,tm=T.timing_ms;
+ let h=`<details ${$('teacher').checked?'open':''}><summary>Background · ${b.variant} · model ${esc(b.model||'?')} · ${b.prompt_tokens} prompt tokens${st?` · first token ${st.ttft_s}s · ${st.tok_per_s} tok/s`:''}</summary>`;
+ h+=sec('1 Query',`<div class=c>Retriever: <b>${q.retriever}</b><br>Vector query text: ${esc(q.vector_text)}<br>Embedding prefix: ${esc(q.embed_prefix)||'(none for documents)'}<br>Keyword/bm25 words: ${esc(q.keyword_words.join(', '))||'(none)'}<br>Page lookup: ${q.page_lookup.length?'yes, page '+q.page_lookup.join(', '):'no'} · Chapter lookup: ${(q.chapter_lookup||[]).length?'yes, pages '+q.chapter_lookup.join(', '):'no'}</div>`);
+ const cnt={};RETR.forEach(r=>T.candidates[r].forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1));
+ h+=sec('2 Candidates (top 10 per retriever)',RETR.map(r=>`<div class=c><b>${r}${r===q.retriever?' (active)':''}</b><br>`+T.candidates[r].map(c=>`<span ${cnt[c.id]>1?'style="background:#fff3bf"':''}>#${c.rank} p${c.page} ${esc(String(c.heading??'').slice(0,40))} · ${c.score}</span>`).join('<br>')+'</div>').join('')+'<small>Yellow = the chunk appears in more than one list.</small>');
+ if(T.rerank&&T.rerank.rows.length)h+=sec('2b Sentence rerank ('+T.rerank.mode+')',T.rerank.rows.map(r=>`<div class=c>p${r.page} · rank ${r.orig_rank} → <b>${r.new_rank}</b> · score ${r.score}<br>${esc(r.sentence)}</div>`).join(''));
+ h+=sec('3 Guard',`<div class=c>Signal: ${esc(g.signal)}<br>best bm25 ${g.bm25} (min ${g.bm25_min}) · best cosine ${g.cosine} (threshold ${g.threshold})<br>Tripped: <b>${g.tripped?'yes':'no'}</b><br>${esc(g.why)}</div>`,g.tripped);
+ h+=sec('4 Budget',`<div class=c>${bu.window} − ${bu.base} system prompt − ${bu.history} history − ${bu.reserve} reply = <b>${bu.lesson}</b> tokens for lesson text</div>`+bu.items.map(x=>`<div class=c>p${x.page} ${esc(String(x.heading??'').slice(0,40))} · ${x.tokens} tok · <b>${esc(x.status)}</b></div>`).join(''));
+ h+=sec('5 Chunks sent',(b.guard_tripped?'<div class=c>Nothing sent.</div>':'')+b.sources.map(s=>{const sc=Object.entries(s.scores).map(([k,v])=>`${k} ${v}${s.ranks[k]?' (#'+s.ranks[k]+')':''}`).join(' · ');
+  return `<div class="c ${s.grounded?'g':''}"><b>page ${s.page}</b> · ${esc(s.heading)}${s.grounded?' · <b>grounded_chunk_id '+s.id+'</b>':' · chunk '+s.id}<br>${sc}<details><summary>chunk text (${s.tokens} tok)</summary><pre>${esc(s.text)}</pre></details></div>`}).join(''),true);
+ const txt=T.prompt_messages.map(m=>`[${m.role}]\n${m.content}`).join('\n\n');PROMPTS.push(txt);
+ h+=sec('6 Full prompt',`<div class=c>Variant ${b.variant}. <button type=button onclick="copyPrompt(${PROMPTS.length-1})" style="min-height:32px">Copy</button><pre>${esc(txt)}</pre></div>`);
+ h+=sec('7 Timing',`<div class=c>embed ${tm.embed} ms · retrieve ${tm.retrieve} ms · tokenize ${tm.tokenize} ms${st?` · prompt eval ${st.prompt_eval_ms} ms · first token ${st.ttft_s} s · ${st.tok_per_s} tok/s · cached prompt tokens ${st.cached_tokens}${st.redacted?` · <b>${st.redacted} sentence(s) removed by the Hub leak guard${st.cite_removed?` (${st.cite_removed} cited a page that was not sent)`:''}</b>`:''}`:' · (waiting for the model…)'}</div>`);
+ if(T.expected){const e=T.expected,hit=b.sources.some(s=>s.page===e.page||(Array.isArray(e.page)&&e.page.includes(s.page)));
+  h+=sec('Expected (test key, not seen by the model)',`<div class=c>${e.id}: page ${esc(String(e.page))} · ${hit?'<b>retrieval hit</b> (that page was sent)':'<b>retrieval miss</b> (that page was not sent)'}<br>Quote: ${esc(e.quote||'')}<br>Expected answer: ${esc(e.expected_answer||'')}</div>`,true)}
+ return h+'</details>'}
+$('f').onsubmit=async e=>{e.preventDefault();const m=$('q').value.trim();if(!m||busy)return;busy=true;$('q').value='';$('go').disabled=true;
+ log.insertAdjacentHTML('beforeend',`<div class="msg u">${esc(m)}</div><div class="msg a" id=cur>…</div><div class=src id=cs></div>`);
+ const cur=$('cur'),cs=$('cs');cur.removeAttribute('id');cs.removeAttribute('id');let text='',src=null,stats=null;
+ try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,history:hist,retriever:$('ret').value,threshold:+$('th').value,variant:$('var').value,rerank:$('rr').value})});
+  if(!r.ok){cur.textContent=(await r.json()).error;throw 0}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  for(;;){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+   while((i=buf.indexOf('\n\n'))>=0){const [a,b]=buf.slice(0,i).split('\n');buf=buf.slice(i+2);const ev=a.slice(7),d=JSON.parse(b.slice(6));
+    if(ev==='sources'){src=d;cs.innerHTML=srcHtml(d);cs.hidden=!$('teacher').checked}
+    else if(ev==='stage'){if(!text)cur.textContent=d.text||'…'}
+    else if(ev==='token'){text+=d;cur.textContent=text;scrollTo(0,document.body.scrollHeight)}
+    else if(ev==='done'){stats=d;const o=[...cs.querySelectorAll('details')].map(x=>x.open);cs.innerHTML=srcHtml(src,d);cs.querySelectorAll('details').forEach((x,i)=>x.open=!!o[i])}
+    else if(ev==='error')cur.textContent+='\n['+d.error+']'}}
+  hist.push({role:'user',content:m},{role:'assistant',content:text,chunk_id:src&&src.grounded_chunk_id})}
+ catch(x){cur.textContent+='\n[page error: '+x.message+']'}busy=false;$('go').disabled=false};
+async function models(){const m=await (await fetch('/api/models')).json();$('mdl').innerHTML=m.models.map(x=>`<option value="${esc(x.name)}">${esc(x.name)} (${x.size_mb} MB)</option>`).join('');if(m.loaded)$('mdl').value=m.loaded}
+$('mdl').onchange=async()=>{const r=await fetch('/api/model',{method:'POST',body:JSON.stringify({name:$('mdl').value})});const j=await r.json();
+ if(!r.ok){alert(j.error);models();return}$('st').textContent='loading '+j.loading+'...';const t=setInterval(async()=>{try{const s=await (await fetch('/api/status')).json();if(s.llm_up){clearInterval(t);status();models()}else $('st').textContent='loading '+j.loading+'...'}catch(e){}},3000)};
+models();setInterval(async()=>{try{const s=await (await fetch('/api/status')).json();const up=s.llm_up;$('go').disabled=!up||busy;$('q').placeholder=up?'Ask about the lesson…':'loading '+($('mdl').value||'model')+'...';
+ if(up&&s.model&&!$('mdl').matches(':focus'))$('mdl').value=s.model;if(s.switch_error)$('st').textContent=s.switch_error;else if(!up||s.switching)$('st').textContent='loading '+($('mdl').value||'model')+'...';else status()}catch(e){}},2000);
+status();
+</script></body></html>
