@@ -55,3 +55,5 @@ JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/private/tmp ./gradlew test lint --continue -
 `ClassworkMockTest` is opt-in with `LARA_AUTHORING_MOCK=1` and an unchanged Mock Hub on 38080/38081. It verifies Room after exactly one learner pull for each create/edit/topic-delete/assignment-delete step. `MaterialStreamingTest` checks the 250 MiB boundary without allocating a 250 MiB array. `ClassworkAuthoringApiTest` checks multipart fields, streaming progress, redirects and Hub binding. The ViewModel test verifies partial attachment failure/retry without creating a second assignment or duplicating prior enqueues.
 
 Physical evidence and actual outcomes belong in `evidence/127/README.md`; do not infer LAN/WAN, real-Hub, vendor-kill or Android Studio profiler results from transport/unit fixtures.
+
+New queued teacher uploads store the authenticated Hub ID, so changing the address can preserve a retry without sending its file to a different Hub. Older jobs have only the original address and retain that address check.

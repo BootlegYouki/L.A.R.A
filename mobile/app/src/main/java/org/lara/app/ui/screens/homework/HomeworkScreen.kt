@@ -56,6 +56,15 @@ import org.lara.app.domain.Cached
 import org.lara.app.data.repository.HomeworkAttachment
 import org.lara.app.ui.theme.*
 
+internal fun privateCommentStatusLabel(status: String, reason: String?): Int? = when (status) {
+    "QUEUED_FOR_SYNC" -> R.string.reading_queued
+    "REJECTED" -> when (reason) {
+        "FORBIDDEN", "NOT_FOUND" -> R.string.homework_comment_access_changed
+        else -> R.string.homework_comment_rejected
+    }
+    else -> null
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, close: () -> Unit) {
@@ -233,6 +242,10 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                                     DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(c.createdAt)),
                                     style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
                                 Text(c.content, style = MaterialTheme.typography.bodyLarge)
+                                privateCommentStatusLabel(c.syncStatus, c.syncRejectReason)?.let { label ->
+                                    Text(stringResource(label), style = MaterialTheme.typography.bodySmall,
+                                        color = LaraColors.TextSecondary)
+                                }
                             }
                         }
         

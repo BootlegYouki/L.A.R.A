@@ -120,12 +120,12 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
     val selectedAssignment = assignments.find { it.id == openedAssignment }
     val fullScreen = org.lara.app.ui.components.LocalFullScreenOverlay.current
-    if (selectedAssignment != null && fullScreen != null) {
+    val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+    if (selectedAssignment != null && fullScreen != null && storeOwner != null) {
         BackHandler { openedAssignment = null }
-        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
         // The overlay is drawn by the scaffold, so hand it this screen's owners or its ViewModel loses the saved-state registry.
-        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val review = assignments.find { it.id == reviewAssignment }
@@ -153,26 +153,22 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     }
     var openedPost by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val selectedPost = (posts as? Cached.Content)?.value.orEmpty().find { it.id == openedPost }
-    if (selectedPost != null && fullScreen != null) {
+    if (selectedPost != null && fullScreen != null && storeOwner != null) {
         BackHandler { openedPost = null }
-        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
-        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
             ClassDiscussion(container, userId, selectedPost, classroom.archivedAt != null, reload, { openedPost = null }) {
                 materials.filter { it.announcementId == selectedPost.id }.forEach { material -> MaterialRow(material) { openMaterial(material.id) } }
             } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val selected = materials.find { it.id == opened }
-    if (selected != null) {
+    if (selected != null && (selected.fileType != "VIDEO" || storeOwner != null)) {
         val page: @Composable () -> Unit = { key(selected.id) {
             if (selected.fileType == "VIDEO") VideoPlayerScreen(container, userId, selected.id) { opened = null }
             else MaterialReader(container, selected) { opened = null }
         } }
-        if (fullScreen != null) {
-            val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-            val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
-            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
+        if (fullScreen != null && storeOwner != null) {
+            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
             DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
         } else page()
         return

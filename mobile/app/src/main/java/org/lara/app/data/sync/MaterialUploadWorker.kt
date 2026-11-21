@@ -32,7 +32,7 @@ class MaterialUploadWorker(context: Context, params: WorkerParameters) : Corouti
             container.materialAuthoringApi.upload(owner, requireNotNull(inputData.getString("hub")),
                 requireNotNull(inputData.getString("class")), file,
                 MaterialDraft(title, requireNotNull(inputData.getString("type")), inputData.getString("topic"),
-                    inputData.getString("assignment"), inputData.getString("announcement"))) { percent ->
+                    inputData.getString("assignment"), inputData.getString("announcement")), inputData.getString("hub_id")) { percent ->
                 if (isStopped) throw java.io.InterruptedIOException()
                 setProgressAsync(workDataOf("title" to title, "percent" to percent))
             }

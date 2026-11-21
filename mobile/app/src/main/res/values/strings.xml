@@ -311,6 +311,8 @@
     <string name="homework_attachments">Attachments</string>
     <string name="homework_private_comments">Private comments</string>
     <string name="homework_no_comments">No comments</string>
+    <string name="homework_comment_access_changed">Not sent. The assignment or your class access may have changed.</string>
+    <string name="homework_comment_rejected">The Hub did not accept this private comment.</string>
     <string name="homework_comment_hint">Add private comment</string>
     <string name="homework_you">You</string>
     <string name="homework_teacher">Teacher</string>
