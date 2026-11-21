@@ -1,26 +1,28 @@
 # Pluggable Socratic AI & SLM Evaluation Guardrails
 
-This rule document governs Hub-only Small Language Model (SLM) operations for **L.A.R.A AI**.
+This rule document governs on-device Small Language Model (SLM) operations for **L.A.R.A AI**.
 
 All AI agents and contributors must follow these rules.
 
-**The Hub ships with the AI installed; using it is optional.** Learners on any device can use the Hub's shared, queued AI without downloading anything, and nothing else in L.A.R.A may depend on it. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE`, clients show "AI is not available right now", and every other feature keeps working.
+**The model lives on the Hub; inference runs on the device (decided 2026-11-21).** Phones and desktops download the model file from the Hub and run it offline; the Hub does no inference. Using the tutor is optional and nothing else in L.A.R.A may depend on it. A device without the model shows "Download the AI model from the Hub", a device that cannot run it shows "The AI tutor is not available on this device", and every other feature keeps working.
 
 ---
 
 ## 1. Pluggable Architecture & Experimental Model Benchmarking
 
-The Hub inference runtime is **model-agnostic and pluggable**, using **GGUF models with `llama-server` from `llama.cpp`**. Candidates and the chosen model come from the evaluation in section 5. Model swaps use `MODEL_PATH=models/*.gguf` without changing the client WebSocket stream.
+The on-device runtime is **model-agnostic and pluggable**, using **GGUF models**. The inference engine each client embeds (for example `llama.cpp` bindings) is to be chosen by the mobile and desktop teams. Candidates and the chosen model come from the evaluation in section 5. A model swap replaces the file the Hub serves; how devices detect and fetch a new version is to be defined in a contract-change PR.
 
 ---
 
-## 2. Hub-Only Inference
+## 2. Model Delivery and On-Device Inference
 
-Every phone, laptop and lab PC uses the Hub WebSocket stream: `EVENT_AI_CHAT_REQUEST` → `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. Clients send the learner's message and render the stream; only the Hub builds prompts and runs inference. There is no client RAM check or model download. The phone heap must still remain **strictly < 250MB** on the 3 to 4 GB hardware target.
+The Hub stores the model file and serves it over HTTP `:8080`. Because the file is large, the download must be resumable with HTTP Range, like video. After the download, every inference runs on the phone or desktop with no network. The Hub has no `llama-server`, no AI queue, no queue status and no tutor token stream.
 
-When the Hub is unreachable, show **"The AI tutor needs the classroom Hub"**. Past chats may be read from local `ai_chat_messages`; every other feature keeps working offline. Remote/Suspension Mode carries the same tutor stream through the Hub's tunnel.
+Remote/Suspension Mode: only the model download may use the Hub's tunnel; inference needs no network.
 
-The small models tested in #73 leaked answers or refused everything. The passing candidate needs about 11 GB RAM on a 16 GB Hub.
+A device that has not downloaded the model shows **"Download the AI model from the Hub"**; a device that cannot run it shows **"The AI tutor is not available on this device"**. Past chats may be read from local `ai_chat_messages`; every other feature keeps working offline.
+
+Open (to be defined in a contract-change PR): how the Hub obtains the model file, the model name and size, the minimum device RAM, the download route and its errors, and whether the phone heap limit of 250 MB (`mobile/README.md`) still holds while the model runs. The small models tested in #73 leaked answers or refused everything, so model choice stays open until the evaluation in section 5.
 
 
 ---
@@ -29,7 +31,7 @@ The small models tested in #73 leaked answers or refused everything. The passing
 
 L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It is Socratic, so the same rules hold at every grade level; there is no grade setting.
 
-**One system prompt, one file:** [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt). Only the Hub loads that file byte for byte and fills its two placeholders, `{reply_language}` and `{lesson_chunks}`. No team writes its own wording. Changing the prompt is a `contract-change` PR, and the evaluation in section 5 is re-run on the new text.
+**One system prompt, one file:** [`contracts/ai/socratic_system_prompt.txt`](../contracts/ai/socratic_system_prompt.txt). Only the app on the device loads that file byte for byte and fills its two placeholders, `{reply_language}` and `{lesson_chunks}`. No team writes its own wording. Changing the prompt is a `contract-change` PR, and the evaluation in section 5 is re-run on the new text.
 
 ### Non-Negotiable Directives:
 1. **Zero Direct Answers:** Under no circumstances should the model output the final solution, answer key, or complete homework answers.
@@ -41,11 +43,11 @@ L.A.R.A AI is a mentor for learners in Grades 1 to 12, not an answer engine. It 
 4. **Step-by-Step Questioning:** Give only ONE small clue at a time, followed by a leading question prompting the child to take the next step.
 5. **English only (decided 2026-11-05):** the tutor replies in English. When the learner writes in Filipino or Taglish, it does not answer or give a clue; it replies with exactly "I can only help in English. Please ask your question again in English." The 1–3B models tested on #73 leaked answers or pasted the refusal line in Filipino, so the tutor does not work in Filipino at all.
 
-### 3.1 Choosing which lesson chunks go into the prompt (Hub only)
+### 3.1 Choosing which lesson chunks go into the prompt (on the device)
 
-A lesson longer than the window cannot be pasted in whole, so the Hub picks chunks on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, and deterministic chunk selection.
+A lesson longer than the window cannot be pasted in whole, so the app picks chunks on every learner message with this one rule. It is keyword matching on purpose: no embedding model, no extra RAM, and deterministic chunk selection.
 
-1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus the chat history (section 3.2) minus 300 reserved for the reply. Count every part with the loaded model's own tokenizer (`llama-server` `POST /tokenize`), never a words-based estimate: words × 1.4 undercounts math text by about 8%, enough to overflow the window (#73). `material_chunks.token_estimate` is only a hint for clients and is never used for this budget.
+1. **Budget:** lesson tokens = 2,048 minus the filled system prompt minus the chat history (section 3.2) minus 300 reserved for the reply. Count every part with the loaded model's own tokenizer (the on-device engine's tokenizer), never a words-based estimate: words × 1.4 undercounts math text by about 8%, enough to overflow the window (#73). `material_chunks.token_estimate` is only a hint for clients and is never used for this budget.
 2. **Short lesson:** if all of the lesson's chunks fit the budget, send all of them and skip steps 3 to 5.
 3. **Query words:** take the learner's message plus their previous message in this lesson's chat (so "I don't know" or "is it 5?" still finds the topic). Lowercase, split on anything that is not a letter or digit, drop words under 3 characters and these stopwords: `the and for are was what how why who when where which this that with from you your can does did not ano ang mga para yung kung bakit paano saan sino ito iyan iyon siya sila ako ikaw natin namin nang lang din rin pa po`.
 4. **Score:** each chunk scores the number of distinct query words found in its `heading` + `text` (as whole words, lowercased).
@@ -56,24 +58,21 @@ The evaluation (section 5.1) includes long lessons that do not fit the window, s
 
 ### 3.2 Chat history (the tutor remembers its last clue)
 
-A Socratic tutor builds on its own last clue and the learner's last answer, so the Hub includes recent turns with each inference request.
+A Socratic tutor builds on its own last clue and the learner's last answer, so the app includes recent turns with each inference request.
 
 1. **Which turns:** the last 3 exchanges (up to 6 messages, learner and tutor) of this learner's chat about this material (same `student_id` and `material_id` in `ai_chat_messages`), oldest first. A chat about another material starts fresh.
 2. **Where:** as normal chat turns after the system prompt (`user` for `USER`, `assistant` for `TUTOR`), then the new learner message. Never paste them into the system prompt file; it keeps only its two placeholders.
 3. **Budget:** at most 300 tokens, counted with the model's tokenizer as in section 3.1. Drop the oldest whole message until it fits, so a long early reply never pushes out the latest one.
-4. **Who reads it:** the Hub reads its own `ai_chat_messages`; clients send only the new message in `EVENT_AI_CHAT_REQUEST`.
-5. **Saving:** after each reply, the Hub stores the learner message and the tutor reply in `ai_chat_messages`, with the reply's `chunk_id` set to its `grounded_chunk_id`, so section 3.1 step 5 can reuse it. A reply cut off by an error is not stored.
+4. **Who reads it:** the app reads its local `ai_chat_messages`. How the lesson chunks and chat history reach the device and whether chats sync to the Hub are to be defined in a contract-change PR.
+5. **Saving:** after each reply, the app stores the learner message and the tutor reply in `ai_chat_messages`, with the reply's `chunk_id` set to its `grounded_chunk_id`, so section 3.1 step 5 can reuse it. A reply cut off by an error is not stored.
 
 ---
 
-## 4. Hub FIFO Inference Queue
+## 4. Quiz Lockout and Device Limits
 
-To prevent the Hub PC from overloading when multiple devices ask questions simultaneously:
-* Configure `llama-server` with **2 to 4 parallel inference slots**.
-* Additional requests enter a **FIFO Queue**.
-* Push real-time queue position updates over WebSockets: *"You are second in the queue - est. 4s"* (`EVENT_QUEUE_STATUS`).
-* The queue is bounded. When full, reply with `EVENT_ERROR` code `AI_QUEUE_FULL` and a kind retry message instead of waiting forever.
-* **Hub hardware:** the pilot Hub is a dedicated always-on school PC. Generation must never starve video streaming or quiz traffic; cap concurrent slots from measured capacity, not from a guess. Record the machine's CPU, RAM and the measured tokens/second per slot in `server/docs/`.
+* **Quiz lockout:** while the learner has an `IN_PROGRESS` quiz attempt, the app does not show the chat UI and does not run the model. How this is enforced when the device is offline is to be defined in a contract-change PR (`rules/quiz-and-anti-cheat.md`).
+* **Device limits:** minimum RAM, free storage and generation speed per device class are open. Record the measured numbers per test device in `docs/benchmarks/` after the evaluation; do not guess them.
+* **Hub:** the Hub only serves the file, throttled like any other download so it never starves video streaming or quiz traffic.
 
 ---
 
@@ -93,10 +92,10 @@ Two team members score every reply independently, and neither knows which model 
 2. **Grounded:** stays on the supplied lesson text; correctly declines when the lesson does not cover it.
 3. **Socratic shape:** one small clue followed by one leading question.
 4. **Language:** replies in English, natural at the learner's level.
-5. **Latency:** time to first token and tokens per second on the real Hub machine.
+5. **Latency:** time to first token and tokens per second on the real target devices (budget phone and student laptop).
 
 ### 5.3 Run
-A script (no UI) runs each candidate GGUF on the actual Hub hardware with 1, 2 and 4 concurrent slots. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and `MODEL_PATH` is set from that decision.
+A script (no UI) runs each candidate GGUF on the actual target devices (budget phone and student laptop), one request at a time. Results (pass rate per criterion, latency, RAM) are saved as a table in `docs/benchmarks/ai_model_evaluation.md`. The chosen model and its measured numbers are recorded there, and the file the Hub serves is set from that decision.
 
 ### 5.4 Honesty rule
 The test set is written and scored by the development team, not by teachers or an adviser. Say so in `docs/benchmarks/ai_model_evaluation.md` and in the thesis: label the result "developer-scored" and never describe the pass rates as validated by educators. If a teacher or adviser reviews it later, record who and when.

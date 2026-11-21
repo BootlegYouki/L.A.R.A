@@ -9,7 +9,7 @@ Desktop owns the learner and teacher client described in [PRD sections 3–6](..
 
 Sources, in order: [contracts](../../contracts/), [root guide](../../AGENTS.md) and [rules](../../rules/), [design system](../../design-system/design-system.md), PRD, then this document. Paths below are relative to `desktop/` unless prefixed otherwise. Proposed modules are created only in their issue.
 
-Non-goals: Hub administration, Android code, new endpoints/schema columns, cloud backends, grade categories, model downloads, Electron/Prisma, or a model choice before the AI evaluation. Classroom and assessment features must work without AI. No feature development is authorized by an unresolved question here.
+Non-goals: Hub administration, Android code, new endpoints/schema columns, cloud backends, grade categories, Electron/Prisma, or a model choice before the AI evaluation. Classroom and assessment features must work without AI. No feature development is authorized by an unresolved question here.
 
 Existing scaffold [PR #161](https://github.com/BootlegYouki/L.A.R.A/pull/161) stays draft while Sprint 0 is reviewed. This spec adopts its `src/`, `store/`, `i18n/`, `services/db.ts`, `tests/` and `src-tauri/migrations/` names; it does not merge that PR. Only the spec is changed by this docs branch. Resume one desktop implementation issue at a time after approval; do not open another feature PR alongside the scaffold.
 
@@ -42,7 +42,7 @@ main.tsx → App.tsx → pages/ + components/
 | Token | Rust `secure_token.rs` using OS credential storage via `keyring`; expose narrowly scoped commands | Windows Credential Manager, macOS Keychain, Linux Secret Service; no plaintext token file | `localStorage`, SQLite, unprotected Tauri store |
 | Preferences | `services/settings.ts` owns nonsecret Hub preferences; no language preference | No extra schema/table; shared accessor for Settings and Connection | Inventing a `settings` SQL table |
 | UI | Bundled Nunito/Phosphor, canonical theme import, Radix Dialog when needed | Required accessible visual vocabulary | CDN assets, copied prototype runtime/demo data |
-| Tutor later | Hub WebSocket chat client; only the Hub builds prompts | Grounded hints from the Hub; quiz lockout on client and Hub | Client prompt building or inference |
+| Tutor later | Model downloaded from the Hub, inference on the device; the app builds the prompt from the contract file (decided 2026-11-21) | Grounded hints offline; quiz lockout on the device | Hub inference or a Hub token stream |
 
 Network permissions must be added with the first network issue, not the scaffold. The HTTP plugin scope and WebSocket/media CSP must permit only Hub transport and required loopback development. Because LAN IPs are dynamic, broad LAN-capable scope is not itself an authorization boundary: `api.ts` must restrict requests to the selected validated Hub and fixed contract paths, reject redirects to other origins, and never forward a token to a newly discovered address automatically. Remote URLs must be explicitly saved HTTPS Hub addresses; use WSS, never a TLS bypass. Confirm exact production capability/CSP patterns in the #40 spike before merging network code.
 
@@ -121,8 +121,8 @@ All events use [event schemas and handshake](../../contracts/events/README.md) a
 | `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED` | Start monotonic countdown; close locks inputs and saves/submits once |
 | `EVENT_QUIZ_SUBMIT` | Contracted alternative only; use REST/queued push as desktop default, never duplicate both paths |
 | `EVENT_GRADE_CONFIRMED`, `EVENT_PRESENCE` | Refresh own results or teacher monitor; no guessing missing identifiers |
-| `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | Later tutor request, translated queue status, incremental text; no automatic duplicate chat replay |
-| `EVENT_ERROR` | Map schema code; `QUIZ_IN_PROGRESS` unmounts tutor; unavailable AI leaves lesson usable |
+| Hub chat events (`EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM`) | Superseded 2026-11-21: no Hub tutor stream; the model download route is to be defined in a contract-change PR |
+| `EVENT_ERROR` | Map schema code; `QUIZ_IN_PROGRESS` unmounts tutor; a device without the model leaves the lesson usable |
 
 WS reconnect: 1/2/4/10-second maximum backoff; one socket; reconnect triggers pull. Retain `last_event_id` only if a contracted event actually supplies it; never manufacture IDs. Do not replay non-idempotent events on reconnect.
 
@@ -144,7 +144,7 @@ Pull is single-flight: validate complete response, open native transaction, appl
 | Homework/comments | Save locally and show queued state; attachments kept until receipt |
 | PDF/video | Open downloaded files; uncached content explains it needs the Hub; no endless spinner |
 | Existing quiz attempt | Continue monotonic countdown; lock/queue at zero or close; never fabricate a new offline attempt |
-| Tutor | Hub unreachable: "The AI tutor needs the classroom Hub"; past chats remain readable offline; never mounted during active attempt |
+| Tutor | Model downloaded: works offline. No model: "Download the AI model from the Hub"; cannot run it: "The AI tutor is not available on this device"; past chats remain readable offline; never mounted during active attempt |
 | Settings | Change local Hub preferences; warn/count queued rows before logout; preserve them |
 
 ## 8. Code Patterns
@@ -225,7 +225,7 @@ Owners below are proposed team responsibilities; no personal commitment by Kierv
 | OS token persistence across Windows/Linux/macOS | Desktop team | Before #45 merge | Session-only token, cached local access; never plaintext |
 | Single transaction, reset parent retention, receipts/revoked access | Desktop team + Lead/server for wire gaps | Before #48 implementation | Keep earlier read-only snapshots; block unsafe sync |
 | Question bank answer-key conflict | Lead + desktop team | Before #31 implementation | No persisted answer-key bank |
-| Hub AI quality and stream handling | Desktop + server AI evaluation owner | Before #32/#67 implementation | Tutor unavailable state if Hub unreachable |
+| On-device model quality, download and size (decision of 2026-11-21) | Desktop + server AI evaluation owner | Before #32/#67 implementation | "Not available on this device" state; tutor stays optional |
 
 ## 13. Commands and Verification
 

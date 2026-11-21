@@ -51,6 +51,9 @@ No database tables, events or contract routes are touched by this step.
 * **Installer wizard language:** the NSIS wizard and Hub window use English. The Hub window has no language toggle; its strings live in `ui/src/i18n/en.json` (#226).
 
 ## Pilot Hub hardware (1.5, #73)
+
+> **Superseded 2026-11-21 for the AI model:** the Hub no longer runs inference, so the model RAM budgets in this section and the next no longer constrain the Hub. Kept as historical measurement.
+
 **No pilot school PC is available yet.** The AI spike runs on a developer laptop set up as a simulated school PC. Replace this section with the real machine's details when the pilot school is known, and re-run the evaluation there (the commands are in `docs/benchmarks/ai_model_evaluation.md`).
 
 **Reference school PC (set by the Lead, 2026-10-30):** the weakest likely machine: Linux, a 4-core CPU, **4 GB RAM in total**, no graphics card.
@@ -92,6 +95,9 @@ Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC
 **On Linux, a model that does not fit slows down before it fails.** `llama-server` maps the model file into memory. When RAM runs short, Linux drops model pages (for example to cache a video being streamed) and reads them back from disk on the next token, so replies slow to a crawl. That is why the budget keeps a reserve.
 
 ## Hub spec for the AI tutor (#73)
+
+> **Superseded 2026-11-21:** the Hub no longer runs the model, so the 16 GB RAM requirement below no longer applies to the Hub. It only needs disk space to store and serve the model file. Device RAM limits are open until the evaluation. The text below is kept as historical measurement.
+
 **The Lead set the Hub budget at 16 GB on 2026-11-14 (#304)** and kept REAP-15B as the tutor model for the pilot ("Decision" in `docs/benchmarks/ai_model_evaluation.md`). There is no 32 GB option. First-token speed (criterion 5) passes on short lessons, as the Lead ruled on 2026-11-13, and the long-lesson wait is a known limit. The 4 GB reference PC above cannot run this model. The Lead moved the AI candidate to a 16 GB Hub on 2026-11-01.
 
 | Part | Spec | Why (measured on the 16 GB laptop, `results/v3-qwen3-reap/`) |
@@ -113,6 +119,6 @@ Speed numbers from this laptop are an **upper bound** for a school PC. A 4 GB PC
 | **Spare** | **≈ 3,900** |
 
 ## Open items (not built in this step)
-* **The AI model in the installer.** The issue asks the Lead whether the model ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model chosen in #73 (`docs/benchmarks/ai_model_evaluation.md`) is a 9.3 GB file. Until the Lead decides, the installer ships no model and the Hub answers `AI_NOT_AVAILABLE`, as PRD section 5.0 allows.
+* **The AI model in the installer.** The issue asks the Lead whether the model ships in the installer or comes from a USB drive at first run, because it may break "under 3 minutes". The model chosen in #73 (`docs/benchmarks/ai_model_evaluation.md`) is a 9.3 GB file. Since 2026-11-21 the Hub only stores and serves this file to devices; how the Hub obtains the file (installer, USB drive or other) is to be defined in a contract-change PR. Until then the installer ships no model.
 * **Client installers for the portal.** `/download` serves `<data_dir>/releases/`. Nothing in this step copies the student APK or the desktop installers there. They come from the mobile and desktop teams' builds and are copied there by hand until a later step owns it.
 * **Fresh-machine timing.** The "under 3 minutes" and "phones are not blocked" checks need a fresh Windows 10/11 PC or VM and a phone on the classroom router. See the PR's "How to test".

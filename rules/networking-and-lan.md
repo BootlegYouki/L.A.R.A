@@ -27,7 +27,7 @@ All AI agents and contributors must follow these rules.
   * Handles homework photo uploads (`POST /api/assignments/{id}/submit`).
 * **Realtime Event Broker (Port 8081):**
   * WebSocket channel for low-latency state synchronization.
-  * Handles live quiz starts, countdowns, enrollment notifications, stream pushes, and Hub-assisted AI token streaming.
+  * Handles live quiz starts, countdowns, enrollment notifications, and stream pushes.
 * **Network Discovery:**
   * **mDNS / Zeroconf:** Register service as `_lara._tcp.local` on port 8080.
   * **UDP Broadcast Beacon:** Broadcast JSON heartbeat packet every 3 seconds to subnet address `255.255.255.255:8888`:
@@ -99,8 +99,8 @@ Operating a multi-client classroom server over local Wi-Fi introduces OS firewal
 
 The one sanctioned exception to section 1's zero-internet invariant. See `AGENTS.md` section 3.5 for the product-level decision; this section is the networking detail.
 
-* **What it's for:** letting a Hub's own accounts reach it from outside the school network while classes are suspended (e.g. bad weather), so homework submission, the stream, materials, grades, private comments, the AI tutor and quizzes keep working from home. It changes transport only — never authorization, never the contract.
-* **Mechanism:** the Hub PC runs `cloudflared` as a managed child process (like `llama-server`), pointed at the Hub's own `:8080` and `:8081`. Cloudflare terminates TLS at its edge and proxies to the tunnel; the Hub never opens an inbound port on the public internet itself (no router port-forwarding, no dynamic DNS to the Hub's own IP). This keeps the Hub PC off the open internet even while reachable through the tunnel.
+* **What it's for:** letting a Hub's own accounts reach it from outside the school network while classes are suspended (e.g. bad weather), so homework submission, the stream, materials, grades, private comments, the AI model download and quizzes keep working (the on-device tutor needs no network) from home. It changes transport only — never authorization, never the contract.
+* **Mechanism:** the Hub PC runs `cloudflared` as a managed child process (a managed child process like any other Hub helper), pointed at the Hub's own `:8080` and `:8081`. Cloudflare terminates TLS at its edge and proxies to the tunnel; the Hub never opens an inbound port on the public internet itself (no router port-forwarding, no dynamic DNS to the Hub's own IP). This keeps the Hub PC off the open internet even while reachable through the tunnel.
 * **Opt-in and admin-controlled:** disabled by default. An admin enables it from the Hub dashboard, which then shows the assigned remote URL (e.g. `hub-<school>.lara.app`) for the admin to share with teachers and learners. Disabling it tears down the tunnel; nothing else about the Hub changes.
 * **Discovery stays LAN-first:** mDNS and the UDP beacon (section 2) are never attempted over the tunnel — they are broadcast/multicast and do not route off the LAN. A client on the school network always finds the Hub locally first; the remote URL is only used by a client that already has it saved and cannot reach the Hub locally.
 * **Auth is unchanged:** the same bearer token and `EVENT_HELLO` handshake (section 2.1) apply byte-for-byte over the tunnel. The tunnel does not add, remove or weaken any authorization check.

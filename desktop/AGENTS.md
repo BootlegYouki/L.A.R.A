@@ -21,7 +21,7 @@ A Tauri 2.x client (React 19, TypeScript strict, Tailwind) for student laptops, 
 * **Never store** a PIN hash, another person's LRN, or any answer key. Keep the auth token in the Tauri secure store.
 * **Quiz screen:** the AI drawer and buttons are removed from the React tree (not hidden with CSS) while a quiz is open. Countdown uses the server offset from `EVENT_HELLO_ACK` plus `performance.now()`; auto-submit at 00:00 and on `EVENT_QUIZ_CLOSED`.
 * **Video:** `<video>` cannot set headers, so stream with `?token=`. Downloaded videos set `materials.local_file_path` and play from disk.
-* **AI:** always stream from the Hub. Only the Hub builds prompts; clients send messages and render tokens. When the Hub is unreachable, show "The AI tutor needs the classroom Hub". Quiz lockout still applies.
+* **AI:** download the model file from the Hub, then run inference on the device with no network. The app builds the prompt from `contracts/ai/socratic_system_prompt.txt`. Without the model show "Download the AI model from the Hub"; if it cannot run, "The AI tutor is not available on this device". Quiz lockout still applies on the device.
 * **UI:** tokens from `design-system/` only, Nunito and Phosphor from `design-system/assets/`, 40px buttons and icon buttons and 48px tabs and drawer items, as in Google Classroom, English text in `src/i18n/en.json` with no language toggle, Radix Dialog for dialogs.
 * **Tauri:** least-privilege capabilities; only the commands you need.
 
