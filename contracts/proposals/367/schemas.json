@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "ActivityEventCode": {
+      "type": "string",
+      "enum": ["HUB_STARTED", "HUB_STOPPING", "UNCLEAN_RESTART", "SERVICE_UNAVAILABLE", "SERVICE_RECOVERED", "CONNECTION_PROBLEM", "DOCUMENT_UPLOADED", "DOCUMENT_UPLOAD_FAILED", "DOCUMENT_PROCESSED", "DOCUMENT_PROCESSING_FAILED", "QUIZ_STARTED", "QUIZ_START_FAILED", "QUIZ_CLOSED", "QUIZ_CLOSE_FAILED", "ACCOUNT_CREATED", "ACCOUNT_CREATE_FAILED", "PIN_RESET", "PIN_RESET_FAILED", "LOG_GAP"]
+    },
+    "ActivitySeverity": {"type": "string", "enum": ["INFO", "WARNING", "ERROR"]},
+    "ActivityResult": {"type": "string", "enum": ["SUCCEEDED", "FAILED", "DEGRADED"]},
+    "ActivityService": {
+      "type": "string",
+      "enum": ["HUB", "DATABASE", "HTTP", "WEBSOCKET", "DISCOVERY", "STORAGE", "DOCUMENTS", "QUIZZES", "ACCOUNTS", "ACTIVITY_LOG"]
+    },
+    "ActivityReason": {
+      "type": "string",
+      "enum": ["PORT_IN_USE", "NETWORK_UNAVAILABLE", "TIMEOUT", "STORAGE_UNAVAILABLE", "DATABASE_UNAVAILABLE", "UNREADABLE_DOCUMENT", "NO_TEXT_LAYER", "SIZE_LIMIT", "INVALID_INPUT", "NOT_ALLOWED", "CONFLICT", "QUEUE_FULL", "WRITE_FAILED", "REPEATED_EVENT", "UNCLEAN_EXIT", "INTERNAL_FAILURE"]
+    },
+    "ActivityDetails": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reason": {"$ref": "#/$defs/ActivityReason"},
+        "item_count": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "duration_ms": {"type": "integer", "minimum": 0, "maximum": 86400000}
+      }
+    },
+    "ActivityEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "occurred_at", "event_code", "severity", "result", "service", "details"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "occurred_at": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "event_code": {"$ref": "#/$defs/ActivityEventCode"},
+        "severity": {"$ref": "#/$defs/ActivitySeverity"},
+        "result": {"$ref": "#/$defs/ActivityResult"},
+        "service": {"$ref": "#/$defs/ActivityService"},
+        "details": {"$ref": "#/$defs/ActivityDetails"}
+      }
+    },
+    "ActivityLogPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["history_id", "entries", "high_water_seq", "next_before_seq", "next_after_seq", "pruned_through_seq", "dropped_total", "recording_state", "server_time"],
+      "properties": {
+        "history_id": {"type": "string", "format": "uuid"},
+        "entries": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/ActivityEntry"}},
+        "high_water_seq": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "next_before_seq": {"type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991},
+        "next_after_seq": {"type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991},
+        "pruned_through_seq": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "dropped_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "recording_state": {"type": "string", "enum": ["ACTIVE", "DEGRADED", "UNAVAILABLE"]},
+        "server_time": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+      }
+    }
+  }
+}
