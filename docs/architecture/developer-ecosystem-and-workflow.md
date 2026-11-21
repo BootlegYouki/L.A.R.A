@@ -12,7 +12,7 @@
 The **L.A.R.A** engineering group operates across three decoupled project streams:
 1. **Mobile Project Team (`mobile/`):** Native Android (Kotlin, Jetpack Compose M3, Room DB).
 2. **Desktop Project Team (`desktop/`):** Desktop Client (Tauri 2.x, React 19, Tailwind M3).
-3. **Server Project Team (`server/`):** the Local Hub on a dedicated school PC (Tauri, Rust/Axum, SQLite, AI model file hosting).
+3. **Server Project Team (`server/`):** the Local Hub on a dedicated school PC (Tauri, Rust/Axum, SQLite, `llama-server` queue, AI model file hosting).
 
 The three teams are the only parallel streams. Inside a team both developers work one issue at a time, in step order (`rules/team-workflow-and-prs.md` section 1.1).
 
@@ -38,7 +38,7 @@ A single-file Python 3 program (standard library only) that implements **every**
 |                          - uploads (multipart)       - join, quiz, grade,     |
 |                          - 206 Range streaming         presence, announcement |
 |                          - cursor delta-sync           pushes                 |
-|                          - in-memory state           - AI model file download |
+|                          - in-memory state           - AI queue, model file   |
 +------------------------------------------------------------------------------+
         |                      |                              |
  [Android Phone]        [Student Laptop]              [Teacher Desktop/Phone]
@@ -47,7 +47,7 @@ A single-file Python 3 program (standard library only) that implements **every**
 ### 2.2 Behavior it enforces (so clients meet the rules early)
 * Bearer auth on every route except `/download`, register and login; media routes also accept `?token=`.
 * Learner quiz payloads never contain `correct_answer`; the teacher view does.
-* The mock hub still simulates the old Hub tutor stream until the contract-change PR for the 2026-11-21 decision (model download, on-device inference) updates it.
+* AI requests fail with `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt; otherwise the mock streams a canned Socratic reply with `EVENT_QUEUE_STATUS` and `grounded_chunk_id`. The mock does not yet serve the optional model download (to be added by the contract-change PR for the 2026-11-22 hybrid decision).
 * Quiz submissions later than the limit plus 60 s fail with `TIME_LIMIT_EXCEEDED`.
 * Delta-sync uses an integer cursor from a change ledger, with tombstones, `hub_id`, `sync_epoch` and `reset`; pulls never contain PIN data or other people's LRN, and learners never see classmates' homework.
 * Unknown routes return `404 ROUTE_NOT_FOUND`, which lets the coverage test tell a missing route from a missing entity.
@@ -105,6 +105,6 @@ Runs `scripts/verify_invariants.py` on pull requests to `staging` and `main`: re
 
 ## 5. Verification & Acceptance Criteria
 
-1. **Mock hub:** `python3 scripts/mock_hub.py` serves UDP `:8888`, HTTP `:8080` and WebSocket `:8081`; a client can discover it, log in, join with `K7M4QX`, get approved, take a quiz (the simulated Hub tutor stream is superseded by the 2026-11-21 decision).
+1. **Mock hub:** `python3 scripts/mock_hub.py` serves UDP `:8888`, HTTP `:8080` and WebSocket `:8081`; a client can discover it, log in, join with `K7M4QX`, get approved, take a quiz and receive streamed tutor tokens.
 2. **Guardrail:** a PR adding a Firebase import or a Google Fonts link fails `guardrails.yml`.
 3. **Contract tests:** `python3 -m unittest discover tests` passes, including OpenAPI validity, SQL schema checks and mock hub coverage.

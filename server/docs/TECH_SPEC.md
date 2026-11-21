@@ -4,8 +4,6 @@
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
 
-> **Superseded in part, 2026-11-21:** the Hub no longer runs inference. Items below that mention `llama-server`, `AiQueue`, `ai_stream`, queue status or Hub-side `AI_NOT_AVAILABLE` / `check_quiz_lockout` are struck or marked and are left for the server team to rework (the Hub only stores and serves the model file; the contract change is a separate PR).
-
 ## 1. Scope and Non-Goals
 **In scope:** the Hub (`server/`): the Rust backend implementing `contracts/openapi.yaml`, `contracts/events/*` and `contracts/schema/server_master.sql`, and the Tauri window (admin console, health dashboard).
 
@@ -30,7 +28,7 @@ One process on the Hub PC. The Tauri window starts the backend library on its ow
  lara_hub  routes/* (Axum :8080) ---+          websocket/* (tokio-tungstenite :8081): Broker, QuizHub, Presence
            | AuthUser extractor     |                ^
            v                        v                |
-           services/*  ->  db/* (SqlitePool, record_revision, pull_page), storage/*, ai/* (model file hosting, no inference)
+           services/*  ->  db/* (SqlitePool, record_revision, pull_page), storage/*, ai/* (AiQueue -> llama-server, model file hosting)
            discovery/* (mDNS, UDP :8888)   network/* (PortHealth)
 ```
 
@@ -47,7 +45,7 @@ One process on the Hub PC. The Tauri window starts the backend library on its ow
 ## 3. Key Decisions
 | Decision | Choice | Why | Rejected alternative |
 |---|---|---|---|
-| Process model | Backend is a library (`lara_hub`) hosted by Tauri; `lara-hub` binary for headless runs | One installer and process; dashboard reads `Broker` directly; tests start the real server | Tauri sidecar process (IPC, harder recovery) |
+| Process model | Backend is a library (`lara_hub`) hosted by Tauri; `lara-hub` binary for headless runs | One installer and process; dashboard reads `Broker`/`AiQueue` directly; tests start the real server | Tauri sidecar process (IPC, harder recovery) |
 | HTTP | Axum + `tower-http` (`ServeFile`, `TraceLayer`, `DefaultBodyLimit`) | `AGENTS.md` §1.4; `ServeFile` does Range/206/416 | Hand-written Range parsing |
 | WebSocket | `tokio-tungstenite`, own listener on `:8081` | Port fixed by `contracts/events/README.md` | Axum `ws` on `:8080` |
 | SQL access | SQLx runtime queries (`query_as::<_, T>`) with unit tests on a temp DB | `cargo check` in CI needs no DB or `.sqlx/` cache | `query!` macros |
@@ -82,7 +80,7 @@ server/backend/
   src/routes/         one file per area: auth, admin, classrooms, sync, topics, announcements, materials,
                       video_stream, assignments, private_comments, quizzes, quiz_control, quiz_submit,
                       export, backup, portal. Guards and calls only
-  src/websocket/      mod.rs (listener, handshake), broker, events, presence, quiz_hub
+  src/websocket/      mod.rs (listener, handshake), broker, events, presence, quiz_hub, ai_stream
   src/services/       class_access, bandwidth (BandwidthLimiter), grading_engine, document_parser, gradebook_exporter,
                       backup_manager
   src/db/             mod.rs (connect, migrate, hub_meta), sync_revisions.rs, one repository file per area
@@ -90,10 +88,10 @@ server/backend/
   src/storage/        file layout, streamed uploads. No DB access
   src/discovery/      mdns.rs, udp.rs. No DB access
   src/network/        health.rs, firewall_check.rs
-  src/ai/             model file hosting only (stores and serves the file); no inference, queue or prompt code
+  src/ai/             llama_server_manager, queue, prompt, guardrails, model_file (stores and serves the model file). Never contains prompt text
   static/portal/      /download page and assets, bundled
   tests/              integration tests on TestHub (temp data_dir, free ports, synthetic test accounts)
-  bin/                helper binaries per OS (cloudflared)
+  bin/                llama-server binaries per OS, cloudflared
 server/src-tauri/     window; Tauri commands admin/*, usb_detector.rs. Never opens the DB
                       windows/hooks.nsh, linux/postinst.sh: installer firewall rules (1.4)
 server/ui/            React pages: Setup, Login, AdminUsers, Dashboard, Export/Backup; i18n/en.json
@@ -105,7 +103,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 |---|---|---|
 | `lara_hub` / `lara-hub` | crate / binary | Backend library / headless runner |
 | `HubConfig` | struct | Ports (overridable in tests only), `data_dir` (`LARA_DATA_DIR`), `model_path` (`MODEL_PATH`), hub name, `test_seed` (`LARA_TEST_SEED=1`, CI only) |
-| `AppState` / `HubHandle` | struct | Shared state (`SqlitePool`, `Broker`, `Storage`, `Clock`, limiters) / running Hub with `shutdown()` |
+| `AppState` / `HubHandle` | struct | Shared state (`SqlitePool`, `Broker`, `AiQueue`, `Storage`, `Clock`, limiters) / running Hub with `shutdown()` |
 | `ApiError`, `ErrorCode` | struct, enum | Error envelope with the contract's code strings |
 | `AuthUser`, `MediaUser`, `Role`, `require_role` | extractors, enum, fn | Bearer → `{ id, role }`; `MediaUser` also takes `?token=`, on media routes only (3.3); 403 on wrong role |
 | `class_access::require_teacher`, `require_owner`, `require_member` | fn | Class authorization: "teaches" = owner or `classroom_teachers` row |
@@ -118,7 +116,7 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `Storage` | struct | Paths and streamed writes under `data_dir/storage` |
 | `document_parser::extract_chunks` | fn | PDF/DOCX → ordered `material_chunks` (3.1; TXT is not an accepted upload since #53, see [`document_chunking.md`](./document_chunking.md)) |
 | `GradebookExporter`, `BackupManager` | struct | Export; `.lara-backup` snapshot and restore |
-| ~~`LlamaServerManager`, `AiQueue`, `PromptBuilder`~~ | superseded 2026-11-21 | The Hub no longer runs inference; the app fills `contracts/ai/socratic_system_prompt.txt` on the device |
+| `LlamaServerManager`, `AiQueue`, `PromptBuilder` | struct | Child process; bounded FIFO over slots; fills `contracts/ai/socratic_system_prompt.txt`. Model file hosting for the optional on-device path is added beside them (route to be defined in a contract-change PR) |
 | `guardrails::check_quiz_lockout` | fn | `QUIZ_IN_PROGRESS` while the learner has an `IN_PROGRESS` attempt |
 | `PortHealth`, `TestHub` | struct | Port bind/reachability; integration-test server |
 | `StartError` | enum | Why `serve` could not start (data dir, database, migrations, port bind) |
@@ -158,7 +156,8 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `EVENT_QUIZ_START`, `EVENT_QUIZ_CLOSED`, `EVENT_GRADE_CONFIRMED` | `websocket/quiz_hub.rs`, `services/quiz_submit.rs` | Grade event not sent while scores are held; the close sends it for each released score | Status and score in next pull |
 | `EVENT_QUIZ_SUBMIT` (in) | `websocket/mod.rs` → `services/quiz_submit.rs` (the REST and push path) | `EVENT_ERROR` (Q2); frame `student_id` ignored | Client uses REST or push |
 | `EVENT_PRESENCE` | `presence.rs` | — | `OFFLINE` on close or drop |
-| `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | superseded 2026-11-21: no Hub handler | Replacement (model download route and errors) to be defined in a contract-change PR | n/a |
+| `EVENT_AI_CHAT_REQUEST` (in), `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `ai_stream.rs`, `ai/*` | `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL`, `AI_NOT_AVAILABLE` | Queued request removed; slot cancelled |
+| Model download route (optional on-device path) | `ai/model_file.rs` (to be defined) | Route, auth and errors to be defined in a contract-change PR | Resumable with Range |
 | `EVENT_ERROR` | `websocket/events.rs` | Only the codes in `error.json` | — |
 
 **Contract flows verified on the real Hub:** `/download` returns HTML without a token; protected routes require authentication; wrong credentials return 401; duplicate registration returns 409; class join and approval emit the contracted enrollment events; sync pull uses the sequence cursor. Tests create their own class and content through the API rather than depending on a prebuilt classroom.
@@ -170,7 +169,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 * **Pull:** `pull_page` in one read transaction: `seq > cursor`, `classroom_id` in the caller's visible classes (teacher: teaches; learner: `ACTIVE`), and `student_id` null, the caller, or a class the caller teaches. Latest revision per entity, rows loaded as `models` types, `users` as `PublicUser` (own LRN; teachers also their roster's). `reset` on `hub_id`/`sync_epoch` mismatch, then cursor 0. Learners never get `DRAFT` quizzes or held scores. Visibility changes: Q3.
 * **`sync_status` lifecycle:** the Hub never stores it; it decides it. Client `QUEUED_FOR_SYNC` → push or multipart submit → receipt `SYNCED` (stored, or already stored by the same author) or `REJECTED` + reason. An id that exists with another author is `REJECTED` `FORBIDDEN`.
 * **Epoch:** restore and tombstone pruning bump `sync_epoch` in the same transaction. Pruning is not scheduled (Q11).
-* **When a Hub dependency fails:** model file missing → the download route reports it (to be defined in a contract-change PR), dashboard warning, all else keeps serving. USB removed → export or backup error, no partial file. Port bind failure → `PortHealth` shows it; other listeners still run. DB busy past 5 s → error envelope (code Q10), never a panic. Stuck socket → dropped by `Broker`.
+* **When a Hub dependency fails:** model missing or `llama-server` crashed → `AI_NOT_AVAILABLE`, dashboard warning, restart with backoff, all else keeps serving (a missing model file is also reported by the download route, to be defined in a contract-change PR). USB removed → export or backup error, no partial file. Port bind failure → `PortHealth` shows it; other listeners still run. DB busy past 5 s → error envelope (code Q10), never a panic. Stuck socket → dropped by `Broker`.
 
 ## 8. Code Patterns
 **Handler: guard, short transaction with revision, emit after commit.**
@@ -244,7 +243,7 @@ async fn unknown_route_is_route_not_found() {
 ## 9. Pitfalls
 * **PRAGMA in a migration** fails (WAL in a transaction). Set them on `SqliteConnectOptions`, which applies `foreign_keys` to every pooled connection.
 * **`SQLITE_BUSY` despite `busy_timeout`:** a deferred transaction that reads then writes. Always `BEGIN IMMEDIATE`.
-* **Write lock across I/O** (upload body, WebSocket send, a large model download) stalls every learner. Slow work first, then the transaction, then emit.
+* **Write lock across I/O** (upload body, WebSocket send, `llama-server`, a large model download) stalls every learner. Slow work first, then the transaction, then emit.
 * **Axum's 2 MB body limit** rejects uploads silently. Raise `DefaultBodyLimit` on upload routes only; never `field.bytes()` a video.
 * **Hub PC check** for admin setup and admin login (`auth::is_hub_pc`) needs `into_make_service_with_connect_info::<SocketAddr>()`, then a loopback peer **and** no `Cf-Connecting-IP` header: `cloudflared` also connects from loopback.
 * **`?token=` in logs:** log the path only. Accept `?token=` only on the media routes, the ones with the contract's `TokenQuery`: `/api/materials/{id}/download`, `/api/materials/{id}/stream`, `/api/submissions/{id}/file` (`/download` needs no token).
@@ -283,7 +282,7 @@ Four issues' `Depends on` lines disagree with their step numbers (2.1 needs 2.4;
 | 4.1 | #11 | `websocket/quiz_hub.rs`, `routes/quiz_control.rs` | 4.5, 4.2, 2.4 |
 | 4.3 | #13 | `GradebookExporter`, `routes/export.rs`, `src-tauri/src/usb_detector.rs` | 4.2, 3.4 |
 | 4.4 | #21 | `BackupManager`, `routes/backup.rs` | 1.2, 3.3 |
-| 5.1 | #14 | superseded 2026-11-21: model file hosting route instead of `llama_server_manager`, `queue`, `ai_stream` and `check_quiz_lockout`; the quiz lockout moves to the device (Q5) | 2.4, 1.5 |
+| 5.1 | #14 | `ai/llama_server_manager.rs`, `ai/queue.rs`, `websocket/ai_stream.rs`, **`ai/guardrails.rs` `check_quiz_lockout`** so AI is never open during a quiz (Q5); plus the model file hosting route for the optional on-device path (to be defined in a contract-change PR) | 2.4, 1.5 |
 | 5.2 | #16 | `ai/prompt.rs`, the rest of `ai/guardrails.rs` | 5.1, 3.1 |
 | 5.3 | #66 | `network/health.rs`, `ui/src/pages/Dashboard.tsx` | 2.4, 5.1 |
 | 6.1 | #17 | 40-device load test and report | Sprint 5 (Q12) |
@@ -298,7 +297,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 
 | Risk or spike | Owner | Decision date | Fallback |
 |---|---|---|---|
-| Model quality and speed on the target devices (#73) | John Rey Calipes | End of 1.5, before 5.1 | Smaller model; AI stays optional (device shows "not available on this device") |
+| Model quality and speed on the Hub PC (#73), and on the target devices for any model offered on-device | John Rey Calipes | End of 1.5, before 5.1 | Smaller model, fewer slots; AI stays optional (`AI_NOT_AVAILABLE`) |
 | Tauri hosting the Axum runtime on Windows and Linux (#39) | Jv Bialen | During 1.0 | Tauri spawns `lara-hub` as a sidecar; same library |
 | mDNS with several network adapters (#1) | John Rey Calipes | During 1.1 | UDP beacon and manual IP |
 | Zero-CLI installer with firewall rules (#20) | John Rey Calipes | During 1.4 | Window's auto-fix runs the rules elevated |
@@ -308,7 +307,7 @@ No sprint calendar exists yet, so each decision date is tied to a step.
 | Token bucket accuracy at 2.0 MB/s with 40 streams (#8) | Jv Bialen | During 3.2 | Coarser chunks; measure on the router. **Outcome (2026-11-09, release Hub on the laptop, loopback):** 40 learners at once got 2.02 to 2.04 MB/s each (the extra is each one's 64 KiB start over a 3 MB download), 20 learners 39.9 MB/s in total. Not yet measured on the router |
 | SQLite write contention, 40 submits in a second (#11) | Jv Bialen | Measured in 4.2, confirmed in 6.1 | One transaction per close batch |
 | USB detection on Windows and Linux (#13) | John Rey Calipes | During 4.3 | Admin picks a folder |
-| Model file size in the installer or on USB (#14) | John Rey Calipes | Before 5.1 | To be decided (see `hub_hardware.md`) |
+| `llama-server` binaries per OS and installer size (#14); how the Hub obtains the model file | John Rey Calipes | Before 5.1 | Ship the binary beside the installer; model file source to be decided (see `hub_hardware.md`) |
 
 ## 13. Commands and Verification
 ```bash
@@ -332,7 +331,7 @@ python3 -m unittest discover tests && python3 scripts/verify_invariants.py
 | 1.2 Schema | Migrated temp DB's `sqlite_master` equals `server_master.sql` loaded into another; `journal_mode` = `wal` and `foreign_keys` = 1 on two pooled connections |
 | 1.3 Portal | Phone on the router opens `/download` with WAN unplugged, in English only; test finds no external URL in the HTML |
 | 1.4 Installer | Fresh Windows VM installs in under 3 minutes; `netsh advfirewall firewall show rule name=all` lists the three rules; Linux `ufw status` |
-| 1.5 AI spike | `docs/benchmarks/ai_model_evaluation.md`: pass rates, TTFT, tokens/s on the target devices, labelled developer-scored |
+| 1.5 AI spike | `docs/benchmarks/ai_model_evaluation.md`: pass rates, TTFT, tokens/s at 1, 2, 4 slots on the Hub PC (and on the target devices for any on-device model), labelled developer-scored |
 | 2.0 Auth | Register, duplicate 409, login, wrong PIN 401, logout kills the token, 6th attempt in a minute limited; DB holds only token hashes; ported `test_admin_is_its_own_account_and_setup_runs_once` and `test_admin_routes_are_admin_only`; setup from the LAN or the tunnel → 403; admin login off the Hub PC → 403 `ADMIN_LOCAL_ONLY`, not counted toward the limit; register trims and limits LRN and name; every stub enforces its contract role |
 | 2.4 Broker | A client that stops reading is dropped while another receives within 300 ms; teacher gets `EVENT_PRESENCE` `ONLINE` then `OFFLINE` |
 | 2.1 Enrollment | Ported `test_join_approve_flow_pushes_websocket_events`, `test_bad_class_code` |
@@ -362,8 +361,8 @@ Raised with the Lead; no missing requirement is guessed in code. A **Call** reco
 
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons come from `design-system/assets/`): sections 3, 4
-- [x] Offline state defined for every screen: the Hub window shows port health and whether the model file is present (section 7); the Hub keeps every client retry idempotent
+- [x] Offline state defined for every screen: the Hub window shows port and AI health (section 7); the Hub keeps every client retry idempotent
 - [x] Hub window text must use `server/ui/src/i18n/en.json` through `useStrings()`, with no language toggle (#226); UI build checks lookups
 - [x] Touch targets at least 52dp on phones (56dp primary and quiz options), 40px buttons on desktop: Hub window on desktop tokens; portal at 52dp with a 56dp download button
 - [x] `correct_answer` never stored on a client: separate student types, `tests/redaction.rs`
-- [x] AI unavailable during an active quiz: enforced on the device (superseded 2026-11-21)
+- [x] AI unavailable during an active quiz: `check_quiz_lockout` from step 5.1 (a device running a downloaded model enforces it itself)

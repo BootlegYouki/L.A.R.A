@@ -1,6 +1,6 @@
 # SLM inference queue
 
-> **Superseded 2026-11-21:** the Hub no longer runs inference. It stores and serves the model file; phones and desktops download it and run it on the device (`AGENTS.md` section 5). The queue, slots and `llama-server` design below no longer apply and are kept for the team to rework into a model file hosting note (to be defined in a contract-change PR).
+> **Hybrid, decided 2026-11-22:** this Hub queue is the default tutor path. The Hub also stores and serves the model file so a capable phone or desktop may download it and run the tutor offline; that hosting route is to be defined in a contract-change PR and is not described below.
 
 > **Status:** the queue, the tutor WebSocket stream and the Hub-side guardrails are built in Sprint 5. This file starts with what the AI evaluation ([SERVER 1.5], #73) decided and measured, so Sprint 5 starts from numbers. Sprint 5 adds the key files, data flow and queue behavior.
 
