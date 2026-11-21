@@ -95,7 +95,7 @@ Common handling **R**: 10-second metadata-request deadline; transport loss shows
 
 | Route(s), including methods | Owning module | Specific errors / unreachable behavior in addition to R |
 |---|---|---|
-| `POST /auth/register`, `/auth/login`, `/auth/logout` | `auth.ts` | Invalid credentials stay on login; registration/login need Hub. Offline logout clears local token and reports revocation not delivered |
+| `POST /api/auth/login`, `/api/auth/logout` | `auth.ts` | Invalid credentials stay on login; sign-in needs the Hub. Offline logout clears local token and reports revocation not delivered |
 | `GET /classrooms`; `POST /classrooms`, `/classrooms/join`; `PATCH /classrooms/{id}` | `classrooms.ts` | `CLASS_CODE_INVALID` at join input; pending is not access; create/join/rename/archive require Hub |
 | `GET /classrooms/{id}/roster`; `POST /classrooms/{id}/approve`, `/reject`, `/remove` | `classrooms.ts` | Teacher authorization enforced by Hub; cached roster read-only offline |
 | `POST /classrooms/{id}/teachers`; `DELETE /classrooms/{id}/teachers/{teacher_id}` | `classrooms.ts` | Owner-only controls; no offline queue |
@@ -139,7 +139,7 @@ Pull is single-flight: validate complete response, open native transaction, appl
 | Screen family | No Hub behavior |
 |---|---|
 | Home, Stream, Classwork, People, My Work, gradebook | Cached account-scoped rows, meaningful empty state and banner; no blocking launch error |
-| Login/register, Connection | Cached previous session can open; new sign-in/register waits for Hub; manual entry remains available |
+| Sign-in, Connection | Cached previous session can open; new sign-in waits for Hub; manual entry remains available |
 | Join, class settings, teacher authoring/grading/export | Show cached read-only data; disable network-only actions with translated helper text |
 | Homework/comments | Save locally and show queued state; attachments kept until receipt |
 | PDF/video | Open downloaded files; uncached content explains it needs the Hub; no endless spinner |
@@ -255,7 +255,7 @@ Use only synthetic accounts from the checked-out server seed implementation, nev
 | #29 shell | Native launch creates schema; Hub stopped gives cached/empty view; English-only shell; reopen DB and reject wrong-account rows |
 | #5 discovery | Parse malformed/wrong-app beacons, deduplicate; UDP discovery around 3 seconds; mDNS on actual LAN; Wi-Fi reconnect and scanner shutdown |
 | #40 connection | Manual address works without broadcast; invalid octets/port rejected; 401 reachability separated from login; stop Hub gives banner; production HTTP/WS scope smoke test |
-| #45 accounts | Teacher/learner Hub login and registration; secure token absent from SQLite/localStorage/logs; relaunch with Hub stopped; switch accounts/Hubs with queued rows and prove no cross-context access |
+| #45 accounts | Teacher/learner Hub sign-in with admin-created accounts; secure token absent from SQLite/localStorage/logs; relaunch with Hub stopped; switch accounts/Hubs with queued rows and prove no cross-context access |
 | #46 join | Joining seed learner enters grouped code, sees PENDING, teacher approval unlocks without refresh; invalid/rejected/removed states and WS 4401/backoff |
 | #47 roster | Create class, join from second session, accept/reject/remove with retained scores; forbidden role checks and offline read-only roster |
 | #48 sync | Paging/tombstones and users; fail halfway through apply and kill/reopen: rows and cursor unchanged; reset with queued child/parent; duplicate receipts; rejected item; revoked access; new-member full snapshot; refresh under 1 second on the real Hub |
