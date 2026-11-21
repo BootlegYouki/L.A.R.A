@@ -7,10 +7,15 @@ export class ApiError extends Error {
 }
 
 type AccountPath = '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
+  | '/api/announcements' | '/api/assignments' | '/api/topics' | '/api/materials' | '/api/quizzes'
   | `/api/classrooms/${string}` | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
 export interface ClassroomChange { name?: string; section?: string; archived?: boolean }
+export type AuthoringBody = {classroom_id: string; title: string; content: string; allow_comments?: boolean}
+  | {classroom_id: string; title: string; instructions?: string; max_points: number; due_date: number; allow_late?: boolean; topic_id?: string}
+  | {classroom_id: string; name: string}
+  | {classroom_id: string; title: string; instructions?: string; time_limit_minutes: number; shuffle_questions?: boolean; release_scores_immediately?: boolean; topic_id?: string | null; questions: {id: string; order_index: number; question_text: string; question_type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION'; options: string[]; points: number; image_url?: string; correct_answer: string; synonyms?: string[]}[]};
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE';
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush | AuthoringBody; form?: FormData; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE';
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
@@ -18,7 +23,11 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   const classRoute = new RegExp('^/api/classrooms/' + classroomId + '$', 'i');
   const teacherRoute = new RegExp('^/api/classrooms/' + classroomId + '/teachers/' + classroomId + '$', 'i');
   const standardRoute = new RegExp('^/api/classrooms/' + classroomId + '/(roster|approve|reject|remove|teachers)$', 'i');
-  const allowed = options.method === 'PATCH' ? classRoute.test(path)
+  const createRoute = ['/api/announcements', '/api/assignments', '/api/topics', '/api/quizzes'].includes(path);
+  const allowed = options.form ? path === '/api/materials' && !options.body && !options.method
+    : path === '/api/materials' ? false
+    : createRoute ? !!options.body && !options.method
+    : options.method === 'PATCH' ? classRoute.test(path)
     : options.method === 'DELETE' ? teacherRoute.test(path)
     : standardRoute.test(path) || ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/classrooms',
       '/api/classrooms/join', '/api/sync/pull', '/api/sync/push'].includes(path);
@@ -29,17 +38,17 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   let abort!: () => void;
   const cancelled = new Promise<never>((_, reject) => {
     abort = () => { controller.abort(); reject(new ApiError(options.signal?.aborted ? 'cancelled' : 'network')); };
-    timer = setTimeout(abort, 10000);
+    timer = setTimeout(abort, options.form ? 120000 : 10000);
   });
   options.signal?.addEventListener('abort', abort, { once: true });
   try {
     return await Promise.race([cancelled, (async () => {
       const response = await fetch(url, {
-        method: options.method ?? (options.body || path === '/api/auth/logout' ? 'POST' : 'GET'), credentials: 'omit', redirect: 'error', maxRedirections: 0,
+        method: options.method ?? (options.body || options.form || path === '/api/auth/logout' ? 'POST' : 'GET'), credentials: 'omit', redirect: 'error', maxRedirections: 0,
         connectTimeout: 10000, signal: controller.signal,
         headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}) },
-        ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+        ...(options.body ? { body: JSON.stringify(options.body) } : options.form ? { body: options.form } : {}),
       });
       if (response.url !== url || (response.status >= 300 && response.status < 400)) {
         void response.body?.cancel().catch(() => {});
@@ -62,6 +71,10 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
     })()]);
   } catch (error) { throw error instanceof ApiError ? error : new ApiError('network'); }
   finally { clearTimeout(timer); options.signal?.removeEventListener('abort', abort); }
+}
+
+export function uploadMaterialRequest(hub: HubInfo, token: string, form: FormData, signal?: AbortSignal) {
+  return requestHub(hub, '/api/materials', {form, token, signal});
 }
 
 // Reachability only: no credentials, classroom data or sign-in state is accepted here.

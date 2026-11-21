@@ -104,6 +104,11 @@ mod permissions {
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/approve",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/reject",
                     "/api/classrooms/11111111-1111-4111-8111-111111111111/remove",
+                    "/api/announcements",
+                    "/api/assignments",
+                    "/api/topics",
+                    "/api/materials",
+                    "/api/quizzes",
                 ] {
                     let url: tauri_plugin_http::reqwest::Url =
                         format!("http://{ip}:{port}{path}").parse().unwrap();
@@ -126,6 +131,8 @@ mod permissions {
             "http://8.8.8.8:8080/api/auth/logout",
             "http://192.168.1.2:8080/api/sync/pull/extra",
             "http://192.168.1.2:8080/api/sync/other",
+            "http://192.168.1.2:8080/api/topics/11111111-1111-4111-8111-111111111111",
+            "http://192.168.1.2:8080/api/materials/11111111-1111-4111-8111-111111111111/download",
             "http://8.8.8.8:8080/api/sync/push",
             "http://8.8.8.8:8080/api/auth/login",
             "https://192.168.1.2:8080/api/classrooms",

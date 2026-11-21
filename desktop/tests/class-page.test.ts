@@ -78,7 +78,7 @@ it('puts tabs before the Stream banner and uses expandable Classwork material ro
   expect(renderer.root.findAllByProps({className:'class-banner'})).toHaveLength(1);
   await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   expect(renderer.root.findAllByProps({className:'class-banner'})).toHaveLength(0);
-  expect(renderer.root.findByType('details').findByType('summary').props.className).toBe('material-row');
+  expect(renderer.root.findByProps({className:'material-item'}).findByType('summary').props.className).toBe('material-row');
   expect(renderer.root.findByProps({className:'control text-button material-open'}).props['aria-label']).toBe('Open handout: Food chain');
 });
 
@@ -89,4 +89,36 @@ it('keeps extracted paragraphs separate without blank-line spacer text', async (
   await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   await act(async () => renderer.root.findByProps({className:'control text-button material-open'}).props.onClick());
   expect(renderer.root.findAllByProps({className:'lesson-text'}).map(node => node.children.join(''))).toEqual(['First paragraph.','Second paragraph.']);
+});
+it('offers real teacher authoring controls but none for learners or archived classes', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[],assignments:[],topics:[],quizzes:[]});
+  await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:false,onVideo:vi.fn()}));});
+  expect(renderer.root.findAllByProps({className:'control tonal-button new-announcement'})).toHaveLength(1);
+  await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  expect(renderer.root.findAllByProps({className:'class-create-menu'})).toHaveLength(1);
+  await act(async()=>renderer.update(createElement(ClassPage,{account:{...account,user:{...account.user,role:'STUDENT'}},classroom:room,offline:false,onVideo:vi.fn()})));
+  expect(renderer.root.findAllByProps({className:'class-create-menu'})).toHaveLength(0);
+  await act(async()=>renderer.update(createElement(ClassPage,{account,classroom:{...room,archived_at:1},offline:false,onVideo:vi.fn()})));
+  expect(renderer.root.findAllByProps({className:'class-create-menu'})).toHaveLength(0);
+});
+it('renders cached assignments and topics without a network read', async()=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[],assignments:[{id:'a',title:'Water cycle work',instructions:'Explain evaporation.',due_date:1795300000000,max_points:100}],topics:[{id:'t',name:'Water cycle'}],quizzes:[]});
+  await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}));});
+  await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  expect(JSON.stringify(renderer.toJSON())).toContain('Water cycle work');
+  expect(JSON.stringify(renderer.toJSON())).toContain('Explain evaporation.');
+  expect(renderer.root.findAllByProps({id:'class-topic-filter'})).toHaveLength(1);
+});
+
+it('filters cached work by its real topic while retaining unassigned work in All topics', async()=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[],assignments:[{id:'a',title:'In unit',instructions:'Read',due_date:1,max_points:1,topic_id:'t'},{id:'b',title:'Outside unit',instructions:'Write',due_date:1,max_points:1,topic_id:null}],topics:[{id:'t',name:'Unit'}],quizzes:[]});
+  await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}));});
+  await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+  expect(JSON.stringify(renderer.toJSON())).toContain('Outside unit');
+  await act(async()=>renderer.root.findByProps({id:'class-topic-filter'}).props.onChange({target:{value:'t'}}));
+  expect(JSON.stringify(renderer.toJSON())).toContain('In unit');
+  expect(JSON.stringify(renderer.toJSON())).not.toContain('Outside unit');
 });

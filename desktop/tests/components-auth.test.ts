@@ -41,7 +41,8 @@ it('disables classroom retries during the server cooldown while keeping cached c
 it('uses role labels and current navigation without class codes', () => {
   const html = renderToStaticMarkup(createElement(Sidebar, { user, classrooms: [classroom], onHome: noop, onOpen: noop }));
   expect(html).toContain('Teaching'); expect(html).toContain('aria-current="page"'); expect(html).not.toContain('SECRET');
-  expect(renderToStaticMarkup(createElement(Sidebar, { user: { ...user, role: 'STUDENT' }, classrooms: [], onHome: noop, onOpen: noop }))).toContain('Enrolled');
+  expect(renderToStaticMarkup(createElement(Sidebar, { user: { ...user, role: 'STUDENT' }, classrooms: [], onHome: noop, onOpen: noop }))).not.toContain('Enrolled');
+  expect(renderToStaticMarkup(createElement(Sidebar, { user, classrooms: [], onHome: noop, onOpen: noop }))).not.toContain('Teaching');
 });
 it('masks the PIN and disables submission until a Hub is selected', () => {
   const html = renderToStaticMarkup(createElement(LoginPage, { hub: null, busy: false, error: null, retryAfter: 9, onSubmit: noop }));
