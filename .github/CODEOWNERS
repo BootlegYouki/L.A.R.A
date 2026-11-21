@@ -1,9 +1,11 @@
-# Shared paths: Lead Developer only. Any change here is a contract-change or governance PR.
-/contracts/            @BootlegYouki
+# Contracts: team-owned through contract-change PRs; any developer of an affected team may approve.
+/contracts/            @BootlegYouki @OpenYaji @meliodaff @Nash172 @Osbornejmb @Aki-QA @kerrV
+/contracts/ai/         @BootlegYouki
+# Other shared paths: Lead Developer only. Any change here is a governance PR.
 /rules/                @BootlegYouki
 /design-system/        @BootlegYouki
 /scripts/              @BootlegYouki
-/tests/                @BootlegYouki
+/tests/                @BootlegYouki @OpenYaji @meliodaff @Nash172 @Osbornejmb @Aki-QA @kerrV
 /.github/              @BootlegYouki
 /AGENTS.md             @BootlegYouki
 /CLAUDE.md             @BootlegYouki
