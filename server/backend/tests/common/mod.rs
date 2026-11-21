@@ -17,19 +17,31 @@ use tempfile::TempDir;
 pub struct TestHub {
     hub: HubHandle,
     client: reqwest::Client,
-    /// A session for the mock's teacher `T-0001` (PIN `123456`), seeded in the database.
+    /// A session for the seeded teacher `T-0001` (PIN `123456`), seeded in the database.
     teacher_token: String,
     _data_dir: TempDir,
 }
 
 impl TestHub {
     pub async fn start() -> Self {
+        Self::start_with_test_seed(false).await
+    }
+
+    pub async fn start_seeded() -> Self {
+        Self::start_with_test_seed(true).await
+    }
+
+    async fn start_with_test_seed(test_seed: bool) -> Self {
         let data_dir = tempfile::tempdir().unwrap();
-        let config = HubConfig { http_port: 0, ws_port: 0, ..HubConfig::new(data_dir.path()) };
+        let config = HubConfig { http_port: 0, ws_port: 0, test_seed, ..HubConfig::new(data_dir.path()) };
         let hub = lara_hub::serve(config).await.unwrap();
         let mut test_hub = Self { hub, client: reqwest::Client::new(), teacher_token: String::new(), _data_dir: data_dir };
-        let teacher = test_hub.seed_user("T-0001", "Teacher", Role::Teacher, "123456").await;
-        test_hub.teacher_token = test_hub.open_session(teacher).await;
+        test_hub.teacher_token = if test_seed {
+            test_hub.login("T-0001", lara_hub::db::seed::TEST_PIN).await
+        } else {
+            let teacher = test_hub.seed_user("T-0001", "Teacher", Role::Teacher, "123456").await;
+            test_hub.open_session(teacher).await
+        };
         test_hub
     }
 
@@ -70,7 +82,7 @@ impl TestHub {
         body["token"].as_str().unwrap().to_owned()
     }
 
-    /// A body sent as is, with no `Content-Type` (the mock ignores it).
+    /// A body sent as is, with no `Content-Type`.
     pub async fn post_raw(&self, path: &str, body: &str) -> (u16, Value) {
         let url = format!("http://127.0.0.1:{}{path}", self.hub.http_addr().port());
         let res = self.client.post(url).body(body.to_owned()).send().await.unwrap();

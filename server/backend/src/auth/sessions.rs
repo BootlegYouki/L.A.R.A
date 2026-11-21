@@ -26,7 +26,7 @@ pub async fn open(tx: &mut SqliteConnection, user: User, now_ms: i64) -> Result<
 }
 
 /// `None` for an unknown or expired token and for a deactivated account. A session is valid
-/// until the millisecond it expires, as in the mock (`expires_at < now` is expired).
+/// until the millisecond it expires (`expires_at < now` is expired).
 pub async fn user_for_token(db: &SqlitePool, token: &str, now_ms: i64) -> Result<Option<AuthUser>, sqlx::Error> {
     let row: Option<(String, String)> = sqlx::query_as(
         "SELECT u.id, u.role FROM sessions s JOIN users u ON u.id = s.user_id

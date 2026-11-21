@@ -20,9 +20,9 @@ pub fn router() -> Router<AppState> {
     Router::new().route("/api/assignments/{id}/private-comments", get(list).post(create))
 }
 
-/// Whose thread the caller may touch, as `(classroom_id, student_id)`, like the mock's `private_thread`:
+/// Whose thread the caller may touch, as `(classroom_id, student_id)`:
 /// a learner only their own (an `ACTIVE` member; a `student_id` they send is ignored), a teacher of the
-/// class any learner they name. Beyond the mock, the named learner must have an enrollment in the class,
+/// class any learner they name. The named learner must have an enrollment in the class,
 /// and an `ACTIVE` one to post: an unknown id would otherwise reach the `users` foreign key.
 async fn whose_thread(
     conn: &mut SqliteConnection,

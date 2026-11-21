@@ -14,7 +14,7 @@ Teachers create classes and approve each learner before that learner becomes an 
 
 ## Data flow
 
-- Creation uses the calling teacher as owner, regardless of body fields. Six random characters come from the contract's 32-character alphabet. The database's unique code constraint decides collisions: an insertion that conflicts on `class_code` writes nothing, then creation generates another code. Codes are stored and returned without a hyphen; clients display `XXX-XXX`. Join also accepts lowercase and a display hyphen, matching the mock.
+- Creation uses the calling teacher as owner, regardless of body fields. Six random characters come from the contract's 32-character alphabet. The database's unique code constraint decides collisions: an insertion that conflicts on `class_code` writes nothing, then creation generates another code. Codes are stored and returned without a hyphen; clients display `XXX-XXX`. Join also accepts lowercase and a display hyphen.
 - Listing returns owned/co-taught classes for teachers and only `PENDING`/`ACTIVE` classes for learners. Learner results include their own `enrollment_status`. Co-teacher IDs are sorted. The Hub admin has no classes.
 - Join inserts `PENDING`, or changes an existing `REJECTED`/`REMOVED` enrollment back to `PENDING`, preserving its ID and original `joined_at`. Only a changed enrollment sends `EVENT_JOIN_REQUEST`, with learner name and LRN, to that class's teachers. A `PENDING`/`ACTIVE` retry returns its status without changing data or sending an event.
 - Roster is available only to the owner/co-teachers and includes learner name, LRN, status, `joined_at` and the actual `enrollment_id`. Learners and unrelated teachers cannot read it.
@@ -54,7 +54,7 @@ These checks use loopback networking. A physical classroom router with its WAN c
 |---|---|
 | `cargo check --all-targets` | PASS; final check finished in 11.33 s |
 | `cargo test` | PASS; 130 tests in total, including all 10 enrollment tests; no failures |
-| `python3 -m unittest discover tests` | PASS; 68 tests in 26.689 s against the mock |
+| `python3 -m unittest discover tests` | PASS; 68 tests in 26.689 s in the historical shared suite |
 | `python3 scripts/verify_invariants.py` | PASS; offline invariants and localization rules |
 | `rustfmt --check` on the new/rewritten Rust files; `git diff --check` | PASS |
 
@@ -69,7 +69,7 @@ test disconnected_devices_recover_enrollment_after_hub_restart ... ok
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.47s
 ```
 
-Full local command output is in `backend/target/issue-6-{check,tests,shared-tests,invariants}.log` (ignored build artifacts). Rust dependencies were cached and the commands ran with `CARGO_NET_OFFLINE=true`. An earlier shared-suite run timed out in the mock's unrelated submission sync-pull test during compilation; the final rerun above passed all 68 tests.
+Full local command output is in `backend/target/issue-6-{check,tests,shared-tests,invariants}.log` (ignored build artifacts). Rust dependencies were cached and the commands ran with `CARGO_NET_OFFLINE=true`. An earlier historical shared-suite run timed out during compilation; the final rerun above passed all 68 tests.
 
 ## How to test (no programming required)
 

@@ -5,7 +5,7 @@ use std::fmt::Write;
 
 use sha2::{Digest, Sha256};
 
-/// 12 hours, as the mock hub's sessions.
+/// Hub sessions expire after 12 hours.
 pub const SESSION_TTL_MS: i64 = 12 * 60 * 60 * 1000;
 
 /// 32 bytes from the operating system's random source, as 64 lowercase hex characters.

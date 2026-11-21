@@ -14,7 +14,7 @@ fn code(body: &Value) -> &str {
     body["error"]["code"].as_str().unwrap_or("")
 }
 
-/// The mock's two-question quiz (`QUIZ` in `tests/test_mock_hub.py`).
+/// Synthetic two-question quiz for real-Hub tests.
 fn quiz_body(classroom_id: &str) -> Value {
     json!({
         "classroom_id": classroom_id, "title": "Ecosystem", "time_limit_minutes": 15,

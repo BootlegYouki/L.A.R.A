@@ -851,7 +851,7 @@ async fn a_deactivated_teacher_cannot_be_added() {
     hub.stop().await;
 }
 
-/// `tests/test_mock_hub.py` removes a co-teacher from a class it has just archived.
+/// Teacher management remains available after a class is archived.
 #[tokio::test]
 async fn the_owner_can_still_manage_teachers_on_an_archived_class() {
     let hub = TestHub::start().await;

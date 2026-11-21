@@ -47,7 +47,7 @@ async fn pull_from(class: &Class, token: &str, cursor: i64) -> Value {
 }
 
 #[tokio::test]
-async fn teacher_creates_an_assignment_with_the_mock_defaults() {
+async fn teacher_creates_an_assignment_with_the_contract_defaults() {
     let class = Class::start().await;
     let asg = worksheet(&class, class.teacher()).await;
     assert!(uuid::Uuid::parse_str(asg["id"].as_str().unwrap()).is_ok(), "{asg}");
@@ -166,7 +166,7 @@ async fn assignment_writes_need_a_writable_class_you_teach() {
     let id = asg["id"].as_str().unwrap();
     let (_, other_teacher) = class.other_class().await;
 
-    assert_eq!(patch(&class, id, json!({"title": "x"}), &class.learner_token).await.0, 403, "the mock's last check");
+    assert_eq!(patch(&class, id, json!({"title": "x"}), &class.learner_token).await.0, 403, "learner cannot edit an assignment");
     assert_eq!(delete(&class, id, &class.learner_token).await.0, 403);
     let (status, body) = patch(&class, id, json!({"title": "x"}), &other_teacher).await;
     assert_eq!((status, message(&body)), (403, "Not your classroom"));

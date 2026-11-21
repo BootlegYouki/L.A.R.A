@@ -114,7 +114,7 @@ async fn serve_connection(stream: TcpStream, app: AppState, mut shutdown: watch:
     let _ = timeout(Duration::from_secs(1), sink.close()).await;
 }
 
-/// Answers frames sent before `EVENT_HELLO` like the mock does, and closes with 4401 when the
+/// Refuses frames sent before `EVENT_HELLO`, and closes with 4401 when the
 /// token is missing, unknown, expired or belongs to a deactivated account. `None` once the
 /// socket is closed.
 async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> Option<AuthUser> {
@@ -155,7 +155,7 @@ async fn wait_for_hello(ws: &mut WebSocketStream<TcpStream>, app: &AppState) -> 
 
 /// `false` drops the connection: its queue is full or its writer is gone. A quiz submit goes through the
 /// same path as REST (`services::quiz_submit`); its grade arrives as `EVENT_GRADE_CONFIRMED`, and a refusal
-/// as `EVENT_ERROR` `BAD_REQUEST` with the error code as the message (the mock's; `error.json` has no quiz codes).
+/// as `EVENT_ERROR` `BAD_REQUEST` with the error code as the message (`error.json` has no quiz codes).
 async fn handle_frame(app: &AppState, user: &AuthUser, text: &str, tx: &mpsc::Sender<Frame>) -> bool {
     match ClientEvent::parse(text) {
         None => queue(tx, &ServerEvent::error(ErrorCode::BadRequest, "Invalid JSON")),

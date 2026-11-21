@@ -253,7 +253,7 @@ async fn comments_disabled_refuses_everyone() {
     let (status, body) = comment_on(&class, id, &class.learner_token, "Opo!").await;
     assert_eq!((status, code(&body), message(&body)), (403, "COMMENTS_DISABLED", "Comments are turned off for this post"));
     let (status, body) = comment_on(&class, id, class.teacher(), "Note").await;
-    assert_eq!((status, code(&body)), (403, "COMMENTS_DISABLED"), "the mock applies it to teachers too");
+    assert_eq!((status, code(&body)), (403, "COMMENTS_DISABLED"), "comments are disabled for teachers too");
     assert_eq!(comments_of(&class, id, &class.learner_token).await, (200, json!([])));
 }
 

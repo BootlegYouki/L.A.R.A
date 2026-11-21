@@ -131,7 +131,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     };
     // Before the listeners open, so no request finds the accounts missing.
     if config.test_seed {
-        db::seed::mock_accounts(&state.db, &state.pins, state.clock.now_ms()).await?;
+        db::seed::test_accounts(&state.db, &state.pins, state.clock.now_ms()).await?;
     }
 
     let (http, http_addr) = bind(config.http_port).await?;

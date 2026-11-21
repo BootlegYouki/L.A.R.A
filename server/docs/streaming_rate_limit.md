@@ -49,8 +49,8 @@ A 720p H.264 lesson runs at about 0.2 to 0.4 MB/s, so 2.0 MB/s is 5 to 10 times 
 
 ## Gotchas
 
-- **Open-ended ranges get the rest of the file at 2.0 MB/s.** The mock answers `bytes=X-` 64 KiB at a time; the Hub sends the rest of the file, as `/download` does and as players expect. A player that seeks closes the old connection, so it never pays for bytes it skipped.
-- **`/stream` sends the video's type, `/download` sends `application/octet-stream`.** The contract and the mock send octet-stream for downloads. Save for Home uses `/download`.
+- **Open-ended ranges get the rest of the file at 2.0 MB/s.** The Hub sends the rest of the file, as `/download` does and as players expect. A player that seeks closes the old connection, so it never pays for bytes it skipped.
+- **`/stream` sends the video's type, `/download` sends `application/octet-stream`.** The contract specifies octet-stream for downloads. Save for Home uses `/download`.
 - **The Hub PC's own clients are capped too.** A teacher previewing a video on the Hub PC gets 2.0 MB/s, which is plenty for playback.
 - **Uploads are not rate-limited.** They're bounded by the 250 MB cap (`materials_and_submissions.md`).
 - **Tests use 127.0.0.x addresses.** Every 127.0.0.x is loopback on Windows and Linux, and the Hub sees each as a different address, so the tests can act as many devices.
@@ -59,9 +59,9 @@ A 720p H.264 lesson runs at about 0.2 to 0.4 MB/s, so 2.0 MB/s is 5 to 10 times 
 
 1. **Seek start:** 64 KiB goes at once after a pause, so over any second a user can get 2.0 MB plus 64 KiB.
 2. **Units:** 2.0 MB means 2,000,000 bytes, not 2 MiB (2,097,152).
-3. **Open-ended ranges:** the rest of the file at the capped rate, instead of the mock's 64 KiB pieces.
+3. **Open-ended ranges:** the rest of the file at the capped rate.
 4. **Hub PC:** its own clients (loopback) are capped like everyone else.
-5. **Type:** `/stream` sends `video/mp4` or `video/webm` (the mock sends `video/mp4`); `/download` stays `application/octet-stream`.
+5. **Type:** `/stream` sends `video/mp4` or `video/webm`; `/download` stays `application/octet-stream`.
 
 ## Acceptance evidence
 

@@ -52,7 +52,7 @@ pub struct AuthUser {
     pub role: Role,
 }
 
-/// 403 `FORBIDDEN` with the mock's message when the caller has another role.
+/// 403 `FORBIDDEN` with the contract error message when the caller has another role.
 pub fn require_role(user: &AuthUser, role: Role) -> Result<(), ApiError> {
     if user.role == role {
         return Ok(());
@@ -73,7 +73,7 @@ pub fn is_hub_pc(peer: SocketAddr, headers: &HeaderMap) -> bool {
 
 const CF_CONNECTING_IP: &str = "cf-connecting-ip";
 
-/// The token after `Bearer `, as the mock reads it.
+/// The token after `Bearer `, as sent.
 pub(crate) fn bearer_token(headers: &HeaderMap) -> Option<&str> {
     let token = headers.get(AUTHORIZATION)?.to_str().ok()?.strip_prefix("Bearer ")?;
     (!token.is_empty()).then_some(token)
@@ -108,7 +108,7 @@ struct TokenQuery {
     token: Option<String>,
 }
 
-/// The bearer header when present, else `?token=` (as the mock's `_token` reads it).
+/// The bearer header when present, else `?token=` (only on media routes).
 fn media_token(headers: &HeaderMap, uri: &Uri) -> Option<String> {
     if let Some(token) = bearer_token(headers) {
         return Some(token.to_owned());
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn require_role_answers_the_mocks_403s() {
+    fn require_role_rejects_other_roles() {
         let roles = [(Role::Teacher, "Teacher only"), (Role::Student, "Learners only"), (Role::Admin, "Hub admin only")];
         for (needed, text) in roles {
             for (has, _) in roles {

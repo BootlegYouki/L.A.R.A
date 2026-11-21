@@ -83,7 +83,7 @@ On the development Windows PC, after bringing in merged contract-change #218:
 | `cargo check --all-targets` in `server/backend` | Exit 0, `Finished dev profile` |
 | `cargo test` in `server/backend` | Exit 0; 56 unit tests and 83 integration tests passed (139 total), no failures |
 | `cargo test --test sync -- --nocapture` | Exit 0; all 9 sync integration tests passed |
-| `python -m unittest discover tests` from the root | Exit 0; 69 tests passed against the mock and contracts |
+| `python -m unittest discover tests` from the root | Exit 0; 69 tests passed in the historical shared contract suite |
 | `python scripts/verify_invariants.py` from the root | Exit 0; offline invariants and localization passed |
 | `git diff --check` | Exit 0 |
 
@@ -106,4 +106,4 @@ OK
 All L.A.R.A offline invariants and localization rules PASSED.
 ```
 
-Localhost tests do not establish physical WAN isolation, classroom-router behavior or 40-device performance; record those separately on the actual Hub. The shared Python suite runs against the unmodified mock; topics, materials, assignment and quiz mutation routes on the real Hub remain later issues, so this feature's Rust tests seed those rows directly with scoped revisions. Client UI behavior with the Hub stopped still needs a physical client check; this server test suite verifies SQLite transactions, idempotent retries, and retained sessions after a Hub restart.
+Localhost tests do not establish physical WAN isolation, classroom-router behavior or 40-device performance; record those separately on the actual Hub. Runtime acceptance uses isolated real Hub instances with synthetic data and scoped revisions. Client UI behavior with the Hub stopped still needs a physical client check; this server suite verifies SQLite transactions, idempotent retries and retained sessions after a Hub restart.

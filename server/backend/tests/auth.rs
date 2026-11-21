@@ -1,5 +1,5 @@
-//! Register, login and logout against the mock's flows (`scripts/mock_hub.py`, ported from
-//! `tests/test_mock_hub.py`), plus the failed-login limit (TECH_SPEC section 14, Q7).
+//! Register, login and logout against the real Hub, plus the failed-login limit
+//! (TECH_SPEC section 14, Q7).
 
 mod common;
 
@@ -98,7 +98,7 @@ async fn register_rejects_bad_pins() {
     hub.stop().await;
 }
 
-/// Contract PR #197: both are trimmed, then 1-32 and 1-100 characters, as in the mock.
+/// Contract PR #197: both are trimmed, then 1-32 and 1-100 characters.
 #[tokio::test]
 async fn register_trims_and_limits_the_lrn_and_name() {
     let hub = TestHub::start().await;

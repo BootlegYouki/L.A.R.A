@@ -151,8 +151,8 @@ async fn grade_submission(
     Ok(Json(graded))
 }
 
-/// One submission per (assignment, learner), with contract #257's rules in the mock's order
-/// (`submission_create` in `scripts/mock_hub.py`):
+/// One submission per (assignment, learner), with contract #257's rules:
+///
 /// 1. The same `submission_id` with the same bytes (SHA-256) is a retry: the stored row comes back
 ///    unchanged, even after grading or the due date.
 /// 2. Graded work is final: anything else is 409 `ALREADY_GRADED`.
@@ -254,7 +254,7 @@ async fn submit(
     if assignment.refuses(submitted_at) {
         return Err(ApiError::late_submission());
     }
-    // An id already used for other work is never overwritten (the mock would replace it).
+    // An id already used for other work is never overwritten.
     let new_id = current.as_ref().is_none_or(|row| row.id != submission_id);
     if new_id && submissions::by_id(&mut tx, &submission_id).await?.is_some() {
         return Err(ApiError::forbidden("This submission id belongs to other work"));
@@ -299,8 +299,8 @@ async fn submit(
     Ok(Json(submission))
 }
 
-/// The owning learner and the class's teachers (PRD FR-3.5). Sent with its real type (the mock
-/// sends `image/jpeg`) so a teacher's image view can show the photo.
+/// The owning learner and the class's teachers (PRD FR-3.5). Sent with its real content type
+/// so the client's image or document viewer can open it.
 async fn submission_file(
     State(app): State<AppState>,
     MediaUser(user): MediaUser,
