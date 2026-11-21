@@ -13,7 +13,7 @@ What this delivers and why, in two or three sentences.
 - **Team:** SERVER | DESKTOP | MOBILE | QA  |  **Sprint:** n
 - **Depends on:** step codes such as `[SERVER 2.0]` (or "none")
 - **PRD:** the requirement this delivers, for example `docs/PRD.md` FR-3.5 (behavior is defined there, not here)
-- One issue = one PR. The team works its issues one at a time, in step order. Do not edit another team's folder; `design-system/` and `rules/` are Lead-owned; `contracts/` changes go in their own `contract-change` PR, never in a feature PR.
+- One issue = one PR. The team works its issues one at a time, in step order. Do not edit another team's folder; `rules/` is Lead-owned; `contracts/`, the PRD, `design-system/` and `scripts/` change only in their own `contract-change` PR, never in a feature PR.
 
 ### Contract & Mock Hub
 - **Contract:** routes, events and tables from `contracts/` this issue implements or uses.
