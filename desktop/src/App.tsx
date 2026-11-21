@@ -385,13 +385,13 @@ export default function App() {
       }
     } finally { if (current === epoch.current) setJoining(false); }
   }
-  async function submit(fields: Credentials, register: boolean) {
+  async function submit(fields: Credentials) {
     if (!hub || busy || retryAfter > 0) return;
     epoch.current++; classRequest.current?.abort(); authRequest.current?.abort(); joinRequest.current?.abort(); abortTeacherWork(); setJoining(false); setJoinOpen(false); setCreateOpen(false); setCreating(false); setRosterBusy(false);setRosterActionErrors({});setSyncError(false);
     const current = epoch.current, request = new AbortController(); authRequest.current = request;
     setBusy(true); setAuthError(null); setClassError(null); setLogoutNotice(null);
     try {
-      const next = await signIn(hub, fields, register, request.signal);
+      const next = await signIn(hub, fields, false, request.signal);
       if (current !== epoch.current || request.signal.aborted) return;
       const repeated = accountRef.current?.user.id === next.user.id;
       publishAccount(next); setLoginVisible(false); setSelectedId(undefined);
@@ -430,7 +430,7 @@ export default function App() {
         {activeAccount&&syncError&&<p className="hub-status-banner banner-warning" role="status">{t.sync_error}</p>}
         {activeAccount && !activeAccount.persistent && <p role="status" className="auth-session-note">{t.auth_session_only}</p>}
         {status === 'error' && <section className="database-error" role="alert"><h2>{t.database_error_title}</h2><p>{t.database_error_body}</p><button type="button" className="control tonal-button" onClick={() => { void loadAccount(hub); }}>{t.retry}</button></section>}
-        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount && connection.status !== 'connected' ? <div className="startup-connection">{hubPicker}</div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields, register) => { void submit(fields, register); }} onNavigate={() => setAuthError(null)} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : videoMaterialId ? <VideoLessonPage key={identity + "/" + videoMaterialId} materialId={videoMaterialId} hub={hub} userId={activeAccount.user.id} token={videoToken} offline={connection.status !== 'connected'} onBack={() => setVideoMaterialId(undefined)} />  : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => { setSelectedId(undefined); }} settings={
+        {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount && connection.status !== 'connected' ? <div className="startup-connection">{hubPicker}</div> : !activeAccount || loginVisible ? <LoginPage hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields) => { void submit(fields); }} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : videoMaterialId ? <VideoLessonPage key={identity + "/" + videoMaterialId} materialId={videoMaterialId} hub={hub} userId={activeAccount.user.id} token={videoToken} offline={connection.status !== 'connected'} onBack={() => setVideoMaterialId(undefined)} />  : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} onHome={() => { setSelectedId(undefined); }} settings={
           selectedClass.teacher_id === activeAccount.user.id && selectedClass.archived_at == null &&
           <ClassSettingsDialog key={selectedClass.id} classroom={selectedClass} offline={offline} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
         } /><ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} onVideo={setVideoMaterialId} people={<RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} teachers={
