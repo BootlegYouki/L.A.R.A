@@ -23,7 +23,7 @@ pub struct StoredSubmission {
     pub file_type: String,
     pub submitted_at: i64,
     /// When the learner first handed in work for this assignment; a resubmission under a new id
-    /// keeps it, as the mock does (contract #273). Stays on the Hub.
+    /// keeps it, as required by contract #273. Stays on the Hub.
     pub created_at: i64,
     pub received_at: i64,
     pub score: Option<i64>,

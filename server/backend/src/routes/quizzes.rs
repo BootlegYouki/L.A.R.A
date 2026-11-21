@@ -75,7 +75,7 @@ fn parse_question(item: &Value, position: i64) -> Result<QuestionInput, ApiError
 /// `MAX_SAFE_INT`, so the timing check can never overflow and the duration reaches the desktop.
 const MAX_TIME_LIMIT_MINUTES: i64 = (MAX_SAFE_INT - 60_000) / 60_000;
 
-/// Every check the mock's `quiz_fields` does, plus the ones the database and grading need.
+/// Contract quiz fields, including database and grading constraints.
 fn parse_quiz(body: &JsonBody) -> Result<QuizInput, ApiError> {
     body.need(&["title", "time_limit_minutes", "questions"])?;
     let Some(Value::Array(items)) = body.0.get("questions") else {
@@ -140,7 +140,7 @@ fn quiz_not_found() -> ApiError {
     ApiError::not_found("Quiz not found")
 }
 
-/// Replaces a draft (PRD FR-4.8). The mock's order: 404, 403, then 409 once it has started, then the body.
+/// Replaces a draft (PRD FR-4.8). Validation order: 404, 403, then 409 once it has started, then the body.
 async fn update(
     State(app): State<AppState>,
     user: AuthUser,
@@ -162,7 +162,7 @@ async fn update(
 }
 
 /// The teacher of the class gets the whole quiz with its key. Anyone else goes through the learner path:
-/// a `DRAFT` is 404 (before the member check, as in the mock), then members only, then the redacted view.
+/// a `DRAFT` is 404 (before the member check), then members only, then the redacted view.
 async fn read(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Response, ApiError> {
     let mut conn = app.db.acquire().await?;
     let (classroom_id, status) = quizzes::meta(&mut conn, &id).await?.ok_or_else(quiz_not_found)?;
@@ -179,7 +179,7 @@ async fn read(State(app): State<AppState>, user: AuthUser, Path(id): Path<String
     Ok(Json(quiz).into_response())
 }
 
-/// Always the learner view, for teachers too (the mock's `student_quiz`).
+/// Always the learner view, for teachers too.
 async fn active(State(app): State<AppState>, user: AuthUser) -> Result<Json<StudentQuiz>, ApiError> {
     let mut conn = app.db.acquire().await?;
     let no_active = || ApiError::not_found("No active quiz");
@@ -189,7 +189,7 @@ async fn active(State(app): State<AppState>, user: AuthUser) -> Result<Json<Stud
 }
 
 /// Opens the learner's attempt on an `ACTIVE` quiz, which starts the AI lockout (PRD FR-4.3), and tells
-/// the class teachers the learner is answering. The mock's order: 404 (missing or `DRAFT`), 403 (not an
+/// the class teachers the learner is answering. Validation order: 404 (missing or `DRAFT`), 403 (not an
 /// `ACTIVE` member), then 409 `QUIZ_CLOSED`. A repeat answers the same attempt and sends no second event.
 async fn begin(State(app): State<AppState>, user: AuthUser, Path(id): Path<String>) -> Result<Json<Value>, ApiError> {
     require_role(&user, Role::Student)?;

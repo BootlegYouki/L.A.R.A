@@ -209,7 +209,7 @@ async fn a_document_download_sends_the_whole_file_whatever_the_range() {
     class.hub.stop().await;
 }
 
-/// Contract #259 and the mock's `test_video_download_resumes_with_range_and_if_range`: Save for Home
+/// Contract #259: Save for Home
 /// resumes after a Wi-Fi drop, and starts over when the file changed.
 #[tokio::test]
 async fn a_video_download_resumes_with_range_and_if_range() {

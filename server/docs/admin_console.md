@@ -10,13 +10,13 @@ The Hub window lets the school admin set up `ADMIN-0001`, sign in, list accounts
 - `backend/src/routes/admin.rs`: existing contract routes, guarded by `AuthUser` and `require_role(Role::Admin)`. Setup/login retain the Hub-PC and tunnel checks implemented in #42.
 - `backend/src/db/users.rs`: explicit `User` projections, account inserts, and PIN updates. The model cannot serialize a PIN/hash.
 - `backend/tests/admin_users.rs`: account login, reset durability, reset signing out old sessions, input validation, concurrent duplicates, role guards, response redaction and CORS.
-- `ui/tests/admin-console.cjs`: browser acceptance checks against an isolated mock or real Hub.
+- `ui/tests/admin-console.cjs`: browser acceptance checks against an isolated real Hub with `LARA_TEST_SEED=1`.
 
 The window uses REST directly, as TECH_SPEC section 2 requires. It adds no Tauri account commands, REST routes, events, columns or migrations. `src-tauri/tauri.conf.json` permits the loopback connection and Tauri IPC. CORS allows the Tauri origins, plus the two local Vite origins (`:5173`) in debug builds only (#230); it grants no authentication. Other origins receive no CORS permission. The existing `tower-http` dependency enables its `cors` feature.
 
-Creation and reset hash PINs through the existing bounded `PinHasher` before taking a write lock. A short `BEGIN IMMEDIATE` transaction commits the account change and its non-admin `sync_revisions` entry together. The admin gets no sync revision. Reset deletes every session the user holds in the same transaction (`sessions::close_all`, #230), because a reset is how the admin answers a leaked PIN: whoever was signed in with the old PIN gets `401 UNAUTHORIZED` on their next request and must sign in with the new one. The admin's own session and other users' sessions are untouched. The mock keeps sessions on reset; no client flow depends on either behavior. A WebSocket that is already open stays connected until it reconnects, as after logout (see `auth_sessions.md`).
+Creation and reset hash PINs through the existing bounded `PinHasher` before taking a write lock. A short `BEGIN IMMEDIATE` transaction commits the account change and its non-admin `sync_revisions` entry together. The admin gets no sync revision. Reset deletes every session the user holds in the same transaction (`sessions::close_all`, #230), because a reset is how the admin answers a leaked PIN: whoever was signed in with the old PIN gets `401 UNAUTHORIZED` on their next request and must sign in with the new one. The admin's own session and other users' sessions are untouched. A WebSocket that is already open stays connected until it reconnects, as after logout (see `auth_sessions.md`).
 
-The real create/reset handlers validate six ASCII PIN digits as the contract requires; the mock is more permissive for malformed create/reset requests. The native window lockfile now also includes the backend's existing hashing dependencies, which were missing from that lockfile.
+The real create/reset handlers validate six ASCII PIN digits as the contract requires. The native window lockfile now also includes the backend's existing hashing dependencies, which were missing from that lockfile.
 
 ## State and failure handling
 
@@ -50,15 +50,15 @@ From `server/ui/`: `npm run build`.
 From the repository root: `python3 -m unittest discover tests` and `python3 scripts/verify_invariants.py`.
 On Windows, use the installed Python executable and set `PYTHONUTF8=1` for the suite and its subprocesses.
 
-For browser checks, first build the backend binary and start the UI on `127.0.0.1:5173`. Keep ports 8080/8081 free. From `server/ui/`, run `node tests/admin-console.cjs mock`, then `node tests/admin-console.cjs real`. The runner starts/stops its own Hub and creates a fresh real data directory under `backend/target/`. It refuses an occupied HTTP port.
+For browser checks, first build the backend binary and start the UI on `127.0.0.1:5173`. Keep ports 8080/8081 free. From `server/ui/`, run `node tests/admin-console.cjs`. The runner starts/stops the real Hub with `LARA_TEST_SEED=1` and a fresh data directory under `backend/target/`; it refuses an occupied HTTP port. Because the seed includes an admin, the setup attempt reports that the admin exists and the test signs in with the seeded account. First-run creation remains covered by `backend/tests/admin_setup.rs`.
 
-The runner requires an available Playwright installation and browser. Set `LARA_PLAYWRIGHT_PACKAGE` to its package path if it is not locally installed, `LARA_CHROMIUM_EXECUTABLE` for an existing Chromium executable, and `LARA_PYTHON` if the mock needs an explicit Python path. These are development tools, not runtime dependencies. It simulates only the `lan_address` OS command; every account request uses the selected Hub.
+The runner requires an available Playwright installation and browser. Set `LARA_PLAYWRIGHT_PACKAGE` to its package path if needed, `LARA_CHROMIUM_EXECUTABLE` for an existing Chromium executable, and `LARA_HUB_BINARY` to test a separately built Hub. These are development tools, not runtime dependencies. Only the `lan_address` OS command is simulated; every account request uses the real Hub.
 
 ## Acceptance evidence
 
 | Criterion | Evidence |
 | --- | --- |
-| Admin creates a teacher that can sign in | Browser flows against mock and real Hub; Rust `created_accounts_sign_in_and_reset_pin_survives_restart` also checks learner creation, leading-zero PINs and old/new PIN login. |
+| Admin creates a teacher that can sign in | Browser flows against the real Hub; Rust `created_accounts_sign_in_and_reset_pin_survives_restart` also checks learner creation, leading-zero PINs and old/new PIN login. |
 | Only the admin reaches account routes | Rust `account_routes_require_admin_and_do_not_change_data_for_other_roles`; browser-created teachers/learners receive 403 on the admin list. Existing setup/login tests cover LAN/tunnel restrictions. |
 | Hub unavailable preserves local screen data | Browser checks abort loopback account requests, retain the table and open draft, disable saving and recover after refresh. Delayed list responses verify the loading skeleton; an empty response verifies the empty state. See the screenshots. |
 | English, design tokens, desktop targets | English dictionary and existing token/font/icon imports; browser checks assert visible buttons are at least 40px. Text contrast: Dark Green on white 6.58:1; Secondary text on white 4.97:1. |
@@ -91,9 +91,6 @@ python -X utf8 scripts/verify_invariants.py
 
 Screenshots use synthetic test accounts, with the PIN confirmations dismissed:
 
-- [Mock Hub accounts](evidence/issue-43-mock-accounts.png)
-- [Mock Hub loading skeleton](evidence/issue-43-mock-loading.png)
-- [Mock Hub unavailable with retained draft](evidence/issue-43-mock-offline.png)
 - [Real Hub accounts](evidence/issue-43-real-accounts.png)
 - [Real Hub loading skeleton](evidence/issue-43-real-loading.png)
 - [Real Hub unavailable with retained draft](evidence/issue-43-real-offline.png)

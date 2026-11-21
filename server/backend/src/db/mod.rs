@@ -86,13 +86,71 @@ mod tests {
     }
 
     async fn schema_of(pool: &SqlitePool) -> Vec<(String, String, String, Option<String>)> {
-        sqlx::query_as(
+        let rows: Vec<(String, String, String, Option<String>)> = sqlx::query_as(
             "SELECT type, name, tbl_name, sql FROM sqlite_master
              WHERE tbl_name <> '_sqlx_migrations' ORDER BY type, name",
         )
         .fetch_all(pool)
         .await
-        .unwrap()
+        .unwrap();
+        rows.into_iter().map(|(kind, name, table, sql)| {
+            (kind, name, table, sql.map(|sql| without_sql_comments(&sql)))
+        }).collect()
+    }
+
+    // sqlite_master preserves comments from applied migrations. Compare executable SQL while
+    // keeping quoted values intact, so historical wording cannot fail contract parity.
+    fn without_sql_comments(sql: &str) -> String {
+        let mut chars = sql.chars().peekable();
+        let mut result = String::new();
+        while let Some(ch) = chars.next() {
+            match ch {
+                '\'' | '"' | '`' | '[' => {
+                    let end = if ch == '[' { ']' } else { ch };
+                    result.push(ch);
+                    while let Some(quoted) = chars.next() {
+                        result.push(quoted);
+                        if quoted == end {
+                            if ch != '[' && chars.peek() == Some(&end) {
+                                result.push(chars.next().unwrap());
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                '-' if chars.peek() == Some(&'-') => {
+                    chars.next();
+                    for comment in chars.by_ref() {
+                        if comment == '\n' { break; }
+                    }
+                    result.push(' ');
+                }
+                '/' if chars.peek() == Some(&'*') => {
+                    chars.next();
+                    while let Some(comment) = chars.next() {
+                        if comment == '*' && chars.peek() == Some(&'/') {
+                            chars.next();
+                            break;
+                        }
+                    }
+                    result.push(' ');
+                }
+                _ => result.push(ch),
+            }
+        }
+        result
+    }
+
+    #[test]
+    fn schema_comparison_ignores_comments_but_preserves_quoted_sql() {
+        assert_eq!(without_sql_comments("TEXT -- old PIN wording\nNOT NULL"), "TEXT  NOT NULL");
+        assert_eq!(without_sql_comments("TEXT /* old PIN wording */ NOT NULL"), "TEXT   NOT NULL");
+        for quoted in ["'-- literal'", "'it''s /* literal */'", "\"-- column\"", "`/* column */`", "[-- column]"] {
+            assert_eq!(without_sql_comments(quoted), quoted);
+        }
+        assert_ne!(without_sql_comments("TEXT NOT NULL"), without_sql_comments("TEXT"));
+        assert_ne!(without_sql_comments("DEFAULT '-- one'"), without_sql_comments("DEFAULT '-- two'"));
     }
 
     #[tokio::test]

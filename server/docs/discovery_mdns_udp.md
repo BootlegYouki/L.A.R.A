@@ -26,7 +26,7 @@ multicast (`rules/networking-and-lan.md` §4.2).
 ## 3. Data flow and state
 No database, no files, no events on the Broker. Discovery is read-only network output.
 
-**Beacon packet** (keys exactly as `scripts/mock_hub.py`, verified by a unit test in `udp.rs`):
+**Beacon packet** (documented discovery keys, verified by a unit test in `udp.rs`):
 
 ```json
 {"app": "lara", "version": "<CARGO_PKG_VERSION>", "name": "<hub name>", "ip": "<lan ip>", "http_port": 8080, "ws_port": 8081}
@@ -76,7 +76,7 @@ No database, no files, no events on the Broker. Discovery is read-only network o
   (step 1.4); without it Windows "Public" profile blocks the beacon. See `network/firewall_check.rs`.
 
 ## 5. Tests
-* `discovery/udp.rs` unit tests: the beacon JSON has exactly the six mock-hub keys and values, a
+* `discovery/udp.rs` unit tests: the beacon JSON has exactly the six documented keys and values, a
   name with dots arrives whole, the port and interval match the rules file, and the beacon socket is
   bound to the address it is given (never `0.0.0.0`), may broadcast, and sends from that address
   (#200; loopback stands in for the classroom adapter).

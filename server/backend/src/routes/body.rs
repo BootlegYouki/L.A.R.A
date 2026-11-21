@@ -1,4 +1,4 @@
-//! JSON request bodies read the way the mock reads them: whatever the `Content-Type`, an empty
+//! JSON request bodies use the Hub's JSON parser: whatever the `Content-Type`, an empty
 //! body is `{}`, anything that is not a JSON object is 400 `Invalid JSON`, and missing keys are
 //! named in one 400 (`Missing: a, b`). Axum's `Json` extractor would answer 415 or 422 instead.
 
@@ -31,7 +31,7 @@ impl JsonBody {
         }
     }
 
-    /// A string as sent, or a number as text (the mock does `str(b["pin"])`); anything else is `None`.
+    /// A string as sent, or a number as text; anything else is `None`.
     pub fn text(&self, key: &str) -> Option<String> {
         match self.0.get(key)? {
             Value::String(s) => Some(s.clone()),
@@ -40,8 +40,8 @@ impl JsonBody {
         }
     }
 
-    /// Absent is `None`; present must be a string of at most `MAX_TEXT_BYTES`. The mock stores whatever was
-    /// sent, but a wrong type here would fail a CHECK or end up in a client's typed model.
+    /// Absent is `None`; present must be a string of at most `MAX_TEXT_BYTES`. A wrong type
+    /// would fail a CHECK or end up in a client's typed model.
     pub fn optional_text(&self, key: &str) -> Result<Option<String>, ApiError> {
         match self.0.get(key) {
             None => Ok(None),
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn text_reads_strings_and_numbers_like_the_mock() {
+    fn text_reads_strings_and_numbers() {
         let b = body(json!({"pin": 1234, "name": "Ana", "gone": null, "list": [1]}));
         assert_eq!(b.text("pin").as_deref(), Some("1234"));
         assert_eq!(b.text("name").as_deref(), Some("Ana"));

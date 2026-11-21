@@ -34,13 +34,13 @@ The contract routes and events are `POST /api/quizzes/{id}/start`, `POST /api/qu
    5. When scores were held, each attempt submitted before the close gets a new learner revision, so a learner who pulled `score: null` gets the score.
    6. After commit:
       * `EVENT_GRADE_CONFIRMED` goes to each released learner;
-      * then `EVENT_QUIZ_CLOSED` `{quiz_id, timestamp}` goes to the class's learners (the mock's order);
+      * then `EVENT_QUIZ_CLOSED` `{quiz_id, timestamp}` goes to the class's learners;
       * the reply is `{"success": true}`.
 3. **The replace-once rule** (in `submit`, so REST, push and WebSocket all apply it):
    * A stored submission comes back as it is, except an auto-submitted one.
    * The learner's own work replaces that once, if it passes the time check from the Hub's start and `finish <= closed_at + 60 000` (`CLOSE_GRACE_MS`). Otherwise the answer is 422 `TIME_LIMIT_EXCEEDED`.
    * The replacement is stored with `auto_submitted = 0`, so the next copy gets the stored receipt.
-   * The same close limit holds for a learner with no attempt row: they never reached `/begin`, so the close auto-submitted nothing. Without it, their work could arrive days after the close and still count, while a learner who began would be refused. This is a call beyond the mock (review of #11).
+   * The same close limit holds for a learner with no attempt row: they never reached `/begin`, so the close auto-submitted nothing. Without it, their work could arrive days after the close and still count, while a learner who began would be refused. This was recorded in the review of #11.
    * `EVENT_GRADE_CONFIRMED` goes out because the quiz is `CLOSED`.
 
 ## Who may do what
@@ -52,13 +52,13 @@ The contract routes and events are `POST /api/quizzes/{id}/start`, `POST /api/qu
 
 ## Gotchas
 - **The close almost always stores 0.** The Hub never has a learner's answers before they submit, so `answers_json` is `[]` for an unfinished attempt. A learner's app sends its saved answers when it gets `EVENT_QUIZ_CLOSED`. Its `submitted_at` is a little after `closed_at`, which is why the 60 s grace exists (the Lead's answer on #11).
-- **Auto-submitted learners get no `EVENT_GRADE_CONFIRMED`** at the close, as in the mock. A 0 would flash on the screen just before the app's own answers replace it.
-- **The release writes revisions but leaves `updated_at` alone.** The pull's attempt item (`GradeReceipt`) has no `updated_at`, and the mock doesn't touch the row.
+- **Auto-submitted learners get no `EVENT_GRADE_CONFIRMED`** at the close,. A 0 would flash on the screen just before the app's own answers replace it.
+- **The release writes revisions but leaves `updated_at` alone.** The pull's attempt item (`GradeReceipt`) has no `updated_at`.
 - **An archived class may still close an `ACTIVE` quiz.** Closing ends work. Refusing it would leave the quiz `ACTIVE` and the learners' AI tutor locked (steps 5.1 and 5.2).
-- **Closing an already-closed quiz:** the Hub answers `{"success": true}` as the contract's `Ok` response says. The mock answers `{"ok": true}` there, against the contract; the mock is the Lead's to fix.
+- **Closing an already-closed quiz:** the Hub answers `{"success": true}` as the contract's `Ok` response says.
 - **A learner who connects after the start** misses `EVENT_QUIZ_START`. The mobile app then asks `GET /api/quizzes/active` (mobile TECH_SPEC).
 - **Speed:** 40 connected learners get `EVENT_QUIZ_START` within about 1 ms of each other in a debug build (`forty_learners_get_the_start_within_300_ms`; the target is 300 ms). The broker never waits on a socket.
-- **Teachers get no presence event for auto-submitted learners** (mock parity). A live roster may keep showing them `ANSWERING_QUIZ` until it reloads `/results`.
+- **Teachers get no presence event for auto-submitted learners** (current Hub behavior). A live roster may keep showing them `ANSWERING_QUIZ` until it reloads `/results`.
 - **`closed_at`'s comment in the schema** says queued work "must finish before this". The 60 s grace (#294) came later; the comment is the Lead's to update.
 - **`/results`** shows an auto-submitted attempt as `SUBMITTED` with its score. The contract's `ResultRow` has no field that marks it as auto-submitted.
 

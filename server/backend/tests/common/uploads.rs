@@ -52,7 +52,7 @@ pub fn submission_form_at(submission_id: &str, bytes: &[u8], turned_in_at: &str)
         .part("file", file_part("homework.jpg", bytes))
 }
 
-/// The real Hub with the mock's teacher `T-0001`, one class, and learner `123456789012` enrolled.
+/// The real Hub with the seeded teacher `T-0001`, one class, and learner `123456789012` enrolled.
 pub struct Class {
     pub hub: TestHub,
     pub id: String,
