@@ -19,6 +19,7 @@ import org.lara.app.MainActivity
 import org.lara.app.R
 import org.lara.app.data.repository.HomeworkPhoto
 import org.lara.app.ui.screens.homework.CameraCaptureScreen
+import org.lara.app.ui.screens.homework.HomeworkCameraDialog
 import org.lara.app.ui.theme.LaraTheme
 
 @RunWith(AndroidJUnit4::class)
@@ -56,11 +57,13 @@ class PhotoCameraDeviceTest {
                     scenario.onActivity { activity ->
                         activity.setContent {
                             LaraTheme {
-                                CameraCaptureScreen(
-                                    onCaptured = { if (!captures.offer(it)) it.delete() },
-                                    close = {},
-                                    document = document,
-                                )
+                                HomeworkCameraDialog(onDismiss = {}) {
+                                    CameraCaptureScreen(
+                                        onCaptured = { if (!captures.offer(it)) it.delete() },
+                                        close = {},
+                                        document = document,
+                                    )
+                                }
                             }
                         }
                     }
@@ -82,6 +85,7 @@ class PhotoCameraDeviceTest {
                 show(document = true)
                 waitFor(context.getString(R.string.homework_scan_document))
                 waitFor(guide)
+                waitFor(context.getString(R.string.homework_capture_document), clickable = true)
             }
         } finally {
             captures.forEach { it.delete() }

@@ -136,21 +136,25 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         return
     }
     if (camera) {
-        CameraCaptureScreen(
-            onCaptured = { file ->
-                camera = false
-                model.captured(file, documentCamera)
-            },
-            close = { camera = false },
-            document = documentCamera,
-        )
+        HomeworkCameraDialog(onDismiss = { camera = false }) {
+            CameraCaptureScreen(
+                onCaptured = { file ->
+                    camera = false
+                    model.captured(file, documentCamera)
+                },
+                close = { camera = false },
+                document = documentCamera,
+            )
+        }
         return
     }
     val source = scanSource
     if (source != null) {
-        DocumentReviewScreen(source, scanPreview, container.homeworkPhotos, scanCorners, scanEnhance,
-            scanDetected, scanAvailable, busy, error, model::previewScan, model::adjustScan,
-            { model.useScan(false) }, { model.useScan(true) }, model::cancelScan)
+        HomeworkCameraDialog(onDismiss = { if (!busy) model.cancelScan() }) {
+            DocumentReviewScreen(source, scanPreview, container.homeworkPhotos, scanCorners, scanEnhance,
+                scanDetected, scanAvailable, busy, error, model::previewScan, model::adjustScan,
+                { model.useScan(false) }, { model.useScan(true) }, model::cancelScan)
+        }
         return
     }
     val path = draft ?: submission?.filePath
@@ -327,7 +331,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             }
             TextButton(onClick = { adding = false; documentCamera = true; requestCamera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp))
+                Icon(painterResource(R.drawable.ic_corners_out), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 Text(stringResource(R.string.homework_scan_document))
             }
