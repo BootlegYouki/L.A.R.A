@@ -2,7 +2,7 @@
 
 ## Audit timestamps, Issue #276
 
-Room v4 matches the audit fields from contract #273. `AuditTimestampMigration`
+Room v5 adds nullable `announcements.author_id` (contract 388) via `AnnouncementAuthorMigration` (4 to 5, `ALTER TABLE ... ADD COLUMN`, no data loss). Room v4 matches the audit fields from contract #273. `AuditTimestampMigration`
 upgrades v3 by rebuilding only enrollments, material_chunks, assignment_submissions
 and quiz_attempts inside Room's migration transaction. It copies every existing
 column and restores each index and foreign key. No default is added to created_at.
