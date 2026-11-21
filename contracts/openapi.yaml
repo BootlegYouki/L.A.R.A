@@ -688,7 +688,8 @@ paths:
 
   /api/announcements:
     post:
-      summary: Post an announcement to a classroom stream (teacher). Emits EVENT_ANNOUNCEMENT_PUSH.
+      summary: Post an announcement as a class teacher or active learner. Emits EVENT_ANNOUNCEMENT_PUSH.
+      description: The Hub sets author_id from the authenticated account. Only class teachers may set allow_comments.
       tags: [stream]
       requestBody:
         required: true
@@ -718,7 +719,8 @@ paths:
 
   /api/announcements/{id}:
     patch:
-      summary: Edit an announcement or toggle comments (teacher)
+      summary: Edit an announcement or moderate its comments
+      description: An active learner may edit the title and content of their own post. Class teachers may edit teacher posts and set allow_comments on any post.
       tags: [stream]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -743,7 +745,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Announcement"
     delete:
-      summary: Delete an announcement (teacher). Produces a DELETE tombstone in sync.
+      summary: Delete an announcement and its attachments
+      description: An active learner may delete their own post. Class teachers may delete any post in their class. The Hub emits sync tombstones for the announcement and its attachments.
       tags: [stream]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -792,8 +795,8 @@ paths:
   # ---------------------------------------------------------------- MATERIALS
   /api/materials:
     post:
-      description: A standalone material is linked to a classroom announcement thread. When neither assignment_id nor announcement_id is supplied, the Hub creates an announcement with the material title and empty content atomically with the material. Attachments use the linked announcement comments; assignment attachments retain private assignment comments. An explicit announcement_id must belong to the same class. Existing standalone materials must receive a linked thread before syncing to clients.
-      summary: Upload a lesson file, or an attachment for an assignment or announcement (teacher). Max 250 MB. PDF/DOCX are text-chunked on upload.
+      summary: Upload a lesson file, or an attachment for an assignment or announcement. Max 250 MB. PDF/DOCX uploaded by a teacher are text-chunked on upload.
+      description: A standalone material is linked to a classroom announcement thread. When neither assignment_id nor announcement_id is supplied, the Hub creates an announcement with the material title and empty content atomically with the material. Attachments use the linked announcement comments; assignment attachments retain private assignment comments. An explicit announcement_id must belong to the same class. Existing standalone materials must receive a linked thread before syncing to clients. Class teachers may upload materials. Active learners may upload only to their own announcement, in its classroom, with no assignment_id or topic_id; learner uploads do not generate lesson chunks.
       tags: [materials]
       requestBody:
         required: true
@@ -821,7 +824,7 @@ paths:
                 announcement_id:
                   type: string
                   format: uuid
-                  description: Set to attach this file to an announcement.
+                  description: Set to attach this file to an existing announcement in the specified classroom.
                 file:
                   type: string
                   format: binary
@@ -837,7 +840,8 @@ paths:
 
   /api/materials/{id}:
     patch:
-      summary: Rename a material or move it to a topic (teacher)
+      summary: Rename a material or move it to a topic
+      description: Class teachers may rename or move materials. Active learners may rename an attachment on their own announcement. To replace its file, upload a new attachment and delete the old one.
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -861,7 +865,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Material"
     delete:
-      summary: Delete a material and its lesson chunks (teacher). Produces a DELETE tombstone in sync; clients remove the cached file.
+      summary: Delete a material and any lesson chunks
+      description: Class teachers may delete materials in their class. Active learners may delete attachments on their own announcements. Clients remove cached files when they receive the sync tombstone.
       tags: [materials]
       parameters:
         - $ref: "#/components/parameters/Id"
@@ -1783,6 +1788,10 @@ components:
         classroom_id:
           type: string
           format: uuid
+        author_id:
+          type: [string, "null"]
+          format: uuid
+          description: Authenticated author UUID. May be absent or null for legacy teacher posts.
         title:
           type: string
         content:

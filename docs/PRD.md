@@ -138,10 +138,10 @@ flowchart TD
 * **FR-1.6 Shared Devices:** Each signed-in account has its own local database, mirror and sync cursor, as required by `rules/database-and-sync.md` section 2. Signing into another account never exposes or overwrites the first account's data; queued work survives until its owner signs in again.
 
 ### 4.2 Module 2: Stream & Announcements
-* **FR-2.1 Teacher Broadcasts:** Teachers post text announcements, agenda items, or urgent notices, and can edit or delete them. Posting requires a reachable Hub; when it is unreachable, Post is disabled with an explanation. Active class members and teachers can exchange public class comments on announcements and standalone handout posts. Handouts use their linked announcement thread. Comments can queue offline; teacher moderation is enforced when syncing.
+* **FR-2.1 Stream Posts:** Class teachers and active learners can post announcements, agenda items or notices. Learners can edit and delete their own posts. Class teachers can edit teacher posts, delete any post in their class and moderate its comments. Posting requires a reachable Hub; when it is unreachable, Post is disabled with an explanation and the draft is retained locally. Active class members and teachers can exchange public class comments on announcements and standalone handout posts. Handouts use their linked announcement thread. Comments can queue offline; teacher moderation is enforced when syncing.
 * **FR-2.2 Comment Moderation:** Teachers can enable or disable student commenting per post to prevent distractions.
 * **FR-2.3 Offline Persistence:** All stream items are cached in the client’s local SQLite database for viewing outside the school network.
-* **FR-2.4 Attachments:** A teacher can attach files to an announcement.
+* **FR-2.4 Attachments:** Class teachers can attach files to announcements. Active learners can add, rename, replace, and delete attachments on their own announcements. Learner attachments do not supply lesson text to the tutor.
 
 ### 4.3 Module 3: Classwork, Handouts, Videos & Homework Submissions
 * **FR-3.1 Document Uploads:** Teachers can upload PDFs, Word documents (DOCX), and images. `POST /api/materials` caps material uploads, including handouts and videos, at 250 MB.

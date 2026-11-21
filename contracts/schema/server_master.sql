@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
 CREATE TABLE IF NOT EXISTS announcements (
     id TEXT PRIMARY KEY NOT NULL,
     classroom_id TEXT NOT NULL,
+    author_id TEXT,                            -- authenticated author UUID; NULL for legacy teacher posts
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     allow_comments INTEGER NOT NULL DEFAULT 1 CHECK(allow_comments IN (0, 1)),

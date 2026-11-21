@@ -944,46 +944,62 @@ def sync_push(req):
 
 
 # ---- stream
-@route("POST", r"/api/announcements", role="TEACHER")
+@route("POST", r"/api/announcements")
 def announcement_create(req):
     b = req.json()
     need(b, "classroom_id", "title", "content")
-    owned_classroom(req, b["classroom_id"])
+    member_of(req.user, b["classroom_id"])
+    if req.user["role"] != "TEACHER" and "allow_comments" in b:
+        raise ApiError(403, "FORBIDDEN", "Only class teachers can set comment permissions")
     t = now_ms()
-    a = {"id": new_id(), "classroom_id": b["classroom_id"], "title": b["title"], "content": b["content"],
+    a = {"id": new_id(), "classroom_id": b["classroom_id"], "author_id": req.user["id"],
+         "title": b["title"], "content": b["content"],
          "allow_comments": b.get("allow_comments", True), "created_at": t, "updated_at": t}
     STATE.announcements[a["id"]] = a
     STATE.log("announcements", a["id"], a["classroom_id"])
     STATE.broadcast({"event": "EVENT_ANNOUNCEMENT_PUSH", "classroom_id": a["classroom_id"],
                      "announcement_id": a["id"], "title": a["title"], "timestamp": t},
-                    STATE.students_of(a["classroom_id"]))
+                    STATE.students_of(a["classroom_id"]) | STATE.teachers_of(a["classroom_id"]))
     return a
 
 
-@route("PATCH", r"/api/announcements/([^/]+)", role="TEACHER")
+@route("PATCH", r"/api/announcements/([^/]+)")
 def announcement_patch(req):
-    a = STATE.announcements.get(req.groups[0])
-    if not a:
-        raise ApiError(404, "NOT_FOUND", "Announcement not found")
-    owned_classroom(req, a["classroom_id"])
+    a = announcement_in_my_class(req)
+    b = req.json()
+    require_announcement_author(req, a)
+    if req.user["role"] != "TEACHER" and "allow_comments" in b:
+        raise ApiError(403, "FORBIDDEN", "Only class teachers can set comment permissions")
+    author = STATE.users.get(a.get("author_id"))
+    if req.user["role"] == "TEACHER" and author and author["role"] == "STUDENT" and {"title", "content"} & b.keys():
+        raise ApiError(403, "FORBIDDEN", "Only the learner can edit their post")
     for k in ("title", "content", "allow_comments"):
-        if k in req.json():
-            a[k] = req.json()[k]
+        if k in b:
+            a[k] = b[k]
     a["updated_at"] = now_ms()
     STATE.log("announcements", a["id"], a["classroom_id"])
     return a
 
 
-@route("DELETE", r"/api/announcements/([^/]+)", role="TEACHER")
+@route("DELETE", r"/api/announcements/([^/]+)")
 def announcement_delete(req):
-    a = STATE.announcements.get(req.groups[0])
-    if not a:
-        raise ApiError(404, "NOT_FOUND", "Announcement not found")
-    owned_classroom(req, a["classroom_id"])
+    a = announcement_in_my_class(req)
+    require_announcement_author(req, a)
+    for m in list(STATE.materials.values()):
+        if m.get("announcement_id") == a["id"]:
+            delete_material(m)
+    for cid, comment in list(STATE.comments.items()):
+        if comment["announcement_id"] == a["id"]:
+            del STATE.comments[cid]
+            STATE.log("announcement_comments", cid, a["classroom_id"], action="DELETE")
     del STATE.announcements[a["id"]]
     STATE.log("announcements", a["id"], a["classroom_id"], action="DELETE")
     return {"success": True}
 
+
+def require_announcement_author(req, announcement):
+    if req.user["role"] != "TEACHER" and req.user["id"] != announcement.get("author_id"):
+        raise ApiError(403, "FORBIDDEN", "Not your announcement")
 
 def notify_class_comments(announcement):
     cid = announcement["classroom_id"]
@@ -1077,26 +1093,57 @@ def topic_delete(req):
 
 
 # ---- materials
-@route("PATCH", r"/api/materials/([^/]+)", role="TEACHER")
+def allow_material_write(req, classroom_id, announcement_id, *, standalone_fields=False):
+    if req.user["role"] == "TEACHER":
+        owned_classroom(req, classroom_id)
+    else:
+        member_of(req.user, classroom_id)
+        if not announcement_id or standalone_fields:
+            raise ApiError(403, "FORBIDDEN", "Learners can only manage their announcement attachments")
+    if announcement_id:
+        a = STATE.announcements.get(announcement_id)
+        if not a or a["classroom_id"] != classroom_id:
+            raise ApiError(404, "NOT_FOUND", "Announcement not found in this classroom")
+        require_announcement_author(req, a)
+
+
+@route("PATCH", r"/api/materials/([^/]+)")
 def material_patch(req):
-    material = patch_entity(req, STATE.materials, "Material", "materials", ("title", "topic_id"))
+    material = visible_material(req)
+    b = req.json()
+    allow_material_write(req, material["classroom_id"], material.get("announcement_id"),
+                         standalone_fields="topic_id" in b)
+    for k in ("title", "topic_id"):
+        if k in b:
+            material[k] = b[k]
+    material["updated_at"] = now_ms()
+    STATE.log("materials", material["id"], material["classroom_id"])
     return {k: v for k, v in material.items() if k != "uploaded_by"}
 
 
-@route("DELETE", r"/api/materials/([^/]+)", role="TEACHER")
+@route("DELETE", r"/api/materials/([^/]+)")
 def material_delete(req):
-    m = owned_entity(req, STATE.materials, "Material")
-    del STATE.materials[m["id"]]
-    STATE.chunks.pop(m["id"], None)
-    STATE.log("materials", m["id"], m["classroom_id"], action="DELETE")
+    m = visible_material(req)
+    allow_material_write(req, m["classroom_id"], m.get("announcement_id"))
+    delete_material(m)
     return {"success": True}
 
 
-@route("POST", r"/api/materials", role="TEACHER")
+def delete_material(m):
+    del STATE.materials[m["id"]]
+    STATE.material_files.pop(m["id"], None)
+    for chunk in STATE.chunks.pop(m["id"], []):
+        STATE.log("material_chunks", chunk["id"], m["classroom_id"], action="DELETE")
+    STATE.log("materials", m["id"], m["classroom_id"], action="DELETE")
+
+
+@route("POST", r"/api/materials")
 def material_create(req):
     f, files = req.multipart()
     need(f, "classroom_id", "title", "file_type")
-    owned_classroom(req, f["classroom_id"])
+    allow_material_write(req, f["classroom_id"], f.get("announcement_id"),
+                         standalone_fields="topic_id" in f or "assignment_id" in f)
+    need(files, "file")
     data = files.get("file", b"")
     if len(data) > 250 * 1024 * 1024:
         raise ApiError(413, "FILE_TOO_LARGE", "Max 250MB")
@@ -1119,7 +1166,7 @@ def material_create(req):
     STATE.materials[mid] = m
     STATE.material_files[mid] = data
     STATE.log("materials", mid, f["classroom_id"])
-    if f["file_type"] != "VIDEO":
+    if req.user["role"] == "TEACHER" and f["file_type"] != "VIDEO":
         chunk = {"id": new_id(), "material_id": mid, "order_index": 1,
                  "heading": f["title"], "text": data.decode("utf-8", "replace")[:500],
                  "created_at": t, "updated_at": t}

@@ -563,6 +563,49 @@ class TestMockHub(unittest.TestCase):
         status, session, _ = call(BASE, "POST", "/api/admin/setup", {"full_name": "ICT Coordinator", "pin": "654321"})
         self.assertEqual((status, session["user"]["role"]), (200, "ADMIN"))
 
+    @needs_mock
+    def test_learner_announcement_and_attachment_permissions(self):
+        data = {"classroom_id": CLASSROOM, "title": "Class update", "content": "Hello"}
+        ana = login(BASE, "123456789013")
+        self.assertEqual(call(BASE, "POST", "/api/announcements", data, ana)[0], 403)
+        ana, _ = self.enroll_ana()
+        status, post, _ = call(BASE, "POST", "/api/announcements", data, self.pupil)
+        self.assertEqual(status, 200)
+        path = f"/api/announcements/{post['id']}"
+        self.assertEqual(call(BASE, "PATCH", path, {"title": "Updated"}, self.pupil)[0], 200)
+        self.assertEqual(call(BASE, "PATCH", path, {"allow_comments": False}, self.pupil)[0], 403)
+        self.assertEqual(call(BASE, "DELETE", path, token=ana)[0], 403)
+        self.assertEqual(call(BASE, "PATCH", path, {"allow_comments": False}, self.teacher)[0], 200)
+        self.assertIn(post["id"], [a["id"] for a in self.pull(self.teacher)["announcements"]])
+
+        fields = {"classroom_id": CLASSROOM, "title": "Notes.pdf", "file_type": "DOCUMENT"}
+        def upload(token, **extra):
+            parts = "".join(f'--XX\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'
+                            for key, value in (fields | extra).items())
+            body = (parts + '--XX\r\nContent-Disposition: form-data; name="file"; filename="notes.pdf"\r\n\r\nPDF\r\n--XX--\r\n').encode()
+            return call(BASE, "POST", "/api/materials", token=token, raw=body,
+                        headers={"Content-Type": "multipart/form-data; boundary=XX"})
+
+        self.assertEqual(upload(self.pupil)[0], 403)
+        self.assertEqual(upload(ana, announcement_id=post["id"])[0], 403)
+        self.assertEqual(upload(self.pupil, announcement_id=post["id"], topic_id=CLASSROOM)[0], 403)
+        status, material, _ = upload(self.pupil, announcement_id=post["id"])
+        self.assertEqual(status, 200)
+        mat_path = f"/api/materials/{material['id']}"
+        self.assertEqual(call(BASE, "PATCH", mat_path, {"title": "Other"}, ana)[0], 403)
+        self.assertEqual(call(BASE, "DELETE", mat_path, token=ana)[0], 403)
+        self.assertEqual(call(BASE, "PATCH", mat_path, {"title": "Renamed"}, self.pupil)[1]["title"], "Renamed")
+        self.assertNotIn(material["id"], self.server.state.chunks)
+        self.assertEqual(call(BASE, "DELETE", mat_path, token=self.pupil)[0], 200)
+
+        _, replacement, _ = upload(self.pupil, announcement_id=post["id"])
+        cursor = self.pull(ana)["next_cursor"]
+        self.assertEqual(call(BASE, "DELETE", path, token=self.teacher)[0], 200)
+        deleted = self.pull(ana, cursor=cursor)["deleted"]
+        self.assertIn({"entity_table": "announcements", "entity_id": post["id"]}, deleted)
+        self.assertIn({"entity_table": "materials", "entity_id": replacement["id"]}, deleted)
+        self.assertNotIn(replacement["id"], self.server.state.material_files)
+
     def test_material_can_be_attached_renamed_and_deleted(self):
         asg = self.pull(self.teacher)["assignments"][0]["id"]
         boundary = "XX"
