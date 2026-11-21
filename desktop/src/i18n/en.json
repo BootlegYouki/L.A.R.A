@@ -221,5 +221,15 @@
   "lesson_saved": "Saved on this device",
   "lesson_save": "Save for Home",
   "lesson_save_error": "The lesson could not be saved. Try again.",
-  "lesson_text_missing": "Lesson text is not available on this device yet. Connect to the Hub and let the class sync."
+  "lesson_text_missing": "Lesson text is not available on this device yet. Connect to the Hub and let the class sync.",
+  "class_materials_one": "1 material",
+  "class_materials_many": "{count} materials",
+  "class_open_classwork": "View classwork",
+  "class_handout": "Handout",
+  "class_video": "Video lesson",
+  "class_open_handout": "Open handout",
+  "class_open_video": "Watch video",
+  "class_video_help": "Open the video lesson to watch or save it for home.",
+  "class_home_study": "Home study",
+  "class_save_help": "Save this lesson on your device to use it away from the classroom Hub."
 }
