@@ -43,7 +43,7 @@ The requested enhancement uses the official OpenCV 4.13.0 Android AAR, with its 
 
 Captured and imported photos first become an orientation-corrected, bounded, lossless PNG. Transparent images receive a white paper background. Detection runs on a grayscale copy with its longest edge at most 640 pixels. Locally contrast-enhanced edges and a shadow-tolerant bright-paper mask supply page candidates. Separate ordinary, shadow-tolerant and brighter paper masks retain candidates that a single threshold would merge with the desk or remove under shadow. Convex boundaries bridge small edge interruptions, and their enclosed area determines candidate size. An irregular contour can propose a fitted rectangle, which must still remain within the image and pass all four edge checks. Each candidate must pass a coverage check against the lower-quartile background brightness before the largest valid four-corner region covering at least a quarter of the image is selected. Each of its four sides must also show paper brighter than its immediate surroundings at least eight of fifteen sampled positions. This rejects large candidates that merge furniture with the paper. A rejected larger object cannot hide a valid smaller page.
 
-The camera shows a static framing guide. Page detection runs only after capture or gallery import, followed by perspective correction and enhancement. This avoids live-frame allocation and disagreement between a preview outline and the captured image.
+Scan a document shows a static framing guide. Page detection runs after capture, followed by perspective correction and enhancement. This avoids live-frame allocation and disagreement between a preview outline and the captured image.
 Capture and gallery import automatically open an adjusted, enhanced preview. Confident page boundaries receive perspective correction. Unclear edges receive an enhanced full-photo preview. Manual adjustment is optional through Adjust corners, and the preview explains which result is shown.
 
 `DocumentReviewScreen` provides corner dragging, a corner selector and labeled horizontal/vertical sliders. Handles have 52dp touch regions. Dragging outside the handles permits scrolling. Crossed, collapsed, out-of-range and tiny page boundaries disable Preview scan. The learner can always choose the full photo or cancel the review.
@@ -73,3 +73,5 @@ The Lead-approved 3 GB emulator alternative passed CameraX capture, document pro
 Assignment private comments display the saved queued or rejected status alongside the comment.
 
 The assignment screen checks Android camera permission before opening the capture screen. It requests access after dismissing the attachment sheet and keeps the assignment visible if access is denied. An existing Android grant opens the camera directly.
+
+Take a photo and Choose a photo add a full image directly as a compressed JPEG. Scan a document is a separate camera action with a page guide and document review tools.

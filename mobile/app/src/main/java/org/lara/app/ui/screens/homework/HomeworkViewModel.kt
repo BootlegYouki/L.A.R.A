@@ -42,7 +42,7 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
     private val failed = MutableStateFlow(false)
     val error = failed.asStateFlow()
 
-    fun captured(file: File) = prepare { file }
+    fun captured(file: File, document: Boolean = false) = prepare(document) { file }
 
     fun choose(context: Context, uri: Uri) = prepare {
         val file = File.createTempFile("homework-import-", ".image", context.cacheDir)
@@ -71,8 +71,16 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
         previous?.let { container.homework.discardDraft(it) }
     }
 
-    private fun prepare(source: suspend () -> File) = action {
+    private fun prepare(document: Boolean = false, source: suspend () -> File) = action {
         val file = withContext(Dispatchers.IO) { source() }
+        if (!document) {
+            val photo = try { HomeworkPhoto.compress(file, container.homeworkPhotos) }
+            finally { withContext(Dispatchers.IO) { file.delete() } }
+            val previous = draft.value
+            saved["photo"] = photo.path
+            previous?.let { container.homework.discardDraft(it) }
+            return@action
+        }
         val photo = HomeworkPhoto.normalize(file, container.homeworkPhotos)
         val available = withContext(Dispatchers.IO) { DocumentScanner.available }
         val corners = if (available) {

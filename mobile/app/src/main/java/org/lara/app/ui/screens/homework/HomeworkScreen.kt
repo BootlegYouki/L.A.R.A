@@ -90,7 +90,8 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     val scanEnhance by model.scanEnhance.collectAsStateWithLifecycle()
     val scanDetected by model.scanDetected.collectAsStateWithLifecycle()
     val scanAvailable by model.scanAvailable.collectAsStateWithLifecycle()
-    var camera by rememberSaveable { mutableStateOf(false) }
+    var camera by rememberSaveable(assignment.id) { mutableStateOf(false) }
+    var documentCamera by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var adding by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var confirming by rememberSaveable(assignment.id) { mutableStateOf(false) }
     val context = LocalContext.current
@@ -135,7 +136,14 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         return
     }
     if (camera) {
-        CameraCaptureScreen({ file -> camera = false; model.captured(file) }, { camera = false })
+        CameraCaptureScreen(
+            onCaptured = { file ->
+                camera = false
+                model.captured(file, documentCamera)
+            },
+            close = { camera = false },
+            document = documentCamera,
+        )
         return
     }
     val source = scanSource
@@ -310,12 +318,18 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             Text(stringResource(R.string.homework_add_work), style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = { adding = false; requestCamera = true }, enabled = !busy,
+            TextButton(onClick = { adding = false; documentCamera = false; requestCamera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 val hasPhoto = !path.isNullOrEmpty() && HomeworkAttachment.type(File(path)) == "IMAGE"
                 Text(stringResource(if (hasPhoto) R.string.homework_retake else R.string.homework_take_photo))
+            }
+            TextButton(onClick = { adding = false; documentCamera = true; requestCamera = true }, enabled = !busy,
+                modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp))
+                Spacer(Modifier.width(LaraSpacing.S3))
+                Text(stringResource(R.string.homework_scan_document))
             }
             TextButton(onClick = { adding = false; gallery.launch("image/*") }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {

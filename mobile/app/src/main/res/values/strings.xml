@@ -215,9 +215,10 @@
     <string name="reading_zoom_in">Zoom in</string>
     <string name="reading_zoom_out">Zoom out</string>
     <string name="reading_zoom_state">Zoom: %1$d%%</string>
-    <string name="homework_camera_title">Photograph your work</string>
-    <string name="homework_frame">KEEP THE WHOLE PAGE IN VIEW</string>
-    <string name="homework_permission">Allow camera access in Android settings to take a photo, or choose an existing photo.</string>
+    <string name="homework_camera_title">Camera</string>
+    <string name="homework_scan_document">Scan a document</string>
+    <string name="homework_frame">Keep the whole page in view</string>
+    <string name="homework_permission">Allow camera access in Android settings to take photos or scan documents. You can also choose an existing photo.</string>
     <string name="homework_camera_failed">The camera could not open or save the photo. Try again, or choose a photo instead.</string>
     <string name="homework_take_photo">Take a photo</string>
     <string name="homework_retake">Take a new photo</string>

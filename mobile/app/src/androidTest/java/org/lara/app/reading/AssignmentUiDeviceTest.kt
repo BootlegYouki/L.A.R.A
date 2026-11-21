@@ -187,8 +187,7 @@ class AssignmentUiDeviceTest {
                     val model = androidx.lifecycle.ViewModelProvider(requireNotNull(screenOwner))["homework-$owner-leaf", org.lara.app.ui.screens.homework.HomeworkViewModel::class.java]
                     model.choose(context, android.net.Uri.fromFile(File(row.filePath)))
                 }
-                scrollTo("Use this photo"); capture("import-preview")
-                click("Use this photo"); waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
+                waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
                 capture("import-ready")
                 assertEquals("Draft replacement does not overwrite queued work", row, db.homeworkDao().find("leaf", owner))
             }
@@ -238,7 +237,6 @@ class AssignmentUiDeviceTest {
                     androidx.lifecycle.ViewModelProvider(requireNotNull(screenOwner))["homework-${user.id}-${assignment.id}", org.lara.app.ui.screens.homework.HomeworkViewModel::class.java]
                         .choose(context, android.net.Uri.fromFile(source))
                 }
-                scrollTo("Use this photo"); click("Use this photo")
                 waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
                 click("Turn in"); waitFor("Turn in your work?"); click("Turn in")
                 kotlinx.coroutines.withTimeout(10_000) {

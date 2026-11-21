@@ -4,7 +4,6 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,10 +29,15 @@ import org.lara.app.R
 import org.lara.app.ui.theme.*
 
 @Composable
-fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
+fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit, document: Boolean = false) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current
-    val view = remember { PreviewView(context).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE } }
+    val view = remember(context) {
+        PreviewView(context).apply {
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            scaleType = PreviewView.ScaleType.FIT_CENTER
+        }
+    }
     val capture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build() }
     var ready by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -58,58 +62,57 @@ fun CameraCaptureScreen(onCaptured: (File) -> Unit, close: () -> Unit) {
             provider?.unbind(preview, capture)
         }
     }
-    Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
-        verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-            IconButton(onClick = close, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
-                Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.settings_back))
+    BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
+        val previewHeight = (maxHeight * 0.66f).coerceIn(180.dp, 560.dp)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S3),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                IconButton(onClick = close, enabled = !busy, modifier = Modifier.size(MinTouchTarget)) {
+                    Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.settings_back))
+                }
+                Text(stringResource(if (document) R.string.homework_scan_document else R.string.homework_camera_title), style = MaterialTheme.typography.titleLarge)
             }
-            Text(stringResource(R.string.homework_camera_title), style = MaterialTheme.typography.titleLarge)
-        }
-        Box(Modifier.fillMaxWidth().height(320.dp).clipToBounds().background(LaraColors.TextPrimary), contentAlignment = Alignment.Center) {
-            AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
-            Canvas(Modifier.fillMaxSize().padding(LaraSpacing.S5)) {
-                drawRect(LaraColors.Primary, topLeft = Offset.Zero, size = Size(size.width, size.height),
-                    style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(16.dp.toPx(), 8.dp.toPx()))))
+            Box(Modifier.fillMaxWidth().height(previewHeight).clipToBounds().background(LaraColors.TextPrimary), contentAlignment = Alignment.Center) {
+                AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+                if (document) Canvas(Modifier.fillMaxSize().padding(LaraSpacing.S5)) {
+                    drawRect(LaraColors.Primary, topLeft = Offset.Zero, size = Size(size.width, size.height),
+                        style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(16.dp.toPx(), 8.dp.toPx()))))
+                }
+                if (document) Surface(Modifier.align(Alignment.TopCenter).padding(LaraSpacing.S3), color = LaraColors.TextPrimary) {
+                    Text(stringResource(R.string.homework_frame),
+                        Modifier.padding(LaraSpacing.S2), color = LaraColors.Surface)
+                }
             }
-            Surface(Modifier.align(Alignment.TopCenter).padding(LaraSpacing.S3), color = LaraColors.TextPrimary) {
-                Text(stringResource(R.string.homework_frame),
-                    Modifier.padding(LaraSpacing.S2), color = LaraColors.Surface)
-            }
-        }
-        if (failed) Text(stringResource(R.string.homework_camera_failed))
-        if (!ready && !failed) org.lara.app.ui.components.LoadingSpinner(inline = true)
-        if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        Button(enabled = ready && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
-            colors = ButtonDefaults.buttonColors(containerColor = LaraColors.Surface, contentColor = LaraColors.PrimaryDark),
-            border = BorderStroke(4.dp, LaraColors.PrimaryLight), onClick = {
-            busy = true
-            failed = false
-            var file: File? = null
-            try {
-                val output = File.createTempFile("homework-capture-", ".jpg", context.cacheDir)
-                file = output
-                capture.targetRotation = view.display?.rotation ?: android.view.Surface.ROTATION_0
-                capture.takePicture(ImageCapture.OutputFileOptions.Builder(output).build(), ContextCompat.getMainExecutor(context),
-                    object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(result: ImageCapture.OutputFileResults) {
-                            busy = false
-                            onCaptured(output)
-                        }
-                        override fun onError(error: ImageCaptureException) {
-                            output.delete()
-                            busy = false
-                            failed = true
-                        }
-                    })
-            } catch (_: Exception) {
-                file?.delete()
-                busy = false
-                failed = true
-            }
-        }) { Text(stringResource(R.string.homework_take_photo)) }
-        OutlinedButton(onClick = close, enabled = !busy, modifier = Modifier.heightIn(min = MinTouchTarget)) {
-            Text(stringResource(R.string.settings_back))
+            if (failed) Text(stringResource(R.string.homework_camera_failed))
+            if (!ready && !failed) org.lara.app.ui.components.LoadingSpinner(inline = true)
+            if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+            Button(enabled = ready && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget),
+                onClick = {
+                busy = true
+                failed = false
+                var file: File? = null
+                try {
+                    val output = File.createTempFile("homework-capture-", ".jpg", context.cacheDir)
+                    file = output
+                    capture.targetRotation = view.display?.rotation ?: android.view.Surface.ROTATION_0
+                    capture.takePicture(ImageCapture.OutputFileOptions.Builder(output).build(), ContextCompat.getMainExecutor(context),
+                        object : ImageCapture.OnImageSavedCallback {
+                            override fun onImageSaved(result: ImageCapture.OutputFileResults) {
+                                busy = false
+                                onCaptured(output)
+                            }
+                            override fun onError(error: ImageCaptureException) {
+                                output.delete()
+                                busy = false
+                                failed = true
+                            }
+                        })
+                } catch (_: Exception) {
+                    file?.delete()
+                    busy = false
+                    failed = true
+                }
+            }) { Text(stringResource(R.string.homework_take_photo)) }
         }
     }
 }
