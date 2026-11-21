@@ -159,8 +159,9 @@ internal fun PostAnnouncement(container: AppContainer, userId: String, classroom
             if (!acquired) pickerFailed = true
         }
     }
-    val attachments by produceState<Map<String, String>>(emptyMap(), files) {
-        value = withContext(Dispatchers.IO) {
+    var attachments by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(files) {
+        attachments = withContext(Dispatchers.IO) {
             files.associateWith { raw ->
                 runCatching {
                     context.contentResolver.query(Uri.parse(raw), arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
