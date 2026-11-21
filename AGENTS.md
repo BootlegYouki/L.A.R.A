@@ -13,7 +13,7 @@ An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Phil
 * **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
-**How a class runs:** the admin sets a PIN the first time the Hub starts and creates teacher accounts, a teacher creates a class and gets a 6-character code, learners self-register (LRN + 4-digit PIN), enter the code, and the teacher approves them. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English, and is locked while a quiz is active.
+**How a class runs:** The Hub admin creates teacher and learner accounts in the Hub dashboard. A teacher creates a class and shares its 6-character code. Learners sign in with their LRN and six-digit PIN, enter the code, and wait for teacher approval. Everything syncs into each device's local SQLite so learners can study at home offline. Teachers post announcements, upload handouts and videos, group classwork under topics, assign homework (learners photograph their notebook, and can ask the teacher in a private comment), and run synchronized timed quizzes that auto-grade on the Hub and export to a DepEd class record on USB. The AI tutor never gives the final answer: it asks guiding questions grounded in the teacher's lesson text, in English, and is locked while a quiz is active.
 
 **Biggest known risk:** AI quality on weak hardware. No model is chosen yet; see section 5.
 
@@ -52,7 +52,7 @@ Seed accounts for the mock hub (PIN `123456`): `T-0001` (teacher, class code `K7
 ### 1.4 Decisions already made (do not re-litigate)
 * Server backend is **Rust** (Axum, Tokio, SQLx). No Node backend.
 * The Hub runs on a **dedicated always-on machine** for the pilot (same app, any Windows or Linux PC).
-* **Accounts:** admin creates teachers; learners self-register, join by class code, teacher approves.
+* **Accounts:** The Hub admin creates teacher and learner accounts in the Hub dashboard. A teacher creates a class and shares its 6-character code. Learners sign in with their LRN and six-digit PIN, enter the code, and wait for teacher approval. The Hub admin resets forgotten PINs.
 * **The product is Google Classroom, offline, plus quizzes and the Socratic tutor.** When a classroom behavior is not written down, Google Classroom's behavior is the default, limited to what the contract supports. Out of scope: Meet, Drive, Calendar, guardian emails, rubrics and grade categories.
 * **Teachers have the same features on desktop and mobile** (decided 2026-10-11, replacing "mobile is the on-the-go set"): classes, posts, materials, assignments, grading, gradebook, and building, starting and monitoring quizzes.
 * **One Hub admin account** (`ADMIN-0001`, role `ADMIN`), created on the Hub PC at first run with a PIN (`POST /api/admin/setup`). It is not a teacher and is never synced to a client.
@@ -106,7 +106,7 @@ Rule documents (read the ones for your task):
 * **Discovery:** mDNS `_lara._tcp.local` on 8080, UDP JSON beacon every 3 s to `255.255.255.255:8888`. A manual IP entry fallback must always exist on the connection screen. mDNS and the UDP beacon are LAN-only and never attempted off the school network; the same fallback field also accepts a saved Hub remote URL (the Cloudflare Tunnel hostname) when the device is off the LAN (section 3.5).
 
 ### 3.4 Security and privacy (children's data)
-* Every route except `/download`, register and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI. This holds identically over the Remote/Suspension Mode tunnel — the tunnel changes transport, never authorization.
+* Every route except `/download`, first-run `POST /api/admin/setup` and login needs a bearer token. Authorise by role and by class ownership on the server, never only in the UI. This holds identically over the Remote/Suspension Mode tunnel — the tunnel changes transport, never authorization.
 * **Never reach a client:** PIN hashes, other people's LRN, answer keys (`correct_answer`, synonyms), server file paths. Student serializers are separate types that cannot contain `correct_answer`.
 * Never log PINs, tokens, LRNs or homework file contents. Never delete users, classrooms or graded rows; deactivate or archive.
 * Learners' names, LRNs and homework photos are personal data of minors under the Data Privacy Act. They may transit the internet only through the Hub's own Remote/Suspension Mode tunnel (section 3.5); never add a feature that exports or transmits them anywhere else (analytics, third-party storage, another server).
