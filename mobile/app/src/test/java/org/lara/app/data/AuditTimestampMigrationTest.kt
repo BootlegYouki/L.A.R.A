@@ -36,6 +36,7 @@ class AuditTimestampMigrationTest {
             schema.getValue("setupQueries").jsonArray.forEach { old.execSQL(it.jsonPrimitive.content) }
             old.execSQL("INSERT INTO users(id,full_name,role,created_at,updated_at) VALUES('learner','Synthetic','STUDENT',1,1)")
             old.execSQL("INSERT INTO classrooms(id,name,section,class_code,teacher_id,created_at,updated_at) VALUES('class','Science','A','K7M4QX','teacher',1,1)")
+            old.execSQL("INSERT INTO announcements(id,classroom_id,title,content,created_at,updated_at) VALUES('post','class','Legacy','Retained',1,1)")
             old.execSQL("INSERT INTO enrollments(id,classroom_id,student_id,joined_at,updated_at) VALUES('enrollment','class','learner',11,99)")
             old.execSQL("INSERT INTO materials(id,classroom_id,title,file_type,file_size_bytes,created_at,updated_at) VALUES('material','class','Lesson','DOCUMENT',5,1,1)")
             old.execSQL("INSERT INTO material_chunks(id,material_id,order_index,text,updated_at) VALUES('chunk','material',0,'Synthetic lesson',22)")
@@ -87,10 +88,15 @@ class AuditTimestampMigrationTest {
             assertEquals("synthetic-hub", db.syncStateDao().get("queued_hub:assignment_submissions:photo-QUEUED_FOR_SYNC")?.value)
             db.close()
             db = LaraDatabase.create(context, name)
-            assertEquals(4, db.openHelper.writableDatabase.version)
+            assertEquals(5, db.openHelper.writableDatabase.version)
             assertEquals(33L, db.syncDao().submission("photo-QUEUED_FOR_SYNC")?.createdAt)
             assertEquals(44L, db.syncDao().attempt("attempt-REJECTED")?.createdAt)
             val sql = db.openHelper.writableDatabase
+            sql.query("SELECT content, author_id FROM announcements WHERE id='post'").use {
+                assertTrue(it.moveToFirst())
+                assertEquals("Retained", it.getString(0))
+                assertTrue(it.isNull(1))
+            }
             sql.query("PRAGMA foreign_key_check").use { assertFalse(it.moveToFirst()) }
             for (table in listOf("enrollments", "material_chunks", "assignment_submissions", "quiz_attempts")) {
                 val failure = runCatching { sql.execSQL("UPDATE $table SET created_at=NULL") }.exceptionOrNull()

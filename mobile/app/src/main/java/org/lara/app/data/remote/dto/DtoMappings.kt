@@ -14,6 +14,7 @@ fun PublicUserDto.toEntity(createdAt: Long, updatedAt: Long) = UserEntity(
 fun AnnouncementDto.toEntity() = AnnouncementEntity(
     id = id, classroomId = classroomId, title = title, content = content,
     allowComments = allowComments ?: true, createdAt = createdAt, updatedAt = updatedAt,
+    authorId = authorId,
 )
 
 fun AnnouncementCommentEntity.toPushDto(): CommentPushDto {

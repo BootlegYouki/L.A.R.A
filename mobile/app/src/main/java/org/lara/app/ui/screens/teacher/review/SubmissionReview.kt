@@ -42,6 +42,7 @@ import org.lara.app.data.local.entities.AssignmentSubmissionEntity
 import org.lara.app.data.remote.HubFailure
 import org.lara.app.domain.Cached
 import org.lara.app.domain.model.Assignment
+import org.lara.app.ui.components.AttachmentChip
 import org.lara.app.ui.theme.*
 
 @Composable
@@ -49,12 +50,15 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
     archived: Boolean, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     val roster by remember(container, assignment.classroomId) { container.enrollments.roster(assignment.classroomId, scope) }.collectAsStateWithLifecycle()
-    val submissions by remember(container, assignment.id) { container.reviewSubmissions(assignment.id) }.collectAsStateWithLifecycle(emptyList())
+    val cachedSubmissions by remember(container, assignment.id) { container.reviewSubmissions(assignment.id) }
+        .collectAsStateWithLifecycle(initialValue = null)
+    val submissions = cachedSubmissions.orEmpty()
     var access by remember(assignment.id) { mutableStateOf<Int?>(null) } // 0 allowed, 1 denied
     var online by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf<Int?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var reviewedTab by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var score by rememberSaveable(selectedId) { mutableStateOf("") }
     var feedback by rememberSaveable(selectedId) { mutableStateOf("") }
     var baselineScore by rememberSaveable(selectedId) { mutableStateOf("") }
@@ -117,32 +121,46 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
         }
         message?.let { Text(stringResource(it), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
         if (selectedId == null) {
-            if (roster is Cached.Loading) { ReviewSkeleton(); return@Column }
-            val turnedInCount = submissions.count { it.score == null && learners.any { person -> person.enrollment.studentId == it.studentId } }
-            val gradedCount = submissions.count { it.score != null && learners.any { person -> person.enrollment.studentId == it.studentId } }
+            if (roster is Cached.Loading || cachedSubmissions == null) { ReviewSkeleton(); return@Column }
+            val submissionsByLearner = submissions.associateBy { it.studentId }
+            val submitted = learners.mapNotNull { learner ->
+                submissionsByLearner[learner.enrollment.studentId]?.let { learner to it }
+            }
+            val (toReview, reviewed) = submitted.partition { (_, submission) -> submission.score == null }
+            val turnedInCount = toReview.size
+            val gradedCount = reviewed.size
             val missingCount = (learners.size - turnedInCount - gradedCount).coerceAtLeast(0)
+            val rows = if (reviewedTab) reviewed else toReview
             Column(Modifier.fillMaxSize()) {
                 Text(stringResource(R.string.review_assignment_summary), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.review_summary_counts, turnedInCount, missingCount, gradedCount),
                     color = LaraColors.TextSecondary, modifier = Modifier.padding(top = LaraSpacing.S1, bottom = LaraSpacing.S3))
-                if (learners.isEmpty()) {
-                    Text(stringResource(R.string.review_empty), style = MaterialTheme.typography.bodyLarge)
+                TabRow(selectedTabIndex = if (reviewedTab) 1 else 0) {
+                    Tab(selected = !reviewedTab, onClick = { reviewedTab = false },
+                        modifier = Modifier.heightIn(min = MinTouchTarget),
+                        text = { Text(stringResource(R.string.review_to_review_tab, turnedInCount)) })
+                    Tab(selected = reviewedTab, onClick = { reviewedTab = true },
+                        modifier = Modifier.heightIn(min = MinTouchTarget),
+                        text = { Text(stringResource(R.string.review_reviewed_tab, gradedCount)) })
+                }
+                Spacer(Modifier.height(LaraSpacing.S3))
+                if (rows.isEmpty()) {
+                    Text(stringResource(if (reviewedTab) R.string.review_reviewed_empty else R.string.review_to_review_empty),
+                        style = MaterialTheme.typography.bodyLarge)
                 } else LazyColumn(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    items(learners, key = { it.enrollment.studentId }) { learner ->
-                        val submission = submissions.find { it.studentId == learner.enrollment.studentId }
-                        val status = when { submission == null -> R.string.review_not_turned_in; submission.score != null -> R.string.review_graded; else -> R.string.review_turned_in }
-                        val icon = if (submission == null) R.drawable.ic_warning_circle else R.drawable.ic_check_circle
+                    items(rows, key = { (_, submission) -> submission.id }) { (learner, submission) ->
+                        val status = if (submission.score != null) R.string.review_graded else R.string.review_turned_in
                         Surface(Modifier.fillMaxWidth(), color = LaraColors.Surface, shape = LaraShapes.medium,
                             border = androidx.compose.foundation.BorderStroke(1.dp, LaraColors.Border)) {
-                            TextButton(onClick = { selectedId = submission?.id }, enabled = submission != null,
+                            TextButton(onClick = { selectedId = submission.id },
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = LaraSpacing.S2)) {
-                                Icon(painterResource(icon), null, tint = if (submission == null) LaraColors.WarningDark else LaraColors.Success)
+                                Icon(painterResource(R.drawable.ic_check_circle), null, tint = LaraColors.Success)
                                 Spacer(Modifier.width(LaraSpacing.S3))
                                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.Start) {
                                     Text(learner.user?.fullName.orEmpty(), style = MaterialTheme.typography.titleMedium)
                                     Text(stringResource(status), color = LaraColors.TextSecondary)
                                 }
-                                submission?.score?.let { Text(stringResource(R.string.review_points_value, it, assignment.maxPoints), color = LaraColors.TextPrimary) }
+                                submission.score?.let { Text(stringResource(R.string.review_points_value, it, assignment.maxPoints), color = LaraColors.TextPrimary) }
                             }
                         }
                     }
@@ -154,6 +172,7 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
             val index = ordered.indexOfFirst { it.id == selected.id }
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                 Text(learner?.user?.fullName ?: stringResource(R.string.review_learner), style = MaterialTheme.typography.titleMedium)
+                AttachmentChip(selected.fileType)
                 if (selected.fileType == "IMAGE") ReviewPhoto(container, userId, selected, online) { access = 1; scope.launch { container.setReviewDenied(assignment.id, true) } }
                 else ReviewDocument(container, userId, selected.id, online) { access = 1; scope.launch { container.setReviewDenied(assignment.id, true) } }
                 OutlinedTextField(score, { score = it }, label = { Text(stringResource(R.string.review_score, assignment.maxPoints)) },

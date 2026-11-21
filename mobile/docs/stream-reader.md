@@ -14,7 +14,7 @@ The first reading UI used plain text handout buttons and a single text block for
 
 `ui/screens/stream/ClassroomLearningHost.kt` supplies Stream and Classwork content to both existing role graphs. Learners enter an approved class through the existing class list. Teachers select from their saved classes. Classroom-style banners, post cards and topic-grouped handouts use existing L.A.R.A. tokens, Nunito and bundled icons. Other feature destinations remain owned by their later issues.
 
-Announcements, topics, materials and extracted text come from Room flows. Stream has no class comments (removed 2026-11-18): announcement cards show their text and attachments inline and nothing opens a comments page. The sync and Room code for announcement comments is kept because the contract still defines it, but no screen reads or posts them. Private comments live on the assignment screen only (`HomeworkScreen.kt`).
+Announcements, topics, materials and extracted text come from Room flows. Announcement cards show text and attachments inline. The class comments action opens the announcement discussion, which reads from Room and saves new comments to the durable outbox. Private comments live on the assignment screen only (`HomeworkScreen.kt`).
 
 `MaterialFiles` downloads only the fixed authenticated material route on the selected Hub, never the supplied arbitrary download URL. Redirects are refused. Transfers stream into a temporary account-private file, enforce the 250 MB contract cap, check completion/session continuity, and set `local_file_path` only after a successful transfer against the same material version. Sync preserves the cached path/MIME when material metadata is renamed or moved: the contract does not replace file bytes in place. After a pull commits, account-scoped cache pruning removes files no longer referenced by Room (including material tombstones), never before a transaction succeeds. Active downloads are not pruned. Missing downloads show saved extracted text and a nonblocking explanation. Opening a handout downloads its bytes; metadata sync alone does not imply its binary file has been downloaded.
 
@@ -54,3 +54,8 @@ adb shell am instrument -w -r -e class org.lara.app.reading.HandoutDeviceTest,or
 ```
 
 These synthetic fixture scenarios must use the isolated package: they write a test token/profile and leave fixture caches there. They do not require the mock Hub. Run JVM tests under the normal app ID to avoid this Windows machine's long test database paths. For the full app flow, start the unmodified mock, forward its REST/WS ports with ADB, connect through manual IP, and use the documented seed accounts. Remove forwarding to test Hub-unreachable behavior; restore it for reconnect. A low battery can legitimately hold background queued uploads until the worker's battery constraint is satisfied.
+## Checking Stream comments and submissions
+
+- In the Stream, open an announcement and add a multi-line comment. Check the space around the avatar, text, and composer. Open the keyboard and check that the Send button remains visible.
+- As a teacher, open Classwork and select an assignment with a submission. Check its count under **To review**. Grade it, go back, and confirm that it appears under **Reviewed**. A score of zero also counts as reviewed.
+- Disconnect from the Hub and reopen grading. Check the offline notice and verify that cached submissions remain in their respective tabs.

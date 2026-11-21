@@ -16,9 +16,7 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -29,9 +27,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -217,7 +212,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                         }
                         if (error) Text(stringResource(R.string.homework_save_failed), color = LaraColors.DangerDark)
                         Text(stringResource(R.string.homework_attachments), style = MaterialTheme.typography.titleMedium)
-                        HomeworkAttachmentPreview(path, container.homeworkPhotos)
+                        HomeworkAttachmentPreview(path, submission?.fileType)
                         if (submission?.syncStatus == "REJECTED") {
                             when (submission?.syncRejectReason) {
                                 "LATE_SUBMISSION" -> Text(stringResource(R.string.homework_rejected_late))
@@ -306,29 +301,16 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
 }
 
 @Composable
-private fun HomeworkAttachmentPreview(path: String?, root: File) {
-    if (path.isNullOrEmpty()) {
+private fun HomeworkAttachmentPreview(path: String?, fileType: String?) {
+    if (path.isNullOrEmpty() && fileType == null) {
         Text(stringResource(R.string.homework_photo_hint), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
         return
     }
-    val file = remember(path) { File(path) }
-    val isPhoto = HomeworkAttachment.type(file) == "IMAGE"
-    val bitmap = if (isPhoto) rememberHomeworkBitmap(path, root) else null
-    Surface(shape = LaraShapes.medium, color = LaraColors.Surface, border = BorderStroke(1.dp, LaraColors.Border)) {
-        Row(Modifier.fillMaxWidth().padding(LaraSpacing.S3), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-            if (bitmap != null) Image(bitmap.asImageBitmap(), stringResource(R.string.homework_photo_description),
-                Modifier.size(56.dp).clip(LaraShapes.small), contentScale = ContentScale.Crop)
-            else Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(40.dp), tint = LaraColors.PrimaryDark)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
-                Text(stringResource(if (isPhoto) R.string.homework_photo_item else R.string.homework_document_item),
-                    style = MaterialTheme.typography.titleSmall, color = LaraColors.TextPrimary)
-                Text(if (isPhoto) stringResource(R.string.homework_photo_format)
-                    else stringResource(R.string.homework_attachment_name, HomeworkAttachment.displayName(file)), style = MaterialTheme.typography.bodySmall,
-                    color = LaraColors.TextSecondary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            }
-        }
-    }
+    val file = path?.takeIf { it.isNotEmpty() }?.let(::File)
+    val type = file?.let(HomeworkAttachment::type) ?: fileType ?: "DOCUMENT"
+    org.lara.app.ui.components.AttachmentChip(
+        type, file?.takeIf { type != "IMAGE" }?.let(HomeworkAttachment::displayName),
+    )
 }
 
 @Composable

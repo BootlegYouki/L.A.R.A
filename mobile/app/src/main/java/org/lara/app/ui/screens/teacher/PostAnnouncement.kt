@@ -62,14 +62,14 @@ internal class PostAnnouncementViewModel(
 
 @Composable
 internal fun PostAnnouncement(container: AppContainer, userId: String, classroom: Classroom,
-    reachable: Boolean, modifier: Modifier = Modifier) {
+    reachable: Boolean, modifier: Modifier = Modifier, canModerate: Boolean = true) {
     val model: PostAnnouncementViewModel = viewModel(
         key = "post-announcement-$userId-${classroom.id}",
         factory = viewModelFactory {
             initializer {
                 PostAnnouncementViewModel(
                     post = { title, content, allowComments ->
-                        container.announcements.post(userId, classroom.id, title, content, allowComments)
+                        container.announcements.post(userId, classroom.id, title, content, allowComments.takeIf { canModerate })
                     },
                     refreshStream = {
                         container.syncScheduler.enqueueNow()
@@ -107,6 +107,7 @@ internal fun PostAnnouncement(container: AppContainer, userId: String, classroom
     if (open) AnnouncementDialog(
         classroomName = classroom.name,
         reachable = reachable,
+        canModerate = canModerate,
         status = status,
         onClose = { open = false; model.reset() },
         onPost = { title, content, comments -> model.send(title, content, comments, reachable) },
@@ -114,7 +115,7 @@ internal fun PostAnnouncement(container: AppContainer, userId: String, classroom
 }
 
 @Composable
-private fun AnnouncementDialog(classroomName: String, reachable: Boolean, status: AnnouncementStatus,
+private fun AnnouncementDialog(classroomName: String, reachable: Boolean, canModerate: Boolean, status: AnnouncementStatus,
     onClose: () -> Unit, onPost: (String, String, Boolean) -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var content by rememberSaveable { mutableStateOf("") }
@@ -142,7 +143,7 @@ private fun AnnouncementDialog(classroomName: String, reachable: Boolean, status
             modifier = Modifier.fillMaxWidth().classFormInputScroll(),
             label = { Text(stringResource(R.string.announcement_content)) },
             shape = LaraShapes.medium, minLines = 4, enabled = editable)
-        Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+        if (canModerate) Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
             .toggleable(comments, enabled = editable, role = Role.Checkbox, onValueChange = { comments = it }),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             Checkbox(checked = comments, onCheckedChange = null, enabled = editable)

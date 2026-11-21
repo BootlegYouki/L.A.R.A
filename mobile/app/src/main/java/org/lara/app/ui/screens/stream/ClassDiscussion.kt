@@ -45,8 +45,11 @@ internal fun ClassDiscussion(container: AppContainer, userId: String, post: Anno
             }
         }
         org.lara.app.ui.components.PullRefresh(reload, Modifier.weight(1f)) {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
-                verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = LaraSpacing.S4, vertical = LaraSpacing.S5),
+                verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
+            ) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                         Text(post.title, style = MaterialTheme.typography.headlineMedium)
@@ -67,7 +70,11 @@ internal fun ClassDiscussion(container: AppContainer, userId: String, post: Anno
                 }
                 items(comments, key = { it.id }) { comment ->
                     val author = names.find { it.id == comment.authorId }?.name ?: stringResource(R.string.class_comments_member)
-                    Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = LaraSpacing.S2),
+                        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
+                        verticalAlignment = Alignment.Top,
+                    ) {
                         Surface(Modifier.size(40.dp), color = LaraColors.PrimaryLight, shape = CircleShape) {
                             Box(contentAlignment = Alignment.Center) { Text(author.take(1).uppercase(), color = LaraColors.PrimaryDark) }
                         }
@@ -75,7 +82,8 @@ internal fun ClassDiscussion(container: AppContainer, userId: String, post: Anno
                             Text(author, style = MaterialTheme.typography.titleSmall)
                             Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(comment.createdAt)),
                                 style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
-                            Text(comment.content, style = MaterialTheme.typography.bodyLarge)
+                            Text(comment.content, Modifier.padding(top = LaraSpacing.S1),
+                                style = MaterialTheme.typography.bodyLarge)
                             if (comment.syncStatus != "SYNCED") Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
                                 Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(16.dp))
                                 Text(stringResource(if (comment.syncStatus == "REJECTED") R.string.class_comments_rejected else R.string.reading_queued),
@@ -89,9 +97,12 @@ internal fun ClassDiscussion(container: AppContainer, userId: String, post: Anno
         HorizontalDivider(color = LaraColors.Border)
         if (readOnly || !post.allowComments) Text(stringResource(if (readOnly) R.string.class_comments_archived else R.string.class_comments_disabled),
             Modifier.padding(LaraSpacing.S4), color = LaraColors.TextSecondary)
-        else Column(Modifier.padding(LaraSpacing.S3)) {
+        else Column(
+            Modifier.padding(LaraSpacing.S4),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2),
+        ) {
             if (failed) Text(stringResource(R.string.class_comments_save_failed), color = MaterialTheme.colorScheme.error)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 OutlinedTextField(draft, { draft = it }, Modifier.weight(1f).heightIn(min = MinTouchTarget),
                     label = { Text(stringResource(R.string.class_comments_hint)) }, maxLines = 4,
                     enabled = !saving, shape = LaraShapes.large)
