@@ -188,16 +188,12 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
                     AttachmentThumb(bitmap ?: docPic, R.drawable.ic_books_regular,
                         text = if (bitmap == null && docPic == null) blocks?.filterIsInstance<DocBlock.Para>()?.firstOrNull()?.text else null, onClick = open)
                 }
-                if (visual && bitmap != null) Row(Modifier.fillMaxWidth().clickable(onClick = open).heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp), tint = LaraColors.DangerDark)
-                    Text(material.title, Modifier.weight(1f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                }
-                if (docx && file != null) Row(Modifier.fillMaxWidth().clickable(onClick = open).heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp), tint = LaraColors.Primary)
-                    Text(material.title, Modifier.weight(1f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                }
+                if (visual && bitmap != null) AttachmentTitleRow(
+                    material.title, R.drawable.ic_books_regular, LaraColors.DangerDark, open,
+                )
+                if (docx && file != null) AttachmentTitleRow(
+                    material.title, R.drawable.ic_books_regular, LaraColors.Primary, open,
+                )
                 }
                 if (file != null && !removed) OutlinedButton(onClick = { confirmRemove = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.video_remove)) }

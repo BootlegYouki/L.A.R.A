@@ -121,12 +121,8 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
                 DisposableEffect(thumbnail) { onDispose { thumbnail?.recycle() } }
                 if (state.source != null) Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                 AttachmentThumb(frame, R.drawable.ic_play, play = true) { open = true }
-                if (state.source != null) Row(Modifier.fillMaxWidth().clickable { open = true }.heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_play), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
-                    Text(material?.title ?: stringResource(R.string.video_title), Modifier.weight(1f), maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                }
+                AttachmentTitleRow(material?.title ?: stringResource(R.string.video_title),
+                    R.drawable.ic_play, LaraColors.PrimaryDark) { open = true }
                 }
                 if (state.loading && state.source == null) {
                     Spacer(Modifier.fillMaxWidth(0.48f).aspectRatio(1.6f).clip(LaraShapes.medium).background(Color.Black))
