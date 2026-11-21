@@ -226,6 +226,113 @@ paths:
         "200":
           $ref: "#/components/responses/Ok"
 
+  /api/admin/activity-logs:
+    get:
+      summary: Read private operational history on the Hub PC (ADMIN only)
+      tags:
+      - admin
+      description: 'Authenticate first (401), require ADMIN (403 FORBIDDEN), then require
+
+        Hub-PC loopback without tunnel forwarding (403 ADMIN_LOCAL_ONLY).
+
+        Reject invalid parameters with 400 BAD_REQUEST. Never cache responses.
+
+        All sequence values are independent of the classroom sync cursor.
+
+        See activity_logs.md for stable pagination, filtering and retention semantics.
+
+        '
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 100
+      - name: before_seq
+        in: query
+        description: Exclusive older-page boundary; mutually exclusive with after_seq.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+      - name: after_seq
+        in: query
+        description: Exclusive new-event boundary; mutually exclusive with before_seq.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      - name: snapshot_seq
+        in: query
+        description: Inclusive high-water boundary returned by the first page; fixed
+          while draining pages.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      - name: history_id
+        in: query
+        description: Required with sequence parameters; mismatch after database initialization/restore
+          answers 409 ACTIVITY_LOG_RESET.
+        schema:
+          type: string
+          format: uuid
+      - name: from_time
+        in: query
+        description: Inclusive epoch milliseconds; must be less than to_time when both
+          are provided.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      - name: to_time
+        in: query
+        description: Exclusive epoch milliseconds.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+      - name: severity
+        in: query
+        schema:
+          $ref: #/components/schemas/ActivitySeverity
+      - name: q
+        in: query
+        description: Case-insensitive literal search over safe event/service/reason/result
+          labels; not raw error text.
+        schema:
+          type: string
+          maxLength: 64
+      responses:
+        '200':
+          description: Newest-first entries and stable sequence boundaries; no-store.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: #/components/schemas/ActivityLogPage
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '503':
+          description: History cannot be read; ACTIVITY_LOG_UNAVAILABLE. Other Hub features
+            remain usable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   # ---------------------------------------------------------------- CLASSROOMS
   /api/classrooms:
     get:
@@ -1406,6 +1513,172 @@ components:
             $ref: "#/components/schemas/Error"
 
   schemas:
+    ActivityEventCode:
+      type: string
+      enum:
+      - HUB_STARTED
+      - HUB_STOPPING
+      - UNCLEAN_RESTART
+      - SERVICE_UNAVAILABLE
+      - SERVICE_RECOVERED
+      - CONNECTION_PROBLEM
+      - DOCUMENT_UPLOADED
+      - DOCUMENT_UPLOAD_FAILED
+      - DOCUMENT_PROCESSED
+      - DOCUMENT_PROCESSING_FAILED
+      - QUIZ_STARTED
+      - QUIZ_START_FAILED
+      - QUIZ_CLOSED
+      - QUIZ_CLOSE_FAILED
+      - ACCOUNT_CREATED
+      - ACCOUNT_CREATE_FAILED
+      - PIN_RESET
+      - PIN_RESET_FAILED
+      - LOG_GAP
+    ActivitySeverity:
+      type: string
+      enum:
+      - INFO
+      - WARNING
+      - ERROR
+    ActivityResult:
+      type: string
+      enum:
+      - SUCCEEDED
+      - FAILED
+      - DEGRADED
+    ActivityService:
+      type: string
+      enum:
+      - HUB
+      - DATABASE
+      - HTTP
+      - WEBSOCKET
+      - DISCOVERY
+      - STORAGE
+      - DOCUMENTS
+      - QUIZZES
+      - ACCOUNTS
+      - ACTIVITY_LOG
+    ActivityReason:
+      type: string
+      enum:
+      - PORT_IN_USE
+      - NETWORK_UNAVAILABLE
+      - TIMEOUT
+      - STORAGE_UNAVAILABLE
+      - DATABASE_UNAVAILABLE
+      - UNREADABLE_DOCUMENT
+      - NO_TEXT_LAYER
+      - SIZE_LIMIT
+      - INVALID_INPUT
+      - NOT_ALLOWED
+      - CONFLICT
+      - QUEUE_FULL
+      - WRITE_FAILED
+      - REPEATED_EVENT
+      - UNCLEAN_EXIT
+      - INTERNAL_FAILURE
+    ActivityDetails:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          $ref: '#/components/schemas/ActivityReason'
+        item_count:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        duration_ms:
+          type: integer
+          minimum: 0
+          maximum: 86400000
+    ActivityEntry:
+      type: object
+      additionalProperties: false
+      required:
+      - seq
+      - occurred_at
+      - event_code
+      - severity
+      - result
+      - service
+      - details
+      properties:
+        seq:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        occurred_at:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        event_code:
+          $ref: '#/components/schemas/ActivityEventCode'
+        severity:
+          $ref: '#/components/schemas/ActivitySeverity'
+        result:
+          $ref: '#/components/schemas/ActivityResult'
+        service:
+          $ref: '#/components/schemas/ActivityService'
+        details:
+          $ref: '#/components/schemas/ActivityDetails'
+    ActivityLogPage:
+      type: object
+      additionalProperties: false
+      required:
+      - history_id
+      - entries
+      - high_water_seq
+      - next_before_seq
+      - next_after_seq
+      - pruned_through_seq
+      - dropped_total
+      - recording_state
+      - server_time
+      properties:
+        history_id:
+          type: string
+          format: uuid
+        entries:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ActivityEntry'
+        high_water_seq:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        next_before_seq:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 9007199254740991
+        next_after_seq:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 9007199254740991
+        pruned_through_seq:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        dropped_total:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        recording_state:
+          type: string
+          enum:
+          - ACTIVE
+          - DEGRADED
+          - UNAVAILABLE
+        server_time:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
     Error:
       type: object
       required: [error]

@@ -42,7 +42,7 @@ class TestContracts(unittest.TestCase):
         cur_server = conn_server.cursor()
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         server_tables = [r[0] for r in cur_server.fetchall()]
-        self.assertEqual(len(server_tables), 19, f"Server master must have exactly 19 tables, got {server_tables}")
+        self.assertEqual(len(server_tables), 21, f"Server master must have exactly 21 tables, got {server_tables}")
         for added in ("classroom_teachers", "topics", "private_comments"):
             self.assertIn(added, server_tables)
         self.assertIn("hub_meta", server_tables)
@@ -86,7 +86,7 @@ class TestContracts(unittest.TestCase):
         cur_server.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         for table in server_tables:
             columns = {row[1] for row in cur_server.execute(f"PRAGMA table_info({table})")}
-            if table in {"hub_meta"}:
+            if table in {"hub_meta", "hub_activity_state", "hub_activity_events"}:
                 self.assertNotIn("created_at", columns, table)
                 self.assertNotIn("updated_at", columns, table)
             elif table in {"sessions", "ai_chat_messages", "sync_revisions"}:
