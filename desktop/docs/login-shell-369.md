@@ -18,7 +18,7 @@ Native Windows Tauri test used the changed frontend and unchanged native source 
 
 - With Hub stopped and a new uncached context: connection screen, no credentials or app navigation. Restart the same real Hub: the screen advances to standalone sign-in automatically. Six-digit teacher sign-in fetches the actual synthetic class.
 - Sign-in, registration layout, invalid four-digit input, keyboard ID→PIN focus, account switching/Cancel, Home without archives and Settings Hub picker: pass.
-- The startup selector is centered at 480px maximum width, matching the login card. Its 720×480 layout has no horizontal overflow. Login at 720×480 emulated viewport and 200% root text: no horizontal overflow in login; fields remain reachable by scrolling. At the small viewport, keyboard Enter toggles the menu and Settings Hub controls remain reachable.
+- The startup selector is centered horizontally and vertically at 480px maximum width, matching the login card. Native bounds checks pass at 1200×884, 800×1200, 900×900 and 1600×700; at 720×480 and 200% text, content remains reachable by scrolling rather than clipping. Its 720×480 layout has no horizontal overflow. Login at 720×480 emulated viewport and 200% root text: no horizontal overflow in login; fields remain reachable by scrolling. At the small viewport, keyboard Enter toggles the menu and Settings Hub controls remain reachable.
 - Stop Hub, fully exit/relaunch native app: cached class still opens offline. The normal close request did not finish within five seconds; the verified isolated test process was then terminated and relaunched. No installed production app or user database was modified.
 
 ## Evidence
