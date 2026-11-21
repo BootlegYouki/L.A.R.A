@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">LARA SLM Experiment</string>
+    <string name="banner">Experiment: on-device tutor. Not the product plan; no network permission.</string>
+    <string name="no_models">No .gguf model found in %1$s. Push one with adb (see README).</string>
+    <string name="model_label">Model</string>
+    <string name="threads_label">Threads</string>
+    <string name="ctx_label">Context</string>
+    <string name="load">Load model</string>
+    <string name="refresh">Refresh</string>
+    <string name="loading">Loading %1$s…</string>
+    <string name="loaded">Ready: %1$s, %2$d chunks, load %3$.1f s</string>
+    <string name="not_loaded">No model loaded.</string>
+    <string name="err_no_lesson">lesson.json not found in %1$s</string>
+    <string name="err_model_load">Could not load %1$s (out of memory or bad file)</string>
+    <string name="input_hint">Ask about the lesson</string>
+    <string name="send">Send</string>
+    <string name="stop">Stop</string>
+    <string name="teacher_view">Teacher view</string>
+    <string name="run_key">Run key</string>
+    <string name="run_progress">Key: %1$d / %2$d (%3$s)</string>
+    <string name="run_done">Key finished (run %1$s). Results are in results.csv and runs.csv.</string>
+    <string name="killed_before">Last run %1$s did not finish: the process was stopped (see runs.csv).</string>
+    <string name="tv_guard">Guard</string>
+    <string name="tv_chunks">Retrieved chunks (page, heading, tokens)</string>
+    <string name="tv_prompt">Exact prompt sent to the model</string>
+    <string name="tv_timings">Timings</string>
+    <string name="tv_raw">Model text before the output guard</string>
+    <string name="tv_empty">Ask a question to see how the answer was built.</string>
+    <string name="tv_none">none</string>
+    <string name="tv_timing_line">retrieve %1$d ms · first token %2$.2f s · prompt eval %3$.0f ms (%4$d tok) · %5$d tokens at %6$.1f tok/s · output guard removed %7$d sentence(s)</string>
+    <string name="tv_timing_forced">Filipino/Taglish message: answered by the app, no model call.</string>
+    <string name="tv_guard_line">%1$s · prompt %2$d tokens · lesson budget %3$d tokens</string>
+</resources>
