@@ -149,3 +149,20 @@ The live list is on GitHub, so it is not copied here: [open `server` issues](htt
 * Issues are titled `[SERVER sprint.step]`. The team works them **one at a time, in step order**, both developers together, with one open PR (`rules/team-workflow-and-prs.md` section 1.1).
 * Sprint 0 is `docs/TECH_SPEC.md`; its section 10 records the build order and what each step creates for later steps.
 * Each issue names its PRD requirement, its contract routes and events, its Target Files and the checks that prove it.
+# Starting the local Hub GUI on Windows
+
+From PowerShell in the repository root, run:
+
+```powershell
+.\lara.ps1 start
+```
+
+The script builds `server/ui`, then runs the Tauri window and Hub backend with
+the normal application data folder at `%APPDATA%\org.lara.hub`. It keeps the
+Hub in the foreground; press Ctrl+C to stop it cleanly. If either Hub port
+(8080 or 8081) is already in use, close that Hub window before starting again.
+
+The same command can be run as `lara start` from Command Prompt in the repository
+root, or as `lara.cmd start` in PowerShell. The shorter `lara start` PowerShell
+form requires the repository root to be on PATH.
+
