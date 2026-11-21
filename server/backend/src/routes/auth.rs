@@ -1,4 +1,4 @@
-//! `/api/auth/*`, answering as `scripts/mock_hub.py` does. PINs, tokens and LRNs never reach a
+//! Contract `/api/auth/*` routes. PINs, tokens and LRNs never reach a
 //! log: the request span carries only the method and path (`routes/mod.rs`).
 
 use std::net::SocketAddr;
@@ -37,8 +37,8 @@ async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<Au
     if !(1..=MAX_LRN_CHARS).contains(&lrn_or_id.chars().count()) || !(1..=MAX_NAME_CHARS).contains(&full_name.chars().count()) {
         return Err(ApiError::bad_request("LRN and name must be 1-32 and 1-100 characters"));
     }
-    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
-    // Taken before setup too, as in the mock (which is seeded with the admin), so setup always works.
+    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 6 digits"))?;
+    // Reserve the admin ID before first-run setup so learner registration cannot claim it.
     if lrn_or_id == ADMIN_ID {
         return Err(users::InsertError::Exists.into());
     }
@@ -62,7 +62,7 @@ async fn login(
     body: JsonBody,
 ) -> Result<Json<AuthSession>, ApiError> {
     body.need(&["lrn_or_id", "pin"])?;
-    // A value that is not text cannot match an account, like the mock's string compare.
+    // A value that is not text cannot match an account, because account IDs are text.
     let lrn_or_id = body.text("lrn_or_id").unwrap_or_default();
     let pin = body.text("pin").unwrap_or_default();
     let now = app.clock.now_ms();

@@ -31,7 +31,7 @@ pub async fn class_of(conn: &mut SqliteConnection, id: &str) -> Result<Option<St
     sqlx::query_scalar("SELECT classroom_id FROM topics WHERE id = ?").bind(id).fetch_optional(conn).await
 }
 
-/// Rename or move. Like the mock, the other topics keep their `order_index`.
+/// Rename or move. The other topics keep their `order_index`.
 pub async fn update(
     tx: &mut SqliteConnection,
     id: &str,

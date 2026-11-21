@@ -45,7 +45,8 @@ Seed accounts for the mock hub (PIN `123456`): `T-0001` (teacher, class code `K7
 ### 1.3 Ownership
 * One issue = one team = one PR. Edit only your team's folder.
 * The three teams are the only parallel streams. Inside a team, both developers work the same issue together, in step order, one open feature PR at a time; an evaluation PR may run alongside (`rules/team-workflow-and-prs.md` section 1.1).
-* **Lead-owned (never edit in a feature PR):** `contracts/`, `rules/`, `design-system/`, `scripts/`, `tests/`, `.github/`, this file. A change there is its own `contract-change` PR, merged before teams branch from it.
+* **Lead-owned (never edit in a feature PR):** `rules/`, `design-system/`, `scripts/`, `.github/`, `docs/PRD.md`, `contracts/ai/`, this file. A change there is its own PR, merged before teams branch from it.
+* **Team-owned contracts (decided 2026-11-21, the foundation and connectivity are settled):** any team member may change `contracts/` (and the contract tests in `tests/` that check it) in their own `contract-change` PR, never inside a feature PR, merged before anyone builds on it. The developers talk to each other directly: request review from both developers of every team that uses the route, event or column you change. An additive change (new route, event, optional field or column) needs a written OK from each consuming team in the PR; a breaking change (rename, remove, type or meaning change) needs an OK from all three teams. The co-lead only checks the tests, `scripts/verify_invariants.py` and the invariants below, and merges. A contract change may not alter a decision in section 1.4 or an invariant in section 3: that is a Design Proposal (section 1.5).
 * Contract first: never add or change an endpoint, event or column in code before it exists in `contracts/`, the mock hub serves it, and the tests pass.
 
 ### 1.4 Decisions already made (do not re-litigate)

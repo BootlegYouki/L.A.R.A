@@ -45,6 +45,13 @@ class AppContainer private constructor(private val services: AppServices, privat
     val discovery get() = services.discovery
     val syncScheduler get() = services.scheduler
     private val database get() = services.accounts.prepared(requireNotNull(accountId))
+    fun reviewSubmissions(assignmentId: String) = database.classworkDao().observeSubmissions(assignmentId)
+    suspend fun reviewDenied(assignmentId: String) = database.syncStateDao().get("review_denied:$assignmentId")?.value == "1"
+    suspend fun setReviewDenied(assignmentId: String, denied: Boolean) {
+        database.syncStateDao().put(org.lara.app.data.local.entities.SyncStateEntity("review_denied:$assignmentId", if (denied) "1" else "0", System.currentTimeMillis()))
+    }
+    suspend fun saveReviewGrade(id: String, score: Long?, feedback: String?) = database.syncDao().applySubmissionGrade(id, score, feedback)
+    val gradingApi by lazy { org.lara.app.data.remote.GradingApi(enrollmentApi) }
     fun privateComments(assignmentId: String) = database.streamDao().observePrivateComments(assignmentId)
     suspend fun addPrivateComment(assignmentId: String, studentId: String, content: String) {
         require(content.isNotBlank())

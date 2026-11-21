@@ -21,6 +21,7 @@ can tell a missing route from a missing entity (NOT_FOUND).
 import base64
 import hashlib
 import http.server
+import io
 import json
 import os
 import re
@@ -31,6 +32,7 @@ import sys
 import threading
 import time
 import uuid
+import zipfile
 
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 GRACE_MS = 60_000
@@ -259,6 +261,25 @@ def parse_multipart(content_type, body):
         else:
             fields[name.group(1).decode()] = data.decode("utf-8", "replace")
     return fields, files
+
+
+def homework_file_format(data):
+    """Classify homework by its bytes, as the Hub does, not by the supplied filename."""
+    if data.startswith(b"\xff\xd8\xff"):
+        return "IMAGE", "image/jpeg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "IMAGE", "image/png"
+    if data.startswith(b"%PDF-"):
+        return "DOCUMENT", "application/pdf"
+    if data.startswith(b"PK\x03\x04"):
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                names = set(archive.namelist())
+                if {"[Content_Types].xml", "word/document.xml"}.issubset(names):
+                    return "DOCUMENT", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        except (zipfile.BadZipFile, OSError, ValueError):
+            pass
+    raise ApiError(400, "BAD_REQUEST", "File must be a photo (JPEG or PNG), PDF or Word document")
 
 
 # ----------------------------------------------------------------- HTTP
@@ -1164,8 +1185,9 @@ def submission_create(req):
     if (asg.get("due_date") is not None and not asg.get("allow_late", False)
             and effective_time > asg["due_date"]):
         raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
+    file_type, _ = homework_file_format(files["file"])
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
-                       "file_type": "IMAGE", "score": None, "teacher_feedback": None,
+                       "file_type": file_type, "score": None, "teacher_feedback": None,
                        "created_at": received_at}
     if existing and existing["id"] != fields["submission_id"]:
         old_id = existing["id"]
@@ -1173,6 +1195,7 @@ def submission_create(req):
         STATE.submission_files.pop(old_id, None)
         STATE.log("assignment_submissions", old_id, asg["classroom_id"], req.user["id"], action="DELETE")
         sub["id"] = fields["submission_id"]
+    sub["file_type"] = file_type
     sub["submitted_at"], sub["received_at"], sub["updated_at"] = effective_time, received_at, received_at
     sub["_file_sha256"] = file_hash
     STATE.submissions[sub["id"]] = sub
@@ -1214,7 +1237,9 @@ def submission_file(req):
     if req.user["role"] == "STUDENT" and s["student_id"] != req.user["id"]:
         raise ApiError(403, "FORBIDDEN", "Not your submission")
     member_of(req.user, STATE.assignments[s["assignment_id"]]["classroom_id"])
-    return Raw(STATE.submission_files.get(s["id"], b""), "image/jpeg")
+    data = STATE.submission_files.get(s["id"], b"")
+    _, content_type = homework_file_format(data)
+    return Raw(data, content_type)
 
 
 # ---- quizzes

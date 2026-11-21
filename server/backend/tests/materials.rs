@@ -209,7 +209,7 @@ async fn a_document_download_sends_the_whole_file_whatever_the_range() {
     class.hub.stop().await;
 }
 
-/// Contract #259 and the mock's `test_video_download_resumes_with_range_and_if_range`: Save for Home
+/// Contract #259: Save for Home
 /// resumes after a Wi-Fi drop, and starts over when the file changed.
 #[tokio::test]
 async fn a_video_download_resumes_with_range_and_if_range() {
@@ -265,10 +265,10 @@ async fn outsiders_cannot_download() {
     let (status, body) = class.hub.get("/api/materials/no-such-material/download", Some(class.teacher())).await;
     assert_eq!((status, body["error"]["message"].as_str()), (404, Some("Material not found")));
     let (_, pending) = class.add_learner("123456789013", false).await;
-    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     let (_, other_teacher) = class.teacher_token("T-0002").await;
-    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "1234").await;
+    let admin = class.hub.seed_user("ADMIN-0001", "Hub Admin", lara_hub::auth::Role::Admin, "123456").await;
     let admin = class.hub.open_session(admin).await;
     for token in [&pending, &outsider, &other_teacher, &admin] {
         let (status, body) = class.hub.get(url, Some(token)).await;

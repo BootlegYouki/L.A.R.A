@@ -59,7 +59,7 @@ pub async fn get(conn: &mut SqliteConnection, id: &str) -> Result<Option<Announc
     .await
 }
 
-/// Oldest first, as the mock lists them.
+/// Oldest first, in creation order.
 pub async fn comments(conn: &mut SqliteConnection, announcement_id: &str) -> Result<Vec<Comment>, sqlx::Error> {
     sqlx::query_as(
         "SELECT id, announcement_id, author_id, content, created_at, updated_at FROM announcement_comments
@@ -102,7 +102,7 @@ pub async fn insert_comment(
     })
 }
 
-/// Like the mock, every edit bumps `updated_at` and syncs, even one that changes nothing.
+/// Every edit bumps `updated_at` and syncs, even one that changes nothing.
 pub async fn update(
     tx: &mut SqliteConnection,
     id: &str,

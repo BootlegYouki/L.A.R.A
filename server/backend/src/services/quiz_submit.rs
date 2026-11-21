@@ -42,10 +42,10 @@ fn receipt(quiz: &QuizState, quiz_id: &str, student_id: &str, attempt: &AttemptR
 
 /// Grades and stores a learner's finished quiz, once: the quiz (404, and a `DRAFT` is 404 too), membership
 /// (403), a stored submission comes back as it is, then the archived class (403) and the time limit (422).
-/// Unlike the mock's `submit_attempt`, a stored submission returns before the time check, so a retry always
+/// A stored submission returns before the time check, so a retry always
 /// gets its receipt. The one exception is the close's auto-submit: the learner's own work replaces it once,
 /// if it is on time and finished no later than `CLOSE_GRACE_MS` after the close (contract #293, #294). The
-/// same close limit holds for a learner with no attempt row, unlike the mock (review of #11).
+/// same close limit holds for a learner with no attempt row (review of #11).
 ///
 /// Timing trusts the Hub's clock (`server/AGENTS.md`): the start is the attempt's `started_at` from `/begin`.
 /// Only without an attempt row is the device's start used, and then not before the quiz's own start or

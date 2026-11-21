@@ -13,7 +13,7 @@ pub async fn announce_start(app: &AppState, classroom_id: &str, event: &ServerEv
 }
 
 /// After a close: `EVENT_GRADE_CONFIRMED` to each learner whose held score was released, then
-/// `EVENT_QUIZ_CLOSED` to the class's learners, in the mock's order (`quiz_close`). Learners the close
+/// `EVENT_QUIZ_CLOSED` to the class's learners, in close order. Learners the close
 /// auto-submitted get no grade event; their devices submit their own answers on `EVENT_QUIZ_CLOSED`.
 pub async fn announce_close(app: &AppState, classroom_id: &str, quiz_id: &str, released: &[ReleasedScore], now_ms: i64) {
     for r in released {

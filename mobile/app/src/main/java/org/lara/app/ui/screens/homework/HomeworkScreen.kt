@@ -76,6 +76,11 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     val draft by model.draft.collectAsStateWithLifecycle()
     val busy by model.busy.collectAsStateWithLifecycle()
     val error by model.error.collectAsStateWithLifecycle()
+    LaunchedEffect(userId, assignment.id) {
+        try { container.sync.synchronize(userId) }
+        catch (e: CancellationException) { throw e }
+        catch (_: Exception) { /* Keep showing the Room snapshot while the Hub is unreachable. */ }
+    }
     val scanSource by model.scanSource.collectAsStateWithLifecycle()
     val scanPreview by model.scanPreview.collectAsStateWithLifecycle()
     val scanCorners by model.scanCorners.collectAsStateWithLifecycle()
@@ -122,15 +127,17 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         return
     }
     val path = draft ?: submission?.filePath
-    val status = if (draft != null) R.string.homework_work_ready else when (submission?.syncStatus) {
-        "QUEUED_FOR_SYNC" -> R.string.homework_queued
-        "REJECTED" -> R.string.homework_rejected
-        "SYNCED" -> R.string.homework_turned_in
+    val graded = submission?.score != null
+    val status = if (draft != null) R.string.homework_work_ready else when {
+        graded -> R.string.homework_graded
+        submission?.syncStatus == "QUEUED_FOR_SYNC" -> R.string.homework_queued
+        submission?.syncStatus == "REJECTED" -> R.string.homework_rejected
+        submission?.syncStatus == "SYNCED" -> R.string.homework_turned_in
         else -> R.string.homework_to_do
     }
     val statusIcon = when {
         draft != null -> R.drawable.ic_info
-        submission?.syncStatus == "SYNCED" -> R.drawable.ic_check_circle
+        graded || submission?.syncStatus == "SYNCED" -> R.drawable.ic_check_circle
         submission != null -> R.drawable.ic_warning_circle
         else -> R.drawable.ic_info
     }
@@ -205,6 +212,14 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                             Icon(painterResource(statusIcon), null, Modifier.size(24.dp), tint = LaraColors.TextSecondary)
                             Text(stringResource(status), style = MaterialTheme.typography.bodyMedium)
                         }
+                        if (graded) {
+                            Text(stringResource(R.string.homework_grade_value, submission.score, assignment.maxPoints),
+                                style = MaterialTheme.typography.titleLarge, color = LaraColors.PrimaryDark)
+                            submission.teacherFeedback?.takeIf { it.isNotBlank() }?.let { feedback ->
+                                Text(stringResource(R.string.homework_teacher_feedback), style = MaterialTheme.typography.titleMedium)
+                                Text(feedback, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
                         if (busy) {
                             LinearProgressIndicator(Modifier.fillMaxWidth())
                             Text(stringResource(R.string.homework_saving))
@@ -255,7 +270,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
             if (submission != null) {
                 Button(onClick = {}, enabled = false, shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
-                    Text(stringResource(R.string.homework_turn_in_complete))
+                    Text(stringResource(if (graded) R.string.homework_graded_button else R.string.homework_turn_in_complete))
                 }
             } else {
                 Button(onClick = { adding = true }, enabled = !busy, shape = CircleShape,

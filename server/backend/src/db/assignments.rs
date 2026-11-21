@@ -69,7 +69,7 @@ pub async fn open_class(conn: &mut SqliteConnection, id: &str) -> Result<Option<
         .await
 }
 
-/// Like the mock, every edit bumps `updated_at` and syncs, even one that changes nothing.
+/// Every edit bumps `updated_at` and syncs, even one that changes nothing.
 pub async fn update(
     tx: &mut SqliteConnection,
     id: &str,

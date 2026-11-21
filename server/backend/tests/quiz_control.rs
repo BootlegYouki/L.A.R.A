@@ -327,7 +327,7 @@ fn queued(id: &str, quiz: &str, started_at: i64, submitted_at: i64, answers: Val
     json!({"id": id, "quiz_id": quiz, "started_at": started_at, "submitted_at": submitted_at, "answers": answers})
 }
 
-/// Contract #293 (the mock's `test_on_time_offline_work_replaces_the_close_auto_submit_once`). A held quiz,
+/// Contract #293: on-time offline work replaces the close auto-submit once. A held quiz,
 /// so the grade event on the replacement comes from the quiz being `CLOSED`.
 #[tokio::test]
 async fn on_time_offline_work_replaces_the_close_auto_submit_once() {

@@ -51,7 +51,7 @@ async fn create(hub: &TestHub) -> Value {
 }
 
 async fn learner(hub: &TestHub, lrn: &str) -> (User, String) {
-    let user = hub.seed_user(lrn, "Ana Reyes", Role::Student, "1234").await;
+    let user = hub.seed_user(lrn, "Ana Reyes", Role::Student, "123456").await;
     let token = hub.open_session(user.clone()).await;
     (user, token)
 }
@@ -285,8 +285,8 @@ async fn decisions_retries_and_rejoins_preserve_the_enrollment_identity() {
 async fn co_teachers_can_list_read_roster_and_decide_but_foreign_teachers_cannot() {
     let hub = TestHub::start().await;
     let room = create(&hub).await;
-    let co = hub.seed_user("T-co", "Co Teacher", Role::Teacher, "1234").await;
-    let foreign = hub.seed_user("T-other", "Other Teacher", Role::Teacher, "1234").await;
+    let co = hub.seed_user("T-co", "Co Teacher", Role::Teacher, "123456").await;
+    let foreign = hub.seed_user("T-other", "Other Teacher", Role::Teacher, "123456").await;
     let co_id = co.id.clone();
     let co_token = hub.open_session(co).await;
     let foreign_token = hub.open_session(foreign).await;
@@ -553,7 +553,7 @@ async fn drop_teacher(hub: &TestHub, room: &Value, teacher_id: &str, token: &str
 }
 
 async fn teacher(hub: &TestHub, id: &str) -> (User, String) {
-    let user = hub.seed_user(id, "Jose Rizal", Role::Teacher, "1234").await;
+    let user = hub.seed_user(id, "Jose Rizal", Role::Teacher, "123456").await;
     let token = hub.open_session(user.clone()).await;
     (user, token)
 }
@@ -851,7 +851,7 @@ async fn a_deactivated_teacher_cannot_be_added() {
     hub.stop().await;
 }
 
-/// `tests/test_mock_hub.py` removes a co-teacher from a class it has just archived.
+/// Teacher management remains available after a class is archived.
 #[tokio::test]
 async fn the_owner_can_still_manage_teachers_on_an_archived_class() {
     let hub = TestHub::start().await;

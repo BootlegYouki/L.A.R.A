@@ -225,13 +225,13 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
     }
 }
 
-private sealed interface DocBlock {
+internal sealed interface DocBlock {
     data class Para(val text: String) : DocBlock
     data class Pic(val entry: String) : DocBlock
 }
 
 /** A .docx is a zip; the body is word/document.xml. shortcut: paragraphs and inline pictures only (no tables, fonts or layout), upgrade if handouts need them. */
-private fun docxBlocks(file: File): List<DocBlock> = java.util.zip.ZipFile(file).use { zip ->
+internal fun docxBlocks(file: File): List<DocBlock> = java.util.zip.ZipFile(file).use { zip ->
     fun read(name: String) = zip.getEntry(name)?.let { entry ->
         zip.getInputStream(entry).use { readDocxXml(it) }
     }
@@ -264,7 +264,7 @@ internal fun readDocxXml(input: java.io.InputStream, maxBytes: Int = 4 * 1024 * 
 }
 
 @Composable
-private fun rememberDocxPicture(file: File?, picture: DocBlock.Pic?): Bitmap? {
+internal fun rememberDocxPicture(file: File?, picture: DocBlock.Pic?): Bitmap? {
     var bitmap by remember(file, picture) { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(file, picture) {
         if (file == null || picture == null) return@LaunchedEffect

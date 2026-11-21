@@ -40,7 +40,7 @@ async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> 
     // Every client pulls `users` (bug #290).
     within_text_cap("full_name", &full_name)?;
     let pin = body.text("pin").filter(|p| is_valid_pin(p))
-        .ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+        .ok_or_else(|| ApiError::bad_request("PIN must be 6 digits"))?;
     let pin_hash = app.pins.hash(&pin).await?;
     let mut tx = begin_immediate(&app.db).await?;
     let created = users::insert(&mut tx, &lrn_or_id, &full_name, role, &pin_hash, app.clock.now_ms()).await?;
@@ -54,7 +54,7 @@ async fn reset_pin(
     require_role(&user, Role::Admin)?;
     body.need(&["pin"])?;
     let pin = body.text("pin").filter(|p| is_valid_pin(p))
-        .ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+        .ok_or_else(|| ApiError::bad_request("PIN must be 6 digits"))?;
     let pin_hash = app.pins.hash(&pin).await?;
     let mut tx = begin_immediate(&app.db).await?;
     if !users::reset_pin(&mut tx, &id, &pin_hash, app.clock.now_ms()).await? {
@@ -79,11 +79,11 @@ async fn setup(
         return Err(ApiError::forbidden("Only on the Hub PC"));
     }
     body.need(&["full_name", "pin"])?;
-    // Before the PIN check, so a second setup answers 409 whatever it sends, as in the mock.
+    // Before the PIN check, so a second setup answers 409 whatever it sends.
     if admin_exists(&mut *app.db.acquire().await?).await? {
         return Err(admin_already_set_up());
     }
-    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 4 digits"))?;
+    let pin = body.text("pin").filter(|p| is_valid_pin(p)).ok_or_else(|| ApiError::bad_request("PIN must be 6 digits"))?;
     let full_name = body.text("full_name").ok_or_else(|| ApiError::bad_request("full_name must be text"))?;
     within_text_cap("full_name", &full_name)?;
 

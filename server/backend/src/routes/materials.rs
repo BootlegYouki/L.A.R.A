@@ -191,7 +191,7 @@ async fn run_in_slot<T: Send + 'static>(slots: Arc<Semaphore>, parse: impl FnOnc
 }
 
 /// Any member of the class, also while it is archived (read-only, not hidden). The contract and the
-/// mock send `application/octet-stream`; the client knows the kind from `Material.file_type`.
+/// Hub send `application/octet-stream`; the client knows the kind from `Material.file_type`.
 /// A VIDEO resumes with `Range` and `If-Range`; any other file comes whole (contract #259).
 async fn download(
     State(app): State<AppState>,
@@ -221,7 +221,7 @@ async fn chunks(State(app): State<AppState>, user: AuthUser, Path(id): Path<Stri
 /// player seeks anywhere without fetching the whole file. Any member of the class, also while it is
 /// archived. `Range` gets `206`, none gets the whole video as `200`, and `If-Range` works as on
 /// the VIDEO download (contract #259). The video's own type (`video/mp4` or `video/webm`), so a
-/// desktop `<video>` tag plays it. Any other kind of material is 404, as in the mock.
+/// desktop `<video>` tag plays it. Any other kind of material is 404.
 async fn stream(
     State(app): State<AppState>,
     MediaUser(user): MediaUser,

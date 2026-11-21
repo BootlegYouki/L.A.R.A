@@ -241,7 +241,7 @@ async fn who_may_submit() {
     let (status, body) = submit(&class, class.teacher(), "t-1", &photo).await;
     assert_eq!((status, message(&body)), (403, "Learners only"));
     let (_, pending) = class.add_learner("123456789013", false).await;
-    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "1234").await;
+    let outsider = class.hub.seed_user("123456789014", "Outsider", lara_hub::auth::Role::Student, "123456").await;
     let outsider = class.hub.open_session(outsider).await;
     for token in [&pending, &outsider] {
         let (status, body) = submit(&class, token, "o-1", &photo).await;

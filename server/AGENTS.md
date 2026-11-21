@@ -9,7 +9,7 @@ The Local Hub: Rust backend (`backend/`, Axum, Tokio, SQLx, tokio-tungstenite) p
 `cargo check --all-targets` and `cargo test`. Whole-repo contract checks from the root: `python3 -m unittest discover tests`.
 
 ## Contract is the spec
-* Implement exactly `contracts/openapi.yaml`, `contracts/events/*` and `contracts/schema/server_master.sql`. `scripts/mock_hub.py` and `tests/test_mock_hub.py` are the acceptance reference: your behavior must match the flows they exercise.
+* Implement exactly `contracts/openapi.yaml`, `contracts/events/*` and `contracts/schema/server_master.sql`. Verify contract behavior against the real Hub with `cargo test`; development accounts are opt-in through `LARA_TEST_SEED=1`.
 * Migrations reproduce `server_master.sql`. Set PRAGMAs on the connection (WAL, `synchronous = NORMAL`, `foreign_keys = ON` on every connection, `busy_timeout = 5000`), never in a migration (SQLx runs migrations in a transaction and WAL fails there).
 * Need a new route, event or column? Stop and ask the Lead for a `contract-change` PR first.
 
