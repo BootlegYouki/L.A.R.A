@@ -2,7 +2,7 @@
 
 ## Audit timestamps, Issue #276
 
-Room v4 matches the audit fields from contract #273. `AuditTimestampMigration`
+Room v5 adds nullable `announcements.author_id` (contract 388) via `AnnouncementAuthorMigration` (4 to 5, `ALTER TABLE ... ADD COLUMN`, no data loss). Room v4 matches the audit fields from contract #273. `AuditTimestampMigration`
 upgrades v3 by rebuilding only enrollments, material_chunks, assignment_submissions
 and quiz_attempts inside Room's migration transaction. It copies every existing
 column and restores each index and foreign key. No default is added to created_at.
@@ -73,7 +73,7 @@ Room warns about three unindexed foreign keys already present in the contract
 
 ## Entry points and data flow
 
-`data/local/LaraDatabase.kt` registers all entities at version 4, exports the
+`data/local/LaraDatabase.kt` registers all entities at version 5, exports the
 schema, uses private `lara.db` storage and WAL, and also exposes the later auth/sync DAOs. It has no
 main-thread queries or destructive migration fallback. The existing manual
 `LaraApp.AppContainer` scopes repositories to the selected account's database; shared services remain application-owned. `AccountDatabases` retains the original lara.db for its owner and uses private hashed filenames for other accounts, preserving separate mirrors/cursors rather than clearing work on sign-out. No dependency injection framework is introduced. See settings.md for the 2.6 account-switch policy.

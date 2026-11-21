@@ -42,6 +42,7 @@ data class AnnouncementDto(
     @SerialName("created_at") val createdAt: Long,
     @SerialName("updated_at") val updatedAt: Long,
     @SerialName("allow_comments") val allowComments: Boolean? = null,
+    @SerialName("author_id") val authorId: String? = null,
 )
 
 @Serializable
