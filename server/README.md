@@ -2,7 +2,7 @@
 
 > **Subsystem Scope:** The school's Local Hub: the LAN server for every teacher and learner, with an admin console window.  
 > **Deployment:** one Hub per school on a **dedicated, always-on PC wired to the router**, serving every teacher and learner. The same app also runs on a team laptop for demos.  
-> **Repository Role:** Single source of truth for the offline classroom: serves the captive APK portal, orchestrates live quiz WebSockets, manages the SQLite delta-sync ledger, and stores and serves the AI model file that devices download (the Hub does no inference).
+> **Repository Role:** Single source of truth for the offline classroom: serves the captive APK portal, orchestrates live quiz WebSockets, manages the SQLite delta-sync ledger, runs the multi-slot SLM inference queue, and stores and serves the AI model file that capable devices may download.
 
 ---
 
@@ -66,7 +66,8 @@
 * **Network Discovery:**
   * `mdns-sd` registering `_lara._tcp.local` on port 8080.
   * UDP socket broadcasting JSON heartbeat packets to `255.255.255.255:8888` every 3 seconds.
-* **AI model file hosting:** the Hub stores the chosen GGUF model and serves it over HTTP `:8080` with Range support (decided 2026-11-21); inference runs on each device. How the Hub obtains the file and the route are to be defined in a contract-change PR.
+* **Pluggable SLM Engine:** Child `llama-server` process hosting candidate GGUF models (MiniCPM5-2B, Qwen2.5, Llama 3.2, SmolLM2) with continuous batching (2 to 4 parallel slots) and a WebSocket FIFO queue.
+* **AI model file hosting:** the Hub also stores the chosen GGUF model and serves it over HTTP `:8080` with Range support, so a capable phone or desktop may download it and run the tutor offline (hybrid, decided 2026-11-22). How the Hub obtains the file and the route are to be defined in a contract-change PR.
 * **Gradebook Exporter:** Direct generation of gradebook spreadsheets (`.xlsx`, learners by work, points only) using `rust_xlsxwriter` with automatic detection of mounted USB flash drives across Windows and Linux.
 * **Disaster Recovery:** One-click encrypted snapshot backup (`.lara-backup`) to plugged-in USB flash drives.
 
@@ -94,11 +95,13 @@
 ### 2.4 Timed Paperless Quiz Engine & Auto-Grading
 * Synchronized `EVENT_QUIZ_START` broadcast over WebSockets.
 * Instant auto-grading algorithm scoring Multiple Choice, True/False, and Identification questions in < 50ms.
-* Quiz lockout for the AI tutor is enforced on the device; the Hub no longer sees AI requests (open: how it reaches offline devices).
+* Hard Quiz Lockout: Rejects any AI inference calls originating from students with active quiz attempts (`HTTP 403 / QUIZ_IN_PROGRESS`). A device running a downloaded model enforces it itself (open: how it works offline).
 
-### 2.5 AI Model File Hosting
-* Stores the model file and serves it to phones and desktops over HTTP `:8080`, resumable with Range and capped per client like video.
-* Runs no `llama-server`, queue or inference. Superseded design: `docs/slm_inference_queue.md`.
+### 2.5 Central SLM Multi-Slot Queue Manager and Model File Hosting
+* Buffers concurrent hint requests from all phones, laptops and lab PCs.
+* Spawns `llama-server` with `--cont-batching -np 4 -c 2048`.
+* Emits real-time queue position updates (`"Pangalawa ka sa pila - est. 4s"`) over WebSockets.
+* Also stores the model file and serves it to capable phones and desktops over HTTP `:8080`, resumable with Range and capped per client like video, for the optional on-device path.
 
 ---
 
@@ -131,11 +134,11 @@ server/
 │   │   ├── main.rs                   # Server daemon entrypoint
 │   │   ├── discovery/                # mDNS responder & UDP beacon
 │   │   ├── routes/                   # Classrooms, Sync, Quizzes, Video stream
-│   │   ├── websocket/                # Realtime event broker
+│   │   ├── websocket/                # Realtime event broker & AI streaming
 │   │   ├── services/                 # Auto-grader, gradebook exporter, text chunker
-│   │   ├── ai/                       # AI model file hosting (no inference)
+│   │   ├── ai/                       # llama-server process manager, FIFO queue & model file hosting
 │   │   └── db/                       # SQLx migrations & SQLite schema
-│   └── bin/                          # helper binaries (cloudflared)
+│   └── bin/                          # llama-server pre-compiled binary, cloudflared
 └── docs/                             # Mandatory subsystem architectural documentation
 ```
 

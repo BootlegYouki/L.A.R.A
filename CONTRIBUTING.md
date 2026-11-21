@@ -9,8 +9,8 @@ Welcome to **L.A.R.A**. You are responsible for system stability, the architectu
 | Team | Folder | Developers | Lead's view |
 | :--- | :--- | :--- | :--- |
 | **Mobile** | `mobile/` | 2 developers | Kotlin, Compose, Room, CameraX, Media3 |
-| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, on-device AI tutor |
-| **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI model file hosting |
+| **Desktop** | `desktop/` | 2 developers | Tauri, React, TypeScript, Hub AI stream, optional on-device model |
+| **Server** | `server/` | 2 developers | Rust Hub: REST, WebSocket, SQLite, video, AI queue and model file hosting |
 | **Lead Developer** | all | 1 | Reviews every PR, owns `rules/` and `.github/`; the shared files (`contracts/`, PRD, `design-system/`, `scripts/`, `tests/`) go through `contract-change` PRs |
 
 You only edit your own team's folder. `rules/` and `.github/` are Lead-owned; `contracts/`, `docs/PRD.md`, `design-system/` and `scripts/` change only in their own `contract-change` PR written by any team member and reviewed by the teams it affects (see `.github/CODEOWNERS` and `rules/team-workflow-and-prs.md` section 1).
@@ -98,7 +98,7 @@ git commit -m "docs(server): document the enrollment gate"
 | :--- | :--- |
 | `fix(mobile): keep quiz timer running when Wi-Fi drops` | `fixed stuff` |
 | `feat(desktop): add roster table with Accept / Decline` | `WIP` / `update` / `final final` |
-| `test(server): hide the AI tutor during an active quiz` | a commit that mixes three unrelated changes |
+| `test(server): reject AI requests during an active quiz` | a commit that mixes three unrelated changes |
 
 Rules: plain messages only (no co-author or tool attribution lines), no secrets, no generated or build files, never `git add .` blindly (check `git status` first).
 

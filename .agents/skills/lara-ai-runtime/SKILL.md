@@ -1,37 +1,48 @@
 ---
 name: lara-ai-runtime
-description: Delivering the GGUF model from the Hub and running it on the device for the L.A.R.A Socratic tutor (download, on-device inference, streaming). Context and memory budgeting, grounding, quiz lockout and how to record evidence. Use when working on anything under an ai/ folder or the AI issues.
+description: Running GGUF models with llama-server on the Hub for the L.A.R.A Socratic tutor (slots, queue, streaming), plus serving the model file for the optional on-device path. Context and memory budgeting, grounding, quiz lockout and how to record evidence. Use when working on anything under an ai/ folder or the AI issues.
 ---
 
-# L.A.R.A AI runtime: model from the Hub, inference on the device
+# L.A.R.A AI runtime: Hub llama-server, optional on-device model
 
 Read `rules/socratic-ai-guardrails.md` first. It decides **what** the tutor may say; this skill covers **how** to run the model. AI quality on weak hardware is the project's biggest risk, so measure everything and write the numbers down.
 
 ## 0. Three facts
 
-* **The model is not chosen yet.** It comes from the evaluation in `rules/socratic-ai-guardrails.md` section 5, recorded as `MODEL_PATH` in `docs/benchmarks/ai_model_evaluation.md`. Never hard-code a model file name or a tokens-per-second figure. Device RAM and size limits are open until the evaluation.
-* **Tutor behavior:** never give the final answer, one small clue then one leading question, reply in English for the pilot, ground in the teacher's lesson chunks, and say "I cannot help with that, go back to your lesson" when the lesson does not cover it.
-* **Quiz lockout everywhere:** while the learner has an `IN_PROGRESS` attempt the app does not run the model and never composes the chat UI. How the lockout reaches an offline device is to be defined in a contract-change PR.
+* **The model is not chosen yet.** It comes from the evaluation in `rules/socratic-ai-guardrails.md` section 5, recorded as `MODEL_PATH` in `docs/benchmarks/ai_model_evaluation.md`. Never hard-code a model file name, a slot count or a tokens-per-second figure.
+* **Hub tutor behavior:** never give the final answer, one small clue then one leading question, reply in English for the pilot, ground in the teacher's lesson chunks, and say "I cannot help with that, go back to your lesson" when the lesson does not cover it.
+* **Quiz lockout everywhere:** while the learner has an `IN_PROGRESS` attempt the Hub rejects the request (`QUIZ_IN_PROGRESS`) and clients never compose the chat UI.
 
-## 1. Delivery: download from the Hub, run on the device (decided 2026-11-21)
+## 1. Routing: Hub by default (hybrid, decided 2026-11-22)
 
-The Hub stores the model file and serves it over HTTP `:8080`, resumable with Range like video. Each phone and desktop downloads it and runs inference locally with no network. The Hub runs no `llama-server`, no queue and no token stream.
+Every phone, laptop and lab PC sends the learner's message through `EVENT_AI_CHAT_REQUEST` and renders `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. On this default path only the Hub builds prompts and runs inference, and there is no client RAM check. The phone heap remains under 250 MB on the 3 to 4 GB target. A capable device may instead download the model from the Hub and run it offline (section 5); budget phones are expected to stay on the Hub path.
 
-A device without the model shows "Download the AI model from the Hub"; a device that cannot run it shows "The AI tutor is not available on this device". Past chats may be read from local `ai_chat_messages`. Other features keep working offline. Remote/Suspension Mode carries only the model download through the Hub tunnel. AI remains optional.
+When the Hub is unreachable, clients without a downloaded model show "The AI tutor needs the classroom Hub" and may read past chats from local `ai_chat_messages`. Other features keep working offline. Remote/Suspension Mode carries the same stream through the Hub tunnel. If the Hub model is missing or fails to load, return `AI_NOT_AVAILABLE`; AI remains optional.
 
-## 2. On-device engine
+## 2. `llama-server` on the Hub
 
-* The inference engine each client embeds, the model file name and size, the minimum device RAM and whether the phone heap limit of 250 MB holds are open (to be decided from the evaluation and recorded in a contract-change PR). Do not guess them.
-* Stream tokens from the engine to the UI incrementally and cancel generation when the learner closes the sheet or a quiz attempt starts.
-* Return the `grounded_chunk_id` with each reply so the UI can show which part of the lesson the hint came from.
-* Run the download as a resumable background task; verify the file's checksum before loading it.
+* Run it as a **managed child process**: spawn with `tokio::process::Command`, `kill_on_drop(true)`, wait for `GET /health` before accepting requests, restart with backoff if it dies, stop it when the Hub exits.
+* **Bind to `127.0.0.1` only** (`--host 127.0.0.1`). Only the Hub's own code talks to it; learners never reach it directly.
+* Flags: `-m <MODEL_PATH>`, `-c <context>`, `-np <slots>` (2 to 4 from the evaluation), continuous batching. **Budget the context per slot.** `-c` is the server's total context, and with several slots each sequence gets a share of it unless the KV cache is unified. Read the startup log for the per-slot context and make sure each slot has room for the system prompt, the lesson chunks (about 2048 tokens) and the reply. If it does not, raise `-c` and re-measure RAM. This is the easiest mistake to make: `-c 2048 -np 4` can leave only a quarter of the window per learner.
+* Request `POST /v1/chat/completions` with `"stream": true` and `max_tokens` capped (a hint is short; 200 to 256 is plenty). Low temperature. Convert the server's SSE chunks into `EVENT_AI_TOKEN_STREAM` frames; do not forward raw OpenAI chunks to clients.
+* **Cancel upstream** when the learner's socket closes, or a generation keeps burning a slot for nobody.
+* Keep a **bounded FIFO queue** in front of the slots. Send `EVENT_QUEUE_STATUS` with `position` and `estimated_wait_seconds`; clients show the localized text ("Pangalawa ka sa pila - est. 4s"). When the queue is full, answer with a friendly error, not a hang. Cap concurrent generation so video and quizzes still run on the same machine.
+* Return `grounded_chunk_id` in the stream so the UI can show which part of the lesson the hint came from.
 
 ## 3. Prompt and grounding
 
-* The app on the device selects chunks using `rules/socratic-ai-guardrails.md` section 3.1 and includes recent history from its local `ai_chat_messages` using section 3.2. How the chunks reach the device is to be defined in a contract-change PR. Files with no extracted text have no chunks: return the lesson-text-unavailable response rather than inventing a hint.
-* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. The app loads it byte for byte at start and fills `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
-* Test the on-device builder against learner prompts (`server/ai_eval/`), with English replies even to Filipino and Taglish messages, and add a regression test when you fix a leak.
+* Only the Hub selects chunks using `rules/socratic-ai-guardrails.md` section 3.1 and includes recent history from its `ai_chat_messages` using section 3.2. Files with no extracted text have no chunks: return the lesson-text-unavailable response rather than inventing a hint.
+* **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. Only the Hub loads it byte for byte at start and fills `{reply_language}` and `{lesson_chunks}`. Never retype or reword it in code; a wording change is a `contract-change` PR.
+* Test the Hub builder against learner prompts (`server/ai_eval/`), with English replies even to Filipino and Taglish messages, and add a regression test when you fix a leak.
 
 ## 4. Evidence to record
 
-For every model and device class: pass rate per criterion from the evaluation, time to first token, tokens per second, peak RAM, and the hardware it ran on. Label results "developer-scored" as the rules require, and write them to `docs/benchmarks/`. Do not say "good enough" without these numbers.
+For every model and slot count (and, for any model offered on the device, every device class): pass rate per criterion from the evaluation, time to first token, tokens per second, peak RAM, and the hardware it ran on. Label results "developer-scored" as the rules require, and write them to `docs/benchmarks/`. Do not say "good enough" without these numbers.
+
+## 5. Optional on-device path (the Hub only stores and serves the file)
+
+* The Hub stores the model file and serves it over HTTP `:8080`, resumable with Range like video. A capable phone or desktop MAY download it and run the tutor offline on the device (for example at home). The Hub's own `llama-server` and queue are unchanged.
+* The app checks the device first: a device that cannot run the model never gets it installed or loaded and keeps using the Hub path. The capability rule (RAM, storage, CPU), the model name and size, and whether the 250 MB phone heap limit holds with a model loaded are open until the evaluation; do not guess them.
+* On the device the app loads `contracts/ai/socratic_system_prompt.txt` byte for byte and applies the same chunk (section 3.1) and history (section 3.2) rules as the Hub. The same Socratic, English-only, grounded rules apply. The app refuses to run the model during an active quiz attempt.
+* Run the download as a resumable background task and verify the file's checksum before loading it. Stream tokens to the UI incrementally and cancel generation when the learner closes the sheet or a quiz attempt starts.
+* To be defined in a contract-change PR: the download route, auth, error code and size/checksum metadata, how chunks and chat history reach the device, how quiz lockout is enforced offline, whether on-device `ai_chat_messages` sync to the Hub, and which path wins when both are available.
