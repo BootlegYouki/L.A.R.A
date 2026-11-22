@@ -34,6 +34,7 @@ use websocket::broker::Broker;
 
 #[derive(Clone)]
 pub struct AppState {
+    pub workload: Arc<services::workload::Workload>,
     pub activity: Arc<services::activity::Recorder>,
     pub db: SqlitePool,
     pub broker: Arc<Broker>,
@@ -121,6 +122,7 @@ pub async fn serve(config: HubConfig) -> Result<HubHandle, StartError> {
     let activity = services::activity::Recorder::start(db.clone(), Arc::clone(&clock)).await;
 
     let state = AppState {
+        workload: Arc::default(),
         activity,
         db,
         broker: Arc::default(),

@@ -9,12 +9,12 @@ const { retainSamples, graphPath, areaPath, networkBars } = require('../src/moni
 
 test('history expires by elapsed time and stays bounded during rapid responses', () => {
   let samples = [];
-  for (let at = 0; at <= 700000; at += 2000) samples = retainSamples(samples, { at, value: null });
-  assert.equal(samples.length, 300);
-  assert.equal(samples[0].at, 102000);
-  for (let at = 700001; at <= 701000; at++) samples = retainSamples(samples, { at, value: null });
-  assert.equal(samples.length, 301);
-  samples = retainSamples(samples, { at: 2000000, value: null });
+  for (let at = 0; at <= 4200000; at += 2000) samples = retainSamples(samples, { at, value: null });
+  assert.equal(samples.length, 1800);
+  assert.equal(samples[0].at, 602000);
+  for (let at = 4200001; at <= 4201000; at++) samples = retainSamples(samples, { at, value: null });
+  assert.equal(samples.length, 1801);
+  samples = retainSamples(samples, { at: 10000000, value: null });
   assert.equal(samples.length, 1);
 });
 

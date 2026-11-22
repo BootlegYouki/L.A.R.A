@@ -3,6 +3,91 @@
 
 @layer components {
   .monitor-page { @apply flex min-w-0 flex-col gap-4; }
+  .dashboard-layout { @apply flex min-w-0 flex-col gap-3; }
+  .dashboard-layout-toolbar { @apply flex flex-wrap items-center justify-between gap-3; }
+  .dashboard-layout-toolbar > p { @apply text-sm text-lara-ink-2; }
+  .dashboard-layout-toolbar > div { @apply flex flex-wrap gap-2; }
+  .dashboard-grid { @apply grid min-w-0 grid-cols-12 items-stretch gap-4; }
+  .dashboard-item { @apply col-span-12 flex min-w-0 flex-col; }
+  .dashboard-item > :last-child { @apply flex-1; }
+  .dashboard-item-compact, .dashboard-item-summary { @apply col-span-6; }
+  .dashboard-item-comparison { @apply min-[900px]:col-span-6; }
+  .dashboard-item-compact { @apply min-[900px]:col-span-4; }
+  .dashboard-item-summary { @apply min-[1100px]:col-span-3; }
+  .dashboard-item-half { @apply sm:col-span-6; }
+  .dashboard-item-graph { @apply min-[960px]:col-span-6; }
+  .dashboard-item:has(.monitor-chart-wide) { @apply col-span-full; }
+  .dashboard-editing .dashboard-item { outline: 1px dashed var(--color-lara-ink-2); outline-offset: 3px; }
+  .dashboard-editing .dashboard-drop-target { outline: 3px solid var(--color-lara-primary-dark); }
+  .dashboard-dragging { opacity: 0.6; }
+  .dashboard-card-tools { @apply mb-2 flex min-w-0 items-center gap-1; }
+  .dashboard-drag-handle { @apply flex min-h-control min-w-0 flex-1 cursor-grab items-center gap-2 rounded-md border border-lara-border bg-white px-3 text-left text-sm font-bold text-lara-primary-dark; }
+  .dashboard-drag-handle:active { @apply cursor-grabbing; }
+  .dashboard-drag-handle > span { @apply min-w-0 break-words; }
+  .dashboard-move-button { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-lara-border bg-white text-lara-primary-dark; }
+  .workload-summary-card { @apply min-w-0 rounded-md border border-lara-border bg-white p-3; }
+  .workload-summary-card dt { @apply text-sm font-bold text-lara-ink-2; }
+  .workload-summary-card dd { @apply my-2 text-xl font-extrabold tabular-nums; }
+  .workload-summary-card p { @apply text-xs leading-5 text-lara-ink-2; }
+  .monitor-toolbar { @apply flex flex-wrap items-end gap-3 rounded-md border border-lara-border bg-white p-4; }
+  .monitor-toolbar label { @apply flex flex-col gap-1 text-xs font-bold text-lara-ink-2; }
+  .monitor-toolbar select { @apply min-h-control rounded-md border border-lara-ink-2 bg-white px-3 text-sm font-medium text-lara-ink; }
+  .monitor-toolbar button { @apply px-4; }
+  .monitor-warnings { @apply rounded-md border border-lara-border bg-white p-4; }
+  .monitor-warning-grid { @apply mt-3 grid gap-3 sm:grid-cols-3; }
+  .monitor-warning { @apply rounded-md border border-lara-border bg-lara-subtle p-3; }
+  .monitor-warning h3 { @apply text-sm font-extrabold; }
+  .monitor-warning p { @apply my-2 flex items-center gap-2 text-sm font-bold; }
+  .monitor-warning > span { @apply text-xs leading-5 text-lara-ink-2; }
+  .monitor-warning-attention { @apply border-lara-warning-border bg-lara-warning-light; }
+  .monitor-warning-attention p { @apply text-lara-warning-dark; }
+  .monitor-warning-normal p { @apply text-lara-primary-dark; }
+  .monitor-warning-missing p { @apply text-lara-ink-2; }
+  .monitor-gauge { @apply mt-3 h-2 overflow-hidden rounded-full bg-lara-border; }
+  .monitor-gauge > span { @apply block h-full bg-lara-primary-dark; }
+  .monitor-card-ram .monitor-gauge > span { @apply bg-lara-info-dark; }
+  .monitor-card-disk .monitor-gauge > span { @apply bg-lara-ink-2; }
+  .monitor-expand { @apply ml-2 inline-flex min-h-control items-center gap-1 px-2 text-xs font-bold text-lara-primary-dark; }
+  .monitor-chart.monitor-chart-wide { @apply col-span-full; }
+  .monitor-chart.monitor-chart-wide svg, .monitor-chart.monitor-chart-wide .monitor-y-ticks { @apply h-56; }
+  .monitor-chart .monitor-dot { fill: var(--color-lara-primary-dark); stroke-width: 1; }
+  .monitor-chart .monitor-dot.monitor-line-1 { fill: var(--color-lara-info-dark); }
+  .monitor-chart-ram .monitor-dot.monitor-line-0 { fill: var(--color-lara-info-dark); }
+  .monitor-chart-ram .monitor-dot.monitor-line-1 { fill: var(--color-lara-ink); }
+  .monitor-statistics { @apply min-w-0 rounded-md border border-lara-border bg-white p-4; }
+  .monitor-statistics h2 { @apply text-lg font-extrabold; }
+  .monitor-statistics-scroll { @apply mt-3 max-h-96 overflow-auto; }
+  .monitor-statistics table { @apply w-full text-left text-sm; table-layout: fixed; min-width: 960px; }
+  .statistics-metric-column { width: 40%; }
+  .statistics-value-column { width: 12%; }
+  .monitor-statistics th, .monitor-statistics td { @apply border-b border-lara-border px-3 py-3; }
+  .monitor-statistics td { @apply whitespace-nowrap text-right tabular-nums; }
+  .monitor-statistics th, .monitor-statistics td { @apply align-middle; }
+  .monitor-statistics thead th:not(:first-child) { @apply text-right; }
+  .monitor-statistics tbody tr { height: 64px; }
+  .monitor-statistics tbody th { @apply leading-5; }
+  .monitor-statistics thead { @apply sticky top-0 bg-lara-subtle; }
+  .monitor-statistics tbody th { @apply min-w-52 font-bold; }
+  .workload-section { @apply flex min-w-0 flex-col gap-3; }
+  .workload-section > .monitor-heading p { @apply text-xs text-lara-ink-2; }
+  .workload-summary { @apply grid grid-cols-2 gap-3 min-[1100px]:grid-cols-4; }
+  .workload-summary > div { @apply rounded-md border border-lara-border bg-white p-3; }
+  .workload-summary dt { @apply text-sm font-bold text-lara-ink-2; }
+  .workload-summary dd { @apply mt-2 text-xl font-extrabold tabular-nums; }
+  .workload-panels { @apply grid min-w-0 gap-3 sm:grid-cols-2; }
+  .workload-panel { @apply min-w-0 rounded-md border border-lara-border bg-white p-4; }
+  .workload-panel h3 { @apply mb-3 text-base font-extrabold; }
+  .workload-panel dl > div { @apply flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-1; }
+  .workload-panel dt { @apply flex items-center gap-2 text-sm text-lara-ink-2; }
+  .workload-panel dd { @apply text-sm font-extrabold tabular-nums; }
+  .workload-panel p { @apply mt-2 text-xs leading-5 text-lara-ink-2; }
+  .storage-use-bars { @apply my-4 flex h-3 overflow-hidden rounded-full bg-lara-border; }
+  .storage-dot { @apply inline-block h-3 w-3 rounded-sm; }
+  .storage-segment-0 { @apply bg-lara-primary-dark; }
+  .storage-segment-1 { @apply bg-lara-info-dark; }
+  .storage-segment-2 { @apply bg-lara-warning-dark; }
+  .storage-segment-3 { @apply bg-lara-ink-2; }
+  .storage-use-values { @apply grid gap-x-6 sm:grid-cols-2; }
   .monitor-heading { @apply flex flex-wrap items-center justify-between gap-2; }
   .monitor-heading h2 { @apply text-lg font-extrabold; }
   .monitor-update { @apply inline-flex items-center gap-1.5 text-xs text-lara-ink-2; }
@@ -67,11 +152,11 @@
   .monitor-plot { @apply grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-2; }
   .monitor-y-ticks { @apply relative h-28 text-right text-xs tabular-nums text-lara-ink-2; }
   .monitor-y-ticks span { @apply absolute right-0 -translate-y-1/2 whitespace-nowrap; }
-  .monitor-y-ticks span:nth-child(1) { top: 5px; }
-  .monitor-y-ticks span:nth-child(2) { top: 30px; }
-  .monitor-y-ticks span:nth-child(3) { top: 55px; }
-  .monitor-y-ticks span:nth-child(4) { top: 80px; }
-  .monitor-y-ticks span:nth-child(5) { top: 105px; }
+  .monitor-y-ticks span:nth-child(1) { top: 4.46%; }
+  .monitor-y-ticks span:nth-child(2) { top: 26.79%; }
+  .monitor-y-ticks span:nth-child(3) { top: 49.11%; }
+  .monitor-y-ticks span:nth-child(4) { top: 71.43%; }
+  .monitor-y-ticks span:nth-child(5) { top: 93.75%; }
   .monitor-timeline { @apply ml-[88px] mt-2; }
   .monitor-timeline .monitor-axis-title { @apply mt-2 mb-0; }
   .monitor-chart-empty, .monitor-footnote { @apply mt-2 text-xs leading-5 text-lara-ink-2; }
@@ -79,14 +164,38 @@
 
 @layer components {
   :focus-visible { outline: 3px solid var(--color-lara-primary-dark); outline-offset: 2px; }
-  .hub-main:has(.admin-auth) { @apply flex min-h-[calc(100dvh-4rem)] items-center justify-center py-8; }
-  .admin-auth { @apply mx-auto flex w-full max-w-md flex-col gap-8 rounded-lg border border-lara-border bg-white p-8; }
+  .hub-main:has(.admin-auth) { @apply flex min-h-[calc(100dvh-4rem)] items-center justify-center py-6; }
+  .admin-auth { @apply mx-auto grid w-full max-w-4xl min-w-0 grid-cols-[2fr_3fr] overflow-hidden rounded-lg border border-lara-border bg-white; }
+  .auth-intro { @apply flex min-w-0 flex-col justify-between gap-8 bg-lara-ink p-6 text-white min-[900px]:p-8; }
+  .auth-hub-mark { @apply mb-4 block text-[40px] leading-[48px] text-lara-primary-light; }
+  .auth-brand { @apply text-[28px] leading-9 font-extrabold; }
+  .auth-intro-copy { @apply mt-2 text-base leading-6 text-lara-primary-light; }
+  .auth-capabilities { @apply flex flex-col gap-6; }
+  .auth-capabilities > div { @apply flex items-start gap-3; }
+  .auth-capabilities i { @apply mt-0.5 text-xl text-lara-primary-light; }
+  .auth-capabilities dt { @apply text-sm leading-5 font-extrabold; }
+  .auth-capabilities dd { @apply mt-1 text-sm leading-5 text-lara-border; }
+  .auth-intro-note { @apply flex items-center gap-2 border-t border-lara-ink-2 pt-4 text-xs leading-5 text-lara-border; }
+  .auth-form-panel { @apply flex min-w-0 flex-col justify-center gap-8 p-6 min-[900px]:p-10; }
   .auth-heading h1 { @apply mb-2 text-[28px] leading-9 font-extrabold; }
   .auth-heading p { @apply text-base leading-6 text-lara-ink-2; }
   .auth-fields { @apply flex min-w-0 flex-col gap-6; }
-  .admin-auth .admin-pin-digit { @apply h-14 min-w-0 flex-1 rounded-md border border-lara-ink-2 text-2xl font-bold; }
+  .admin-auth .admin-pin-digit { @apply h-14 min-w-0 flex-1 rounded-md border border-lara-ink-2 bg-lara-canvas text-2xl font-bold; }
+  .admin-auth .admin-pin-digit:focus { @apply border-lara-primary-dark bg-white; }
   .auth-pin-visibility { @apply inline-flex min-h-control items-center gap-2 self-end px-1 text-sm font-bold text-lara-primary-dark; }
-  .auth-submit { @apply w-full; }
+  .admin-primary.auth-submit { @apply min-h-touch w-full rounded-md text-base; }
+  @media (max-height: 600px) {
+    .hub-main:has(.admin-auth) { @apply py-4; }
+    .auth-intro { @apply gap-4; }
+    .auth-hub-mark, .auth-capabilities dd { @apply hidden; }
+    .auth-capabilities { @apply gap-4; }
+    .auth-form-panel { @apply gap-6; }
+    .auth-fields { @apply gap-4; }
+  }
+  @media (max-width: 639px) {
+    .admin-auth { @apply grid-cols-1; }
+    .auth-intro { @apply hidden; }
+  }
   .admin-label { @apply flex flex-col gap-2 font-extrabold; }
   .admin-label input, .admin-label select { @apply min-h-touch w-full rounded-md border-2 border-lara-ink-2 bg-white px-4 text-base font-medium text-lara-ink; }
   .admin-pin-digit { @apply h-15 w-touch rounded-md border-2 border-lara-ink-2 bg-white text-center text-2xl font-black; }

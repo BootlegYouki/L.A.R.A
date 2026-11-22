@@ -54,7 +54,7 @@ export default function App() {
         {status && <Beacon status={status} t={t} />}
       </header>
 
-      <main className="hub-main mx-auto max-w-5xl px-6"><AdminUsers overview={<>
+      <main className="hub-main mx-auto max-w-5xl px-6 has-[.hub-shell-overview]:max-w-none"><AdminUsers overview={<>
         {status && !status.running && (
           <div
             role="alert"

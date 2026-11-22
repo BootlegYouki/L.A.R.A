@@ -94,18 +94,42 @@ pub(crate) fn method(method: &Method) -> &'static str {
 pub(crate) async fn record(State(app): State<AppState>, request: Request, next: Next) -> Response {
     let method = method(request.method());
     let endpoint = endpoint(&request);
-    if endpoint == "/api/admin/activity-logs" || (matches!(method, "GET" | "OPTIONS") && endpoint == "/api/admin/users") {
-        return next.run(request).await;
-    }
+    let upload = method == "POST" && matches!(endpoint, "/api/materials" | "/api/assignments/{id}/submit");
+    let request = if upload {
+        let (parts, body) = request.into_parts();
+        Request::from_parts(parts, tracked_body(body, app.workload.task(crate::services::workload::Task::Upload)))
+    } else { request };
+    let exclude_log = endpoint == "/api/admin/activity-logs" || (matches!(method, "GET" | "OPTIONS") && endpoint == "/api/admin/users");
     let started = Instant::now();
     let response = next.run(request).await;
+    if method != "OPTIONS" { app.workload.request(response.status().as_u16(), started.elapsed()); }
+    if exclude_log { return response; }
     app.activity.record(Event::http_request(
         method,
         endpoint,
         response.status().as_u16(),
         started.elapsed(),
     ));
+    if method == "GET" && matches!(response.status().as_u16(), 200 | 206) {
+        use crate::services::workload::Task;
+        let task = match endpoint {
+            "/api/materials/{id}/stream" => Some(Task::Video),
+            "/api/materials/{id}/download" | "/api/submissions/{id}/file" | "/download/{file}" => Some(Task::Download),
+            _ => None,
+        };
+        if let Some(task) = task {
+            let (parts, body) = response.into_parts();
+            return Response::from_parts(parts, tracked_body(body, app.workload.task(task)));
+        }
+    }
     response
+}
+
+fn tracked_body(body: axum::body::Body, guard: crate::services::workload::TaskGuard) -> axum::body::Body {
+    use futures_util::StreamExt;
+    axum::body::Body::from_stream(futures_util::stream::unfold((body.into_data_stream(), guard), |(mut body, guard)| async move {
+        body.next().await.map(|piece| (piece, (body, guard)))
+    }))
 }
 
 #[cfg(test)]
@@ -116,6 +140,20 @@ mod tests {
     use axum::routing::get;
     use axum::Router;
     use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn transfer_counts_end_at_body_eof_or_disconnect() {
+        use crate::services::workload::{Task, Workload};
+        let metrics = std::sync::Arc::new(Workload::default());
+        let body = tracked_body(Body::from("fixture"), metrics.task(Task::Download));
+        assert_eq!(metrics.snapshot().downloads, 1);
+        assert_eq!(axum::body::to_bytes(body, 100).await.unwrap(), "fixture");
+        assert_eq!(metrics.snapshot().downloads, 0);
+        let body = tracked_body(Body::from_stream(futures_util::stream::pending::<Result<Vec<u8>, std::io::Error>>()), metrics.task(Task::Video));
+        assert_eq!(metrics.snapshot().video_streams, 1);
+        drop(body);
+        assert_eq!(metrics.snapshot().video_streams, 0);
+    }
 
     #[tokio::test]
     async fn server_errors_redirects_and_streaming_headers_record_without_reading_the_body() {

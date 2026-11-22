@@ -1,4 +1,5 @@
 pub mod bandwidth;
+pub mod workload;
 pub mod activity;
 pub(crate) mod request_activity;
 pub mod class_access;

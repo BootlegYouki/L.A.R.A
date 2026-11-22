@@ -1,15 +1,21 @@
 type Adapter = { name: string; classroom: boolean; received_per_second: number | null; sent_per_second: number | null };
 export type Metrics = {
+  connected_apps?: number;
+  workload?: { requests_per_second: number; failed_per_second: number; requests_last_minute: number; failed_last_minute: number; average_response_ms: number | null; slowest_response_ms: number | null; uploads: number; downloads: number; video_streams: number; documents_waiting: number; documents_processing: number; documents_finished: number; documents_failed: number } | null;
+  storage_use?: { videos: number; documents: number; homework: number; database: number } | null;
+  disk_read_per_second?: number | null; disk_write_per_second?: number | null;
+  ai_running?: boolean; ai_cpu_percent?: number | null; ai_ram?: number | null; ai_waiting?: number | null;
   cpu_percent: number | null; hub_cpu_percent: number | null;
   ram_used: number | null; ram_total: number | null; hub_ram: number | null;
   disk_free: number | null; disk_total: number | null; uptime_seconds: number; adapters: Adapter[];
 };
 export type Sample = { at: number; value: Metrics | null };
 const WINDOW_MS = 10 * 60 * 1000;
+const HISTORY_MS = 60 * 60 * 1000;
 export const INTERVAL_MS = 2000;
 
 export function retainSamples(samples: Sample[], next: Sample): Sample[] {
-  return [...samples.filter(sample => sample.at > next.at - WINDOW_MS), next].slice(-301);
+  return [...samples.filter(sample => sample.at > next.at - HISTORY_MS), next].slice(-1801);
 }
 
 export function graphPath(samples: Sample[], end: number, maximum: number, read: (value: Metrics) => number | null): string {
