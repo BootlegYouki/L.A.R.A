@@ -1,0 +1,31 @@
+import { act, create } from 'react-test-renderer';
+import { createElement, StrictMode, type ReactNode } from 'react';
+import { expect, it, vi } from 'vitest';
+const { post }=vi.hoisted(()=>({post:vi.fn()}));
+vi.mock('../src/services/authoring',()=>({createAnnouncement:post,createAssignment:vi.fn(),createTopic:vi.fn()}));
+vi.mock('@radix-ui/react-dialog',()=>{const wrap=({children}:{children?:ReactNode})=>children;return {Root:wrap,Portal:wrap,Overlay:()=>null,Content:'section',Title:'h2',Description:'p'};});
+import ClassAuthoringDialog from '../src/components/ClassAuthoringDialog';
+import type { CachedAccount } from '../src/services/auth';
+it('keeps a live request signal after StrictMode effect replay',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);post.mockResolvedValue('created');
+ const closed=vi.fn(),created=vi.fn();
+ const account={user:{id:'teacher',role:'TEACHER'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
+ let r!:ReturnType<typeof create>;
+ await act(async()=>{r=create(createElement(StrictMode,null,createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:closed,onCreated:created})));});
+ await act(async()=>r.root.findByProps({id:'post-title'}).props.onChange({target:{value:'Class news'}}));
+ await act(async()=>r.root.findByProps({id:'post-body'}).props.onChange({target:{value:'Hello class'}}));
+ await act(async()=>r.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ expect(post).toHaveBeenCalledTimes(1);expect(post.mock.calls[0][3].aborted).toBe(false);expect(created).toHaveBeenCalledOnce();expect(closed).toHaveBeenCalledOnce();
+ await act(async()=>r.unmount());vi.unstubAllGlobals();
+});
+it('offers announcement attachments inside the creation dialog',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReturnType<typeof create>;
+ const account={user:{id:'teacher',role:'TEACHER'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
+ await act(async()=>{r=create(createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:vi.fn(),onCreated:vi.fn()}))});
+ expect(r.root.findAllByProps({type:'file'})).toHaveLength(1);
+ await act(async()=>r.root.findByProps({id:'assignment-files'}).props.onChange({target:{files:[new File(['clip'],'lesson.mp4')]}}));
+ expect(JSON.stringify(r.root.findByProps({className:'authoring-file-picker'}).findByType('span').children)).toContain('Chosen file: lesson.mp4');
+ await act(async()=>r.root.findByProps({id:'assignment-files'}).props.onChange({target:{files:[new File(['a'],'notes.pdf'),new File(['b'],'photo.png')]}}));
+ expect(JSON.stringify(r.root.findByProps({className:'authoring-file-picker'}).findByType('span').children)).toContain('Chosen files: notes.pdf, photo.png');
+ await act(async()=>r.unmount());vi.unstubAllGlobals();
+});

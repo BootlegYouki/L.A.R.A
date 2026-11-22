@@ -11,7 +11,7 @@ const account: CachedAccount = { hub, user: { id: 'learner', full_name: 'Learner
 const useStore = createStore<{ status: string; account: CachedAccount | null; loadAccount: () => void; setAccount: (next: CachedAccount | null) => void }>(set => ({ status: 'ready', account, loadAccount: () => {}, setAccount: next => set({ account: next }) }));
 vi.mock('../src/store/app', () => ({ useAppStore: () => useStore() }));
 const connectionControl = vi.hoisted(() => ({status:'connected', update:null as null | ((state:unknown) => void)}));
-vi.mock('../src/services/connection', () => ({ observeHubConnection: (update: (state: unknown) => void) => { connectionControl.update = update; update({ hub, status: connectionControl.status, persisted: true }); return { stop: () => {}, discovered: () => {} }; } }));
+vi.mock('../src/services/connection', () => ({ observeHubConnection: (update: (state: unknown) => void) => { connectionControl.update = update; update({ hub, status: connectionControl.status, persisted: true }); return { stop: () => {}, discovered: () => {},select:vi.fn() }; } }));
 vi.mock('../src/services/discovery', () => ({ observeDiscovery: () => () => {} }));
 vi.mock('../src/services/auth', async original => ({ ...await original<typeof import('../src/services/auth')>(), refreshClassrooms: async () => useStore.getState().account?.classrooms ?? classrooms }));
 vi.mock('../src/services/realtime', () => ({ observeJoinUpdates: () => () => {} }));
@@ -20,6 +20,8 @@ vi.mock('../src/services/websocket-policy', () => ({ ensureWebSocketPolicy: () =
 vi.mock('@tauri-apps/api/core', () => ({ invoke: async (command: string) => command === 'account_token' ? 'synthetic-token' : { announcements: [], materials: [] } }));
 vi.mock('../src/pages/VideoLessonPage', () => ({ default: () => null }));
 import App from '../src/App';
+import LoginPage from '../src/pages/LoginPage';
+import ConnectionPage from '../src/pages/ConnectionPage';
 import ClassPage from '../src/pages/ClassPage';
 import HomePage from '../src/pages/HomePage';
 import SettingsPage from '../src/pages/SettingsPage';
@@ -105,3 +107,7 @@ it('omits the archived Home section without changing the cached account', async 
   expect(renderer.root.findAllByProps({id:'archived-classes'})).toHaveLength(0);
   expect(useStore.getState().account!.classrooms.some(room => room.id === 'archived')).toBe(true);
 });
+
+it('returns from login to Hub selection and stays there until an explicit connection choice',async()=>{useStore.setState({account:null});await act(async()=>{renderer=create(createElement(App));});await act(async()=>renderer.root.findByType(LoginPage).props.onChangeHub());expect(renderer.root.findAllByType(LoginPage)).toHaveLength(0);expect(renderer.root.findAllByProps({id:'hub-address'})).toHaveLength(1);await act(async()=>connectionControl.update!({hub,status:'connected',persisted:true}));expect(renderer.root.findAllByProps({id:'hub-address'})).toHaveLength(1);await act(async()=>renderer.root.findByType(ConnectionPage).props.onConnect(hub));expect(renderer.root.findAllByType(LoginPage)).toHaveLength(1);expect(useStore.getState().account).toBeNull();});
+
+it.each(['classwork','stream'] as const)('Back restores the video origin tab: %s',async origin=>{await act(async()=>{renderer=create(createElement(App));});await act(async()=>renderer.root.findByType(HomePage).props.onOpen(classrooms[0].id));await act(async()=>renderer.root.findByType(ClassPage).props.onVideo('lesson',origin));expect(renderer.root.findByType(VideoLessonPage).props.backLabel).toBe(origin==='classwork'?t.classwork:t.stream);await act(async()=>renderer.root.findByType(VideoLessonPage).props.onBack());expect(renderer.root.findByProps({id:'tab-'+origin}).props['aria-selected']).toBe(true);await act(async()=>renderer.root.findByType(Sidebar).props.onOpen(classrooms[1].id));expect(renderer.root.findByProps({id:'tab-stream'}).props['aria-selected']).toBe(true);});

@@ -1,0 +1,8 @@
+import {act,create} from 'react-test-renderer';
+import {createElement} from 'react';
+import {expect,it,vi} from 'vitest';
+import type {CachedAccount} from '../src/services/auth';
+const{queueHomework,readHomework}=vi.hoisted(()=>({queueHomework:vi.fn(),readHomework:vi.fn()}));
+vi.mock('../src/services/homework',()=>({queueHomework,readHomework,flushHomework:vi.fn()}));
+import HomeworkUpload from '../src/components/HomeworkUpload';
+it('clears the actual file input and draft without submitting work, and allows selecting the same file again',async()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);readHomework.mockResolvedValue(null);const node={value:'selected.png',focus:vi.fn()};let r!:ReturnType<typeof create>;const account={hub:{ip:'127.0.0.1',http_port:8080},user:{id:'learner'}} as CachedAccount;await act(async()=>{r=create(createElement(HomeworkUpload,{account,assignmentId:'assignment',offline:false,archived:false,onChanged:vi.fn()}),{createNodeMock:element=>element.type==='input'?node:null});});const file=new File(['photo'],'photo.png',{type:'application/pdf'});await act(async()=>r.root.findByType('input').props.onChange({target:{files:[file]}}));expect(r.root.findAllByProps({'aria-label':'Remove selected attachment'})).toHaveLength(1);await act(async()=>r.root.findByProps({'aria-label':'Remove selected attachment'}).props.onClick());expect(node.value).toBe('');expect(r.root.findAllByProps({'aria-label':'Remove selected attachment'})).toHaveLength(0);expect(queueHomework).not.toHaveBeenCalled();await act(async()=>r.root.findByType('input').props.onChange({target:{files:[file]}}));expect(r.root.findAllByProps({'aria-label':'Remove selected attachment'})).toHaveLength(1);await act(async()=>r.unmount());vi.unstubAllGlobals();});

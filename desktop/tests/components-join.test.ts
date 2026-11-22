@@ -22,3 +22,14 @@ it('retains receipt statuses without metadata and never grants access on an unkn
   const html = renderToStaticMarkup(createElement(HomePage, { user, classrooms: [], loading: false, error: null, onRetry: noop, onOpen: noop, joinRequests: [{ classroom_id: 'r', status: 'REJECTED' }, { classroom_id: 'm', status: 'REMOVED' }, { classroom_id: 'a', status: 'ACTIVE' }] }));
   expect(html).toContain('Request not approved'); expect(html).toContain('Class access removed'); expect(html).toContain('Waiting for class details'); expect(html).not.toContain('>Open'); expect(html).not.toContain('Add a class');
 });
+it('shows saved join section and teacher before class sync, including offline', () => {
+  const props = {user, loading:false, error:null, onRetry:noop, onOpen:noop, offline:true,
+    joinRequests:[{classroom_id:'c',status:'PENDING' as const,section:'Grade 4A',teacher_name:'Ms. <Rivera>'}]};
+  for (const classrooms of [[], [classroom]]) {
+    const html=renderToStaticMarkup(createElement(HomePage,{...props,classrooms}));
+    expect(html).toContain('Ms. &lt;Rivera&gt;');
+    expect(html).not.toContain('>Open');
+    expect(html).not.toContain('SECRET');
+    expect(html).toContain(classrooms.length?'A':'Grade 4A');
+  }
+});

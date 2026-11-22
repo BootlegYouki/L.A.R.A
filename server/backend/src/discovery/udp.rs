@@ -13,7 +13,10 @@
 //! Bound to the LAN address, the packet leaves through that adapter. Payload and port are unchanged.
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddrV4};
+use std::sync::Arc;
 use std::time::Duration;
+
+use crate::services::activity::{Code, Event, Reason, Recorder, Service};
 
 use serde::Serialize;
 use tokio::net::UdpSocket;
@@ -58,7 +61,7 @@ pub async fn bind_beacon_socket(ip: Ipv4Addr) -> std::io::Result<UdpSocket> {
 /// Broadcasts until `stop` flips to `true`. Never returns an error to the caller: a classroom
 /// router that blocks broadcast must not stop the Hub from serving. A socket that cannot be opened
 /// is logged once, then silently retried, so a flaky adapter does not spam the console every 3 s.
-pub async fn run(info: BeaconInfo, mut stop: watch::Receiver<bool>) {
+pub async fn run(info: BeaconInfo, mut stop: watch::Receiver<bool>, activity: Arc<Recorder>) {
     let version = env!("CARGO_PKG_VERSION");
     tracing::info!("discovery beacon broadcasting to {BROADCAST_ADDR} every {}s", BEACON_INTERVAL.as_secs());
 
@@ -66,13 +69,18 @@ pub async fn run(info: BeaconInfo, mut stop: watch::Receiver<bool>) {
     // the PC plugged into the router after start), so the socket is re-bound when it changes.
     let mut bound: Option<(Ipv4Addr, UdpSocket)> = None;
     let mut bind_failure_logged = false;
+    let mut connection_problem = false;
     let mut ticker = tokio::time::interval(BEACON_INTERVAL);
     loop {
         tokio::select! {
             _ = ticker.tick() => {
                 // No network yet: skip this tick quietly and try again. A client cannot reach a Hub
                 // that is on no network anyway, so an address-less beacon would only mislead.
-                let Some(IpAddr::V4(ip)) = super::lan_ip() else { continue };
+                let Some(IpAddr::V4(ip)) = super::lan_ip() else {
+                    if !connection_problem { activity.record(Event::new(Code::ConnectionProblem, Service::Discovery).reason(Reason::NetworkUnavailable)); }
+                    connection_problem = true;
+                    continue;
+                };
                 if bound.as_ref().map(|(at, _)| *at) != Some(ip) {
                     bound = None;
                     match bind_beacon_socket(ip).await {
@@ -82,6 +90,8 @@ pub async fn run(info: BeaconInfo, mut stop: watch::Receiver<bool>) {
                             bind_failure_logged = false;
                         }
                         Err(e) => {
+                            if !connection_problem { activity.record(Event::new(Code::ConnectionProblem, Service::Discovery).reason(Reason::NetworkUnavailable)); }
+                            connection_problem = true;
                             if !bind_failure_logged {
                                 tracing::warn!(error = %e, %ip, "discovery beacon could not open a UDP socket on the classroom adapter; retrying every tick");
                                 bind_failure_logged = true;
@@ -106,6 +116,11 @@ pub async fn run(info: BeaconInfo, mut stop: watch::Receiver<bool>) {
                 // A dropped packet is normal (AP isolation, transient routing). Clients get the next one.
                 if let Err(e) = socket.send_to(&payload, BROADCAST_ADDR).await {
                     tracing::debug!(error = %e, "beacon packet not sent");
+                    if !connection_problem { activity.record(Event::new(Code::ConnectionProblem, Service::Discovery).reason(Reason::NetworkUnavailable)); }
+                    connection_problem = true;
+                } else if connection_problem {
+                    activity.record(Event::new(Code::ServiceRecovered, Service::Discovery));
+                    connection_problem = false;
                 }
             }
             _ = stop.changed() => {
@@ -188,7 +203,8 @@ mod tests {
         let receiver = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         socket.send_to(b"beacon", receiver.local_addr().unwrap()).await.unwrap();
         let mut buf = [0u8; 16];
-        let (len, from) = tokio::time::timeout(Duration::from_secs(5), receiver.recv_from(&mut buf)).await.unwrap().unwrap();
+        let (len, from) =
+            tokio::time::timeout(Duration::from_secs(5), receiver.recv_from(&mut buf)).await.unwrap().unwrap();
         assert_eq!(&buf[..len], b"beacon");
         assert_eq!(from, local);
     }

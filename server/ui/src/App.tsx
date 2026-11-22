@@ -54,7 +54,7 @@ export default function App() {
         {status && <Beacon status={status} t={t} />}
       </header>
 
-      <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 pt-6 pb-8">
+      <main className="hub-main mx-auto max-w-5xl px-6"><AdminUsers overview={<>
         {status && !status.running && (
           <div
             role="alert"
@@ -67,11 +67,12 @@ export default function App() {
           </div>
         )}
 
-        <section className="flex flex-col gap-3 rounded-lg border border-lara-border bg-white p-4 shadow-card">
-          <h1 className="flex items-center gap-2 text-sm leading-5 font-extrabold text-lara-ink-2">
+        <section className="flex flex-col gap-2 rounded-lg border border-lara-border bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="flex items-center gap-2 text-sm leading-5 font-extrabold text-lara-ink-2">
             <i className="ph ph-broadcast text-xl" aria-hidden="true" />
             {t.address_label}
-          </h1>
+          </h2>
+          {status?.ip && <p className="text-lg font-extrabold tabular-nums select-all">{status.ip}</p>}</div>
           {status === null ? (
             <div role="status" aria-label={t.loading} className="flex flex-col gap-4">
               <div className="skeleton h-12 w-72 rounded-md bg-lara-subtle" />
@@ -79,7 +80,6 @@ export default function App() {
             </div>
           ) : status.ip ? (
             <>
-              <p className="text-2xl font-black tracking-wide select-all">{status.ip}</p>
               {/* While stopped, nothing answers at this address, so do not send learners to it. */}
               {status.running && <p className="text-sm leading-5 font-medium text-lara-ink-2">{t.address_help}</p>}
             </>
@@ -90,7 +90,7 @@ export default function App() {
             </p>
           )}
         </section>
-        <AdminUsers />
+        </>} />
       </main>
     </div>
   );

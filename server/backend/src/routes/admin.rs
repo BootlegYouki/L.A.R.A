@@ -45,6 +45,7 @@ async fn create(State(app): State<AppState>, user: AuthUser, body: JsonBody) -> 
     let mut tx = begin_immediate(&app.db).await?;
     let created = users::insert(&mut tx, &lrn_or_id, &full_name, role, &pin_hash, app.clock.now_ms()).await?;
     tx.commit().await?;
+    app.activity.record(crate::services::activity::Event::new(crate::services::activity::Code::AccountCreated, crate::services::activity::Service::Accounts));
     Ok(Json(created))
 }
 
@@ -63,6 +64,7 @@ async fn reset_pin(
     // A reset is how the admin answers a leaked PIN, so the old sessions end with it.
     sessions::close_all(&mut tx, &id).await?;
     tx.commit().await?;
+    app.activity.record(crate::services::activity::Event::new(crate::services::activity::Code::PinReset, crate::services::activity::Service::Accounts));
     Ok(Json(json!({"success": true})))
 }
 

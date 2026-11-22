@@ -1,0 +1,21 @@
+import {act,create,type ReactTestRenderer} from 'react-test-renderer';
+import {beforeEach,expect,it,vi} from 'vitest';
+import {createElement} from 'react';
+import type {CachedAccount} from '../src/services/auth';
+const {readAssignmentWork,fetchSubmissions,publishGrade}=vi.hoisted(()=>({readAssignmentWork:vi.fn(),fetchSubmissions:vi.fn(),publishGrade:vi.fn()}));
+vi.mock('../src/services/grading',async original=>({...await original<typeof import('../src/services/grading')>(),readAssignmentWork,fetchSubmissions,publishGrade}));
+vi.mock('../src/components/CommentThread',()=>({default:()=>createElement('div',null,'private thread')}));
+import AssignmentWork from '../src/components/AssignmentWork';
+const room='11111111-1111-4111-8111-111111111111',learner='22222222-2222-4222-8222-222222222222';
+const classroom={id:room,name:'Class',section:'A',class_code:'K7M4QX',teacher_id:room};
+const account:CachedAccount={hub:{ip:'127.0.0.1',name:'Hub',http_port:8080,ws_port:8081},user:{id:room,role:'TEACHER',full_name:'Teacher',lrn_or_id:'T-1'},expires_at:9999999999999,persistent:true,classrooms:[classroom],rosters:{[room]:[{enrollment_id:learner,student_id:learner,full_name:'Ana',status:'ACTIVE'}]}};
+const assignment={id:room,title:'Activity',instructions:'Read',max_points:100,due_date:1};
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.clearAllMocks();readAssignmentWork.mockResolvedValue([]);fetchSubmissions.mockResolvedValue([]);});
+it('opens a private thread for a learner without inventing a submission or grade',async()=>{
+ let tree!:ReactTestRenderer;await act(async()=>{tree=create(createElement(AssignmentWork,{account,classroom,assignment,offline:true,onBack:vi.fn(),onChanged:vi.fn()}))});
+ const learnerButton=tree.root.findAllByType('button').find(b=>b.props.className==='work-learner control')!;
+ await act(async()=>{learnerButton.props.onClick()});
+ expect(JSON.stringify(tree.toJSON())).toContain('private thread');
+ expect(tree.root.findAllByType('input').filter(i=>i.props.inputMode==='numeric')).toHaveLength(0);
+ await act(async()=>tree.unmount());
+});

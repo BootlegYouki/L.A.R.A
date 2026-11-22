@@ -1,0 +1,14 @@
+import {createElement} from 'react';
+import {act,create} from 'react-test-renderer';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import type {CachedAccount} from '../src/services/auth';
+const {invoke}=vi.hoisted(()=>({invoke:vi.fn()}));vi.mock('@tauri-apps/api/core',()=>({invoke}));
+import AttachmentMedia from '../src/components/AttachmentMedia';
+import {clearMediaCache} from '../src/services/mediaCache';
+const account={hub:{name:'Hub',ip:'127.0.0.1',http_port:8080,ws_port:8081},user:{id:'teacher'}} as CachedAccount;
+beforeEach(async()=>{clearMediaCache();await Promise.resolve();vi.clearAllMocks();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);invoke.mockResolvedValue({id:'lease',url:'http://127.0.0.1:1234/opaque'});});
+afterEach(()=>{clearMediaCache();vi.useRealTimers();});
+it('renders raster preview and releases its listener after the idle cache expires',async()=>{vi.useFakeTimers();let r!:ReturnType<typeof create>;await act(async()=>{r=create(createElement(AttachmentMedia,{account,id:'material',title:'Photo',mime:'image/png',offline:false,children:'file'}));});expect(r.root.findByType('img').props.src).toContain('/opaque');await act(async()=>r.unmount());expect(invoke).not.toHaveBeenCalledWith('close_material_preview',{id:'lease'});await vi.advanceTimersByTimeAsync(300000);expect(invoke).toHaveBeenCalledWith('close_material_preview',{id:'lease'});});
+it('does not request offline or active content previews',async()=>{for(const props of [{mime:'image/png',offline:true},{mime:'image/svg+xml',offline:false}]){let r!:ReturnType<typeof create>;await act(async()=>{r=create(createElement(AttachmentMedia,{account,id:'material',title:'Photo',children:'file',...props}));});expect(r.toJSON()).toBe('file');await act(async()=>r.unmount());}expect(invoke).not.toHaveBeenCalled();});
+it('shows video controls without autoplay or eager download and falls back on failure',async()=>{let r!:ReturnType<typeof create>;await act(async()=>{r=create(createElement(AttachmentMedia,{account,id:'material',title:'Clip',mime:'video/mp4',offline:false,children:'file'}));});const video=r.root.findByType('video');expect(video.props.controls).toBe(true);expect(video.props.preload).toBe('none');expect(video.props.autoPlay).toBeUndefined();await act(async()=>video.props.onError());expect(r.toJSON()).toBe('file');await act(async()=>r.unmount());});
+it('uses native media detection when synced MIME metadata is absent',async()=>{invoke.mockResolvedValue({id:'lease',url:'http://127.0.0.1:1234/opaque',mime:'video/mp4'});let r!:ReturnType<typeof create>;await act(async()=>{r=create(createElement(AttachmentMedia,{account,id:'material',title:'Clip',offline:false,children:'file'}));});expect(r.root.findByType('video').props.src).toContain('/opaque');await act(async()=>r.unmount());});

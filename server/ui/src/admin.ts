@@ -13,7 +13,7 @@ export class HubError extends Error {
   }
 }
 
-export async function request<T>(path: string, token?: string, body?: unknown): Promise<T> {
+export async function request<T>(path: string, token?: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`http://127.0.0.1:8080${path}`, {
@@ -23,7 +23,7 @@ export async function request<T>(path: string, token?: string, body?: unknown): 
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      signal: AbortSignal.timeout(5000),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000),
       cache: 'no-store',
     });
   } catch {

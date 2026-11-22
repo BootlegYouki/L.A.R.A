@@ -8,6 +8,18 @@ import type { AuthUser, Classroom } from '../src/services/auth';
 const user: AuthUser = { id: 'u', lrn_or_id: 'T-0001', full_name: 'Teacher', role: 'TEACHER' };
 const classroom: Classroom = { id: 'c', name: '<script>bad()</script>', section: 'A', class_code: 'SECRET', teacher_id: 'u' };
 const noop = () => {};
+it('keeps sidebar order stable across refreshed snapshots and class selection without mutating data', () => {
+  const rooms = [
+    { ...classroom, id: 'z', name: 'Science', section: 'B' },
+    { ...classroom, id: 'a', name: 'Art', section: 'A' },
+    { ...classroom, id: 's', name: 'Science', section: 'A' },
+  ];
+  const labels = (classes: Classroom[], selectedId: string) => renderToStaticMarkup(createElement(Sidebar, { user, classrooms: classes, selectedId, onHome: noop, onOpen: noop })).match(/<strong>.*?<\/strong><small>.*?<\/small>/g);
+  const expected = ['<strong>Art</strong><small>A</small>', '<strong>Science</strong><small>A</small>', '<strong>Science</strong><small>B</small>'];
+  expect(labels(rooms, 'z')).toEqual(expected);
+  expect(labels([...rooms].reverse(), 'a')).toEqual(expected);
+  expect(rooms.map(room => room.id)).toEqual(['z', 'a', 's']);
+});
 const home = (props = {}) => renderToStaticMarkup(createElement(HomePage, { user, classrooms: [], loading: false, error: null, onRetry: noop, onOpen: noop, ...props }));
 it('preserves escaped cached cards during refresh and error without class codes or fictional progress', () => {
   const html = home({ classrooms: [classroom], loading: true, error: 'Refresh failed' });
@@ -25,6 +37,13 @@ it('keeps loading, failed and empty states distinct with disabled role actions',
   expect(home()).toMatch(/disabled=""[^>]*>.*Create class/s);
   expect(home({ user: { ...user, role: 'STUDENT' } })).toContain('Join class');
 });
+it('shows decorative owl art and keeps Home empty actions connected to the existing callbacks', () => {
+  const html = home({ onCreate: noop });
+  expect(html).toContain('class="empty-state empty-home"');
+  expect(html).toContain('alt=""');
+  expect(html).toMatch(/<button[^>]*>.*Create class/s);
+  expect(home({ user: { ...user, role: 'STUDENT' }, onJoin: noop })).toMatch(/<button[^>]*>.*Join class/s);
+});
 it('disables classroom retries during the server cooldown while keeping cached cards', () => {
   const html = home({ classrooms: [classroom], error: 'Wait', retryAfter: 17 });
   expect(html).toContain('17 seconds');
@@ -34,7 +53,8 @@ it('disables classroom retries during the server cooldown while keeping cached c
 it('uses role labels and current navigation without class codes', () => {
   const html = renderToStaticMarkup(createElement(Sidebar, { user, classrooms: [classroom], onHome: noop, onOpen: noop }));
   expect(html).toContain('Teaching'); expect(html).toContain('aria-current="page"'); expect(html).not.toContain('SECRET');
-  expect(renderToStaticMarkup(createElement(Sidebar, { user: { ...user, role: 'STUDENT' }, classrooms: [], onHome: noop, onOpen: noop }))).toContain('Enrolled');
+  expect(renderToStaticMarkup(createElement(Sidebar, { user: { ...user, role: 'STUDENT' }, classrooms: [], onHome: noop, onOpen: noop }))).not.toContain('Enrolled');
+  expect(renderToStaticMarkup(createElement(Sidebar, { user, classrooms: [], onHome: noop, onOpen: noop }))).not.toContain('Teaching');
 });
 it('masks the PIN and disables submission until a Hub is selected', () => {
   const html = renderToStaticMarkup(createElement(LoginPage, { hub: null, busy: false, error: null, retryAfter: 9, onSubmit: noop }));

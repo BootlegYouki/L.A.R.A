@@ -141,6 +141,7 @@ async function main() {
     assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), ['lara:admin-configured']);
     assert.equal(await page.evaluate(() => sessionStorage.length), 0);
     await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.getByRole('dialog', { name: 'Sign out of the Hub?' }).getByRole('button', { name: 'Sign out', exact: true }).click();
     await visible(page.getByRole('heading', { name: 'Admin sign in' }));
     await page.reload();
     await visible(page.getByRole('heading', { name: 'Admin sign in' }));

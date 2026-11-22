@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { HubError, request, setupCompleted, type AuthSession, type User } from '../admin';
 import { useStrings } from '../i18n';
+import ActivityLogs from './ActivityLogs';
+import Monitoring from './Monitoring';
+const ImportLearners = lazy(() => import('./ImportLearners'));
 
 function Dialog({ title, close, children, busy = false }: {
   title: string; close: () => void; children: ReactNode; busy?: boolean;
@@ -24,10 +27,11 @@ function Dialog({ title, close, children, busy = false }: {
   </dialog>;
 }
 
-function PinInput({ value, change }: { value: string; change: (value: string) => void }) {
+function PinInput({ value, change, reveal = false }: { value: string; change: (value: string) => void; reveal?: boolean }) {
   const { t } = useStrings();
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const [lettersRefused, setLettersRefused] = useState(false);
+  const [visible, setVisible] = useState(false);
   function digit(index: number, next: string) {
     const digits = value.padEnd(6, ' ').split('');
     digits[index] = next || ' ';
@@ -36,7 +40,7 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
   return <fieldset className="flex flex-col gap-2"><legend className="mb-2 font-extrabold">{t.admin_pin}</legend>
     <div className="flex gap-2">{[0, 1, 2, 3, 4, 5].map(index => <input key={index} ref={node => { inputs.current[index] = node; }}
       className="admin-pin-digit" aria-label={t.admin_pin_digit.replace('{digit}', String(index + 1))}
-      aria-describedby="pin-help" type="password" inputMode="numeric" pattern="[0-9]" maxLength={1}
+      aria-describedby="pin-help" type={visible ? 'text' : 'password'} inputMode="numeric" pattern="[0-9]" maxLength={1}
       autoComplete="off" value={value[index]?.trim() ?? ''}
       onChange={event => {
         const next = event.target.value;
@@ -58,12 +62,19 @@ function PinInput({ value, change }: { value: string; change: (value: string) =>
     <p id="pin-help" className="text-sm text-lara-ink-2" aria-live="polite">
       {lettersRefused ? t.admin_pin_digits_only : t.admin_pin_help}
     </p>
+    {reveal && <button type="button" className="auth-pin-visibility" aria-pressed={visible} onClick={() => setVisible(current => !current)}>
+      <i className={`ph ${visible ? 'ph-eye-slash' : 'ph-eye'}`} aria-hidden="true" />{visible ? t.admin_hide_pin : t.admin_show_pin}
+    </button>}
   </fieldset>;
 }
 
-export default function AdminUsers() {
+export default function AdminUsers({ overview }: { overview: ReactNode }) {
   const { t } = useStrings();
+  const [importing, setImporting] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [session, setSession] = useState<AuthSession | null>(null);
+  const currentSession = useRef(session);
+  currentSession.current = session;
   const [setup, setSetup] = useState(() => !setupCompleted());
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +88,21 @@ export default function AdminUsers() {
   const [pin, setPin] = useState('');
   const [id, setId] = useState('');
   const [role, setRole] = useState<'TEACHER' | 'STUDENT'>('TEACHER');
+  const [page, setPage] = useState<'overview' | 'accounts' | 'activity'>('overview');
+  const [accountSearch, setAccountSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [accountPage, setAccountPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const tableScroll = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!session) { setConfirmSignOut(false); setImporting(false); setAccountSearch(''); setRoleFilter(''); setAccountPage(1); setPageSize(10); setPage('overview'); } }, [session]);
+  const visibleUsers = users.filter(user => (!roleFilter || user.role === roleFilter)
+    && `${user.full_name} ${user.lrn_or_id}`.toLowerCase().includes(accountSearch.trim().toLowerCase()));
+  const pageCount = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
+  const currentAccountPage = Math.min(accountPage, pageCount);
+  const pageStart = (currentAccountPage - 1) * pageSize;
+  const pagedUsers = visibleUsers.slice(pageStart, pageStart + pageSize);
+  useEffect(() => { setAccountPage(current => Math.min(current, pageCount)); }, [pageCount]);
+  useEffect(() => { tableScroll.current?.scrollTo({ top: 0 }); }, [currentAccountPage, pageSize, accountSearch, roleFilter]);
 
   const fail = useCallback((cause: unknown) => {
     const code = cause instanceof HubError ? cause.code : 'UNKNOWN';
@@ -99,9 +125,10 @@ export default function AdminUsers() {
     if (!session) return;
     try {
       const data = await request<User[]>('/api/admin/users', session.token);
+      if (currentSession.current?.token !== session.token) return;
       setUsers(data); setOffline(false);
-    } catch (cause) { fail(cause); }
-    finally { setLoading(false); }
+    } catch (cause) { if (currentSession.current?.token === session.token) fail(cause); }
+    finally { if (currentSession.current?.token === session.token) setLoading(false); }
   }, [session, fail]);
 
   useEffect(() => {
@@ -185,47 +212,83 @@ export default function AdminUsers() {
   </>;
 
   if (!session) return <section className="admin-auth" aria-labelledby="admin-title">
-    <h1 id="admin-title" className="text-2xl font-black">{setup ? t.admin_setup_title : t.admin_login_title}</h1>
-    <p className="text-sm text-lara-ink-2">{setup ? t.admin_setup_help : t.admin_login_help}</p>
-    <form className="flex flex-col gap-4" onSubmit={authenticate}>
-      <fieldset disabled={busy} className="flex flex-col gap-4">
+    <div className="auth-heading"><h1 id="admin-title">{setup ? t.admin_setup_title : t.admin_login_title}</h1>
+    <p>{setup ? t.admin_setup_help : t.admin_login_help}</p></div>
+    <form onSubmit={authenticate}>
+      <fieldset disabled={busy} className="auth-fields">
         {setup && <label className="admin-label">{t.admin_full_name}<input name="full_name" required value={name} onChange={e => setName(e.target.value)} /></label>}
-        {pinInput}
+        <PinInput value={pin} change={setPin} reveal />
         {feedback}
-        <button className="admin-primary" type="submit">{busy ? t.admin_working : setup ? t.admin_setup_action : t.admin_login_action}</button>
-        <button type="button" className="admin-secondary" onClick={() => { setSetup(!setup); setPin(''); setError(''); setNotice(''); }}>
-          {setup ? t.admin_existing_action : t.admin_first_run_action}
-        </button>
+        <button className="admin-primary auth-submit" type="submit">{busy ? t.admin_signing_in : setup ? t.admin_setup_action : t.admin_login_action}</button>
+        {setup && <button type="button" className="admin-secondary" onClick={() => { setSetup(false); setPin(''); setError(''); setNotice(''); }}>
+          {t.admin_existing_action}
+        </button>}
       </fieldset>
     </form>
   </section>;
 
-  return <section className="flex flex-col gap-4" aria-labelledby="admin-title">
+  return <div className={`hub-shell${page === 'accounts' ? ' hub-shell-accounts' : ''}`}><aside className="hub-sidebar"><nav aria-label={t.console_navigation} className="flex flex-wrap gap-2 min-[900px]:flex-col">
+    {([['overview', 'ph-squares-four', t.console_overview], ['accounts', 'ph-users', t.admin_accounts], ['activity', 'ph-list-dashes', t.activity_title]] as const).map(([key, icon, label]) => <button key={key} type="button" className={`hub-nav ${page === key ? 'hub-nav-active' : ''}`} aria-current={page === key ? 'page' : undefined} onClick={() => setPage(key)}><i className={`ph ${icon} text-xl`} aria-hidden="true" />{label}</button>)}
+    </nav><button type="button" className="admin-secondary mt-4" disabled={busy} onClick={() => setConfirmSignOut(true)}><i className="ph ph-sign-out" aria-hidden="true" />{t.admin_sign_out}</button></aside>
+    {confirmSignOut && <Dialog title={t.admin_sign_out_title} close={() => setConfirmSignOut(false)} busy={busy}>
+      <p className="mb-6 text-lara-ink-2">{t.admin_sign_out_help}</p>
+      <div className="flex flex-wrap justify-end gap-2">
+        <button type="button" className="admin-secondary" autoFocus disabled={busy} onClick={() => setConfirmSignOut(false)}>{t.admin_cancel}</button>
+        <button type="button" className="admin-primary" disabled={busy} onClick={() => void signOut()}>{busy ? t.admin_signing_out : t.admin_sign_out}</button>
+      </div>
+    </Dialog>}
+    <div className="hub-content min-w-0"><div hidden={page !== 'overview'} className="flex flex-col gap-4"><h1 className="text-2xl font-black">{t.console_overview}</h1>{overview}<Monitoring token={session.token} expired={() => fail(new HubError('UNAUTHORIZED', 401))} /></div>
+    <div hidden={page !== 'activity'}><ActivityLogs token={session.token} active={page === 'activity'} expired={() => fail(new HubError('UNAUTHORIZED', 401))} /></div>
+    <section hidden={page !== 'accounts'} className="accounts-page flex flex-col" aria-labelledby="admin-title">
+    <div className="accounts-controls flex flex-col gap-4">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 id="admin-title" className="text-2xl font-black">{t.admin_accounts}</h1><p className="text-sm text-lara-ink-2">{t.admin_accounts_help}</p></div>
-      <button type="button" className="admin-secondary" disabled={busy} onClick={() => void signOut()}>{t.admin_sign_out}</button>
     </div>
     {!form && feedback}
+    <div className="grid gap-3 sm:grid-cols-2"><label className="admin-label">{t.accounts_search}<input type="search" value={accountSearch} onChange={event => { setAccountSearch(event.target.value); setAccountPage(1); }} /></label><label className="admin-label">{t.admin_role}<select value={roleFilter} onChange={event => { setRoleFilter(event.target.value); setAccountPage(1); }}><option value="">{t.accounts_all_roles}</option><option value="TEACHER">{t.admin_role_teacher}</option><option value="STUDENT">{t.admin_role_learner}</option></select></label></div>
     <div className="flex flex-wrap gap-2">
       <button type="button" className="admin-primary" disabled={offline || busy} onClick={() => {
         setError(''); setPin(''); setName(''); setId(''); setRole('TEACHER'); setForm('create');
       }}><i className="ph ph-user-plus" aria-hidden="true" />{t.admin_create}</button>
+      <button type="button" className="admin-secondary" disabled={offline || busy} onClick={() => setImporting(true)}>
+        <i className="ph ph-upload-simple" aria-hidden="true" />{t.import_title}
+      </button>
       <button type="button" className="admin-secondary" onClick={() => { setLoading(true); void refresh(); }}>{t.admin_refresh}</button>
+    </div>
     </div>
     {loading && users.length === 0 ? <div role="status" aria-label={t.admin_loading} className="flex flex-col gap-3 rounded-lg bg-white p-6">
       <p>{t.admin_loading}</p>{[0, 1, 2].map(n => <div key={n} className="skeleton h-control rounded-md bg-lara-border" />)}
     </div> : users.length === 0 ? <div className="rounded-lg border border-lara-border bg-white p-8">
       <h2 className="text-xl font-black">{t.admin_empty_title}</h2><p>{t.admin_empty_body}</p>
-    </div> : <div className="overflow-x-auto rounded-lg border border-lara-border bg-white">
-      <table className="admin-table"><caption className="sr-only">{t.admin_accounts}</caption>
+    </div> : <div className="accounts-card rounded-lg border border-lara-border bg-white">
+      <div ref={tableScroll} className="accounts-table-scroll" role="region" aria-label={t.accounts_table_region} tabIndex={0}><table className="admin-table" id="accounts-table"><caption className="sr-only">{t.admin_accounts}</caption>
         <thead><tr><th scope="col">{t.admin_full_name}</th><th scope="col">{t.admin_id}</th><th scope="col">{t.admin_role}</th><th scope="col">{t.admin_action}</th></tr></thead>
-        <tbody>{users.map(user => <tr key={user.id}><th scope="row">{user.full_name}</th><td>{user.lrn_or_id}</td>
+        <tbody>{visibleUsers.length === 0 && <tr><td colSpan={4}>{t.accounts_no_matches}</td></tr>}{pagedUsers.map(user => <tr key={user.id}><th scope="row">{user.full_name}</th><td>{user.lrn_or_id}</td>
           <td>{user.role === 'ADMIN' ? t.admin_role_admin : user.role === 'TEACHER' ? t.admin_role_teacher : t.admin_role_learner}</td>
           <td>{user.role !== 'ADMIN' && <button className="admin-secondary" type="button" disabled={offline || busy}
             aria-label={`${t.admin_reset} ${user.full_name}`} onClick={() => { setPin(''); setError(''); setForm(user); }}>{t.admin_reset}</button>}</td>
         </tr>)}</tbody>
-      </table>
+      </table></div>
+      <nav aria-label={t.accounts_pagination} className="accounts-pagination flex flex-wrap items-center justify-between">
+        <p role="status" className="text-sm text-lara-ink-2">{t.accounts_range
+          .replace('{start}', String(visibleUsers.length ? pageStart + 1 : 0))
+          .replace('{end}', String(Math.min(pageStart + pageSize, visibleUsers.length)))
+          .replace('{total}', String(visibleUsers.length))}</p>
+        <label className="admin-label flex-row items-center text-sm">{t.accounts_rows_per_page}
+          <select aria-controls="accounts-table" className="!min-h-control !w-auto" value={pageSize} onChange={event => { setPageSize(Number(event.target.value)); setAccountPage(1); }}>
+            {[10, 25, 50].map(size => <option key={size} value={size}>{size}</option>)}
+          </select>
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="admin-secondary" aria-controls="accounts-table" disabled={currentAccountPage === 1} onClick={() => setAccountPage(currentAccountPage - 1)}><i className="ph ph-caret-left" aria-hidden="true" />{t.accounts_previous}</button>
+          <span className="text-sm text-lara-ink-2">{t.accounts_page.replace('{page}', String(currentAccountPage)).replace('{pages}', String(pageCount))}</span>
+          <button type="button" className="admin-secondary" aria-controls="accounts-table" disabled={currentAccountPage === pageCount} onClick={() => setAccountPage(currentAccountPage + 1)}>{t.accounts_next}<i className="ph ph-caret-right" aria-hidden="true" /></button>
+        </div>
+      </nav>
     </div>}
+    {importing && <Suspense fallback={<p role="status">{t.loading}</p>}>
+      <ImportLearners session={session} users={users} close={() => setImporting(false)} refresh={refresh} fail={fail} />
+    </Suspense>}
     {form && <Dialog title={form === 'create' ? t.admin_create : t.admin_reset} close={closeForm} busy={busy}>
       <form onSubmit={save} className="flex flex-col gap-4"><fieldset disabled={busy} className="flex flex-col gap-4">
         {form === 'create' ? <>
@@ -248,5 +311,5 @@ export default function AdminUsers() {
       <p className="mb-6 text-3xl font-black tracking-widest">{receipt.pin}</p>
       <button className="admin-primary" type="button" onClick={() => setReceipt(null)}>{t.admin_pin_dismiss}</button>
     </Dialog>}
-  </section>;
+  </section></div></div>;
 }

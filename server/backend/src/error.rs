@@ -8,6 +8,8 @@ use serde::Serialize;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ErrorCode {
     BadRequest,
+    ActivityLogUnavailable,
+    ActivityLogReset,
     Unauthorized,
     Forbidden,
     NotFound,
@@ -50,6 +52,8 @@ impl ErrorCode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::BadRequest => "BAD_REQUEST",
+            Self::ActivityLogUnavailable => "ACTIVITY_LOG_UNAVAILABLE",
+            Self::ActivityLogReset => "ACTIVITY_LOG_RESET",
             Self::Unauthorized => "UNAUTHORIZED",
             Self::Forbidden => "FORBIDDEN",
             Self::NotFound => "NOT_FOUND",

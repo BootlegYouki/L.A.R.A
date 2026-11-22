@@ -627,6 +627,9 @@ def admin_activity_logs(req):
     search = query.get("q", "").strip().replace("_", " ").casefold()
     selected = []
     for item in kept:
+        if item["event_code"] == "HTTP_REQUEST" and (item["details"].get("endpoint") == "/api/admin/activity-logs"
+                or (item["details"].get("endpoint") == "/api/admin/users" and item["details"].get("http_method") in ("GET", "OPTIONS"))):
+            continue
         if item["seq"] > high_water:
             continue
         if "before_seq" in numbers and item["seq"] >= numbers["before_seq"]:
@@ -639,7 +642,7 @@ def admin_activity_logs(req):
             continue
         if "severity" in query and item["severity"] != query["severity"]:
             continue
-        words = " ".join(str(item[key]) for key in ("event_code", "service", "result")) + " " + item["details"].get("reason", "")
+        words = " ".join(str(item[key]) for key in ("event_code", "service", "result")) + " " + " ".join(str(item["details"].get(key, "")) for key in ("reason", "http_method", "endpoint", "status_code"))
         if search not in words.replace("_", " ").casefold():
             continue
         selected.append(item)
