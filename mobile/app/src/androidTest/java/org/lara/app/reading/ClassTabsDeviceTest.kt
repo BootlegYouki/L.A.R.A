@@ -89,6 +89,74 @@ class ClassTabsDeviceTest {
         } finally { bitmap.recycle() }
     }
 
+    @Test fun systemBackReturnsFromAnAttachmentToItsParent() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity -> activity.setContent {
+                LaraTheme {
+                    ClassScreen {
+                        val overlay = requireNotNull(LocalFullScreenOverlay.current)
+                        var showAssignment by remember { mutableStateOf(false) }
+                        var showAttachment by remember { mutableStateOf(false) }
+                        val page: (@Composable () -> Unit)? = when {
+                            showAttachment -> ({
+                                androidx.activity.compose.BackHandler { showAttachment = false }
+                                androidx.compose.material3.Text("Attachment fixture")
+                            })
+                            showAssignment -> ({
+                                androidx.activity.compose.BackHandler { showAssignment = false }
+                                androidx.compose.material3.Button(onClick = { showAttachment = true }) {
+                                    androidx.compose.material3.Text("Open attachment fixture")
+                                }
+                            })
+                            else -> null
+                        }
+                        SideEffect { overlay.value = page }
+                        androidx.compose.material3.Button(onClick = { showAssignment = true }) {
+                            androidx.compose.material3.Text("Open assignment fixture")
+                        }
+                    }
+                }
+            } }
+            click("Open assignment fixture")
+            click("Open attachment fixture")
+            waitFor("Attachment fixture")
+            assertTrue(instrumentation.uiAutomation.performGlobalAction(
+                android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK,
+            ))
+            waitFor("Open attachment fixture")
+            assertFalse(nodes().any { it.text?.toString() == "Attachment fixture" })
+        }
+    }
+
+    @Test fun switchingTabsDoesNotRestoreGrades() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity -> activity.setContent {
+                LaraTheme {
+                    ClassScreen {
+                        org.lara.app.ui.navigation.TeacherNavGraph(
+                            state = org.lara.app.ui.navigation.ShellState(org.lara.app.ui.navigation.ShellRole.TEACHER),
+                            content = { destination ->
+                                androidx.compose.material3.Text("Screen ${destination.name}")
+                            },
+                            grades = { androidx.compose.material3.Text("Gradebook fixture") },
+                        )
+                    }
+                }
+            } }
+            waitFor("Screen STREAM")
+            click("Class actions")
+            click("Grades")
+            waitFor("Gradebook fixture")
+            click("People")
+            waitFor("Screen PEOPLE")
+            click("Classwork")
+            waitFor("Screen CLASSWORK")
+            click("Stream")
+            waitFor("Screen STREAM")
+            assertFalse(nodes().any { it.text?.toString() == "Gradebook fixture" })
+        }
+    }
+
     @Test fun liveClassTabs(): Unit = runBlocking {
         assumeTrue(InstrumentationRegistry.getArguments().getString("tabsHub") == "true")
         check(context.packageName == "org.lara.app.group3")

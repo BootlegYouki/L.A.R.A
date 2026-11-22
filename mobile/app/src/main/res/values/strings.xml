@@ -470,7 +470,7 @@
     <string name="parity_grades_empty">No enrolled learners yet.</string>
     <string name="parity_grades_no_work">No assignments or closed quizzes yet.</string>
     <string name="parity_learner">Learner</string>
-    <string name="parity_grade_column">%1$s (%2$d points)</string>
+    <string name="parity_grade_points">Out of %1$d</string>
     <string name="parity_grade_missing">—</string>
     <string name="parity_upload_uncertain">The Hub may have received this upload.</string>
     <string name="parity_upload_dismiss">Dismiss upload</string>

@@ -204,15 +204,28 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     val assignment = work.assignments.find { it.id == id }
     val material = work.materials.find { it.id == id }
     val topic = work.topics.find { it.id == id }
-    var order by rememberSaveable { mutableStateOf(topic?.orderIndex?.toString() ?: "0") }
+    val initialOrder = topic?.orderIndex?.toString() ?: "0"
+    val initialTitle = assignment?.title ?: material?.title ?: topic?.name.orEmpty()
+    val initialInstructions = assignment?.instructions.orEmpty()
+    val initialPoints = assignment?.maxPoints?.toString() ?: "100"
+    val initialDue = rememberSaveable {
+        assignment?.dueDate ?: Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 7)
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+        }.timeInMillis
+    }
+    val initialLate = assignment?.allowLate ?: false
+    val initialTopic = assignment?.topicId ?: material?.topicId
+    var order by rememberSaveable { mutableStateOf(initialOrder) }
     var worksheet by rememberSaveable { mutableStateOf(false) }
-    var title by rememberSaveable { mutableStateOf(assignment?.title ?: material?.title ?: topic?.name.orEmpty()) }
-    var instructions by rememberSaveable { mutableStateOf(assignment?.instructions.orEmpty()) }
+    var title by rememberSaveable { mutableStateOf(initialTitle) }
+    var instructions by rememberSaveable { mutableStateOf(initialInstructions) }
     var addingLink by rememberSaveable { mutableStateOf(false) }
-    var points by rememberSaveable { mutableStateOf(assignment?.maxPoints?.toString() ?: "100") }
-    var due by rememberSaveable { mutableLongStateOf(assignment?.dueDate ?: Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 7); set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59) }.timeInMillis) }
-    var late by rememberSaveable { mutableStateOf(assignment?.allowLate ?: false) }
-    var topicId by rememberSaveable { mutableStateOf(assignment?.topicId ?: material?.topicId) }
+    var points by rememberSaveable { mutableStateOf(initialPoints) }
+    var due by rememberSaveable { mutableLongStateOf(initialDue) }
+    var late by rememberSaveable { mutableStateOf(initialLate) }
+    var topicId by rememberSaveable { mutableStateOf(initialTopic) }
     var files by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
     var fileNames by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
     val pickerContext = LocalContext.current
@@ -220,19 +233,32 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     var attach by rememberSaveable { mutableStateOf<String?>(null) }
     var discard by remember { mutableStateOf(false) }
     var removeAttachment by remember { mutableStateOf<String?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+    fun selectFiles(uris: List<android.net.Uri>, replace: Boolean) {
         pickerScope.launch {
             val names = withContext(Dispatchers.IO) { uris.map { uri ->
                 runCatching { pickerContext.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
                     if (it.moveToFirst()) it.getString(0) else null
                 } }.getOrNull()
             } }
+            if (replace) {
+                files = arrayListOf()
+                fileNames = arrayListOf()
+            }
             uris.forEachIndexed { index, uri -> if (uri.toString() !in files) {
                 files = ArrayList(files + uri.toString())
                 fileNames = ArrayList(fileNames + names[index].orEmpty())
             } }
         }
     }
+    val assignmentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        selectFiles(uris, replace = false)
+    }
+    val materialPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) selectFiles(listOf(uri), replace = true)
+    }
+    val hasChanges = title != initialTitle || instructions != initialInstructions || points != initialPoints ||
+        due != initialDue || late != initialLate || topicId != initialTopic || order != initialOrder ||
+        worksheet || attach != null || files.isNotEmpty()
     val isAssignment = kind == "assignments"
     val isTopic = kind == "topics"
     val newMaterial = !isTopic && !isAssignment && id == null
@@ -246,7 +272,7 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
             newMaterial && !reachable -> R.string.material_queue_upload
             else -> R.string.author_save
         }), enabled = canSave,
-        canDismiss = !state.busy, onDismiss = { discard = true }, onAction = {
+        canDismiss = !state.busy, onDismiss = { if (hasChanges) discard = true else onClose() }, onAction = {
             if (isAssignment) model.assignment(classroom.id, id, AssignmentDraft(title, instructions, requireNotNull(points.toLongOrNull()), due, late, topicId), files)
             else model.run {
                 when {
@@ -288,8 +314,13 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
                     }
                 }
             }
-            if (isAssignment || id == null) TextButton(onClick = { picker.launch(if (kind == "video") arrayOf("video/mp4", "video/webm") else arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/*")) },
-                enabled = !state.busy, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.author_add_attachment)) }
+            if (isAssignment || id == null) TextButton(onClick = {
+                val types = if (kind == "video") arrayOf("video/mp4", "video/webm")
+                else arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/*")
+                if (isAssignment) assignmentPicker.launch(types) else materialPicker.launch(types)
+            }, enabled = !state.busy, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                Text(stringResource(R.string.author_add_attachment))
+            }
             if (!isAssignment && id == null) Text(stringResource(R.string.author_one_file), color = LaraColors.TextSecondary)
         }
         if (isAssignment) {

@@ -6,7 +6,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,7 +100,7 @@ internal fun AnnouncementAttachmentPreview(container: AppContainer, userId: Stri
                         CircularProgressIndicator(Modifier.size(28.dp), color = LaraColors.PrimaryDark, strokeWidth = 2.dp)
                     }
                 }
-                video -> InlineVideoPreview(container, userId, material, open)
+                video -> InlineVideoPreview(container, userId, material)
             }
             TextButton(onClick = open, modifier = Modifier.heightIn(min = org.lara.app.ui.theme.MinTouchTarget)) {
                 Text(material.title, maxLines = 2)
@@ -166,7 +165,7 @@ private fun ExistingAttachmentCard(material: Material, open: () -> Unit) {
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-private fun InlineVideoPreview(container: AppContainer, userId: String, material: Material, open: () -> Unit) {
+private fun InlineVideoPreview(container: AppContainer, userId: String, material: Material) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val id = material.id
     var started by remember(id, userId) { mutableStateOf(false) }
@@ -181,12 +180,16 @@ private fun InlineVideoPreview(container: AppContainer, userId: String, material
         catch (error: CancellationException) { throw error }
         catch (_: Exception) { failed = true; null }
     }
-    if (failed) { ExistingAttachmentCard(material, open); return }
+    if (failed) {
+        Text(stringResource(R.string.video_invalid), Modifier.padding(LaraSpacing.S3), color = LaraColors.TextSecondary)
+        return
+    }
     if (!started) {
-        Box(Modifier.fillMaxWidth().height(112.dp), contentAlignment = Alignment.Center) {
-            ExistingAttachmentCard(material) { started = true }
-            IconButton(onClick = { started = true }, modifier = Modifier.size(56.dp)) {
-                Icon(painterResource(R.drawable.ic_play), stringResource(R.string.video_play), tint = LaraColors.PrimaryDark)
+        Surface(color = LaraColors.SurfaceSubtle, shape = LaraShapes.small) {
+            Box(Modifier.fillMaxWidth().height(112.dp), contentAlignment = Alignment.Center) {
+                FilledTonalIconButton(onClick = { started = true }, modifier = Modifier.size(MinTouchTarget)) {
+                    Icon(painterResource(R.drawable.ic_play), stringResource(R.string.video_play), tint = LaraColors.PrimaryDark)
+                }
             }
         }
         return
@@ -221,7 +224,7 @@ private fun InlineVideoPreview(container: AppContainer, userId: String, material
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) start()
         onDispose { lifecycle.removeObserver(observer); stop() }
     }
-    Box(Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 260.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = open), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 260.dp).clip(LaraShapes.small), contentAlignment = Alignment.Center) {
         AndroidView(factory = { PlayerView(it).apply { useController = true; resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT } },
             update = { it.player = player }, modifier = Modifier.fillMaxSize())
         if (source == null) CircularProgressIndicator(Modifier.size(28.dp), color = LaraColors.PrimaryDark, strokeWidth = 2.dp)

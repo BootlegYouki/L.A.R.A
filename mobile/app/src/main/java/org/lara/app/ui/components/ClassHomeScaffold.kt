@@ -2,7 +2,11 @@ package org.lara.app.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
@@ -149,7 +153,7 @@ fun ClassHomeScaffold(
             else CompositionLocalProvider(LocalOpenDrawer provides { scope.launch { drawer.open() } }, LocalFullScreenOverlay provides overlay) { content(insets) }
         }
     }
-    overlay.value?.let { page -> Box(Modifier.fillMaxSize()) { page() } }
+    overlay.value?.let { page -> ClassroomOverlay(page) }
     }
     if (adding) ModalBottomSheet(onDismissRequest = { adding = false }, containerColor = LaraColors.Surface,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -230,7 +234,23 @@ fun ClassScreen(content: @Composable () -> Unit) {
     val overlay = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
     Box(Modifier.fillMaxSize().background(LaraColors.Canvas)) {
         CompositionLocalProvider(LocalFullScreenOverlay provides overlay) { content() }
-        overlay.value?.let { page -> Box(Modifier.fillMaxSize()) { page() } }
+        overlay.value?.let { page -> ClassroomOverlay(page) }
+    }
+}
+
+@Composable
+private fun ClassroomOverlay(page: @Composable () -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val owner = remember(lifecycleOwner) {
+        object : OnBackPressedDispatcherOwner {
+            override val lifecycle = lifecycleOwner.lifecycle
+            override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        }
+    }
+    // The overlay is outside the tab NavHost and receives Back before the tab stack.
+    BackHandler { owner.onBackPressedDispatcher.onBackPressed() }
+    CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides owner) {
+        Box(Modifier.fillMaxSize()) { page() }
     }
 }
 

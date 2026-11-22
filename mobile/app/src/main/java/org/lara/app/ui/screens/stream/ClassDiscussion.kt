@@ -1,5 +1,6 @@
 package org.lara.app.ui.screens.stream
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,7 @@ import java.util.Date
 internal fun ClassDiscussion(container: AppContainer, userId: String, post: Announcement,
     readOnly: Boolean, reload: suspend () -> Unit, back: () -> Unit,
     attachmentContent: @Composable () -> Unit) {
+    BackHandler(onBack = back)
     val scope = rememberCoroutineScope()
     val flow = remember(container, post.id) { container.stream.comments(post.id, scope) }
     val cached by flow.collectAsStateWithLifecycle()
