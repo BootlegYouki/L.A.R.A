@@ -78,6 +78,7 @@ async function main() {
     await visible(page.getByRole('cell', { name: 'T-0001', exact: true }));
     assert.equal(await page.getByRole('cell', { name: 'ADMIN-0001', exact: true }).count(), 0);
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Sign out of the Hub?' }).getByRole('button', { name: 'Sign out', exact: true }).click();
     await visible(page.getByRole('button', { name: 'Sign in', exact: true }));
     assert.equal(await page.locator('tr[data-entry]').count(), 0, 'logout clears activity DOM');
     assert.deepEqual(errors, []);

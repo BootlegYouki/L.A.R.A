@@ -3,7 +3,14 @@
 
 @layer components {
   :focus-visible { outline: 3px solid var(--color-lara-primary-dark); outline-offset: 2px; }
-  .admin-auth { @apply mx-auto flex w-full max-w-lg flex-col gap-4 rounded-lg border border-lara-border bg-white p-6; }
+  .hub-main:has(.admin-auth) { @apply flex min-h-[calc(100dvh-4rem)] items-center justify-center py-8; }
+  .admin-auth { @apply mx-auto flex w-full max-w-md flex-col gap-8 rounded-lg border border-lara-border bg-white p-8; }
+  .auth-heading h1 { @apply mb-2 text-[28px] leading-9 font-extrabold; }
+  .auth-heading p { @apply text-base leading-6 text-lara-ink-2; }
+  .auth-fields { @apply flex min-w-0 flex-col gap-6; }
+  .admin-auth .admin-pin-digit { @apply h-14 min-w-0 flex-1 rounded-md border border-lara-ink-2 text-2xl font-bold; }
+  .auth-pin-visibility { @apply inline-flex min-h-control items-center gap-2 self-end px-1 text-sm font-bold text-lara-primary-dark; }
+  .auth-submit { @apply w-full; }
   .admin-label { @apply flex flex-col gap-2 font-extrabold; }
   .admin-label input, .admin-label select { @apply min-h-touch w-full rounded-md border-2 border-lara-ink-2 bg-white px-4 text-base font-medium text-lara-ink; }
   .admin-pin-digit { @apply h-15 w-touch rounded-md border-2 border-lara-ink-2 bg-white text-center text-2xl font-black; }
@@ -41,6 +48,24 @@
   .hub-sidebar { @apply self-start rounded-lg border border-lara-border bg-white p-3; }
   .hub-nav { @apply flex min-h-12 items-center gap-3 rounded-md px-3 text-left text-sm font-extrabold text-lara-ink-2 hover:bg-lara-subtle; }
   .hub-nav-active { @apply bg-lara-primary-light text-lara-primary-dark; }
+  .hub-main { @apply pt-6 pb-8; }
+  .hub-main:has(.hub-shell-accounts) { height: calc(100dvh - 4rem); }
+  .hub-shell-accounts { @apply h-full min-h-0 gap-3 grid-rows-[auto_minmax(0,1fr)] min-[900px]:grid-rows-[minmax(0,1fr)]; }
+  .hub-shell-accounts .hub-content { @apply min-h-0; }
+  .accounts-page { @apply h-full min-h-0 gap-3; }
+  .accounts-controls { @apply max-h-[55%] shrink-0 overflow-y-auto; }
+  .accounts-card { @apply flex min-h-0 flex-1 flex-col overflow-hidden; }
+  .accounts-table-scroll { @apply min-h-0 flex-1 overflow-auto overscroll-contain; scrollbar-gutter: stable; }
+  .accounts-table-scroll thead th { @apply sticky top-0 z-10 bg-lara-subtle; }
+  .accounts-pagination { @apply shrink-0 gap-2 border-t border-lara-border p-3; }
+  @media (height <= 600px) {
+    .hub-main:has(.hub-shell-accounts) { @apply py-2; }
+    .accounts-controls { @apply max-h-[30%]; }
+  }
+  @media (width < 900px) {
+    .hub-shell-accounts .hub-sidebar { @apply flex flex-wrap items-center justify-between gap-2; }
+    .hub-shell-accounts .hub-sidebar > button { @apply mt-0; }
+  }
   [hidden] { display: none !important; }
   summary:focus-visible, .hub-nav:focus-visible { @apply outline-2 outline-offset-2 outline-lara-primary-dark; }
 }
