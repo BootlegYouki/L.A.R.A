@@ -9,12 +9,19 @@ import type { CachedAccount } from '../src/services/auth';
 it('keeps a live request signal after StrictMode effect replay',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);post.mockResolvedValue('created');
  const closed=vi.fn(),created=vi.fn();
- const account={user:{id:'teacher'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
+ const account={user:{id:'teacher',role:'TEACHER'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
  let r!:ReturnType<typeof create>;
  await act(async()=>{r=create(createElement(StrictMode,null,createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:closed,onCreated:created})));});
  await act(async()=>r.root.findByProps({id:'post-title'}).props.onChange({target:{value:'Class news'}}));
  await act(async()=>r.root.findByProps({id:'post-body'}).props.onChange({target:{value:'Hello class'}}));
  await act(async()=>r.root.findByType('form').props.onSubmit({preventDefault(){}}));
  expect(post).toHaveBeenCalledTimes(1);expect(post.mock.calls[0][3].aborted).toBe(false);expect(created).toHaveBeenCalledOnce();expect(closed).toHaveBeenCalledOnce();
+ await act(async()=>r.unmount());vi.unstubAllGlobals();
+});
+it('offers announcement attachments inside the creation dialog',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReturnType<typeof create>;
+ const account={user:{id:'teacher',role:'TEACHER'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
+ await act(async()=>{r=create(createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:vi.fn(),onCreated:vi.fn()}))});
+ expect(r.root.findAllByProps({type:'file'})).toHaveLength(1);
  await act(async()=>r.unmount());vi.unstubAllGlobals();
 });

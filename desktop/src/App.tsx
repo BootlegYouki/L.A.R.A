@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from './i18n';
+import { flushHomework } from './services/homework';
 import { useAppStore } from './store/app';
 import ConnectionPage from './pages/ConnectionPage';
 import LoginPage from './pages/LoginPage';
@@ -110,6 +111,14 @@ export default function App() {
     void loadAccount(hub);
   }, [hub, loadAccount, abortTeacherWork]);
   useEffect(() => { if (connection.status === 'connected' && hub) ensureWebSocketPolicy(hub); }, [connection.status, hub]);
+
+  useEffect(()=>{
+    if(busy||loginVisible||connection.status!=='connected'||!identity||accountRef.current?.user.role!=='STUDENT')return;
+    let disposed=false,running=false;
+    const flush=async()=>{const selected=accountRef.current;if(running||!selected)return;running=true;try{const completed=await flushHomework(selected);if(!disposed&&completed)syncController.current?.trigger();}catch{/* Durable queued work is retried on the next foreground check. */}finally{running=false}};
+    void flush();const timer=setInterval(()=>void flush(),5000);
+    return()=>{disposed=true;clearInterval(timer)};
+  },[busy,loginVisible,connection.status,identity]);
 
   // Fetch auth token when video page opens
   useEffect(() => {

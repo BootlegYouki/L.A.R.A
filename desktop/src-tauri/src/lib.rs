@@ -1,8 +1,12 @@
 mod account;
+mod assignment_work;
+mod homework;
+mod comments;
 mod migrations;
 mod discovery;
 mod sync;
 mod video;
+mod media_preview;
 mod uploads;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -12,6 +16,8 @@ pub fn run() {
         .manage(discovery::Discovery::default())
         .manage(account::Accounts::default())
         .manage(uploads::UploadTasks::default())
+        .manage(homework::HomeworkTasks::default())
+        .manage(media_preview::MediaPreviews::default())
         .setup(|app| {
             discovery::start(app.handle().clone());
             Ok(())
@@ -25,6 +31,17 @@ pub fn run() {
             account::save_classroom_snapshot,
             account::classroom_teacher_names,
             account::read_class_content,
+            assignment_work::read_assignment_work,
+            assignment_work::submission_preview,
+            assignment_work::read_gradebook,
+            homework::begin_homework,
+            homework::append_homework,
+            homework::finish_homework,
+            homework::discard_homework_stage,
+            homework::read_homework_status,
+            homework::flush_homework,
+            comments::read_comment_thread,
+            comments::queue_comment,
             account::save_roster_snapshot,
             account::clear_roster_snapshot,
             account::save_join_status,
@@ -34,6 +51,8 @@ pub fn run() {
             sync::count_queued_work,
             sync::apply_sync_receipts,
             account::forget_account_session,
+            media_preview::open_material_preview,
+            media_preview::close_material_preview,
             video::get_material_by_id,
             video::download_video_for_offline,
             video::check_partial_download,

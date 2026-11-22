@@ -86,6 +86,7 @@ const ENTITIES: &[Entity] = &[
         fields: &[
             ("id", "uuid!"),
             ("classroom_id", "uuid!"),
+            ("author_id", "nullable_uuid"),
             ("title", "string!"),
             ("content", "string!"),
             ("allow_comments", "bool"),
@@ -1305,6 +1306,7 @@ mod tests {
             .execute(&mut db)
             .await
             .unwrap();
+        sqlx::raw_sql(include_str!("../migrations/005_announcement_author.sql")).execute(&mut db).await.unwrap();
         sqlx::raw_sql(include_str!("../migrations/004_audit_created_at.sql"))
             .execute(&mut db).await.unwrap();
         (db, root)
@@ -1339,7 +1341,7 @@ mod tests {
     const PRIVATE: &str = "88888888-8888-4888-8888-888888888888";
     const ATTEMPT: &str = "99999999-9999-4999-8999-999999999999";
     async fn seed(db: &mut SqliteConnection) {
-        sqlx::query("INSERT INTO announcements VALUES(?,?, 'Title','Body',1,0,0)")
+        sqlx::query("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES(?,?, 'Title','Body',1,0,0)")
             .bind(ANN)
             .bind(CLASS)
             .execute(&mut *db)
@@ -1365,7 +1367,7 @@ mod tests {
         sqlx::query("INSERT INTO materials(id,classroom_id,title,file_type,file_size_bytes,local_file_path,created_at,updated_at) VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',?,'cached','VIDEO',1,'G:/cached.mp4',0,0)").bind(CLASS).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO assignment_submissions(id,assignment_id,student_id,file_path,submitted_at,created_at,updated_at,sync_status) VALUES('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',?,?,'G:/photo.jpg',0,0,0,'REJECTED')").bind(ASSIGN).bind(USER).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO ai_chat_messages(id,classroom_id,student_id,role,content,created_at) VALUES('cccccccc-cccc-4ccc-8ccc-cccccccccccc',?,?,'USER','history',0)").bind(CLASS).bind(USER).execute(&mut db).await.unwrap();
-        sqlx::query("INSERT INTO announcements VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd',?,'ordinary','removed',1,0,0)").bind(CLASS).execute(&mut db).await.unwrap();
+        sqlx::query("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd',?,'ordinary','removed',1,0,0)").bind(CLASS).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO quiz_questions(id,quiz_id,order_index,question_text,question_type,points,created_at,updated_at) VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',?,0,'Keep this question','IDENTIFICATION',1,0,0)").bind(QUIZ).execute(&mut db).await.unwrap();
         let expected = read_state(&mut db).await.unwrap();
         let reset = json!({"server_time":0,"hub_id":"test-hub","sync_epoch":2,"next_cursor":1,"has_more":false,"reset":true});

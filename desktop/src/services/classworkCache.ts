@@ -12,7 +12,7 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-export async function waitForCachedAssignment(account: CachedAccount, classroomId: string, assignmentId: string, signal?: AbortSignal): Promise<void> {
+export async function waitForCachedAssignment(account: CachedAccount, classroomId: string, assignmentId: string, signal?: AbortSignal, kind: 'assignments' | 'announcements' = 'assignments'): Promise<void> {
   if(signal?.aborted)throw cancelled(signal);
   let expired=false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -27,13 +27,14 @@ export async function waitForCachedAssignment(account: CachedAccount, classroomI
     while(true) {
       if(signal?.aborted)throw cancelled(signal);
       if(expired)throw new Error('Assignment did not appear in the class cache within 10 seconds.');
-      let content:{assignments?:{id:string}[]};
-      try { content=await invoke<{assignments?:{id:string}[]}>('read_class_content',{hub:account.hub,userId:account.user.id,classroomId}); }
+      let content:{assignments?:{id:string}[];announcements?:{id:string}[]};
+      try { content=await invoke<{assignments?:{id:string}[];announcements?:{id:string}[]}>('read_class_content',{hub:account.hub,userId:account.user.id,classroomId}); }
       catch { await delay(POLL_MS,signal); continue; }
       if(signal?.aborted)throw cancelled(signal);
       if(expired)throw new Error('Assignment did not appear in the class cache within 10 seconds.');
-      if(!Array.isArray(content.assignments))throw new Error('Invalid cached class content.');
-      if(content.assignments.some(item=>item.id===assignmentId))return;
+      const items=content[kind];
+      if(!Array.isArray(items))throw new Error('Invalid cached class content.');
+      if(items.some(item=>item.id===assignmentId))return;
       await delay(POLL_MS,signal);
     }
   };

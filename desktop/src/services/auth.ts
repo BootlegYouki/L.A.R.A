@@ -1,3 +1,4 @@
+import {clearMediaCache} from './mediaCache';
 import { invoke } from '@tauri-apps/api/core';
 import { ApiError, requestHub } from './api';
 import { isHubInfo, type HubInfo } from './discovery';
@@ -119,6 +120,7 @@ export async function refreshClassrooms(account: CachedAccount, signal?: AbortSi
   return parseClassrooms(await withDatabaseTimeout(invoke('save_classroom_snapshot', { hub, userId: user.id, classrooms })));
 }
 export async function forgetAccount(account: CachedAccount) {
+  clearMediaCache();
   await withDatabaseTimeout(invoke('forget_account_session', { hub: account.hub, userId: account.user.id }));
 }
 

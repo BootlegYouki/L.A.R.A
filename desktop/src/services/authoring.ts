@@ -24,7 +24,12 @@ async function create(account: CachedAccount, path: '/api/announcements' | '/api
 }
 
 export async function createAnnouncement(account: CachedAccount, classroomId: string, input: {title: string; content: string; allow_comments?: boolean}, signal?: AbortSignal) {
-  teacherClass(account, classroomId);
+  const room=account.classrooms.find(c=>c.id===classroomId);
+  if(account.user.role==='STUDENT') {
+    const status=room?.enrollment_status??account.join_requests?.find(r=>r.classroom_id===classroomId)?.status??'ACTIVE';
+    if(!uuid(classroomId)||!room||room.archived_at!=null||status!=='ACTIVE')throw new ApiError('FORBIDDEN');
+    if(input.allow_comments!==undefined)throw new ApiError('FORBIDDEN');
+  } else teacherClass(account,classroomId);
   if (typeof input.content !== 'string' || hasControlCharacters(input.content.replace(/[\r\n\t]/g, ''))
     || (input.allow_comments !== undefined && typeof input.allow_comments !== 'boolean')) throw new ApiError('invalid_fields');
   return create(account, '/api/announcements', {classroom_id: classroomId, title: requiredText(input.title), content: input.content,

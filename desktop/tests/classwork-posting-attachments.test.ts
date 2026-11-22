@@ -10,7 +10,7 @@ vi.mock('@radix-ui/react-dialog',()=>{const wrap=({children}:{children?:ReactNod
 import ClassAuthoringDialog from '../src/components/ClassAuthoringDialog';
 import type { CachedAccount } from '../src/services/auth';
 
-const account={user:{id:'teacher'}} as CachedAccount;
+const account={user:{id:'teacher',role:'TEACHER'}} as CachedAccount;
 const id='33333333-3333-4333-8333-333333333333';
 beforeEach(()=>{vi.clearAllMocks();createAssignment.mockResolvedValue(id);updateClasswork.mockResolvedValue(id);waitForCachedAssignment.mockResolvedValue(undefined);});
 

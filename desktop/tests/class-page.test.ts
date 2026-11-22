@@ -133,5 +133,20 @@ it('keeps assignment attachments under their parent instead of duplicating them 
  expect(JSON.stringify(list.findAllByType('strong').map(node=>node.children))).toContain('Independent lesson');
  const assignment=renderer.root.findByProps({className:'material-item assignment-preview'});
  expect(assignment.findByProps({'aria-label':'Open handout: Attached sheet'})).toBeTruthy();
- expect(assignment.findAllByType('button').some(node=>node.children.includes('Add attachment'))).toBe(true);
+ expect(assignment.findAllByType('button').some(node=>node.children.includes('Add attachment'))).toBe(false);
+});
+it('keeps public comments collapsed until the entry beneath the post is opened',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ invoke.mockResolvedValue({announcements:[{id:'post',title:'Post',content:'Text',created_at:1}],materials:[]});
+ await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}))});
+ expect(renderer.root.findAllByProps({className:'comment-entry'})).toHaveLength(1);
+ expect(renderer.root.findAllByType('textarea')).toHaveLength(0);
+});
+
+it('lists a Hub material in Classwork even when its automatic Stream post is linked',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ invoke.mockResolvedValue({announcements:[{id:'post',title:'Lesson',content:'Read',created_at:1}],materials:[{id:'handout',announcement_id:'post',title:'Lesson',file_type:'DOCUMENT',saved:true,chunks:[]}],assignments:[],topics:[],quizzes:[]});
+ await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}))});
+ await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+ expect(renderer.root.findByProps({className:'material-list'}).findByProps({'aria-label':'Open handout: Lesson'})).toBeTruthy();
 });

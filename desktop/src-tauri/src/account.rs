@@ -581,7 +581,7 @@ async fn stored_rosters(
         None => Ok(HashMap::new()),
     }
 }
-async fn get_rosters(
+pub(crate) async fn get_rosters(
     db: &mut SqliteConnection,
     user: &User,
 ) -> Result<HashMap<String, Vec<RosterEntry>>, &'static str> {
@@ -772,9 +772,9 @@ pub async fn read_class_content(
         .find(|c| c.id.eq_ignore_ascii_case(&classroom_id)
             && (profile.user.role == Role::TEACHER || c.enrollment_status.as_deref() == Some("ACTIVE")))
         .ok_or(INVALID)?;
-    let posts = sqlx::query("SELECT id,title,content,created_at FROM announcements WHERE classroom_id=? ORDER BY created_at DESC,id")
+    let posts = sqlx::query("SELECT id,title,content,author_id,(SELECT full_name FROM users WHERE users.id=announcements.author_id) AS author_name,allow_comments,created_at,(SELECT COUNT(*) FROM announcement_comments WHERE announcement_id=announcements.id) AS comment_count FROM announcements WHERE classroom_id=? ORDER BY created_at DESC,id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
-    let materials = sqlx::query("SELECT id,title,file_type,topic_id,assignment_id,announcement_id,local_file_path,updated_at FROM materials WHERE classroom_id=? ORDER BY created_at DESC,id")
+    let materials = sqlx::query("SELECT id,title,file_type,mime_type,topic_id,assignment_id,announcement_id,local_file_path,updated_at FROM materials WHERE classroom_id=? ORDER BY created_at DESC,id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
     let chunks = sqlx::query("SELECT c.material_id,c.heading,c.text FROM material_chunks c JOIN materials m ON m.id=c.material_id WHERE m.classroom_id=? ORDER BY c.material_id,c.order_index,c.id")
         .bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?;
@@ -802,7 +802,7 @@ pub async fn read_class_content(
                 .is_some_and(|revision| revision == row.get::<i64,_>("updated_at").to_string())
         };
         lessons.push(serde_json::json!({
-            "id": id, "title": row.get::<String,_>("title"), "file_type": kind, "saved": saved, "topic_id": row.get::<Option<String>,_>("topic_id"), "assignment_id": row.get::<Option<String>,_>("assignment_id"), "announcement_id": row.get::<Option<String>,_>("announcement_id"),
+            "id": id, "title": row.get::<String,_>("title"), "file_type": kind, "mime_type": row.get::<String,_>("mime_type"), "updated_at": row.get::<i64,_>("updated_at"), "saved": saved, "topic_id": row.get::<Option<String>,_>("topic_id"), "assignment_id": row.get::<Option<String>,_>("assignment_id"), "announcement_id": row.get::<Option<String>,_>("announcement_id"),
             "chunks": chunks.iter().filter(|chunk| chunk.get::<String,_>("material_id") == id)
                 .map(|chunk| serde_json::json!({"heading": chunk.get::<Option<String>,_>("heading"), "text": chunk.get::<String,_>("text")})).collect::<Vec<_>>()
         }));
@@ -810,7 +810,7 @@ pub async fn read_class_content(
     Ok(serde_json::json!({
         "announcements": posts.iter().map(|row| serde_json::json!({
             "id": row.get::<String,_>("id"), "title": row.get::<String,_>("title"),
-            "content": row.get::<String,_>("content"), "created_at": row.get::<i64,_>("created_at")
+            "author_id":row.get::<Option<String>,_>("author_id"), "author_name":row.get::<Option<String>,_>("author_name"), "allow_comments":row.get::<i64,_>("allow_comments") != 0, "comment_count":row.get::<i64,_>("comment_count"), "content": row.get::<String,_>("content"), "created_at": row.get::<i64,_>("created_at")
         })).collect::<Vec<_>>(),
         "materials": lessons,
         "assignments": sqlx::query("SELECT id,title,instructions,due_date,max_points,allow_late,topic_id FROM assignments WHERE classroom_id=? ORDER BY due_date,id").bind(&room.id).fetch_all(&mut db).await.map_err(|_| ERROR)?.iter().map(|row| serde_json::json!({"id":row.get::<String,_>("id"),"title":row.get::<String,_>("title"),"instructions":row.get::<Option<String>,_>("instructions"),"due_date":row.get::<i64,_>("due_date"),"max_points":row.get::<i64,_>("max_points"),"allow_late":row.get::<i64,_>("allow_late") != 0,"topic_id":row.get::<Option<String>,_>("topic_id")})).collect::<Vec<_>>(),
@@ -979,7 +979,7 @@ mod tests {
         migrations.run_direct(&mut old).await.unwrap();
         sqlx::raw_sql("INSERT INTO classrooms(id,name,section,class_code,teacher_id,created_at,updated_at) VALUES('class','Science','A','ABC234','teacher',1,1);
             INSERT INTO enrollments(id,classroom_id,student_id,joined_at,updated_at) VALUES('enrollment','class','learner',42,50);
-            INSERT INTO announcements VALUES('post','class','Title','Body',1,1,1);
+            INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('post','class','Title','Body',1,1,1);
             INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('queued','post','learner','Keep this work',1,1,'QUEUED_FOR_SYNC');")
             .execute(&mut old).await.unwrap();
         put(&mut old, "cursor", "7").await.unwrap();
@@ -1115,7 +1115,7 @@ mod tests {
             1
         );
         snapshot(&mut db, &user(), &[class()]).await.unwrap();
-        sqlx::raw_sql("INSERT INTO announcements VALUES('announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('comment','announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        sqlx::raw_sql("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('comment','announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
         let mut changed = class();
         changed.name = "Changed".into();
         changed.enrollment_status = Some("PENDING".into());
@@ -1207,7 +1207,7 @@ mod tests {
         let key = context(&hub(), STUDENT);
         let mut db = database(&root, &key).await.unwrap();
         snapshot(&mut db, &user(), &[class()]).await.unwrap();
-        sqlx::raw_sql("INSERT INTO announcements VALUES('join-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('join-comment','join-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        sqlx::raw_sql("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('join-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('join-comment','join-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
         for status in ["PENDING", "REJECTED", "REMOVED"] {
             save_receipt(
                 &mut db,
@@ -1378,7 +1378,7 @@ mod tests {
         let mut long = entry.clone();
         long.full_name = "x".repeat(1000);
         assert!(validate_roster(&[long]).is_ok());
-        sqlx::raw_sql("INSERT INTO announcements VALUES('roster-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('roster-comment','roster-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        sqlx::raw_sql("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('roster-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('roster-comment','roster-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
         roster_snapshot(&mut db, &teacher, CLASS, &[entry])
             .await
             .unwrap();
@@ -1450,7 +1450,7 @@ mod tests {
         roster_snapshot(&mut db, &teacher, &other.id, &[])
             .await
             .unwrap();
-        sqlx::raw_sql("INSERT INTO announcements VALUES('clear-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('clear-comment','clear-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
+        sqlx::raw_sql("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES('clear-announcement','33333333-3333-4333-8333-333333333333','Title','Body',1,0,0); INSERT INTO announcement_comments(id,announcement_id,author_id,content,created_at,updated_at,sync_status) VALUES('clear-comment','clear-announcement','11111111-1111-4111-8111-111111111111','queued',0,0,'QUEUED_FOR_SYNC');").execute(&mut db).await.unwrap();
         assert!(clear_roster(&mut db, &user(), CLASS).await.is_err());
         assert!(clear_roster(&mut db, &teacher, STUDENT).await.is_err());
         sqlx::raw_sql("CREATE TRIGGER fail_clear BEFORE UPDATE ON sync_state WHEN NEW.key='account_rosters' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").execute(&mut db).await.unwrap();
