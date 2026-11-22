@@ -1,0 +1,5 @@
+<resources>
+    <string name="request_class_context">Class: %1$s</string>
+    <string name="request_section_context">Section: %1$s</string>
+    <string name="request_section_unspecified">Not specified</string>
+</resources>

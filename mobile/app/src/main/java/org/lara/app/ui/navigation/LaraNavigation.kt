@@ -1,11 +1,14 @@
 package org.lara.app.ui.navigation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -17,9 +20,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -101,11 +106,17 @@ private fun PlaceholderPage(about: Boolean, onAction: () -> Unit, onDiscovery: (
             .padding(LaraSpacing.S4),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S6),
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            color = LaraColors.PrimaryDark,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2),
+        ) {
+            Image(painterResource(R.drawable.lara_logo), contentDescription = null, modifier = Modifier.size(32.dp))
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineLarge,
+                color = LaraColors.PrimaryDark,
+            )
+        }
         Text(
             text = stringResource(if (about) R.string.about_title else R.string.shell_title),
             style = MaterialTheme.typography.headlineMedium,

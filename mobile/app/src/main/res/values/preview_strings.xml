@@ -1,0 +1,5 @@
+<resources>
+    <string name="preview_image_attachment">Photo attachment preview</string>
+    <string name="preview_image_unavailable">Photo preview unavailable</string>
+    <string name="preview_open_attachment">Open attachment</string>
+</resources>

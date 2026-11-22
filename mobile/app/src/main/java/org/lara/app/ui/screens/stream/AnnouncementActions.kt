@@ -1,6 +1,5 @@
 package org.lara.app.ui.screens.stream
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -87,7 +86,7 @@ internal fun AnnouncementActions(
         ) { Text(stringResource(R.string.review_retry)) }
     }
     attachments.forEach { attachment ->
-        AttachmentChip(attachment.fileType, attachment.title, Modifier.clickable { openMaterial(attachment.id) })
+        AnnouncementAttachmentPreview(attachment) { openMaterial(attachment.id) }
         if (canManage) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             TextButton(onClick = { title = attachment.title; renameId = attachment.id }, enabled = enabled,
                 modifier = Modifier.heightIn(min = MinTouchTarget)) {

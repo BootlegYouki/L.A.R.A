@@ -3,6 +3,7 @@ package org.lara.app.ui.components
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -92,7 +95,7 @@ fun ClassHomeScaffold(
                 verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 // Same height as the top bar title: centred in a 64dp row below the status bar.
                 Box(Modifier.fillMaxWidth().height(AppBarHeight).padding(start = LaraSpacing.S4), contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
-                    Text(brand, style = MaterialTheme.typography.titleLarge, color = LaraColors.PrimaryDark)
+                    HomeBrand(brand)
                 }
                 HomeDrawerItem(stringResource(R.string.home_classes), R.drawable.ic_books_fill, selected = !notifications && pageTitle == null) {
                     scope.launch { drawer.close() }; notifications = false; onHome()
@@ -124,7 +127,11 @@ fun ClassHomeScaffold(
                     IconButton(onClick = { scope.launch { drawer.open() } }, modifier = Modifier.size(MinTouchTarget)) {
                         Icon(menuIcon, stringResource(R.string.home_open_navigation))
                     }
-                    Text(pageTitle?.let { androidx.compose.ui.text.AnnotatedString(it) } ?: brand, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, color = LaraColors.PrimaryDark)
+                    if (pageTitle == null) {
+                        HomeBrand(brand, Modifier.weight(1f))
+                    } else {
+                        Text(pageTitle, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, color = LaraColors.PrimaryDark)
+                    }
                     if (offline != null) Icon(painterResource(if (offline) R.drawable.ic_wifi_slash else R.drawable.ic_wifi_high),
                         stringResource(if (offline) R.string.home_offline else R.string.home_connected), Modifier.padding(end = LaraSpacing.S2).size(24.dp),
                         tint = if (offline) LaraColors.WarningDark else LaraColors.Primary)
@@ -250,4 +257,16 @@ fun PullRefresh(refresh: suspend () -> Unit, modifier: Modifier = Modifier.fillM
         PullToRefreshDefaults.Indicator(state, refreshing, Modifier.align(androidx.compose.ui.Alignment.TopCenter),
             containerColor = LaraColors.Surface, color = LaraColors.Primary)
     }) { content() }
+}
+
+@Composable
+private fun HomeBrand(title: AnnotatedString, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2),
+    ) {
+        Image(painterResource(R.drawable.lara_logo), contentDescription = null, modifier = Modifier.size(24.dp))
+        Text(title, style = MaterialTheme.typography.titleLarge, color = LaraColors.PrimaryDark)
+    }
 }

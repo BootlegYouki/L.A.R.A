@@ -32,3 +32,7 @@ MOBILE 2.2 wires this boundary from `AuthHost`; callers and tests can still inje
 ## English-only UI (#224)
 
 UI strings are bundled in `values/strings.xml`; there is no language selector or locale override. Android falls back to English on Filipino system locales. Historical evidence may show the retired Filipino UI. Learner-entered chat language data is unchanged.
+
+## App branding
+
+Android reads the L.A.R.A label from `app_name` and the adaptive launcher icon from `mipmap-anydpi-v26/ic_launcher.xml`. The supplied logo is bundled as a transparent PNG for sign-in, the classroom home bar, the navigation drawer, and the About screen. The launcher uses a separately padded foreground to keep the artwork inside Android’s launcher masks.

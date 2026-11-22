@@ -164,6 +164,7 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     val topic = work.topics.find { it.id == id }
     var title by rememberSaveable { mutableStateOf(assignment?.title ?: material?.title ?: topic?.name.orEmpty()) }
     var instructions by rememberSaveable { mutableStateOf(assignment?.instructions.orEmpty()) }
+    var addingLink by rememberSaveable { mutableStateOf(false) }
     var points by rememberSaveable { mutableStateOf(assignment?.maxPoints?.toString() ?: "100") }
     var due by rememberSaveable { mutableLongStateOf(assignment?.dueDate ?: Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 7); set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59) }.timeInMillis) }
     var late by rememberSaveable { mutableStateOf(assignment?.allowLate ?: false) }
@@ -213,6 +214,10 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
             label = { Text(stringResource(R.string.author_title)) }, enabled = !state.busy, shape = LaraShapes.medium)
         if (isAssignment) OutlinedTextField(instructions, { instructions = it }, Modifier.fillMaxWidth().classFormInputScroll(),
             label = { Text(stringResource(R.string.author_instructions)) }, minLines = 3, enabled = !state.busy, shape = LaraShapes.medium)
+        if (isAssignment) {
+            TextButton(onClick = { addingLink = true }, enabled = !state.busy,
+                modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.assignment_add_link)) }
+        }
         if (!isTopic) {
             work.materials.filter { it.assignmentId == id && id != null }.forEach { m ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -259,6 +264,13 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
         if (!isTopic && !isAssignment && id == null) ChoiceField(stringResource(R.string.author_attach_to), attach,
             listOf(null to stringResource(R.string.author_standalone)) + work.assignments.map { "a:${it.id}" to it.title } + posts.map { "p:${it.id}" to it.title }, !state.busy) { attach = it }
     }
+    if (addingLink) AssignmentLinkDialog(
+        onDismiss = { addingLink = false },
+        onAdd = { address ->
+            instructions = listOf(instructions.trimEnd(), address).filter { it.isNotEmpty() }.joinToString("\n")
+            addingLink = false
+        },
+    )
     removeAttachment?.let { attachmentId ->
         AlertDialog(onDismissRequest = { removeAttachment = null }, title = { Text(stringResource(R.string.author_delete_title)) },
             text = { Text(stringResource(R.string.author_delete_material)) }, confirmButton = {

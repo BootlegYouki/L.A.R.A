@@ -145,6 +145,12 @@ fun VideoPlayerScreen(container: AppContainer, userId: String, id: String, close
             }
             if (!fullscreen && !(state.loading && state.source == null)) {
                 if (state.source is VideoSource.Local) {
+                    Row(Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+                        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_check_circle), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+                        Text(stringResource(R.string.video_local), style = MaterialTheme.typography.bodyLarge,
+                            color = LaraColors.PrimaryDark)
+                    }
                     OutlinedButton(onClick = { confirmRemoval = true }, enabled = !state.removing,
                         modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                         Text(stringResource(R.string.video_remove))
@@ -308,7 +314,13 @@ internal fun DownloadControls(state: VideoDownload, save: () -> Unit, pause: () 
     Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
         val downloading = state.phase == DownloadPhase.DOWNLOADING
         if (state.phase == DownloadPhase.FAILED) Text(stringResource(R.string.video_download_failed), style = MaterialTheme.typography.titleMedium)
-        // No Hub, no warning and no download button: the wifi icon already says it, and there is nothing to download.
+        if (state.phase == DownloadPhase.PAUSED && state.bytes > 0) {
+            Text(stringResource(R.string.video_status_interrupted), style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
+        if (state.problem == VideoProblem.HUB_UNAVAILABLE) {
+            org.lara.app.ui.components.DiscoveryBanner(R.string.video_status_offline, warning = true, success = false)
+        }
         state.problem?.takeIf { it != VideoProblem.HUB_UNAVAILABLE }?.let { VideoMessage(problemText(it)) }
         if (state.phase != DownloadPhase.COMPLETE && state.problem != VideoProblem.HUB_UNAVAILABLE) {
             OutlinedButton(onClick = if (downloading) pause else save, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {

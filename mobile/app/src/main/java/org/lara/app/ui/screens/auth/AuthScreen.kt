@@ -84,8 +84,11 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String) -> Unit, onDiscovery
         BoxWithConstraints(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets)) {
         Column(Modifier.fillMaxWidth().heightIn(min = maxHeight).verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4, Alignment.CenterVertically)) {
-            // Placeholder mark until the real L.A.R.A. logo is chosen.
-            Image(painterResource(R.drawable.ic_logo_placeholder), null, Modifier.align(Alignment.CenterHorizontally).size(72.dp))
+            Image(
+                painter = painterResource(R.drawable.lara_logo),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(72.dp),
+            )
             Text(stringResource(R.string.auth_login),
                 Modifier.fillMaxWidth(), style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
             ClassroomSurface {

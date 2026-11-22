@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">lara latest</string>
+    <string name="app_name">L.A.R.A</string>
     <string name="role_teacher">Teacher</string>
     <string name="role_student">Student</string>
     <string name="shell_title">Your classroom, together</string>
@@ -8,7 +8,7 @@
     <string name="offline_body">This app is getting ready for your classroom. Hub connection and saved lessons will be available in a later update.</string>
     <string name="empty_title">No classes yet</string>
     <string name="empty_body">Your classes will appear here after account setup and connection to your classroom Hub are available.</string>
-    <string name="about_action">About L.A.R.A.</string>
+    <string name="about_action">About L.A.R.A</string>
     <string name="about_title">Learning with your classroom</string>
     <string name="about_body">L.A.R.A. brings lessons and classroom activities to your device. This version sets up the app; account setup and classroom features are coming later.</string>
     <string name="back_action">Back to home</string>
@@ -138,7 +138,7 @@
     <string name="settings_disconnected">Hub unreachable</string>
     <string name="settings_change_hub">Change Hub</string>
     <string name="settings_change_hub_help">Changing the Hub signs you out. Your saved work stays on this phone.</string>
-    <string name="settings_about">About L.A.R.A.</string>
+    <string name="settings_about">About L.A.R.A</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_about_text">Your classroom, lessons and learning activities, available on the classroom network and saved for offline study.</string>
     <string name="settings_sign_out">Sign out</string>
@@ -294,7 +294,6 @@
     <string name="video_download_failed">Download failed</string>
     <string name="video_resume">Resume download</string>
     <string name="video_cancel">Cancel download (keep progress)</string>
-    <string name="video_local">Saved on this device · Plays without the Hub</string>
     <string name="video_offline">Not connected to Hub. Saved videos still work. Reconnect to stream or continue saving.</string>
     <string name="video_unavailable">This video is unavailable offline. Return to classwork or reconnect to the Hub and retry.</string>
     <string name="video_retry">Retry</string>

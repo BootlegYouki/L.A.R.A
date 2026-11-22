@@ -73,7 +73,7 @@ fun TeacherApprovalPanel(container: AppContainer, userId: String, syncSession: o
                     names.find { it.id == classroom.teacherId }?.name,
                     stringResource(if (classroom.archivedAt == null) R.string.classes_active else R.string.classes_archived),
                     true) { onOpenClass(classroom.id) }
-                if (onOpenClass == null && classroom.managedBy(userId)) org.lara.app.ui.components.ClassroomSurface { TeacherApprovalHost(model) }
+                if (onOpenClass == null && classroom.managedBy(userId)) org.lara.app.ui.components.ClassroomSurface { TeacherApprovalHost(model, classroom) }
             }
         }
     }

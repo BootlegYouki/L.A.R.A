@@ -115,7 +115,7 @@ class HomeNavigationDeviceTest {
                 capture("$role-home")
                 if (phase == "before") {
                     click("Settings")
-                    scrollTo("About L.A.R.A.")
+                    scrollTo("About L.A.R.A")
                     capture("$role-settings")
                 } else {
                     assertTarget("Open navigation menu", 52)
@@ -135,10 +135,10 @@ class HomeNavigationDeviceTest {
                     waitFor("Stream")
                     waitFor("Classwork")
                     click("Back")
-                    waitFor("My classes")
+                    waitFor("Open navigation menu")
                     click("Open navigation menu")
                     click("Settings")
-                    scrollTo("About L.A.R.A.")
+                    scrollTo("About L.A.R.A")
                     capture("$role-settings")
                 }
             }
@@ -171,7 +171,7 @@ class HomeNavigationDeviceTest {
                         }
                     }
                 } }
-                waitFor("My classes")
+                waitFor("Open navigation menu")
                 capture("learner-$name")
             }
             show("offline", home.copy(offline = true))

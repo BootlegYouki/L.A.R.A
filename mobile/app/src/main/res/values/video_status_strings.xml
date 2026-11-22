@@ -1,0 +1,5 @@
+<resources>
+    <string name="video_status_offline">The Hub is unavailable. This video cannot be downloaded right now. Saved videos on this device still play offline.</string>
+    <string name="video_status_interrupted">Download paused. Your saved progress is ready to resume.</string>
+    <string name="video_local">Saved on this device · Plays without the Hub</string>
+</resources>

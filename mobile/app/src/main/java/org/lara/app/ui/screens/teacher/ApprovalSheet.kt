@@ -30,7 +30,8 @@ fun PendingApprovalButton(state: ApprovalState, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (String, Boolean) -> Unit) {
+fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (String, Boolean) -> Unit,
+    classroomName: String = "", section: String = "") {
     if (!state.sheetOpen) return
     ModalBottomSheet(onDismissRequest = onDismiss, shape = LaraShapes.extraLarge,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -50,7 +51,9 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
                 }
                 if (state.roster == Cached.Loading) item { org.lara.app.ui.components.LoadingSpinner(inline = true) }
                 else if (state.pending.isEmpty()) item { Text(stringResource(R.string.approval_empty)) }
-                items(state.pending.take(1), key = { it.enrollment.id }) { member -> PendingMemberCard(member, state, onDecision) }
+                items(state.pending.take(1), key = { it.enrollment.id }) {
+                    PendingMemberCard(it, state, onDecision, classroomName, section)
+                }
             }
             TextButton(onDismiss, Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
                 colors = ButtonDefaults.textButtonColors(contentColor = LaraColors.PrimaryDark)) {
@@ -62,7 +65,8 @@ fun ApprovalSheet(state: ApprovalState, onDismiss: () -> Unit, onDecision: (Stri
 
 
 @Composable
-internal fun PendingMemberCard(member: RosterMember, state: ApprovalState, onDecision: (String, Boolean) -> Unit) {
+internal fun PendingMemberCard(member: RosterMember, state: ApprovalState, onDecision: (String, Boolean) -> Unit,
+    classroomName: String = "", section: String = "") {
     val name = member.user?.fullName ?: stringResource(R.string.approval_learner)
     val id = member.enrollment.studentId
     val busy = id in state.busy
@@ -80,6 +84,11 @@ internal fun PendingMemberCard(member: RosterMember, state: ApprovalState, onDec
             }
             Column(Modifier.weight(1f)) {
                 Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                if (classroomName.isNotBlank()) {
+                    Text(stringResource(R.string.request_class_context, classroomName), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+                    Text(stringResource(R.string.request_section_context, section.ifBlank { stringResource(R.string.request_section_unspecified) }),
+                        style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
+                }
                 member.user?.lrnOrId?.let { Text(stringResource(R.string.approval_lrn, it), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary) }
             }
             if (busy) CircularProgressIndicator(Modifier.size(24.dp), color = LaraColors.PrimaryDark, strokeWidth = 2.dp)
