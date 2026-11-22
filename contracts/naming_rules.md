@@ -71,7 +71,7 @@ The same discipline as the answer key applies to personal data. A learner can re
 * Another learner's submissions, quiz attempts or private comments.
 * The Hub admin account (role `ADMIN`). It exists only on the Hub.
 
-Hub operational history is private to the Hub-PC admin API (`activity_logs.md`). Its tables are never copied to client schemas or emitted through `sync_revisions`. Entries use an independent `seq` plus `history_id`; they are not classroom sync cursors. Only catalog enums and bounded numeric details are permitted: no names, account/resource IDs, credentials, raw errors, paths or uploaded content. `ACTIVITY_LOG_UNAVAILABLE` means a safe retryable 503; `ACTIVITY_LOG_RESET` means a 409 requiring a fresh history load after initialization/restore.
+Hub operational history is private to the Hub-PC admin API (`activity_logs.md`). Its tables are never copied to client schemas or emitted through `sync_revisions`. Entries use an independent `seq` plus `history_id`; they are not classroom sync cursors. Only catalog enums, approved endpoint templates and bounded numeric details are permitted: no names, account/resource IDs, credentials, raw errors, raw paths or uploaded content. `ACTIVITY_LOG_UNAVAILABLE` means a safe retryable 503; `ACTIVITY_LOG_RESET` means a 409 requiring a fresh history load after initialization/restore.
 
 ---
 

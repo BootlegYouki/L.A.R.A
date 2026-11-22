@@ -628,7 +628,7 @@ def admin_activity_logs(req):
             continue
         if "severity" in query and item["severity"] != query["severity"]:
             continue
-        words = " ".join(str(item[key]) for key in ("event_code", "service", "result")) + " " + item["details"].get("reason", "")
+        words = " ".join(str(item[key]) for key in ("event_code", "service", "result")) + " " + " ".join(str(item["details"].get(key, "")) for key in ("reason", "http_method", "endpoint", "status_code"))
         if search not in words.replace("_", " ").casefold():
             continue
         selected.append(item)
