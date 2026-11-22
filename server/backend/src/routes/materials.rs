@@ -79,7 +79,9 @@ async fn upload(
     let stored = app.storage.commit(file, StorageKind::Material).await.map_err(storage_error)?;
     let id = uuid::Uuid::new_v4().to_string();
     // Lesson text for the AI tutor, before the write lock: parsing a long PDF takes CPU time.
+    let extraction_started = std::time::Instant::now();
     let chunks = if video { Vec::new() } else { extract(&app, &stored.relative, format, &form.fields["title"], &id).await };
+    let extraction_duration = extraction_started.elapsed();
 
     let now = app.clock.now_ms();
     let mut tx = begin_immediate(&app.db).await?;
@@ -109,6 +111,15 @@ async fn upload(
     material_chunks::insert_all(&mut tx, &id, classroom_id, &chunks, now).await?;
     tx.commit().await?;
     stored.keep();
+    if !video {
+        use crate::services::activity::{Code, Event, Service};
+        app.activity.record(Event::new(Code::DocumentUploaded, Service::Documents));
+        if matches!(format, FileFormat::Pdf | FileFormat::Docx) {
+            let event = Event::new(if chunks.is_empty() { Code::DocumentProcessingFailed } else { Code::DocumentProcessed }, Service::Documents)
+                .measurement(chunks.len(), extraction_duration);
+            app.activity.record(if chunks.is_empty() { event.reason(crate::services::activity::Reason::NoTextLayer) } else { event });
+        }
+    }
     Ok(Json(material))
 }
 

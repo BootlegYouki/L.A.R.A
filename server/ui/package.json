@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:import": "node --test tests/learner-import.test.cjs",
+    "test:import:browser": "node tests/learner-import-browser.cjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "tauri": "cd .. && tauri"
@@ -11,7 +13,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

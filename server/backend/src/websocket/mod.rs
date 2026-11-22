@@ -40,6 +40,7 @@ pub(crate) async fn run(listener: TcpListener, app: AppState, mut shutdown: watc
                 Err(e) => {
                     // Usually out of file handles; pause instead of spinning.
                     tracing::warn!(error = %e, "websocket accept failed");
+                    app.activity.record(crate::services::activity::Event::new(crate::services::activity::Code::ConnectionProblem, crate::services::activity::Service::Websocket).reason(crate::services::activity::Reason::InternalFailure));
                     tokio::time::sleep(Duration::from_millis(100)).await;
                 }
             },

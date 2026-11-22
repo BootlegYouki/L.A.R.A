@@ -9,7 +9,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 lara_hub = { path = "../backend" }
+rfd = "0.17"
 serde = { version = "1", features = ["derive"] }
+sysinfo = { version = "0.40.4", default-features = false, features = ["system", "network", "disk"] }
 tauri = { version = "2", features = [] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 tracing = "0.1"

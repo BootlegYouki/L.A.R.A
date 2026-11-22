@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { HubError, request, setupCompleted, type AuthSession, type User } from '../admin';
 import { useStrings } from '../i18n';
+import ActivityLogs from './ActivityLogs';
+import Monitoring from './Monitoring';
+const ImportLearners = lazy(() => import('./ImportLearners'));
 
 function Dialog({ title, close, children, busy = false }: {
   title: string; close: () => void; children: ReactNode; busy?: boolean;
@@ -67,6 +70,7 @@ function PinInput({ value, change, reveal = false }: { value: string; change: (v
 
 export default function AdminUsers({ overview }: { overview: ReactNode }) {
   const { t } = useStrings();
+  const [importing, setImporting] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [session, setSession] = useState<AuthSession | null>(null);
   const currentSession = useRef(session);
@@ -84,13 +88,13 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
   const [pin, setPin] = useState('');
   const [id, setId] = useState('');
   const [role, setRole] = useState<'TEACHER' | 'STUDENT'>('TEACHER');
-  const [page, setPage] = useState<'overview' | 'accounts'>('overview');
+  const [page, setPage] = useState<'overview' | 'accounts' | 'activity'>('overview');
   const [accountSearch, setAccountSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [accountPage, setAccountPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const tableScroll = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (!session) { setConfirmSignOut(false); setAccountSearch(''); setRoleFilter(''); setAccountPage(1); setPageSize(10); setPage('overview'); } }, [session]);
+  useEffect(() => { if (!session) { setConfirmSignOut(false); setImporting(false); setAccountSearch(''); setRoleFilter(''); setAccountPage(1); setPageSize(10); setPage('overview'); } }, [session]);
   const visibleUsers = users.filter(user => (!roleFilter || user.role === roleFilter)
     && `${user.full_name} ${user.lrn_or_id}`.toLowerCase().includes(accountSearch.trim().toLowerCase()));
   const pageCount = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
@@ -224,7 +228,7 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
   </section>;
 
   return <div className={`hub-shell${page === 'accounts' ? ' hub-shell-accounts' : ''}`}><aside className="hub-sidebar"><nav aria-label={t.console_navigation} className="flex flex-wrap gap-2 min-[900px]:flex-col">
-    {([['overview', 'ph-squares-four', t.console_overview], ['accounts', 'ph-users', t.admin_accounts]] as const).map(([key, icon, label]) => <button key={key} type="button" className={`hub-nav ${page === key ? 'hub-nav-active' : ''}`} aria-current={page === key ? 'page' : undefined} onClick={() => setPage(key)}><i className={`ph ${icon} text-xl`} aria-hidden="true" />{label}</button>)}
+    {([['overview', 'ph-squares-four', t.console_overview], ['accounts', 'ph-users', t.admin_accounts], ['activity', 'ph-list-dashes', t.activity_title]] as const).map(([key, icon, label]) => <button key={key} type="button" className={`hub-nav ${page === key ? 'hub-nav-active' : ''}`} aria-current={page === key ? 'page' : undefined} onClick={() => setPage(key)}><i className={`ph ${icon} text-xl`} aria-hidden="true" />{label}</button>)}
     </nav><button type="button" className="admin-secondary mt-4" disabled={busy} onClick={() => setConfirmSignOut(true)}><i className="ph ph-sign-out" aria-hidden="true" />{t.admin_sign_out}</button></aside>
     {confirmSignOut && <Dialog title={t.admin_sign_out_title} close={() => setConfirmSignOut(false)} busy={busy}>
       <p className="mb-6 text-lara-ink-2">{t.admin_sign_out_help}</p>
@@ -233,7 +237,8 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
         <button type="button" className="admin-primary" disabled={busy} onClick={() => void signOut()}>{busy ? t.admin_signing_out : t.admin_sign_out}</button>
       </div>
     </Dialog>}
-    <div className="hub-content min-w-0"><div hidden={page !== 'overview'} className="flex flex-col gap-4"><h1 className="text-2xl font-black">{t.console_overview}</h1><p className="text-sm text-lara-ink-2">{t.console_overview_help}</p>{overview}</div>
+    <div className="hub-content min-w-0"><div hidden={page !== 'overview'} className="flex flex-col gap-4"><h1 className="text-2xl font-black">{t.console_overview}</h1>{overview}<Monitoring token={session.token} expired={() => fail(new HubError('UNAUTHORIZED', 401))} /></div>
+    <div hidden={page !== 'activity'}><ActivityLogs token={session.token} active={page === 'activity'} expired={() => fail(new HubError('UNAUTHORIZED', 401))} /></div>
     <section hidden={page !== 'accounts'} className="accounts-page flex flex-col" aria-labelledby="admin-title">
     <div className="accounts-controls flex flex-col gap-4">
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -245,6 +250,9 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
       <button type="button" className="admin-primary" disabled={offline || busy} onClick={() => {
         setError(''); setPin(''); setName(''); setId(''); setRole('TEACHER'); setForm('create');
       }}><i className="ph ph-user-plus" aria-hidden="true" />{t.admin_create}</button>
+      <button type="button" className="admin-secondary" disabled={offline || busy} onClick={() => setImporting(true)}>
+        <i className="ph ph-upload-simple" aria-hidden="true" />{t.import_title}
+      </button>
       <button type="button" className="admin-secondary" onClick={() => { setLoading(true); void refresh(); }}>{t.admin_refresh}</button>
     </div>
     </div>
@@ -278,6 +286,9 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
         </div>
       </nav>
     </div>}
+    {importing && <Suspense fallback={<p role="status">{t.loading}</p>}>
+      <ImportLearners session={session} users={users} close={() => setImporting(false)} refresh={refresh} fail={fail} />
+    </Suspense>}
     {form && <Dialog title={form === 'create' ? t.admin_create : t.admin_reset} close={closeForm} busy={busy}>
       <form onSubmit={save} className="flex flex-col gap-4"><fieldset disabled={busy} className="flex flex-col gap-4">
         {form === 'create' ? <>

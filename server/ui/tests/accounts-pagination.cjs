@@ -57,11 +57,9 @@ async function main() {
     assert.equal(await page.getByLabel('PIN digit 1', { exact: true }).getAttribute('type'), 'password');
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByRole('alert').getByText('The admin PIN was not accepted. Check it and try again.', { exact: true }).waitFor();
-    await page.screenshot({ path: path.join(evidence, 'sign-in-error.png') });
     offline = true;
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByText('The Hub is not responding.', { exact: false }).waitFor();
-    await page.screenshot({ path: path.join(evidence, 'sign-in-offline.png') });
     offline = false;
     for (let i = 1; i <= 6; i++) await page.getByLabel(`PIN digit ${i}`, { exact: true }).fill(String(i));
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -98,7 +96,6 @@ async function main() {
     await nav.getByText('Showing 1–1 of 1 accounts', { exact: true }).waitFor();
     await search.fill('no matching account');
     await page.getByText('No accounts match these filters.', { exact: true }).waitFor();
-    await page.screenshot({ path: path.join(evidence, 'accounts-empty.png') });
     assert(await next.isDisabled()); assert(await previous.isDisabled());
     await nav.getByText('Showing 0–0 of 0 accounts', { exact: true }).waitFor();
     await search.fill(''); await role.selectOption('');
@@ -111,7 +108,6 @@ async function main() {
     offline = true;
     await page.getByRole('button', { name: 'Refresh accounts', exact: true }).click();
     await page.getByText('Hub unavailable', { exact: false }).first().waitFor();
-    await page.screenshot({ path: path.join(evidence, 'accounts-offline.png') });
     assert.equal(await rows.count(), 2);
     await previous.click(); assert.equal(await rows.count(), 10);
     offline = false;
