@@ -12,7 +12,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.lara.app.data.local.AnnouncementAuthorMigration
 import org.lara.app.data.local.AuditTimestampMigration
 import org.lara.app.data.local.HomeworkReceiptMigration
 import org.lara.app.data.local.LaraDatabase
@@ -43,7 +42,7 @@ class HomeworkReceiptMigrationTest {
             old.execSQL("INSERT INTO sync_state(`key`,value,updated_at) VALUES('current_user_id','learner',1)")
             old.version = 2
         }
-        val migrated = Room.databaseBuilder(context, LaraDatabase::class.java, name).addMigrations(HomeworkReceiptMigration, AuditTimestampMigration, AnnouncementAuthorMigration).build()
+        val migrated = Room.databaseBuilder(context, LaraDatabase::class.java, name).addMigrations(HomeworkReceiptMigration, AuditTimestampMigration, org.lara.app.data.local.AnnouncementAuthorMigration).build()
         try {
             val photo = requireNotNull(migrated.homeworkDao().find("assignment", "learner"))
             assertEquals("QUEUED_FOR_SYNC", photo.syncStatus)

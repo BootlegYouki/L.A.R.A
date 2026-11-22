@@ -28,8 +28,8 @@
 
 1. **Strict Zero-Internet Policy:** Never import Firebase, Google Play APIs, external CDNs, Google Fonts web links, or remote telemetry. The application must operate with the phone's mobile data turned off and the router's WAN unplugged.
 2. **Budget Hardware Reality (Heap < 250MB):** The primary target devices are Philippine budget smartphones (Infinix Smart 8, TECNO Spark, realme Note 50) with 3GB to 4GB physical RAM.
-   * Total JVM heap memory must remain **strictly under 250MB** while the app runs. Whether this limit still holds with the on-device model loaded is open (to be decided with the evaluation).
-   * The phone downloads the tutor model from the Hub and runs it on the device (decided 2026-11-21). The Hub does no inference.
+   * Total JVM heap memory must remain **strictly under 250MB** during Hub-assisted mode. Whether it still holds with an optional on-device model loaded is open (to be decided with the evaluation).
+   * Default path: every device streams tutor tokens over WebSockets from the Hub. Clients send the learner's message; only the Hub builds prompts and runs inference on that path. A capable phone may optionally download the model from the Hub and run it offline (hybrid, decided 2026-11-22); budget phones are expected to stay on the Hub path.
 3. **Database Stack Invariant:** Use **Android Room (SQLite)** with Kotlin Coroutines and StateFlow. **Prisma is strictly forbidden.**
 4. **Canonical Network Contracts (`contracts/`):**
    * Check [`../contracts/openapi.yaml`](../contracts/openapi.yaml) and [`../contracts/events/`](../contracts/events/) before writing any API call or DTO.
@@ -68,7 +68,7 @@
 * **MulticastLock Requirement:** Must acquire `WifiManager.createMulticastLock("lara_discovery_lock")` to prevent Android OS power-saving from dropping UDP discovery packets on budget phones.
 * **Hardware Camera:** CameraX (`androidx.camera`) with in-app rectangular framing overlay, downscaling to max 1080p, and compressing worksheets to JPEG < 800KB.
 * **Media Playback:** Jetpack Media3 (ExoPlayer) supporting HTTP 206 Byte-Range streaming and offline local disk caching.
-* **On-device AI Client:** Downloads the model from the Hub, runs it locally and renders streamed hints.
+* **AI Client:** Sends learner messages and renders queue status and streamed hints over WebSocket; optionally downloads the model from the Hub and runs it locally.
 
 ---
 
@@ -89,7 +89,7 @@ The app switches navigation graphs depending on authenticated role:
 * Draggable `ModalBottomSheet` inside the lesson module viewer.
 * Bound strictly to teacher lesson text chunks. Never provides direct answers or homework solutions.
 * Bilingual interface; tutor replies in English for the pilot.
-* **On-device model:** the phone downloads the model from the Hub and runs it offline (heap and RAM limits open). Without the model show "Download the AI model from the Hub"; if the phone cannot run it, "The AI tutor is not available on this device". Quiz lockout removes the chat UI during an active attempt.
+* **Hub stream (default):** Every phone uses the Hub FIFO queue over WebSocket (`heap < 250MB`). Quiz lockout removes the chat UI during an active attempt. **Optional on-device model:** a capable phone may download the model from the Hub and run it offline (heap and RAM limits open); a phone that cannot run it keeps using the Hub path.
 
 ---
 

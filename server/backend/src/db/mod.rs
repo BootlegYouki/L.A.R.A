@@ -251,6 +251,51 @@ mod tests {
         assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
     }
 
+    /// Migration 006: a Hub that already holds announcements and everything hanging off them keeps
+    /// every row (announcements get author_id NULL, comments stay as they were) and no foreign key breaks.
+    #[tokio::test]
+    async fn upgrading_to_announcement_author_keeps_every_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let pool = connect(dir.path()).await.unwrap();
+        let mut before = sqlx::migrate!("src/db/migrations");
+        before.migrations = before.migrations.iter().filter(|m| m.version <= 5).cloned().collect::<Vec<_>>().into();
+        before.run(&pool).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO users (id, lrn_or_id, full_name, role, pin_hash, created_at, updated_at)
+                 VALUES ('t', 'T-0001', 'Owner', 'TEACHER', 'x', 1, 1), ('s', '123456789012', 'Ana', 'STUDENT', 'x', 1, 1);
+             INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
+                 VALUES ('c', 'Science 4', 'A', 'K7M4QX', 't', 1, 1);
+             INSERT INTO announcements (id, classroom_id, title, content, allow_comments, created_at, updated_at) VALUES ('a', 'c', 'Hi', 'Body', 0, 2, 3);
+             INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at) VALUES ('ac', 'a', 's', 'Thanks', 4, 5);
+             INSERT INTO materials (id, classroom_id, title, file_type, file_path, file_size_bytes, uploaded_by, announcement_id, created_at, updated_at)
+                 VALUES ('m', 'c', 'Lesson', 'DOCUMENT', 'materials/a.pdf', 10, 't', 'a', 6, 6);
+             INSERT INTO material_chunks (id, material_id, order_index, text, created_at, updated_at) VALUES ('ch', 'm', 0, 'Plants', 7, 7);
+             INSERT INTO ai_chat_messages (id, classroom_id, student_id, material_id, chunk_id, role, content, created_at)
+                 VALUES ('ai', 'c', 's', 'm', 'ch', 'TUTOR', 'What do plants need?', 8);",
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        migrate(&pool).await.unwrap();
+        let row: (String, Option<String>, i64, i64, i64) =
+            sqlx::query_as("SELECT title, author_id, allow_comments, created_at, updated_at FROM announcements WHERE id = 'a'")
+                .fetch_one(&pool).await.unwrap();
+        assert_eq!(row, ("Hi".into(), None, 0, 2, 3));
+        let comment: (String, String, i64) = sqlx::query_as("SELECT announcement_id, content, updated_at FROM announcement_comments WHERE id = 'ac'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(comment, ("a".into(), "Thanks".into(), 5));
+        let material: (Option<String>, String) = sqlx::query_as("SELECT announcement_id, uploaded_by FROM materials WHERE id = 'm'")
+            .fetch_one(&pool).await.unwrap();
+        assert_eq!(material, (Some("a".into()), "t".into()));
+        let chat: (Option<String>, Option<String>) =
+            sqlx::query_as("SELECT material_id, chunk_id FROM ai_chat_messages WHERE id = 'ai'").fetch_one(&pool).await.unwrap();
+        assert_eq!(chat, (Some("m".into()), Some("ch".into())), "the rebuild must not fire ON DELETE SET NULL");
+        let chunks: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM material_chunks").fetch_one(&pool).await.unwrap();
+        assert_eq!(chunks, 1, "the rebuild must not cascade into chunks");
+        assert_eq!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().len(), 0, "no broken references");
+    }
+
     /// Contract #273 (issue #274): a Hub that already holds classes upgrades with every row kept and
     /// the new audit columns filled from the times it already recorded. Rebuilding `materials` and
     /// `material_chunks` must not cascade into their chunks or null the tutor's chunk references.

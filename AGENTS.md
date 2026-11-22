@@ -9,7 +9,7 @@ Mandatory architectural invariants, technical constraints, coding standards and 
 An **offline Google Classroom + paperless quizzes + Socratic AI tutor** for Philippine public schools (Grades 1 to 12, elementary to senior high). It runs entirely on the classroom's own Wi-Fi, with no internet at all. First deployment: the capstone defense plus one pilot class of about 40 learners.
 
 **Three programs, one network:**
-* **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker and the AI model file that devices download. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
+* **Hub (`server/`):** runs on a dedicated, always-on school PC wired to the router. Holds the master SQLite database, files and videos, the quiz broker, the AI queue and the AI model file. One Hub serves all teachers and is the single place that syncs. Its window is an admin console (accounts, port health, USB export and backup).
 * **Mobile app (`mobile/`):** Android for learners (budget 3 to 4 GB phones) and teachers. A teacher can do on the phone everything they can do on desktop.
 * **Desktop app (`desktop/`):** Tauri client for student laptops, lab PCs and teachers. Same features as mobile, laid out for a large screen.
 
@@ -61,7 +61,7 @@ Seed accounts for the mock hub (PIN `123456`): `T-0001` (teacher, class code `K7
 * **Quizzes may be taken remotely**, but the live-synced countdown (`EVENT_QUIZ_START`, tick-by-tick) is a classroom-LAN feature. Over the tunnel, each client runs its own local countdown from `started_at` and the quiz's duration, and submits under the same `submitted_at - started_at <= limit + 60s` rule as in-school (`rules/quiz-and-anti-cheat.md`).
 * **The apps are English only** (decided 2026-11-03): no Filipino strings and no language toggle on mobile, desktop or the Hub window. The tutor already replies in English (§5.2).
 * Canonical values: touch targets 52dp on phones (56dp primary actions and quiz options) and 40px buttons on desktop (as in Google Classroom), quiz lockout `HTTP 403` / `QUIZ_IN_PROGRESS`, Phosphor icons, Nunito font, queued status `QUEUED_FOR_SYNC`, Android package `org.lara.app`, class codes are 6 uppercase characters without 0/O/1/I (shown `XXX-XXX`).
-* **The AI model lives on the Hub; inference runs on the device** (decided 2026-11-21, replacing the 2026-11-02 "tutor runs only on the Hub" decision and the "no AI on the Hub" proposal in PR #359): phones and desktops download the model file from the Hub over the classroom network (HTTP `:8080`, resumable with Range like video) and run it fully offline on the device. The Hub does not run inference: no `llama-server`, no AI queue, no queue status and no tutor token stream over the Hub WebSocket; it only stores and serves the file. The minimum device RAM and model file size are open until the evaluation (section 5.4). The small models tested in #73 leaked answers or refused everything, so model choice stays open.
+* **The AI tutor is hybrid** (decided 2026-11-22, replacing the 2026-11-21 on-device-only decision, the 2026-11-02 "tutor runs only on the Hub" decision and the "no AI on the Hub" proposal in PR #359): by default every device uses the tutor through the Hub (WebSocket, FIFO queue over 2 to 4 `llama-server` slots, queue status, token stream), as originally planned. The Hub also stores and serves the model file, and a capable phone or desktop may download it (HTTP `:8080`, resumable with Range like video) and run the tutor fully offline on the device, for example at home. A device that cannot run the model never installs or loads it and keeps using the Hub path. The small models tested in #73 leaked answers or refused everything; the passing candidate needs about 11 GB RAM on a 16 GB Hub. The device capability rule and the model size are open until the evaluation (section 5.4).
 * **AI grounding:** if the lesson text does not cover the question, the tutor says it cannot help with that and points the learner back to the lesson.
 * Model choice is open until the AI evaluation (section 5.4) produces data.
 
@@ -74,7 +74,7 @@ Say so, in an issue, with evidence. Every developer and agent may propose a bett
 
 1. **Mobile (`mobile/`):** Kotlin 2.x, Jetpack Compose, Room, CameraX, Media3. Hardware target: 3 to 4 GB RAM phones (Infinix, TECNO, itel, realme); **heap under 250 MB**.
 2. **Desktop (`desktop/`):** Tauri 2.x, React 19, TypeScript, Tailwind, `@tauri-apps/plugin-sql`.
-3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, model file hosting, gradebook export, backup.
+3. **Server (`server/`):** Tauri window plus Rust backend: mDNS, UDP beacon, SQLite, REST `:8080`, WebSocket `:8081`, video streaming, `llama-server` queue and model file hosting, gradebook export, backup.
 4. **Lead Developer:** reviews every PR against `rules/team-workflow-and-prs.md` section 5, gatekeeps `staging` and `main`, enforces the invariants. Does not write feature code.
 
 Rule documents (read the ones for your task):
@@ -97,12 +97,12 @@ Rule documents (read the ones for your task):
 
 ### 3.2 Offline-first persistence
 * Both clients keep an offline mirror of enrolled classes, announcements, handouts, videos and quiz history in local SQLite.
-* A learner can launch the app at home with no Wi-Fi and read and watch without errors or blocking loaders. Once the model is downloaded, the tutor works with no Wi-Fi; a device without the model shows "Download the AI model from the Hub" and one that cannot run it shows "The AI tutor is not available on this device".
+* A learner can launch the app at home with no Wi-Fi and read and watch without errors or blocking loaders. The tutor shows "The AI tutor needs the classroom Hub" when the Hub is unreachable, unless the device has downloaded the model, in which case it works with no Wi-Fi.
 * Offline actions (finished quizzes, homework photos, comments) are saved with `sync_status = 'QUEUED_FOR_SYNC'` and flush automatically when the Hub is reachable. Never describe the connection as "internet"; say "Hub" or "classroom network".
 
 ### 3.3 Network protocol and ports
 * **HTTP `:8080`:** captive portal `/download`, REST, file transfer, video streaming strictly via HTTP Range (`206 Partial Content`), per-client cap **2.0 MB/s**, video uploads capped at 250 MB.
-* **WebSocket `:8081`:** live quiz timers, presence, enrollment approvals, announcement pushes. Handshake in `contracts/events/README.md`.
+* **WebSocket `:8081`:** live quiz timers, presence, enrollment approvals, announcement pushes, Hub-assisted AI tokens. Handshake in `contracts/events/README.md`.
 * **Discovery:** mDNS `_lara._tcp.local` on 8080, UDP JSON beacon every 3 s to `255.255.255.255:8888`. A manual IP entry fallback must always exist on the connection screen. mDNS and the UDP beacon are LAN-only and never attempted off the school network; the same fallback field also accepts a saved Hub remote URL (the Cloudflare Tunnel hostname) when the device is off the LAN (section 3.5).
 
 ### 3.4 Security and privacy (children's data)
@@ -136,25 +136,29 @@ Rule documents (read the ones for your task):
 
 ## 5. Socratic AI Tutor (L.A.R.A AI)
 
-A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. The model file is stored on the Hub and downloaded by each device, and inference runs on the device only, with pluggable GGUF models. Full rules: `rules/socratic-ai-guardrails.md`.
+A guide for Grades 1 to 12, never an answer engine. It is Socratic by design, so it behaves the same at every grade level: no grade setting, no per-grade prompt. It is hybrid: by default the Hub runs the model with `llama-server` and every device uses it over the classroom network; the Hub also stores the model file, and a capable device may download it and run the tutor offline. Pluggable GGUF models. Full rules: `rules/socratic-ai-guardrails.md`.
 
-### 5.1 Delivery
-* **The Hub stores and serves the model file; the device runs it.** A phone or desktop downloads the model over HTTP `:8080` (large file, resumable via Range, like video) and runs inference locally and offline. The Hub does no inference and has no AI queue, queue status or tutor token stream. Remote/Suspension Mode: only the model download may use the tunnel; inference needs no network.
-* **Using the tutor is optional.** Nothing else may depend on it. A device that has not downloaded the model shows "Download the AI model from the Hub"; a device that cannot run it shows "The AI tutor is not available on this device". Everything else keeps working. The device RAM and size limits, how the Hub obtains the model file, and the route and error code for the download are to be defined in a contract-change PR.
+### 5.1 Routing and delivery
+* **Default path: the Hub.** Every device can use the tutor through the Hub over WebSocket: `EVENT_AI_CHAT_REQUEST` → `EVENT_QUEUE_STATUS` / `EVENT_AI_TOKEN_STREAM`. The Hub runs a FIFO queue over 2 to 4 `llama-server` slots and pushes queue status (`"You are second in the queue - est. 4s"`). The Hub model needs about 11 GB RAM on a 16 GB Hub. When the Hub is unreachable and the device has no local model, show "The AI tutor needs the classroom Hub"; Remote/Suspension Mode carries the same stream through the tunnel.
+* **The Hub ships with the AI installed; using it is optional.** Nothing else may depend on it. If the Hub's model file is missing or fails to load, the Hub answers `AI_NOT_AVAILABLE` and shows the problem on its dashboard, and clients show "AI is not available right now" while everything else keeps working.
+* **Optional second path: on the device, offline.** The Hub also stores and serves the model file. A capable phone or desktop may download it over HTTP `:8080` (large file, resumable via Range, like video) and then run the tutor fully offline on the device, for example at home. The app checks the device first: a device that cannot run the model never gets it installed and never tries to load it, so the app cannot crash on it, and it simply keeps using the Hub path (budget phones are expected to stay on the Hub path). The capability rule (RAM, storage, CPU) and the model size are open until the evaluation. Remote/Suspension Mode: the model download may use the tunnel; on-device inference needs no network.
+* To be defined in a contract-change PR: the route, auth and error code for the model download (with size and checksum metadata), how the Hub obtains the model file, the model name and size, the device capability rule, how lesson chunks and chat history reach the device on the on-device path, how quiz lockout is enforced offline, whether `ai_chat_messages` from on-device chats sync to the Hub, and which path wins when both are available.
 
 ### 5.2 Behavior (every model, every path)
-0. **One prompt file, loaded by the app on the device:** `contracts/ai/socratic_system_prompt.txt`. The app loads that file byte for byte, selects chunks per `rules/socratic-ai-guardrails.md` section 3.1 and history per section 3.2. The app never writes its own prompt; changing it is a `contract-change` PR followed by a re-run of the evaluation.
+The rules below are identical on the Hub path and the on-device path.
+
+0. **One prompt file:** `contracts/ai/socratic_system_prompt.txt`. On the Hub path only the Hub builds the prompt: it loads that file byte for byte, selects chunks per `rules/socratic-ai-guardrails.md` section 3.1 and history per section 3.2; clients send the learner's message and render the stream. On the on-device path the app loads the same file byte for byte and applies the same chunk and history rules. Nobody writes their own prompt; changing it is a `contract-change` PR followed by a re-run of the evaluation.
 1. **Never give the final answer.** Decline warmly: *"I can't give you the answer itself, but I will help you find it! Let's go back to what you read. What is the first step?"*
 2. **Strict grounding** in the teacher's lesson chunks (`material_chunks`). If the lesson does not cover it, say so and point back to the lesson. Never extrapolate.
 3. **One small clue, then one leading question.**
 4. **English only:** the tutor replies in English, and it does not help with messages written in Filipino or Taglish. It declines in English with exactly "I can only help in English. Please ask your question again in English." (decided 2026-11-05, replacing the 2026-11-01 rule that answered them in English).
-5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. The app never composes the chat UI and refuses to run the model during an active attempt. How this is enforced offline is to be defined in a contract-change PR.
+5. **Quiz lockout:** while a learner has an `IN_PROGRESS` quiz attempt the AI is unavailable. Clients never compose the chat UI. On the Hub path the Hub rejects requests with `HTTP 403` / `EVENT_ERROR` code `QUIZ_IN_PROGRESS`; on the on-device path the app refuses to run the model during an active attempt (how this is enforced offline is to be defined in a contract-change PR).
 
 ### 5.3 Model choice is open
-MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. The model must pass the evaluation on the target devices.
+MiniCPM5-2B is a baseline candidate only. Pick the model from the evaluation below, not from assumption. The Hub model must pass the evaluation on the Hub machine, and any model offered for on-device use must pass it on the target devices. A model that tutors well enough is expected to be around 4B parameters, which only flagship-class phones can run on the device; budget phones stay on the Hub path (section 5.1) and the rest of the app works as usual.
 
 ### 5.4 Evaluation requirement
-Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, run on the actual target devices (budget phones and student laptops). Do not claim "good enough" without those numbers.
+Before the chat UI is built, run the AI feasibility spike (`rules/socratic-ai-guardrails.md` section 5): a fixed scored test set in English, run on the actual Hub machine and, for any model offered for on-device use, on the actual target devices (budget phones and student laptops). Do not claim "good enough" without those numbers.
 
 ---
 
@@ -192,7 +196,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 - [ ] Works with the Hub unreachable (offline state defined)
 - [ ] Strings in resources (English), tokens only, targets at least 52dp on phones and 40px buttons on desktop
 - [ ] No answer key, PIN data or foreign LRN reaches a client
-- [ ] AI unavailable during a quiz (the on-device tutor refuses to run during an active attempt)
+- [ ] AI unavailable during a quiz (the Hub rejects with `QUIZ_IN_PROGRESS`; an on-device tutor refuses to run during an active attempt)
 - [ ] Team docs updated
 
 ---
@@ -201,7 +205,7 @@ Every PR that adds a feature updates its team folder: `mobile/docs/`, `desktop/d
 
 | Term | Meaning |
 |---|---|
-| **Hub** | The server app on the school PC: database, files, WebSocket, AI model file |
+| **Hub** | The server app on the school PC: database, files, WebSocket, AI queue and model file |
 | **Class Code** | 6-character code a learner enters to ask to join a class (stored `K7M4QX`, shown `K7M-4QX`) |
 | **LRN** | Learner Reference Number, the 12-digit DepEd learner ID. Personal data |
 | **QUEUED_FOR_SYNC** | Work created offline, waiting for the Hub |

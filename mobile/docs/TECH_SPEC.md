@@ -13,7 +13,7 @@
 | 2 | 2.1 nav shell, 2.2 auth, 2.3 join, 2.4 approvals, 2.5 sync, 2.6 settings, 2.7 class management | FR-1.1 to FR-1.4, PRD 6.2 |
 | 3 | 3.1 stream and PDF, 3.2 camera, 3.3 video, 3.4 announce, 3.5 authoring, 3.6 review, 3.7 private comments and To-do | FR-2.x, FR-3.x |
 | 4 | 4.1 quiz, 4.2 controller, 4.3 offline queue, 4.4 My Work, 4.5 quiz builder, 4.6 gradebook | FR-4.x, FR-5.1 |
-| 5 | 5.1 on-device chat client (model download from the Hub, local inference; reworked 2026-11-21), 5.2 tutor sheet, 5.3 quiz lockout | PRD 5.x |
+| 5 | 5.1 Hub chat client (optional model download and local inference added 2026-11-22), 5.2 tutor sheet, 5.3 quiz lockout | PRD 5.x |
 | 6 | 6.1 profiling, 6.2 UX audit, 6.3 remote Hub screen | PRD 3.2, 8 |
 
 **Non-goals (must not be built):** Firebase, Play Services, CDN assets, telemetry; a model chosen by us (the AI evaluation decides); queued announcements, grading or class management (they need the Hub); a gradebook export on the phone (the Hub never sends learner data files to a client, server spec Q6); admin, backup or restore screens; learners posting to the stream; per-grade AI settings; dynamic color; tablet-specific layouts; Hilt, Ktor, Prisma or any other ORM.
@@ -69,7 +69,7 @@ data/remote/           HubClient, AuthApi and other *Api, RealtimeClient, dto/, 
 data/sync/             SyncRepository, DeltaSyncWorker, HomeworkUploadWorker, QuizPushWorker
 data/quiz/             QuizAttemptRepository (path named by [MOBILE 4.3])
 data/media/            DownloadManager (Save for Home)
-ai/                    on-device tutor client (replaces HubChatClient), QuizLockout
+ai/                    HubChatClient, optional on-device tutor client, QuizLockout
 res/values   English resources; res/font Nunito; Phosphor drawables bundled
 mobile/docs/           one doc per module (see mobile/docs/README.md)
 ```
@@ -90,7 +90,7 @@ mobile/docs/           one doc per module (see mobile/docs/README.md)
 | `QuizAttemptRepository` | class | Attempt rows, answers saved per change, `hasInProgressAttempt(): Flow<Boolean>`, queue and finish |
 | `QuizSessionManager` | class | Countdown from `started_at` and clock offset; emits remaining time and expiry |
 | `QuizLockout` | class | Exposes `Flow<Boolean>` from `hasInProgressAttempt()`; gate for any AI UI or call |
-| `HubChatClient` (to be renamed) | class | Superseded 2026-11-21: downloads the model from the Hub and runs inference on the device; engine and API to be defined in a contract-change PR |
+| `HubChatClient` | class | Sends learner messages and renders the Hub queue and token stream. The optional model download and on-device inference (capable phones only) are to be defined in a contract-change PR |
 | `SyncScheduler` | class | Enqueues unique one-time and periodic WorkManager work; the only caller of `WorkManager` for sync |
 | `ClassroomRepository`, `EnrollmentRepository`, `ClassManagementRepository`, `StreamRepository`, `PrivateCommentRepository`, `GradingRepository`, `GradebookRepository`, `QuizRepository`, `QuizControllerRepository`, `QuizAuthoringRepository`, `ClassworkAuthoringRepository` | repository interfaces in `domain/`, impls in `data/repository/` | One per feature area named in section 6; created in the step that first needs it (section 10) |
 | `UiState` | sealed interface per screen | `Loading`, `Content`, `Empty`, `Offline` as needed |
@@ -137,7 +137,8 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 | `EVENT_GRADE_CONFIRMED` | `QuizAttemptRepository` | n/a | Next pull carries score (null while held) |
 | `EVENT_PRESENCE` (teacher) | `QuizControllerRepository` | n/a | Polling `GET /api/quizzes/{id}/results` |
 | `EVENT_QUIZ_SUBMIT` | not used (REST submit only) | n/a | n/a |
-| Model download route (to be defined in a contract-change PR); the Hub chat events no longer apply (2026-11-21) | on-device tutor client | No model: "Download the AI model from the Hub"; cannot run it: "The AI tutor is not available on this device" | Download interrupted: resume with Range |
+| `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | `HubChatClient` | `EVENT_ERROR` `QUIZ_IN_PROGRESS`, `AI_QUEUE_FULL` keep typed text, `AI_NOT_AVAILABLE` show unavailable state | Socket drop: offline state, keep conversation so far |
+| Model download route (optional, to be defined in a contract-change PR) | optional on-device tutor client | A device that cannot run the model keeps using the Hub path | Download interrupted: resume with Range |
 
 ## 7. Data and Offline Behavior
 Source of truth: `contracts/schema/client_offline.sql` and `rules/database-and-sync.md`. Details in `mobile/docs/room_schema.md` and `sync_worker.md`.
@@ -165,7 +166,7 @@ retain existing creation times. These audit fields are local and are not added t
 | Join class, class management, post announcement, authoring, grading, quiz start/close | Action disabled with helper line (not queued) |
 | Comments, private comments, homework photo | Saved `QUEUED_FOR_SYNC` with queued badge |
 | Quiz (learner) | Continues from local timer and Room answers; finish queues |
-| Tutor | Model downloaded: works offline. No model: "Download the AI model from the Hub"; cannot run it: "The AI tutor is not available on this device"; past chats remain readable offline |
+| Tutor | Hub unreachable and no model downloaded: "The AI tutor needs the classroom Hub"; model downloaded: works offline; past chats remain readable offline |
 | Gradebook, results | Cached from Room |
 
 ## 8. Code Patterns
@@ -202,7 +203,7 @@ fun TutorEntry(lockout: QuizLockout) {
     if (locked) DisabledTutorTab(reason = R.string.tutor_locked_quiz) else SocraticBottomSheetHost()
 }
 ```
-The on-device tutor client also checks `lockout.active.first()` before any generation and refuses to run during an active attempt (the Hub no longer sees AI requests).
+`HubChatClient` also checks `lockout.active.first()` before any request and handles `QUIZ_IN_PROGRESS`; the optional on-device client checks it before any generation and refuses to run during an active attempt.
 
 **Screen UiState:**
 ```kotlin
@@ -312,7 +313,7 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 3. **No client-side draft store.** `POST /api/quizzes` already creates a `DRAFT` quiz on the Hub and `PATCH /api/quizzes/{id}` edits it while it is `DRAFT`, so the draft lives on the Hub. The builder keeps unsaved edits only in ViewModel memory, never in Room, files or prefs, and saving needs the Hub. `correct_answer` from `GET /api/quizzes/{id}` (owning teacher) is held in memory only and never logged.
 4. **Yes.** `hasInProgressAttempt()` lands in [MOBILE 1.3]; build [MOBILE 5.3] before [MOBILE 5.2].
 5. **Yes.** `QuizPushWorker` is thin expedited work calling `SyncRepository.pushQueued()`; [MOBILE 4.1] creates `QuizAttemptRepository`.
-6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; the on-device chat client and quiz lockout stay in `ai/`. [MOBILE 6.1] writes its report to `docs/benchmarks/mobile_battery_memory_report.md` as the issue says (allowed by `rules/team-workflow-and-prs.md` 1.1.9).
+6. **Accepted.** `data/quiz/` and `data/media/` are sub-packages of `data/`; the Hub chat client and quiz lockout stay in `ai/`. [MOBILE 6.1] writes its report to `docs/benchmarks/mobile_battery_memory_report.md` as the issue says (allowed by `rules/team-workflow-and-prs.md` 1.1.9).
 7. **Yes.** Keystore-wrapped `TokenStore`, not `EncryptedSharedPreferences`.
 8. **16 tables.** The contract wins over the issue text.
 12. **Accepted.** No `last_event_id`; the client relies on pull.
@@ -324,7 +325,7 @@ Answered by the Lead on 2026-10-26 (decisions, now binding for this spec):
 11. **Error codes follow the server spec's calls** (`server/docs/TECH_SPEC.md` section 14: Q1 start codes, Q7 login limit, Q8 `ALREADY_EXISTS`, `QUIZ_CLOSED`). The client maps by HTTP status plus these codes and shows a kind generic message for anything else, until the `contract-change` PRs those calls name are merged.
 
 Still open (answer before the step named):
-14. [MOBILE 5.2] waits for [SERVER 1.5] results; [MOBILE 5.1] provides the on-device chat client.
+14. [MOBILE 5.2] waits for [SERVER 1.5] results; [MOBILE 5.1] provides the Hub chat client.
 
 ## 15. Invariants Checklist
 - [x] No internet or CDN dependency (fonts and icons bundled; the only off-LAN path is the Hub's tunnel URL)

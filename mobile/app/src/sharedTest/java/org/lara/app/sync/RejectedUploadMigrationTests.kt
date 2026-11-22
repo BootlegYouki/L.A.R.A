@@ -13,6 +13,7 @@ import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.local.RejectedUploadMigration
 import org.lara.app.data.local.AnnouncementAuthorMigration
 import org.lara.app.data.local.AuditTimestampMigration
+import org.lara.app.data.local.AnnouncementAuthorMigration
 import org.lara.app.data.local.HomeworkReceiptMigration
 import java.util.UUID
 
