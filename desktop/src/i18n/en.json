@@ -1,5 +1,7 @@
 {
   "app_title": "L.A.R.A.",
+  "window_role_teacher": "Teacher",
+  "window_role_student": "Student",
   "home": "Home",
   "skip_content": "Skip to content",
   "hub_offline": "Not connected to Hub",
