@@ -19,7 +19,7 @@ class SyncScheduler(context: Context) {
     private val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val networkChanges = changes.asSharedFlow()
     fun enqueueHomework() {
-        manager.enqueueUniqueWork("lara-homework-upload", ExistingWorkPolicy.APPEND_OR_REPLACE,
+        manager.enqueueUniqueWork(HOMEWORK, ExistingWorkPolicy.APPEND_OR_REPLACE,
             OneTimeWorkRequestBuilder<HomeworkUploadWorker>().setConstraints(constraints())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build())
     }
@@ -33,7 +33,11 @@ class SyncScheduler(context: Context) {
     @Synchronized fun start() {
         if (started) return
         started = true
-        manager.enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.KEEP,
+        // Old requests keep their battery constraint. The saved outbox will drain through delta sync.
+        manager.cancelUniqueWork("lara-homework-upload")
+        manager.cancelUniqueWork("lara-delta-sync-now")
+        manager.cancelUniqueWork("lara-delta-sync-reconnect")
+        manager.enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.UPDATE,
             PeriodicWorkRequestBuilder<DeltaSyncWorker>(15, TimeUnit.MINUTES)
                 .setConstraints(constraints()).setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build())
         connectivity.registerNetworkCallback(networkRequest(),
@@ -43,12 +47,13 @@ class SyncScheduler(context: Context) {
             })
     }
     companion object {
-        const val NOW = "lara-delta-sync-now"
+        const val NOW = "lara-delta-sync-now-v2"
+        private const val HOMEWORK = "lara-homework-upload-v2"
         const val PERIODIC = "lara-delta-sync-periodic"
-        const val RECONNECT = "lara-delta-sync-reconnect"
+        const val RECONNECT = "lara-delta-sync-reconnect-v2"
         internal fun networkRequest() = NetworkRequest.Builder().build()
         internal fun constraints() = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true).build()
+            .build()
         internal fun oneTime() = OneTimeWorkRequestBuilder<DeltaSyncWorker>().setConstraints(constraints())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build()
     }

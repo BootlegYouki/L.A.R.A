@@ -75,3 +75,5 @@ The required `.agents/skills/lara-mobile/SKILL.md` was missing locally and on fe
 Media3 references: [DataSource read/open contract](https://developer.android.com/reference/androidx/media3/datasource/DataSource), [ExoPlayer lifecycle](https://developer.android.com/media/media3/exoplayer/hello-world).
 
 The fullscreen/removal continuation report and current evidence are in [evidence/59/fullscreen-removal/README.md](evidence/59/fullscreen-removal/README.md). Earlier evidence above describes historical runs, not the current working tree.
+
+Saved video cards use a sampled thumbnail on Android 8.1 and later. Android 8.0 uses the play card fallback.

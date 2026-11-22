@@ -1,5 +1,7 @@
 # Delta sync - MOBILE 2.5 (#52)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 ## Base and implementation
 
 Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a6` and now includes `d140e77`, the independent REST approval fixes, including Mobile 2.3 `adade1a` and the Lead's roster `enrollment_id` contract update. The integration adds no shared API or schema changes.
@@ -8,7 +10,7 @@ Branch `codex/52-mobile-2.5-delta-sync` originally started at Mobile 2.4 `6b174a
 - `SyncRepository`: serializes foreground/background sync, follows `has_more`, pushes bounded batches of the current user’s submitted quiz attempts and comments, then pulls authoritative changes. An unfinished quiz or another author’s work is never uploaded.
 - `SyncStore`: applies a fully decoded page, public users, upserts, tombstones and `hub_id`/`sync_epoch`/integer `cursor` in one Room transaction. Fetch/decode failure changes no database state; apply failure rolls the page back. Stale concurrent responses cannot advance the cursor.
 - `DeltaSyncWorker`: success when no account/endpoint exists; retries transport errors, 429 and server failures; reports authorization/permanent payload failures without clearing saved work.
-- `SyncScheduler`: unique 15-minute periodic work, unique immediate chains, battery-not-low and exponential retry. Connectivity callbacks enqueue a separate replaceable reconnect job so an older offline retry chain cannot delay it. Session startup and offline comment writes enqueue ordinary immediate work. `NetworkType.NOT_REQUIRED` permits classroom Wi-Fi without internet validation; the transport must still reach and authenticate with the selected Hub.
+- `SyncScheduler`: unique 15-minute periodic work, unique immediate chains, exponential retry and no minimum battery requirement. Connectivity callbacks enqueue a separate replaceable reconnect job so an older offline retry chain cannot delay it. Session startup and offline comment writes enqueue ordinary immediate work. `NetworkType.NOT_REQUIRED` permits classroom Wi-Fi without internet validation; the transport must still reach and authenticate with the selected Hub. On upgrade, the scheduler updates periodic work and cancels old one-time jobs that still carry the battery constraint. New sync jobs drain the saved outbox.
 - `SyncSessionViewModel`: one foreground socket shared with learner and teacher controls. HELLO/reconnect and announcement events trigger a direct pull and queued worker retry. Lifecycle disposal/background stops socket subscriptions. No UI reads remote responses directly.
 
 ## Enrollment visibility and 2.4 integration

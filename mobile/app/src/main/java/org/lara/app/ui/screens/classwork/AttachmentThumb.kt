@@ -5,6 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,5 +40,17 @@ internal fun AttachmentThumb(bitmap: Bitmap?, icon: Int, play: Boolean = false, 
         else if (text != null) Text(text, Modifier.padding(LaraSpacing.S3), style = MaterialTheme.typography.bodySmall, maxLines = 6, overflow = TextOverflow.Ellipsis)
         else Icon(painterResource(icon), null, Modifier.size(40.dp), tint = LaraColors.TextSecondary)
         if (play) Icon(painterResource(org.lara.app.R.drawable.ic_play), null, Modifier.size(48.dp), tint = Color.White)
+    }
+}
+
+@Composable
+internal fun AttachmentTitleRow(title: String, icon: Int, tint: Color, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = org.lara.app.ui.theme.MinTouchTarget).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2),
+    ) {
+        Icon(painterResource(icon), null, Modifier.size(24.dp), tint = tint)
+        Text(title, Modifier.weight(1f))
     }
 }

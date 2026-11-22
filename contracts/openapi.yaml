@@ -6,7 +6,7 @@ info:
 
     Conventions (see contracts/naming_rules.md):
     - All JSON keys are snake_case. All timestamps are epoch milliseconds (integer).
-    - All routes except /download, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
+    - All routes except /download, first-run /api/admin/setup, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
     - Errors always use the Error envelope: {"error": {"code": "...", "message": "..."}}.
     - correct_answer is returned ONLY to the teacher who owns the quiz. Student responses never contain it.
     - Realtime events are on ws://{hub_ip}:8081 (see contracts/events/README.md).
@@ -37,7 +37,8 @@ paths:
   # ---------------------------------------------------------------- AUTH
   /api/auth/register:
     post:
-      summary: Self-register a learner account (teacher accounts are created by the Hub admin)
+      summary: Self-register a learner account
+      description: Legacy learner-only registration. An active teacher bearer session or an explicit TEACHER role request returns 403.
       security: []
       tags: [auth]
       requestBody:
@@ -71,6 +72,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthSession"
         "400":
+          $ref: "#/components/responses/Error"
+        "403":
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"

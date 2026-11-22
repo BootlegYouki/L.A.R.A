@@ -53,7 +53,10 @@ Build `assembleDebug assembleDebugAndroidTest` with `-I <init-script>`, install 
 adb shell am instrument -w -r -e class org.lara.app.reading.HandoutDeviceTest,org.lara.app.reading.ReadingScreenDeviceTest org.lara.app.sprint31reading.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-These synthetic fixture scenarios must use the isolated package: they write a test token/profile and leave fixture caches there. They do not require the mock Hub. Run JVM tests under the normal app ID to avoid this Windows machine's long test database paths. For the full app flow, start the unmodified mock, forward its REST/WS ports with ADB, connect through manual IP, and use the documented seed accounts. Remove forwarding to test Hub-unreachable behavior; restore it for reconnect. A low battery can legitimately hold background queued uploads until the worker's battery constraint is satisfied.
+These synthetic fixture scenarios must use the isolated package: they write a test token/profile and leave fixture caches there. They do not require the mock Hub. Run JVM tests under the normal app ID to avoid this Windows machine's long test database paths. For the full app flow, start the unmodified mock, forward its REST/WS ports with ADB, connect through manual IP, and use the documented seed accounts. Remove forwarding to test Hub-unreachable behavior; restore it for reconnect.
+
+Word handouts size-check expanded XML before parsing. The attachment preview decodes only its first image, and the document viewer loads and releases sampled images with its lazy list.
+
 ## Checking Stream comments and submissions
 
 - Start the mock Hub from the repository root with `python3 scripts/mock_hub.py`, then connect the phones to the classroom network and enter the Hub's address in the app. The teacher signs in as `T-0001` and opens class `K7M-4QX`. Use the current six-digit mock PIN, `123456`.

@@ -11,6 +11,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
@@ -51,6 +54,15 @@ import org.lara.app.domain.Cached
 import org.lara.app.data.repository.HomeworkAttachment
 import org.lara.app.ui.theme.*
 
+internal fun privateCommentStatusLabel(status: String, reason: String?): Int? = when (status) {
+    "QUEUED_FOR_SYNC" -> R.string.reading_queued
+    "REJECTED" -> when (reason) {
+        "FORBIDDEN", "NOT_FOUND" -> R.string.homework_comment_access_changed
+        else -> R.string.homework_comment_rejected
+    }
+    else -> null
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, close: () -> Unit) {
@@ -73,10 +85,27 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     val scanEnhance by model.scanEnhance.collectAsStateWithLifecycle()
     val scanDetected by model.scanDetected.collectAsStateWithLifecycle()
     val scanAvailable by model.scanAvailable.collectAsStateWithLifecycle()
-    var camera by rememberSaveable { mutableStateOf(false) }
+    var camera by rememberSaveable(assignment.id) { mutableStateOf(false) }
+    var documentCamera by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var adding by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var confirming by rememberSaveable(assignment.id) { mutableStateOf(false) }
     val context = LocalContext.current
+    var requestCamera by remember { mutableStateOf(false) }
+    var cameraPermissionDenied by rememberSaveable(assignment.id) { mutableStateOf(false) }
+    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        cameraPermissionDenied = !granted
+        camera = granted
+    }
+    LaunchedEffect(requestCamera) {
+        if (!requestCamera) return@LaunchedEffect
+        requestCamera = false
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionDenied = false
+            camera = true
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { model.choose(context.applicationContext, it) }
     }
@@ -102,14 +131,25 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         return
     }
     if (camera) {
-        CameraCaptureScreen({ file -> camera = false; model.captured(file) }, { camera = false })
+        HomeworkCameraDialog(onDismiss = { camera = false }) {
+            CameraCaptureScreen(
+                onCaptured = { file ->
+                    camera = false
+                    model.captured(file, documentCamera)
+                },
+                close = { camera = false },
+                document = documentCamera,
+            )
+        }
         return
     }
     val source = scanSource
     if (source != null) {
-        DocumentReviewScreen(source, scanPreview, container.homeworkPhotos, scanCorners, scanEnhance,
-            scanDetected, scanAvailable, busy, error, model::previewScan, model::adjustScan,
-            { model.useScan(false) }, { model.useScan(true) }, model::cancelScan)
+        HomeworkCameraDialog(onDismiss = { if (!busy) model.cancelScan() }) {
+            DocumentReviewScreen(source, scanPreview, container.homeworkPhotos, scanCorners, scanEnhance,
+                scanDetected, scanAvailable, busy, error, model::previewScan, model::adjustScan,
+                { model.useScan(false) }, { model.useScan(true) }, model::cancelScan)
+        }
         return
     }
     val path = draft ?: submission?.filePath
@@ -211,6 +251,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                             Text(stringResource(R.string.homework_saving))
                         }
                         if (error) Text(stringResource(R.string.homework_save_failed), color = LaraColors.DangerDark)
+                        if (cameraPermissionDenied) Text(stringResource(R.string.homework_permission))
                         Text(stringResource(R.string.homework_attachments), style = MaterialTheme.typography.titleMedium)
                         HomeworkAttachmentPreview(path, submission?.fileType)
                         if (submission?.syncStatus == "REJECTED") {
@@ -228,6 +269,10 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                                     DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(c.createdAt)),
                                     style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
                                 Text(c.content, style = MaterialTheme.typography.bodyLarge)
+                                privateCommentStatusLabel(c.syncStatus, c.syncRejectReason)?.let { label ->
+                                    Text(stringResource(label), style = MaterialTheme.typography.bodySmall,
+                                        color = LaraColors.TextSecondary)
+                                }
                             }
                         }
         
@@ -272,12 +317,18 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             Text(stringResource(R.string.homework_add_work), style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = { adding = false; camera = true }, enabled = !busy,
+            TextButton(onClick = { adding = false; documentCamera = false; requestCamera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
                 val hasPhoto = !path.isNullOrEmpty() && HomeworkAttachment.type(File(path)) == "IMAGE"
                 Text(stringResource(if (hasPhoto) R.string.homework_retake else R.string.homework_take_photo))
+            }
+            TextButton(onClick = { adding = false; documentCamera = true; requestCamera = true }, enabled = !busy,
+                modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                Icon(painterResource(R.drawable.ic_corners_out), null, Modifier.size(24.dp))
+                Spacer(Modifier.width(LaraSpacing.S3))
+                Text(stringResource(R.string.homework_scan_document))
             }
             TextButton(onClick = { adding = false; gallery.launch("image/*") }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {

@@ -38,12 +38,10 @@ class AuthViewModel(private val repository: AuthRepository, private val endpoint
     fun signedOut(expectedSession: Long? = null) {
         if (expectedSession == null || mutable.value.sessionVersion == expectedSession) mutable.value = AuthState(restoring = false)
     }
-    fun submit(id: String, pin: String, name: String?) {
+    fun submit(id: String, pin: String) {
         if (mutable.value.busy || SystemClock.elapsedRealtime() < mutable.value.retryAt) return
         val normalizedId = id.trim()
-        val normalizedName = name?.trim()
-        if (normalizedId.isBlank() || normalizedId.length > 32 || !AuthPin.isValid(pin) ||
-            (normalizedName != null && (normalizedName.isBlank() || normalizedName.length > 100 || !normalizedId.matches(Regex("[0-9]{12}"))))) {
+        if (normalizedId.isBlank() || normalizedId.length > 32 || !AuthPin.isValid(pin)) {
             mutable.value = mutable.value.copy(error = R.string.auth_invalid)
             return
         }
@@ -52,7 +50,7 @@ class AuthViewModel(private val repository: AuthRepository, private val endpoint
         mutable.value = mutable.value.copy(busy = true, error = null)
         val previousUser = mutable.value.previousUser
         viewModelScope.launch {
-            try { mutable.value = AuthState(restoring = false, user = repository.authenticate(endpoint, normalizedId, pin, normalizedName), sessionVersion = ++nextSession) }
+            try { mutable.value = AuthState(restoring = false, user = repository.authenticate(endpoint, normalizedId, pin), sessionVersion = ++nextSession) }
             catch (e: CancellationException) { throw e }
             catch (e: AuthFailure) {
                 val error = when(e.status) { 401 -> R.string.auth_wrong_pin; 403 -> R.string.auth_admin; 409 -> R.string.auth_exists; 429 -> R.string.auth_wait; else -> R.string.auth_failed }

@@ -30,7 +30,21 @@ const MAX_LRN_CHARS: usize = 32;
 const MAX_NAME_CHARS: usize = 100;
 
 /// Learners only: teachers are created by the Hub admin (PRD FR-1.0, FR-1.1).
-async fn register(State(app): State<AppState>, body: JsonBody) -> Result<Json<AuthSession>, ApiError> {
+async fn register(
+    State(app): State<AppState>,
+    headers: HeaderMap,
+    body: JsonBody,
+) -> Result<Json<AuthSession>, ApiError> {
+    let teacher_session = if let Some(token) = bearer_token(&headers) {
+        sessions::user_for_token(&app.db, token, app.clock.now_ms())
+            .await?
+            .is_some_and(|user| user.role == Role::Teacher)
+    } else {
+        false
+    };
+    if teacher_session || body.text("role").as_deref() == Some("TEACHER") {
+        return Err(ApiError::forbidden("Teachers cannot register accounts"));
+    }
     body.need(&["lrn_or_id", "full_name", "pin"])?;
     let lrn_or_id = text_field(&body, "lrn_or_id")?.trim().to_owned();
     let full_name = text_field(&body, "full_name")?.trim().to_owned();

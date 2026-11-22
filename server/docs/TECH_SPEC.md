@@ -1,5 +1,7 @@
 # Server Technical Spec
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 > Owner: Jv Bialen, John Rey Calipes (Server team)  |  Reviewer: Lead Developer  |  Status: Approved  |  Last updated: 2026-11-04
 > This is not a PRD. Product behavior lives in `docs/PRD.md` and `contracts/`. This document says how this team will build its part. Never redefine behavior here; link to the source instead.
 > AI agents read this file as context in every session. Read [`TECH_SPEC_GUIDE.md`](../../docs/templates/TECH_SPEC_GUIDE.md) before filling it in. Keep the headings unchanged, use exact names and paths in backticks, and write "must" or "must not".
@@ -129,12 +131,12 @@ server/ai_eval/       prompts.json, run_eval.py (spike #73 only, not shipped)
 | `<Entity>Input` | structs | Inline request bodies, following `TeacherQuizInput` (`AnnouncementInput`, `AssignmentInput`, ...) |
 
 ## 6. Contract Usage
-Every route except `/download`, register and login answers 401 `UNAUTHORIZED` without a valid token; every route can answer 403 `FORBIDDEN` (wrong role or class) and 400 `BAD_REQUEST` (missing field, bad JSON); unknown paths answer 404 `ROUTE_NOT_FOUND`. **On peer gone:** a transaction either committed or rolled back, and client-generated ids make the retry idempotent.
+Every route except `/download`, first-run `POST /api/admin/setup` and login answers 401 `UNAUTHORIZED` without a valid token; every route can answer 403 `FORBIDDEN` (wrong role or class) and 400 `BAD_REQUEST` (missing field, bad JSON); unknown paths answer 404 `ROUTE_NOT_FOUND`. **On peer gone:** a transaction either committed or rolled back, and client-generated ids make the retry idempotent.
 
 | Contract route or event | Our module | On error codes (beyond the common ones) | On timeout or Hub unreachable (peer gone) |
 |---|---|---|---|
 | `GET /download` | `routes/portal.rs` | 404 missing installer | Range resume |
-| `/api/auth/register`, `/login`, `/logout` | `routes/auth.rs` | 409 `ALREADY_EXISTS` (Q8); 400 empty or too long LRN or name; 401 wrong LRN or PIN; 429 `TOO_MANY_ATTEMPTS` (Q7); admin off the Hub PC 403 `ADMIN_LOCAL_ONLY` | Client logs in again |
+| `/api/auth/login`, `/api/auth/logout` | `routes/auth.rs` | 401 wrong LRN or PIN; 429 `TOO_MANY_ATTEMPTS` (Q7); admin off the Hub PC 403 `ADMIN_LOCAL_ONLY` | Client logs in again |
 | `/api/admin/setup`, `/api/admin/users`, `.../reset-pin` | `routes/admin.rs` | 409 `ADMIN_EXISTS`; setup 403 off the Hub PC (not loopback, or relayed by the tunnel); 409 `ALREADY_EXISTS`; 404 | Same |
 | `/api/classrooms` (GET, POST), `/join` | `routes/classrooms.rs` | 404 `CLASS_CODE_INVALID` | Join returns the existing enrollment |
 | `/api/classrooms/{id}` PATCH, `/remove`, `/teachers`, `/teachers/{teacher_id}`, `/roster`, `/approve`, `/reject` | `routes/classrooms.rs`, `services/class_access.rs` | 403 not owner; 404 enrollment or teacher; archived class (Q9) | Events after commit; pull recovers |
@@ -161,7 +163,7 @@ Every route except `/download`, register and login answers 401 `UNAUTHORIZED` wi
 | `EVENT_AI_CHAT_REQUEST`, `EVENT_QUEUE_STATUS`, `EVENT_AI_TOKEN_STREAM` | superseded 2026-11-21: no Hub handler | Replacement (model download route and errors) to be defined in a contract-change PR | n/a |
 | `EVENT_ERROR` | `websocket/events.rs` | Only the codes in `error.json` | — |
 
-**Contract flows verified on the real Hub:** `/download` returns HTML without a token; protected routes require authentication; wrong credentials return 401; duplicate registration returns 409; class join and approval emit the contracted enrollment events; sync pull uses the sequence cursor. Tests create their own class and content through the API rather than depending on a prebuilt classroom.
+**Historical verification before the Hub admin account creation pivot:** `/download` returns HTML without a token; protected routes require authentication; wrong credentials return 401; duplicate registration returns 409; class join and approval emit the contracted enrollment events; sync pull uses the sequence cursor. Tests create their own class and content through the API rather than depending on a prebuilt classroom.
 
 ## 7. Data and Offline Behavior
 * **Storage:** `<data_dir>/lara.db` (WAL), `<data_dir>/storage/`, `<data_dir>/hub_config.json`, model at `model_path`. `data_dir` = Tauri app data dir, or `LARA_DATA_DIR`.

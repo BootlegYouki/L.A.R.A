@@ -57,7 +57,7 @@ class DocumentReviewDeviceTest {
         }
         suspend fun capture(blank: Boolean) {
             val photo = input(blank)
-            instrumentation.runOnMainSync { model.captured(photo) }
+            instrumentation.runOnMainSync { model.captured(photo, document = true) }
             withTimeout(15_000) { model.scanPreview.filterNotNull().first() }
             withTimeout(15_000) { model.busy.filter { !it }.first() }
             assertFalse(photo.exists())

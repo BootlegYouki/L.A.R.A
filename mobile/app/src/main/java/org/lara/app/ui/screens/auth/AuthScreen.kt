@@ -32,7 +32,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import org.lara.app.R
@@ -45,12 +44,10 @@ import org.lara.app.ui.theme.*
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, onDiscovery: () -> Unit,
+fun AuthScreen(state: AuthState, onSubmit: (String, String) -> Unit, onDiscovery: () -> Unit,
     onSettings: (() -> Unit)? = null, hub: String? = null, hubReachable: Boolean? = null) {
-    var registering by remember { mutableStateOf(false) }
     // Credentials deliberately do not use rememberSaveable or a SavedStateHandle.
     var id by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
     var now by remember { mutableStateOf(android.os.SystemClock.elapsedRealtime()) }
     LaunchedEffect(state.retryAt) {
@@ -61,9 +58,7 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
         }
     }
     val retrying = now < state.retryAt
-    val idLabel = stringResource(if (registering) R.string.auth_lrn else R.string.auth_id)
-    val nameLabel = stringResource(R.string.auth_name)
-    val nameFocus = remember { FocusRequester() }
+    val idLabel = stringResource(R.string.auth_id)
     val pinFocus = remember { FocusRequester() }
     val errorLocation = remember { BringIntoViewRequester() }
     LaunchedEffect(state.error) {
@@ -76,12 +71,12 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
     val keyboard = LocalSoftwareKeyboardController.current
     fun dismissKeyboard() { focus.clearFocus(); keyboard?.hide() }
     val invalid = state.error == R.string.auth_invalid || state.error == R.string.auth_wrong_pin
-    fun canSubmitNow() = !state.busy && !retrying && id.isNotBlank() && AuthPin.isValid(pin) && (!registering || name.isNotBlank())
+    fun canSubmitNow() = !state.busy && !retrying && id.isNotBlank() && AuthPin.isValid(pin)
     val canSubmit = canSubmitNow()
     fun submit() {
         if (canSubmitNow()) {
             dismissKeyboard()
-            onSubmit(id, pin, if (registering) name else null)
+            onSubmit(id, pin)
             pin = ""
         }
     }
@@ -91,7 +86,7 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4, Alignment.CenterVertically)) {
             // Placeholder mark until the real L.A.R.A. logo is chosen.
             Image(painterResource(R.drawable.ic_logo_placeholder), null, Modifier.align(Alignment.CenterHorizontally).size(72.dp))
-            Text(stringResource(if (registering) R.string.auth_register else R.string.auth_login),
+            Text(stringResource(R.string.auth_login),
                 Modifier.fillMaxWidth(), style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
             ClassroomSurface {
                 state.error?.let {
@@ -103,22 +98,11 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
                     Text(idLabel, style = MaterialTheme.typography.labelLarge)
                     OutlinedTextField(value = id, onValueChange = { id = it.take(32) }, enabled = !state.busy,
                         singleLine = true, shape = LaraShapes.medium, isError = invalid,
-                        keyboardOptions = KeyboardOptions(keyboardType = if (registering) KeyboardType.Number else KeyboardType.Ascii,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii,
                             imeAction = ImeAction.Next, autoCorrectEnabled = false),
-                        keyboardActions = KeyboardActions(onNext = { if (registering) nameFocus.requestFocus() else pinFocus.requestFocus() }),
+                        keyboardActions = KeyboardActions(onNext = { pinFocus.requestFocus() }),
                         modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).classFormInputScroll()
                             .semantics { contentDescription = idLabel })
-                    if (registering) Text(stringResource(R.string.auth_lrn_help),
-                        style = MaterialTheme.typography.bodyLarge, color = LaraColors.TextSecondary)
-                }
-                if (registering) Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Text(nameLabel, style = MaterialTheme.typography.labelLarge)
-                    OutlinedTextField(value = name, onValueChange = { name = it.take(100) }, enabled = !state.busy,
-                        singleLine = true, shape = LaraShapes.medium,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { pinFocus.requestFocus() }),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).focusRequester(nameFocus)
-                            .classFormInputScroll().semantics { contentDescription = nameLabel })
                 }
                 if (retrying) Text(stringResource(R.string.auth_retry_seconds, ((state.retryAt - now + 999) / 1000).toInt()),
                     style = MaterialTheme.typography.bodyLarge)
@@ -154,12 +138,10 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String, String?) -> Unit, on
                     CircularProgressIndicator(Modifier.size(LaraSpacing.S5), color = LaraColors.Surface)
                     Spacer(Modifier.width(LaraSpacing.S2))
                     Text(stringResource(R.string.auth_checking))
-                } else Text(stringResource(if (registering) R.string.auth_register else R.string.auth_login))
+                } else Text(stringResource(R.string.auth_login))
             }
-            TextButton(onClick = { dismissKeyboard(); registering = !registering; pin = "" }, enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
-                Text(stringResource(if (registering) R.string.auth_login_instead else R.string.auth_register_instead))
-            }
+            Text(stringResource(R.string.auth_account_help), Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary, textAlign = TextAlign.Center)
             HubChip(hub, hubReachable, !state.busy) { dismissKeyboard(); onDiscovery() }
             onSettings?.let { open ->
                 TextButton(onClick = open, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {

@@ -719,6 +719,12 @@ class TestMockHub(unittest.TestCase):
     def test_admin_routes_are_admin_only(self):
         status, _, _ = call(BASE, "GET", "/api/admin/users", token=self.teacher)
         self.assertEqual(status, 403)
+        account = {"lrn_or_id": "123456789019", "full_name": "New learner", "pin": "123456", "role": "STUDENT"}
+        for path in ("/api/admin/users", "/api/auth/register"):
+            status, error, _ = call(BASE, "POST", path, account, token=self.teacher)
+            self.assertEqual((status, error["error"]["code"]), (403, "FORBIDDEN"))
+        status, error, _ = call(BASE, "POST", "/api/auth/register", dict(account, role="TEACHER"))
+        self.assertEqual((status, error["error"]["code"]), (403, "FORBIDDEN"))
         admin = login(BASE, "ADMIN-0001")
         status, users, _ = call(BASE, "GET", "/api/admin/users", token=admin)
         self.assertEqual(status, 200)

@@ -45,7 +45,7 @@ A single-file Python 3 program (standard library only) that implements **every**
 ```
 
 ### 2.2 Behavior it enforces (so clients meet the rules early)
-* Bearer auth on every route except `/download`, register and login; media routes also accept `?token=`.
+* Bearer auth on every route except `/download`, first-run `POST /api/admin/setup` and login; media routes also accept `?token=`.
 * Learner quiz payloads never contain `correct_answer`; the teacher view does.
 * The mock hub still simulates the old Hub tutor stream until the contract-change PR for the 2026-11-21 decision (model download, on-device inference) updates it.
 * Quiz submissions later than the limit plus 60 s fail with `TIME_LIMIT_EXCEEDED`.

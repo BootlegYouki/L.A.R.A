@@ -29,7 +29,7 @@ class GradingMockTest {
         assumeTrue(System.getenv("LARA_GRADING_MOCK") == "1")
         val hub = requireNotNull(HubEndpoint.lan("127.0.0.1", 38080, 38081))
         fun login(id: String): AuthSession = Json { ignoreUnknownKeys = true }.decodeFromString(
-            AuthSession.serializer(), HubClient().postAuth(hub, "/api/auth/login", buildJsonObject {
+            AuthSession.serializer(), HubClient().postAuth(hub, buildJsonObject {
                 put("lrn_or_id", id); put("pin", "123456")
             }.toString()))
         fun session(auth: AuthSession): EnrollmentApi {

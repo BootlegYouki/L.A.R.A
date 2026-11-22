@@ -187,8 +187,7 @@ class AssignmentUiDeviceTest {
                     val model = androidx.lifecycle.ViewModelProvider(requireNotNull(screenOwner))["homework-$owner-leaf", org.lara.app.ui.screens.homework.HomeworkViewModel::class.java]
                     model.choose(context, android.net.Uri.fromFile(File(row.filePath)))
                 }
-                scrollTo("Use this photo"); capture("import-preview")
-                click("Use this photo"); waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
+                waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
                 capture("import-ready")
                 assertEquals("Draft replacement does not overwrite queued work", row, db.homeworkDao().find("leaf", owner))
             }
@@ -202,7 +201,7 @@ class AssignmentUiDeviceTest {
         val container = (context.applicationContext as LaraApp).container
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         container.endpoints.save(endpoint, "Synthetic Group 5 mock Hub")
-        val user = container.auth.authenticate(endpoint, "123456789012", "123456", null)
+        val user = container.auth.authenticate(endpoint, "123456789012", "123456")
         val active = container.forUser(user.id)
         active.sync.pull(user.id)
         val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default + kotlinx.coroutines.Job())
@@ -238,7 +237,6 @@ class AssignmentUiDeviceTest {
                     androidx.lifecycle.ViewModelProvider(requireNotNull(screenOwner))["homework-${user.id}-${assignment.id}", org.lara.app.ui.screens.homework.HomeworkViewModel::class.java]
                         .choose(context, android.net.Uri.fromFile(source))
                 }
-                scrollTo("Use this photo"); click("Use this photo")
                 waitFor(context.getString(org.lara.app.R.string.homework_photo_ready))
                 click("Turn in"); waitFor("Turn in your work?"); click("Turn in")
                 kotlinx.coroutines.withTimeout(10_000) {

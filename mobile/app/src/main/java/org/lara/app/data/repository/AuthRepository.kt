@@ -36,8 +36,8 @@ class AuthRepository(private val api: AuthApi, private val tokens: SessionTokenS
         if (dao.currentUserId() != token.userId) return@withContext null
         dao.user(token.userId)?.takeIf { it.role in setOf("STUDENT", "TEACHER") }?.toDomain()
     }
-    suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String, name: String?): User = withContext(Dispatchers.IO) {
-        val session = api.authenticate(endpoint, id, pin, name)
+    suspend fun authenticate(endpoint: HubEndpoint, id: String, pin: String): User = withContext(Dispatchers.IO) {
+        val session = api.authenticate(endpoint, id, pin)
         val old = try { tokens.load() } catch (_: Exception) { null }
         if (old != null && old.userId != session.user.id) throw AuthFailure(409)
         val dao = accountDao(session.user.id)

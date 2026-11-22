@@ -470,6 +470,10 @@ def portal_file(req):
 @route("POST", r"/api/auth/register", auth=False)
 def register(req):
     b = req.json()
+    authorization = req.handler.headers.get("Authorization", "")
+    caller = STATE.user_for_token(authorization[7:]) if authorization.startswith("Bearer ") else None
+    if (caller and caller["role"] == "TEACHER") or b.get("role") == "TEACHER":
+        raise ApiError(403, "FORBIDDEN", "Teachers cannot register accounts")
     need(b, "lrn_or_id", "full_name", "pin")
     b["lrn_or_id"], b["full_name"] = str(b["lrn_or_id"]).strip(), str(b["full_name"]).strip()
     if not (0 < len(b["lrn_or_id"]) <= 32 and 0 < len(b["full_name"]) <= 100):

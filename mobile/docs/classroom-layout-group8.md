@@ -1,5 +1,7 @@
 # Group 8 inventory and implementation — Part of #266
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 Base: staging `2a861ba` (Group 7 merged). Working branch: `mobile/266-group8-lara-screens`. Publication is authorized as a normal ready-for-review PR targeting staging, using `Part of #266`; no merge or automatic issue closure is authorized.
 
 ## Initial inventory (before production edits)

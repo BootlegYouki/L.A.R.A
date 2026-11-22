@@ -1,5 +1,7 @@
 # Standalone authentication and Settings Hub controls — #369
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 21 November 2026. User-requested UI follow-up during the [bug/UI freeze](https://github.com/BootlegYouki/L.A.R.A/discussions/297), based on latest staging `02e6bec` plus the six-digit Desktop fix #348 (`370e620`). Merge #348 first; this change does not implement another PIN rule.
 
 ## Behavior

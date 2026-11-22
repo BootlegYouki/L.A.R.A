@@ -19,7 +19,7 @@
 L.A.R.A. is a zero-internet, local-area-network (LAN) classroom management platform engineered as an offline alternative to Google Classroom. It pairs an offline-first learning management system (LMS) with a language model for Socratic tutoring that the Hub hosts as a downloadable file and each device runs locally (decision of 2026-11-21). Small models tested in issue #73 failed to provide reliable guidance without leaking answers or refusing everything. The current candidate is **Qwen3-30B-A3B-Instruct-2507, pruned REAP-15B-A3B, Q4_K_M**, with device RAM and file size still open. Final model and hardware selection depend on the evaluation pass marks in section 10, following `rules/socratic-ai-guardrails.md` section 5; this is not a claim that the candidate has passed.
 
 The system operates across three interconnected applications:
-1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its window is an admin console (accounts, port health, USB export and backup). It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
+1. **Local Hub (Server):** A standalone desktop application (Tauri + Rust) running on a dedicated, always-on school PC wired to the router (Windows or Linux). One Hub serves all teachers, and its Hub dashboard provides account administration, port health, USB export and backup. It acts as the local source of truth, hosts a captive download portal with visual onboarding, brokers WebSocket events, manages file submissions, and runs an SLM inference server.
 2. **Mobile Client (Android):** A native Android application (Kotlin + Jetpack Compose + Material 3) running offline-first on learners' phones and on teachers' phones (a teacher can do on the phone everything they can do on desktop), with local Room (SQLite) storage, camera homework capture, English interface strings in resources, and an on-device tutor model downloaded from the Hub.
 3. **Desktop Client:** A cross-platform desktop application (Tauri + React + TypeScript + Tailwind) for student laptops, lab PCs and teachers. It has the same learner and teacher features as the mobile app, laid out for a large screen.
 
@@ -43,7 +43,7 @@ The system operates across three interconnected applications:
  * Connects to the classroom Wi-Fi, downloads the app directly from the Hub's web portal following a 3-step visual guide, joins with a Class Code, downloads lesson materials and videos, takes timed paperless quizzes, snaps photos of handwritten math homework to submit, and gets English Socratic guidance from the AI tutor.
  * Takes his phone home where classroom content remains available offline and the tutor works offline once the model has been downloaded from the Hub.
 * **School Admin (ICT coordinator or principal's designee):**
- * Installs and runs the Hub on the school PC, creates teacher accounts, resets forgotten PINs, checks port health, and keeps the USB backup.
+ * Installs and runs the Hub on the school PC, creates teacher and learner accounts in the Hub dashboard, resets forgotten PINs, checks port health, and keeps the USB backup.
 
 ---
 
@@ -106,7 +106,7 @@ flowchart TD
  * **3-Step Visual Installation Guide on Web Portal:**
  * *Step 1:* Tap the large **"Download L.A.R.A. (Android)"** button.
  * *Step 2:* When prompted by Android browser, tap **Settings** Toggle on **"Allow from this source"**.
- * *Step 3:* Tap **Install**, open L.A.R.A., and register with your full name, 12-digit LRN and 6-digit PIN (`full_name`, `lrn_or_id`, `pin` in `POST /api/auth/register`).
+ * *Step 3:* Tap **Install**, open L.A.R.A., and sign in with the 12-digit LRN and six-digit PIN provided by your teacher or Hub admin.
 3. **Data Communication Protocols:**
  * **HTTP/1.1 REST (Port 8080):** Large binary transfers (APKs, PDF handouts, MP4 video streams, student homework photo submissions) with HTTP Byte-Range support for video streaming (`Range: bytes=X-`).
  * **WebSocket (Port 8081):** Real-time bidirectional event bus (announcements push, live quiz synchronization, automated timeout enforcement, instant grade delivery).
@@ -125,8 +125,8 @@ flowchart TD
 ## 4. Functional Specifications
 
 ### 4.1 Module 1: Offline Identity & Class Enrollment Gate
-* **FR-1.0 Admin-Created Teacher Accounts:** The single Hub admin creates student and teacher accounts, and a teacher creates student accounts only, never teacher or admin accounts (decided 2026-11-21); nobody self-registers. The admin is not a teacher and has no classes (Hub console requirements in section 4.6).
-* **FR-1.1 Account creation (replaces self-registration, decided 2026-11-21):** an account is created by the Hub admin (student or teacher) or by a teacher (student only, the server rejects any other role), with the person's full name, 12-digit Learner Reference Number (LRN) for learners and a 6-digit PIN. The person then signs in; no account is created by the person themselves. The contract currently still lists `POST /api/auth/register`; its removal, the teacher-created-learner route and the open questions (scope to the teacher's own classes, auto-enrolment, bulk creation) go in a team-owned `contract-change` PR after the 23 Nov defense.
+* **FR-1.0 Hub Admin Account Creation:** The Hub admin creates all teacher and learner accounts in the Hub dashboard through `POST /api/admin/users`. Mobile and Desktop only support sign-in. The Hub admin has no classes (see section 4.6).
+* **FR-1.1 Replaced:** Hub admin account creation is covered by FR-1.0 and FR-6.2. Learners sign in before requesting class access under FR-1.2. The existing learner-only registration API remains available for compatibility. Teacher sessions cannot use it.
 * **FR-1.2 Class Code Entry:** Learners join a subject by entering a 6-character uppercase code (no 0/O/1/I; shown as XXX-XXX) generated by the teacher (e.g., `K7M-4QX`).
 * **FR-1.3 Teacher Verification Gate:**
  * The client strips the display hyphen and sends the code to `POST /api/classrooms/join`. A new request creates a `PENDING` enrollment; pending learners cannot access class content. The Hub sends `EVENT_JOIN_REQUEST` to the class teachers.
@@ -224,7 +224,7 @@ sequenceDiagram
 
 ### 4.6 Module 6: Hub Administration, Backup & Restore
 * **FR-6.1 First-Run Admin Setup:** On the Hub PC, `POST /api/admin/setup` accepts a full name and 6-digit PIN to create the single `ADMIN-0001` account with role `ADMIN`. Setup is local-only and returns `ADMIN_EXISTS` once configured. Later access uses `/api/auth/login`; admin login is restricted to the Hub PC and disallowed through the remote tunnel. The admin is never synced to a client.
-* **FR-6.2 Account Administration:** The console lists accounts through `GET /api/admin/users` and creates teacher or learner accounts through `POST /api/admin/users` with ID/LRN, full name, role and PIN. Forgotten PINs use the admin reset route (FR-1.5). Account deactivation is a data-preservation rule, but its management workflow is not yet contracted (section 11).
+* **FR-6.2 Account Administration:** The Hub dashboard (#329) lists accounts with `GET /api/admin/users` and lets the Hub admin create teacher and learner accounts with `POST /api/admin/users`, supplying ID/LRN, full name, role and a six-digit PIN. Bulk or CSV creation is a separate follow-up.
 * **FR-6.3 Hub Operations:** The console shows port health for HTTP 8080 and WebSocket 8081, supports USB export and backup, and lets the admin opt into Remote/Suspension Mode per section 3.2. These are Hub console responsibilities under `AGENTS.md`; this PRD adds no new health or tunnel API routes. The export UI location remains an open decision (FR-5.2).
 * **FR-6.4 Backup:** `POST /api/backup` writes a `.lara-backup` snapshot to the selected `target_path`, such as a mounted USB location, and returns its filename and SHA-256 checksum.
 * **FR-6.5 Restore:** `POST /api/restore` restores a `.lara-backup` archive from `source_path` after verifying its checksum. Restore increments `sync_epoch`; clients rebuild their mirrors on the next sync while preserving queued and rejected local work, per `rules/database-and-sync.md` section 3.3.
