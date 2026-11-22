@@ -147,6 +147,8 @@ data class GradeReceiptDto(
     @SerialName("score") val score: Long?,
     @SerialName("total_points") val totalPoints: Long,
     @SerialName("submitted_at") val submittedAt: Long,
+    @SerialName("quiz_id") val quizId: String? = null,
+    @SerialName("student_id") val studentId: String? = null,
 )
 
 @Serializable

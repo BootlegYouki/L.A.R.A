@@ -11,9 +11,13 @@ data class AuthoringUpload(val id: String, val title: String, val state: String,
 interface ClassworkAuthoringRepository {
     suspend fun saveAssignment(classroomId: String, id: String?, draft: AssignmentDraft): String
     suspend fun saveTopic(classroomId: String, id: String?, name: String)
+    suspend fun reorderTopic(classroomId: String, id: String, name: String, order: Long) = saveTopic(classroomId, id, name)
     suspend fun saveMaterial(id: String, title: String, topicId: String?)
     suspend fun delete(kind: String, id: String)
     suspend fun upload(classroomId: String, uri: String, draft: MaterialDraft)
     fun uploads(classroomId: String): Flow<List<AuthoringUpload>>
     suspend fun retry(uploadId: String)
+    suspend fun retryUncertain(uploadId: String) = retry(uploadId)
+    suspend fun cancel(uploadId: String) = Unit
+    suspend fun pendingUploadCount(): Int = 0
 }

@@ -86,7 +86,7 @@ internal fun AnnouncementActions(
         ) { Text(stringResource(R.string.review_retry)) }
     }
     attachments.forEach { attachment ->
-        AnnouncementAttachmentPreview(attachment) { openMaterial(attachment.id) }
+        AnnouncementAttachmentPreview(container, userId, attachment) { openMaterial(attachment.id) }
         if (canManage) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
             TextButton(onClick = { title = attachment.title; renameId = attachment.id }, enabled = enabled,
                 modifier = Modifier.heightIn(min = MinTouchTarget)) {

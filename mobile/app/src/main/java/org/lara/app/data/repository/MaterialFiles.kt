@@ -14,12 +14,14 @@ import kotlinx.coroutines.withContext
 import org.lara.app.data.local.LaraDatabase
 import org.lara.app.data.remote.EnrollmentApi
 import org.lara.app.data.remote.HubFailure
+import org.lara.app.data.remote.MediaHttp
 import org.lara.app.data.remote.isAllowedHubUrl
 
 /** Files are account-scoped; a failed transfer never replaces a readable cached copy. */
 class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi,
     private val root: File, private val userId: String) {
     private val mutex = Mutex()
+    private val media = MediaHttp(api, userId)
     suspend fun prune() = withContext(Dispatchers.IO) {
         if (!mutex.tryLock()) return@withContext
         try {
@@ -32,13 +34,31 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
         val path = db.classworkDao().material(id)?.localFilePath ?: return@withContext
         if (db.classworkDao().clearFile(id, path) == 1) File(path).delete()
     } }
-    /** [save] false is a preview only: the file is fetched for viewing but not recorded as saved, so it is dropped on the next prune. */
-    suspend fun open(id: String, save: Boolean = true): File = mutex.withLock { withContext(Dispatchers.IO) {
+    suspend fun probeImageSignature(id: String): Boolean = withContext(Dispatchers.IO) {
+        val response = media.open(id, 0, 11, null)
+        response.use {
+            // The Hub serves documents as whole files. Read only the signature when it ignores Range.
+            val ranged = it.code == 206 && Regex("bytes 0-11/\\d+").matches(it.header("Content-Range").orEmpty())
+            if (it.code != 200 && !ranged) return@withContext false
+            val input = it.body?.byteStream() ?: return@withContext false
+            val bytes = ByteArray(12)
+            var count = 0
+            while (count < bytes.size) {
+                val read = input.read(bytes, count, bytes.size - count)
+                if (read < 0) break
+                count += read
+            }
+            bytes.isImageSignature(count)
+        }
+    }
+    /** Preview files are dropped on the next prune unless the learner saves them. */
+    suspend fun open(id: String, save: Boolean = true, maxBytes: Long = 250L * 1024 * 1024): File = mutex.withLock { withContext(Dispatchers.IO) {
+        require(maxBytes in 1..250L * 1024 * 1024)
         require(id.matches(Regex("[A-Za-z0-9-]{1,128}")))
         val row = db.classworkDao().material(id) ?: throw IOException("Material unavailable")
         row.localFilePath?.let { path ->
             val file = File(path).canonicalFile
-            if (file.path.startsWith(root.canonicalPath + File.separator) && file.isFile) return@withContext file
+            if (file.path.startsWith(root.canonicalPath + File.separator) && file.isFile && file.length() <= maxBytes) return@withContext file
         }
         val c = api.connection(userId)
         val url = c.endpoint.restBase + "/api/materials/$id/download"
@@ -47,7 +67,10 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
         val key = MessageDigest.getInstance("SHA-256").digest("$id:${row.updatedAt}".toByteArray())
             .joinToString("") { "%02x".format(it) }
         val target = File(root, if (save) key else "preview-$key")
-        if (!save && target.isFile) return@withContext target
+        if (!save && target.isFile) {
+            if (target.length() <= maxBytes) return@withContext target
+            target.delete()
+        }
         val part = File.createTempFile("download-", ".part", root)
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
@@ -55,8 +78,7 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
             connection.connectTimeout = 5_000; connection.readTimeout = 10_000
             connection.setRequestProperty("Authorization", "Bearer ${c.session.token}")
             if (connection.responseCode != 200) throw HubFailure(connection.responseCode, "MATERIAL_UNAVAILABLE")
-            val max = 250L * 1024 * 1024
-            require(connection.contentLengthLong <= max)
+            require(connection.contentLengthLong <= maxBytes)
             connection.inputStream.use { input -> part.outputStream().use { output ->
                 val buffer = ByteArray(32 * 1024)
                 var total = 0L
@@ -65,7 +87,7 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
                     val count = input.read(buffer)
                     if (count < 0) break
                     total += count
-                    require(total <= max)
+                    require(total <= maxBytes)
                     output.write(buffer, 0, count)
                 }
                 require(total > 0)
@@ -98,4 +120,10 @@ class MaterialFiles(private val db: LaraDatabase, private val api: EnrollmentApi
             target
         } finally { part.delete(); connection.disconnect() }
     } }
+
+    private fun ByteArray.isImageSignature(count: Int): Boolean =
+        (count >= 8 && this[0] == 0x89.toByte() && this[1] == 0x50.toByte() && this[2] == 0x4e.toByte() && this[3] == 0x47.toByte()) ||
+            (count >= 3 && this[0] == 0xff.toByte() && this[1] == 0xd8.toByte() && this[2] == 0xff.toByte()) ||
+            (count >= 12 && String(this, 0, 4) == "RIFF" && String(this, 8, 4) == "WEBP") ||
+            (count >= 6 && (String(this, 0, 6) == "GIF87a" || String(this, 0, 6) == "GIF89a"))
 }

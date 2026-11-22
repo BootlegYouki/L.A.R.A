@@ -65,9 +65,12 @@ fun TeacherNavGraph(
     approvalActions: @Composable () -> Unit = {},
     content: @Composable (ShellDestination) -> Unit = { ShellPlaceholder(it) },
     peopleContent: (@Composable (() -> Unit) -> Unit)? = null,
+    grades: (@Composable () -> Unit)? = null,
+    unreadComments: Int = 0,
 ) {
     require(state.role == ShellRole.TEACHER)
-    RoleNavGraph(state, teacher = true, content = content, approvalActions = approvalActions, peopleContent = peopleContent)
+    RoleNavGraph(state, teacher = true, content = content, approvalActions = approvalActions, peopleContent = peopleContent,
+        grades = grades, unreadComments = unreadComments)
 }
 
 @Composable
@@ -78,6 +81,8 @@ private fun RoleNavGraph(
     approvalActions: @Composable () -> Unit = {},
     learnerClassActions: @Composable () -> Unit = {},
     peopleContent: (@Composable (() -> Unit) -> Unit)? = null,
+    grades: (@Composable () -> Unit)? = null,
+    unreadComments: Int = 0,
 ) {
     val controller = rememberNavController()
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -123,6 +128,10 @@ private fun RoleNavGraph(
                             text = { Text(stringResource(R.string.class_info)) },
                             modifier = Modifier.heightIn(min = MinTouchTarget),
                             onClick = { expanded = false; info() }) }
+                        if (teacher && grades != null) DropdownMenuItem(
+                            text = { Text(stringResource(R.string.nav_grades)) },
+                            modifier = Modifier.heightIn(min = MinTouchTarget),
+                            onClick = { expanded = false; controller.navigate(Grades) { launchSingleTop = true } })
                         if (teacher) classroom?.edit?.let { edit -> DropdownMenuItem(
                             leadingIcon = { Icon(painterResource(R.drawable.ic_pencil_simple), null, tint = LaraColors.PrimaryDark) },
                             text = { Text(stringResource(R.string.classes_manage)) },
@@ -139,7 +148,7 @@ private fun RoleNavGraph(
                 if (state.hasInProgressAttempt) {
                     Text(stringResource(R.string.ai_quiz_locked), Modifier.padding(LaraSpacing.S4))
                 }
-                BottomNavBar(selected, onSelect = { destination ->
+                BottomNavBar(selected, unreadComments = unreadComments, onSelect = { destination ->
                     if (state.allows(destination)) {
                         controller.navigate(destination.route) {
                             popUpTo(controller.graph.startDestinationId) { saveState = true }
@@ -170,7 +179,7 @@ private fun RoleNavGraph(
                     else TabContent(ShellDestination.PEOPLE, state, content)
                 }
                 if (teacher) {
-                    composable<Grades> { ManagementPlaceholder(R.string.nav_grades, state.isLoading) }
+                    composable<Grades> { if (grades != null) grades() else ManagementPlaceholder(R.string.nav_grades, state.isLoading) }
                 }
             }
         }

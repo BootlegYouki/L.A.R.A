@@ -54,19 +54,23 @@ import org.lara.app.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SubmissionReview(container: AppContainer, userId: String, assignment: Assignment, reachable: Boolean,
-    archived: Boolean, close: () -> Unit) {
+    archived: Boolean, assignmentAttachments: (@Composable () -> Unit)? = null, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     val roster by remember(container, assignment.classroomId) { container.enrollments.roster(assignment.classroomId, scope) }.collectAsStateWithLifecycle()
     val cachedSubmissions by remember(container, assignment.id) { container.reviewSubmissions(assignment.id) }
         .collectAsStateWithLifecycle(initialValue = null)
     val queuedGrades by remember(container) { container.gradeOutbox.observe() }
         .collectAsStateWithLifecycle(initialValue = emptyMap())
+    val unreadThreads by remember(container, assignment.classroomId) {
+        container.teacherPrivateCommentRepository.unreadThreads(assignment.classroomId)
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
     val submissions = cachedSubmissions.orEmpty()
     var access by remember(assignment.id) { mutableStateOf<Int?>(null) } // 0 allowed, 1 denied
     var online by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf<Int?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var privateThreadStudentId by rememberSaveable(assignment.id) { mutableStateOf<String?>(null) }
     var gradeMessage by remember(selectedId) { mutableStateOf<Int?>(null) }
     LaunchedEffect(gradeMessage) {
         if (gradeMessage == R.string.review_saved) {
@@ -111,6 +115,11 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
     }
     val learners = (roster as? Cached.Content)?.value.orEmpty().filter { it.enrollment.status == "ACTIVE" && it.user != null }
         .sortedWith(compareBy({ it.user?.fullName?.lowercase().orEmpty() }, { it.enrollment.studentId }))
+    LaunchedEffect(privateThreadStudentId, learners) {
+        if (privateThreadStudentId != null && learners.none { it.enrollment.studentId == privateThreadStudentId }) {
+            privateThreadStudentId = null
+        }
+    }
     val selected = submissions.find { it.id == selectedId }
     val pendingGrade = queuedGrades[selectedId]
     var previewIndex by rememberSaveable(selectedId) { mutableStateOf<Int?>(null) }
@@ -161,11 +170,12 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
                         text = { Text(stringResource(R.string.review_reviewed_tab, gradedCount)) })
                 }
                 Spacer(Modifier.height(LaraSpacing.S3))
-                if (rows.isEmpty()) {
-                    Text(stringResource(if (reviewedTab) R.string.review_reviewed_empty else R.string.review_to_review_empty),
-                        style = MaterialTheme.typography.bodyLarge)
-                } else LazyColumn(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    items(rows, key = { (_, submission) -> submission.id }) { (learner, submission) ->
+                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                    if (assignmentAttachments != null) item(key = "assignment-materials") { assignmentAttachments() }
+                    if (rows.isEmpty()) item {
+                        Text(stringResource(if (reviewedTab) R.string.review_reviewed_empty else R.string.review_to_review_empty),
+                            style = MaterialTheme.typography.bodyLarge)
+                    } else items(rows, key = { (_, submission) -> submission.id }) { (learner, submission) ->
                         val queued = queuedGrades[submission.id]
                         val displayedScore = queued?.takeUnless { it.rejected }?.score ?: submission.score
                         val status = when {
@@ -190,8 +200,35 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
                             }
                         }
                     }
+                    item(key = "private-section-title") {
+                        Spacer(Modifier.height(LaraSpacing.S3))
+                        Text(stringResource(R.string.teacher_private_title), style = MaterialTheme.typography.titleMedium)
+                    }
+                    if (learners.isEmpty()) item { Text(stringResource(R.string.review_empty), color = LaraColors.TextSecondary) }
+                    else items(learners, key = { "private-${it.enrollment.studentId}" }) { person ->
+                        val studentId = person.enrollment.studentId
+                        val unread = unreadThreads.find { it.assignmentId == assignment.id && it.studentId == studentId }?.count ?: 0
+                        Surface(Modifier.fillMaxWidth(), color = LaraColors.Surface, shape = LaraShapes.medium,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, LaraColors.Border)) {
+                            TextButton(onClick = { privateThreadStudentId = studentId },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)) {
+                                Column(Modifier.weight(1f), horizontalAlignment = Alignment.Start) {
+                                    Text(person.user?.fullName.orEmpty(), style = MaterialTheme.typography.titleMedium)
+                                    if (unread > 0) Text(stringResource(R.string.teacher_private_unread, unread), color = LaraColors.PrimaryDark)
+                                }
+                                Text(stringResource(R.string.teacher_private_open))
+                            }
+                        }
+                    }
                 }
             }
+        }
+        privateThreadStudentId?.let { studentId ->
+            val person = learners.find { it.enrollment.studentId == studentId }
+            TeacherPrivateThread(container, assignment.id, studentId,
+                person?.user?.fullName ?: stringResource(R.string.review_learner), reachable && online,
+                allowReply = reachable && online && !archived && access == 0 && person != null,
+                close = { privateThreadStudentId = null })
         }
         if (selected != null) {
             val learner = learners.find { it.enrollment.studentId == selected.studentId }
@@ -356,6 +393,86 @@ internal fun ReviewPhoto(container: AppContainer, userId: String, submission: As
             TextButton(onClick = { retry++ }, enabled = online, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.review_retry_photo)) }
         }
         else -> Text(stringResource(R.string.review_photo_offline))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TeacherPrivateThread(
+    container: AppContainer,
+    assignmentId: String,
+    studentId: String,
+    learnerName: String,
+    reachable: Boolean,
+    allowReply: Boolean,
+    close: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val repository = container.teacherPrivateCommentRepository
+    val comments by remember(repository, assignmentId, studentId) { repository.comments(assignmentId, studentId) }
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+    var draft by rememberSaveable(assignmentId, studentId) { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(reachable) }
+    var failed by remember { mutableStateOf(false) }
+    var readDenied by remember { mutableStateOf(false) }
+    LaunchedEffect(assignmentId, studentId, reachable) {
+        loading = reachable
+        readDenied = false
+        if (reachable) try { repository.refresh(assignmentId, studentId) } catch (error: CancellationException) { throw error }
+        catch (error: HubFailure) { failed = true; readDenied = error.status == 403 }
+        catch (_: Exception) { failed = true }
+        finally { loading = false }
+    }
+    LaunchedEffect(assignmentId, studentId, comments) {
+        if (comments.isNotEmpty()) repository.markRead(assignmentId, studentId, comments.map { it.id })
+    }
+    ModalBottomSheet(onDismissRequest = close, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().imePadding().padding(LaraSpacing.S4),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+            Text(stringResource(R.string.teacher_private_title), style = MaterialTheme.typography.titleLarge)
+            Text(learnerName, style = MaterialTheme.typography.titleMedium)
+            if (!reachable) Text(stringResource(R.string.teacher_private_offline), color = LaraColors.TextSecondary)
+            if (failed) Text(stringResource(if (readDenied) R.string.teacher_private_denied else R.string.teacher_private_failed),
+                color = MaterialTheme.colorScheme.error)
+            if (loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                Text(stringResource(R.string.teacher_private_loading), color = LaraColors.TextSecondary)
+            } else if (comments.isEmpty()) Text(stringResource(R.string.teacher_private_empty), color = LaraColors.TextSecondary)
+            else LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+                items(comments, key = { it.id }) { comment ->
+                    val isLearner = comment.authorId == studentId
+                    Surface(color = if (isLearner) LaraColors.Surface else LaraColors.PrimaryLight,
+                        shape = LaraShapes.medium, modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(LaraSpacing.S3)) {
+                            Text(stringResource(if (isLearner) R.string.teacher_private_learner else R.string.teacher_private_teacher),
+                                style = MaterialTheme.typography.labelLarge, color = LaraColors.TextSecondary)
+                            Text(comment.content, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+            OutlinedTextField(draft, { draft = it }, label = { Text(stringResource(R.string.teacher_private_hint)) },
+                enabled = allowReply && !readDenied && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), maxLines = 4)
+            Button(onClick = {
+                val text = draft.trim()
+                if (text.isBlank()) return@Button
+                busy = true; failed = false
+                scope.launch {
+                    try {
+                        repository.reply(assignmentId, studentId, text)
+                        draft = ""
+                    } catch (error: CancellationException) { throw error }
+                    catch (error: HubFailure) { failed = true; readDenied = error.status == 403 }
+                    catch (_: Exception) { failed = true }
+                    finally { busy = false }
+                }
+            }, enabled = allowReply && !readDenied && !busy && draft.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
+                Text(stringResource(R.string.teacher_private_reply))
+            }
+            Spacer(Modifier.height(LaraSpacing.S3))
+        }
     }
 }
 

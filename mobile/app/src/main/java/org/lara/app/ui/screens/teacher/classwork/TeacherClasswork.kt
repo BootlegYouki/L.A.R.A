@@ -41,7 +41,8 @@ import java.util.Date
 
 @Composable
 internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: String, classroom: Classroom, work: Classwork,
-    announcements: List<Announcement>, reachable: Boolean, openMaterial: (String) -> Unit, openReview: (String) -> Unit) {
+    announcements: List<Announcement>, reachable: Boolean, openMaterial: (String) -> Unit,
+    unreadCommentsByAssignment: Map<String, Int> = emptyMap(), openReview: (String) -> Unit) {
     val model: ClassworkAuthoringViewModel = viewModel(key = "author-$userId-${classroom.id}", factory = viewModelFactory {
         initializer { ClassworkAuthoringViewModel(repository) }
     })
@@ -51,6 +52,9 @@ internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: 
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
+    var topicFilter by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
+    var confirmRetry by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedTopic = topicFilter?.takeIf { id -> work.topics.any { it.id == id } }
     val canWrite = reachable && classroom.archivedAt == null && !state.busy
     fun edit(kind: String, id: String? = null) { model.reset(); selectedId = id; form = kind }
     LaunchedEffect(state.completed) { if (state.completed > 0) { form = null; deleting = null } }
@@ -68,22 +72,31 @@ internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: 
                 }
             }
         }
-        if (!reachable) item { Text(stringResource(R.string.author_offline), color = LaraColors.TextSecondary) }
+        if (!reachable) item { Text(stringResource(R.string.material_staging_offline), color = LaraColors.TextSecondary) }
         state.error?.let { error -> item { Text(stringResource(error), color = MaterialTheme.colorScheme.error) } }
         items(uploads.filter { it.state != "SUCCEEDED" }, key = { "upload-${it.id}" }) { upload ->
             Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 Text(upload.title.ifBlank { stringResource(R.string.author_uploading) })
-                Text(stringResource(when (upload.state) { "FAILED" -> R.string.author_upload_failed; "RUNNING" -> R.string.author_upload_percent; else -> R.string.author_upload_waiting }, upload.percent))
+                Text(stringResource(when (upload.state) { "FAILED" -> R.string.author_upload_failed; "UNCERTAIN" -> R.string.parity_upload_uncertain; "RUNNING" -> R.string.author_upload_percent; else -> R.string.author_upload_waiting }, upload.percent))
                 LinearProgressIndicator(progress = { upload.percent / 100f }, color = LaraColors.Primary, trackColor = LaraColors.PrimaryLight, modifier = Modifier.fillMaxWidth().height(12.dp))
                 if (upload.state == "FAILED") TextButton(onClick = { model.run { repository.retry(upload.id) } }, enabled = canWrite,
                     modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.author_retry)) }
+                if (upload.state == "UNCERTAIN") TextButton(onClick = { confirmRetry = upload.id }, enabled = canWrite,
+                    modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.author_retry)) }
+                TextButton(onClick = { model.run(close = false) { repository.cancel(upload.id) } },
+                    enabled = !state.busy, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    Text(stringResource(if (upload.state == "UNCERTAIN") R.string.parity_upload_dismiss else R.string.parity_upload_cancel))
+                }
             }
+        }
+        if (work.topics.isNotEmpty()) item {
+            TopicFilter(work.topics, selectedTopic) { topicFilter = it }
         }
         val visible = work.materials.filter { it.assignmentId == null }
         if (visible.isEmpty() && work.assignments.isEmpty() && work.topics.isEmpty()) item {
             org.lara.app.ui.screens.stream.ReadingEmpty(R.string.reading_work_empty)
         }
-        (work.topics.map { it.id } + listOf<String?>(null)).forEach { topicId ->
+        (work.topics.map { it.id } + listOf<String?>(null)).filter { selectedTopic == null || it == selectedTopic }.forEach { topicId ->
             val topic = work.topics.find { it.id == topicId }
             val assignments = work.assignments.filter { it.topicId == topicId || (topicId == null && work.topics.none { t -> t.id == it.topicId }) }
             val materials = visible.filter { it.topicId == topicId || (topicId == null && work.topics.none { t -> t.id == it.topicId }) }
@@ -98,7 +111,18 @@ internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: 
                 }
                 items(assignments, key = { "assignment-${it.id}" }) { a ->
                     AuthorRow(a.title, stringResource(R.string.classwork_due, DateFormat.getDateTimeInstance().format(Date(a.dueDate))), R.drawable.ic_exam_regular,
-                        { openReview(a.id) }) { ItemMenu(canWrite, { edit("assignments", a.id) }, { selectedId = a.id; deleting = "assignments" }) }
+                        { openReview(a.id) }) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
+                            unreadCommentsByAssignment[a.id]?.takeIf { it > 0 }?.let { count ->
+                                Surface(color = LaraColors.InfoLight, shape = LaraShapes.small) {
+                                    Text(stringResource(R.string.teacher_private_unread, count),
+                                        Modifier.padding(horizontal = LaraSpacing.S2, vertical = LaraSpacing.S1),
+                                        style = MaterialTheme.typography.labelMedium, color = LaraColors.InfoDark)
+                                }
+                            }
+                            ItemMenu(canWrite, { edit("assignments", a.id) }, { selectedId = a.id; deleting = "assignments" })
+                        }
+                    }
                 }
                 items(materials, key = { "material-${it.id}" }) { m ->
                     AuthorRow(m.title, stringResource(R.string.classwork_posted, DateFormat.getDateInstance().format(Date(m.createdAt))),
@@ -108,6 +132,24 @@ internal fun TeacherClasswork(repository: ClassworkAuthoringRepository, userId: 
                 }
             }
         }
+    }
+    confirmRetry?.let { id ->
+        AlertDialog(onDismissRequest = { confirmRetry = null },
+            title = { Text(stringResource(R.string.author_retry)) },
+            text = { Text(stringResource(R.string.parity_upload_duplicate)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRetry = null
+                    model.run(close = false) { repository.retryUncertain(id) }
+                }, enabled = canWrite, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    Text(stringResource(R.string.author_retry))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRetry = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                    Text(stringResource(R.string.enrollment_cancel_action))
+                }
+            })
     }
     form?.let { kind -> key(kind, selectedId) {
         AuthoringForm(kind, classroom, selectedId, work, announcements, reachable, state, model, onClose = { form = null; model.reset() })
@@ -162,6 +204,8 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     val assignment = work.assignments.find { it.id == id }
     val material = work.materials.find { it.id == id }
     val topic = work.topics.find { it.id == id }
+    var order by rememberSaveable { mutableStateOf(topic?.orderIndex?.toString() ?: "0") }
+    var worksheet by rememberSaveable { mutableStateOf(false) }
     var title by rememberSaveable { mutableStateOf(assignment?.title ?: material?.title ?: topic?.name.orEmpty()) }
     var instructions by rememberSaveable { mutableStateOf(assignment?.instructions.orEmpty()) }
     var addingLink by rememberSaveable { mutableStateOf(false) }
@@ -191,24 +235,32 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     }
     val isAssignment = kind == "assignments"
     val isTopic = kind == "topics"
-    val canSave = reachable && !state.busy && title.isNotBlank() &&
+    val newMaterial = !isTopic && !isAssignment && id == null
+    val canSave = classroom.archivedAt == null && (reachable || newMaterial) && !state.busy && title.isNotBlank() &&
+        (!isTopic || id == null || order.toLongOrNull()?.let { it >= 0 } == true) &&
         (!isAssignment || points.toLongOrNull()?.let { it in 1..Int.MAX_VALUE } == true) &&
         (isAssignment || isTopic || id != null || files.size == 1)
     ClassFormDialog(title = stringResource(when { isAssignment -> R.string.author_assignment; isTopic -> R.string.author_topic; kind == "video" -> R.string.author_video; else -> R.string.author_material }),
-        action = stringResource(if (state.busy) R.string.author_saving else R.string.author_save), enabled = canSave,
+        action = stringResource(when {
+            state.busy -> R.string.author_saving
+            newMaterial && !reachable -> R.string.material_queue_upload
+            else -> R.string.author_save
+        }), enabled = canSave,
         canDismiss = !state.busy, onDismiss = { discard = true }, onAction = {
             if (isAssignment) model.assignment(classroom.id, id, AssignmentDraft(title, instructions, requireNotNull(points.toLongOrNull()), due, late, topicId), files)
             else model.run {
                 when {
+                    isTopic && id != null && order.toLongOrNull() != topic?.orderIndex ->
+                        model.repository.reorderTopic(classroom.id, id, title, requireNotNull(order.toLongOrNull()))
                     isTopic -> model.repository.saveTopic(classroom.id, id, title)
                     id != null -> model.repository.saveMaterial(id, title, topicId)
-                    else -> model.repository.upload(classroom.id, files.single(), MaterialDraft(title, if (kind == "video") "VIDEO" else "DOCUMENT", topicId,
+                    else -> model.repository.upload(classroom.id, files.single(), MaterialDraft(title, when { kind == "video" -> "VIDEO"; worksheet -> "WORKSHEET"; else -> "DOCUMENT" }, topicId,
                         assignmentId = attach?.takeIf { it.startsWith("a:") }?.drop(2), announcementId = attach?.takeIf { it.startsWith("p:") }?.drop(2)))
                 }
             }
         }) {
         Text(classroom.name, style = MaterialTheme.typography.titleMedium)
-        if (!reachable) Text(stringResource(R.string.author_offline), color = LaraColors.TextSecondary)
+        if (!reachable) Text(stringResource(if (newMaterial) R.string.material_staging_offline else R.string.author_offline), color = LaraColors.TextSecondary)
         state.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
         OutlinedTextField(title, { title = it }, Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).classFormInputScroll(),
             label = { Text(stringResource(R.string.author_title)) }, enabled = !state.busy, shape = LaraShapes.medium)
@@ -259,6 +311,19 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
                 Checkbox(late, null, enabled = !state.busy); Text(stringResource(R.string.author_allow_late))
             }
         }
+        if (isTopic && id != null) OutlinedTextField(order, { order = it },
+            Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+            label = { Text(stringResource(R.string.parity_topic_order)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = order.toLongOrNull()?.let { it >= 0 } != true, enabled = !state.busy)
+        if (newMaterial && kind != "video") Row(
+            Modifier.fillMaxWidth().heightIn(min = MinTouchTarget)
+                .toggleable(worksheet, enabled = !state.busy, role = Role.Checkbox, onValueChange = { worksheet = it }),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(worksheet, null, enabled = !state.busy)
+            Text(stringResource(R.string.parity_worksheet))
+        }
         if (!isTopic) ChoiceField(stringResource(R.string.author_topic), topicId,
             listOf(null to stringResource(R.string.reading_no_topic)) + work.topics.map { it.id to it.name }, !state.busy) { topicId = it }
         if (!isTopic && !isAssignment && id == null) ChoiceField(stringResource(R.string.author_attach_to), attach,
@@ -281,6 +346,12 @@ private fun AuthoringForm(kind: String, classroom: Classroom, id: String?, work:
     if (discard) AlertDialog(onDismissRequest = { discard = false }, title = { Text(stringResource(R.string.author_discard_title)) },
         text = { Text(stringResource(R.string.author_discard_body)) }, confirmButton = { TextButton(onClick = onClose, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.author_discard)) } },
         dismissButton = { TextButton(onClick = { discard = false }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.author_keep_editing)) } })
+}
+
+@Composable
+internal fun TopicFilter(topics: List<org.lara.app.domain.model.Topic>, selected: String?, onSelect: (String?) -> Unit) {
+    ChoiceField(stringResource(R.string.author_topic), selected,
+        listOf(null to stringResource(R.string.parity_all_topics)) + topics.map { it.id to it.name }, true, onSelect)
 }
 
 @Composable

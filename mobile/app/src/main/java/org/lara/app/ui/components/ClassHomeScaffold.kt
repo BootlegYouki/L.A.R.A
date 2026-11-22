@@ -36,7 +36,7 @@ import org.lara.app.R
 import org.lara.app.ui.screens.settings.LocalOpenSettings
 import org.lara.app.ui.theme.*
 
-data class HomeClass(val id: String, val name: String, val section: String)
+data class HomeClass(val id: String, val name: String, val section: String, val badge: Int = 0)
 
 // Phosphor Regular list and plus paths (256 viewport, MIT; see design-system/assets/phosphor).
 private fun homeIcon(name: String, draw: androidx.compose.ui.graphics.vector.PathBuilder.() -> Unit) =
@@ -107,7 +107,7 @@ fun ClassHomeScaffold(
                 Text(stringResource(if (teacher) R.string.home_teaching else R.string.home_enrolled),
                     Modifier.padding(start = LaraSpacing.S4, top = LaraSpacing.S4, end = LaraSpacing.S4, bottom = LaraSpacing.S1), style = MaterialTheme.typography.titleSmall)
                 classes.forEach { row ->
-                    HomeDrawerItem(row.name, R.drawable.ic_books_regular, subtitle = row.section, initial = row.name.take(1).uppercase()) {
+                    HomeDrawerItem(row.name, R.drawable.ic_books_regular, subtitle = row.section, initial = row.name.take(1).uppercase(), badge = row.badge) {
                         scope.launch { drawer.close(); notifications = false; onOpenClass(row.id) }
                     }
                 }

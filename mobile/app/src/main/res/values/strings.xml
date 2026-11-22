@@ -464,4 +464,19 @@
     <string name="homework_grade_value">Score: %1$d / %2$d</string>
     <string name="homework_teacher_feedback">Teacher feedback</string>
     <string name="homework_graded_button">Graded</string>
+    <string name="parity_all_topics">All topics</string>
+    <string name="parity_topic_order">Topic order</string>
+    <string name="parity_worksheet">Publish as a worksheet</string>
+    <string name="parity_grades_empty">No enrolled learners yet.</string>
+    <string name="parity_grades_no_work">No assignments or closed quizzes yet.</string>
+    <string name="parity_learner">Learner</string>
+    <string name="parity_grade_column">%1$s (%2$d points)</string>
+    <string name="parity_grade_missing">—</string>
+    <string name="parity_upload_uncertain">The Hub may have received this upload.</string>
+    <string name="parity_upload_dismiss">Dismiss upload</string>
+    <string name="parity_upload_cancel">Cancel upload</string>
+    <string name="parity_upload_duplicate">Retrying may create a duplicate. Check Classwork before retrying.</string>
+    <string name="parity_unread_badge">Unread private comments: %1$d</string>
+    <string name="material_staging_offline">You can queue new materials. Connect to the Hub to make other Classwork changes.</string>
+    <string name="material_queue_upload">Queue upload</string>
 </resources>

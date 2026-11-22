@@ -39,6 +39,13 @@ class EnrollmentApi(
         EnrollmentConnection(hub, saved)
     }
 
+    internal suspend fun savedEndpoint(userId: String): HubEndpoint = withContext(Dispatchers.IO) {
+        val hub = endpoint() ?: throw java.io.IOException("Hub unavailable")
+        val saved = tokens.load() ?: throw HubFailure(401, "UNAUTHORIZED")
+        if (saved.userId != userId || saved.hub != hub.restBase) throw HubFailure(401, "UNAUTHORIZED")
+        hub
+    }
+
     suspend fun join(userId: String, displayedCode: String): JoinReceipt = withContext(Dispatchers.IO) {
         val code = ClassCode.canonicalOrNull(displayedCode) ?: throw HubFailure(404, "CLASS_CODE_INVALID")
         val c = connection(userId)
