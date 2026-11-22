@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { t } from '../i18n';
+import appLogo from '../assets/branding/lara-logo.png';
 import type { HubInfo } from '../services/discovery';
 type Fields = { lrn_or_id: string; pin: string };
 type Errors = Partial<Record<keyof Fields, string>>;
@@ -27,7 +28,7 @@ export default function LoginPage({ hub, busy, error, retryAfter, onSubmit, onCa
 
   function fieldError(key: keyof Fields) { return errors[key] ? <p id={`auth-${key}-error`} className="auth-field-error"><i className="ph ph-warning-circle" aria-hidden="true" />{errors[key]}</p> : null; }
   return <section className="auth-panel" aria-labelledby="auth-title">
-    <div className="auth-heading"><span className="empty-art"><i className="ph ph-user-circle" aria-hidden="true" /></span><div><h1 id="auth-title">{t.auth_sign_in}</h1><p>{t.auth_sign_in_help}</p></div></div>
+    <div className="auth-heading"><img className="startup-logo" src={appLogo} alt={t.app_title} width={56} height={56}/><div><h1 id="auth-title">{t.auth_sign_in}</h1><p>{t.auth_sign_in_help}</p></div></div>
     <p className="auth-hub">{hub ? `${t.auth_selected_hub} ${hub.name}` : t.auth_need_hub}</p>
     <form onSubmit={submit} noValidate aria-busy={busy}>
       <div className="auth-field"><label htmlFor="auth-id">{t.auth_id}</label><input id="auth-id" name="lrn_or_id" autoComplete="username" inputMode="text" maxLength={32} value={fields.lrn_or_id} disabled={busy} aria-invalid={!!errors.lrn_or_id} aria-describedby={errors.lrn_or_id ? 'auth-lrn_or_id-error' : undefined} onChange={(e) => setFields({ ...fields, lrn_or_id: e.target.value })} />{fieldError('lrn_or_id')}</div>

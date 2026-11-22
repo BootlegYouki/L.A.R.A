@@ -16,3 +16,12 @@ Verification:
 ![Desktop header](evidence/branding-410/header-desktop.png)
 ![Narrow header](evidence/branding-410/header-narrow.png)
 ![Embedded Windows icon](evidence/branding-410/windows-icon.png)
+## Startup branding follow-up (#413)
+
+The sign-in card replaces its generic avatar with the same supplied logo. The startup Hub-selection card displays the logo above its heading. Both use a centered 56px transparent image with accessible name `L.A.R.A.`. The shared ConnectionPage receives an explicit `showLogo` flag from the signed-out shell, so the Settings connection panel keeps its existing layout.
+
+Verification: all 215 frontend tests, lint, production frontend/native builds, normal NSIS bundle and offline invariant guard passed. A separate native QA build with an explicit G-drive WebView `dataDirectory` verified both startup cards, Change Hub navigation, 128px source rendering, centered 56px sizing and 720×480 fit against the existing local real Hub's reachability check. No sign-in or data-changing Hub action was required. The normal installer was saved before making that temporary out-of-repository QA configuration. The user's active app was not closed or replaced. No installer upgrade or new prerelease publication is claimed for this follow-up.
+
+![Sign-in logo](evidence/branding-410/startup-login.png)
+![Hub-selection logo](evidence/branding-410/startup-hub.png)
+![Narrow Hub-selection logo](evidence/branding-410/startup-hub-narrow.png)

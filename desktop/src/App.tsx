@@ -422,7 +422,7 @@ export default function App() {
   }
   const offline = connection.status !== 'connected';
   const settingsBlocked = offline || creating || rosterBusy || retryAfter > 0;
-  const hubPicker = <fieldset disabled={busy || joining || creating || rosterBusy} className="connection-fieldset"><ConnectionPage t={t} hubs={hubs} failed={discoveryFailed} searching={searching} connection={connection} onConnect={(next) => {controller.current?.select(next);setChoosingHub(false);}} /></fieldset>;
+  const hubPicker = <fieldset disabled={busy || joining || creating || rosterBusy} className="connection-fieldset"><ConnectionPage showLogo={!activeAccount} t={t} hubs={hubs} failed={discoveryFailed} searching={searching} connection={connection} onConnect={(next) => {controller.current?.select(next);setChoosingHub(false);}} /></fieldset>;
   const authScreen = !activeAccount || loginVisible || choosingHub;
   return <div className={`app-shell ${authScreen ? 'auth-shell' : drawerOpen ? '' : 'drawer-rail'}`}>
     <a href="#content" className="skip-link">{t.skip_content}</a>

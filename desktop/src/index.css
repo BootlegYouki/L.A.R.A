@@ -14,6 +14,8 @@ button:disabled { cursor: default; }
 .icon-button:hover:not(:disabled), .drawer-item:hover:not(:disabled) { background: var(--color-lara-subtle); }
 .brand { display: inline-flex; align-items: center; flex-shrink: 0; }
 .brand img { display: block; width: 40px; height: 40px; object-fit: contain; }
+.startup-logo { display: block; width: 56px; height: 56px; flex-shrink: 0; object-fit: contain; }
+.discovery-logo { margin: 0 auto 16px; }
 
 .top-actions { margin-left: auto; display: flex; flex: 1; min-width: 0; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
 .hub-pill { max-width: 100%; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 1px solid var(--color-lara-warning-border); border-radius: 9999px; background: var(--color-lara-warning-light); color: var(--color-lara-warning-dark); font-size: 0.8125rem; font-weight: 800; }
@@ -579,7 +581,6 @@ section[aria-labelledby="upload-jobs-title"] progress { display: block; width: m
 .auth-shell .hub-status-banner { box-sizing: border-box; width: 100%; justify-content: center; text-align: center; margin: 0 0 12px; overflow-wrap: anywhere; }
 .auth-shell .auth-panel { margin: 0; max-width: none; padding: 24px; }
 .auth-shell .auth-heading { align-items: center; gap: 12px; text-align: center; }
-.auth-shell .auth-heading .empty-art { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); }
 .auth-shell .auth-heading h1 { font-size: 1.75rem; line-height: 1.3; }
 .auth-shell .auth-heading p { line-height: 1.5; }
 .auth-shell .auth-hub { margin: 16px 0; text-align: center; }
