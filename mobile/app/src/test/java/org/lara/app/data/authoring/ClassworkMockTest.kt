@@ -30,7 +30,7 @@ class ClassworkMockTest {
         val hub = requireNotNull(HubEndpoint.lan("127.0.0.1", 38080, 38081))
         fun login(id: String): AuthSession {
             // Transport fixture bypasses the unrelated four-digit AuthApi validator. Mock is unchanged.
-            val response = HubClient().postAuth(hub, "/api/auth/login", buildJsonObject {
+            val response = HubClient().postAuth(hub, buildJsonObject {
                 put("lrn_or_id", id); put("pin", "123456")
             }.toString())
             return Json { ignoreUnknownKeys = true }.decodeFromString(AuthSession.serializer(), response)

@@ -1,5 +1,6 @@
 package org.lara.app.reading
 
+import org.lara.app.auth.createMockLearner
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfDocument
 import android.os.Build
@@ -156,17 +157,18 @@ class Group8UiDeviceTest {
     @Test fun authAndDiscoveryPresentation() {
         guard()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            show(scenario) { AuthScreen(AuthState(restoring=false), { _, _, _ -> }, {}) }
+            show(scenario) { AuthScreen(AuthState(restoring=false), { _, _ -> }, {}) }
             scrollTo(context.getString(R.string.auth_id)); shot("sign-in")
             scrollTo(context.getString(R.string.auth_pin)); shot("pin-system-field")
-            click(context.getString(R.string.auth_register_instead)); scrollTo(context.getString(R.string.auth_name)); shot("registration")
+            waitFor(context.getString(R.string.auth_account_help))
+            assertFalse(nodes().any { it.text?.toString() == "New learner? Create an account" })
             for ((name, state) in listOf(
                 "auth-validation" to AuthState(restoring=false, error=R.string.auth_invalid),
                 "auth-unreachable" to AuthState(restoring=false, error=R.string.auth_unreachable),
                 "auth-wrong-pin" to AuthState(restoring=false, error=R.string.auth_wrong_pin),
                 "auth-busy" to AuthState(restoring=false, busy=true),
                 "auth-rate-limit" to AuthState(restoring=false, error=R.string.auth_wait, retryAt=SystemClock.elapsedRealtime()+60_000))) {
-                show(scenario) { AuthScreen(state, { _, _, _ -> }, {}) }
+                show(scenario) { AuthScreen(state, { _, _ -> }, {}) }
                 state.error?.let { scrollTo(context.getString(it)) } ?: scrollTo(context.getString(R.string.auth_checking))
                 shot(name)
             }
@@ -325,9 +327,9 @@ class Group8UiDeviceTest {
     @Test fun inputCallbacksAndKeyboardRemainUsable() {
         guard()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            val submitted = java.util.concurrent.atomic.AtomicReference<Triple<String,String,String?>?>()
+            val submitted = java.util.concurrent.atomic.AtomicReference<Pair<String,String>?>()
             val authState = mutableStateOf(AuthState(restoring=false))
-            show(scenario) { AuthScreen(authState.value, { id, pin, name -> submitted.set(Triple(id,pin,name)) }, {}) }
+            show(scenario) { AuthScreen(authState.value, { id, pin -> submitted.set(id to pin) }, {}) }
             click(context.getString(R.string.auth_id))
             waitUntil("ID keyboard must open") { keyboardShown(scenario) }
             shot("keyboard-blank-id")
@@ -340,7 +342,7 @@ class Group8UiDeviceTest {
             waitUntil("Back must dismiss the keyboard") { !keyboardShown(scenario) }
             click(context.getString(R.string.auth_login))
             assertTrue("Sign-in callback must receive the unchanged values", submitted.get()?.let {
-                it.first == "SAMPLE-TEACHER" && it.second == "124567" && it.third == null } == true)
+                it.first == "SAMPLE-TEACHER" && it.second == "124567" } == true)
             click(context.getString(R.string.auth_pin))
             val passwordFields = nodes().filter { it.isPassword }
             assertTrue("PIN field must retain password semantics", passwordFields.isNotEmpty())
@@ -352,23 +354,6 @@ class Group8UiDeviceTest {
             }
             authState.value = authState.value.copy(error=R.string.auth_wrong_pin)
             waitFor(context.getString(R.string.auth_wrong_pin))
-            show(scenario) { AuthScreen(AuthState(restoring=false), { id, pin, name -> submitted.set(Triple(id,pin,name)) }, {}) }
-            click(context.getString(R.string.auth_register_instead))
-            click(context.getString(R.string.auth_lrn))
-            waitUntil("Registration numeric keyboard must open") { keyboardShown(scenario) }
-            shot("keyboard-blank-registration")
-            click(context.getString(R.string.auth_pin))
-            waitUntil("Registration PIN numeric keyboard must open") { keyboardShown(scenario) }
-            shot("keyboard-blank-registration-pin")
-            enterText(context.getString(R.string.auth_lrn), "999999999999")
-            enterText(context.getString(R.string.auth_name), "Sample Learner")
-            enterText(context.getString(R.string.auth_pin), "12a45678")
-            assertTrue("Registration PIN must retain password semantics", nodes().any { it.isPassword })
-            instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
-            waitUntil("Back must dismiss registration keyboard") { !keyboardShown(scenario) }
-            click(context.getString(R.string.auth_register))
-            assertTrue("Existing registration callback must receive name and LRN", submitted.get()?.let {
-                it.first == "999999999999" && it.second == "124567" && it.third == "Sample Learner" } == true)
             val choices = mutableListOf<Boolean>()
             val member = RosterMember(Enrollment("interaction-request","interaction-class","interaction-learner","PENDING",1,1),
                 User("interaction-learner",null,"Sample Learner","STUDENT",1,1))
@@ -392,17 +377,14 @@ class Group8UiDeviceTest {
     @Test fun pinKeyboardPresentation() {
         guard()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            for (register in listOf(false, true)) {
-                show(scenario) { AuthScreen(AuthState(restoring=false), { _, _, _ -> }, {}) }
-                if (register) click(context.getString(R.string.auth_register_instead))
-                click(context.getString(R.string.auth_pin))
-                waitUntil("PIN keyboard must open for capture") { keyboardShown(scenario) }
-                SystemClock.sleep(700)
-                assertTrue("PIN keyboard must remain visible after focus scrolling settles", keyboardShown(scenario))
-                shot(if (register) "registration-pin-system-keyboard" else "sign-in-pin-system-keyboard")
-                instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
-                waitUntil("Back must dismiss the captured keyboard") { !keyboardShown(scenario) }
-            }
+            show(scenario) { AuthScreen(AuthState(restoring=false), { _, _ -> }, {}) }
+            click(context.getString(R.string.auth_pin))
+            waitUntil("PIN keyboard must open for capture") { keyboardShown(scenario) }
+            SystemClock.sleep(700)
+            assertTrue("PIN keyboard must remain visible after focus scrolling settles", keyboardShown(scenario))
+            shot("sign-in-pin-system-keyboard")
+            instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
+            waitUntil("Back must dismiss the captured keyboard") { !keyboardShown(scenario) }
         }
     }
 
@@ -426,8 +408,8 @@ class Group8UiDeviceTest {
     @Test fun hardwareKeyboardFocusAndSubmission() {
         guard()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            val submitted = java.util.concurrent.atomic.AtomicReference<Triple<String,String,String?>?>()
-            show(scenario) { AuthScreen(AuthState(restoring=false), { id, pin, name -> submitted.set(Triple(id,pin,name)) }, {}) }
+            val submitted = java.util.concurrent.atomic.AtomicReference<Pair<String,String>?>()
+            show(scenario) { AuthScreen(AuthState(restoring=false), { id, pin -> submitted.set(id to pin) }, {}) }
             enterText(context.getString(R.string.auth_id), "SAMPLE-TEACHER")
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB)
             waitUntil("Tab must move from ID to PIN") { nodes().any { it.isFocused && it.isPassword } }
@@ -440,24 +422,8 @@ class Group8UiDeviceTest {
             assertNull("Deleting a digit must disable submission", submitted.get())
             enterText(context.getString(R.string.auth_pin), "6")
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
-            waitUntil("Hardware Enter must submit sign-in") { submitted.get() == Triple("SAMPLE-TEACHER", "123456", null) }
-            submitted.set(null)
-            show(scenario) { AuthScreen(AuthState(restoring=false), { id, pin, name -> submitted.set(Triple(id,pin,name)) }, {}) }
-            click(context.getString(R.string.auth_register_instead))
-            enterText(context.getString(R.string.auth_lrn), "999999999999")
-            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB)
-            waitUntil("Tab must focus the name input") { nodes().any { it.isFocused && !it.isPassword } }
-            instrumentation.sendStringSync("Sample Learner")
-            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB)
-            waitUntil("Tab must move from name to PIN") { nodes().any { it.isFocused && it.isPassword } }
-            instrumentation.sendStringSync("123")
-            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
-            assertNull("Incomplete PIN must never submit", submitted.get())
-            enterText(context.getString(R.string.auth_pin), "456")
-            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER)
-            waitUntil("Hardware Enter must submit registration") {
-                submitted.get() == Triple("999999999999", "123456", "Sample Learner")
-            }
+            waitUntil("Hardware Enter must submit sign-in") { submitted.get() == ("SAMPLE-TEACHER" to "123456") }
+
         }
     }
 
@@ -478,34 +444,34 @@ class Group8UiDeviceTest {
         }
         var teacher: User? = null
         var learner: User? = null
-        for (register in listOf(false,true)) {
+        val learnerLrn = "9" + System.nanoTime().toString().takeLast(11).padStart(11,'0')
+        createMockLearner(endpoint, learnerLrn, "Group 8 Sample Learner")
+        for (isLearner in listOf(false, true)) {
             val model = AuthViewModel(root.auth,root.endpoints)
             try {
                 waitUntil("Authentication restoration must finish") { !model.state.value.restoring }
                 ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                     show(scenario) { val state by model.state.collectAsState(); AuthScreen(state,model::submit,{}) }
-                    val label = context.getString(if (register) R.string.auth_lrn else R.string.auth_id)
-                    if (register) click(context.getString(R.string.auth_register_instead))
-                    val id = if (register) "9" + System.nanoTime().toString().takeLast(11).padStart(11,'0') else "T-0001"
+                    val label = context.getString(R.string.auth_id)
+                    val id = if (isLearner) learnerLrn else "T-0001"
                     enterText(label,id)
-                    if (register) enterText(context.getString(R.string.auth_name),"Group 8 Sample Learner")
                     enterText(context.getString(R.string.auth_pin), "123456")
                     instrumentation.uiAutomation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK)
                     waitUntil("Back must dismiss authentication keyboard") { !keyboardShown(scenario) }
-                    click(context.getString(if (register) R.string.auth_register else R.string.auth_login))
+                    click(context.getString(R.string.auth_login))
                     waitUntil("Mock authentication must complete successfully") { model.state.value.user != null }
                     val user = requireNotNull(model.state.value.user)
-                    assertEquals(if (register) "STUDENT" else "TEACHER",user.role)
-                    if (register) learner = user else teacher = user
+                    assertEquals(if (isLearner) "STUDENT" else "TEACHER",user.role)
+                    if (isLearner) learner = user else teacher = user
                 }
             } finally { instrumentation.runOnMainSync { model.viewModelScope.cancel() } }
-            if (!register) root.forUser(requireNotNull(teacher).id).settings.signOut(requireNotNull(teacher).id)
+            if (!isLearner) root.forUser(requireNotNull(teacher).id).settings.signOut(requireNotNull(teacher).id)
         }
         val student = requireNotNull(learner)
         val learnerContainer = root.forUser(student.id)
         assertEquals("PENDING",learnerContainer.enrollmentApi.join(student.id,"K7M4QX").status.name)
         learnerContainer.settings.signOut(student.id)
-        val teacherUser = root.auth.authenticate(endpoint,"T-0001","123456",null)
+        val teacherUser = root.auth.authenticate(endpoint,"T-0001","123456")
         val active = root.forUser(teacherUser.id)
         active.sync.pull(teacherUser.id)
         val classroom = active.enrollmentApi.classrooms(teacherUser.id).first { it.classCode == "K7M4QX" }

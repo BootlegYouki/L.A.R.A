@@ -1,6 +1,8 @@
 package org.lara.app.ui.screens.teacher.classes
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,7 +38,8 @@ fun EditClassPage(container: AppContainer, userId: String, reachable: StateFlow<
     // Close once the save finishes without an error.
     LaunchedEffect(state.busy, state.error) { if (saving && !state.busy) { saving = false; if (state.error == null) close() } }
     run {
-        Column(Modifier.fillMaxWidth().padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S4).navigationBarsPadding().imePadding(),
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding().verticalScroll(rememberScrollState())
+            .padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
             Text(stringResource(if (classId == null) R.string.classes_create else R.string.classes_manage), style = MaterialTheme.typography.titleLarge)
             if (online) state.error?.let { DiscoveryBanner(it, warning = true, success = false) }

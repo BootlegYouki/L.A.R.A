@@ -12,7 +12,7 @@ vi.mock('../src/services/connection',()=>({observeHubConnection:(fn:(s:unknown)=
 vi.mock('../src/services/discovery',()=>({observeDiscovery:()=>()=>{}}));
 vi.mock('../src/services/auth',async original=>({...await original<typeof import('../src/services/auth')>(),refreshClassrooms:mocks.refresh,signIn:mocks.signIn,restoreAccount:mocks.restore}));
 vi.mock('../src/services/classrooms',()=>({classroomTeacherNames:vi.fn().mockResolvedValue({}),refreshRoster:mocks.roster,createClassroom:vi.fn(),decideEnrollment:mocks.decide,saveJoinStatus:vi.fn(),joinClass:vi.fn()}));
-vi.mock('../src/services/sync',()=>({observeSync:mocks.sync}));
+vi.mock('../src/services/sync',async original=>({...await original<typeof import('../src/services/sync')>(),observeSync:mocks.sync}));
 vi.mock('../src/services/realtime',()=>({observeJoinUpdates:()=>()=>{}}));
 vi.mock('../src/services/websocket-policy',()=>({ensureWebSocketPolicy:()=>true}));
 vi.mock('../src/components/JoinClassModal',()=>({default:()=>null}));

@@ -101,7 +101,7 @@ Unreachable Hub means: reads come from Room; writes marked "outbox" are queued; 
 
 | Contract route or event | Our module | On error codes | On timeout or Hub unreachable |
 |---|---|---|---|
-| `POST /api/auth/login`, `register` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); register 409 `ALREADY_EXISTS` | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
+| `POST /api/auth/login` | `AuthApi` | login 401 wrong-PIN message, 429 `TOO_MANY_ATTEMPTS` "wait a minute" using `Retry-After` (server spec Q7); accounts and PIN resets come from the Hub admin | Show "cannot reach the Hub", keep manual IP; cached session opens offline |
 | `POST /api/auth/logout` | `AuthApi` (Settings) | any: still clear local token after queued-row check | Clear locally, ignore failure |
 | `GET/POST /api/classrooms` | `ClassroomRepository` | 403 | Room data; create is needs Hub |
 | `POST /api/classrooms/join` | `EnrollmentRepository` | 404 `CLASS_CODE_INVALID` English message | Disabled with helper line |
@@ -154,7 +154,7 @@ retain existing creation times. These audit fields are local and are not added t
 * **`sync_status`:** a row is created `QUEUED_FOR_SYNC` on the client with a UUID v4 generated on the device. It becomes `SYNCED` only from a push receipt (or submit response). A refused row becomes `REJECTED` with `sync_reject_reason` on the same row, stays visible and is never retried automatically or silently deleted; the UI uses a kind explanation. Room version 2 migrates legacy rejection receipts, and version 3 adds nullable homework `received_at` in place. Homework uploads send the queued `submitted_at` as `turned_in_at`, preserving the original Turn in time across retries. Both migrations preserve queued work. Rows are never deleted by sign-out; sign-out warns with the queued count.
 * **Cursor:** integer `next_cursor` from `SyncRepository.pull`, stored in `sync_state` in the same `@Transaction` as the applied rows, tombstones and `users`. On any exception the transaction rolls back and the old cursor stays. Loop while `has_more`. `server_time` only feeds the clock offset.
 * **Reset:** if the pull response has `reset: true` (hub_id or sync_epoch differs, also reported by `EVENT_HELLO_ACK`), the same transaction keeps `QUEUED_FOR_SYNC` and `REJECTED` rows and their required ancestors, clears the remaining mirror, then applies the response and stores new `hub_id`, `sync_epoch`, cursor.
-* **Triggers:** unique periodic work (15 min, NetworkType.NOT_REQUIRED for LAN-only Wi-Fi, not low battery), one-time work on `NetworkCallback` available, on `EVENT_ANNOUNCEMENT_PUSH`, after login, after any outbox write.
+* **Triggers:** unique periodic work (15 min, NetworkType.NOT_REQUIRED for LAN-only Wi-Fi, no minimum battery requirement), one-time work on `NetworkCallback` available, on `EVENT_ANNOUNCEMENT_PUSH`, after login, after any outbox write.
 * **Remote/Suspension Mode** (`AGENTS.md` 3.5, `rules/networking-and-lan.md` section 5): the client tries LAN discovery first; only when it fails and a remote URL is saved does `HubEndpointStore` return the `https` host. Same token, same contract, same cursor. Discovery is never attempted over the tunnel. Over the tunnel `QuizSessionManager` does not rely on `EVENT_QUIZ_START`: it anchors to `started_at` from `POST /api/quizzes/{id}/begin` or `GET /api/quizzes/active` and counts down on `elapsedRealtime()`.
 
 | Screen group | No Hub behavior |

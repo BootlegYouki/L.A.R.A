@@ -2,6 +2,7 @@ package org.lara.app.ui.screens.teacher.review
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import org.lara.app.data.remote.HubFailure
 import org.lara.app.ui.screens.classwork.DocBlock
 import org.lara.app.ui.screens.classwork.docxBlocks
 import org.lara.app.ui.screens.classwork.renderHandout
+import org.lara.app.ui.screens.classwork.rememberDocxPicture
 import org.lara.app.ui.theme.LaraSpacing
 import org.lara.app.ui.theme.MinTouchTarget
 
@@ -45,7 +47,7 @@ internal fun reviewDocumentType(file: File): ReviewDocumentType? {
 }
 
 @Composable
-internal fun ReviewDocument(container: AppContainer, userId: String, submissionId: String, online: Boolean, forbidden: () -> Unit) {
+internal fun ReviewDocument(container: AppContainer, userId: String, submissionId: String, online: Boolean, attachment: Int = 0, forbidden: () -> Unit) {
     val context = LocalContext.current
     var file by remember(submissionId) { mutableStateOf<File?>(null) }
     var type by remember(submissionId) { mutableStateOf<ReviewDocumentType?>(null) }
@@ -60,7 +62,7 @@ internal fun ReviewDocument(container: AppContainer, userId: String, submissionI
             var temp: File? = null
             try {
                 temp = File.createTempFile("review-document-", ".tmp", context.cacheDir)
-                container.gradingApi.file(userId, submissionId, temp, 250L * 1024 * 1024)
+                container.gradingApi.file(userId, submissionId, temp, 250L * 1024 * 1024, attachment)
                 val detected = withContext(Dispatchers.IO) { reviewDocumentType(temp) }
                 if (detected == null) failed = true else { type = detected; file = temp }
                 loading = false
@@ -123,16 +125,21 @@ private fun ReviewWordDocument(file: File) {
         catch (_: Exception) { failed = true }
     }
     val content = blocks
-    DisposableEffect(content) { onDispose { content?.filterIsInstance<DocBlock.Pic>()?.forEach { it.bitmap.recycle() } } }
     when {
         failed -> Text(stringResource(R.string.review_document_unavailable))
         content == null -> LinearProgressIndicator(Modifier.fillMaxWidth())
-        else -> content.forEach { block ->
-            when (block) {
-                is DocBlock.Para -> Text(block.text, style = MaterialTheme.typography.bodyLarge)
-                is DocBlock.Pic -> Image(block.bitmap.asImageBitmap(), null, Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+        else -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 480.dp),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            items(content.size) { index ->
+                when (val block = content[index]) {
+                    is DocBlock.Para -> Text(block.text, style = MaterialTheme.typography.bodyLarge)
+                    is DocBlock.Pic -> {
+                        val bitmap = rememberDocxPicture(file, block)
+                        if (bitmap == null) Spacer(Modifier.fillMaxWidth().aspectRatio(1f))
+                        else Image(bitmap.asImageBitmap(), null, Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+                    }
+                }
             }
-            Spacer(Modifier.height(8.dp))
         }
     }
 }

@@ -622,6 +622,37 @@ class TestMockHub(unittest.TestCase):
         call(BASE, "DELETE", f"/api/materials/{mat['id']}", token=self.teacher)
         self.assertIn({"entity_table": "materials", "entity_id": mat["id"]}, self.pull(self.pupil, cursor=cursor)["deleted"])
 
+    def test_mixed_homework_attachments_and_versioned_grade_edits(self):
+        assignment = self.pull(self.pupil)["assignments"][0]
+        photo = b"\xff\xd8\xff\xe0synthetic"
+        document = b"%PDF-1.4\nsynthetic"
+        body = b'--QA\r\nContent-Disposition: form-data; name="submission_id"\r\n\r\nmixed-test\r\n'
+        for slot, name, data in (("file_1", "homework_123.jpg", photo), ("file_2", "notes.pdf", document)):
+            body += (f'--QA\r\nContent-Disposition: form-data; name="{slot}"; filename="{name}"\r\n\r\n'.encode()
+                     + data + b"\r\n")
+        body += b"--QA--\r\n"
+        path = f"/api/assignments/{assignment['id']}/submit"
+        headers = {"Content-Type": "multipart/form-data; boundary=QA"}
+        status, submission, _ = call(BASE, "POST", path, token=self.pupil, raw=body, headers=headers)
+        self.assertEqual(status, 200)
+        self.assertEqual(submission["attachments"], [
+            {"name": "homework_123.jpg", "file_type": "IMAGE"},
+            {"name": "notes.pdf", "file_type": "DOCUMENT"},
+        ])
+        self.assertEqual(submission["attachments"], self.pull(self.teacher)["submissions"][0]["attachments"])
+        grade_path = f"/api/submissions/{submission['id']}"
+        self.assertEqual(call(BASE, "GET", grade_path + "/file?attachment=1", token=self.teacher)[1], document)
+        grade_path += "/grade-edit"
+        grade = {"expected_updated_at": submission["updated_at"], "score": 3, "teacher_feedback": ""}
+        status, first, _ = call(BASE, "PATCH", grade_path, grade, self.teacher)
+        self.assertEqual(status, 200)
+        status, repeated, _ = call(BASE, "PATCH", grade_path, grade, self.teacher)
+        self.assertEqual((status, repeated["updated_at"]), (200, first["updated_at"]))
+        self.assertEqual(call(BASE, "PATCH", grade_path, dict(grade, score=0), self.teacher)[0], 409)
+        self.assertEqual(call(BASE, "PATCH", grade_path, dict(grade, score=0, expected_updated_at=first["updated_at"]), self.teacher)[1]["score"], 0)
+        status, repeated, _ = call(BASE, "POST", path, token=self.pupil, raw=body, headers=headers)
+        self.assertEqual((status, repeated["score"]), (200, 0))
+
     def test_submissions_are_scoped_to_their_owner(self):
         ana = login(BASE, "123456789013")
         call(BASE, "POST", "/api/classrooms/join", {"class_code": "K7M4QX"}, ana)
@@ -719,6 +750,12 @@ class TestMockHub(unittest.TestCase):
     def test_admin_routes_are_admin_only(self):
         status, _, _ = call(BASE, "GET", "/api/admin/users", token=self.teacher)
         self.assertEqual(status, 403)
+        account = {"lrn_or_id": "123456789019", "full_name": "New learner", "pin": "123456", "role": "STUDENT"}
+        for path in ("/api/admin/users", "/api/auth/register"):
+            status, error, _ = call(BASE, "POST", path, account, token=self.teacher)
+            self.assertEqual((status, error["error"]["code"]), (403, "FORBIDDEN"))
+        status, error, _ = call(BASE, "POST", "/api/auth/register", dict(account, role="TEACHER"))
+        self.assertEqual((status, error["error"]["code"]), (403, "FORBIDDEN"))
         admin = login(BASE, "ADMIN-0001")
         status, users, _ = call(BASE, "GET", "/api/admin/users", token=admin)
         self.assertEqual(status, 200)

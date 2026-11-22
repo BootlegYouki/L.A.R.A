@@ -67,3 +67,7 @@ On the staging-based feature branch, Windows, 22 November 2026:
 Browser checks cover graph types/axes, account table scrolling/pagination,
 sign-out confirmation, stale/offline recovery, row details and import interruption.
 Screenshots are under the corresponding `server/docs/evidence/` folders.
+
+GitHub CI follow-up: the strict Clippy job rejected the recorder's nested map key
+type. A named EventKey alias keeps the same representation and behavior while
+satisfying the type-complexity lint; no lint suppression is added.

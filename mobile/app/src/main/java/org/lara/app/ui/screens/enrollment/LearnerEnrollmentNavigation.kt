@@ -52,7 +52,9 @@ fun LearnerEnrollmentNavigation(container: AppContainer, userId: String, shell: 
         CompositionLocalProvider(org.lara.app.ui.components.LocalClassChrome provides
             org.lara.app.ui.components.ClassChrome(selected.classroom.name, selected.classroom.section, info = { info = true }, back = home)) {
             LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.classroom.id}", content = { destination ->
-                org.lara.app.ui.screens.stream.ClassroomLearningHost(container, userId, destination, selected.classroom.id)
+                org.lara.app.ui.screens.stream.ClassroomLearningHost(
+                    container, userId, destination, selected.classroom.id, hubReachable = shell.isHubReachable,
+                )
             })
         }
         if (info) @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)

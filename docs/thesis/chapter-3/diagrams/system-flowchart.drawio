@@ -104,7 +104,7 @@
         <mxCell id="10" value="Previously signed-in account: open local data; queue supported writes as QUEUED_FOR_SYNC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
           <mxGeometry x="1000" y="630" width="390" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="11" value="Register learner or sign in" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+        <mxCell id="11" value="Sign in with Hub-created credentials" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#152a38;fontSize=16;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
           <mxGeometry x="620" y="780" width="240" height="80" as="geometry" />
         </mxCell>
         <mxCell id="12" value="Role?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#152a38;fontSize=15;align=center;verticalAlign=middle;spacing=5;" vertex="1" parent="1">

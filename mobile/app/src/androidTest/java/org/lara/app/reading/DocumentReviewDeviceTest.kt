@@ -57,7 +57,7 @@ class DocumentReviewDeviceTest {
         }
         suspend fun capture(blank: Boolean) {
             val photo = input(blank)
-            instrumentation.runOnMainSync { model.captured(photo) }
+            instrumentation.runOnMainSync { model.captured(photo, document = true) }
             withTimeout(15_000) { model.scanPreview.filterNotNull().first() }
             withTimeout(15_000) { model.busy.filter { !it }.first() }
             assertFalse(photo.exists())
@@ -77,7 +77,7 @@ class DocumentReviewDeviceTest {
 
             capture(blank = true)
             instrumentation.runOnMainSync { model.useScan(false) }
-            val accepted = withTimeout(10_000) { model.draft.filterNotNull().first() }
+            val accepted = withTimeout(10_000) { model.draft.first { it.isNotEmpty() }.single() }
             withTimeout(10_000) { model.busy.filter { !it }.first() }
             assertTrue(File(accepted).length() in 1 until HomeworkPhoto.MAX_BYTES)
             assertNull(model.scanSource.value)

@@ -35,7 +35,7 @@ Ask a developer to start the Hub window with a temporary, empty Hub data folder.
 
 1. On **Set the admin PIN**, enter your name and a six-digit test PIN. Select **Set admin PIN**. The Accounts screen opens with the admin listed.
 2. Select **Sign out**, close and reopen the window, and enter the admin PIN. Accounts must remain hidden until sign-in succeeds. A wrong PIN must show a readable error.
-3. Select **Create account**. Enter a test teacher's full name and unique ID, choose **Teacher**, enter a PIN with a leading zero, and save. Record the PIN privately, then dismiss the confirmation. It must disappear.
+3. In the Hub dashboard, the Hub admin selects **Create account**. Enter a test teacher's full name and unique ID, choose **Teacher**, enter a PIN with a leading zero, and save. Record the PIN privately, then dismiss the confirmation. It must disappear.
 4. Sign in to a test learner/teacher app with that teacher ID and PIN. It should sign in as a teacher. Repeat account creation with **Learner** and a test LRN.
 5. On the Hub, select the teacher's **Reset PIN** button. Enter a different PIN and save. The old PIN must fail at the app's sign-in screen; the new PIN must work. Restarting the Hub must preserve the change.
 6. Try creating the same ID again. The console must explain that it already exists and keep the account list intact.

@@ -25,6 +25,7 @@ pub(crate) const SQL: &[(i64, &str, &str)] = &[
         include_str!("../migrations/004_audit_created_at.sql"),
     ),
     (5, "announcement_author", include_str!("../migrations/005_announcement_author.sql")),
+    (6, "submission_attachments", include_str!("../migrations/006_submission_attachments.sql")),
 ];
 
 pub(crate) fn migrator() -> sqlx::migrate::Migrator {

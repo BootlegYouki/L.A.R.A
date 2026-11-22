@@ -128,7 +128,7 @@ class ClassFormsDeviceTest {
         if (previous != null) assertEquals(SignOutResult.SignedOut, container.forUser(previous.id).settings.signOut(previous.id))
         val endpoint = requireNotNull(HubEndpoint.manual("127.0.0.1:8080"))
         container.endpoints.save(endpoint, "Synthetic forms test Hub")
-        val user = container.auth.authenticate(endpoint, id, "123456", null)
+        val user = container.auth.authenticate(endpoint, id, "123456")
         container.forUser(user.id).sync.pull(user.id)
         return user.id
     }

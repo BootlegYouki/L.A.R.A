@@ -4,7 +4,7 @@ export interface MediaSource {id:string;url:string;mime?:string}
 const entries=new Map<string,{promise:Promise<MediaSource>;users:number;timer?:ReturnType<typeof setTimeout>}>();
 let scope='';
 export function clearMediaCache(){for(const entry of entries.values()){clearTimeout(entry.timer);void entry.promise.then(value=>invoke('close_material_preview',{id:value.id})).catch(()=>{});}entries.clear();scope='';}
-export function acquireMedia(account:CachedAccount,id:string,revision:number,mime?:string,offline=false){
+export function acquireMedia(account:{hub:CachedAccount['hub'];user:Pick<CachedAccount['user'],'id'>},id:string,revision:number,mime?:string,offline=false){
  const owner=`${account.hub.ip}:${account.hub.http_port}/${account.user.id}`;
  if(scope&&scope!==owner)clearMediaCache();scope=owner;
  const key=`${owner}/${id}/${revision}`;

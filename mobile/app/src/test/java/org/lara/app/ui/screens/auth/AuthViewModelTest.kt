@@ -45,21 +45,19 @@ class AuthViewModelTest {
         model = AuthViewModel(AuthRepository(AuthApi(), tokens, db.authDao()), endpoints)
     }
     @After fun close() { model.viewModelScope.cancel(); server.shutdown(); db.close(); Dispatchers.resetMain() }
-    @Test fun registrationTrimsBeforeValidationAndRejectsContractLengthViolations(): Unit = runBlocking {
+    @Test fun signInTrimsIdAndRejectsOverlongIdentifiers(): Unit = runBlocking {
         withTimeout(5_000) { model.state.first { !it.restoring } }
-        model.submit("123456789012", "123456", " ")
-        assertEquals(R.string.auth_invalid, model.state.value.error)
-        model.submit("123456789012", "123456", "x".repeat(101))
-        assertEquals(R.string.auth_invalid, model.state.value.error)
-        model.submit("x".repeat(33), "123456", null)
+        model.submit("x".repeat(33), "123456")
         assertEquals(R.string.auth_invalid, model.state.value.error)
         assertEquals(0, server.requestCount)
         server.enqueue(MockResponse().setBody("""{"token":"synthetic","expires_at":9999999999999,"user":{"id":"learner","lrn_or_id":"123456789012","full_name":"Learner","role":"STUDENT"}}"""))
-        model.submit(" 123456789012 ", "123456", " Learner ")
+        model.submit(" 123456789012 ", "123456")
         withTimeout(5_000) { model.state.first { it.user != null } }
-        val body = Json.parseToJsonElement(server.takeRequest().body.readUtf8()).jsonObject
+        val request = server.takeRequest()
+        assertEquals("/api/auth/login", request.path)
+        val body = Json.parseToJsonElement(request.body.readUtf8()).jsonObject
         assertEquals("123456789012", body.getValue("lrn_or_id").jsonPrimitive.content)
-        assertEquals("Learner", body.getValue("full_name").jsonPrimitive.content)
+        assertEquals(setOf("lrn_or_id", "pin"), body.keys)
         val session = model.state.value.sessionVersion
         model.requireSignIn(session - 1)
         model.signedOut(session - 1)
@@ -70,30 +68,28 @@ class AuthViewModelTest {
         model.signedOut(0)
         assertNull(model.state.value.previousUser)
     }
-    @Test fun bothAuthModesRejectEveryPinOutsideTheSixAsciiDigitContract(): Unit = runBlocking {
+    @Test fun signInRejectsEveryPinOutsideTheSixAsciiDigitContract(): Unit = runBlocking {
         withTimeout(5_000) { model.state.first { !it.restoring } }
-        for (name in listOf(null, "Learner")) {
-            for (pin in listOf("", "1234", "12345", "1234567", "12345a", "１２３４５６", "١٢٣٤٥٦")) {
-                model.submit("123456789012", pin, name)
-                assertEquals(R.string.auth_invalid, model.state.value.error)
-            }
+        for (pin in listOf("", "1234", "12345", "1234567", "12345a", "１２３４５６", "١٢٣٤٥٦")) {
+            model.submit("123456789012", pin)
+            assertEquals(R.string.auth_invalid, model.state.value.error)
         }
         assertEquals(0, server.requestCount)
     }
     @Test fun unreachableHubReturnsAnErrorForAValidSixDigitPin(): Unit = runBlocking {
         withTimeout(5_000) { model.state.first { !it.restoring } }
         server.enqueue(MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START))
-        model.submit("123456789012", "123456", null)
+        model.submit("123456789012", "123456")
         withTimeout(10_000) { model.state.first { !it.busy && it.error == R.string.auth_unreachable } }
         assertNull(model.state.value.user)
     }
     @Test fun retryAfterBlocksManualAndAutomaticRetriesUntilTheWaitEnds(): Unit = runBlocking {
         withTimeout(5_000) { model.state.first { !it.restoring } }
         server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", "37").setBody("{}"))
-        model.submit("123456789012", "123456", null)
+        model.submit("123456789012", "123456")
         val state = withTimeout(5_000) { model.state.first { !it.busy && it.error == R.string.auth_wait } }
         assertTrue(state.retryAt - SystemClock.elapsedRealtime() in 36_000L..37_000L)
-        model.submit("123456789012", "123456", null)
+        model.submit("123456789012", "123456")
         delay(150)
         assertEquals(1, server.requestCount)
     }

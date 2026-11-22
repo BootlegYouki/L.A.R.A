@@ -12,6 +12,7 @@ const upgrade = readFileSync(new URL('../src-tauri/migrations/002_sync_rejection
 const receiptMigration = readFileSync(new URL('../src-tauri/migrations/003_submission_received_at.sql', import.meta.url), 'utf8');
 const auditMigration = readFileSync(new URL('../src-tauri/migrations/004_audit_created_at.sql', import.meta.url), 'utf8');
 const authorMigration = readFileSync(new URL('../src-tauri/migrations/005_announcement_author.sql', import.meta.url), 'utf8');
+const attachmentsMigration = readFileSync(new URL('../src-tauri/migrations/006_submission_attachments.sql', import.meta.url), 'utf8');
 const contract = readFileSync(new URL('../../contracts/schema/client_offline.sql', import.meta.url), 'utf8');
 
 describe('client database', () => {
@@ -36,6 +37,7 @@ describe('client database', () => {
       db.exec(receiptMigration);
       db.exec(auditMigration);
       db.exec(authorMigration);
+      db.exec(attachmentsMigration);
       db.exec('PRAGMA user_version = 4');
     }
     return db;

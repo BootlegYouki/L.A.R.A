@@ -364,3 +364,46 @@ async fn archiving_hides_its_submissions_and_private_comments_from_every_pull() 
     }
     assert_eq!(class.count("SELECT COUNT(*) FROM assignment_submissions WHERE score = 18").await, 1, "the grade is kept on the Hub");
 }
+
+#[tokio::test]
+async fn mixed_attachments_and_retries_of_edited_grades() {
+    use common::uploads::{file_part, PDF};
+    let class = Class::start().await;
+    let assignment = worksheet(&class, class.teacher()).await;
+    let assignment_id = assignment["id"].as_str().unwrap();
+    let submission_id = uuid::Uuid::new_v4().to_string();
+    let path = format!("/api/assignments/{assignment_id}/submit");
+    let form = || reqwest::multipart::Form::new()
+        .text("submission_id", submission_id.clone())
+        .part("file_1", file_part("homework.jpg", &jpeg("mixed")))
+        .part("file_2", file_part("worksheet.pdf", PDF));
+    let (status, submission) = class.upload(&path, Some(&class.learner_token), form()).await;
+    assert_eq!(status, 200, "{submission}");
+    assert_eq!(submission["attachments"], json!([
+        {"name": "homework.jpg", "file_type": "IMAGE"},
+        {"name": "worksheet.pdf", "file_type": "DOCUMENT"}
+    ]));
+    assert_eq!(class.pull(class.teacher()).await["submissions"][0]["attachments"], submission["attachments"]);
+    let grade_path = format!("/api/submissions/{submission_id}/grade-edit");
+    let file_path = format!("/api/submissions/{submission_id}/file?attachment=1&token={}", class.teacher());
+    let (status, mime, body) = class.hub.get_raw(&file_path).await;
+    assert_eq!(status, 200);
+    assert_eq!(mime, "application/pdf");
+    assert_eq!(body, PDF);
+    let original_version = submission["updated_at"].as_i64().unwrap();
+    let first = json!({"score": 8, "teacher_feedback": "First", "expected_updated_at": original_version});
+    let (status, graded) = class.hub.send_json(Method::PATCH, &grade_path, &first, Some(class.teacher())).await;
+    assert_eq!(status, 200, "{graded}");
+    let retry = class.hub.send_json(Method::PATCH, &grade_path, &first, Some(class.teacher())).await;
+    assert_eq!(retry, (200, graded.clone()));
+    let stale = json!({"score": 0, "teacher_feedback": "Stale", "expected_updated_at": original_version});
+    let (status, body) = class.hub.send_json(Method::PATCH, &grade_path, &stale, Some(class.teacher())).await;
+    assert_eq!(status, 409);
+    assert_eq!(body["error"]["code"], "GRADE_CHANGED");
+    let (status, edited) = class.hub.send_json(Method::PATCH, &grade_path,
+        &json!({"score": 0, "teacher_feedback": "", "expected_updated_at": graded["updated_at"]}),
+        Some(class.teacher())).await;
+    assert_eq!(status, 200, "{edited}");
+    assert_eq!(edited["score"], 0);
+    assert_eq!(class.upload(&path, Some(&class.learner_token), form()).await, (200, edited));
+}

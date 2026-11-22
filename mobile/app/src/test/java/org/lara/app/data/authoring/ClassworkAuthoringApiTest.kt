@@ -27,7 +27,7 @@ class ClassworkAuthoringApiTest {
                 file.writeText("%PDF-1.4 test")
                 server.enqueue(MockResponse().setBody("{}"))
                 val progress = mutableListOf<Int>()
-                api.upload("teacher", hub.restBase, "class", file, MaterialDraft("Lesson", "DOCUMENT", assignmentId = "assignment"), progress::add)
+                api.upload("teacher", hub.restBase, "class", file, MaterialDraft("Lesson", "DOCUMENT", assignmentId = "assignment"), progress = progress::add)
                 val request = server.takeRequest()
                 assertEquals("Bearer synthetic", request.getHeader("Authorization"))
                 val body = request.body.readUtf8()
@@ -44,4 +44,35 @@ class ClassworkAuthoringApiTest {
             } finally { file.delete() }
         }
     }
+    @Test fun retryAfterAddressChangeRequiresTheSameHubIdentity() = runBlocking {
+        MockWebServer().use { server ->
+            server.start()
+            val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", server.port))
+            val tokens = object : SessionTokenStore {
+                override fun load() = StoredToken("synthetic", "teacher", Long.MAX_VALUE, endpoint.restBase)
+                override fun save(value: StoredToken) = Unit
+                override fun clear() = Unit
+            }
+            val api = ClassworkAuthoringApi(EnrollmentApi(HubClient(), tokens, { endpoint }))
+            val file = File.createTempFile("fixture-", ".pdf")
+            try {
+                file.writeText("%PDF-1.4 test")
+                val draft = MaterialDraft("Lesson", "DOCUMENT")
+                val oldAddress = "http://127.0.0.2:8080"
+                server.enqueue(MockResponse().setBody("""{"hub_id":"other"}"""))
+                try {
+                    api.upload("teacher", oldAddress, "class", file, draft, "original") {}
+                    fail("Upload accepted by another Hub")
+                } catch (_: IllegalArgumentException) { }
+                assertEquals(1, server.requestCount)
+                server.enqueue(MockResponse().setBody("""{"hub_id":"original"}"""))
+                server.enqueue(MockResponse().setBody("{}"))
+                api.upload("teacher", oldAddress, "class", file, draft, "original") {}
+                assertEquals("/api/sync/pull", server.takeRequest().path)
+                assertEquals("/api/sync/pull", server.takeRequest().path)
+                assertEquals("/api/materials", server.takeRequest().path)
+            } finally { file.delete() }
+        }
+    }
+
 }

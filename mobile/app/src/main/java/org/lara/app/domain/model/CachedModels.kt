@@ -38,6 +38,7 @@ data class Announcement(
     val allowComments: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
+    val authorId: String? = null,
 )
 
 data class AnnouncementComment(

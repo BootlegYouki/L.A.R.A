@@ -54,7 +54,7 @@ async fn a_learner_submits_a_photo_and_only_they_and_the_teachers_see_it() {
     keys.sort_unstable();
     assert_eq!(
         keys,
-        ["assignment_id", "file_type", "id", "received_at", "score", "student_id", "submitted_at", "teacher_feedback", "updated_at"]
+        ["assignment_id", "attachments", "file_type", "id", "received_at", "score", "student_id", "submitted_at", "teacher_feedback", "updated_at"]
     );
     assert!(class.pull(&class.learner_token).await["submissions"][0]["received_at"].is_i64(), "sync carries it too");
     assert_eq!((sub["id"].as_str(), sub["assignment_id"].as_str()), (Some("c1000000-0000-4000-8000-000000000001"), Some("asg-1")));

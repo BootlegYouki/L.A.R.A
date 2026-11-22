@@ -14,6 +14,34 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostAnnouncementViewModelTest {
+    @Test fun retriesOnlyAttachmentsThatHaveNotBeenQueued() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            var posts = 0
+            val attempts = mutableListOf<String>()
+            val model = PostAnnouncementViewModel(
+                post = { _, _, _ -> posts++; "announcement" },
+                refreshStream = {},
+                queueAttachment = { id, uri, _ ->
+                    assertEquals("announcement", id)
+                    attempts.add(uri)
+                    if (attempts == listOf("one", "two")) throw IOException()
+                },
+            )
+            val attachments = mapOf("one" to "One", "two" to "Two")
+            model.send("Title", "Content", false, true, attachments)
+            runCurrent()
+            assertEquals(AnnouncementStatus.Failed, model.status.value)
+            model.send("Title", "Content", false, true, attachments)
+            runCurrent()
+            assertEquals(AnnouncementStatus.Posted, model.status.value)
+            assertEquals(1, posts)
+            assertEquals(listOf("one", "two", "two"), attempts)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
     @Test fun offlineAndRepeatedTapsDoNotPostAndOnlySuccessRefreshesStream() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
@@ -24,6 +52,7 @@ class PostAnnouncementViewModelTest {
                 assertEquals(false, comments)
                 if (++requests == 1) throw IOException()
                 reply.await()
+                "announcement"
             }, refreshStream = { refreshes++ })
 
             model.send("Reminder", "Bring your notes", false, reachable = false)

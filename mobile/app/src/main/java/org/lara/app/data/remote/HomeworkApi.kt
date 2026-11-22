@@ -16,10 +16,14 @@ import java.util.concurrent.TimeUnit
 class HomeworkApi(private val api: EnrollmentApi) {
     private val client = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
         .connectTimeout(5, TimeUnit.SECONDS).readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS).callTimeout(30, TimeUnit.SECONDS).build()
+        .writeTimeout(15, TimeUnit.SECONDS).callTimeout(5, TimeUnit.MINUTES).build()
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun upload(userId: String, assignmentId: String, submissionId: String, file: File, turnedInAt: Long): SubmissionDto = withContext(Dispatchers.IO) {
+    suspend fun upload(userId: String, assignmentId: String, submissionId: String, file: File, turnedInAt: Long): SubmissionDto =
+        upload(userId, assignmentId, submissionId, listOf(file), turnedInAt)
+
+    suspend fun upload(userId: String, assignmentId: String, submissionId: String, files: List<File>, turnedInAt: Long): SubmissionDto = withContext(Dispatchers.IO) {
+        require(files.size in 1..HomeworkAttachment.MAX_ATTACHMENTS)
         require(assignmentId.matches(Regex("[A-Za-z0-9-]{1,128}")))
         require(submissionId.matches(Regex("[A-Za-z0-9-]{1,128}")))
         val connection = api.connection(userId)
@@ -28,8 +32,13 @@ class HomeworkApi(private val api: EnrollmentApi) {
         val body = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("submission_id", submissionId)
             .addFormDataPart("turned_in_at", turnedInAt.toString())
-            .addFormDataPart("file", HomeworkAttachment.displayName(file),
-                file.asRequestBody(HomeworkAttachment.mimeType(file).toMediaType())).build()
+            .apply {
+                files.forEachIndexed { index, file ->
+                    val slot = if (files.size == 1) "file" else "file_${index + 1}"
+                    addFormDataPart(slot, HomeworkAttachment.displayName(file),
+                        file.asRequestBody(HomeworkAttachment.mimeType(file).toMediaType()))
+                }
+            }.build()
         val request = Request.Builder().url(url).header("Authorization", "Bearer ${connection.session.token}").post(body).build()
         client.newCall(request).execute().use { response ->
             val source = requireNotNull(response.body).source()
@@ -43,7 +52,9 @@ class HomeworkApi(private val api: EnrollmentApi) {
             }
             json.decodeFromString(SubmissionDto.serializer(), text).also {
                 require(it.id.matches(Regex("[A-Za-z0-9-]{1,128}")) && it.assignmentId == assignmentId &&
-                    it.studentId == userId && it.fileType == HomeworkAttachment.type(file))
+                    it.studentId == userId && it.fileType == HomeworkAttachment.type(files.first()))
+                require(if (it.attachments.isEmpty()) files.size == 1
+                    else it.attachments.map { attachment -> attachment.fileType } == files.map(HomeworkAttachment::type))
             }
         }
     }

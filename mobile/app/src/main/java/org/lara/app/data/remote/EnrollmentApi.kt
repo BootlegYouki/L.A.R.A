@@ -13,7 +13,8 @@ import org.lara.app.domain.enrollment.EnrollmentStatus
 
 @Serializable
 data class JoinReceipt(@SerialName("classroom_id") val classroomId: String, val status: EnrollmentStatus,
-    val section: String, @SerialName("teacher_name") val teacherName: String)
+    // Older Hubs return the enrollment receipt before they support the display metadata.
+    val section: String? = null, @SerialName("teacher_name") val teacherName: String? = null)
 @Serializable
 private data class JoinRequest(@SerialName("class_code") val code: String)
 data class ClassroomSnapshot(val hub: String, val rows: List<ClassroomDto>)

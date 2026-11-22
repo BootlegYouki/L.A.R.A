@@ -250,7 +250,7 @@ def student_quiz(quiz):
     return out
 
 
-def parse_multipart(content_type, body):
+def parse_multipart(content_type, body, filenames=None):
     m = re.search(r'boundary="?([^";]+)"?', content_type or "")
     if not m:
         return {}, {}
@@ -264,8 +264,15 @@ def parse_multipart(content_type, body):
         name = re.search(rb'name="([^"]+)"', head)
         if not name:
             continue
-        if re.search(rb'filename="', head):
-            files[name.group(1).decode()] = data
+        filename = re.search(rb'filename="([^"]*)"', head)
+        if filename:
+            key = name.group(1).decode()
+            if filenames is not None:
+                if key in files:
+                    raise ApiError(400, "BAD_REQUEST", "Duplicate attachment slot")
+                supplied = filename.group(1).decode("utf-8", "replace").replace("\\", "/").split("/")[-1]
+                filenames[key] = "".join(c for c in supplied if c.isprintable())[:120] or "attachment"
+            files[key] = data
         else:
             fields[name.group(1).decode()] = data.decode("utf-8", "replace")
     return fields, files
@@ -470,6 +477,10 @@ def portal_file(req):
 @route("POST", r"/api/auth/register", auth=False)
 def register(req):
     b = req.json()
+    authorization = req.handler.headers.get("Authorization", "")
+    caller = STATE.user_for_token(authorization[7:]) if authorization.startswith("Bearer ") else None
+    if (caller and caller["role"] == "TEACHER") or b.get("role") == "TEACHER":
+        raise ApiError(403, "FORBIDDEN", "Teachers cannot register accounts")
     need(b, "lrn_or_id", "full_name", "pin")
     b["lrn_or_id"], b["full_name"] = str(b["lrn_or_id"]).strip(), str(b["full_name"]).strip()
     if not (0 < len(b["lrn_or_id"]) <= 32 and 0 < len(b["full_name"]) <= 100):
@@ -1317,12 +1328,17 @@ def submission_create(req):
     if not asg or asg.get("archived_at"):
         raise ApiError(404, "NOT_FOUND", "Assignment not found")
     member_of(req.user, asg["classroom_id"])
-    fields, files = req.multipart()
+    names = {}
+    fields, files = parse_multipart(req.handler.headers.get("Content-Type"), req.raw, names)
     need(fields, "submission_id")
-    if "file" not in files:
-        raise ApiError(400, "BAD_REQUEST", "Missing file")
+    slots = ["file"] if "file" in files else [f"file_{index}" for index in range(1, len(files) + 1)]
+    if not 1 <= len(files) <= 5 or set(files) != set(slots):
+        raise ApiError(400, "BAD_REQUEST", "Send one to five consecutive attachments")
+    if sum(map(len, files.values())) > 250 * 1024 * 1024:
+        raise ApiError(413, "FILE_TOO_LARGE", "Attachments are too large")
     received_at = now_ms()
-    file_hash = hashlib.sha256(files["file"]).hexdigest()
+    file_hash = [hashlib.sha256(files[slot]).hexdigest() for slot in slots]
+    attachments = [{"name": names[slot], "file_type": homework_file_format(files[slot])[0]} for slot in slots]
     turned_in_at = fields.get("turned_in_at")
     if turned_in_at is not None:
         try:
@@ -1340,7 +1356,7 @@ def submission_create(req):
     if (asg.get("due_date") is not None and not asg.get("allow_late", False)
             and effective_time > asg["due_date"]):
         raise ApiError(409, "LATE_SUBMISSION", "This assignment does not accept late submissions")
-    file_type, _ = homework_file_format(files["file"])
+    file_type = attachments[0]["file_type"]
     sub = existing or {"id": fields["submission_id"], "assignment_id": asg["id"], "student_id": req.user["id"],
                        "file_type": file_type, "score": None, "teacher_feedback": None,
                        "created_at": received_at}
@@ -1351,10 +1367,11 @@ def submission_create(req):
         STATE.log("assignment_submissions", old_id, asg["classroom_id"], req.user["id"], action="DELETE")
         sub["id"] = fields["submission_id"]
     sub["file_type"] = file_type
+    sub["attachments"] = attachments
     sub["submitted_at"], sub["received_at"], sub["updated_at"] = effective_time, received_at, received_at
     sub["_file_sha256"] = file_hash
     STATE.submissions[sub["id"]] = sub
-    STATE.submission_files[sub["id"]] = files["file"]
+    STATE.submission_files[sub["id"]] = [files[slot] for slot in slots]
     STATE.log("assignment_submissions", sub["id"], asg["classroom_id"], req.user["id"])
     return {k: v for k, v in sub.items() if k not in ("created_at", "_file_sha256")}
 
@@ -1369,6 +1386,12 @@ def submissions_list(req):
             for s in STATE.submissions.values() if s["assignment_id"] == asg["id"]]
 
 
+@route("PATCH", r"/api/submissions/([^/]+)/grade-edit", role="TEACHER")
+def submission_grade_edit(req):
+    need(req.json(), "score", "teacher_feedback", "expected_updated_at")
+    return submission_grade(req)
+
+
 @route("PATCH", r"/api/submissions/([^/]+)", role="TEACHER")
 def submission_grade(req):
     s = STATE.submissions.get(req.groups[0])
@@ -1376,10 +1399,22 @@ def submission_grade(req):
         raise ApiError(404, "NOT_FOUND", "Submission not found")
     owned_classroom(req, STATE.assignments[s["assignment_id"]]["classroom_id"])
     b = req.json()
+    if "expected_updated_at" in b:
+        assignment = STATE.assignments[s["assignment_id"]]
+        if assignment.get("archived_at") or STATE.classrooms[assignment["classroom_id"]].get("archived_at"):
+            raise ApiError(403, "FORBIDDEN", "This class or assignment is archived")
+        if type(b["expected_updated_at"]) is not int or b["expected_updated_at"] < 0:
+            raise ApiError(400, "BAD_REQUEST", "Invalid submission version")
+        if "score" in b and (type(b["score"]) is not int or not 0 <= b["score"] <= assignment["max_points"]):
+            raise ApiError(400, "BAD_REQUEST", "Score exceeds assignment maximum or is invalid")
+        if all(k not in b or b[k] == s.get(k) for k in ("score", "teacher_feedback")):
+            return {k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
+        if b["expected_updated_at"] != s["updated_at"]:
+            raise ApiError(409, "GRADE_CHANGED", "The grade changed on the Hub")
     for k in ("score", "teacher_feedback"):
         if k in b:
             s[k] = b[k]
-    s["updated_at"] = now_ms()
+    s["updated_at"] = max(now_ms(), s["updated_at"] + 1)
     STATE.log("assignment_submissions", s["id"], STATE.assignments[s["assignment_id"]]["classroom_id"], s["student_id"])
     return {k: v for k, v in s.items() if k not in ("created_at", "_file_sha256")}
 
@@ -1392,7 +1427,18 @@ def submission_file(req):
     if req.user["role"] == "STUDENT" and s["student_id"] != req.user["id"]:
         raise ApiError(403, "FORBIDDEN", "Not your submission")
     member_of(req.user, STATE.assignments[s["assignment_id"]]["classroom_id"])
-    data = STATE.submission_files.get(s["id"], b"")
+    try:
+        index = int(parse_qs(urlsplit(req.handler.path).query).get("attachment", ["0"])[0])
+    except ValueError:
+        raise ApiError(400, "BAD_REQUEST", "Invalid attachment index")
+    if not 0 <= index < 5:
+        raise ApiError(400, "BAD_REQUEST", "Invalid attachment index")
+    data = STATE.submission_files.get(s["id"], [])
+    if isinstance(data, bytes):
+        data = [data]
+    if index >= len(data):
+        raise ApiError(404, "NOT_FOUND", "File not found")
+    data = data[index]
     _, content_type = homework_file_format(data)
     return Raw(data, content_type)
 

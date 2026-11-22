@@ -83,6 +83,21 @@ async fn selected_context(app:&tauri::AppHandle, accounts:&Accounts, hub:&HubInf
     let user=account::sync_user(&mut db,id).await?;
     Ok((db,user))
 }
+async fn read_counts_db(db:&mut SqliteConnection,user:&User,classroom:&str)->Result<Value,&'static str>{
+    if !account::uuid(classroom)||!account::classes(db,user).await?.iter().any(|room|room.id==classroom){return Err(ERROR)}
+    if user.role==Role::STUDENT {
+        let active:i64=sqlx::query_scalar("SELECT COUNT(*) FROM enrollments WHERE classroom_id=? AND student_id=? AND status='ACTIVE'").bind(classroom).bind(&user.id).fetch_one(&mut *db).await.map_err(|_|ERROR)?;
+        if active!=1{return Err(ERROR)}
+    }
+    let rows=sqlx::query("SELECT a.id,COUNT(c.id) AS count FROM announcements a LEFT JOIN announcement_comments c ON c.announcement_id=a.id WHERE a.classroom_id=? GROUP BY a.id").bind(classroom).fetch_all(db).await.map_err(|_|ERROR)?;
+    Ok(Value::Object(rows.into_iter().map(|row|(row.get::<String,_>("id"),json!(row.get::<i64,_>("count")))).collect()))
+}
+#[tauri::command]
+pub async fn read_class_comment_counts(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,classroom_id:String)->Result<Value,&'static str>{
+    let _guard=accounts.0.lock().await;
+    let(mut db,user)=selected_context(&app,&accounts,&hub,&user_id.to_ascii_lowercase()).await?;
+    read_counts_db(&mut db,&user,&classroom_id.to_ascii_lowercase()).await
+}
 #[tauri::command]
 pub async fn read_comment_thread(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,target:ThreadTarget)->Result<Value,&'static str>{
     let _guard=accounts.0.lock().await;
@@ -123,6 +138,15 @@ mod tests {
         sqlx::query("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES(?,?,'QA','Text',1,0,0)").bind(POST).bind(CLASS).execute(&mut db).await.unwrap();
         sqlx::query("INSERT INTO assignments(id,classroom_id,title,instructions,due_date,created_at,updated_at) VALUES(?,?,'QA','Read',100,0,0)").bind(ASSIGN).bind(CLASS).execute(&mut db).await.unwrap();
         db
+    }
+    #[tokio::test]
+    async fn comment_counts_are_scoped_to_an_active_visible_class(){
+        let mut db=db().await;let learner=user(LEARNER,Role::STUDENT);
+        queue_comment_db(&mut db,&learner,&public(),MESSAGE,"Counted comment").await.unwrap();
+        assert_eq!(read_counts_db(&mut db,&learner,CLASS).await.unwrap()[POST],1);
+        assert!(read_counts_db(&mut db,&learner,ASSIGN).await.is_err());
+        sqlx::query("UPDATE enrollments SET status='REMOVED' WHERE student_id=?").bind(LEARNER).execute(&mut db).await.unwrap();
+        assert!(read_counts_db(&mut db,&learner,CLASS).await.is_err());
     }
     #[tokio::test]
     async fn queue_is_own_author_and_idempotent_without_overwriting_changed_content() {

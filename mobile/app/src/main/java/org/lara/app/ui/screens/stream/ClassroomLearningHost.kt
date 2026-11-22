@@ -58,7 +58,8 @@ import java.util.Date
 
 @Composable
 fun ClassroomLearningHost(container: AppContainer, userId: String, destination: ShellDestination,
-    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null, teacherHubReachable: Boolean? = null) {
+    fixedClassId: String? = null, teacherClassId: String? = null, onChooseClass: ((String) -> Unit)? = null,
+    teacherHubReachable: Boolean? = null, hubReachable: Boolean? = teacherHubReachable) {
     if (destination !in setOf(ShellDestination.STREAM, ShellDestination.CLASSWORK, ShellDestination.PEOPLE)) {
         ShellPlaceholder(destination); return
     }
@@ -87,13 +88,14 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
                 }
             }
         }
-        key(selected.id) { ClassFeed(container, userId, selected, destination, teacherHubReachable) }
+        key(selected.id) { ClassFeed(container, userId, selected, destination, teacherHubReachable, hubReachable) }
     }
 }
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination, teacherHubReachable: Boolean?) {
+private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination,
+    teacherHubReachable: Boolean?, hubReachable: Boolean?) {
     val scope = rememberCoroutineScope()
     val streamFlow = remember(classroom.id) { container.stream.stream(classroom.id, scope) }
     val workFlow = remember(classroom.id) { container.classwork.classwork(classroom.id, scope) }
@@ -120,12 +122,12 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
     val selectedAssignment = assignments.find { it.id == openedAssignment }
     val fullScreen = org.lara.app.ui.components.LocalFullScreenOverlay.current
-    if (selectedAssignment != null && fullScreen != null) {
+    val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
+    if (selectedAssignment != null && fullScreen != null && storeOwner != null) {
         BackHandler { openedAssignment = null }
-        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
         // The overlay is drawn by the scaffold, so hand it this screen's owners or its ViewModel loses the saved-state registry.
-        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val review = assignments.find { it.id == reviewAssignment }
@@ -153,26 +155,24 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     }
     var openedPost by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val selectedPost = (posts as? Cached.Content)?.value.orEmpty().find { it.id == openedPost }
-    if (selectedPost != null && fullScreen != null) {
+    if (selectedPost != null && fullScreen != null && storeOwner != null) {
         BackHandler { openedPost = null }
-        val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-        val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
-        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) {
             ClassDiscussion(container, userId, selectedPost, classroom.archivedAt != null, reload, { openedPost = null }) {
-                materials.filter { it.announcementId == selectedPost.id }.forEach { material -> MaterialRow(material) { openMaterial(material.id) } }
+                AnnouncementActions(container, userId, classroom, selectedPost,
+                    materials.filter { it.announcementId == selectedPost.id }, hubReachable == true, reload,
+                    close = { openedPost = null }, openMaterial = { openMaterial(it) })
             } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val selected = materials.find { it.id == opened }
-    if (selected != null) {
+    if (selected != null && (selected.fileType != "VIDEO" || storeOwner != null)) {
         val page: @Composable () -> Unit = { key(selected.id) {
             if (selected.fileType == "VIDEO") VideoPlayerScreen(container, userId, selected.id) { opened = null }
             else MaterialReader(container, selected) { opened = null }
         } }
-        if (fullScreen != null) {
-            val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-            val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
-            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner!!, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
+        if (fullScreen != null && storeOwner != null) {
+            SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { page() } } }
             DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
         } else page()
         return
@@ -191,8 +191,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
         }
         return
     }
-    val canCompose = teacherHubReachable != null && destination == ShellDestination.STREAM &&
-        userId in classroom.teacherIds() && classroom.archivedAt == null
+    val canCompose = hubReachable != null && destination == ShellDestination.STREAM && classroom.archivedAt == null
     Box(Modifier.fillMaxSize()) {
     org.lara.app.ui.components.PullRefresh(reload) { LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(start = LaraSpacing.S4, top = LaraSpacing.S4, end = LaraSpacing.S4, bottom = LaraSpacing.S4 + if (canCompose) PrimaryTouchTarget + LaraSpacing.S4 else 0.dp),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
@@ -245,8 +244,8 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             }
         }
     } }
-        if (canCompose) PostAnnouncement(container, userId, classroom, teacherHubReachable == true,
-            Modifier.align(Alignment.BottomEnd).padding(LaraSpacing.S4))
+        if (canCompose) PostAnnouncement(container, userId, classroom, hubReachable == true,
+            Modifier.align(Alignment.BottomEnd).padding(LaraSpacing.S4), canModerate = userId in classroom.teacherIds())
     }
 }
 
@@ -287,9 +286,14 @@ private fun AnnouncementCard(post: Announcement, attachments: List<Material>, op
                 }
             }
             if (post.content.isNotBlank()) Text(post.content, style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
-            attachments.forEach { MaterialRow(it) { onOpen(it) } }
+            attachments.forEach { attachment ->
+                org.lara.app.ui.components.AttachmentChip(
+                    attachment.fileType, attachment.title, Modifier.clickable { onOpen(attachment) },
+                )
+            }
             HorizontalDivider(color = LaraColors.Border)
-            Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(onClick = openPost),
+            Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(onClick = openPost)
+                .padding(horizontal = LaraSpacing.S1, vertical = LaraSpacing.S2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(24.dp))
                 Text(stringResource(R.string.class_comments_hint), color = LaraColors.TextSecondary)

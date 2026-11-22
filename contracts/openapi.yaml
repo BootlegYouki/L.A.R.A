@@ -6,7 +6,7 @@ info:
 
     Conventions (see contracts/naming_rules.md):
     - All JSON keys are snake_case. All timestamps are epoch milliseconds (integer).
-    - All routes except /download, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
+    - All routes except /download, first-run /api/admin/setup, /api/auth/register and /api/auth/login require `Authorization: Bearer <token>`.
     - Errors always use the Error envelope: {"error": {"code": "...", "message": "..."}}.
     - correct_answer is returned ONLY to the teacher who owns the quiz. Student responses never contain it.
     - Realtime events are on ws://{hub_ip}:8081 (see contracts/events/README.md).
@@ -37,7 +37,8 @@ paths:
   # ---------------------------------------------------------------- AUTH
   /api/auth/register:
     post:
-      summary: Self-register a learner account (teacher accounts are created by the Hub admin)
+      summary: Self-register a learner account
+      description: Legacy learner-only registration. An active teacher bearer session or an explicit TEACHER role request returns 403.
       security: []
       tags: [auth]
       requestBody:
@@ -71,6 +72,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthSession"
         "400":
+          $ref: "#/components/responses/Error"
+        "403":
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
@@ -1111,8 +1114,8 @@ paths:
         `turned_in_at` is the learner device's epoch-millisecond time when Turn in was pressed. The Hub
         clamps future values to its current time; if omitted, the Hub arrival time is used. When `allow_late`
         is false, a submission after `due_date` is refused with 409 LATE_SUBMISSION. An identical retry
-        (same submission_id and SHA-256 file hash) returns the stored submission unchanged, including after
-        grading or the due date. A different file after grading is refused with 409 ALREADY_GRADED.
+        (same submission_id and ordered attachment SHA-256 hashes) returns the stored submission unchanged, including after
+        grading or the due date. Different attachments after grading is refused with 409 ALREADY_GRADED.
         A queued submission refused with either code is rejected permanently; the client shows the learner
         why it was not turned in instead of retrying it indefinitely.
       tags: [assignments]
@@ -1124,7 +1127,11 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [submission_id, file]
+              required: [submission_id]
+              oneOf:
+                - required: [file]
+                - required: [file_1]
+              description: Use file for a single legacy attachment or file_1 through file_5 for a batch. Do not mix the two forms.
               properties:
                 submission_id:
                   type: string
@@ -1137,7 +1144,27 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: JPEG up to ~800 KB for photos
+                  description: Single legacy photo, PDF or DOCX.
+                file_1:
+                  type: string
+                  format: binary
+                  description: First attachment in a batch. At most five files and 250 MiB total.
+                file_2:
+                  type: string
+                  format: binary
+                  description: Optional attachment 2; slots must be consecutive.
+                file_3:
+                  type: string
+                  format: binary
+                  description: Optional attachment 3; slots must be consecutive.
+                file_4:
+                  type: string
+                  format: binary
+                  description: Optional attachment 4; slots must be consecutive.
+                file_5:
+                  type: string
+                  format: binary
+                  description: Optional attachment 5; slots must be consecutive.
       responses:
         "200":
           description: Stored submission
@@ -1189,13 +1216,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/Submission"
 
+  /api/submissions/{id}/grade-edit:
+    patch:
+      summary: Save or edit a grade with a submission version (teacher)
+      description: A queued edit supplies expected_updated_at. Identical retries return the current receipt; a stale edit with different values returns 409 GRADE_CHANGED.
+      tags: [assignments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score, teacher_feedback, expected_updated_at]
+              properties:
+                score:
+                  type: integer
+                expected_updated_at:
+                  type: integer
+                  minimum: 0
+                  description: Submission version seen by the teacher when editing.
+                teacher_feedback:
+                  type: string
+      responses:
+        "200":
+          description: Updated submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "409":
+          $ref: "#/components/responses/Error"
+
   /api/submissions/{id}/file:
     get:
-      summary: Fetch the stored submission image or document (teacher or owning learner)
+      summary: Fetch a stored submission attachment (teacher or owning learner)
       tags: [assignments]
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/TokenQuery"
+        - name: attachment
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 4
+            default: 0
       responses:
         "200":
           description: File bytes
@@ -1654,6 +1721,7 @@ components:
           - '/api/restore'
           - '/api/submissions/{id}'
           - '/api/submissions/{id}/file'
+          - '/api/submissions/{id}/grade-edit'
           - '/api/sync/pull'
           - '/api/sync/push'
           - '/api/topics'
@@ -2054,6 +2122,19 @@ components:
         file_type:
           type: string
           enum: ["IMAGE", "DOCUMENT"]
+        attachments:
+          type: array
+          maxItems: 5
+          description: Ordered attachment metadata. Older submissions may omit this field.
+          items:
+            type: object
+            required: [name, file_type]
+            properties:
+              name:
+                type: string
+              file_type:
+                type: string
+                enum: ["IMAGE", "DOCUMENT"]
         submitted_at:
           type: integer
           description: Effective learner turn-in time in epoch milliseconds (future values clamped by Hub)

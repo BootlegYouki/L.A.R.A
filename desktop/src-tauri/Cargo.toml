@@ -28,6 +28,7 @@ tower = { version = "0.5", features = ["util"] }
 sqlx = { version = "0.8.6", default-features = false, features = ["sqlite", "runtime-tokio", "migrate"] }
 sha2 = "0.10"
 uuid = { version = "1", features = ["v4"] }
+zip = { version = "9.8.1", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }

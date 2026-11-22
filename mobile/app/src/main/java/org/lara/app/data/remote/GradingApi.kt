@@ -39,11 +39,16 @@ class GradingApi(private val sessions: EnrollmentApi) {
         }
     }
 
-    suspend fun grade(userId: String, submissionId: String, score: Long, feedback: String): SubmissionDto = withContext(Dispatchers.IO) {
+    suspend fun grade(userId: String, submissionId: String, score: Long, feedback: String, expectedUpdatedAt: Long? = null): SubmissionDto = withContext(Dispatchers.IO) {
         require(validId(submissionId) && score >= 0)
-        val body = buildJsonObject { put("score", score); put("teacher_feedback", feedback) }
+        val body = buildJsonObject {
+            put("score", score)
+            put("teacher_feedback", feedback)
+            expectedUpdatedAt?.let { put("expected_updated_at", it) }
+        }
             .toString().toRequestBody("application/json".toMediaType())
-        client.newCall(request(userId, "/api/submissions/$submissionId").patch(body).build()).execute().use { response ->
+        val path = "/api/submissions/$submissionId" + if (expectedUpdatedAt == null) "" else "/grade-edit"
+        client.newCall(request(userId, path).patch(body).build()).execute().use { response ->
             if (!response.isSuccessful) throw HubFailure(response.code, "GRADING_REQUEST_FAILED")
             val source = response.body?.source() ?: throw IOException("Missing response")
             source.request(65537)
@@ -52,10 +57,10 @@ class GradingApi(private val sessions: EnrollmentApi) {
         }
     }
 
-    suspend fun file(userId: String, submissionId: String, destination: File, maxBytes: Long = 20L * 1024 * 1024) = withContext(Dispatchers.IO) {
+    suspend fun file(userId: String, submissionId: String, destination: File, maxBytes: Long = 20L * 1024 * 1024, attachment: Int = 0) = withContext(Dispatchers.IO) {
         require(validId(submissionId))
         try {
-            client.newCall(request(userId, "/api/submissions/$submissionId/file").get().build()).execute().use { response ->
+            client.newCall(request(userId, "/api/submissions/$submissionId/file?attachment=$attachment").get().build()).execute().use { response ->
                 if (!response.isSuccessful) throw HubFailure(response.code, "GRADING_REQUEST_FAILED")
                 val body = response.body ?: throw IOException("Missing file")
                 body.byteStream().use { input -> destination.outputStream().use { output ->

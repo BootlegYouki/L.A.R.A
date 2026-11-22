@@ -39,7 +39,7 @@ All AI agents and contributors must follow these rules.
 ---
 
 ### 2.1 Authentication and the Realtime Handshake
-* Every REST route except `/download`, `POST /api/auth/register` and `POST /api/auth/login` requires `Authorization: Bearer <token>`. Media routes that players cannot send headers to (`/api/materials/{id}/stream`, `/download`, `/api/submissions/{id}/file`) also accept `?token=`.
+* Every REST route except `/download`, first-run `POST /api/admin/setup`, legacy learner-only `POST /api/auth/register` and `POST /api/auth/login` requires `Authorization: Bearer <token>`. Media routes that players cannot send headers to (`/api/materials/{id}/stream`, `/download`, `/api/submissions/{id}/file`) also accept `?token=`.
 * WebSocket: the first frame must be `EVENT_HELLO` with the token. The Hub answers `EVENT_HELLO_ACK` (`server_time`, `hub_id`, `sync_epoch`) or closes with code `4401`. Reconnect with backoff 1 s, 2 s, 4 s, up to 10 s, and never show a blocking error while offline.
 * Errors always use `{ "error": { "code", "message" } }`. See `contracts/events/README.md` and `contracts/openapi.yaml`.
 

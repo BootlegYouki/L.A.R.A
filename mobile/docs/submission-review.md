@@ -50,3 +50,7 @@ Real-Hub isolated tests passed for PDF submission as `DOCUMENT` and teacher file
 With the shared mock correction on this branch, the full repository test suite passed (73 tests), as did the invariant guard. The focused Android run passed against the corrected mock with PDF and DOCX upload receipts, teacher list and file retrieval, grading, and learner receipt after one sync; debug build and lint passed. These synthetic files exercise the API and sync, not on-device PDF or Word rendering. Existing running mock processes retain their prior code and in-memory state until restarted.
 
 The predefined feedback shortcuts were removed at the user’s request. This deviates from issue #128 and the design reference, which call for encouraging phrase buttons; the feedback field remains available.
+
+Grade feedback appears by the save button and belongs to the open submission. The success message clears automatically or when the teacher navigates away. A saved grade updates the review tabs from Room, including a score of zero.
+
+The grading sheet opens over the review tabs. It lists each attachment with a photo thumbnail where available and opens an indexed preview on tap. Offline grades are stored in the account outbox. They count toward Reviewed while queued, and the app reconciles the score on the Hub receipt. Conflicts keep the attempted grade available for explicit retry after refreshing the current score. The versioned grade route and batch uploads require the updated Hub.

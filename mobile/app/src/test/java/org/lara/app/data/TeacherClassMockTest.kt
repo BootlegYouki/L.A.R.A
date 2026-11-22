@@ -1,5 +1,6 @@
 package org.lara.app.data
 
+import org.lara.app.auth.createMockLearner
 import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -29,11 +30,13 @@ class TeacherClassMockTest {
             override fun save(value: StoredToken) { this.value = value }
             override fun clear() { value = null }
         }
-        val teacher = AuthApi().authenticate(hub, "T-0001", "123456", null)
+        val teacher = AuthApi().authenticate(hub, "T-0001", "123456")
         val teacherSessions = EnrollmentApi(HubClient(), tokens(teacher), { hub })
         val commands = TeacherClassApi(teacher.user.id, teacherSessions, HubClient())
         val classroom = commands.create("Synthetic mobile class", "Test")
-        val learner = AuthApi().authenticate(hub, "8" + System.nanoTime().toString().takeLast(11).padStart(11, '0'), "123456", "Synthetic class learner")
+        val learnerLrn = "8" + System.nanoTime().toString().takeLast(11).padStart(11, '0')
+        createMockLearner(hub, learnerLrn, "Synthetic class learner")
+        val learner = AuthApi().authenticate(hub, learnerLrn, "123456")
         val learnerSessions = EnrollmentApi(HubClient(), tokens(learner), { hub })
         assertEquals(classroom.id, learnerSessions.join(learner.user.id, classroom.classCode).classroomId)
         HubClassManagementRepository(teacher.user.id, teacherSessions, HubClient()).decide(classroom.id, learner.user.id, true)

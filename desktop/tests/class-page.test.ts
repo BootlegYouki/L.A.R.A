@@ -1,8 +1,8 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { createElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
-const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
-vi.mock('@tauri-apps/api/core', () => ({ invoke: (command:string,...args:unknown[]) => command==='list_uploads'?Promise.resolve([]):invoke(command,...args) }));
+const { invoke,counts } = vi.hoisted(() => ({ invoke: vi.fn(),counts:vi.fn().mockResolvedValue({}) }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (command:string,...args:unknown[]) => command==='list_uploads'?Promise.resolve([]):command==='read_class_comment_counts'?counts(...args):invoke(command,...args) }));
 import ClassPage from '../src/pages/ClassPage';
 import type { CachedAccount } from '../src/services/auth';
 const room = {id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_id:'teacher'};
@@ -169,4 +169,12 @@ it('lists a Hub material in Classwork even when its automatic Stream post is lin
  await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:vi.fn()}))});
  await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
  expect(renderer.root.findByProps({className:'material-list'}).findByProps({'aria-label':'Open handout: Lesson'})).toBeTruthy();
+});
+
+it('updates closed comment badges without reloading classwork or opening the thread',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);invoke.mockReset().mockResolvedValue({announcements:[{id:'post',title:'Post',content:'Body',created_at:1,comment_count:0}],materials:[]});counts.mockReset().mockResolvedValueOnce({post:1}).mockResolvedValueOnce({post:2});
+ await act(async()=>{renderer=create(createElement(ClassPage,{account,classroom:room,offline:false,onVideo:vi.fn(),commentsVersion:0}))});
+ expect(renderer.root.findByProps({className:'comment-count'}).children).toEqual(['1']);
+ await act(async()=>renderer.update(createElement(ClassPage,{account,classroom:room,offline:false,onVideo:vi.fn(),commentsVersion:1})));
+ expect(renderer.root.findByProps({className:'comment-count'}).children).toEqual(['2']);expect(invoke).toHaveBeenCalledTimes(1);expect(renderer.root.findAllByType('textarea')).toHaveLength(0);
 });

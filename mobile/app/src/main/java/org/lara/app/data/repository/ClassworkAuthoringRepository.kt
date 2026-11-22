@@ -53,6 +53,7 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
     override suspend fun upload(classroomId: String, uri: String, draft: MaterialDraft) = withContext(Dispatchers.IO) {
         require(draft.title.isNotBlank())
         val connection = sessions.connection(userId)
+        val hubId = api.uploadHubId(connection)
         val selected = Uri.parse(uri)
         require(selected.scheme == "content")
         var name = "attachment"
@@ -72,7 +73,7 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
                 file.outputStream().use { output -> copyMaterial(input, output) }
             }
             require(file.length() > 0)
-            val data = workDataOf("owner" to userId, "hub" to connection.endpoint.restBase,
+            val data = workDataOf("owner" to userId, "hub" to connection.endpoint.restBase, "hub_id" to hubId,
                 "class" to classroomId, "file" to file.name, "title" to draft.title, "type" to draft.fileType,
                 "topic" to draft.topicId, "assignment" to draft.assignmentId, "announcement" to draft.announcementId)
             manager.enqueue(request(data)).result.get()
@@ -83,7 +84,8 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
         val superseded = rows.flatMap { it.tags }.filter { it.startsWith("retry-of:") }.map { it.removePrefix("retry-of:") }.toSet()
         rows.filterNot { it.id.toString() in superseded }.sortedBy { it.id.toString() }.map { row -> AuthoringUpload(row.id.toString(),
             row.progress.getString("title") ?: row.outputData.getString("title").orEmpty(),
-            row.state.name, if (row.state == WorkInfo.State.SUCCEEDED) 100 else row.progress.getInt("percent", 0)) }
+            row.state.name, if (row.state == WorkInfo.State.SUCCEEDED) 100 else row.progress.getInt("percent", 0),
+            row.tags.firstOrNull { it.startsWith("announcement:") }?.removePrefix("announcement:")) }
     }
     override suspend fun retry(uploadId: String) = withContext(Dispatchers.IO) {
         val old = manager.getWorkInfoById(UUID.fromString(uploadId)).get() ?: return@withContext
@@ -93,7 +95,10 @@ class ClassworkAuthoringRepository(private val context: Context, private val use
         manager.enqueueUniqueWork("authoring-retry-$uploadId", ExistingWorkPolicy.KEEP, request(data, uploadId)).result.get()
     }
     private fun request(data: Data, retryOf: String? = null) = OneTimeWorkRequestBuilder<MaterialUploadWorker>()
-        .apply { retryOf?.let { addTag("retry-of:$it") } }.setInputData(data).addTag("authoring-$userId").addTag("authoring-$userId-${data.getString("class")}")
+        .apply {
+            retryOf?.let { addTag("retry-of:$it") }
+            data.getString("announcement")?.let { addTag("announcement:$it") }
+        }.setInputData(data).addTag("authoring-$userId").addTag("authoring-$userId-${data.getString("class")}")
         .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS).build()
 }
 

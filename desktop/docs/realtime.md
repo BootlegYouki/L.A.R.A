@@ -1,5 +1,7 @@
 # Joining classes and live approval (#46)
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 > Current verification follows [real-Hub testing](real-hub-testing.md). Simulator observations below are archived historical evidence and do not prove real-Hub behavior.
 
 
