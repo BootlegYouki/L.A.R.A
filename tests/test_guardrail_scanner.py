@@ -29,7 +29,7 @@ def _scan_repo(files, extra_env=None):
         for path, content in files.items():
             full = os.path.join(d, path)
             os.makedirs(os.path.dirname(full), exist_ok=True)
-            with open(full, "w") as f:
+            with open(full, "wb" if isinstance(content, bytes) else "w") as f:
                 f.write(content)
         _git(d, "add", "-A")
         _git(d, "commit", "-q", "-m", "change")
@@ -116,6 +116,18 @@ class TestGuardrailScanner(unittest.TestCase):
     def test_script_passes_a_clean_change(self):
         r = _scan_repo({"server/backend/src/main.rs": "fn main() {}\n"})
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_workbook_and_vendored_archive_bytes_do_not_crash_the_scan(self):
+        r = _scan_repo({"server/docs/examples/demo.xlsx": b"PK\x03\x04\x8a\xff\n",
+                        "server/ui/vendor/library.tgz": b"\x1f\x8b\x08\xff\x8a\n"})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_non_utf8_diff_bytes_do_not_hide_a_source_violation(self):
+        r = _scan_repo({"assets/unknown.dat": b"\x8a\xff\n",
+                        "desktop/src/Bad.js": 'import firebase from "firebase"\n'})
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("firebase", r.stdout)
+        self.assertNotIn("UnicodeDecodeError", r.stderr)
 
 
 if __name__ == "__main__":
