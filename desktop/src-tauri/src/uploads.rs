@@ -47,6 +47,8 @@ struct Job {
     status: Status,
     uploaded_bytes: u64,
     material_id: Option<String>,
+    #[serde(default)]
+    dismissed: bool,
 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,6 +59,7 @@ pub struct JobView {
     file_size: u64,
     status: Status,
     uploaded_bytes: u64,
+    dismissed: bool,
 }
 impl JobView {
     fn new(job: &Job, progress: Option<u64>) -> Self {
@@ -67,6 +70,7 @@ impl JobView {
             file_size: job.file_size,
             status: job.status,
             uploaded_bytes: progress.unwrap_or(job.uploaded_bytes),
+            dismissed: job.dismissed,
         }
     }
 }
@@ -125,7 +129,7 @@ fn load(root: &Path, hub: &HubInfo, user_id: &str, id: &str) -> Result<Job, Stri
     Ok(job)
 }
 fn recover(root: &Path, mut job: Job, running: bool) -> Result<Job, String> {
-    if job.status == Status::Succeeded {
+    if job.status == Status::Succeeded || job.dismissed {
         let _ = std::fs::remove_file(payload(root, &job)?);
     }
     if job.status == Status::Staging && !running {
@@ -245,7 +249,20 @@ async fn validate_context(
 async fn persist(app: &AppHandle, root: &Path, job: &Job) -> Result<(), String> {
     let state = app.state::<UploadTasks>();
     let _guard = state.jobs.lock().await;
-    save(root, job)
+    save_worker_job(root, job)
+}
+fn save_worker_job(root: &Path, job: &Job) -> Result<(), String> {
+    let mut next=job.clone();
+    next.dismissed |= load(root,&job.hub,&job.user_id,&job.id)?.dismissed;
+    save(root,&next)
+}
+fn cancel_owned_job(root: &Path, job: &mut Job) -> Result<(), String> {
+    if matches!(job.status,Status::Staging|Status::Ready|Status::Failed){job.status=Status::Cancelled;}
+    else if job.status==Status::Uploading {job.status=Status::Uncertain;}
+    // Dismissing local work never claims that an accepted Hub material was deleted.
+    job.dismissed=true;save(root,job)?;
+    let _=std::fs::remove_file(payload(root,job)?);
+    Ok(())
 }
 
 #[tauri::command]
@@ -306,6 +323,7 @@ pub async fn begin_upload(
         status: Status::Staging,
         uploaded_bytes: 0,
         material_id: None,
+        dismissed: false,
     };
     let dir = job_dir(&root, &hub, &user_id, &id)?;
     let task_state = app.state::<UploadTasks>();
@@ -609,7 +627,7 @@ async fn launch(
     let root = account::root(&app).map_err(str::to_owned)?;
     let lease = acquire_lease(&root, &hub, &user_id, &job_id)?;
     let mut job = load(&root, &hub, &user_id, &job_id)?;
-    if !(job.status == Status::Ready
+    if job.dismissed || !(job.status == Status::Ready
         || (retry && matches!(job.status, Status::Failed | Status::Uncertain)))
     {
         return Err("invalid_upload_state".into());
@@ -754,14 +772,7 @@ pub async fn cancel_upload(
         held_lease = Some(acquire_lease(&root, &hub, &user_id, &job_id)?);
     }
     let mut job = load(&root, &hub, &user_id, &job_id)?;
-    if matches!(job.status, Status::Staging | Status::Ready | Status::Failed) {
-        job.status = Status::Cancelled;
-        save(&root, &job)?;
-        let _ = std::fs::remove_file(payload(&root, &job)?);
-    } else if job.status == Status::Uploading {
-        job.status = Status::Uncertain;
-        save(&root, &job)?;
-    }
+    cancel_owned_job(&root,&mut job)?;
     drop(held_lease);
     Ok(())
 }
@@ -797,12 +808,24 @@ mod tests {
             status: Status::Ready,
             uploaded_bytes: 0,
             material_id: None,
+        dismissed: false,
         };
         save(root, &j).unwrap();
         std::fs::write(payload(root, &j).unwrap(), b"x").unwrap();
         j
     }
     #[test]
+    fn cancelling_an_unknown_transfer_is_durable_and_late_workers_cannot_restore_it(){
+        let root=root();let mut j=job(&root);j.status=Status::Uploading;save(&root,&j).unwrap();let stale=j.clone();
+        let original=root.join("original.pdf");std::fs::write(&original,b"original").unwrap();
+        cancel_owned_job(&root,&mut j).unwrap();
+        let loaded=load(&root,&j.hub,&j.user_id,&j.id).unwrap();assert!(loaded.dismissed);assert_eq!(loaded.status,Status::Uncertain);assert!(!payload(&root,&j).unwrap().exists());assert!(original.exists());
+        save_worker_job(&root,&stale).unwrap();let restored=recover(&root,load(&root,&j.hub,&j.user_id,&j.id).unwrap(),false).unwrap();assert!(restored.dismissed);assert_eq!(restored.status,Status::Uncertain);
+        assert!(JobView::new(&restored,None).dismissed);
+        let mut legacy=serde_json::to_value(&restored).unwrap();legacy.as_object_mut().unwrap().remove("dismissed");let old:Job=serde_json::from_value(legacy).unwrap();assert!(!old.dismissed);
+        j.status=Status::Succeeded;j.material_id=Some("44444444-4444-4444-8444-444444444444".into());cancel_owned_job(&root,&mut j).unwrap();assert_eq!(j.status,Status::Succeeded);assert!(j.material_id.is_some());
+        std::fs::remove_dir_all(root).unwrap();
+    }    #[test]
     fn metadata_never_contains_source_path_or_token_and_context_is_scoped() {
         let root = root();
         let j = job(&root);
@@ -886,6 +909,7 @@ mod tests {
             status: Status::Staging,
             uploaded_bytes: 0,
             material_id: None,
+        dismissed: false,
         };
         assert!(!valid_chunk(&[]));
         assert!(!valid_chunk(&vec![0; CHUNK_LIMIT + 1]));

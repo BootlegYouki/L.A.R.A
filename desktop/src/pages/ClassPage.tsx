@@ -34,8 +34,8 @@ function classOwl(id: string) {
 
 interface Lesson { updated_at?: number; mime_type?: string; assignment_id?: string | null; announcement_id?: string | null; topic_id?: string | null; id: string; title: string; file_type: string; saved: boolean; chunks: {heading: string | null; text: string}[] }
 interface Content { announcements: {author_name?:string|null; author_id?:string|null; allow_comments?:boolean; comment_count?:number; id: string; title: string; content: string; created_at: number}[]; materials: Lesson[]; assignments?: {topic_id?: string | null; id: string; title: string; instructions: string | null; due_date: number; max_points: number; allow_late?: boolean}[]; topics?: {id: string; name: string; order_index?: number}[]; quizzes?: {topic_id?: string | null; id: string; title: string}[] }
-interface Props { account: CachedAccount; classroom: Classroom; offline: boolean; people?: ReactNode; onVideo: (id: string,origin?:'stream'|'classwork') => void; initialTab?:'stream'|'classwork'; onContentCreated?: () => void; onRefreshComments?:()=>Promise<void>;commentsVersion?:number }
-export default function ClassPage({account, classroom, people, onVideo, offline, onContentCreated,onRefreshComments,commentsVersion=0,initialTab='stream'}: Props) {
+interface Props { account: CachedAccount; classroom: Classroom; offline: boolean; people?: ReactNode; onVideo: (id: string,origin?:'stream'|'classwork') => void; initialTab?:'stream'|'classwork'; onContentCreated?: () => void; onRefreshComments?:()=>Promise<void>;commentsVersion?:number;onPrivateRead?:()=>void }
+export default function ClassPage({account, classroom, people, onVideo, offline, onContentCreated,onRefreshComments,commentsVersion=0,initialTab='stream',onPrivateRead}: Props) {
   const [documentFile,setDocumentFile]=useState<{id:string;title:string}|null>(null);
   const documentViewer=documentFile?<DocumentViewer account={account} source={{kind:'material',id:documentFile.id}} title={documentFile.title} offline={offline} onClose={()=>setDocumentFile(null)}/>:null;
   const [commentCounts,setCommentCounts]=useState<Record<string,number>>({});
@@ -56,12 +56,6 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
     let current=true;void readPrivateUnread(account,classroom.id).then(value=>{if(current)setPrivateUnread(old=>JSON.stringify(old)===JSON.stringify(value)?old:value)}).catch(()=>{});
     return()=>{current=false};
   },[account,classroom.id,teacher,commentsVersion,privateReadVersion]);
-  const pollPrivate=!!teacher&&!offline&&!!onRefreshComments;
-  useEffect(()=>{
-    if(!pollPrivate)return;let running=false,alive=true;
-    const timer=setInterval(()=>{if(!alive||running||document.visibilityState!=='visible')return;running=true;void Promise.resolve().then(()=>privateRefresh.current?.()).catch(()=>{}).finally(()=>{running=false;if(alive)setPrivateReadVersion(value=>value+1)});},5000);
-    return()=>{alive=false;clearInterval(timer)};
-  },[pollPrivate]);
   const unreadFor=(id:string)=>Object.values(privateUnread[id]??{}).reduce((sum,count)=>sum+count,0);
   const unreadTotal=Object.keys(privateUnread).reduce((sum,id)=>sum+unreadFor(id),0);
   const unreadBadge=(count:number)=>teacher&&count>0?<span className="pending-count private-unread-count" title={t.comments_unread_private.replace('{count}',String(count))} aria-label={t.comments_unread_private.replace('{count}',String(count))}>{count}</span>:null;
@@ -115,7 +109,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
     </div>
   </section>;
   const assignment=content?.assignments?.find(item=>item.id===assignmentId);
-  if(assignment)return <><AssignmentWork account={account} classroom={classroom} assignment={assignment} attachments={<div className="assignment-attachments">{content?.materials.filter(item=>item.assignment_id===assignment.id).map(attachment)}</div>} offline={offline} onBack={()=>setAssignmentId(undefined)} onChanged={()=>onContentCreated?.()} onRefreshComments={onRefreshComments} unreadCounts={privateUnread[assignment.id]} onPrivateRead={()=>setPrivateReadVersion(value=>value+1)}/>{documentViewer}</>;
+  if(assignment)return <><AssignmentWork account={account} classroom={classroom} assignment={assignment} attachments={<div className="assignment-attachments">{content?.materials.filter(item=>item.assignment_id===assignment.id).map(attachment)}</div>} offline={offline} onBack={()=>setAssignmentId(undefined)} onChanged={()=>onContentCreated?.()} onRefreshComments={onRefreshComments} unreadCounts={privateUnread[assignment.id]} onPrivateRead={()=>{setPrivateReadVersion(value=>value+1);onPrivateRead?.();}}/>{documentViewer}</>;
   return <section className="class-page">{documentViewer}
     {composer && composer!=='material' && composer!=='quiz' && <ClassAuthoringDialog key={composer} kind={composer} account={account} classroomId={classroom.id} offline={offline} topics={content?.topics} onClose={()=>setComposer(null)} onCreated={createdContent}/>}
     {composer==='quiz' && <QuizCreateDialog account={account} classroomId={classroom.id} offline={offline} onClose={()=>setComposer(null)} onCreated={createdContent}/>}

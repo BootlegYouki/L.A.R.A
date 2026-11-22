@@ -29,6 +29,12 @@ export async function readPrivateUnread(account:CachedAccount,classroomId:string
  if(!object(value)||Object.values(value).some(rows=>!object(rows)||Object.values(rows).some(count=>!Number.isSafeInteger(count)||Number(count)<0)))throw new ApiError('invalid_response');
  return value as PrivateUnread;
 }
+export async function readUnreadClassCounts(account:CachedAccount):Promise<Record<string,number>>{
+ if(account.user.role!=='TEACHER')return {};
+ const value:unknown=await withDatabaseTimeout(invoke('read_private_unread_class_counts',{hub:account.hub,userId:account.user.id}));
+ if(!object(value)||Object.values(value).some(count=>!Number.isSafeInteger(count)||Number(count)<0))throw new ApiError('invalid_response');
+ return value as Record<string,number>;
+}
 export async function markPrivateCommentsRead(account:CachedAccount,target:ThreadTarget,commentIds:string[]):Promise<void>{
  validateTarget(account,target);
  if(account.user.role!=='TEACHER'||target.kind!=='assignment'||!target.student_id||!commentIds.every(uuid))throw new ApiError('comment_invalid');

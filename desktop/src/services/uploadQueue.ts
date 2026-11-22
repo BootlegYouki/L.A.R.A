@@ -5,7 +5,7 @@ import type { MaterialFileType } from './materialUpload';
 const MAX_BYTES = 250 * 1024 * 1024;
 const CHUNK_BYTES = 64 * 1024;
 export type UploadStatus = 'staging' | 'ready' | 'uploading' | 'succeeded' | 'failed' | 'uncertain' | 'cancelled';
-export interface UploadJob { id: string; title: string; fileName: string; fileSize: number; status: UploadStatus; uploadedBytes: number; }
+export interface UploadJob { id: string; title: string; fileName: string; fileSize: number; status: UploadStatus; uploadedBytes: number; dismissed?: boolean; }
 export interface UploadInput {
   classroom_id: string; title: string; file_type: MaterialFileType; file: File;
   topic_id?: string; assignment_id?: string; announcement_id?: string;

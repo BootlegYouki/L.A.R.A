@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {getCurrentWindow} from '@tauri-apps/api/window';
 import { t } from './i18n';
+import {readUnreadClassCounts} from './services/comments';
 import appLogo from './assets/branding/lara-logo.png';
 import { flushHomework } from './services/homework';
 import { useAppStore } from './store/app';
@@ -43,6 +44,7 @@ function errorMessage(error: unknown): string {
 export default function App() {
   const { status, account, loadAccount, setAccount } = useAppStore();
   const [commentsVersion,setCommentsVersion]=useState(0);
+  const [sidebarUnread,setSidebarUnread]=useState<{identity:string;counts:Record<string,number>}>({identity:'',counts:{}});
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [hubs, setHubs] = useState<HubInfo[]>([]);
   const [discoveryFailed, setDiscoveryFailed] = useState(false);
@@ -101,6 +103,11 @@ export default function App() {
   const selectedClass = activeAccount?.classrooms.find(item => item.id === selectedId
     && (activeAccount.user.role === 'TEACHER' || item.enrollment_status === 'ACTIVE'));
   const teacherClassIds = activeAccount?.user.role === 'TEACHER' ? activeAccount.classrooms.map(c => c.id).sort().join(',') : '';
+  useEffect(()=>{
+    if(activeAccount?.user.role!=='TEACHER'){setSidebarUnread({identity,counts:{}});return;}
+    let current=true;void readUnreadClassCounts(activeAccount).then(counts=>{if(current)setSidebarUnread(old=>old.identity===identity&&JSON.stringify(old.counts)===JSON.stringify(counts)?old:{identity,counts})}).catch(()=>{});
+    return()=>{current=false};
+  },[activeAccount,identity,commentsVersion]);
   const pendingCounts = activeAccount?.user.role === 'TEACHER' ? Object.fromEntries(Object.entries(activeAccount.rosters ?? {}).map(([id, rows]) => [id, rows.filter(r => r.status === 'PENDING').length])) : {};
   const abortTeacherWork = useCallback(() => {
     teacherMutation.current?.abort(); rosterSweep.current++;
@@ -268,6 +275,12 @@ export default function App() {
     syncController.current=active;
     return()=>{disposed=true;active.stop();if(syncController.current===active)syncController.current=null;};
   },[busy,connection.status,identity,loginVisible,publishAccount,expireSession]);
+  useEffect(()=>{
+    if(busy||loginVisible||connection.status!=='connected'||signedInRole!=='TEACHER'||!identity)return;
+    let alive=true,running=false;
+    const timer=setInterval(()=>{if(!alive||running||document.visibilityState!=='visible')return;running=true;void Promise.resolve().then(()=>syncController.current?.refresh()).catch(()=>{}).finally(()=>{running=false;if(alive)setCommentsVersion(value=>value+1)});},5000);
+    return()=>{alive=false;clearInterval(timer)};
+  },[busy,loginVisible,connection.status,signedInRole,identity]);
   useEffect(() => {
     if (busy || connection.status !== 'connected' || !identity || loginVisible || !accountRef.current) return;
     const target = accountRef.current, current = epoch.current;
@@ -443,7 +456,7 @@ export default function App() {
       </div>
     </header>}
     <div className="shell-body">
-      {!authScreen && <Sidebar user={activeAccount.user} classrooms={activeAccount.classrooms} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(false); setSelectedId(undefined); setAuthError(null); }} onOpen={id => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(false); setSelectedId(id); }} onSettings={!busy && !joining && !creating && !rosterBusy ? () => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} />}
+      {!authScreen && <Sidebar user={activeAccount.user} classrooms={activeAccount.classrooms} selectedId={selectedClass?.id} settingsOpen={settingsOpen} onHome={() => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(false); setSelectedId(undefined); setAuthError(null); }} onOpen={id => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(false); setSelectedId(id); }} onSettings={!busy && !joining && !creating && !rosterBusy ? () => { setVideoMaterialId(undefined);setVideoReturn(null); setSettingsOpen(true); setSelectedId(undefined); setLogoutError(null); } : undefined} pendingCounts={pendingCounts} unreadCounts={sidebarUnread.identity===identity?sidebarUnread.counts:{}} />}
       <main id="content" className="content-sheet" tabIndex={-1}><div className="content-wrap">
         <HubStatusBanner t={t} connection={connection} />
         {logoutNotice && !activeAccount && <p role="status" className="hub-status-banner banner-info">{logoutNotice}</p>}
@@ -452,9 +465,9 @@ export default function App() {
         {status === 'loading' && !activeAccount ? <div role="status" aria-label={t.loading} className="class-grid"><div className="skeleton class-skeleton" /></div> : !activeAccount && (choosingHub||connection.status !== 'connected') ? <div className="startup-connection">{hubPicker}</div> : !activeAccount || loginVisible ? <LoginPage onChangeHub={!activeAccount?()=>{epoch.current++;authRequest.current?.abort();setAuthError(null);setLogoutNotice(null);setChoosingHub(true);}:undefined} hub={hub} busy={busy} error={authError} retryAfter={retryAfter} onSubmit={(fields) => { void submit(fields); }} onCancel={activeAccount ? () => { setLoginVisible(false); setAuthError(null); } : undefined} /> : videoMaterialId ? <VideoLessonPage key={identity + "/" + videoMaterialId} backLabel={videoReturn?.tab==='classwork'?t.classwork:t.stream} materialId={videoMaterialId} hub={hub} userId={activeAccount.user.id} token={videoToken} offline={connection.status !== 'connected'} onBack={() => setVideoMaterialId(undefined)} />  : settingsOpen ? <SettingsPage key={identity} account={activeAccount} connection={connection} hubName={hubName} busy={busy} error={logoutError} onSignOut={() => void submitSignOut()}>{hubPicker}</SettingsPage> : selectedClass && activeAccount.user.role === 'TEACHER' ? <><TopAppBar classroom={selectedClass} settings={
           selectedClass.teacher_id === activeAccount.user.id && selectedClass.archived_at == null &&
           <ClassSettingsDialog key={selectedClass.id} classroom={selectedClass} offline={offline} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
-        } /><ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} initialTab={videoReturn?.identity===identity&&videoReturn.classroomId===selectedClass.id?videoReturn.tab:'stream'} onVideo={(id,tab='stream')=>{setVideoReturn({identity,classroomId:selectedClass.id,tab});setVideoMaterialId(id);}} onContentCreated={()=>syncController.current?.trigger()} onRefreshComments={()=>syncController.current?.refresh()??Promise.resolve()} commentsVersion={commentsVersion} people={<RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} teachers={
+        } /><ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} initialTab={videoReturn?.identity===identity&&videoReturn.classroomId===selectedClass.id?videoReturn.tab:'stream'} onVideo={(id,tab='stream')=>{setVideoReturn({identity,classroomId:selectedClass.id,tab});setVideoMaterialId(id);}} onContentCreated={()=>syncController.current?.trigger()} onRefreshComments={()=>syncController.current?.refresh()??Promise.resolve()} commentsVersion={commentsVersion} onPrivateRead={()=>setCommentsVersion(value=>value+1)} people={<RosterPage key={`${identity}/${selectedClass.id}`} classroom={selectedClass} user={activeAccount.user} teachers={
           <ClassTeachers account={activeAccount} classroom={selectedClass} blocked={settingsBlocked} busy={rosterBusy} onChange={submitClassSettings} />
-        } roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} />} /></> : selectedClass ? <ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} initialTab={videoReturn?.identity===identity&&videoReturn.classroomId===selectedClass.id?videoReturn.tab:'stream'} onVideo={(id,tab='stream')=>{setVideoReturn({identity,classroomId:selectedClass.id,tab});setVideoMaterialId(id);}} onContentCreated={()=>syncController.current?.trigger()} onRefreshComments={()=>syncController.current?.refresh()??Promise.resolve()} commentsVersion={commentsVersion} /> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'}  />}
+        } roster={activeAccount.rosters?.[selectedClass.id]} loading={!!rosterLoading[selectedClass.id]} error={rosterErrors[selectedClass.id] || null} actionError={rosterActionErrors[selectedClass.id]} offline={connection.status !== 'connected'} busy={rosterBusy || creating} retryAfter={retryAfter} onRetry={() => { void refreshTeacherRoster(activeAccount, selectedClass.id); }} onDecide={(id, action) => { void decide(id, action); }} />} /></> : selectedClass ? <ClassPage key={identity + "/" + selectedClass.id} account={activeAccount} classroom={selectedClass} offline={connection.status !== "connected"} initialTab={videoReturn?.identity===identity&&videoReturn.classroomId===selectedClass.id?videoReturn.tab:'stream'} onVideo={(id,tab='stream')=>{setVideoReturn({identity,classroomId:selectedClass.id,tab});setVideoMaterialId(id);}} onContentCreated={()=>syncController.current?.trigger()} onRefreshComments={()=>syncController.current?.refresh()??Promise.resolve()} commentsVersion={commentsVersion} onPrivateRead={()=>setCommentsVersion(value=>value+1)} /> : <HomePage user={activeAccount.user} classrooms={activeAccount.classrooms} loading={refreshing} error={classError} retryAfter={retryAfter} onRetry={() => { void refresh(activeAccount); }} onOpen={setSelectedId} joinRequests={activeAccount.join_requests} onJoin={openJoin} onCreate={openCreate} offline={connection.status !== 'connected'}  />}
         {activeAccount?.user.role === 'TEACHER' && !loginVisible && <CreateClassroomDialog open={createOpen} onOpenChange={setCreateOpen} busy={creating || rosterBusy} offline={connection.status !== 'connected'} error={createError} retryAfter={retryAfter} result={createdClass} onCreate={(name, section) => { void submitCreate(name, section); }} />}
         {activeAccount?.user.role === 'STUDENT' && !loginVisible && <JoinClassModal open={joinOpen} onOpenChange={setJoinOpen} fullName={activeAccount.user.full_name} busy={joining} offline={connection.status !== 'connected'} error={joinError} retryAfter={retryAfter} onJoin={(code) => { void submitJoin(code); }} />}
       </div></main>

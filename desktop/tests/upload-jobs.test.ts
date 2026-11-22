@@ -32,9 +32,23 @@ it('offers manual retry for a ready job and warns without retry controls for unc
   expect(retry).toBeDefined();
   await act(async()=>{retry!.props.onClick();await Promise.resolve();await Promise.resolve();});
   expect(retryUpload).toHaveBeenCalledWith(account,'class','ready');
-  const uncertain=renderer.root.findAllByType('li')[1].findByType('button');
+  const uncertain=renderer.root.findAllByType('li')[1].findAllByType('button')[0];
   await act(async()=>uncertain.props.onClick());expect(retryUpload).toHaveBeenCalledTimes(1);
-  await act(async()=>{renderer.root.findAllByType('li')[1].findByType('button').props.onClick();await Promise.resolve();await Promise.resolve();});
+  await act(async()=>{renderer.root.findAllByType('li')[1].findAllByType('button')[0].props.onClick();await Promise.resolve();await Promise.resolve();});
   expect(retryUpload).toHaveBeenCalledWith(account,'class','uncertain');
   await act(async()=>renderer.unmount());vi.unstubAllGlobals();
+});
+
+it('dismisses unknown upload outcomes durably without retrying or restoring a stale poll',async()=>{
+ vi.clearAllMocks();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.useFakeTimers();
+ const account={hub:{ip:'127.0.0.1',http_port:8080},user:{id:'teacher'}} as CachedAccount;
+ const job={id:'unknown',title:'Cancelled upload',fileName:'file.pdf',fileSize:10,uploadedBytes:10,status:'uncertain',dismissed:false};
+ let resolveOld!:(rows:unknown[])=>void;listUploadJobs.mockResolvedValue([job]);cancelUpload.mockResolvedValue(undefined);
+ let renderer!:ReturnType<typeof create>;await act(async()=>{renderer=create(createElement(UploadJobs,{account,classroomId:'class',onCompleted:vi.fn()}))});
+ listUploadJobs.mockImplementationOnce(()=>new Promise(resolve=>{resolveOld=resolve}));await act(async()=>{await vi.advanceTimersByTimeAsync(1000)});
+ listUploadJobs.mockResolvedValue([{...job,dismissed:true}]);
+ await act(async()=>renderer.root.findAllByType('button').find(button=>button.children.join('')==='Dismiss')!.props.onClick());
+ expect(cancelUpload).toHaveBeenCalledWith(account,'class','unknown');expect(retryUpload).not.toHaveBeenCalled();expect(renderer.toJSON()).toBeNull();
+ await act(async()=>resolveOld([job]));expect(renderer.toJSON()).toBeNull();
+ await act(async()=>{await vi.advanceTimersByTimeAsync(1000)});expect(renderer.toJSON()).toBeNull();await act(async()=>renderer.unmount());vi.useRealTimers();vi.unstubAllGlobals();
 });

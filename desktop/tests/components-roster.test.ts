@@ -51,3 +51,11 @@ it('displays the selected class and formatted code in the teacher bar', () => {
   expect(html).toContain('Science'); expect(html).toContain('K7M-4QX'); expect(html).toContain('Copy class code');
   expect(html).not.toContain('Class code copied.');
 });
+
+it('combines pending approvals and unread comments for each teacher class',()=>{
+ const props={user,classrooms:[classroom],onHome:noop,onOpen:noop,pendingCounts:{[classroom.id]:1},unreadCounts:{[classroom.id]:2}};
+ const html=renderToStaticMarkup(createElement(Sidebar,props));expect(html).toContain('3 class notifications');expect(html).toContain('1 pending join requests and 2 unread private comments');
+ expect(renderToStaticMarkup(createElement(Sidebar,{...props,pendingCounts:{}}))).toContain('2 class notifications');
+ expect(renderToStaticMarkup(createElement(Sidebar,{...props,pendingCounts:{},unreadCounts:{}}))).not.toContain('pending-count');
+ expect(renderToStaticMarkup(createElement(Sidebar,{...props,user:{...user,role:'STUDENT'},classrooms:[{...classroom,enrollment_status:'ACTIVE'}]}))).not.toContain('class notifications');
+});
