@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from './i18n';
+import appLogo from './assets/branding/lara-logo.png';
 import { flushHomework } from './services/homework';
 import { useAppStore } from './store/app';
 import ConnectionPage from './pages/ConnectionPage';
@@ -427,7 +428,7 @@ export default function App() {
     <a href="#content" className="skip-link">{t.skip_content}</a>
     {!authScreen && <header className="top-bar">
       <button type="button" className="icon-button menu-button" aria-label={t.toggle_menu} aria-expanded={drawerOpen} aria-controls="navigation" onClick={() => setDrawerOpen(!drawerOpen)}><i className="ph ph-list" aria-hidden="true" /></button>
-      <span className="brand">{t.app_title}</span>
+      <span className="brand"><img src={appLogo} alt={t.app_title} width={40} height={40}/></span>
       <div className="top-actions">
         <span className={`hub-pill ${connection.status === 'connected' ? 'hub-connected' : 'hub-offline'}`}><i className={`ph ${connection.status === 'connected' ? 'ph-wifi-high' : 'ph-wifi-slash'}`} aria-hidden="true" /><span>{connection.status === 'connected' ? t.connected_to_hub.replace('{name}', hub?.name ?? '') : t.hub_offline}</span></span>
         {!selectedClass && <button type="button" className="icon-button" aria-label={activeAccount?.user.role === 'TEACHER' ? t.create_class : t.join_class} disabled={!activeAccount || busy || joining || creating || rosterBusy || loginVisible} onClick={() => activeAccount?.user.role === 'TEACHER' ? openCreate() : openJoin()}><i className="ph ph-plus" aria-hidden="true" /></button>}

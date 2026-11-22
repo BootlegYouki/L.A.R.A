@@ -12,7 +12,8 @@ button:disabled { cursor: default; }
 .top-bar { min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 12px; }
 .icon-button { width: 2.5rem; height: 2.5rem; min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; border-radius: 50%; background: transparent; color: var(--color-lara-ink-2); font-size: 1.5rem; }
 .icon-button:hover:not(:disabled), .drawer-item:hover:not(:disabled) { background: var(--color-lara-subtle); }
-.brand { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; color: white; background: var(--color-lara-primary-dark); font-size: 0.875rem; font-weight: 900; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px; }
+.brand { display: inline-flex; align-items: center; flex-shrink: 0; }
+.brand img { display: block; width: 40px; height: 40px; object-fit: contain; }
 
 .top-actions { margin-left: auto; display: flex; flex: 1; min-width: 0; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
 .hub-pill { max-width: 100%; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 1px solid var(--color-lara-warning-border); border-radius: 9999px; background: var(--color-lara-warning-light); color: var(--color-lara-warning-dark); font-size: 0.8125rem; font-weight: 800; }
@@ -70,7 +71,6 @@ button:disabled { cursor: default; }
   .empty-state { padding: 24px; gap: 20px; }
   .empty-stream { flex-direction: row; text-align: left; }
   .top-bar { padding: 0 8px; }
-  .brand { font-size: 0.875rem; }
   .content-wrap { padding: 20px; }
 }
 @media (max-width: 480px) { .empty-stream { flex-direction: column; text-align: center; } }
