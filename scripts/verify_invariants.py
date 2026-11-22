@@ -39,7 +39,7 @@ SCAN_GLOBS = ["."]
 SCAN_EXCLUDES = [":(exclude)tests", ":(exclude)scripts", ":(exclude).github", ":(exclude)docs", ":(exclude)rules", ":(exclude)*.md"]
 # Binary assets only produce noise under --text.
 SCAN_EXCLUDES += [f":(exclude)*.{e}" for e in
-                  "png jpg jpeg webp gif ico ttf otf woff woff2 jar apk aab so zip gz mp4 webm pdf gguf".split()]
+                  "png jpg jpeg webp gif ico ttf otf woff woff2 jar apk aab so zip gz tgz xlsx mp4 webm pdf gguf".split()]
 
 def check_forbidden_patterns(diff_text: str):
     """Scans a git diff text for added (+) lines introducing forbidden cloud dependencies."""
@@ -68,7 +68,9 @@ def run_git_diff_check():
     # --text: a .gitattributes line such as "*.kt -diff" would otherwise turn the diff into "Binary files differ"
     # with no added lines, and the scan would pass. No textconv or external diff driver may rewrite what we read.
     cmd = ["git", "diff", "--text", "--no-textconv", "--no-ext-diff", f"{spec}...HEAD", "--", *SCAN_GLOBS, *SCAN_EXCLUDES]
-    res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    # Unknown file types can still contain non-UTF-8 bytes under --text. Replacement
+    # preserves ASCII dependency patterns instead of letting those bytes abort CI.
+    res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
     if res.returncode != 0:
         print(f"\n❌ L.A.R.A GUARDRAIL COULD NOT RUN: git diff against '{spec}' failed.")
         print(f"   {res.stderr.strip()}")
