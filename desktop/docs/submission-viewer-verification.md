@@ -9,7 +9,7 @@ Desktop-only changes for #407, draft PR #408. Base: staging b860308. No Server, 
 - Open file remains an optional system-viewer fallback. Download creates a new copy in Downloads without overwriting other files. Native commands resolve authorized account-scoped files, never a client-provided filesystem path.
 - Learners select/remove up to five attachments, 250 MiB total. Native staging streams 64 KiB chunks, validates all files, flushes payloads and job metadata, then atomically queues one ordered batch. Retries retain the submission ID and turn-in time. Older single-file queued jobs remain readable. The Hub receipt must match all ordered filenames/types.
 - Teacher grades show and enforce 0–maximum in the editor and service, including when the assignment maximum changes while editing. Saves use the contracted versioned `/grade-edit` route with `expected_updated_at` and narrow native HTTP permissions. Quiz scores are calculated by the Hub; Desktop has no manual quiz-grade editor.
-- Open visible comment threads request the existing coalesced sync every five seconds while connected, preserving drafts and sync backoff. Closing a thread removes its timer.
+- Open visible comment threads request the existing coalesced sync every five seconds while connected, preserving drafts and sync backoff. Closing a thread removes its timer. Comment-only pulls and receipts update the open thread and Stream count badges without publishing a new page/account snapshot. Unordered class/roster serialization does not count as a visible account change; genuine class, membership and content changes still propagate.
 
 ## Verified
 
@@ -22,7 +22,7 @@ Packaged Windows custom-protocol app, using the updated separate-PC QA Hub suppl
 - DOCX text/table rendered. A hostile `javascript:` hyperlink in the synthetic fixture became plain text, with no active link/script/iframe.
 - At 720×480, the bounded dialog and Close stayed visible, and PDF width adapted to the available space.
 - Earlier checks in the same PR verified byte-identical image/PDF downloads, native system-viewer opening, live public/private comments with draft retention, and Hub-stopped cached PDF/history access.
-- 210 frontend tests, 59 native tests (3 opt-in skips), 92 shared tests, lint, the offline invariant guard and production build pass. Native tests cover source/account permissions, MIME/ZIP bounds, replacement-cache cleanup, batch receipt ordering and writable-handle flushing on Windows.
+- 215 frontend tests, 60 native tests (3 opt-in skips), 92 shared tests, lint, the offline invariant guard and production build pass. Native tests cover source/account permissions, MIME/ZIP bounds, replacement-cache cleanup, batch receipt ordering and writable-handle flushing on Windows.
 
 ## Limits
 
@@ -34,3 +34,17 @@ Windows native behavior is verified; Linux/macOS runtime behavior is not. `.doc`
 ![Compact PDF viewer](evidence/submission-407/compact-pdf.png)
 ![Word document preview](evidence/submission-407/docx-preview.png)
 ![Maximum grade saved](evidence/submission-407/grade-saved.png)
+
+## Comment refresh isolation regression
+
+A private-thread timer used the assignment refresh callback, while every sync commit also published a new account object. This re-read class/assignment data and remounted previews. The timer now awaits coalesced sync and reads only its own thread; unchanged account snapshots are retained. Closed Stream count badges use a scoped count read instead of loading class materials. Teacher background updates retain existing submission rows while fresh rows arrive.
+
+Verified with the final packaged executable and the existing local real Hub, through a client-only loopback TCP bridge and an isolated synthetic account cache. The supplied remote Hub was timing out during this follow-up; no Server files or process were changed.
+
+- Private reply appeared over three polls: zero `read_assignment_work`, `read_class_content`, or `submission_preview` calls and zero page-loader insertions. Existing grade input/image DOM nodes, unsaved grade, comment draft and keyboard focus survived.
+- Public reply and count appeared over two polls: zero `read_class_content` calls; post, draft and focus survived.
+- Regression coverage checks the same callback isolation, closed count updates, sync wait/backoff cancellation, private-recipient isolation and unordered account serialization. Lint, production build, 215 frontend tests, 60 native tests (3 opt-in skips), 92 shared tests and offline invariant guard pass. Shared Windows scripts require UTF-8 and the existing G-drive PyYAML dependency.
+- Repeatedly replacing the synthetic submission during test setup exposed a separate incremental sync conflict on the older local Hub: a new submission row and old-row tombstone for the same learner/assignment fail cache application. The comment check used a fresh isolated cache with the existing submission; that replacement-sync case remains a follow-up, not covered by the comment-only fix.
+
+![Private thread without page refresh](evidence/submission-407/private-thread-isolation.png)
+![Public thread and count without page refresh](evidence/submission-407/public-thread-isolation.png)

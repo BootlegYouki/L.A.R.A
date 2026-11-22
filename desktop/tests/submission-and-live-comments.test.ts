@@ -19,15 +19,15 @@ it('opens PDF through native file handling and downloads without navigating the 
  expect(invoke).toHaveBeenLastCalledWith('export_submission',expect.objectContaining({submissionId:'submission',open:true}));
 });
 it('automatically requests Hub sync while a comment thread is open without losing its draft',async()=>{
- vi.useFakeTimers();const onChanged=vi.fn();
- await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id:'post'},offline:false,onChanged}));});
+ vi.useFakeTimers();const onRefresh=vi.fn(async()=>{});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id:'post'},offline:false,onRefresh}));});
  await act(async()=>renderer.root.findByType('textarea').props.onChange({target:{value:'Unsent draft'}}));
  await act(async()=>{vi.advanceTimersByTime(5000)});
- expect(onChanged).toHaveBeenCalled();expect(readThread.mock.calls.length).toBeGreaterThan(1);expect(renderer.root.findByType('textarea').props.value).toBe('Unsent draft');
+ expect(onRefresh).toHaveBeenCalledOnce();expect(readThread.mock.calls.length).toBeGreaterThan(1);expect(renderer.root.findByType('textarea').props.value).toBe('Unsent draft');
 });
 it('does not poll the Hub while offline or after the thread closes',async()=>{
- vi.useFakeTimers();const onChanged=vi.fn();
- await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id:'post'},offline:true,onChanged}));});
- await act(async()=>{vi.advanceTimersByTime(10000)});expect(onChanged).not.toHaveBeenCalled();
- await act(async()=>renderer.unmount());await act(async()=>{vi.advanceTimersByTime(10000)});expect(onChanged).not.toHaveBeenCalled();
+ vi.useFakeTimers();const onRefresh=vi.fn(async()=>{});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id:'post'},offline:true,onRefresh}));});
+ await act(async()=>{vi.advanceTimersByTime(10000)});expect(onRefresh).not.toHaveBeenCalled();
+ await act(async()=>renderer.unmount());await act(async()=>{vi.advanceTimersByTime(10000)});expect(onRefresh).not.toHaveBeenCalled();
 });

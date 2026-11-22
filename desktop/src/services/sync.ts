@@ -26,9 +26,30 @@ function queue(v:unknown):SyncPush {
   const rows=(key:string)=>{const a=v[key];if(!Array.isArray(a)||!a.every(object))throw new ApiError('invalid_response');return a;};
   return {quiz_attempts:rows('quiz_attempts'),comments:rows('comments'),private_comments:rows('private_comments')};
 }
-export function observeSync(account:CachedAccount,onCommit:()=>void|Promise<void>,onError:(error:unknown)=>void) {
+export function sameAccountSnapshot(left:CachedAccount|null,right:CachedAccount|null):boolean {
+ // Sync's visible-class set and roster maps have no presentation ordering.
+ const normalize=(value:CachedAccount|null)=>value&&({...value,
+  classrooms:value.classrooms.map(room=>({...room,...(room.co_teacher_ids?{co_teacher_ids:[...room.co_teacher_ids].sort()}:{})})).sort((a,b)=>a.id.localeCompare(b.id)),
+  ...(value.join_requests?{join_requests:[...value.join_requests].sort((a,b)=>a.classroom_id.localeCompare(b.classroom_id))}:{}),
+  ...(value.rosters?{rosters:Object.fromEntries(Object.entries(value.rosters).map(([id,rows])=>[id,[...rows].sort((a,b)=>a.enrollment_id.localeCompare(b.enrollment_id))]))}:{})
+ });
+ const snapshot=(value:CachedAccount|null)=>JSON.stringify(normalize(value),(_key,row)=>object(row)?Object.fromEntries(Object.entries(row).sort(([a],[b])=>a.localeCompare(b))):row);
+ return snapshot(left)===snapshot(right);
+}
+export function pageContentChanged(payload:Record<string,unknown>):boolean {
+ return payload.reset===true||Object.entries(payload).some(([key,value])=>{
+  if(!Array.isArray(value)||!value.length||['users','comments','private_comments'].includes(key))return false;
+  return key!=='deleted'||value.some(row=>!object(row)||!['announcement_comments','private_comments'].includes(String(row.entity_table)));
+ });
+}
+function commentsChanged(payload:Record<string,unknown>):boolean {
+ return ['comments','private_comments'].some(key=>Array.isArray(payload[key])&&payload[key].length>0)||(Array.isArray(payload.deleted)&&payload.deleted.some(row=>object(row)&&['announcement_comments','private_comments'].includes(String(row.entity_table))));
+}
+export function observeSync(account:CachedAccount,onCommit:(contentChanged:boolean,commentsChanged?:boolean)=>void|Promise<void>,onError:(error:unknown)=>void) {
   let stopped=false,running=false,requested=false,failures=0,notBefore=0;
   let retry:ReturnType<typeof setTimeout>|undefined;
+  const waiters=new Set<()=>void>();
+  const settle=()=>{for(const done of waiters)done();waiters.clear()};
   const request=new AbortController(),args={hub:account.hub,userId:account.user.id};
   const native=(cmd:string,extra:Record<string,unknown>={})=>withDatabaseTimeout(invoke(cmd,{...args,...extra}));
   async function pull(token:string) {
@@ -38,7 +59,7 @@ export function observeSync(account:CachedAccount,onCommit:()=>void|Promise<void
       if(stopped)return;
       await native('apply_sync_pull',{expected,payload});
       if(stopped)return;
-      await onCommit();
+      await onCommit(pageContentChanged(payload),commentsChanged(payload));
       expected={cursor:payload.next_cursor,hub_id:payload.hub_id,sync_epoch:payload.sync_epoch};
       if(!payload.has_more)return;
     }
@@ -58,7 +79,7 @@ export function observeSync(account:CachedAccount,onCommit:()=>void|Promise<void
         if(stopped)return;
         await native('apply_sync_receipts',{sent,payload});
         if(stopped)return;
-        await onCommit();await pull(token);
+        await onCommit(sent.quiz_attempts.length>0,sent.comments.length+sent.private_comments.length>0);await pull(token);
       }
       failures=0;notBefore=0;
     } catch(error) {
@@ -68,10 +89,14 @@ export function observeSync(account:CachedAccount,onCommit:()=>void|Promise<void
       }
       const delay=error instanceof ApiError&&error.retryAfter>0?error.retryAfter*1000:Math.min(1000*2**Math.min(failures++,4),10000);
       notBefore=Date.now()+delay;clearTimeout(retry);retry=setTimeout(trigger,delay);onError(error);
-    } finally {running=false;if(requested&&!stopped&&Date.now()>=notBefore)void run();}
+    } finally {running=false;if(requested&&!stopped&&Date.now()>=notBefore)void run();else settle();}
   }
   function trigger(){if(stopped)return;requested=true;void run();}
+  function refresh():Promise<void>{
+    if(stopped||Date.now()<notBefore)return Promise.resolve();
+    return new Promise(resolve=>{waiters.add(resolve);trigger()});
+  }
   const timer=setInterval(trigger,60000);
-  function stop(){stopped=true;request.abort();clearTimeout(retry);clearInterval(timer);}
-  trigger();return {trigger,stop};
+  function stop(){stopped=true;request.abort();clearTimeout(retry);clearInterval(timer);settle();}
+  trigger();return {trigger,refresh,stop};
 }
