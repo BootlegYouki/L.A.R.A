@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import appLogo from '../assets/branding/lara-logo.png';
 import type { Dictionary } from '../i18n';
 import type { HubConnectionState } from '../services/connection';
 import { manualEndpoint, type HubInfo } from '../services/discovery';
@@ -6,12 +7,14 @@ import { manualEndpoint, type HubInfo } from '../services/discovery';
 interface Props {
   t: Dictionary; hubs: HubInfo[]; failed: boolean; searching: boolean;
   connection: HubConnectionState; onConnect: (hub: HubInfo) => void;
+  showLogo?: boolean;
 }
-export default function ConnectionPage({ t, hubs, failed, searching, connection, onConnect }: Props) {
+export default function ConnectionPage({ t, hubs, failed, searching, connection, onConnect, showLogo=false }: Props) {
   const [address, setAddress] = useState('');
   const [invalid, setInvalid] = useState(false);
   const connecting = connection.status === 'connecting';
   return <section className="discovery-panel" aria-labelledby="discovery-title">
+    {showLogo&&<img className="startup-logo discovery-logo" src={appLogo} alt={t.app_title} width={56} height={56}/>}
     <h2 id="discovery-title"><i className="ph ph-broadcast" aria-hidden="true" />{t.discovery_title}</h2>
     <p>{t.discovery_help}</p>
     <div role="status">
