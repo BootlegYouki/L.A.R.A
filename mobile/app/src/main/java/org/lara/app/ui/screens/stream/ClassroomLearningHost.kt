@@ -287,9 +287,7 @@ private fun AnnouncementCard(post: Announcement, attachments: List<Material>, op
             }
             if (post.content.isNotBlank()) Text(post.content, style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
             attachments.forEach { attachment ->
-                org.lara.app.ui.components.AttachmentChip(
-                    attachment.fileType, attachment.title, Modifier.clickable { onOpen(attachment) },
-                )
+                AnnouncementAttachmentPreview(attachment) { onOpen(attachment) }
             }
             HorizontalDivider(color = LaraColors.Border)
             Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(onClick = openPost)

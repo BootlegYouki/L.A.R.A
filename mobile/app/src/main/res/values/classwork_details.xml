@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assignment_turned_in_at">Turned in %1$s</string>
+    <string name="assignment_attempted_at">Attempted %1$s</string>
+    <string name="assignment_add_link">Add link</string>
+    <string name="assignment_link_address">Web address</string>
+    <string name="assignment_link_help">Enter a full http:// or https:// address.</string>
+</resources>

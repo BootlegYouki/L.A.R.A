@@ -13,7 +13,7 @@ The teacher loads classes with authenticated `GET /api/classrooms`. Each roster 
 - `RosterViewModel` observes saved rows, opens the sheet for matching join hints, updates optimistically, rolls back failed commands and refreshes the REST roster after a decision. A successful decision is not reversed just because its follow-up refresh fails. Offline actions are disabled.
 - `TeacherApprovalPanel` is mounted only in the teacher graph. Lifecycle/background disposal stops the socket and refresh subscriptions. Expired sessions return to sign-in without deleting saved/queued work.
 
-Teacher controls show only unarchived classes owned or co-taught by the signed-in teacher. The Hub remains the authorization boundary.
+Teacher controls show only unarchived classes owned or co-taught by the signed-in teacher. The Join Requests page and its pending badge use the same scoped class IDs, and each pending learner card labels its class and section; the embedded People review and approval sheet carry the same context. Approval state is keyed by teacher account, so a teacher account switch cannot reuse another account's request view. The Hub remains the authorization boundary.
 
 ## Learner unlock through canonical sync in 2.5
 

@@ -8,7 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /** Mount in the teacher action slot; the session owner supplies a sync-backed RosterViewModel. */
 @Composable
-fun TeacherApprovalHost(model: RosterViewModel) {
+fun TeacherApprovalHost(model: RosterViewModel, classroom: org.lara.app.domain.model.Classroom? = null) {
     val state by model.state.collectAsStateWithLifecycle()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(model, lifecycle) {
@@ -24,5 +24,5 @@ fun TeacherApprovalHost(model: RosterViewModel) {
         onDispose { lifecycle.removeObserver(observer); model.stop() }
     }
     PendingApprovalButton(state, model::show)
-    ApprovalSheet(state, model::dismiss, model::decide)
+    ApprovalSheet(state, model::dismiss, model::decide, classroom?.name.orEmpty(), classroom?.section.orEmpty())
 }

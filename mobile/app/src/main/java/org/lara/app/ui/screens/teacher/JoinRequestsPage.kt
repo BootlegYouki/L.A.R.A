@@ -68,7 +68,9 @@ fun JoinRequestsPage(container: AppContainer, userId: String, syncSession: SyncS
                         stringResource(R.string.approval_accept), stringResource(R.string.enrollment_cancel_action),
                         { confirmAll = false; state.pending.forEach { model.decide(it.enrollment.studentId, true) } }, { confirmAll = false })
                 }
-                items(state.pending, key = { "${classroom.id}-${it.enrollment.id}" }) { PendingMemberCard(it, state, model::decide) }
+                items(state.pending, key = { "${classroom.id}-${it.enrollment.id}" }) {
+                    PendingMemberCard(it, state, model::decide, classroom.name, classroom.section)
+                }
             }
         }
         }
@@ -79,6 +81,7 @@ fun JoinRequestsPage(container: AppContainer, userId: String, syncSession: SyncS
 /** Pending learners of one class, for the People tab. Draws nothing when nobody is waiting. */
 @Composable
 fun ClassPendingRequests(container: AppContainer, userId: String, syncSession: SyncSessionViewModel, classroom: org.lara.app.domain.model.Classroom, onExpired: () -> Unit) {
+    if (userId !in classroom.teacherIds() || !classroom.managedBy(userId)) return
     val session: TeacherApprovalSession = viewModel(key = "teacher-approvals-$userId", factory = viewModelFactory {
         initializer { TeacherApprovalSession(container, userId, syncSession) }
     })
@@ -87,9 +90,11 @@ fun ClassPendingRequests(container: AppContainer, userId: String, syncSession: S
     val model = rosterModel(container, userId, session, classroom, onExpired)
     val state by model.state.collectAsStateWithLifecycle()
     LaunchedEffect(reachable) { if (reachable) session.refresher.refresh(classroom.id) }
-    if (state.pending.isEmpty() || !classroom.managedBy(userId)) return
+    if (state.pending.isEmpty()) return
     Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
         Text(stringResource(R.string.approval_title), style = MaterialTheme.typography.titleMedium)
-        state.pending.forEach { key(it.enrollment.id) { PendingMemberCard(it, state, model::decide) } }
+        state.pending.forEach { key(it.enrollment.id) {
+            PendingMemberCard(it, state, model::decide, classroom.name, classroom.section)
+        } }
     }
 }

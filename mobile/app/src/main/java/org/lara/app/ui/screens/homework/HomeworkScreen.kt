@@ -21,6 +21,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
@@ -55,6 +56,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
 import org.lara.app.AppContainer
 import org.lara.app.R
+import org.lara.app.ui.components.SubmissionTime
 import org.lara.app.domain.model.Assignment
 import org.lara.app.domain.Cached
 import org.lara.app.data.repository.HomeworkAttachment
@@ -262,7 +264,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                     style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.homework_due, due), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
                 HorizontalDivider(color = LaraColors.Border)
-                Text(assignment.instructions, style = MaterialTheme.typography.bodyLarge)
+                SelectionContainer { Text(assignment.instructions, style = MaterialTheme.typography.bodyLarge) }
                 }
             }
         }
@@ -279,8 +281,8 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                                 Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(20.dp))
                                 Text(comments.size.toString(), style = MaterialTheme.typography.bodyMedium)
                             }
-                            Text(due, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextPrimary)
                         }
+                        submission?.let { SubmissionTime(it.submittedAt, rejected = it.syncStatus == "REJECTED") }
                         attachments.firstOrNull()?.let { attachment ->
                             HomeworkAttachmentRow(attachment, container.homeworkPhotos,
                                 onView = { viewingPhoto = 0 }, onRemove = attachment.path?.takeIf { hasDraft }?.let { path ->
@@ -438,17 +440,47 @@ private fun HomeworkAttachmentRow(
     onRemove: (() -> Unit)?,
     busy: Boolean,
 ) {
-    val thumbnail = rememberHomeworkBitmap(attachment.path.takeIf { attachment.fileType == "IMAGE" }, root, sampleSize = 8)
-    val preview: (@Composable () -> Unit)? = if (thumbnail == null) null else {
-        { Image(thumbnail.asImageBitmap(), null, Modifier.size(MinTouchTarget).clip(LaraShapes.small),
-            contentScale = ContentScale.Crop) }
-    }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-        val chip = Modifier.weight(1f)
-        org.lara.app.ui.components.AttachmentChip(attachment.fileType, attachment.name,
-            if (attachment.fileType == "IMAGE") chip.clickable(onClick = onView) else chip, preview)
-        if (onRemove != null) IconButton(onRemove, Modifier.size(MinTouchTarget), enabled = !busy) {
-            Icon(painterResource(R.drawable.ic_trash), stringResource(R.string.homework_remove_attachment))
+    val isImage = attachment.fileType == "IMAGE"
+    val thumbnail = rememberHomeworkBitmap(attachment.path.takeIf { isImage }, root, sampleSize = 16)
+    if (isImage) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onView),
+            shape = LaraShapes.medium,
+            color = LaraColors.Surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, LaraColors.Border),
+        ) {
+            Row(
+                Modifier.heightIn(min = MinTouchTarget).padding(LaraSpacing.S2),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
+            ) {
+                if (thumbnail != null) {
+                    Image(thumbnail.asImageBitmap(), stringResource(R.string.preview_image_attachment),
+                        Modifier.size(width = 88.dp, height = 64.dp).clip(LaraShapes.small), contentScale = ContentScale.Crop)
+                } else {
+                    Surface(Modifier.size(width = 88.dp, height = 64.dp), color = LaraColors.SurfaceSubtle, shape = LaraShapes.small) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(painterResource(R.drawable.ic_image), stringResource(R.string.preview_image_unavailable),
+                                Modifier.size(28.dp), tint = LaraColors.TextSecondary)
+                        }
+                    }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
+                    Text(stringResource(R.string.homework_photo_item), style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
+                    Text(attachment.name.orEmpty(), style = MaterialTheme.typography.bodyMedium, maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+                if (onRemove != null) IconButton(onRemove, Modifier.size(MinTouchTarget), enabled = !busy) {
+                    Icon(painterResource(R.drawable.ic_trash), stringResource(R.string.homework_remove_attachment))
+                }
+            }
+        }
+    } else {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            org.lara.app.ui.components.AttachmentChip(attachment.fileType, attachment.name, Modifier.weight(1f))
+            if (onRemove != null) IconButton(onRemove, Modifier.size(MinTouchTarget), enabled = !busy) {
+                Icon(painterResource(R.drawable.ic_trash), stringResource(R.string.homework_remove_attachment))
+            }
         }
     }
 }

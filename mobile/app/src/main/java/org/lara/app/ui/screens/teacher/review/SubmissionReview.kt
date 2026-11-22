@@ -45,6 +45,7 @@ import org.lara.app.data.local.entities.AssignmentSubmissionEntity
 import org.lara.app.data.remote.HubFailure
 import org.lara.app.domain.Cached
 import org.lara.app.domain.model.Assignment
+import org.lara.app.ui.components.SubmissionTime
 import org.lara.app.ui.components.AttachmentChip
 import org.lara.app.ui.components.classFormInputScroll
 import org.lara.app.data.local.entities.attachments
@@ -182,7 +183,8 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
                                 Spacer(Modifier.width(LaraSpacing.S3))
                                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.Start) {
                                     Text(learner.user?.fullName.orEmpty(), style = MaterialTheme.typography.titleMedium)
-                                    Text(stringResource(status), color = LaraColors.TextSecondary)
+                                    if (status != R.string.review_turned_in) Text(stringResource(status), color = LaraColors.TextSecondary)
+                                    SubmissionTime(submission.submittedAt)
                                 }
                                 displayedScore?.let { Text(stringResource(R.string.review_points_value, it, assignment.maxPoints), color = LaraColors.TextPrimary) }
                             }
@@ -217,6 +219,7 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
                         Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.review_back))
                     }
                 }
+                SubmissionTime(selected.submittedAt)
                 val attachments = remember(selected) { selected.attachments() }
                 attachments.forEachIndexed { index, attachment ->
                     val forbidden = { access = 1; scope.launch { container.setReviewDenied(assignment.id, true) }; Unit }
