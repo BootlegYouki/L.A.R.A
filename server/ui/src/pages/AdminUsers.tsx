@@ -203,9 +203,9 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
         {pinInput}
         {feedback}
         <button className="admin-primary" type="submit">{busy ? t.admin_working : setup ? t.admin_setup_action : t.admin_login_action}</button>
-        <button type="button" className="admin-secondary" onClick={() => { setSetup(!setup); setPin(''); setError(''); setNotice(''); }}>
-          {setup ? t.admin_existing_action : t.admin_first_run_action}
-        </button>
+        {setup && <button type="button" className="admin-secondary" onClick={() => { setSetup(false); setPin(''); setError(''); setNotice(''); }}>
+          {t.admin_existing_action}
+        </button>}
       </fieldset>
     </form>
   </section>;

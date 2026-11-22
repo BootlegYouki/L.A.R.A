@@ -22,7 +22,6 @@
   "admin_setup_action": "Set admin PIN",
   "admin_login_action": "Sign in",
   "admin_existing_action": "Admin already set up? Sign in",
-  "admin_first_run_action": "First run? Set admin PIN",
   "admin_exists": "The admin is already set up. Enter the admin PIN to sign in.",
   "admin_working": "Saving…",
   "admin_accounts": "Accounts",
