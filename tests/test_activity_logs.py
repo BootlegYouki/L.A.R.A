@@ -110,8 +110,8 @@ class TestActivityHistoryReference(unittest.TestCase):
     def test_request_details_are_returned_and_searchable(self):
         self.populate(1)
         entry = self.server.state.activity_entries[0]
-        entry.update(event_code="HTTP_REQUEST", service="HTTP", details={"http_method": "GET", "endpoint": "/api/admin/users", "status_code": 200, "duration_ms": 2})
-        for search in ["http request", "GET", "/api/admin/users", "200"]:
+        entry.update(event_code="HTTP_REQUEST", service="HTTP", details={"http_method": "GET", "endpoint": "/api/classrooms", "status_code": 200, "duration_ms": 2})
+        for search in ["http request", "GET", "/api/classrooms", "200"]:
             status, page, _ = self.get(q=search)
             self.assertEqual(status, 200)
             self.assertEqual(page["entries"], [entry])
@@ -124,6 +124,29 @@ class TestActivityHistoryReference(unittest.TestCase):
         _, older, _ = self.get(before_seq=251, snapshot_seq=350, history_id=self.history)
         self.assertEqual([entry["seq"] for entry in older["entries"]], list(range(250, 150, -1)))
         self.assertIsNone(older["next_after_seq"])
+
+    def test_viewer_requests_are_hidden_without_rewriting_history_or_cursors(self):
+        self.populate(3)
+        entry = self.server.state.activity_entries[1]
+        entry.update(event_code="HTTP_REQUEST", service="HTTP", details={"http_method": "GET", "endpoint": "/api/admin/activity-logs", "status_code": 200, "duration_ms": 1})
+        status, page, _ = self.get(limit=1)
+        self.assertEqual(status, 200)
+        self.assertEqual([item["seq"] for item in page["entries"]], [3])
+        _, older, _ = self.get(before_seq=page["next_before_seq"], snapshot_seq=3, history_id=self.history)
+        self.assertEqual([item["seq"] for item in older["entries"]], [1])
+        _, search, _ = self.get(q="/api/admin/activity-logs")
+        self.assertEqual(search["entries"], [])
+        self.assertEqual(search["high_water_seq"], 3)
+        self.assertEqual(len(self.server.state.activity_entries), 3)
+
+    def test_account_reads_are_hidden_but_account_writes_remain_searchable(self):
+        self.populate(4)
+        for entry, method, endpoint in zip(self.server.state.activity_entries, ["GET", "OPTIONS", "POST", "POST"], ["/api/admin/users", "/api/admin/users", "/api/admin/users", "/api/admin/users/{id}/reset-pin"]):
+            entry.update(event_code="HTTP_REQUEST", service="HTTP", details={"http_method": method, "endpoint": endpoint, "status_code": 200, "duration_ms": 1})
+        _, page, _ = self.get(q="/api/admin/users")
+        self.assertEqual([entry["seq"] for entry in page["entries"]], [4, 3])
+        self.assertEqual(page["high_water_seq"], 4)
+        self.assertEqual(len(self.server.state.activity_entries), 4)
 
     def test_catch_up_does_not_skip_a_large_burst_or_include_new_arrivals(self):
         self.populate()

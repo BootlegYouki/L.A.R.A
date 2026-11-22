@@ -239,6 +239,12 @@ paths:
 
         All sequence values are independent of the classroom sync cursor.
 
+        Requests to this endpoint are excluded from request logging. Reads omit
+        pre-existing HTTP_REQUEST entries for this endpoint without deleting history.
+
+        GET and OPTIONS /api/admin/users request entries are likewise excluded from returned
+        history and new recording. Account creation and PIN reset remain recorded.
+
         See activity_logs.md for stable pagination, filtering and retention semantics.
 
         '

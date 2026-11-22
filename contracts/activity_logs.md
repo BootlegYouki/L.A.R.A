@@ -76,9 +76,16 @@ No server migration/runtime/UI code is included in this contract change. Runtime
 
 ## HTTP request activity (user-approved extension)
 
-Record every HTTP request when response headers become available, including public
+Record every HTTP request except `/api/admin/activity-logs` and GET/OPTIONS `/api/admin/users` when response headers become available, including public
 portal/assets, successful writes/reads, rejected authentication, validation errors,
-unknown routes, unsupported methods, CORS preflight and activity-page polling.
+unknown routes, unsupported methods and CORS preflight. Requests to the activity
+history endpoint are excluded for every method/status to prevent viewer feedback.
+Reads also omit pre-existing HTTP_REQUEST rows for that endpoint, without deleting
+stored history or changing sequence/high-water semantics. GET/OPTIONS `/api/admin/users`
+is also excluded for every status, and its pre-existing request entries are hidden
+from reads. OPTIONS is the browser preflight accompanying account polling. Account
+polling is unchanged. POST `/api/admin/users`, PIN resets and
+other methods/endpoints continue to be recorded.
 This covers the REST/portal listener; WebSocket frames on port 8081 are not HTTP
 endpoint requests and retain their existing operational events.
 
@@ -92,6 +99,6 @@ statuses INFO/SUCCEEDED. Existing business outcome events are unchanged.
 
 HTTP_REQUEST bypasses repeated-error suppression so separate requests remain
 separate entries. Queue overflow/write failures still produce visible gaps under
-the existing best-effort guarantees. Polling the history adds one event per read;
+the existing best-effort guarantees. Polling history does not create request events;
 pausing only stops display polling. Existing retention/row limits still apply.
 New migration preserves events, sequence high-water mark and history identity.
