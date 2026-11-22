@@ -56,7 +56,7 @@ class MaterialUploadWorker(context: Context, params: WorkerParameters) : Corouti
             Result.success(workDataOf("title" to title))
         } catch (error: CancellationException) { throw error }
         catch (error: HubFailure) {
-            if (sending?.exists() == true && (error.status in 300..399 || error.status >= 500 && error.code == "UNKNOWN")) {
+            if (sending?.exists() == true && (error.status in 300..399 || error.status >= 500)) {
                 return uncertain()
             }
             sending?.delete()

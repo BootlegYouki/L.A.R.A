@@ -76,7 +76,7 @@ internal fun privateCommentStatusLabel(status: String, reason: String?): Int? = 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, materialAttachments: List<Material> = emptyList(), openAttachment: (String) -> Unit = {}, close: () -> Unit) {
+fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, materialAttachments: List<Material> = emptyList(), openAttachment: (String) -> Unit = {}, previewReachable: Boolean = true, close: () -> Unit) {
     val model: HomeworkViewModel = viewModel(key = "homework-$userId-${assignment.id}", factory = viewModelFactory {
         initializer { HomeworkViewModel(container, assignment.id, createSavedStateHandle()) }
     })
@@ -267,7 +267,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 HorizontalDivider(color = LaraColors.Border)
                 SelectionContainer { Text(assignment.instructions, style = MaterialTheme.typography.bodyLarge) }
                 materialAttachments.forEach { material ->
-                    org.lara.app.ui.screens.stream.AnnouncementAttachmentPreview(container, userId, material) { openAttachment(material.id) }
+                    org.lara.app.ui.screens.stream.AnnouncementAttachmentPreview(container, userId, material, previewReachable) { openAttachment(material.id) }
                 }
                 }
             }

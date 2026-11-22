@@ -50,6 +50,11 @@ class TeacherPrivateCommentReadTest {
             val repository = TeacherPrivateCommentRepository(db, "teacher", PrivateCommentApi(EnrollmentApi(HubClient(), tokens, { null })))
             val unread = repository.unreadThreads("class")
             assertEquals(mapOf("learner-a" to 1, "learner-b" to 1), unread.first().associate { it.studentId to it.count })
+            repository.setAccessDenied("assignment", "learner-a", true)
+            assertEquals(true, repository.accessDenied("assignment", "learner-a").first())
+            repository.markRead("assignment", "learner-a", listOf("seen"))
+            assertEquals(2, unread.first().size)
+            repository.setAccessDenied("assignment", "learner-a", false)
             repository.markRead("assignment", "learner-a", listOf("seen", "reply", "other"))
             assertEquals("learner-b", unread.first().single().studentId)
             db.streamDao().insertPrivateComment(PrivateCommentEntity(

@@ -14,6 +14,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.lara.app.data.remote.dto.PrivateCommentDto
 
+internal const val TEACHER_PRIVATE_REPLY_LIMIT = 4_000
+
 /** Teacher access to the contract's per-learner assignment thread. */
 class PrivateCommentApi(private val sessions: EnrollmentApi) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -43,7 +45,7 @@ class PrivateCommentApi(private val sessions: EnrollmentApi) {
     }
 
     suspend fun reply(userId: String, assignmentId: String, studentId: String, content: String): PrivateCommentDto = withContext(Dispatchers.IO) {
-        require(validId(studentId) && content.isNotBlank() && content.length <= 4000)
+        require(validId(studentId) && content.isNotBlank() && content.length <= TEACHER_PRIVATE_REPLY_LIMIT)
         val body = buildJsonObject {
             put("student_id", studentId)
             put("content", content.trim())

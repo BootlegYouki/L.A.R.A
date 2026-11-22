@@ -206,6 +206,7 @@ class ClassworkAuthoringDeviceTest {
                     val started = SystemClock.elapsedRealtime()
                     var succeeded = false
                     var captured = false
+                    var confirmedRecovery = false
                     while (SystemClock.elapsedRealtime() - started < 360_000) {
                         val runtime = Runtime.getRuntime()
                         samples.appendText("${SystemClock.elapsedRealtime()-started},${runtime.totalMemory()-runtime.freeMemory()},${runtime.totalMemory()},${android.os.Debug.getNativeHeapAllocatedSize()}\n")
@@ -213,6 +214,12 @@ class ClassworkAuthoringDeviceTest {
                         if (!captured && uploads.any { it.state == "RUNNING" && it.percent > 0 }) { shot("upload-progress"); captured = true }
                         if (uploads.any { it.state == "SUCCEEDED" }) { succeeded = true; break }
                         assertFalse("Worker failed", uploads.any { it.state == "FAILED" })
+                        val uncertain = uploads.firstOrNull { it.state == "UNCERTAIN" }
+                        if (uncertain != null) {
+                            assertFalse("Upload was uncertain again after confirmation", confirmedRecovery)
+                            confirmedRecovery = true
+                            account.classworkAuthoring.retryUncertain(uncertain.id)
+                        }
                         SystemClock.sleep(500)
                     }
                     assertTrue("Large upload timed out", succeeded)

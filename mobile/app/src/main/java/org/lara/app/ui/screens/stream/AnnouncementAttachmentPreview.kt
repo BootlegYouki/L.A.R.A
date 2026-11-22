@@ -42,11 +42,11 @@ import java.io.File
 
 /** Inline media preview for class posts and assignment instructions. Bytes are cached to disk; images decode to a small sample. */
 @Composable
-internal fun AnnouncementAttachmentPreview(container: AppContainer, userId: String, material: Material, open: () -> Unit) {
+internal fun AnnouncementAttachmentPreview(container: AppContainer, userId: String, material: Material, reachable: Boolean, open: () -> Unit) {
     val context = LocalContext.current
     var probedImage by remember(material.id, material.updatedAt) { mutableStateOf<Boolean?>(null) }
-    LaunchedEffect(material.id, material.updatedAt, material.mimeType, material.fileType) {
-        if (material.mimeType.isNullOrBlank() && material.fileType != "VIDEO") {
+    LaunchedEffect(material.id, material.updatedAt, material.mimeType, material.fileType, reachable) {
+        if (reachable && material.mimeType.isNullOrBlank() && material.fileType != "VIDEO") {
             probedImage = try { container.materialFiles.probeImageSignature(material.id) }
             catch (error: CancellationException) { throw error }
             catch (_: Exception) { false }
@@ -57,9 +57,10 @@ internal fun AnnouncementAttachmentPreview(container: AppContainer, userId: Stri
     val savedThumbnail by rememberLocalMaterialThumbnail(material.localFilePath.takeIf { image }, context.filesDir)
     var bitmap by remember(material.id, material.updatedAt) { mutableStateOf<Bitmap?>(null) }
     var imageFailed by remember(material.id, material.updatedAt) { mutableStateOf(false) }
-    LaunchedEffect(material.id, material.updatedAt, image, material.localFilePath) {
+    LaunchedEffect(material.id, material.updatedAt, image, material.localFilePath, reachable) {
         bitmap = null
-        if (image) {
+        imageFailed = false
+        if (image && (reachable || material.localFilePath != null)) {
             var decoded: Bitmap? = null
             try {
                 val file = container.materialFiles.open(material.id, save = false, maxBytes = 8L * 1024 * 1024)
@@ -81,7 +82,7 @@ internal fun AnnouncementAttachmentPreview(container: AppContainer, userId: Stri
             finally { decoded?.recycle(); bitmap = null }
         }
     }
-    if ((!image && !video) || image && imageFailed) {
+    if ((!image && !video) || image && (imageFailed || !reachable && material.localFilePath == null)) {
         ExistingAttachmentCard(material, open)
         return
     }
@@ -173,6 +174,7 @@ private fun InlineVideoPreview(container: AppContainer, userId: String, material
     var failed by remember(id, userId) { mutableStateOf(false) }
     var player by remember(id, userId) { mutableStateOf<ExoPlayer?>(null) }
     var autoPlay by remember(id, userId) { mutableStateOf(true) }
+    var positionMs by remember(id, userId) { mutableLongStateOf(0L) }
     LaunchedEffect(id, userId, started) {
         if (!started) return@LaunchedEffect
         source = try { container.videos.source(id) }
@@ -197,12 +199,20 @@ private fun InlineVideoPreview(container: AppContainer, userId: String, material
                     addListener(object : Player.Listener {
                         override fun onPlayerError(error: PlaybackException) { failed = true }
                     })
+                    seekTo(positionMs)
                     playWhenReady = autoPlay
                     prepare()
                 }
             }.getOrElse { failed = true; null }.also { player = it; autoPlay = false }
         }
-        fun stop() { active?.release(); active = null; player = null }
+        fun stop() {
+            active?.let {
+                positionMs = it.currentPosition.coerceAtLeast(0L)
+                it.release()
+            }
+            active = null
+            player = null
+        }
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) start()
             if (event == Lifecycle.Event.ON_STOP) stop()

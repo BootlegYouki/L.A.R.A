@@ -9,3 +9,5 @@ New teacher materials can be staged on device while the known Hub is unreachable
 Teacher assignment review shows unread learner private comments. The class drawer and Classwork show counts, and opening a learner’s thread records the messages read on that device. Replies use the existing private-comment endpoint.
 
 Announcements and assignment materials show inline images and user-initiated video playback. Images use a bounded preview and sampled decoding. The existing attachment card and full reader/player remain available. Teachers viewing a connected class receive unread-count updates via foreground delta pulls with backoff.
+
+The material worker treats a redirect or a server error received after upload bytes start as an uncertain outcome. A teacher must confirm before retrying. Returning from a full-screen attachment reopens the assignment, and inline image previews retry when the Hub becomes reachable. An explicit private-thread denial is retained locally and hides cached messages until a successful refresh restores access. The reply composer shows the same length limit enforced by its transport.
