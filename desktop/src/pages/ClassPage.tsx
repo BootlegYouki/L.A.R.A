@@ -47,6 +47,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
   const [editor,setEditor]=useState<{item:ClassworkItem;action:'edit'|'delete'}|null>(null);
   const [uploadParent,setUploadParent]=useState<{kind:'assignment'|'announcement';id:string}>();
   const teacher=account.user.role==='TEACHER' && (classroom.teacher_id===account.user.id || classroom.co_teacher_ids?.includes(account.user.id)) && classroom.archived_at==null;
+  const pendingCount=teacher?(account.rosters?.[classroom.id]??[]).filter(row=>row.status==='PENDING').length:0;
   const canPost=teacher||(account.user.role==='STUDENT'&&classroom.archived_at==null&&(classroom.enrollment_status??account.join_requests?.find(r=>r.classroom_id===classroom.id)?.status??'ACTIVE')==='ACTIVE');
   const createdContent=()=>{setNotice(t.authoring_saved);onContentCreated?.();setRetry(value=>value+1);};
   const classworkTab = useRef<HTMLButtonElement>(null);
@@ -113,7 +114,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
             const index = buttons.indexOf(event.currentTarget);
             const next = event.key === 'ArrowRight' ? (index + 1) % buttons.length : event.key === 'ArrowLeft' ? (index + buttons.length - 1) % buttons.length : event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : -1;
             if (next >= 0) {event.preventDefault(); buttons[next].click(); buttons[next].focus();}
-          }}>{label}</button>)}
+          }}>{label}{id==='people'&&pendingCount>0&&<span className="pending-count" aria-label={t.roster_pending_count.replace('{count}',String(pendingCount))}>{pendingCount}</span>}</button>)}
     </div>
     {classroom.archived_at != null && <p className="hub-status-banner banner-info" role="status">{t.class_archived_read_only}</p>}
     <div id={'panel-'+tab} role="tabpanel" aria-labelledby={'tab-'+tab}>
