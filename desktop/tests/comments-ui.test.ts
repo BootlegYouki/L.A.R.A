@@ -8,6 +8,18 @@ import CommentThread from '../src/components/CommentThread';
 const account:CachedAccount={hub:{name:'QA',ip:'127.0.0.1',http_port:8080,ws_port:8081},user:{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',lrn_or_id:'synthetic',full_name:'QA',role:'STUDENT'},classrooms:[],persistent:false,expires_at:1};
 const id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';let renderer:ReactTestRenderer;
 afterEach(async()=>{if(renderer)await act(async()=>renderer.unmount());vi.clearAllMocks();vi.unstubAllGlobals()});
+it('keeps Sent on each message without a duplicate success line under the form',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('crypto',{randomUUID:()=>id});
+ const teacher={...account,user:{...account.user,role:'TEACHER' as const}};
+ readThread.mockResolvedValue({write_mode:'online',items:[{id,author_id:teacher.user.id,author_name:'Teacher',content:'Existing reply',created_at:1,sync_status:'SYNCED',sync_reject_reason:null}]});
+ sendComment.mockResolvedValue(null);const changed=vi.fn();
+ await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:account.user.id},offline:false,onChanged:changed}))});
+ await act(async()=>renderer.root.findByType('textarea').props.onChange({target:{value:'New reply'}}));
+ await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ expect(changed).toHaveBeenCalledOnce();
+ expect(renderer.root.findByProps({className:'comment-state'}).children).toEqual(['Sent']);
+ expect(renderer.root.findAll(node=>node.type==='p'&&node.children.includes('Sent'))).toHaveLength(0);
+});
 it('does not carry a private draft or late thread response into another account',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let finish!:(value:unknown)=>void;readThread.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve})).mockResolvedValue({items:[],write_mode:'queue'});
  await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'assignment',id},offline:true,onChanged:vi.fn()}))});

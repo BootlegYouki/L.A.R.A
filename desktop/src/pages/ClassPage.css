@@ -4,6 +4,8 @@
 .class-page .topic-actions { align-self: stretch; align-items: center; }
 .class-page .topic-actions > .classwork-actions { display: block; }
 .class-page .topic-actions summary { padding: 0; }
+.comment-entry-label { display: inline-flex; align-items: baseline; gap: 4px; line-height: inherit; }
+.comment-entry-label .comment-count { font: inherit; font-variant-numeric: tabular-nums; }
 .class-page .class-banner { align-items: center; justify-content: space-between; gap: 24px; }
 .class-banner-owl { flex: 0 0 176px; width: 176px; height: 176px; object-fit: cover; filter: grayscale(1); }
 @media (max-width: 640px) {
