@@ -13,7 +13,7 @@ it('keeps Sent on each message without a duplicate success line under the form',
  const teacher={...account,user:{...account.user,role:'TEACHER' as const}};
  readThread.mockResolvedValue({write_mode:'online',items:[{id,author_id:teacher.user.id,author_name:'Teacher',content:'Existing reply',created_at:1,sync_status:'SYNCED',sync_reject_reason:null}]});
  sendComment.mockResolvedValue(null);const changed=vi.fn();
- await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:account.user.id},offline:false,onChanged:changed}))});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:account.user.id},offline:false,onRefresh:changed}))});
  await act(async()=>renderer.root.findByType('textarea').props.onChange({target:{value:'New reply'}}));
  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
  expect(changed).toHaveBeenCalledOnce();
@@ -22,16 +22,16 @@ it('keeps Sent on each message without a duplicate success line under the form',
 });
 it('does not carry a private draft or late thread response into another account',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let finish!:(value:unknown)=>void;readThread.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve})).mockResolvedValue({items:[],write_mode:'queue'});
- await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'assignment',id},offline:true,onChanged:vi.fn()}))});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'assignment',id},offline:true,onRefresh:vi.fn()}))});
  const next={...account,user:{...account.user,id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc'}};
- await act(async()=>renderer.update(createElement(CommentThread,{account:next,target:{kind:'assignment',id},offline:true,onChanged:vi.fn()})));
+ await act(async()=>renderer.update(createElement(CommentThread,{account:next,target:{kind:'assignment',id},offline:true,onRefresh:vi.fn()})));
  await act(async()=>finish({items:[{id,author_id:account.user.id,author_name:'PRIVATE',content:'PRIVATE CONTENT',created_at:1,sync_status:'SYNCED'}],write_mode:'queue'}));
  expect(JSON.stringify(renderer.toJSON())).not.toContain('PRIVATE CONTENT');
  expect(renderer.root.findByType('textarea').props.value).toBe('');
 });
 it('guards double-submit and reuses the pending UUID after an unconfirmed local save',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('crypto',{randomUUID:()=>id});readThread.mockResolvedValue({items:[],write_mode:'queue'});let fail!:(error:Error)=>void;sendComment.mockImplementationOnce(()=>new Promise((_,reject)=>{fail=reject})).mockResolvedValue({items:[],write_mode:'queue'});
- await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id},offline:true,onChanged:vi.fn()}))});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account,target:{kind:'announcement',id},offline:true,onRefresh:vi.fn()}))});
  await act(async()=>renderer.root.findByType('textarea').props.onChange({target:{value:'Hello'}}));
  await act(async()=>{renderer.root.findByType('form').props.onSubmit({preventDefault:()=>{}});renderer.root.findByType('form').props.onSubmit({preventDefault:()=>{}})});
  expect(sendComment).toHaveBeenCalledTimes(1);await act(async()=>fail(new Error('unknown')));
@@ -40,11 +40,11 @@ it('guards double-submit and reuses the pending UUID after an unconfirmed local 
 });
 it('discards a teacher draft and aborts its request when the private recipient changes',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);readThread.mockResolvedValue({items:[],write_mode:'online'});let finish!:(value:unknown)=>void;sendComment.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}));const changed=vi.fn();const teacher={...account,user:{...account.user,role:'TEACHER' as const}};
- await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc'},offline:false,onChanged:changed}))});
+ await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc'},offline:false,onRefresh:changed}))});
  await act(async()=>renderer.root.findByType('textarea').props.onChange({target:{value:'For first learner'}}));
  await act(async()=>renderer.root.findByType('form').props.onSubmit({preventDefault(){}}));
  const signal=sendComment.mock.calls[0][5] as AbortSignal;
- await act(async()=>renderer.update(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'},offline:false,onChanged:changed})));
+ await act(async()=>renderer.update(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'},offline:false,onRefresh:changed})));
  expect(signal.aborted).toBe(true);expect(renderer.root.findByType('textarea').props.value).toBe('');
  await act(async()=>finish(null));expect(changed).not.toHaveBeenCalled();
 });

@@ -10,7 +10,7 @@ async fn read(db: &mut SqliteConnection, user: &User, assignment_id: &str) -> Re
     account::classes(db, user).await?.into_iter().find(|room| room.id == classroom_id
         && (user.role == Role::TEACHER || room.enrollment_status.as_deref() == Some("ACTIVE")))
         .ok_or("FORBIDDEN")?;
-    let rows = sqlx::query("SELECT id,assignment_id,student_id,submitted_at,received_at,score,teacher_feedback,updated_at,sync_status FROM assignment_submissions WHERE assignment_id=? AND (? OR student_id=?) ORDER BY submitted_at,id")
+    let rows = sqlx::query("SELECT id,assignment_id,student_id,submitted_at,received_at,score,teacher_feedback,updated_at,sync_status,attachments_json FROM assignment_submissions WHERE assignment_id=? AND (? OR student_id=?) ORDER BY submitted_at,id")
         .bind(assignment_id).bind(user.role == Role::TEACHER).bind(&user.id)
         .fetch_all(db).await.map_err(|_| "assignment_unavailable")?;
     Ok(Value::Array(rows.iter().map(|row| json!({
@@ -18,6 +18,7 @@ async fn read(db: &mut SqliteConnection, user: &User, assignment_id: &str) -> Re
         "student_id": row.get::<String,_>("student_id"), "submitted_at": row.get::<i64,_>("submitted_at"),
         "received_at": row.get::<Option<i64>,_>("received_at"), "score": row.get::<Option<i64>,_>("score"),
         "teacher_feedback": row.get::<Option<String>,_>("teacher_feedback"),
+        "attachments": serde_json::from_str::<Value>(&row.get::<String,_>("attachments_json")).unwrap_or(json!([])),
         "updated_at": row.get::<i64,_>("updated_at"), "sync_status": row.get::<String,_>("sync_status")
     })).collect()))
 }
@@ -79,8 +80,9 @@ pub async fn read_gradebook(app:tauri::AppHandle,accounts:tauri::State<'_,Accoun
 }
 
 #[tauri::command]
-pub async fn submission_preview(app: tauri::AppHandle, accounts: tauri::State<'_, Accounts>, hub: HubInfo, user_id: String, submission_id: String, offline: bool) -> Result<Value, String> {
+pub async fn submission_preview(app: tauri::AppHandle, accounts: tauri::State<'_, Accounts>, hub: HubInfo, user_id: String, submission_id: String, offline: bool, attachment_index: Option<u8>) -> Result<Value, String> {
     use futures_util::StreamExt;
+    let index=attachment_index.unwrap_or(0);if index>=5{return Err("invalid_fields".into())}
     account::validate_hub(&hub)?;
     if !account::uuid(&user_id)||!account::uuid(&submission_id){return Err("invalid_fields".into())}
     let user_id=user_id.to_ascii_lowercase();let submission_id=submission_id.to_ascii_lowercase();
@@ -91,24 +93,25 @@ pub async fn submission_preview(app: tauri::AppHandle, accounts: tauri::State<'_
     let assignment:String=sqlx::query_scalar("SELECT assignment_id FROM assignment_submissions WHERE id=?")
         .bind(&submission_id).fetch_optional(&mut db).await.map_err(|_|"assignment_unavailable")?.ok_or("assignment_unavailable")?;
     if !read(&mut db,&profile.user,&assignment).await?.as_array().is_some_and(|rows|rows.iter().any(|row|row["id"]==submission_id)){return Err("FORBIDDEN".into())}
+    let file_id=if index==0{submission_id.clone()}else{format!("{submission_id}-{index}")};
     let directory=root.join("submission-previews").join(account::context(&hub,&user_id));
     std::fs::create_dir_all(&directory).map_err(|_|"file_unavailable")?;
     if offline {
         for (ext,mime) in [("jpg","image/jpeg"),("png","image/png"),("pdf","application/pdf"),("docx","application/vnd.openxmlformats-officedocument.wordprocessingml.document")] {
-            let path=directory.join(format!("{submission_id}.{ext}"));
+            let path=directory.join(format!("{file_id}.{ext}"));
             if path.is_file(){return Ok(json!({"path":path,"mime":mime}))}
         }
         return Err("file_not_saved".into());
     }
     let token=account::secure_token(&app,&accounts,&hub,&user_id).await?.ok_or("UNAUTHORIZED")?;
-    let response=reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).timeout(std::time::Duration::from_secs(180)).build().map_err(|_|"network")?
-        .get(format!("http://{}:{}/api/submissions/{}/file",hub.ip,hub.http_port,submission_id)).bearer_auth(token).send().await.map_err(|_|"network")?;
+    let response=reqwest::Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none()).timeout(std::time::Duration::from_secs(180)).build().map_err(|_|"network")?
+        .get(format!("http://{}:{}/api/submissions/{}/file?attachment={}",hub.ip,hub.http_port,submission_id,index)).bearer_auth(token).send().await.map_err(|_|"network")?;
     if response.status()!=reqwest::StatusCode::OK{return Err(match response.status().as_u16(){401=>"UNAUTHORIZED",403=>"FORBIDDEN",404=>"NOT_FOUND",_=>"network"}.into())}
     let mime=response.headers().get(reqwest::header::CONTENT_TYPE).and_then(|v|v.to_str().ok()).ok_or("invalid_file")?.to_owned();
     let ext=extension(&mime).ok_or("invalid_file")?;
     const MAX:u64=250*1024*1024;
     if response.content_length().is_some_and(|size|size>MAX){return Err("file_too_large".into())}
-    let path=directory.join(format!("{submission_id}.{ext}"));
+    let path=directory.join(format!("{file_id}.{ext}"));
     let temporary=directory.join(format!("{}.part",uuid::Uuid::new_v4()));
     let result=async {
         let mut file=std::fs::File::create(&temporary).map_err(|_|"file_unavailable")?;
@@ -121,17 +124,64 @@ pub async fn submission_preview(app: tauri::AppHandle, accounts: tauri::State<'_
         file.sync_all().map_err(|_|"file_unavailable")?;drop(file);
         accounts.require_sync_selection(&hub,&user_id)?;
         if total==0{return Err("invalid_file")}
-        std::fs::rename(&temporary,&path).map_err(|_|"file_unavailable")?;
+        publish_preview(&temporary,&path).map_err(|_|"file_unavailable")?;
         Ok(json!({"path":path,"mime":mime}))
     }.await;
     if result.is_err(){let _=std::fs::remove_file(&temporary);}
     result.map_err(String::from)
 }
 
+fn publish_preview(temporary:&std::path::Path,path:&std::path::Path)->std::io::Result<()> {
+    std::fs::rename(temporary,path)?;
+    // A replacement may keep its submission ID while changing file format.
+    for ext in ["jpg","png","pdf","docx"] {
+        let old=path.with_extension(ext);
+        if old!=path {let _=std::fs::remove_file(old);}
+    }
+    Ok(())
+}
+
+// Resolve the file again natively: the WebView never supplies a filesystem path.
+#[tauri::command]
+pub async fn export_submission(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,submission_id:String,open:bool,attachment_index:Option<u8>)->Result<String,String>{
+    use tauri::Manager;
+    let cached=submission_preview(app.clone(),accounts,hub,user_id,submission_id.clone(),true,attachment_index).await?;
+    let source=std::path::Path::new(cached["path"].as_str().ok_or("file_unavailable")?);
+    let ext=extension(cached["mime"].as_str().ok_or("invalid_file")?).ok_or("invalid_file")?;
+    let directory=app.path().download_dir().map_err(|_|"file_unavailable")?;
+    std::fs::create_dir_all(&directory).map_err(|_|"file_unavailable")?;
+    let destination=directory.join(format!("submission-{}-{}.{}",submission_id,uuid::Uuid::new_v4(),ext));
+    let mut output=std::fs::OpenOptions::new().write(true).create_new(true).open(&destination).map_err(|_|"file_unavailable")?;
+    let copied=(||{let mut input=std::fs::File::open(source)?;std::io::copy(&mut input,&mut output)?;output.sync_all()})();
+    drop(output);
+    if copied.is_err(){let _=std::fs::remove_file(&destination);return Err("file_unavailable".into())}
+    if open {
+        #[cfg(target_os="windows")]
+        let result=std::process::Command::new("explorer.exe").arg(&destination).spawn();
+        #[cfg(target_os="macos")]
+        let result=std::process::Command::new("open").arg(&destination).spawn();
+        #[cfg(target_os="linux")]
+        let result=std::process::Command::new("xdg-open").arg(&destination).spawn();
+        result.map_err(|_|"file_unavailable")?;
+    }
+    Ok(destination.to_string_lossy().into_owned())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use sqlx::Connection;
+    #[test]
+    fn replacement_exports_current_format_and_failed_fetch_preserves_cached_work() {
+        let root=std::env::temp_dir().join(format!("lara-preview-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let old=root.join("submission.jpg");let new=root.join("submission.pdf");let part=root.join("download.part");
+        std::fs::write(&old,b"old photo").unwrap();
+        assert!(publish_preview(&part,&new).is_err());assert!(old.is_file());
+        std::fs::write(&part,b"%PDF-new work").unwrap();publish_preview(&part,&new).unwrap();
+        assert!(!old.exists());assert_eq!(std::fs::read(&new).unwrap(),b"%PDF-new work");
+        std::fs::remove_file(new).unwrap();std::fs::remove_dir(root).unwrap();
+    }
     #[test]
     fn preview_only_accepts_contract_document_formats() {
         assert_eq!(extension("image/jpeg"),Some("jpg"));

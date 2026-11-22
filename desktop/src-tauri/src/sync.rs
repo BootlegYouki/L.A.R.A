@@ -182,6 +182,7 @@ const ENTITIES: &[Entity] = &[
             ("assignment_id", "uuid!"),
             ("student_id", "uuid!"),
             ("file_type", "IMAGE|DOCUMENT!"),
+            ("attachments", "attachments"),
             ("submitted_at", "int!"),
             ("received_at", "int"),
             ("score", "nullable_int"),
@@ -244,6 +245,7 @@ fn valid(v: &Value, kind: &str) -> bool {
         return v.is_null() || valid(v, inner);
     }
     match kind {
+        "attachments" => v.as_array().is_some_and(|a| a.len()<=5 && a.iter().all(|x| x["name"].as_str().is_some_and(|n| !n.is_empty() && n.len()<=4096) && matches!(x["file_type"].as_str(),Some("IMAGE"|"DOCUMENT")))),
         "uuid" => v.as_str().is_some_and(account::uuid),
         "int" => integer(v),
         "bool" => v.is_boolean(),
@@ -380,6 +382,9 @@ fn normalize(entity: Entity, mut row: Map<String, Value>, user: &User) -> Map<St
             default(&mut row, "updated_at", json!(0));
         }
         "assignment_submissions" => {
+            let attachments=row.remove("attachments").unwrap_or(json!([]));
+            let attachments:Vec<Value>=attachments.as_array().into_iter().flatten().map(|file|json!({"name":file["name"],"file_type":file["file_type"]})).collect();
+            row.insert("attachments_json".into(),json!(serde_json::to_string(&attachments).unwrap()));
             let created = row["submitted_at"].clone();
             default(&mut row, "created_at", created);
             row.insert("sync_status".into(), json!("SYNCED"));
@@ -1311,7 +1316,20 @@ mod tests {
         sqlx::raw_sql(include_str!("../migrations/005_announcement_author.sql")).execute(&mut db).await.unwrap();
         sqlx::raw_sql(include_str!("../migrations/004_audit_created_at.sql"))
             .execute(&mut db).await.unwrap();
+        sqlx::raw_sql(include_str!("../migrations/006_submission_attachments.sql")).execute(&mut db).await.unwrap();
         (db, root)
+    }
+    #[test]
+    fn submission_attachment_metadata_is_bounded_and_discards_wire_paths() {
+        let entity=ENTITIES.iter().find(|e|e.table=="assignment_submissions").unwrap();
+        let mut row=json!({"id":"test","assignment_id":"test","student_id":"test","file_type":"IMAGE","submitted_at":1,"attachments":[{"name":"photo.png","file_type":"IMAGE"},{"name":"work.pdf","file_type":"DOCUMENT","path":"private-server-path"}]});
+        // Validate the new metadata independently of the unrelated required submission fields.
+        assert!(valid(&row["attachments"],"attachments"));
+        let mut metadata=Map::new();metadata.insert("submitted_at".into(),json!(1));metadata.insert("attachments".into(),row["attachments"].clone());
+        let normalized=normalize(*entity,metadata,&user());
+        assert!(normalized["attachments_json"].as_str().unwrap().contains("work.pdf"));
+        assert!(!normalized["attachments_json"].as_str().unwrap().contains("private-server-path"));
+        row["attachments"]=json!([{"name":"x","file_type":"EXECUTABLE"}]);assert!(!valid(&row["attachments"],"attachments"));
     }
     #[tokio::test]
     async fn pull_commits_records_and_integer_cursor_and_rolls_back_failed_page() {

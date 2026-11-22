@@ -3,7 +3,7 @@ const mocks=vi.hoisted(()=>({invoke:vi.fn(),request:vi.fn(),token:vi.fn(),forget
 vi.mock('@tauri-apps/api/core',()=>({invoke:mocks.invoke}));
 vi.mock('../src/services/api',async original=>({...await original<typeof import('../src/services/api')>(),requestHub:mocks.request}));
 vi.mock('../src/services/auth',()=>({accountToken:mocks.token,forgetAccount:mocks.forget}));
-import {observeSync,parseSyncPage} from '../src/services/sync';
+import {observeSync,parseSyncPage,sameAccountSnapshot,pageContentChanged} from '../src/services/sync';
 import {ApiError} from '../src/services/api';
 const hub={name:'Hub',ip:'127.0.0.1',http_port:8080,ws_port:8081};
 const account={hub,user:{id:'11111111-1111-4111-8111-111111111111',full_name:'Teacher',lrn_or_id:'T-0001',role:'TEACHER' as const},persistent:true,expires_at:Date.now()+60000,classrooms:[]};
@@ -39,4 +39,27 @@ it('rejects malformed, regressing and stalled cursors before native apply',()=>{
 });
 it('accepts the contracted opaque Hub identity without requiring a UUID',()=>{
  expect(parseSyncPage({...page(),hub_id:'school-hub-identity'},{cursor:0}).hub_id).toBe('school-hub-identity');
+});
+
+it('awaits committed comment sync without flagging a whole-page content refresh',async()=>{
+ const commit=vi.fn();mocks.request.mockResolvedValue({...page(),users:[{id:account.user.id}],private_comments:[{id:'comment'}]});
+ const sync=observeSync(account,commit,vi.fn());await vi.advanceTimersByTimeAsync(0);commit.mockClear();
+ await sync.refresh();expect(commit).toHaveBeenLastCalledWith(false,true);
+ mocks.request.mockResolvedValue({...page(),assignments:[{id:'assignment'}]});await sync.refresh();expect(commit).toHaveBeenLastCalledWith(true,false);sync.stop();
+});
+it('settles a refresh on stop or backoff instead of leaving thread polling locked',async()=>{
+ const sync=observeSync(account,vi.fn(),vi.fn());await vi.advanceTimersByTimeAsync(0);sync.stop();await expect(sync.refresh()).resolves.toBeUndefined();
+ mocks.request.mockRejectedValue(new ApiError('network'));const failing=observeSync(account,vi.fn(),vi.fn());await vi.advanceTimersByTimeAsync(0);await expect(failing.refresh()).resolves.toBeUndefined();failing.stop();
+});
+
+it('ignores snapshot key ordering but preserves real account and non-comment changes',()=>{
+ const reversed=Object.fromEntries(Object.entries(account).reverse()) as typeof account;
+ expect(sameAccountSnapshot(account,reversed)).toBe(true);
+ const rooms=[{id:'a',name:'First'},{id:'b',name:'Second'}] as import('../src/services/auth').Classroom[];
+ expect(sameAccountSnapshot({...account,classrooms:rooms},{...account,classrooms:[...rooms].reverse()})).toBe(true);
+ expect(sameAccountSnapshot({...account,classrooms:rooms},{...account,classrooms:[rooms[0],{...rooms[1],name:'Renamed'}]})).toBe(false);
+ expect(sameAccountSnapshot(account,{...account,user:{...account.user,full_name:'Renamed'}})).toBe(false);
+ expect(pageContentChanged({...page(),users:[account.user],deleted:[{entity_table:'private_comments'}]})).toBe(false);
+ expect(pageContentChanged({...page(),deleted:[{entity_table:'assignments'}]})).toBe(true);
+ expect(pageContentChanged({...page(),reset:true})).toBe(true);
 });

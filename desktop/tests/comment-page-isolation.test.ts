@@ -1,0 +1,27 @@
+import {createElement} from 'react';
+import {act,create,type ReactTestRenderer} from 'react-test-renderer';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import type {CachedAccount} from '../src/services/auth';
+const {readAssignmentWork,fetchSubmissions,readThread,sendComment}=vi.hoisted(()=>({readAssignmentWork:vi.fn(),fetchSubmissions:vi.fn(),readThread:vi.fn(),sendComment:vi.fn()}));
+vi.mock('../src/services/grading',async original=>({...await original<typeof import('../src/services/grading')>(),readAssignmentWork,fetchSubmissions}));
+vi.mock('../src/services/comments',()=>({readThread,sendComment}));
+vi.mock('../src/components/SubmissionPreview',()=>({default:()=>createElement('div',{'data-testid':'file-preview'},'Existing attachment')}));
+vi.mock('../src/components/HomeworkUpload',()=>({default:()=>null}));
+import AssignmentWork from '../src/components/AssignmentWork';
+const id='11111111-1111-4111-8111-111111111111',learner='22222222-2222-4222-8222-222222222222';
+const room={id,name:'QA',section:'A',class_code:'K7M4QX',teacher_id:id};
+const account:CachedAccount={hub:{ip:'127.0.0.1',name:'Hub',http_port:8080,ws_port:8081},user:{id,role:'TEACHER',full_name:'Teacher',lrn_or_id:'T-1'},expires_at:1,persistent:false,classrooms:[room],rosters:{[id]:[{enrollment_id:learner,student_id:learner,full_name:'Learner',status:'ACTIVE'}]}};
+let tree:ReactTestRenderer;
+beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('document',{visibilityState:'visible'});vi.clearAllMocks();const rows=[{id,assignment_id:id,student_id:learner,submitted_at:1,received_at:1,score:5,teacher_feedback:null,updated_at:1}];readAssignmentWork.mockResolvedValue(rows);fetchSubmissions.mockResolvedValue(rows);readThread.mockResolvedValue({items:[],write_mode:'online'});});
+afterEach(async()=>{if(tree)await act(async()=>tree.unmount());vi.useRealTimers();vi.unstubAllGlobals()});
+it('refreshes private comments without reloading assignment data, files or the parent page',async()=>{
+ const pageChanged=vi.fn(),sync=vi.fn(async()=>{readThread.mockResolvedValue({items:[{id:'comment',author_id:learner,author_name:'Learner',content:'New reply',created_at:1,sync_status:'SYNCED'}],write_mode:'online'})});
+ await act(async()=>{tree=create(createElement(AssignmentWork,{account,classroom:room,assignment:{id,title:'Work',instructions:'Read',max_points:10,due_date:1},offline:false,onBack:vi.fn(),onChanged:pageChanged,onRefreshComments:sync}))});
+ await act(async()=>tree.root.findByProps({className:'work-learner control'}).props.onClick());
+ const file=tree.root.findByProps({'data-testid':'file-preview'});
+ const draft=tree.root.findAllByType('textarea').find(node=>node.props.placeholder==='Add a private comment...')!;
+ await act(async()=>draft.props.onChange({target:{value:'Unsent question'}}));
+ const reads=readAssignmentWork.mock.calls.length,requests=fetchSubmissions.mock.calls.length;
+ for(let i=0;i<3;i++)await act(async()=>{await vi.advanceTimersByTimeAsync(5000)});
+ expect(sync).toHaveBeenCalledTimes(3);expect(readAssignmentWork).toHaveBeenCalledTimes(reads);expect(fetchSubmissions).toHaveBeenCalledTimes(requests);expect(pageChanged).not.toHaveBeenCalled();expect(tree.root.findByProps({'data-testid':'file-preview'})).toBe(file);expect(draft.props.value).toBe('Unsent question');expect(JSON.stringify(tree.toJSON())).toContain('New reply');
+});

@@ -7,9 +7,9 @@ import {parseSubmissions,publishGrade,scoreValue} from '../src/services/grading'
 const id='11111111-1111-4111-8111-111111111111',student='22222222-2222-4222-8222-222222222222';
 const account:CachedAccount={hub:{ip:'127.0.0.1',name:'Hub',http_port:8080,ws_port:8081},user:{id,role:'TEACHER',full_name:'Teacher',lrn_or_id:'T-1'},persistent:true,expires_at:9999999999999,classrooms:[{id,teacher_id:id,name:'Class',section:'A',class_code:'K7M4QX'}]};
 beforeEach(()=>{vi.clearAllMocks();accountToken.mockResolvedValue('token');});
-it('accepts zero, extra credit and safe integers, rejects negative fractional and overflow scores',()=>{
- expect(scoreValue('0')).toBe(0);expect(scoreValue('105')).toBe(105);expect(scoreValue('')).toBe(null);
- for(const v of ['-1','1.5','1e2','9007199254740992']) expect(()=>scoreValue(v)).toThrow();
+it('accepts zero and the exact maximum but rejects above-maximum and invalid scores',()=>{
+ expect(scoreValue('0',100)).toBe(0);expect(scoreValue('100',100)).toBe(100);expect(scoreValue('',100)).toBe(null);
+ for(const v of ['101','-1','1.5','1e2','9007199254740992']) expect(()=>scoreValue(v,100)).toThrow();
 });
 it('rejects a submission from another assignment or duplicate learner',()=>{
  const row={id,assignment_id:id,student_id:student,submitted_at:1,received_at:1,score:0,teacher_feedback:'Good',updated_at:1};
@@ -19,11 +19,21 @@ it('rejects a submission from another assignment or duplicate learner',()=>{
 });
 it('publishes a valid grade through the checked-in route',async()=>{
  requestHub.mockResolvedValue({id,score:0,teacher_feedback:'Good'});
- await publishGrade(account,id,id,0,'Good');
- expect(requestHub).toHaveBeenCalledWith(account.hub,`/api/submissions/${id}`,expect.objectContaining({method:'PATCH',body:{score:0,teacher_feedback:'Good'}}));
+ await publishGrade(account,id,id,0,'Good',100,1);
+ expect(requestHub).toHaveBeenCalledWith(account.hub,`/api/submissions/${id}/grade-edit`,expect.objectContaining({method:'PATCH',body:{score:0,teacher_feedback:'Good',expected_updated_at:1}}));
+});
+it('blocks a score above the assignment maximum before requesting credentials',async()=>{
+ await expect(publishGrade(account,id,id,101,'',100,1)).rejects.toThrow();
+ expect(accountToken).not.toHaveBeenCalled();expect(requestHub).not.toHaveBeenCalled();
 });
 it('blocks learner and archived teacher writes before requesting credentials',async()=>{
- await expect(publishGrade({...account,user:{...account.user,role:'STUDENT'}},id,id,1,'')).rejects.toThrow();
- await expect(publishGrade({...account,classrooms:[{...account.classrooms[0],archived_at:1}]},id,id,1,'')).rejects.toThrow();
+ await expect(publishGrade({...account,user:{...account.user,role:'STUDENT'}},id,id,1,'',100,1)).rejects.toThrow();
+ await expect(publishGrade({...account,classrooms:[{...account.classrooms[0],archived_at:1}]},id,id,1,'',100,1)).rejects.toThrow();
  expect(accountToken).not.toHaveBeenCalled();
+});
+
+it('retains ordered attachment names so a teacher can open a PDF after an image',()=>{
+ const row={id,assignment_id:id,student_id:student,submitted_at:1,received_at:1,score:null,teacher_feedback:null,updated_at:1,attachments:[{name:'photo.png',file_type:'IMAGE'},{name:'work.pdf',file_type:'DOCUMENT'}]};
+ expect(parseSubmissions([row],id)[0].attachments).toEqual(row.attachments);
+ expect(()=>parseSubmissions([{...row,attachments:Array(6).fill(row.attachments[0])}],id)).toThrow();
 });

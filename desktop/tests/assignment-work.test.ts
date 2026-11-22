@@ -19,3 +19,29 @@ it('opens a private thread for a learner without inventing a submission or grade
  expect(tree.root.findAllByType('input').filter(i=>i.props.inputMode==='numeric')).toHaveLength(0);
  await act(async()=>tree.unmount());
 });
+it('shows the assignment score limit and disables an above-maximum grade',async()=>{
+ readAssignmentWork.mockResolvedValue([{id:room,assignment_id:room,student_id:learner,submitted_at:1,received_at:1,score:null,teacher_feedback:null,updated_at:7}]);
+ fetchSubmissions.mockResolvedValue([{id:room,assignment_id:room,student_id:learner,submitted_at:1,received_at:1,score:null,teacher_feedback:null,updated_at:7}]);
+ let tree!:ReactTestRenderer;await act(async()=>{tree=create(createElement(AssignmentWork,{account,classroom,assignment,offline:false,onBack:vi.fn(),onChanged:vi.fn()}))});
+ await act(async()=>{tree.root.findAllByType('button').find(b=>b.props.className==='work-learner control')!.props.onClick()});
+ const score=tree.root.findAllByType('input').find(input=>input.props.inputMode==='numeric')!;
+ expect(score.props.max).toBe(100);expect(tree.root.findAllByType('label').some(label=>label.children.filter(child=>typeof child==='string').join('').includes('0–100'))).toBe(true);
+ await act(async()=>score.props.onChange({target:{value:'101'}}));
+ expect(tree.root.findAllByType('button').find(button=>button.props.className==='control auth-submit')!.props.disabled).toBe(true);
+ expect(publishGrade).not.toHaveBeenCalled();
+ await act(async()=>tree.unmount());
+});
+it('invalidates an unsaved score when the assignment maximum is lowered',async()=>{
+ vi.stubGlobal('window',{addEventListener:vi.fn(),removeEventListener:vi.fn()});
+ const submission={id:room,assignment_id:room,student_id:learner,submitted_at:1,received_at:1,score:null,teacher_feedback:null,updated_at:7};
+ readAssignmentWork.mockResolvedValue([submission]);fetchSubmissions.mockResolvedValue([submission]);
+ let tree!:ReactTestRenderer;await act(async()=>{tree=create(createElement(AssignmentWork,{account,classroom,assignment,offline:false,onBack:vi.fn(),onChanged:vi.fn()}))});
+ await act(async()=>{tree.root.findAllByType('button').find(b=>b.props.className==='work-learner control')!.props.onClick()});
+ const score=tree.root.findAllByType('input').find(input=>input.props.inputMode==='numeric')!;
+ await act(async()=>score.props.onChange({target:{value:'95'}}));
+ expect(tree.root.findAllByType('button').find(button=>button.props.className==='control auth-submit')!.props.disabled).toBe(false);
+ await act(async()=>tree.update(createElement(AssignmentWork,{account,classroom,assignment:{...assignment,max_points:90},offline:false,onBack:vi.fn(),onChanged:vi.fn()})));
+ expect(tree.root.findAllByType('button').find(button=>button.props.className==='control auth-submit')!.props.disabled).toBe(true);
+ expect(publishGrade).not.toHaveBeenCalled();
+ await act(async()=>tree.unmount());
+});

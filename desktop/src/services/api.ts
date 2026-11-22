@@ -6,7 +6,7 @@ export class ApiError extends Error {
   constructor(public code: string, public retryAfter = 0) { super(code); }
 }
 
-type AccountPath = `/api/announcements/${string}` | `/api/assignments/${string}/private-comments` | `/api/assignments/${string}/submissions` | `/api/submissions/${string}` | '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
+type AccountPath = `/api/announcements/${string}` | `/api/assignments/${string}/private-comments` | `/api/assignments/${string}/submissions` | `/api/submissions/${string}/grade-edit` | '/api/auth/login' | '/api/auth/register' | '/api/auth/logout' | '/api/classrooms' | '/api/classrooms/join' | '/api/sync/pull' | '/api/sync/push'
   | '/api/announcements' | '/api/assignments' | '/api/topics' | '/api/materials' | '/api/quizzes'
   | `/api/assignments/${string}` | `/api/materials/${string}` | `/api/topics/${string}`
   | `/api/classrooms/${string}` | `/api/classrooms/${string}/roster` | `/api/classrooms/${string}/approve` | `/api/classrooms/${string}/reject` | `/api/classrooms/${string}/remove`;
@@ -17,7 +17,7 @@ export type AuthoringBody = {classroom_id: string; title: string; content: strin
   | {classroom_id: string; name: string}
   | {classroom_id: string; title: string; instructions?: string; time_limit_minutes: number; shuffle_questions?: boolean; release_scores_immediately?: boolean; topic_id?: string | null; questions: {id: string; order_index: number; question_text: string; question_type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION'; options: string[]; points: number; image_url?: string; correct_answer: string; synonyms?: string[]}[]};
 export async function requestHub(hub: HubInfo, path: AccountPath, options: {
-  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush | {content:string;student_id:string} | {score:number;teacher_feedback:string} | ClassworkMutationBody | AuthoringBody; form?: FormData; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE' | 'PUT';
+  body?: { lrn_or_id: string; pin: string; full_name?: string } | { class_code: string } | ClassroomChange | { lrn_or_id: string } | { student_id: string } | SyncState | SyncPush | {content:string;student_id:string} | {score:number;teacher_feedback:string;expected_updated_at:number} | ClassworkMutationBody | AuthoringBody; form?: FormData; token?: string; signal?: AbortSignal; method?: 'PATCH' | 'DELETE' | 'PUT';
 } = {}): Promise<unknown> {
   if (options.signal?.aborted) throw new ApiError('cancelled');
   if (!isHubInfo(hub)) throw new ApiError('network');
@@ -29,12 +29,12 @@ export async function requestHub(hub: HubInfo, path: AccountPath, options: {
   const createRoute = ['/api/announcements', '/api/assignments', '/api/topics', '/api/quizzes'].includes(path);
   const privateRoute=new RegExp('^/api/assignments/'+classroomId+'/private-comments$','i');
   const submissionsRoute=new RegExp('^/api/assignments/'+classroomId+'/submissions$','i');
-  const gradeRoute=new RegExp('^/api/submissions/'+classroomId+'$','i');
+  const gradeRoute=new RegExp('^/api/submissions/'+classroomId+'/grade-edit$','i');
   const allowed = options.form ? path === '/api/materials' && !options.body && !options.method
     : path === '/api/materials' ? false
     : privateRoute.test(path) ? !options.method && !!options.body && 'content' in options.body && 'student_id' in options.body
     : submissionsRoute.test(path) ? !options.method && !options.body
-    : gradeRoute.test(path) ? options.method==='PATCH' && !!options.body && 'score' in options.body && 'teacher_feedback' in options.body
+    : gradeRoute.test(path) ? options.method==='PATCH' && !!options.body && 'score' in options.body && 'teacher_feedback' in options.body && 'expected_updated_at' in options.body
     : createRoute ? !!options.body && !options.method
     : options.method === 'PATCH' ? classRoute.test(path)||itemRoute.test(path)
     : options.method === 'DELETE' ? teacherRoute.test(path)||itemRoute.test(path)
