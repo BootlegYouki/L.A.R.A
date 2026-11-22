@@ -649,6 +649,8 @@ async fn metadata(
             requests.push(account::JoinReceipt {
                 classroom_id: cid.clone(),
                 status: status.clone(),
+                section: None,
+                teacher_name: None,
             });
         }
     }

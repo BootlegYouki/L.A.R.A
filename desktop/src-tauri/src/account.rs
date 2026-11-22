@@ -48,6 +48,10 @@ pub struct Classroom {
 pub struct JoinReceipt {
     pub classroom_id: String,
     pub status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub section: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub teacher_name: Option<String>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct RosterEntry {
@@ -376,6 +380,8 @@ async fn join_requests(db: &mut SqliteConnection) -> Result<Vec<JoinReceipt>, &'
 fn validate_receipt(user: &User, receipt: &JoinReceipt) -> Result<(), &'static str> {
     if user.role != Role::STUDENT
         || !uuid(&receipt.classroom_id)
+        || receipt.section.as_ref().is_some_and(|s| s.chars().any(char::is_control))
+        || receipt.teacher_name.as_ref().is_some_and(|s| !text(s, 100))
         || !matches!(
             receipt.status.as_str(),
             "PENDING" | "ACTIVE" | "REJECTED" | "REMOVED"
@@ -388,11 +394,15 @@ fn validate_receipt(user: &User, receipt: &JoinReceipt) -> Result<(), &'static s
 async fn save_receipt(
     db: &mut SqliteConnection,
     user: &User,
-    receipt: JoinReceipt,
+    mut receipt: JoinReceipt,
 ) -> Result<(), &'static str> {
     validate_receipt(user, &receipt)?;
     let mut tx = db.begin().await.map_err(|_| ERROR)?;
     let mut receipts = join_requests(&mut tx).await?;
+    if let Some(previous) = receipts.iter().find(|r| r.classroom_id == receipt.classroom_id) {
+        if receipt.section.is_none() { receipt.section = previous.section.clone(); }
+        if receipt.teacher_name.is_none() { receipt.teacher_name = previous.teacher_name.clone(); }
+    }
     receipts.retain(|r| r.classroom_id != receipt.classroom_id);
     if receipt.status != "ACTIVE" {
         let mut statuses: HashMap<String, String> =
@@ -1186,7 +1196,9 @@ mod tests {
             &user(),
             JoinReceipt {
                 classroom_id: CLASS.into(),
-                status: "REMOVED".into()
+                status: "REMOVED".into(),
+                section: None,
+                teacher_name: None,
             }
         )
         .await
@@ -1198,6 +1210,29 @@ mod tests {
                 .as_deref(),
             Some("ACTIVE")
         );
+        db.close().await.unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[tokio::test]
+    async fn join_details_survive_restart_and_status_only_updates() {
+        let root = temporary();
+        let key = context(&hub(), STUDENT);
+        let mut db = database(&root, &key).await.unwrap();
+        let receipt: JoinReceipt = serde_json::from_value(serde_json::json!({
+            "classroom_id": CLASS, "status": "PENDING", "section": "Grade 4A", "teacher_name": "Ms. Rivera"
+        })).unwrap();
+        save_receipt(&mut db, &user(), receipt).await.unwrap();
+        db.close().await.unwrap();
+        let mut db = database(&root, &key).await.unwrap();
+        let cached = serde_json::to_value(&join_requests(&mut db).await.unwrap()[0]).unwrap();
+        assert_eq!(cached["section"], "Grade 4A");
+        assert_eq!(cached["teacher_name"], "Ms. Rivera");
+        let status_only: JoinReceipt = serde_json::from_value(serde_json::json!({"classroom_id": CLASS, "status": "REJECTED"})).unwrap();
+        save_receipt(&mut db, &user(), status_only).await.unwrap();
+        let updated = serde_json::to_value(&join_requests(&mut db).await.unwrap()[0]).unwrap();
+        assert_eq!(updated["teacher_name"], "Ms. Rivera");
+        assert_eq!(updated["section"], "Grade 4A");
+        assert_eq!(updated["status"], "REJECTED");
         db.close().await.unwrap();
         std::fs::remove_dir_all(root).unwrap();
     }
@@ -1215,6 +1250,8 @@ mod tests {
                 JoinReceipt {
                     classroom_id: CLASS.into(),
                     status: status.into(),
+                    section: None,
+                    teacher_name: None,
                 },
             )
             .await
@@ -1230,6 +1267,8 @@ mod tests {
             JoinReceipt {
                 classroom_id: CLASS.into(),
                 status: "ACTIVE".into(),
+                section: None,
+                teacher_name: None,
             },
         )
         .await
@@ -1248,6 +1287,8 @@ mod tests {
             JoinReceipt {
                 classroom_id: CLASS.into(),
                 status: "REMOVED".into(),
+                section: None,
+                teacher_name: None,
             },
         )
         .await
@@ -1287,7 +1328,9 @@ mod tests {
             &teacher,
             JoinReceipt {
                 classroom_id: CLASS.into(),
-                status: "ACTIVE".into()
+                status: "ACTIVE".into(),
+                section: None,
+                teacher_name: None,
             }
         )
         .await
@@ -1297,7 +1340,9 @@ mod tests {
             &user(),
             JoinReceipt {
                 classroom_id: "bad".into(),
-                status: "ACTIVE".into()
+                status: "ACTIVE".into(),
+                section: None,
+                teacher_name: None,
             }
         )
         .await
@@ -1307,7 +1352,9 @@ mod tests {
             &user(),
             JoinReceipt {
                 classroom_id: CLASS.into(),
-                status: "bad".into()
+                status: "bad".into(),
+                section: None,
+                teacher_name: None,
             }
         )
         .await
