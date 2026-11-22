@@ -24,18 +24,18 @@ The logs describe backend operations, including those initiated by mobile/deskto
 | Restart | Mark `clean_shutdown=0` before serving; if already dirty emit UNCLEAN_RESTART. Flush HUB_STOPPING and set clean only after successful drain within 2 seconds | Shutdown is best-effort; power loss cannot create a guaranteed shutdown entry. Startup marker failure leaves the recorder degraded and other features usable |
 | Restore | Regenerate `history_id` whenever the database is initialized or restored; stale read cursors get 409 ACTIVITY_LOG_RESET | Sequence values can repeat after a restore; clients must reset history pages, not merge different generations |
 
-These numerical safety limits are proposals, not silently accepted product requirements. Consuming-team reviewers can request changes before promotion, with the acceptance tests/spec updated together. No success/error entry contains a subject name, account/resource ID, filename, raw exception message, IP address or request URL.
+These numerical safety limits are proposals, not silently accepted product requirements. Consuming-team reviewers can request changes before promotion, with the acceptance tests/spec updated together. No entry contains a subject name, account/resource ID, filename, raw exception message, IP address or raw request URL. HTTP_REQUEST uses only approved endpoint templates.
 
 ## Safe entry and event catalog
 
-The Activity schemas in `openapi.yaml` allows only sequence/time, catalog code, severity/result, service and numeric/enum details. No arbitrary `message`, `summary`, `context` or free-form JSON field exists. The UI maps catalog values to English dictionary text; expandable details map reason codes to dictionary wording and show approved counts/durations. Do not serialize Rust errors, tracing fields, headers or request bodies into the entry.
+The Activity schemas in `openapi.yaml` allows only sequence/time, catalog code, severity/result, service and numeric/enum details. HTTP_REQUEST additionally permits an allowlisted http_method, endpoint template and numeric status_code in details. No arbitrary `message`, `summary`, `context` or free-form JSON field exists. The UI maps catalog values to English dictionary text; expandable details map reason codes to dictionary wording and show approved counts/durations. Do not serialize Rust errors, tracing fields, headers or request bodies into the entry.
 
 | Event codes | When recorded | Default severity / result |
 |---|---|---|
 | HUB_STARTED | Listeners are bound and the Hub is serving | INFO / SUCCEEDED |
 | HUB_STOPPING | A clean shutdown begins, before bounded drain | INFO / SUCCEEDED (stopping began; does not claim shutdown completed) |
 | UNCLEAN_RESTART | A previous recorder lifecycle marker was dirty | WARNING / DEGRADED |
-| SERVICE_UNAVAILABLE, CONNECTION_PROBLEM | A known service stops responding or a connection subsystem fails; no per-request traffic logging | ERROR / FAILED, or WARNING / DEGRADED if other services continue |
+| SERVICE_UNAVAILABLE, CONNECTION_PROBLEM | A known service stops responding or a connection subsystem fails; request outcomes are recorded separately as HTTP_REQUEST | ERROR / FAILED, or WARNING / DEGRADED if other services continue |
 | SERVICE_RECOVERED | Previously impaired service becomes usable | INFO / SUCCEEDED |
 | DOCUMENT_UPLOADED, DOCUMENT_PROCESSED | Upload committed / extraction completed with text; item_count may contain chunk count | INFO / SUCCEEDED |
 | DOCUMENT_UPLOAD_FAILED, DOCUMENT_PROCESSING_FAILED | Actual upload failure / no extracted lesson text (including scans and extraction timeout); uploading can still succeed | ERROR / FAILED for upload; WARNING / DEGRADED for extraction |
@@ -45,7 +45,7 @@ The Activity schemas in `openapi.yaml` allows only sequence/time, catalog code, 
 | ACCOUNT_CREATE_FAILED, PIN_RESET_FAILED | Authorized operation failed; no input values retained | WARNING / FAILED; ERROR / FAILED for service failures |
 | LOG_GAP | Recorder recovers enough to report dropped/suppressed entries | WARNING / DEGRADED; reason QUEUE_FULL, WRITE_FAILED or REPEATED_EVENT |
 
-Only authenticated authorized business handlers emit account/quiz outcome entries. Do not log every unauthenticated probe or rejected credential. Emit committed success events after the transaction commits; never report a rolled-back operation as successful. Best-effort enqueue may lose an otherwise committed success, and gaps must be visible. The event tables have no user/graded-row foreign keys, actor fields or client sync revisions.
+Only authenticated authorized business handlers emit account/quiz outcome entries. HTTP_REQUEST records rejected authentication/authorization without recording credentials or actor information. Emit committed success events after the transaction commits; never report a rolled-back operation as successful. Best-effort enqueue may lose an otherwise committed success, and gaps must be visible. The event tables have no user/graded-row foreign keys, actor fields or client sync revisions.
 
 SQL `reason`, `item_count` and `duration_ms` columns map to non-null optional members of `details`. Absent values are omitted, not null. Reason details are allowlisted in SQL and JSON Schema. `recording_state` is runtime health, not a promise that historical capture was complete. A successful read can return stored rows while the recorder is DEGRADED or UNAVAILABLE; an unreadable history database answers safe 503 ACTIVITY_LOG_UNAVAILABLE. Metadata counter values saturate at the maximum JSON-safe integer rather than overflowing.
 
@@ -62,7 +62,7 @@ Each read is a short consistent SQLite read transaction. Let H be the highest ev
 
 Example: last refresh H=100, new H=350, limit=100. Catch-up returns 200..101 (next_after_seq=200), then 300..201 (next_after_seq=300), then 350..301 (null), all against snapshot_seq=350. Only then advance the refresh watermark to 350. New arrivals 351+ belong to the next refresh. If the filter matches nothing, return empty entries and advance to H after that successful request.
 
-Filters: from_time inclusive, to_time exclusive, and from_time < to_time. All filters combine with AND. Trim q, replace underscores with spaces and case-fold; match it literally as a substring over the concatenated catalog event/service/result/reason words, with their underscores replaced by spaces. No SQL wildcard interpretation and no search over private/raw payloads; bind all values. Empty q means no text filter. Date and sequence timestamps remain epoch milliseconds; the UI converts local date boundaries to epoch milliseconds and labels displayed local times.
+Filters: from_time inclusive, to_time exclusive, and from_time < to_time. All filters combine with AND. Trim q, replace underscores with spaces and case-fold; match it literally as a substring over the concatenated catalog event/service/result/reason words and approved HTTP method/endpoint/status details, with their underscores replaced by spaces. No SQL wildcard interpretation and no search over private/raw payloads; bind all values. Empty q means no text filter. Date and sequence timestamps remain epoch milliseconds; the UI converts local date boundaries to epoch milliseconds and labels displayed local times.
 
 Return Cache-Control: no-store. No browser persistent storage for the bearer, rows or filters containing user input. No activity table/state in delta-sync, client schemas, exports or learner/teacher responses. Existing backup/restore work must preserve safe history or explicitly reset it with a new history_id; never reuse pre-restore cursors.
 
@@ -73,3 +73,32 @@ The authoritative route and DTOs are in `openapi.yaml`; both private table defin
 Current staging still requires simulator parity, so this contract PR supplies a bounded in-memory route reference and tests in the existing simulator. It creates no new simulator dependency for the Rust Hub or server tests. Coordinate the small reference route/test with #344 when that simulator is removed; do not weaken current coverage. The simulator does not prove durable recording or implement the production recorder.
 
 No server migration/runtime/UI code is included in this contract change. Runtime parity/route-registration tests will need the #368 implementation after contract merge; do not advertise the new API as available in a deployed Hub. The original draft artifacts are retained under `proposals/367/` for provenance; this document and canonical OpenAPI/SQL take precedence.
+
+## HTTP request activity (user-approved extension)
+
+Record every HTTP request except `/api/admin/activity-logs` and GET/OPTIONS `/api/admin/users` when response headers become available, including public
+portal/assets, successful writes/reads, rejected authentication, validation errors,
+unknown routes, unsupported methods and CORS preflight. Requests to the activity
+history endpoint are excluded for every method/status to prevent viewer feedback.
+Reads also omit pre-existing HTTP_REQUEST rows for that endpoint, without deleting
+stored history or changing sequence/high-water semantics. GET/OPTIONS `/api/admin/users`
+is also excluded for every status, and its pre-existing request entries are hidden
+from reads. OPTIONS is the browser preflight accompanying account polling. Account
+polling is unchanged. POST `/api/admin/users`, PIN resets and
+other methods/endpoints continue to be recorded.
+This covers the REST/portal listener; WebSocket frames on port 8081 are not HTTP
+endpoint requests and retain their existing operational events.
+
+Use HTTP_REQUEST with service HTTP. Details contain http_method (the fixed enum,
+OTHER for unfamiliar methods), endpoint (a registered template or UNMATCHED),
+status_code (100–599) and duration_ms (time to response headers, bounded as before).
+Never retain actual path parameters, raw paths/query strings, headers, bodies or
+response contents. Only catalog endpoint templates may cross the logger boundary.
+For HTTP_REQUEST, 400–499 means WARNING/FAILED, 500–599 ERROR/FAILED and other
+statuses INFO/SUCCEEDED. Existing business outcome events are unchanged.
+
+HTTP_REQUEST bypasses repeated-error suppression so separate requests remain
+separate entries. Queue overflow/write failures still produce visible gaps under
+the existing best-effort guarantees. Polling history does not create request events;
+pausing only stops display polling. Existing retention/row limits still apply.
+New migration preserves events, sequence high-water mark and history identity.
