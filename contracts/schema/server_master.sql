@@ -390,6 +390,7 @@ CREATE TABLE hub_activity_events (
         '/api/restore',
         '/api/submissions/{id}',
         '/api/submissions/{id}/file',
+        '/api/submissions/{id}/grade-edit',
         '/api/sync/pull',
         '/api/sync/push',
         '/api/topics',
