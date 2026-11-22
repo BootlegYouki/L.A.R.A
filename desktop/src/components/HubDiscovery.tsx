@@ -11,7 +11,7 @@ export default function HubDiscovery({ t, hubs, failed, searching }: { t: Dictio
     <p>{t.discovery_help}</p>
     <div role="status">
       {failed ? <p><i className="ph ph-warning-circle" aria-hidden="true" /> {t.discovery_error}</p>
-        : hubs.length === 0 && searching ? <div role="status" aria-label={t.discovery_loading} className="skeleton hub-skeleton" /> : hubs.length === 0 ? <p>{t.discovery_empty}</p> : <ul className="hub-list">{hubs.map((hub) => {
+        : hubs.length === 0 && searching ? <div role="status" aria-label={t.discovery_loading} className="skeleton hub-skeleton" /> : hubs.length === 0 ? <p className="discovery-empty">{t.discovery_empty}</p> : <ul className="hub-list">{hubs.map((hub) => {
           const endpoint = `${hub.ip}:${hub.http_port}`;
           return <li key={endpoint}><div><strong>{hub.name}</strong><p>{endpoint}</p></div>
             <button type="button" className="control tonal-button" aria-label={`${t.select_address}: ${hub.name}`} onClick={() => { setAddress(endpoint); setInvalid(false); setSelected(endpoint); }}>{t.select_address}</button></li>;

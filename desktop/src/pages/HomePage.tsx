@@ -1,7 +1,9 @@
 import { t } from '../i18n';
-import type { AuthUser, Classroom } from '../services/auth';
+import type { AuthUser, Classroom, JoinReceipt } from '../services/auth';
 import ClassroomCard from '../components/ClassroomCard';
-interface JoinRequest { classroom_id: string; status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REMOVED' }
+import OwlEmptyState from '../components/OwlEmptyState';
+import homeOwl from '../assets/owls/owl-01.webp';
+type JoinRequest = JoinReceipt;
 interface Props { user: AuthUser; classrooms: Classroom[]; loading: boolean; error: string | null; retryAfter?: number; onRetry: () => void; onOpen: (id: string) => void; joinRequests?: JoinRequest[]; onJoin?: () => void; onCreate?: () => void; offline?: boolean; }
 export default function HomePage({ user, classrooms, loading, error, retryAfter = 0, onRetry, onOpen, joinRequests = [], onJoin, onCreate }: Props) {
   const teacher = user.role === 'TEACHER';
@@ -11,13 +13,15 @@ export default function HomePage({ user, classrooms, loading, error, retryAfter 
   const hasCards = active.length > 0 || receipts.length > 0;
   
   function statusCard(id: string, status: JoinRequest['status'], classroom?: Classroom) {
+    const receipt = joinRequests.find(request => request.classroom_id === id);
+    const section = classroom?.section ?? receipt?.section;
     const title = status === 'REJECTED' ? t.join_rejected : status === 'REMOVED' ? t.join_removed : status === 'ACTIVE' ? t.join_waiting_details : t.join_pending;
     const body = status === 'REJECTED' ? t.join_rejected_body : status === 'REMOVED' ? t.join_removed_body : status === 'ACTIVE' ? t.join_waiting_details_body : t.join_pending_body;
-    return <section key={id} className="class-card join-status-card"><span className="class-icon"><i className="ph ph-hourglass" aria-hidden="true" /></span><h2>{classroom?.name ?? t.join_request_title}</h2>{classroom && <p>{classroom.section}</p>}<span className="class-details-status">{title}</span><p>{body}</p></section>;
+    return <section key={id} className="class-card join-status-card"><span className="class-icon"><i className="ph ph-hourglass" aria-hidden="true" /></span><h2>{classroom?.name ?? t.join_request_title}</h2>{section && <p>{section}</p>}{receipt?.teacher_name && <p>{receipt.teacher_name}</p>}<span className="class-details-status">{title}</span><p>{body}</p></section>;
   }
   return <div className="home-page">
     <div className="classes-heading"><h1>{t.classes_title}</h1><button type="button" className="control text-button" disabled={teacher ? !onCreate : !onJoin} onClick={teacher ? onCreate : onJoin}><i className="ph ph-plus" aria-hidden="true" />{action}</button></div>
     {error && <section className="database-error" role="alert"><h2><i className="ph ph-warning-circle" aria-hidden="true" />{t.classes_error_title}</h2><p>{error}</p>{retryAfter > 0 && <p role="status">{t.auth_retry_after.replace('{seconds}', String(retryAfter))}</p>}<button type="button" className="control tonal-button" disabled={loading || retryAfter > 0} onClick={onRetry}>{t.retry}</button></section>}
-    {hasCards ? <><div className="class-grid">{active.map((classroom) => teacher || classroom.enrollment_status === 'ACTIVE' ? <ClassroomCard key={classroom.id} classroom={classroom} onOpen={onOpen} /> : statusCard(classroom.id, classroom.enrollment_status ?? 'PENDING', classroom))}{receipts.map((request) => statusCard(request.classroom_id, request.status))}</div>{loading && <p role="status" className="refresh-status">{t.classes_refreshing}</p>}</> : loading ? <div role="status" aria-label={t.loading} className="class-grid">{[0, 1, 2].map((key) => <div key={key} className="skeleton class-skeleton" />)}</div> : !error && <section className="empty-state"><span className="empty-art"><i className="ph ph-graduation-cap" aria-hidden="true" /></span><div><h2>{t.empty_title}</h2><p>{teacher ? t.teacher_empty_body : t.learner_empty_body}</p><button type="button" className="control tonal-button" disabled={teacher ? !onCreate : !onJoin} onClick={teacher ? onCreate : onJoin}><i className="ph ph-plus" aria-hidden="true" />{action}</button></div></section>}
+    {hasCards ? <><div className="class-grid">{active.map((classroom) => teacher || classroom.enrollment_status === 'ACTIVE' ? <ClassroomCard key={classroom.id} classroom={classroom} onOpen={onOpen} /> : statusCard(classroom.id, classroom.enrollment_status ?? 'PENDING', classroom))}{receipts.map((request) => statusCard(request.classroom_id, request.status))}</div>{loading && <p role="status" className="refresh-status">{t.classes_refreshing}</p>}</> : loading ? <div role="status" aria-label={t.loading} className="class-grid">{[0, 1, 2].map((key) => <div key={key} className="skeleton class-skeleton" />)}</div> : !error && <OwlEmptyState variant="home" image={homeOwl} title={t.empty_title} body={teacher ? t.teacher_empty_body : t.learner_empty_body}><button type="button" className="control tonal-button" disabled={teacher ? !onCreate : !onJoin} onClick={teacher ? onCreate : onJoin}><i className="ph ph-plus" aria-hidden="true" />{action}</button></OwlEmptyState>}
   </div>;
 }

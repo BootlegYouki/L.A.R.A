@@ -11,6 +11,7 @@ const migration = readFileSync(new URL('../src-tauri/migrations/001_client_offli
 const upgrade = readFileSync(new URL('../src-tauri/migrations/002_sync_rejections.sql', import.meta.url), 'utf8');
 const receiptMigration = readFileSync(new URL('../src-tauri/migrations/003_submission_received_at.sql', import.meta.url), 'utf8');
 const auditMigration = readFileSync(new URL('../src-tauri/migrations/004_audit_created_at.sql', import.meta.url), 'utf8');
+const authorMigration = readFileSync(new URL('../src-tauri/migrations/005_announcement_author.sql', import.meta.url), 'utf8');
 const contract = readFileSync(new URL('../../contracts/schema/client_offline.sql', import.meta.url), 'utf8');
 
 describe('client database', () => {
@@ -34,6 +35,7 @@ describe('client database', () => {
       db.exec(upgrade);
       db.exec(receiptMigration);
       db.exec(auditMigration);
+      db.exec(authorMigration);
       db.exec('PRAGMA user_version = 4');
     }
     return db;
@@ -59,7 +61,7 @@ describe('client database', () => {
     first.exec(`
       INSERT INTO classrooms (id, name, section, class_code, teacher_id, created_at, updated_at)
       VALUES ('class-1', 'Science', 'A', 'K7M4QX', 'teacher-1', 1, 1);
-      INSERT INTO announcements VALUES ('post-1', 'class-1', 'Lesson', 'Read', 1, 1, 1);
+      INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES ('post-1', 'class-1', 'Lesson', 'Read', 1, 1, 1);
       INSERT INTO announcement_comments (id, announcement_id, author_id, content, created_at, updated_at, sync_status) VALUES ('comment-1', 'post-1', 'learner-1', 'Question', 1, 1, 'QUEUED_FOR_SYNC');
     `);
     first.close();
@@ -103,7 +105,7 @@ it('upgrades queued rows without clearing them and stores contracted rejection r
     local.exec('PRAGMA foreign_keys = ON');
     local.exec(migration);
     local.exec("INSERT INTO classrooms (id,name,section,class_code,teacher_id,created_at,updated_at) VALUES ('c','Class','A','ABC234','t',1,1)");
-    local.exec("INSERT INTO announcements VALUES ('p','c','Title','Body',1,1,1)");
+    local.exec("INSERT INTO announcements(id,classroom_id,title,content,allow_comments,created_at,updated_at) VALUES ('p','c','Title','Body',1,1,1)");
     local.exec("INSERT INTO announcement_comments VALUES ('q','p','u','Keep this',1,1,'QUEUED_FOR_SYNC')");
     local.exec("INSERT INTO assignments (id,classroom_id,title,due_date,created_at,updated_at) VALUES ('a','c','Work',2,1,1)");
     local.exec("INSERT INTO assignment_submissions (id,assignment_id,student_id,file_path,submitted_at,updated_at) VALUES ('s','a','u','photo.jpg',1,1)");

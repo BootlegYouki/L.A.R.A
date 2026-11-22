@@ -3,10 +3,17 @@ const { fetch, invoke } = vi.hoisted(() => ({ fetch: vi.fn(), invoke: vi.fn() })
 vi.mock('@tauri-apps/plugin-http', () => ({ fetch }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
 import { joinClass } from '../src/services/classrooms';
+import {parseJoinReceipt} from '../src/services/auth';
 const hub = { name: 'Hub', ip: '127.0.0.1', http_port: 8080, ws_port: 8081 };
 const id = '11111111-1111-4111-8111-111111111111';
 const account = { hub, user: { id, lrn_or_id: 'synthetic', full_name: 'Test', role: 'STUDENT' as const }, expires_at: Date.now()+60000, persistent:true, classrooms:[] };
-const receipt = {classroom_id:'22222222-2222-4222-8222-222222222222',status:'PENDING'};
+const receipt = {classroom_id:'22222222-2222-4222-8222-222222222222',status:'PENDING',section:'Grade 4A',teacher_name:'Ms. Rivera'};
+it('retains legacy receipts and validates display details when supplied',()=>{
+ const legacy={classroom_id:receipt.classroom_id,status:receipt.status};
+ expect(parseJoinReceipt(legacy)).toEqual(legacy);
+ expect(parseJoinReceipt({...receipt,section:'',teacher_lrn:'never-cache'})).toEqual({...receipt,section:''});
+ for(const details of [{section:12},{section:'A\nB'},{teacher_name:null},{teacher_name:''},{teacher_name:'x'.repeat(101)},{teacher_name:'Teacher\u0000'}]) expect(()=>parseJoinReceipt({...receipt,...details})).toThrow();
+});
 afterEach(()=>vi.clearAllMocks());
 it('posts a normalized code once and persists the exact receipt without inventing enrollment metadata',async()=>{
  invoke.mockResolvedValueOnce('test-token').mockResolvedValueOnce({...account,join_requests:[receipt]});

@@ -1,3 +1,4 @@
+import {clearMediaCache} from './mediaCache';
 import { invoke } from '@tauri-apps/api/core';
 import { ApiError, requestHub } from './api';
 import { isHubInfo, type HubInfo } from './discovery';
@@ -10,7 +11,7 @@ export interface Classroom {
   co_teacher_ids?: string[]; archived_at?: number | null;
   enrollment_status?: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'REMOVED';
 }
-export interface JoinReceipt { classroom_id: string; status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REMOVED' }
+export interface JoinReceipt { classroom_id: string; status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REMOVED'; section?: string; teacher_name?: string }
 export interface RosterEntry { enrollment_id: string; student_id: string; full_name: string; status: JoinReceipt['status']; joined_at?: number }
 export const hasControlCharacters = (value: string) => [...value].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
 export interface CachedAccount { hub: HubInfo; user: AuthUser; expires_at: number; persistent: boolean; classrooms: Classroom[]; join_requests?: JoinReceipt[]; rosters?: Record<string, RosterEntry[]> }
@@ -52,7 +53,11 @@ export function parseClassrooms(value: unknown): Classroom[] {
 }
 export function parseJoinReceipt(value: unknown): JoinReceipt {
   if (!object(value) || !uuid(value.classroom_id) || !['PENDING', 'ACTIVE', 'REJECTED', 'REMOVED'].includes(String(value.status))) throw new ApiError('invalid_response');
-  return { classroom_id: value.classroom_id, status: value.status as JoinReceipt['status'] };
+  if (value.section !== undefined && (typeof value.section !== 'string' || hasControlCharacters(value.section))) throw new ApiError('invalid_response');
+  if (value.teacher_name !== undefined && (typeof value.teacher_name !== 'string' || !value.teacher_name.trim() || [...value.teacher_name].length > 100 || hasControlCharacters(value.teacher_name))) throw new ApiError('invalid_response');
+  return { classroom_id: value.classroom_id, status: value.status as JoinReceipt['status'],
+    ...(typeof value.section === 'string' ? {section:value.section} : {}),
+    ...(typeof value.teacher_name === 'string' ? {teacher_name:value.teacher_name} : {}) };
 }
 export function parseRoster(value: unknown): RosterEntry[] {
   if (!Array.isArray(value) || value.length > 10000) throw new ApiError('invalid_response');
@@ -79,7 +84,7 @@ export function parseAccount(value: unknown, hub: HubInfo): CachedAccount {
       && (c.teacher_id === user.id || c.co_teacher_ids?.includes(user.id)))).map(([id, rows]) => [id, parseRoster(rows)]));
   }
   return { hub, user, expires_at: Number(value.expires_at), persistent: value.persistent, classrooms,
-    ...(Array.isArray(value.join_requests) ? { join_requests: value.join_requests.map(parseJoinReceipt) } : {}), ...(rosters ? { rosters } : {}) };
+    ...(Array.isArray(value.join_requests) ? { join_requests: value.join_requests.map(receipt => parseJoinReceipt(receipt)) } : {}), ...(rosters ? { rosters } : {}) };
 }
 export async function accountToken(account: CachedAccount): Promise<string> {
   const token: unknown = await withDatabaseTimeout(invoke('account_token', { hub: account.hub, userId: account.user.id }));
@@ -119,6 +124,7 @@ export async function refreshClassrooms(account: CachedAccount, signal?: AbortSi
   return parseClassrooms(await withDatabaseTimeout(invoke('save_classroom_snapshot', { hub, userId: user.id, classrooms })));
 }
 export async function forgetAccount(account: CachedAccount) {
+  clearMediaCache();
   await withDatabaseTimeout(invoke('forget_account_session', { hub: account.hub, userId: account.user.id }));
 }
 

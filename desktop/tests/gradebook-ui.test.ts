@@ -1,0 +1,12 @@
+import {act,create} from 'react-test-renderer';
+import {createElement} from 'react';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import type {CachedAccount} from '../src/services/auth';
+const{invoke}=vi.hoisted(()=>({invoke:vi.fn()}));vi.mock('@tauri-apps/api/core',()=>({invoke}));
+import Gradebook from '../src/components/Gradebook';
+const account={hub:{ip:'127.0.0.1',http_port:8080},user:{id:'teacher'}} as CachedAccount;
+const classroom={id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_id:'teacher'};
+let r:ReturnType<typeof create>;
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.clearAllMocks();});afterEach(async()=>{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();});
+it('shows the owl empty state and routes View People to enrollment',async()=>{invoke.mockResolvedValue({work:[],learners:[]});const people=vi.fn();await act(async()=>{r=create(createElement(Gradebook,{account,classroom,onPeople:people}));});expect(r.root.findByType('img').props.alt).toBe('');expect(JSON.stringify(r.toJSON())).toContain('No learners to grade yet');await act(async()=>r.root.findByType('button').props.onClick());expect(people).toHaveBeenCalledOnce();expect(r.root.findAllByType('table')).toHaveLength(0);});
+it('keeps the grade table for an active learner and hides the empty-state action',async()=>{invoke.mockResolvedValue({work:[{id:'work',title:'Worksheet',max_points:10,kind:'assignment'}],learners:[{id:'learner',name:'Ana',scores:{work:8}}]});await act(async()=>{r=create(createElement(Gradebook,{account,classroom,onPeople:vi.fn()}));});expect(r.root.findAllByType('table')).toHaveLength(1);expect(JSON.stringify(r.toJSON())).toContain('Ana');expect(r.root.findByType('td').children).toEqual(['8']);expect(r.root.findAllByType('button')).toHaveLength(0);});
