@@ -171,7 +171,7 @@ async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, 
     let Some(path) = app.storage.path(stored) else { return Vec::new() };
     let title = title.to_owned();
     let started = std::time::Instant::now();
-    let parse = run_in_slot(Arc::clone(&app.parse_slots), move || document_parser::extract_chunks(&path, format, &title));
+    let parse = run_in_slot(Arc::clone(&app.workload), Arc::clone(&app.parse_slots), move || document_parser::extract_chunks(&path, format, &title));
     let chunks = match tokio::time::timeout(EXTRACT_TIMEOUT, parse).await {
         Ok(Some(chunks)) => chunks,
         Ok(None) => {
@@ -183,6 +183,7 @@ async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, 
             Vec::new()
         }
     };
+    app.workload.document_result(!chunks.is_empty());
     tracing::info!(material_id, chunks = chunks.len(), ms = started.elapsed().as_millis() as u64, "lesson text extracted");
     chunks
 }
@@ -191,10 +192,13 @@ async fn extract(app: &AppState, stored: &str, format: FileFormat, title: &str, 
 /// slot is held until `parse` ends, even after the upload stopped waiting at `EXTRACT_TIMEOUT`, so
 /// parses that ran too long cannot pile up and take every core. `None` if the thread ended without
 /// a result (the parser already runs under `catch_unwind`).
-async fn run_in_slot<T: Send + 'static>(slots: Arc<Semaphore>, parse: impl FnOnce() -> T + Send + 'static) -> Option<T> {
+async fn run_in_slot<T: Send + 'static>(workload: Arc<crate::services::workload::Workload>, slots: Arc<Semaphore>, parse: impl FnOnce() -> T + Send + 'static) -> Option<T> {
+    let waiting = workload.task(crate::services::workload::Task::DocumentWaiting);
     let slot = slots.acquire_owned().await.ok()?;
+    let running = waiting.processing();
     tokio::task::spawn_blocking(move || {
         let _slot = slot;
+        let _running = running;
         parse()
     })
     .await
@@ -268,7 +272,7 @@ mod tests {
         let (running, most) = (Arc::new(AtomicUsize::new(0)), Arc::new(AtomicUsize::new(0)));
         let parses = (0..5).map(|_| {
             let (running, most) = (Arc::clone(&running), Arc::clone(&most));
-            run_in_slot(Arc::clone(&slots), move || {
+            run_in_slot(Arc::default(), Arc::clone(&slots), move || {
                 most.fetch_max(running.fetch_add(1, Ordering::SeqCst) + 1, Ordering::SeqCst);
                 std::thread::sleep(Duration::from_millis(50));
                 running.fetch_sub(1, Ordering::SeqCst);
@@ -284,10 +288,13 @@ mod tests {
     #[tokio::test]
     async fn a_parse_past_the_time_limit_keeps_its_slot_until_it_ends() {
         let slots = Arc::new(Semaphore::new(PARSE_SLOTS));
-        let slow = run_in_slot(Arc::clone(&slots), || std::thread::sleep(Duration::from_millis(300)));
+        let workload = Arc::new(crate::services::workload::Workload::default());
+        let slow = run_in_slot(Arc::clone(&workload), Arc::clone(&slots), || std::thread::sleep(Duration::from_millis(300)));
         assert!(tokio::time::timeout(Duration::from_millis(20), slow).await.is_err(), "the upload stops waiting");
         assert_eq!(slots.available_permits(), PARSE_SLOTS - 1, "the parse still runs, so its slot stays taken");
+        assert_eq!(workload.snapshot().documents_processing, 1);
         tokio::time::sleep(Duration::from_millis(600)).await;
         assert_eq!(slots.available_permits(), PARSE_SLOTS, "its slot is free once it ends");
+        assert_eq!(workload.snapshot().documents_processing, 0);
     }
 }

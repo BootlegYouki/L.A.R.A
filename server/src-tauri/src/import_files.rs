@@ -8,7 +8,7 @@ fn extension(filename: &str, bytes: &[u8]) -> Result<&'static str, &'static str>
         return Err("INVALID_IMPORT_FILE");
     }
     match filename {
-        "learner-template.csv" | "learner-credentials.csv" => Ok("csv"),
+        "learner-template.csv" | "learner-credentials.csv" | "LARA-Hub-resource-usage.csv" => Ok("csv"),
         "learner-template.xlsx" => Ok("xlsx"),
         _ => Err("INVALID_IMPORT_FILE"),
     }
@@ -67,6 +67,7 @@ mod tests {
     #[test]
     fn save_accepts_only_bounded_import_files() {
         assert_eq!(extension("learner-credentials.csv", b"data"), Ok("csv"));
+        assert_eq!(extension("LARA-Hub-resource-usage.csv", b"data"), Ok("csv"));
         assert_eq!(extension("learner-template.xlsx", b"data"), Ok("xlsx"));
         assert!(extension("../other.csv", b"data").is_err());
         assert!(extension("learner-credentials.csv", &[]).is_err());

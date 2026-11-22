@@ -212,6 +212,17 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
   </>;
 
   if (!session) return <section className="admin-auth" aria-labelledby="admin-title">
+    <aside className="auth-intro" aria-label={t.admin_console_identity}>
+      <div><i className="ph ph-buildings auth-hub-mark" aria-hidden="true" /><p className="auth-brand">{t.app_title}</p>
+        <p className="auth-intro-copy">{t.admin_console_identity}</p></div>
+      <dl className="auth-capabilities">{([
+        ['ph-users', t.admin_accounts, t.admin_signin_accounts],
+        ['ph-list-dashes', t.activity_title, t.admin_signin_activity],
+        ['ph-chart-line', t.monitor_title, t.admin_signin_monitoring],
+      ] as const).map(([icon, label, detail]) => <div key={label}><i className={`ph ${icon}`} aria-hidden="true" /><div><dt>{label}</dt><dd>{detail}</dd></div></div>)}</dl>
+      <p className="auth-intro-note"><i className="ph ph-desktop" aria-hidden="true" />{t.admin_signin_local}</p>
+    </aside>
+    <div className="auth-form-panel">
     <div className="auth-heading"><h1 id="admin-title">{setup ? t.admin_setup_title : t.admin_login_title}</h1>
     <p>{setup ? t.admin_setup_help : t.admin_login_help}</p></div>
     <form onSubmit={authenticate}>
@@ -225,9 +236,10 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
         </button>}
       </fieldset>
     </form>
+    </div>
   </section>;
 
-  return <div className={`hub-shell${page === 'accounts' ? ' hub-shell-accounts' : ''}`}><aside className="hub-sidebar"><nav aria-label={t.console_navigation} className="flex flex-wrap gap-2 min-[900px]:flex-col">
+  return <div className={`hub-shell${page === 'overview' ? ' hub-shell-overview' : page === 'accounts' ? ' hub-shell-accounts' : ''}`}><aside className="hub-sidebar"><nav aria-label={t.console_navigation} className="flex flex-wrap gap-2 min-[900px]:flex-col">
     {([['overview', 'ph-squares-four', t.console_overview], ['accounts', 'ph-users', t.admin_accounts], ['activity', 'ph-list-dashes', t.activity_title]] as const).map(([key, icon, label]) => <button key={key} type="button" className={`hub-nav ${page === key ? 'hub-nav-active' : ''}`} aria-current={page === key ? 'page' : undefined} onClick={() => setPage(key)}><i className={`ph ${icon} text-xl`} aria-hidden="true" />{label}</button>)}
     </nav><button type="button" className="admin-secondary mt-4" disabled={busy} onClick={() => setConfirmSignOut(true)}><i className="ph ph-sign-out" aria-hidden="true" />{t.admin_sign_out}</button></aside>
     {confirmSignOut && <Dialog title={t.admin_sign_out_title} close={() => setConfirmSignOut(false)} busy={busy}>

@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::PathBuf,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
@@ -13,6 +13,7 @@ use sysinfo::{
 };
 
 use crate::Hub;
+mod storage_usage;
 
 #[derive(Clone, Serialize)]
 pub struct Adapter {
@@ -24,6 +25,15 @@ pub struct Adapter {
 
 #[derive(Clone, Serialize)]
 pub struct Snapshot {
+    workload: Option<lara_hub::services::workload::Snapshot>,
+    connected_apps: usize,
+    storage_use: Option<storage_usage::StorageUse>,
+    disk_read_per_second: Option<f64>,
+    disk_write_per_second: Option<f64>,
+    ai_running: bool,
+    ai_cpu_percent: Option<f32>,
+    ai_ram: Option<u64>,
+    ai_waiting: Option<u64>,
     cpu_percent: Option<f32>,
     hub_cpu_percent: Option<f32>,
     ram_used: Option<u64>,
@@ -36,6 +46,10 @@ pub struct Snapshot {
 }
 
 pub struct Monitor {
+    inventory_at: Option<Instant>,
+    inventory: Option<storage_usage::StorageUse>,
+    previous_disk: Option<(PathBuf, u64, u64)>,
+    previous_ai: HashSet<sysinfo::Pid>,
     data_dir: PathBuf,
     started: Instant,
     system: Option<System>,
@@ -48,6 +62,7 @@ pub struct Monitor {
 impl Monitor {
     pub fn new(data_dir: PathBuf) -> Self {
         Self {
+            inventory_at: None, inventory: None, previous_disk: None, previous_ai: HashSet::new(),
             data_dir,
             started: Instant::now(),
             system: None,
@@ -70,6 +85,9 @@ impl Monitor {
         let interval =
             elapsed.filter(|d| *d >= Duration::from_millis(200) && *d <= Duration::from_secs(5));
         let mut snapshot = Snapshot {
+            workload: None, connected_apps: 0, storage_use: None,
+            disk_read_per_second: None, disk_write_per_second: None,
+            ai_running: false, ai_cpu_percent: None, ai_ram: None, ai_waiting: None,
             cpu_percent: None,
             hub_cpu_percent: None,
             ram_used: None,
@@ -88,7 +106,7 @@ impl Monitor {
             system.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
             if let Ok(pid) = sysinfo::get_current_pid() {
                 system.refresh_processes_specifics(
-                    ProcessesToUpdate::Some(&[pid]),
+                    ProcessesToUpdate::All,
                     true,
                     ProcessRefreshKind::nothing().with_cpu().with_memory(),
                 );
@@ -98,6 +116,23 @@ impl Monitor {
                         percent(process.cpu_usage() / system.cpus().len().max(1) as f32)
                     });
                 }
+                let mut children = HashSet::from([pid]);
+                loop {
+                    let before = children.len();
+                    for (child, process) in system.processes() {
+                        if process.parent().is_some_and(|parent| children.contains(&parent)) { children.insert(*child); }
+                    }
+                    if children.len() == before { break; }
+                }
+                let ai: Vec<_> = system.processes().iter().filter(|(child, process)| {
+                    children.contains(child) && **child != pid && matches!(process.name().to_string_lossy().to_ascii_lowercase().as_str(), "llama-server" | "llama-server.exe")
+                }).collect();
+                snapshot.ai_running = !ai.is_empty();
+                if snapshot.ai_running {
+                    snapshot.ai_ram = Some(ai.iter().map(|(_, process)| process.memory()).sum());
+                    snapshot.ai_cpu_percent = interval.filter(|_| ai.iter().all(|(pid, _)| self.previous_ai.contains(pid))).and_then(|_| percent(ai.iter().map(|(_, process)| process.cpu_usage()).sum::<f32>() / system.cpus().len().max(1) as f32));
+                }
+                self.previous_ai = ai.iter().map(|(pid, _)| **pid).collect();
             }
             snapshot.cpu_percent = interval.and_then(|_| percent(system.global_cpu_usage()));
             if system.total_memory() > 0 {
@@ -151,8 +186,23 @@ impl Monitor {
                     snapshot.disk_free = Some(disk.available_space());
                     snapshot.disk_total = Some(disk.total_space());
                 }
+                if disk.refresh_specifics(DiskRefreshKind::nothing().with_io_usage()) {
+                    let counters = disk.usage();
+                    if let Some((mount, read, written)) = &self.previous_disk {
+                        if mount == disk.mount_point() {
+                            snapshot.disk_read_per_second = interval.and_then(|d| rate(counters.total_read_bytes, *read, d));
+                            snapshot.disk_write_per_second = interval.and_then(|d| rate(counters.total_written_bytes, *written, d));
+                        }
+                    }
+                    self.previous_disk = Some((disk.mount_point().to_owned(), counters.total_read_bytes, counters.total_written_bytes));
+                } else { self.previous_disk = None; }
             }
         }
+        if self.inventory_at.is_none_or(|at| at.elapsed() >= Duration::from_secs(30)) {
+            self.inventory = storage_usage::scan(&self.data_dir).ok();
+            self.inventory_at = Some(now);
+        }
+        snapshot.storage_use = self.inventory.clone();
         self.sampled = Some(now);
         self.cached = Some(snapshot.clone());
         snapshot
@@ -186,19 +236,24 @@ pub async fn hub_metrics(
         .map(|handle| handle.state().clone())
         .ok_or("HUB_UNAVAILABLE")?;
     authorize(&app, &token).await?;
+    let workload = app.workload.snapshot();
+    let connected = app.broker.connection_count();
     let monitor = monitor.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || {
+    let mut snapshot = tauri::async_runtime::spawn_blocking(move || {
         monitor
             .lock()
             .map_err(|_| "MONITORING_UNAVAILABLE")
             .map(|mut monitor| monitor.sample())
     })
     .await
-    .map_err(|_| "MONITORING_UNAVAILABLE")?
+    .map_err(|_| "MONITORING_UNAVAILABLE")??;
+    snapshot.workload = Some(workload);
+    snapshot.connected_apps = connected;
+    Ok(snapshot)
 }
 
 async fn authorize(app: &lara_hub::AppState, token: &str) -> Result<(), &'static str> {
-    let user = sessions::user_for_token(&app.db, &token, app.clock.now_ms())
+    let user = sessions::user_for_token(&app.db, token, app.clock.now_ms())
         .await
         .map_err(|_| "HUB_UNAVAILABLE")?
         .ok_or("UNAUTHORIZED")?;
