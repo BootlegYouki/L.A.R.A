@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object HomeworkAttachment {
+    const val MAX_ATTACHMENTS = 5
     const val MAX_DOCUMENT_BYTES = 250L * 1024 * 1024
     const val MAX_PHOTO_BYTES = HomeworkPhoto.MAX_BYTES
 
@@ -23,8 +24,8 @@ object HomeworkAttachment {
 
     fun maxBytes(file: File): Long = if (type(file) == "IMAGE") MAX_PHOTO_BYTES else MAX_DOCUMENT_BYTES
 
-    // Photos are temp files with random names; the Hub has always seen them as homework.<ext>.
-    fun displayName(file: File): String = if (type(file) == "IMAGE") "homework.${file.extension.lowercase(Locale.ROOT)}"
+    // Keep the unique photo filename and strip the private storage prefix from picked documents.
+    fun displayName(file: File): String = if (type(file) == "IMAGE") file.name
         else file.name.substringAfter('_', file.name)
 
     fun mimeType(file: File): String = when (file.extension.lowercase(Locale.ROOT)) {

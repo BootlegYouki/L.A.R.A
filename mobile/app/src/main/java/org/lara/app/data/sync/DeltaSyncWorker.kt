@@ -14,8 +14,10 @@ class DeltaSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val userId = container.syncUserId() ?: return Result.success()
         if (container.endpoints.load() == null) return Result.success()
         return try {
-            container.forUser(userId).sync.synchronize(userId)
-            container.forUser(userId).homework.uploadQueued()
+            val account = container.forUser(userId)
+            account.sync.synchronize(userId)
+            account.gradeOutbox.flush()
+            account.homework.uploadQueued()
             Result.success()
         } catch (e: CancellationException) { throw e }
         catch (e: HubFailure) {

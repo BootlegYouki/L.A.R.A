@@ -109,7 +109,9 @@ class SyncStore(private val db: LaraDatabase) {
                     // Empty local path means this metadata has no downloaded attachment.
                     AssignmentSubmissionEntity(row.id, row.assignmentId, row.studentId, old?.filePath ?: "",
                         row.fileType, row.submittedAt, row.score, row.teacherFeedback, row.updatedAt ?: snapshot, "SYNCED",
-                        receivedAt = row.receivedAt, createdAt = old?.createdAt ?: snapshot)
+                        receivedAt = row.receivedAt, createdAt = old?.createdAt ?: snapshot,
+                        attachmentsJson = if (row.attachments.isEmpty()) old?.attachmentsJson ?: "[]"
+                            else json.encodeToString(row.attachments.withLocalPaths(old?.attachments().orEmpty())))
                 },
                 quizzes = page.quizzes.map { row ->
                     val old = dao.quiz(row.id)

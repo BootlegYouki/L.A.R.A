@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
 import android.Manifest
@@ -20,6 +21,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -52,6 +58,8 @@ import org.lara.app.R
 import org.lara.app.domain.model.Assignment
 import org.lara.app.domain.Cached
 import org.lara.app.data.repository.HomeworkAttachment
+import org.lara.app.data.local.entities.LocalSubmissionAttachment
+import org.lara.app.data.local.entities.attachments
 import org.lara.app.ui.theme.*
 
 internal fun privateCommentStatusLabel(status: String, reason: String?): Int? = when (status) {
@@ -152,9 +160,40 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         }
         return
     }
-    val path = draft ?: submission?.filePath
+    val hasDraft = draft.isNotEmpty()
+    val attachments = remember(draft, submission) {
+        if (hasDraft) draft.map { path ->
+            val file = File(path)
+            LocalSubmissionAttachment(HomeworkAttachment.displayName(file), HomeworkAttachment.type(file) ?: "DOCUMENT", path)
+        } else submission?.attachments().orEmpty()
+    }
+    var viewingPhoto by rememberSaveable(assignment.id) { mutableStateOf<Int?>(null) }
+    val viewed = viewingPhoto?.let(attachments::getOrNull)
+    if (viewed != null) {
+        HomeworkCameraDialog(onDismiss = { viewingPhoto = null }) {
+            val photo = rememberHomeworkBitmap(viewed.path, container.homeworkPhotos, sampleSize = 1)
+            Column(Modifier.fillMaxSize().background(LaraColors.Surface).safeDrawingPadding()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton({ viewingPhoto = null }, Modifier.size(MinTouchTarget)) {
+                        Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.settings_back))
+                    }
+                    Text(viewed.name.orEmpty(), style = MaterialTheme.typography.titleMedium)
+                }
+                if (photo != null) Image(photo.asImageBitmap(), stringResource(R.string.homework_photo_description),
+                    Modifier.fillMaxWidth().weight(1f).padding(LaraSpacing.S4), contentScale = ContentScale.Fit)
+                else if (viewed.path == null && submission != null) {
+                    Column(Modifier.verticalScroll(rememberScrollState()).padding(LaraSpacing.S4)) {
+                        org.lara.app.ui.screens.teacher.review.ReviewPhoto(
+                            container, userId, submission, true, requireNotNull(viewingPhoto),
+                            forbidden = { viewingPhoto = null },
+                        )
+                    }
+                }
+            }
+        }
+    }
     val graded = submission?.score != null
-    val status = if (draft != null) R.string.homework_work_ready else when {
+    val status = if (hasDraft) R.string.homework_work_ready else when {
         graded -> R.string.homework_graded
         submission?.syncStatus == "QUEUED_FOR_SYNC" -> R.string.homework_queued
         submission?.syncStatus == "REJECTED" -> R.string.homework_rejected
@@ -162,7 +201,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         else -> R.string.homework_to_do
     }
     val statusIcon = when {
-        draft != null -> R.drawable.ic_info
+        hasDraft -> R.drawable.ic_info
         graded || submission?.syncStatus == "SYNCED" -> R.drawable.ic_check_circle
         submission != null -> R.drawable.ic_warning_circle
         else -> R.drawable.ic_info
@@ -171,16 +210,22 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     val scope = rememberCoroutineScope()
     var up by rememberSaveable(assignment.id) { mutableStateOf(false) }
     var note by rememberSaveable(assignment.id) { mutableStateOf("") }
+    var headerHeight by remember { mutableIntStateOf(0) }
+    var collapsedActionsHeight by remember { mutableIntStateOf(0) }
     val due = DateFormat.getDateTimeInstance().format(Date(assignment.dueDate))
     // The sheet is our own so it can shut while the finger is still down, like Classroom's (BottomSheetScaffold can't).
     BoxWithConstraints(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.White).imePadding()) {
         val statusBar = androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         // The sheet stops under the status bar when swiped up, leaving it visible like Classroom does.
         val collapsedPx = with(LocalDensity.current) {
-            val bottomBar = (WindowInsets.navigationBars.getBottom(this) - WindowInsets.ime.getBottom(this))
-                .coerceAtLeast(0).toDp()
-            val peekHeight = if (draft != null) 248.dp else 176.dp
-            (maxHeight - statusBar - peekHeight - bottomBar).coerceAtLeast(0.dp).toPx()
+            val peekHeight = if (headerHeight > 0 && collapsedActionsHeight > 0) {
+                (headerHeight + collapsedActionsHeight).toDp() + LaraSpacing.S3
+            } else {
+                val bottomBar = (WindowInsets.navigationBars.getBottom(this) - WindowInsets.ime.getBottom(this))
+                    .coerceAtLeast(0).toDp()
+                (if (hasDraft) 248.dp else 176.dp) + bottomBar
+            }
+            (maxHeight - statusBar - peekHeight).coerceAtLeast(0.dp).toPx()
         }
         val offset = remember(collapsedPx) { Animatable(if (up) 0f else collapsedPx) }
         // Content appears only once the sheet has settled at the top, so it stays blank while sliding.
@@ -225,20 +270,42 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         Surface(Modifier.padding(top = statusBar).offset { IntOffset(0, offset.value.roundToInt()) }.fillMaxWidth().height(maxHeight - statusBar), color = LaraColors.SurfaceSubtle,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)) {
             Column {
-                Box(Modifier.fillMaxWidth().heightIn(min = 32.dp).then(drag), contentAlignment = Alignment.Center) { BottomSheetDefaults.DragHandle() }
-                Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = LaraSpacing.S4)
-                    .padding(bottom = LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                    Row(Modifier.fillMaxWidth().then(drag), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-                        Text(stringResource(R.string.homework_your_work), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = LaraColors.TextPrimary)
-                        if (comments.isNotEmpty()) {
-                            Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(20.dp))
-                            Text(comments.size.toString(), style = MaterialTheme.typography.bodyMedium)
+                Column(Modifier.fillMaxWidth().onSizeChanged { if (!full) headerHeight = it.height }) {
+                    Box(Modifier.fillMaxWidth().heightIn(min = 32.dp).then(drag), contentAlignment = Alignment.Center) { BottomSheetDefaults.DragHandle() }
+                    Column(Modifier.padding(horizontal = LaraSpacing.S4), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                        Row(Modifier.fillMaxWidth().then(drag), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                            Text(stringResource(R.string.homework_your_work), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = LaraColors.TextPrimary)
+                            if (comments.isNotEmpty()) {
+                                Icon(painterResource(R.drawable.ic_chats_regular), null, Modifier.size(20.dp))
+                                Text(comments.size.toString(), style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Text(due, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextPrimary)
                         }
-                        Text(due, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextPrimary)
+                        attachments.firstOrNull()?.let { attachment ->
+                            HomeworkAttachmentRow(attachment, container.homeworkPhotos,
+                                onView = { viewingPhoto = 0 }, onRemove = attachment.path?.takeIf { hasDraft }?.let { path ->
+                                    { model.removeDraft(path) }
+                                }, busy = busy)
+                        }
+                        if (!full && attachments.size > 1) {
+                            TextButton(onClick = { up = true; scope.launch { offset.animateTo(0f) } },
+                                modifier = Modifier.heightIn(min = MinTouchTarget)) {
+                                Text(pluralStringResource(R.plurals.homework_more_attachments, attachments.size - 1, attachments.size - 1))
+                            }
+                        }
                     }
-                    // Classroom's collapsed sheet shows only the title row and the buttons; the rest appears when it is swiped up.
-                    // Bottom padding keeps the scrolling content clear of the pinned buttons.
+                }
+                Column(Modifier.fillMaxWidth().weight(1f).padding(LaraSpacing.S4),
+                    verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
                     if (full) Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 260.dp), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
+                        attachments.drop(1).forEachIndexed { index, attachment ->
+                            key(index, attachment.path) {
+                                HomeworkAttachmentRow(attachment, container.homeworkPhotos,
+                                    onView = { viewingPhoto = index + 1 }, onRemove = attachment.path?.takeIf { hasDraft }?.let { path ->
+                                        { model.removeDraft(path) }
+                                    }, busy = busy)
+                            }
+                        }
                         Row(horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2), verticalAlignment = Alignment.Top) {
                             Icon(painterResource(statusIcon), null, Modifier.size(24.dp), tint = LaraColors.TextSecondary)
                             Text(stringResource(status), style = MaterialTheme.typography.bodyMedium)
@@ -257,15 +324,17 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                         }
                         if (error) Text(stringResource(R.string.homework_save_failed), color = LaraColors.DangerDark)
                         if (cameraPermissionDenied) Text(stringResource(R.string.homework_permission))
-                        Text(stringResource(R.string.homework_attachments), style = MaterialTheme.typography.titleMedium)
-                        HomeworkAttachmentPreview(path, submission?.fileType)
+                        if (attachments.isEmpty()) {
+                            Text(stringResource(R.string.homework_photo_hint), style = MaterialTheme.typography.bodyMedium,
+                                color = LaraColors.TextSecondary)
+                        }
                         if (submission?.syncStatus == "REJECTED") {
                             when (submission?.syncRejectReason) {
                                 "LATE_SUBMISSION" -> Text(stringResource(R.string.homework_rejected_late))
                                 "ALREADY_GRADED" -> Text(stringResource(R.string.homework_rejected_graded))
                             }
                         }
-                        if (draft == null && submission?.syncStatus == "QUEUED_FOR_SYNC") Text(stringResource(R.string.homework_offline_help))
+                        if (!hasDraft && submission?.syncStatus == "QUEUED_FOR_SYNC") Text(stringResource(R.string.homework_offline_help))
                         Text(stringResource(R.string.homework_private_comments), style = MaterialTheme.typography.titleMedium)
                         if (comments.isEmpty()) Text(stringResource(R.string.homework_no_comments), style = MaterialTheme.typography.bodyLarge)
                         comments.forEach { c ->
@@ -287,7 +356,9 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
         }
         // Solid like the sheet, so content sliding underneath is hidden behind the buttons as in Classroom.
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().windowInsetsBottomHeight(androidx.compose.foundation.layout.WindowInsets.navigationBars).background(LaraColors.SurfaceSubtle))
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(LaraColors.SurfaceSubtle).navigationBarsPadding().padding(horizontal = LaraSpacing.S4)
+        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(LaraColors.SurfaceSubtle)
+            .onSizeChanged { if (!full) collapsedActionsHeight = it.height }
+            .navigationBarsPadding().padding(horizontal = LaraSpacing.S4)
             .padding(top = LaraSpacing.S3, bottom = LaraSpacing.S5), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
             if (full) {
             OutlinedTextField(note, { note = it }, Modifier.fillMaxWidth(), shape = CircleShape,
@@ -305,11 +376,15 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                     Text(stringResource(if (graded) R.string.homework_graded_button else R.string.homework_turn_in_complete))
                 }
             } else {
-                Button(onClick = { adding = true }, enabled = !busy, shape = CircleShape,
+                if (full && draft.size == HomeworkAttachment.MAX_ATTACHMENTS) {
+                    Text(stringResource(R.string.homework_attachment_limit, HomeworkAttachment.MAX_ATTACHMENTS),
+                        style = MaterialTheme.typography.bodySmall)
+                }
+                Button(onClick = { adding = true }, enabled = !busy && draft.size < HomeworkAttachment.MAX_ATTACHMENTS, shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                     Text(stringResource(R.string.homework_add_work))
                 }
-                if (full || draft != null) OutlinedButton(onClick = { confirming = true }, enabled = draft != null && !busy,
+                if (full || hasDraft) OutlinedButton(onClick = { confirming = true }, enabled = hasDraft && !busy,
                     shape = CircleShape, modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                     Text(stringResource(R.string.homework_turn_in))
                 }
@@ -326,8 +401,7 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Icon(painterResource(R.drawable.ic_camera), null, Modifier.size(24.dp))
                 Spacer(Modifier.width(LaraSpacing.S3))
-                val hasPhoto = !path.isNullOrEmpty() && HomeworkAttachment.type(File(path)) == "IMAGE"
-                Text(stringResource(if (hasPhoto) R.string.homework_retake else R.string.homework_take_photo))
+                Text(stringResource(R.string.homework_take_photo))
             }
             TextButton(onClick = { adding = false; documentCamera = true; requestCamera = true }, enabled = !busy,
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
@@ -353,24 +427,34 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     }
     if (confirming) org.lara.app.ui.components.NativeConfirmDialog(stringResource(R.string.homework_confirm_title), stringResource(R.string.homework_confirm_photo),
         stringResource(R.string.homework_turn_in), stringResource(R.string.enrollment_cancel_action),
-        { confirming = false; if (draft != null && !busy) model.turnIn() }, { confirming = false })
+        { confirming = false; if (hasDraft && !busy) model.turnIn() }, { confirming = false })
 }
 
 @Composable
-private fun HomeworkAttachmentPreview(path: String?, fileType: String?) {
-    if (path.isNullOrEmpty() && fileType == null) {
-        Text(stringResource(R.string.homework_photo_hint), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
-        return
+private fun HomeworkAttachmentRow(
+    attachment: LocalSubmissionAttachment,
+    root: File,
+    onView: () -> Unit,
+    onRemove: (() -> Unit)?,
+    busy: Boolean,
+) {
+    val thumbnail = rememberHomeworkBitmap(attachment.path.takeIf { attachment.fileType == "IMAGE" }, root, sampleSize = 8)
+    val preview: (@Composable () -> Unit)? = if (thumbnail == null) null else {
+        { Image(thumbnail.asImageBitmap(), null, Modifier.size(MinTouchTarget).clip(LaraShapes.small),
+            contentScale = ContentScale.Crop) }
     }
-    val file = path?.takeIf { it.isNotEmpty() }?.let(::File)
-    val type = file?.let(HomeworkAttachment::type) ?: fileType ?: "DOCUMENT"
-    org.lara.app.ui.components.AttachmentChip(
-        type, file?.takeIf { type != "IMAGE" }?.let(HomeworkAttachment::displayName),
-    )
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+        val chip = Modifier.weight(1f)
+        org.lara.app.ui.components.AttachmentChip(attachment.fileType, attachment.name,
+            if (attachment.fileType == "IMAGE") chip.clickable(onClick = onView) else chip, preview)
+        if (onRemove != null) IconButton(onRemove, Modifier.size(MinTouchTarget), enabled = !busy) {
+            Icon(painterResource(R.drawable.ic_trash), stringResource(R.string.homework_remove_attachment))
+        }
+    }
 }
 
 @Composable
-internal fun rememberHomeworkBitmap(path: String?, root: File): Bitmap? {
+internal fun rememberHomeworkBitmap(path: String?, root: File, sampleSize: Int = 2): Bitmap? {
     var bitmap by remember(path) { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(path) {
         var decoded: Bitmap? = null
@@ -379,7 +463,7 @@ internal fun rememberHomeworkBitmap(path: String?, root: File): Bitmap? {
                 if (!path.isNullOrEmpty()) {
                     val file = File(path).canonicalFile
                     if (file.path.startsWith(root.canonicalPath + File.separator) && file.isFile) {
-                        decoded = BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = 2 })
+                        decoded = BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sampleSize })
                     }
                 }
             }

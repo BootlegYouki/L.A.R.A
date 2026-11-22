@@ -51,7 +51,7 @@ async fn upload(
 ) -> Result<Json<Material>, ApiError> {
     require_role(&user, Role::Teacher)?;
     let fields = ["classroom_id", "title", "file_type", "topic_id", "assignment_id", "announcement_id"];
-    let mut form = read_form(&app.storage, &headers, multipart, &fields).await?;
+    let mut form = read_form(&app.storage, &headers, multipart, &fields, 1).await?;
     form.need(&["classroom_id", "title", "file_type"])?;
     // The title names the text before the file's first heading; a blank one left those chunks with no heading
     // (bug #302). The rename route refuses a blank title too.

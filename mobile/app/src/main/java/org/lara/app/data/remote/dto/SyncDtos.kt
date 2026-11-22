@@ -112,6 +112,12 @@ data class PrivateCommentDto(
 )
 
 @Serializable
+data class SubmissionAttachmentDto(
+    val name: String,
+    @SerialName("file_type") val fileType: String,
+)
+
+@Serializable
 data class SubmissionDto(
     @SerialName("id") val id: String,
     @SerialName("assignment_id") val assignmentId: String,
@@ -122,6 +128,7 @@ data class SubmissionDto(
     @SerialName("teacher_feedback") val teacherFeedback: String? = null,
     @SerialName("updated_at") val updatedAt: Long? = null,
     @SerialName("received_at") val receivedAt: Long? = null,
+    val attachments: List<SubmissionAttachmentDto> = emptyList(),
 )
 
 @Serializable

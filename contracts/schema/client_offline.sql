@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     updated_at INTEGER NOT NULL,
     sync_status TEXT NOT NULL DEFAULT 'QUEUED_FOR_SYNC' CHECK(sync_status IN ('SYNCED', 'QUEUED_FOR_SYNC', 'REJECTED')),
     sync_reject_reason TEXT, -- Hub receipt reason when sync_status = 'REJECTED' (e.g. TIME_LIMIT_EXCEEDED); NULL otherwise
+    attachments_json TEXT NOT NULL DEFAULT '[]',
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     UNIQUE(assignment_id, student_id)
 );

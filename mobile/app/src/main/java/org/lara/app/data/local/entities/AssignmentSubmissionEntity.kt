@@ -4,6 +4,11 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import java.io.File
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import org.lara.app.data.remote.dto.SubmissionAttachmentDto
+import org.lara.app.data.repository.HomeworkAttachment
 
 @Entity(
     tableName = "assignment_submissions",
@@ -28,6 +33,7 @@ data class AssignmentSubmissionEntity(
     @ColumnInfo(name = "sync_reject_reason") val syncRejectReason: String? = null,
     @ColumnInfo(name = "received_at") val receivedAt: Long? = null,
     @ColumnInfo(name = "created_at") val createdAt: Long = submittedAt,
+    @ColumnInfo(name = "attachments_json", defaultValue = "'[]'") val attachmentsJson: String = "[]",
 )
  {
     init {
@@ -35,4 +41,21 @@ data class AssignmentSubmissionEntity(
         require(syncStatus in setOf("SYNCED", "QUEUED_FOR_SYNC", "REJECTED"))
         require(syncStatus == "REJECTED" || syncRejectReason == null)
     }
+}
+
+@Serializable
+data class LocalSubmissionAttachment(val name: String?, val fileType: String, val path: String? = null)
+
+fun AssignmentSubmissionEntity.attachments(): List<LocalSubmissionAttachment> =
+    Json.decodeFromString<List<LocalSubmissionAttachment>>(attachmentsJson).ifEmpty {
+        val file = filePath.takeIf(String::isNotBlank)?.let(::File)
+        listOf(LocalSubmissionAttachment(file?.let(HomeworkAttachment::displayName), fileType, file?.path))
+    }
+
+internal fun List<SubmissionAttachmentDto>.withLocalPaths(
+    local: List<LocalSubmissionAttachment>,
+): List<LocalSubmissionAttachment> = mapIndexed { index, item ->
+    val existing = local.getOrNull(index)
+    LocalSubmissionAttachment(item.name, item.fileType,
+        existing?.path?.takeIf { existing.name == item.name && existing.fileType == item.fileType })
 }

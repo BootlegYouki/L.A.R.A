@@ -30,7 +30,22 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
     val comments = container.privateComments(assignmentId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     fun comment(studentId: String, text: String) { viewModelScope.launch { container.addPrivateComment(assignmentId, studentId, text) } }
-    val draft = saved.getStateFlow<String?>("photo", null)
+    val draft = saved.getStateFlow("homework_attachments",
+        arrayListOf<String>().apply { saved.get<String>("photo")?.let(::add) })
+
+    private suspend fun addDraft(file: File) {
+        val files = draft.value
+        val fits = withContext(Dispatchers.IO) {
+            files.size < HomeworkAttachment.MAX_ATTACHMENTS &&
+                files.sumOf { File(it).length() } + file.length() <= HomeworkAttachment.MAX_DOCUMENT_BYTES
+        }
+        if (!fits) {
+            container.homework.discardDraft(file.path)
+            error("Homework attachment limit reached")
+        }
+        saved["homework_attachments"] = ArrayList(files + file.path)
+        saved.remove<String>("photo")
+    }
     val scanSource = saved.getStateFlow<String?>("scan_source", null)
     val scanPreview = saved.getStateFlow<String?>("scan_preview", null)
     val scanCorners = saved.getStateFlow("scan_corners", DocumentScanner.fullPage())
@@ -66,9 +81,7 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
 
     fun chooseDocument(context: Context, uri: Uri) = action {
         val document = HomeworkAttachment.copyDocument(context, uri, container.homeworkPhotos)
-        val previous = draft.value
-        saved["photo"] = document.path
-        previous?.let { container.homework.discardDraft(it) }
+        addDraft(document)
     }
 
     private fun prepare(document: Boolean = false, source: suspend () -> File) = action {
@@ -76,9 +89,7 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
         if (!document) {
             val photo = try { HomeworkPhoto.compress(file, container.homeworkPhotos) }
             finally { withContext(Dispatchers.IO) { file.delete() } }
-            val previous = draft.value
-            saved["photo"] = photo.path
-            previous?.let { container.homework.discardDraft(it) }
+            addDraft(photo)
             return@action
         }
         val photo = HomeworkPhoto.normalize(file, container.homeworkPhotos)
@@ -123,10 +134,8 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
     fun useScan(fullPhoto: Boolean) = action {
         val path = if (fullPhoto) scanSource.value else scanPreview.value
         val photo = HomeworkPhoto.compress(ownedFile(requireNotNull(path)), container.homeworkPhotos)
-        val previous = draft.value
-        saved["photo"] = photo.path
+        addDraft(photo)
         clearScan()
-        previous?.let { container.homework.discardDraft(it) }
     }
 
     private fun ownedFile(path: String): File {
@@ -163,11 +172,22 @@ class HomeworkViewModel(private val container: AppContainer, private val assignm
         }
     }
 
-    fun turnIn() {
-        val path = draft.value ?: return
+    fun removeDraft(path: String) {
+        if (path !in draft.value) return
         action {
-            container.homework.turnIn(assignmentId, ownedFile(path))
-            saved["photo"] = null
+            container.homework.discardDraft(path)
+            saved["homework_attachments"] = ArrayList(draft.value - path)
+            saved.remove<String>("photo")
+        }
+    }
+
+    fun turnIn() {
+        val paths = draft.value
+        if (paths.isEmpty()) return
+        action {
+            container.homework.turnIn(assignmentId, paths.map(::ownedFile))
+            saved["homework_attachments"] = arrayListOf<String>()
+            saved.remove<String>("photo")
         }
     }
 }

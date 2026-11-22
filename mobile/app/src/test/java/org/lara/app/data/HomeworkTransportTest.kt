@@ -37,7 +37,7 @@ class HomeworkTransportTest {
         assertTrue(body.contains("local"))
         assertTrue(body.contains("name=\"turned_in_at\""))
         assertTrue(body.contains("123456"))
-        assertTrue(body.contains("filename=\"homework.jpg\""))
+        assertTrue(body.contains("filename=\"${photo.name}\""))
         assertFalse(body.contains(photo.path))
     }
 

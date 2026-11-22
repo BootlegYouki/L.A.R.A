@@ -4,13 +4,21 @@
 use sqlx::{FromRow, SqliteConnection};
 
 use super::sync_revisions::{record_revision, Action, Scope};
-use crate::models::sync::Submission;
+use crate::models::sync::{Submission, SubmissionAttachment};
+use serde::{Deserialize, Serialize};
 
 /// The stored columns, for `concat!` (query text stays `'static`).
 macro_rules! columns {
     () => {
-        "id, assignment_id, student_id, file_path, file_type, submitted_at, created_at, received_at, score, teacher_feedback, updated_at"
+        "id, assignment_id, student_id, file_path, file_type, submitted_at, created_at, received_at, score, teacher_feedback, updated_at, attachments_json"
     };
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct StoredAttachment {
+    pub path: String,
+    pub name: String,
+    pub file_type: String,
 }
 
 #[derive(Clone, FromRow)]
@@ -29,15 +37,24 @@ pub struct StoredSubmission {
     pub score: Option<i64>,
     pub teacher_feedback: Option<String>,
     pub updated_at: i64,
+    pub attachments_json: String,
 }
 
 impl StoredSubmission {
+    pub fn attachments(&self) -> Vec<StoredAttachment> {
+        serde_json::from_str(&self.attachments_json).unwrap_or_default()
+    }
+
     pub fn public(&self) -> Submission {
         Submission {
             id: self.id.clone(),
             assignment_id: self.assignment_id.clone(),
             student_id: self.student_id.clone(),
             file_type: self.file_type.clone(),
+            attachments: self.attachments().into_iter().map(|file| SubmissionAttachment {
+                name: file.name,
+                file_type: file.file_type,
+            }).collect(),
             submitted_at: self.submitted_at,
             received_at: self.received_at,
             score: self.score,
@@ -58,6 +75,7 @@ pub struct SubmissionFile {
     pub student_id: String,
     pub classroom_id: String,
     pub file_path: String,
+    pub attachments_json: String,
 }
 
 /// The assignment as homework submit needs it.
@@ -160,8 +178,8 @@ pub async fn save(tx: &mut SqliteConnection, row: &StoredSubmission, classroom_i
     sqlx::query(concat!(
         "INSERT INTO assignment_submissions (",
         columns!(),
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET file_path = excluded.file_path, file_type = excluded.file_type,
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET file_path = excluded.file_path, file_type = excluded.file_type, attachments_json = excluded.attachments_json,
              submitted_at = excluded.submitted_at, received_at = excluded.received_at, updated_at = excluded.updated_at"
     ))
     .bind(&row.id)
@@ -175,6 +193,7 @@ pub async fn save(tx: &mut SqliteConnection, row: &StoredSubmission, classroom_i
     .bind(row.score)
     .bind(&row.teacher_feedback)
     .bind(row.updated_at)
+    .bind(&row.attachments_json)
     .execute(&mut *tx)
     .await?;
     record_revision(
@@ -206,7 +225,7 @@ pub async fn delete_replaced(
 /// Archived assignments included: their submissions and grades are kept and stay viewable.
 pub async fn file_of(conn: &mut SqliteConnection, id: &str) -> Result<Option<SubmissionFile>, sqlx::Error> {
     sqlx::query_as(
-        "SELECT s.student_id, a.classroom_id, s.file_path
+        "SELECT s.student_id, a.classroom_id, s.file_path, s.attachments_json
          FROM assignment_submissions s JOIN assignments a ON a.id = s.assignment_id WHERE s.id = ?",
     )
     .bind(id)

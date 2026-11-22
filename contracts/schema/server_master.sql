@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     received_at INTEGER NOT NULL,
     score INTEGER CHECK(score IS NULL OR score >= 0),
     teacher_feedback TEXT,
-    updated_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL, attachments_json TEXT NOT NULL DEFAULT '[]',
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE RESTRICT,
     UNIQUE(assignment_id, student_id)

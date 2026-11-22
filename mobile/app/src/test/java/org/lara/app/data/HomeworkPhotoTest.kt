@@ -37,7 +37,12 @@ class HomeworkPhotoTest {
         val normalized = HomeworkPhoto.normalize(original, root)
         assertFalse(original.exists())
         assertEquals("png", normalized.extension)
+        val secondSource = normalized.copyTo(File(root, "second-source.png"))
         val jpeg = HomeworkPhoto.compress(normalized, root)
+        val second = HomeworkPhoto.compress(secondSource, root)
+        assertTrue(jpeg.name.matches(Regex("homework_[0-9]+_[0-9]+\\.jpg")))
+        assertNotEquals(jpeg.name, second.name)
+        assertEquals(jpeg.name, org.lara.app.data.repository.HomeworkAttachment.displayName(jpeg))
         assertFalse(normalized.exists())
         assertTrue(jpeg.length() in 1 until HomeworkPhoto.MAX_BYTES)
     }

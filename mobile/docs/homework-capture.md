@@ -75,3 +75,7 @@ Assignment private comments display the saved queued or rejected status alongsid
 The assignment screen checks Android camera permission before opening the capture screen. It requests access after dismissing the attachment sheet and keeps the assignment visible if access is denied. An existing Android grant opens the camera directly.
 
 Take a photo and Choose a photo add a full image directly as a compressed JPEG. Scan a document is a separate camera action with a page guide and document review tools.
+
+The Your work panel shows the attachment chip in both its collapsed and expanded states. Local documents use the stored display name, and local images use their stored upload name such as `homework_<timestamp>_<unique>.jpg`. When the Hub provides only a file type and there is no local filename, the chip shows the file type.
+
+A submission can contain five photos, scans, PDFs or DOCX files in any combination, up to 250 MiB combined. The collapsed panel shows the first item and a control to expand the list. Draft files have independent removal controls. A photo thumbnail opens a larger preview and stays visible after turn-in when its local copy is available. Room v6 retains the existing first-file columns and adds ordered attachment metadata and local paths.

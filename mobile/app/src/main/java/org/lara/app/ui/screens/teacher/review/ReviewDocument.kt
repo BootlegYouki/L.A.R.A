@@ -47,7 +47,7 @@ internal fun reviewDocumentType(file: File): ReviewDocumentType? {
 }
 
 @Composable
-internal fun ReviewDocument(container: AppContainer, userId: String, submissionId: String, online: Boolean, forbidden: () -> Unit) {
+internal fun ReviewDocument(container: AppContainer, userId: String, submissionId: String, online: Boolean, attachment: Int = 0, forbidden: () -> Unit) {
     val context = LocalContext.current
     var file by remember(submissionId) { mutableStateOf<File?>(null) }
     var type by remember(submissionId) { mutableStateOf<ReviewDocumentType?>(null) }
@@ -62,7 +62,7 @@ internal fun ReviewDocument(container: AppContainer, userId: String, submissionI
             var temp: File? = null
             try {
                 temp = File.createTempFile("review-document-", ".tmp", context.cacheDir)
-                container.gradingApi.file(userId, submissionId, temp, 250L * 1024 * 1024)
+                container.gradingApi.file(userId, submissionId, temp, 250L * 1024 * 1024, attachment)
                 val detected = withContext(Dispatchers.IO) { reviewDocumentType(temp) }
                 if (detected == null) failed = true else { type = detected; file = temp }
                 loading = false

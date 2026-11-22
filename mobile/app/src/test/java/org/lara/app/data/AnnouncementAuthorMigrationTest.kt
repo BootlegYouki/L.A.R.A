@@ -48,7 +48,7 @@ class AnnouncementAuthorMigrationTest {
             assertNull(post.authorId)
             assertEquals("QUEUED_FOR_SYNC", db.syncDao().comment("comment")?.syncStatus)
             assertEquals("77", db.syncStateDao().get("cursor")?.value)
-            assertEquals(5, db.openHelper.writableDatabase.version)
+            assertEquals(6, db.openHelper.writableDatabase.version)
         } finally { db.close(); context.deleteDatabase(name) }
     }
 }

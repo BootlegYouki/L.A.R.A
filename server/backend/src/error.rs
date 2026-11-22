@@ -27,6 +27,7 @@ pub enum ErrorCode {
     LateSubmission,
     /// 409: a different file for homework the teacher already graded (contract #257).
     AlreadyGraded,
+    GradeChanged,
     /// 403: a comment on a post whose `allow_comments` is false (contract `/api/announcements/{id}/comments`).
     CommentsDisabled,
     /// 409: editing a quiz that has started (contract `PATCH /api/quizzes/{id}`, PRD FR-4.8).
@@ -61,6 +62,7 @@ impl ErrorCode {
             Self::FileTooLarge => "FILE_TOO_LARGE",
             Self::LateSubmission => "LATE_SUBMISSION",
             Self::AlreadyGraded => "ALREADY_GRADED",
+            Self::GradeChanged => "GRADE_CHANGED",
             Self::CommentsDisabled => "COMMENTS_DISABLED",
             Self::QuizNotDraft => "QUIZ_NOT_DRAFT",
             Self::QuizClosed => "QUIZ_CLOSED",

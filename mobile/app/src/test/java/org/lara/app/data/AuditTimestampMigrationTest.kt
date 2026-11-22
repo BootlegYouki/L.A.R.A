@@ -88,7 +88,7 @@ class AuditTimestampMigrationTest {
             assertEquals("synthetic-hub", db.syncStateDao().get("queued_hub:assignment_submissions:photo-QUEUED_FOR_SYNC")?.value)
             db.close()
             db = LaraDatabase.create(context, name)
-            assertEquals(5, db.openHelper.writableDatabase.version)
+            assertEquals(6, db.openHelper.writableDatabase.version)
             assertEquals(33L, db.syncDao().submission("photo-QUEUED_FOR_SYNC")?.createdAt)
             assertEquals(44L, db.syncDao().attempt("attempt-REJECTED")?.createdAt)
             val sql = db.openHelper.writableDatabase

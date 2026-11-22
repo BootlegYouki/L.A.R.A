@@ -17,7 +17,12 @@ import org.lara.app.R
 import org.lara.app.ui.theme.*
 
 @Composable
-internal fun AttachmentChip(fileType: String, name: String? = null, modifier: Modifier = Modifier) {
+internal fun AttachmentChip(
+    fileType: String,
+    name: String? = null,
+    modifier: Modifier = Modifier,
+    preview: (@Composable () -> Unit)? = null,
+) {
     val label = stringResource(if (fileType == "IMAGE") R.string.homework_photo_item else R.string.homework_document_item)
     val icon = when (fileType) {
         "IMAGE" -> R.drawable.ic_image
@@ -31,7 +36,8 @@ internal fun AttachmentChip(fileType: String, name: String? = null, modifier: Mo
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
         ) {
-            Icon(painterResource(icon), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+            if (preview == null) Icon(painterResource(icon), null, Modifier.size(24.dp), tint = LaraColors.PrimaryDark)
+            else preview()
             Text(name ?: label, style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextPrimary,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

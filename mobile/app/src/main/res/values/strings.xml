@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">L.A.R.A.</string>
+    <string name="app_name">lara latest</string>
     <string name="role_teacher">Teacher</string>
     <string name="role_student">Student</string>
     <string name="shell_title">Your classroom, together</string>
@@ -230,6 +230,12 @@
     <string name="homework_your_work">Your work</string>
     <string name="homework_photo_ready">Photo ready. Tap Turn in to send this version.</string>
     <string name="homework_work_ready">Work ready. Tap Turn in to send this version.</string>
+    <plurals name="homework_more_attachments">
+        <item quantity="one">%d more attachment</item>
+        <item quantity="other">%d more attachments</item>
+    </plurals>
+    <string name="homework_attachment_limit">You can add up to %1$d attachments.</string>
+    <string name="homework_remove_attachment">Remove attachment</string>
     <string name="homework_photo_item">Photo attachment</string>
     <string name="homework_photo_format">JPEG image</string>
     <string name="homework_attachment_name">%1$s</string>
@@ -412,7 +418,7 @@
 
     <string name="review_back">Back</string>
     <string name="review_forbidden">You no longer have access to this class’s submissions. Please ask the class teacher for help.</string>
-    <string name="review_offline">Grading requires the Hub. You can still see the saved submission list.</string>
+    <string name="review_offline">The Hub is unavailable. You can save grades on this device and sync them later.</string>
     <string name="review_refresh_failed">The submission list could not be refreshed. Showing saved information.</string>
     <string name="review_empty">No learners are enrolled in this class yet.</string>
     <string name="review_not_turned_in">Not turned in</string>
@@ -425,6 +431,9 @@
     <string name="review_save">Save grade</string>
     <string name="review_saving">Saving…</string>
     <string name="review_saved">Grade saved.</string>
+    <string name="review_grade_queued">Grade saved on this device. Waiting to sync.</string>
+    <string name="review_grade_needs_retry">Grade could not sync. Check the Hub grade before retrying.</string>
+    <string name="review_grade_retry">Retry save</string>
     <string name="review_save_failed">The grade could not be confirmed. Please check the Hub and try again.</string>
     <string name="review_previous">Previous</string>
     <string name="review_next">Next</string>

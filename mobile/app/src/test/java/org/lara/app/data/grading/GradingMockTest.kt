@@ -80,6 +80,16 @@ class GradingMockTest {
             val cached = db.homeworkDao().observe(assignment, learner.user.id).first()
             assertEquals(20L, cached?.score)
             assertEquals("Great effort!", cached?.teacherFeedback)
+            val edited = api.grade(teacher.user.id, id, 0, "Revised", requireNotNull(receipt.updatedAt))
+            assertEquals(0L, edited.score)
+            val retry = api.grade(teacher.user.id, id, 0, "Revised", requireNotNull(receipt.updatedAt))
+            assertEquals(edited.updatedAt, retry.updatedAt)
+            sync.pull(learner.user.id)
+            assertEquals(0L, db.homeworkDao().observe(assignment, learner.user.id).first()?.score)
+            try {
+                api.grade(teacher.user.id, id, 5, "Stale edit", requireNotNull(receipt.updatedAt))
+                fail("Expected stale grade rejection")
+            } catch (error: HubFailure) { assertEquals(409, error.status) }
             try {
                 GradingApi(session(otherTeacher)).list(otherTeacher.user.id, assignment)
                 fail("Expected 403")

@@ -23,7 +23,7 @@ const TEXT_FIELD_LIMIT: usize = 4 * 1024;
 
 pub struct UploadForm {
     pub fields: HashMap<String, String>,
-    pub file: Option<Received>,
+    pub files: Vec<(usize, String, Received)>,
 }
 
 impl UploadForm {
@@ -44,7 +44,7 @@ impl UploadForm {
 
     /// Validate the uploaded file after the text fields.
     pub fn take_file(&mut self) -> Result<Received, ApiError> {
-        self.file.take().ok_or_else(|| ApiError::bad_request("Missing file"))
+        self.files.pop().map(|(_, _, file)| file).ok_or_else(|| ApiError::bad_request("Missing file"))
     }
 }
 
@@ -54,6 +54,7 @@ pub async fn read_form(
     headers: &HeaderMap,
     multipart: Result<Multipart, MultipartRejection>,
     text_fields: &[&str],
+    max_files: usize,
 ) -> Result<UploadForm, ApiError> {
     // A declared length over the limit is refused before a byte is read or written to disk.
     let declared = headers.get(CONTENT_LENGTH).and_then(|v| v.to_str().ok()).and_then(|v| v.parse::<u64>().ok());
@@ -61,18 +62,36 @@ pub async fn read_form(
         return Err(ApiError::file_too_large());
     }
     let mut multipart = multipart.map_err(|_| ApiError::bad_request("Expected multipart/form-data"))?;
-    let mut form = UploadForm { fields: HashMap::new(), file: None };
+    let mut legacy_file = false;
+    let mut form = UploadForm { fields: HashMap::new(), files: Vec::new() };
     while let Some(mut field) = multipart.next_field().await.map_err(multipart_error)? {
         let Some(name) = field.name().map(str::to_owned) else { continue };
-        if name == "file" {
-            if form.file.is_some() {
-                return Err(ApiError::bad_request("Send one file"));
+        let slot = if name == "file" { Some(1) } else {
+            name.strip_prefix("file_").and_then(|slot| slot.parse::<usize>().ok())
+        };
+        if let Some(slot) = slot {
+            let legacy = name == "file";
+            if !form.files.is_empty() && legacy != legacy_file {
+                return Err(ApiError::bad_request("Do not mix single-file and batch upload fields"));
             }
-            form.file = Some(receive(storage, &mut field).await?);
+            legacy_file = legacy;
+            if (max_files == 1 && !legacy) || slot == 0 || slot > max_files || form.files.iter().any(|(index, _, _)| *index == slot) {
+                return Err(ApiError::bad_request("Invalid attachment slot"));
+            }
+            let filename = field.file_name().unwrap_or("attachment").rsplit(['/', '\\']).next().unwrap_or("attachment");
+            let filename: String = filename.chars().filter(|c| !c.is_control()).take(120).collect();
+            form.files.push((slot, filename, receive(storage, &mut field).await?));
         } else if text_fields.contains(&name.as_str()) {
             let text = read_text(&mut field, &name).await?;
             form.fields.insert(name, text);
         }
+    }
+    form.files.sort_by_key(|(slot, _, _)| *slot);
+    if form.files.iter().enumerate().any(|(index, (slot, _, _))| index + 1 != *slot) {
+        return Err(ApiError::bad_request("Attachment slots must be consecutive"));
+    }
+    if form.files.iter().map(|(_, _, file)| file.size).sum::<u64>() > MAX_UPLOAD_BYTES {
+        return Err(ApiError::file_too_large());
     }
     Ok(form)
 }
