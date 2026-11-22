@@ -33,6 +33,7 @@ pub fn run() {
             account::read_class_content,
             assignment_work::read_assignment_work,
             assignment_work::submission_preview,
+            assignment_work::export_submission,
             assignment_work::read_gradebook,
             homework::begin_homework,
             homework::append_homework,

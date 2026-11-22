@@ -16,6 +16,12 @@ function Thread({account,target,offline,onChanged}:Props) {
  const privateThread=target.kind==='assignment',heading=privateThread?t.comments_private:t.comments_class;
  useEffect(()=>{let current=true;const epoch=++readEpoch.current;setLoadError(false);void readThread(account,target).then(value=>{if(current&&epoch===readEpoch.current)setThread(value)}).catch(()=>{if(current)setLoadError(true)});return()=>{current=false}},[account,target,retry]);
  useEffect(()=>()=>request.current?.abort(),[]);
+ const changed=useRef(onChanged);changed.current=onChanged;
+ useEffect(()=>{
+  if(offline)return;
+  const timer=setInterval(()=>{if(document.visibilityState==='visible'&&!sending.current){changed.current();setRetry(value=>value+1)}},5000);
+  return()=>clearInterval(timer);
+ },[offline]);
  const teacherOffline=privateThread&&account.user.role==='TEACHER'&&offline;
  const readonly=thread?.write_mode==='readonly';
  async function submit(event:FormEvent) {

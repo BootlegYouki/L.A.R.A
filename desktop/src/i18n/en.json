@@ -375,7 +375,7 @@
   "work_download": "Download submitted file",
   "work_discard": "Discard edits",
   "work_keep_editing": "Keep editing",
-  "work_document_help": "Download this document to open it in your document viewer.",
+  "work_document_help": "Open this file in your document viewer, or download a copy.",
   "work_preview_error": "Could not open this file. Connect to the Hub to save a copy for offline review.",
   "work_learner": "Learner",
   "work_grades": "Grades",
@@ -409,5 +409,9 @@
  "topic_options": "Topic options",
  "grades_empty_title": "No learners to grade yet",
  "grades_empty_help": "Approved learners and their scores will appear here.",
- "grades_view_people": "View People"
+ "grades_view_people": "View People",
+ "work_open_file": "Open file",
+ "work_opened": "Opened in your default viewer. Close that window to return to L.A.R.A.",
+ "work_saved_to": "Saved to {path}",
+ "work_export_error": "Could not open or save the file. Please try again."
 }

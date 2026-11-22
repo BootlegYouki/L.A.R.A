@@ -46,7 +46,7 @@ function Work({account,classroom,assignment,offline,attachments,onBack,onChanged
    {selected?<section className="work-selected" key={selected}><h2>{teacher?roster.find(row=>row.student_id===selected)?.full_name:t.work_your_work}</h2>
     <p className="work-status">{label(submission)}</p>
     {submission?<><p>{t.work_submitted} {new Date(submission.submitted_at).toLocaleString('en')}</p>{submission.score!=null&&<p className="work-score">{submission.score} / {assignment.max_points}</p>}{submission.teacher_feedback&&<p className="lesson-text">{submission.teacher_feedback}</p>}
-      <SubmissionPreview account={account} submissionId={submission.id} offline={offline}/>
+      <SubmissionPreview account={account} submissionId={submission.id} attachments={submission.attachments} offline={offline}/>
       {teacher&&<GradeEditor key={submission.id} account={account} classroom={classroom} submission={submission} offline={offline} onChanged={update} onDirty={setDirty}/>}
     </>:teacher?<p>{t.work_no_submission}</p>:null}
     {!teacher&&<HomeworkUpload account={account} assignmentId={assignment.id} offline={offline} archived={classroom.archived_at!=null} onChanged={update}/>}

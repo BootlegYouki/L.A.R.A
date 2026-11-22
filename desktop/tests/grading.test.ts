@@ -27,3 +27,9 @@ it('blocks learner and archived teacher writes before requesting credentials',as
  await expect(publishGrade({...account,classrooms:[{...account.classrooms[0],archived_at:1}]},id,id,1,'')).rejects.toThrow();
  expect(accountToken).not.toHaveBeenCalled();
 });
+
+it('retains ordered attachment names so a teacher can open a PDF after an image',()=>{
+ const row={id,assignment_id:id,student_id:student,submitted_at:1,received_at:1,score:null,teacher_feedback:null,updated_at:1,attachments:[{name:'photo.png',file_type:'IMAGE'},{name:'work.pdf',file_type:'DOCUMENT'}]};
+ expect(parseSubmissions([row],id)[0].attachments).toEqual(row.attachments);
+ expect(()=>parseSubmissions([{...row,attachments:Array(6).fill(row.attachments[0])}],id)).toThrow();
+});
