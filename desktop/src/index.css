@@ -304,7 +304,8 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 
 .class-page { max-width: 1048px; margin: 0 auto; }
 .class-tabs { display: flex; border-bottom: 1px solid var(--color-lara-border); margin: 0 0 24px; }
-.class-tabs button { min-height: 48px; padding: 0 24px; border: 0; border-bottom: 4px solid transparent; background: transparent; font: inherit; font-weight: 800; }
+.class-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 0; border-bottom: 4px solid transparent; background: transparent; font: inherit; font-weight: 800; }
+.class-tabs .pending-count { margin-left: 0; }
 .class-tabs button[aria-selected=true] { color: var(--color-lara-primary-dark); border-color: var(--color-lara-primary); }
 .class-page .class-banner { position: relative; display: flex; align-items: flex-start; overflow: hidden; margin: 0 0 24px; box-sizing: border-box; }
 .class-banner > div { position: relative; z-index: 1; min-width: 0; }

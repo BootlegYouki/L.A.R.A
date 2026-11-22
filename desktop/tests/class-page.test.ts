@@ -178,3 +178,17 @@ it('updates closed comment badges without reloading classwork or opening the thr
  await act(async()=>renderer.update(createElement(ClassPage,{account,classroom:room,offline:false,onVideo:vi.fn(),commentsVersion:1})));
  expect(renderer.root.findByProps({className:'comment-count'}).children).toEqual(['2']);expect(invoke).toHaveBeenCalledTimes(1);expect(renderer.root.findAllByType('textarea')).toHaveLength(0);
 });
+
+it('shows pending join requests on People only and clears the count as requests are resolved',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);counts.mockResolvedValue({});invoke.mockResolvedValue({announcements:[],materials:[]});
+ const row={enrollment_id:'request',student_id:'learner',full_name:'Learner',status:'PENDING' as const};
+ const pending:CachedAccount={...account,rosters:{[room.id]:[row,{...row,enrollment_id:'active',status:'ACTIVE'}],other:[{...row,enrollment_id:'other'}]}};
+ const props={account:pending,classroom:room,people:createElement('div',null,'People content'),offline:true,onVideo:vi.fn()};
+ await act(async()=>{renderer=create(createElement(ClassPage,props))});
+ const people=renderer.root.findByProps({id:'tab-people'}),badge=people.findByProps({className:'pending-count'});
+ expect(badge.children).toEqual(['1']);expect(badge.props['aria-label']).toBe('1 pending join requests');
+ expect(renderer.root.findAllByProps({className:'pending-count'})).toHaveLength(1);
+ for(const status of ['ACTIVE','REJECTED'] as const){await act(async()=>renderer.update(createElement(ClassPage,{...props,account:{...pending,rosters:{...pending.rosters,[room.id]:[{...row,status}]}}})));expect(renderer.root.findAllByProps({className:'pending-count'})).toHaveLength(0);}
+ await act(async()=>renderer.update(createElement(ClassPage,{...props,account:{...pending,user:{...pending.user,role:'STUDENT'}}})));
+ expect(renderer.root.findAllByProps({className:'pending-count'})).toHaveLength(0);
+});
