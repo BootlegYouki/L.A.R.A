@@ -36,12 +36,25 @@ class TeacherPrivateCommentRepository(
         }
     }
 
+    fun accessDenied(assignmentId: String, studentId: String) =
+        db.syncStateDao().observe(denialKey(assignmentId, studentId)).map { it?.value == "1" }
+
+    suspend fun setAccessDenied(assignmentId: String, studentId: String, denied: Boolean) {
+        val key = denialKey(assignmentId, studentId)
+        if (denied) db.syncStateDao().put(SyncStateEntity(key, "1", System.currentTimeMillis()))
+        else db.syncStateDao().remove(key)
+    }
+
+    private fun denialKey(assignmentId: String, studentId: String) =
+        "teacher_private_denied:$assignmentId/$studentId"
+
     fun unreadThreads(classroomId: String) = db.streamDao().observeUnreadPrivateThreads(classroomId, READ_PREFIX)
 
     suspend fun markRead(assignmentId: String, studentId: String, commentIds: List<String>) {
         val ids = commentIds.toSet()
         db.withTransaction {
             val state = db.syncStateDao()
+            if (state.get(denialKey(assignmentId, studentId))?.value == "1") return@withTransaction
             val hub = state.get("hub_id")?.value.orEmpty()
             val key = "$READ_PREFIX$hub/$assignmentId/$studentId/"
             val now = System.currentTimeMillis()

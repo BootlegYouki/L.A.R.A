@@ -415,17 +415,35 @@ private fun TeacherPrivateThread(
     var busy by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(reachable) }
     var failed by remember { mutableStateOf(false) }
-    var readDenied by remember { mutableStateOf(false) }
+    val savedDenial by remember(repository, assignmentId, studentId) {
+        repository.accessDenied(assignmentId, studentId)
+    }.collectAsStateWithLifecycle(initialValue = null)
+    var sessionDenied by remember(assignmentId, studentId) { mutableStateOf(false) }
+    val readDenied = sessionDenied || savedDenial == true
+    val canRead = savedDenial != null && !readDenied && !loading
+    val limit = org.lara.app.data.remote.TEACHER_PRIVATE_REPLY_LIMIT
+    val tooLong = draft.length > limit
     LaunchedEffect(assignmentId, studentId, reachable) {
         loading = reachable
-        readDenied = false
-        if (reachable) try { repository.refresh(assignmentId, studentId) } catch (error: CancellationException) { throw error }
-        catch (error: HubFailure) { failed = true; readDenied = error.status == 403 }
-        catch (_: Exception) { failed = true }
-        finally { loading = false }
+        failed = false
+        if (reachable) try {
+            repository.refresh(assignmentId, studentId)
+            repository.setAccessDenied(assignmentId, studentId, false)
+            sessionDenied = false
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: HubFailure) {
+            failed = true
+            if (error.status == 403) {
+                sessionDenied = true
+                repository.setAccessDenied(assignmentId, studentId, true)
+            }
+        } catch (_: Exception) {
+            failed = true
+        } finally { loading = false }
     }
-    LaunchedEffect(assignmentId, studentId, comments) {
-        if (comments.isNotEmpty()) repository.markRead(assignmentId, studentId, comments.map { it.id })
+    LaunchedEffect(assignmentId, studentId, comments, canRead) {
+        if (canRead && comments.isNotEmpty()) repository.markRead(assignmentId, studentId, comments.map { it.id })
     }
     ModalBottomSheet(onDismissRequest = close, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().imePadding().padding(LaraSpacing.S4),
@@ -433,13 +451,13 @@ private fun TeacherPrivateThread(
             Text(stringResource(R.string.teacher_private_title), style = MaterialTheme.typography.titleLarge)
             Text(learnerName, style = MaterialTheme.typography.titleMedium)
             if (!reachable) Text(stringResource(R.string.teacher_private_offline), color = LaraColors.TextSecondary)
-            if (failed) Text(stringResource(if (readDenied) R.string.teacher_private_denied else R.string.teacher_private_failed),
+            if (failed || readDenied) Text(stringResource(if (readDenied) R.string.teacher_private_denied else R.string.teacher_private_failed),
                 color = MaterialTheme.colorScheme.error)
-            if (loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            if (loading || savedDenial == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
                 Text(stringResource(R.string.teacher_private_loading), color = LaraColors.TextSecondary)
-            } else if (comments.isEmpty()) Text(stringResource(R.string.teacher_private_empty), color = LaraColors.TextSecondary)
-            else LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
+            } else if (canRead && comments.isEmpty()) Text(stringResource(R.string.teacher_private_empty), color = LaraColors.TextSecondary)
+            else if (canRead) LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
                 items(comments, key = { it.id }) { comment ->
                     val isLearner = comment.authorId == studentId
                     Surface(color = if (isLearner) LaraColors.Surface else LaraColors.PrimaryLight,
@@ -453,21 +471,29 @@ private fun TeacherPrivateThread(
                 }
             }
             OutlinedTextField(draft, { draft = it }, label = { Text(stringResource(R.string.teacher_private_hint)) },
-                enabled = allowReply && !readDenied && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), maxLines = 4)
+                enabled = allowReply && canRead && !busy, isError = tooLong,
+                supportingText = { Text(stringResource(R.string.teacher_private_length, draft.length, limit)) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchTarget), maxLines = 4)
             Button(onClick = {
                 val text = draft.trim()
-                if (text.isBlank()) return@Button
+                if (text.isBlank() || tooLong) return@Button
                 busy = true; failed = false
                 scope.launch {
                     try {
                         repository.reply(assignmentId, studentId, text)
                         draft = ""
                     } catch (error: CancellationException) { throw error }
-                    catch (error: HubFailure) { failed = true; readDenied = error.status == 403 }
+                    catch (error: HubFailure) {
+                        failed = true
+                        if (error.status == 403) {
+                            sessionDenied = true
+                            repository.setAccessDenied(assignmentId, studentId, true)
+                        }
+                    }
                     catch (_: Exception) { failed = true }
                     finally { busy = false }
                 }
-            }, enabled = allowReply && !readDenied && !busy && draft.isNotBlank(),
+            }, enabled = allowReply && canRead && !busy && !tooLong && draft.isNotBlank(),
                 modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) {
                 Text(stringResource(R.string.teacher_private_reply))
             }
