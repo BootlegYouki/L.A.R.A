@@ -1,15 +1,15 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {t} from '../i18n';
 import type {CachedAccount} from '../services/auth';
-import {readThread,sendComment,type ThreadData,type ThreadTarget} from '../services/comments';
-interface Props {account:CachedAccount;target:ThreadTarget;offline:boolean;onRefresh:()=>Promise<void>;onCountChanged?:(count:number)=>void}
+import {readThread,sendComment,markPrivateCommentsRead,type ThreadData,type ThreadTarget} from '../services/comments';
+interface Props {account:CachedAccount;target:ThreadTarget;offline:boolean;onRefresh:()=>Promise<void>;onCountChanged?:(count:number)=>void;onRead?:()=>void}
 export default function CommentThread(props:Props) {
  const {account,target}=props;
  // Remount the draft and pending requests whenever the account or private recipient changes.
  const key=`${account.hub.ip}:${account.hub.http_port}/${account.user.id}/${target.kind}/${target.id}/${target.kind==='assignment'?target.student_id??account.user.id:''}`;
  return <Thread key={key} {...props}/>;
 }
-function Thread({account,target,offline,onRefresh,onCountChanged}:Props) {
+function Thread({account,target,offline,onRefresh,onCountChanged,onRead}:Props) {
  const [thread,setThread]=useState<ThreadData|null>(null),[loadError,setLoadError]=useState(false),[retry,setRetry]=useState(0);
  const [draft,setDraft]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const pendingId=useRef<string|undefined>(undefined),sending=useRef(false),readEpoch=useRef(0),request=useRef<AbortController|null>(null);
@@ -17,6 +17,15 @@ function Thread({account,target,offline,onRefresh,onCountChanged}:Props) {
  const needsSync=useRef(false),refreshing=useRef(false);
  const refresh=()=>{needsSync.current=true;setRetry(value=>value+1)};
  const privateThread=target.kind==='assignment',heading=privateThread?t.comments_private:t.comments_class;
+ const lastRead=useRef(''),readAlive=useRef(true),readCallback=useRef(onRead);readCallback.current=onRead;
+ useEffect(()=>{readAlive.current=true;return()=>{readAlive.current=false}},[]);
+ useEffect(()=>{
+  const {account,target}=latest.current;
+  if(!thread||account.user.role!=='TEACHER'||target.kind!=='assignment'||typeof document==='undefined'||document.visibilityState!=='visible')return;
+  const ids=thread.items.filter(item=>item.author_id===target.student_id&&item.author_id!==account.user.id&&item.sync_status!=='REJECTED').map(item=>item.id);
+  const key=ids.join(',');if(!key||lastRead.current===key)return;lastRead.current=key;
+  void markPrivateCommentsRead(account,target,ids).then(()=>{if(readAlive.current&&lastRead.current===key)readCallback.current?.()}).catch(()=>{if(lastRead.current===key)lastRead.current=''});
+ },[thread]);
  useEffect(()=>{
   let current=true;const epoch=++readEpoch.current,fetch=needsSync.current;needsSync.current=false;refreshing.current=true;
   void (async()=>{try{if(fetch&&!offline)await latest.current.onRefresh();if(!current)return;const value=await readThread(latest.current.account,latest.current.target);if(current&&epoch===readEpoch.current){setThread(value);setLoadError(false)}}catch{if(current&&epoch===readEpoch.current)setLoadError(true)}finally{if(current&&epoch===readEpoch.current)refreshing.current=false}})();

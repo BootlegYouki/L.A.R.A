@@ -49,6 +49,8 @@ pub fn run() {
             homework::flush_homework,
             comments::read_comment_thread,
             comments::read_class_comment_counts,
+              comments::read_private_comment_unread,
+              comments::mark_private_comments_read,
             comments::queue_comment,
             account::save_roster_snapshot,
             account::clear_roster_snapshot,

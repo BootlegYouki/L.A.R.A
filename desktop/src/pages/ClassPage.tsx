@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { t } from '../i18n';
 import CommentThread from '../components/CommentThread';
+import {readPrivateUnread,type PrivateUnread} from '../services/comments';
 import AssignmentWork from '../components/AssignmentWork';
 import Gradebook from '../components/Gradebook';
 import ClassAuthoringDialog, { type AuthoringKind } from '../components/ClassAuthoringDialog';
@@ -38,6 +39,8 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
   const [documentFile,setDocumentFile]=useState<{id:string;title:string}|null>(null);
   const documentViewer=documentFile?<DocumentViewer account={account} source={{kind:'material',id:documentFile.id}} title={documentFile.title} offline={offline} onClose={()=>setDocumentFile(null)}/>:null;
   const [commentCounts,setCommentCounts]=useState<Record<string,number>>({});
+  const [privateUnread,setPrivateUnread]=useState<PrivateUnread>({}),[privateReadVersion,setPrivateReadVersion]=useState(0);
+  const privateRefresh=useRef(onRefreshComments);privateRefresh.current=onRefreshComments;
   const [openComments,setOpenComments]=useState<string[]>([]);
   const [assignmentId,setAssignmentId]=useState<string>();
   const [tab, setTab] = useState<string>(initialTab);
@@ -48,6 +51,20 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
   const [uploadParent,setUploadParent]=useState<{kind:'assignment'|'announcement';id:string}>();
   const teacher=account.user.role==='TEACHER' && (classroom.teacher_id===account.user.id || classroom.co_teacher_ids?.includes(account.user.id)) && classroom.archived_at==null;
   const pendingCount=teacher?(account.rosters?.[classroom.id]??[]).filter(row=>row.status==='PENDING').length:0;
+  useEffect(()=>{
+    if(!teacher){setPrivateUnread({});return;}
+    let current=true;void readPrivateUnread(account,classroom.id).then(value=>{if(current)setPrivateUnread(old=>JSON.stringify(old)===JSON.stringify(value)?old:value)}).catch(()=>{});
+    return()=>{current=false};
+  },[account,classroom.id,teacher,commentsVersion,privateReadVersion]);
+  const pollPrivate=!!teacher&&!offline&&!!onRefreshComments;
+  useEffect(()=>{
+    if(!pollPrivate)return;let running=false,alive=true;
+    const timer=setInterval(()=>{if(!alive||running||document.visibilityState!=='visible')return;running=true;void Promise.resolve().then(()=>privateRefresh.current?.()).catch(()=>{}).finally(()=>{running=false;if(alive)setPrivateReadVersion(value=>value+1)});},5000);
+    return()=>{alive=false;clearInterval(timer)};
+  },[pollPrivate]);
+  const unreadFor=(id:string)=>Object.values(privateUnread[id]??{}).reduce((sum,count)=>sum+count,0);
+  const unreadTotal=Object.keys(privateUnread).reduce((sum,id)=>sum+unreadFor(id),0);
+  const unreadBadge=(count:number)=>teacher&&count>0?<span className="pending-count private-unread-count" title={t.comments_unread_private.replace('{count}',String(count))} aria-label={t.comments_unread_private.replace('{count}',String(count))}>{count}</span>:null;
   const canPost=teacher||(account.user.role==='STUDENT'&&classroom.archived_at==null&&(classroom.enrollment_status??account.join_requests?.find(r=>r.classroom_id===classroom.id)?.status??'ACTIVE')==='ACTIVE');
   const createdContent=()=>{setNotice(t.authoring_saved);onContentCreated?.();setRetry(value=>value+1);};
   const classworkTab = useRef<HTMLButtonElement>(null);
@@ -98,7 +115,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
     </div>
   </section>;
   const assignment=content?.assignments?.find(item=>item.id===assignmentId);
-  if(assignment)return <><AssignmentWork account={account} classroom={classroom} assignment={assignment} attachments={<div className="assignment-attachments">{content?.materials.filter(item=>item.assignment_id===assignment.id).map(attachment)}</div>} offline={offline} onBack={()=>setAssignmentId(undefined)} onChanged={()=>onContentCreated?.()} onRefreshComments={onRefreshComments}/>{documentViewer}</>;
+  if(assignment)return <><AssignmentWork account={account} classroom={classroom} assignment={assignment} attachments={<div className="assignment-attachments">{content?.materials.filter(item=>item.assignment_id===assignment.id).map(attachment)}</div>} offline={offline} onBack={()=>setAssignmentId(undefined)} onChanged={()=>onContentCreated?.()} onRefreshComments={onRefreshComments} unreadCounts={privateUnread[assignment.id]} onPrivateRead={()=>setPrivateReadVersion(value=>value+1)}/>{documentViewer}</>;
   return <section className="class-page">{documentViewer}
     {composer && composer!=='material' && composer!=='quiz' && <ClassAuthoringDialog key={composer} kind={composer} account={account} classroomId={classroom.id} offline={offline} topics={content?.topics} onClose={()=>setComposer(null)} onCreated={createdContent}/>}
     {composer==='quiz' && <QuizCreateDialog account={account} classroomId={classroom.id} offline={offline} onClose={()=>setComposer(null)} onCreated={createdContent}/>}
@@ -114,7 +131,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
             const index = buttons.indexOf(event.currentTarget);
             const next = event.key === 'ArrowRight' ? (index + 1) % buttons.length : event.key === 'ArrowLeft' ? (index + buttons.length - 1) % buttons.length : event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : -1;
             if (next >= 0) {event.preventDefault(); buttons[next].click(); buttons[next].focus();}
-          }}>{label}{id==='people'&&pendingCount>0&&<span className="pending-count" aria-label={t.roster_pending_count.replace('{count}',String(pendingCount))}>{pendingCount}</span>}</button>)}
+          }}>{label}{id==='classwork'&&unreadBadge(unreadTotal)}{id==='people'&&pendingCount>0&&<span className="pending-count" aria-label={t.roster_pending_count.replace('{count}',String(pendingCount))}>{pendingCount}</span>}</button>)}
     </div>
     {classroom.archived_at != null && <p className="hub-status-banner banner-info" role="status">{t.class_archived_read_only}</p>}
     <div id={'panel-'+tab} role="tabpanel" aria-labelledby={'tab-'+tab}>
@@ -132,7 +149,7 @@ export default function ClassPage({account, classroom, people, onVideo, offline,
           {teacher && <details className="class-create-menu"><summary className="control auth-submit"><i className="ph ph-plus" aria-hidden="true"/>{t.authoring_create}</summary><div>{([['assignment',t.new_assignment],['quiz',t.quiz_create],['material',t.material_upload],['topic',t.new_topic]] as const).map(([kind,label])=><button type="button" key={kind} disabled={offline&&kind!=='material'} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setUploadParent(undefined);setComposer(kind);}}><i className={'ph '+({assignment:'ph-clipboard-text',quiz:'ph-exam',material:'ph-book-open',topic:'ph-list-bullets'}[kind])} aria-hidden="true"/>{label}</button>)}</div></details>}
           <header className="classwork-heading"><div><h1 id="classwork-title">{t.classwork}</h1><p>{classroom.name} / {classroom.section}</p></div>{content && <p>{itemCount === 1 ? t.class_items_one : t.class_items_many.replace('{count}', String(itemCount))}</p>}</header>
           {!!content?.topics?.length&&<div className="auth-field class-topic-filter"><label htmlFor="class-topic-filter">{t.topic_name}</label><select id="class-topic-filter" value={topicFilter} onChange={e=>setTopicFilter(e.target.value)}><option value="">{t.all_topics}</option>{content.topics.map(topic=><option key={topic.id} value={topic.id}>{topic.name}</option>)}</select>{teacher&&topicFilter&&content.topics.filter(topic=>topic.id===topicFilter).map(topic=><div key={topic.id} className="topic-actions">{itemActions({kind:'topic',...topic})}</div>)}</div>}
-          {assignments.map(item=><article key={item.id} className="classwork-item-shell">{itemActions({kind:'assignment',...item})}<details className="material-item assignment-preview"><summary className="material-row"><span className="class-type-icon"><i className="ph ph-clipboard-text" aria-hidden="true"/></span><span className="material-name">{item.title}</span><span>{new Date(item.due_date).toLocaleDateString('en')}</span></summary><div className="material-preview"><p className="lesson-text">{item.instructions}</p><p>{t.assignment_points}: {item.max_points}</p>{content?.materials.filter(file=>file.assignment_id===item.id).map(attachment)}<button type="button" className="control text-button" onClick={()=>setAssignmentId(item.id)}>{t.assignment_view_work}</button></div></details></article>)}
+          {assignments.map(item=><article key={item.id} className="classwork-item-shell">{itemActions({kind:'assignment',...item})}<details className="material-item assignment-preview"><summary className="material-row"><span className="class-type-icon"><i className="ph ph-clipboard-text" aria-hidden="true"/></span><span className="material-name">{item.title}</span>{unreadBadge(unreadFor(item.id))}<span>{new Date(item.due_date).toLocaleDateString('en')}</span></summary><div className="material-preview"><p className="lesson-text">{item.instructions}</p><p>{t.assignment_points}: {item.max_points}</p>{content?.materials.filter(file=>file.assignment_id===item.id).map(attachment)}<button type="button" className="control text-button" onClick={()=>setAssignmentId(item.id)}>{t.assignment_view_work}</button></div></details></article>)}
           {quizzes.map(item=><article className="material-item material-row" key={item.id}><span className="class-type-icon"><i className="ph ph-exam" aria-hidden="true"/></span><h2>{item.title}</h2></article>)}
           {content && (materials.length ? <ul className="material-list">{materials.map(item => <li key={item.id} className="classwork-item-shell">{itemActions({kind:'material',...item})}
             <details className="material-item"><summary className="material-row"><span className="class-type-icon"><i className={'ph '+(item.file_type === 'VIDEO' ? 'ph-play-circle' : 'ph-file-text')} aria-hidden="true" /></span><span className="material-name">{item.title}<span className="material-meta">{item.file_type === 'VIDEO' ? t.class_video : t.class_handout}</span></span>{item.saved && <small className="material-saved">{t.lesson_saved}</small>}<i className="ph ph-caret-down material-caret" aria-hidden="true" /></summary>

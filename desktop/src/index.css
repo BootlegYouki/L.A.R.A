@@ -177,6 +177,7 @@ button:disabled, button:disabled:hover, input:disabled { color: var(--color-lara
 .generated-class-code { text-align: center; font-size: 2.25rem !important; font-weight: 900; letter-spacing: 3px; user-select: all; }
 .pending-count { margin-left: auto; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; background: var(--color-lara-danger-dark); color: white; }
 .roster-page h1 { margin: 24px 0; font-size: 1.5rem; font-weight: 900; }
+.roster-page > .hub-status-banner { margin: 24px 0; }
 .people-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 8px; padding-bottom: 12px; border-bottom: 2px solid var(--color-lara-primary); color: var(--color-lara-primary-dark); }
 .people-heading h2 { font-size: 1.5rem; font-weight: 900; }
 .roster-table-scroll { max-width: 100%; overflow-x: auto; }
@@ -591,3 +592,7 @@ section[aria-labelledby="upload-jobs-title"] progress { display: block; width: m
 .auth-change-hub { width: 100%; justify-content: center; margin-top: 8px; gap: 8px; }
 .auth-shell .startup-connection { min-height: 0; width: 100%; padding: 0; }
 .auth-shell .startup-connection .discovery-panel { margin: 0; width: 100%; box-sizing: border-box; }
+
+.private-unread-count { flex-shrink: 0; white-space: nowrap; }
+.material-row .private-unread-count { margin-left: 0; }
+.work-learner-name { display: flex; align-items: center; gap: 8px; width: 100%; }
