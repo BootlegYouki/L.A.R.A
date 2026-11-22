@@ -9,6 +9,24 @@ const room = {id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_
 const account: CachedAccount = {hub:{ip:'127.0.0.1',http_port:8080,ws_port:8081,name:'Hub'},user:{id:'teacher',role:'TEACHER',lrn_or_id:'T',full_name:'Teacher'},expires_at:1,persistent:true,classrooms:[room]};
 let renderer: ReactTestRenderer;
 afterEach(async () => {if(renderer) await act(async () => renderer.unmount()); vi.clearAllMocks(); vi.unstubAllGlobals();});
+it('keeps the class mascot stable across reopening and renaming while varying between classes', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+  invoke.mockResolvedValue({announcements:[],materials:[]});
+  const show = async (classroom: typeof room) => {
+    await act(async () => {renderer=create(createElement(ClassPage,{account,classroom,offline:true,onVideo:vi.fn()}));});
+    const image = renderer.root.findByProps({className:'class-banner-owl'});
+    expect(image.props.alt).toBe('');
+    const src = image.props.src;
+    expect(src).toMatch(/owl-(0[12]|0[345]-transparent)\.webp/);
+    await act(async () => renderer.unmount());
+    return src;
+  };
+  const first = await show(room);
+  expect(await show({...room,name:'Renamed class'})).toBe(first);
+  const variants = new Set<string>();
+  for (let id = 0; id < 20; id++) variants.add(await show({...room,id:`class-${id}`}));
+  expect(variants.size).toBe(5);
+});
 it('opens cached classwork offline and routes a video through its actual material ID', async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
   invoke.mockResolvedValue({announcements:[],materials:[{id:'lesson',title:'Food chain',file_type:'VIDEO',saved:true,chunks:[]}]});
@@ -16,7 +34,7 @@ it('opens cached classwork offline and routes a video through its actual materia
   await act(async () => {renderer=create(createElement(ClassPage,{account,classroom:room,offline:true,onVideo:open}));});
   await act(async () => renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   await act(async () => renderer.root.findByProps({className:'control text-button material-open'}).props.onClick());
-  expect(open).toHaveBeenCalledWith('lesson');
+  expect(open).toHaveBeenCalledWith('lesson','classwork');
   expect(invoke).toHaveBeenCalledWith('read_class_content',{hub:account.hub,userId:'teacher',classroomId:'class'});
 });
 
@@ -120,6 +138,8 @@ it('filters cached work by its real topic while retaining unassigned work in All
   await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
   expect(JSON.stringify(renderer.toJSON())).toContain('Outside unit');
   await act(async()=>renderer.root.findByProps({id:'class-topic-filter'}).props.onChange({target:{value:'t'}}));
+  expect(renderer.root.findByProps({'aria-label':'Topic options: Unit'}).props.className).toBe('icon-button');
+  expect(renderer.root.findByProps({'aria-label':'Topic options: Unit'}).children).not.toContain('Topic options');
   expect(JSON.stringify(renderer.toJSON())).toContain('In unit');
   expect(JSON.stringify(renderer.toJSON())).not.toContain('Outside unit');
 });

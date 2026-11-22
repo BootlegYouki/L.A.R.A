@@ -1,0 +1,12 @@
+.class-page .class-topic-filter { display: grid; grid-template-columns: minmax(0,1fr) 40px; align-items: center; gap: 8px; max-width: 520px; }
+.class-page .class-topic-filter > label { grid-column: 1 / -1; margin: 0; }
+.class-page .class-topic-filter > select { min-width: 0; }
+.class-page .topic-actions { align-self: stretch; align-items: center; }
+.class-page .topic-actions > .classwork-actions { display: block; }
+.class-page .topic-actions summary { padding: 0; }
+.class-page .class-banner { align-items: center; justify-content: space-between; gap: 24px; }
+.class-banner-owl { flex: 0 0 176px; width: 176px; height: 176px; object-fit: cover; filter: grayscale(1); }
+@media (max-width: 640px) {
+  .class-page .class-banner { gap: 16px; }
+  .class-banner-owl { flex-basis: 96px; width: 96px; height: 96px; }
+}

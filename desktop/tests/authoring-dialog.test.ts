@@ -23,5 +23,9 @@ it('offers announcement attachments inside the creation dialog',async()=>{
  const account={user:{id:'teacher',role:'TEACHER'},hub:{ip:'127.0.0.1',http_port:8080}} as CachedAccount;
  await act(async()=>{r=create(createElement(ClassAuthoringDialog,{kind:'announcement',account,classroomId:'class',offline:false,onClose:vi.fn(),onCreated:vi.fn()}))});
  expect(r.root.findAllByProps({type:'file'})).toHaveLength(1);
+ await act(async()=>r.root.findByProps({id:'assignment-files'}).props.onChange({target:{files:[new File(['clip'],'lesson.mp4')]}}));
+ expect(JSON.stringify(r.root.findByProps({className:'authoring-file-picker'}).findByType('span').children)).toContain('Chosen file: lesson.mp4');
+ await act(async()=>r.root.findByProps({id:'assignment-files'}).props.onChange({target:{files:[new File(['a'],'notes.pdf'),new File(['b'],'photo.png')]}}));
+ expect(JSON.stringify(r.root.findByProps({className:'authoring-file-picker'}).findByType('span').children)).toContain('Chosen files: notes.pdf, photo.png');
  await act(async()=>r.unmount());vi.unstubAllGlobals();
 });

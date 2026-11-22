@@ -30,6 +30,7 @@ interface Props {
   token: string;
   offline: boolean;
   onBack: () => void;
+  backLabel?: string;
 }
 
 export default function VideoLessonPage({
@@ -39,6 +40,7 @@ export default function VideoLessonPage({
   token,
   offline,
   onBack,
+  backLabel=t.back,
 }: Props) {
   const [material, setMaterial] = useState<Material | null>(null);
   const [loading, setLoading] = useState(true);
@@ -231,7 +233,7 @@ export default function VideoLessonPage({
             type="button"
             className="icon-button back-button"
             onClick={onBack}
-            aria-label={t.back}
+            aria-label={backLabel}
           >
             <i className="ph ph-arrow-left" aria-hidden="true" />
           </button>
@@ -253,7 +255,7 @@ export default function VideoLessonPage({
             type="button"
             className="icon-button back-button"
             onClick={onBack}
-            aria-label={t.back}
+            aria-label={backLabel}
           >
             <i className="ph ph-arrow-left" aria-hidden="true" />
           </button>
@@ -271,7 +273,7 @@ export default function VideoLessonPage({
             onClick={onBack}
           >
             <i className="ph ph-arrow-left" aria-hidden="true" />
-            {t.back_to_stream}
+            {backLabel}
           </button>
         </section>
       </div>
@@ -287,7 +289,7 @@ export default function VideoLessonPage({
             type="button"
             className="icon-button back-button"
             onClick={onBack}
-            aria-label={t.back}
+            aria-label={backLabel}
           >
             <i className="ph ph-arrow-left" aria-hidden="true" />
           </button>
@@ -306,7 +308,7 @@ export default function VideoLessonPage({
               onClick={onBack}
             >
               <i className="ph ph-arrow-left" aria-hidden="true" />
-              {t.back_to_stream}
+              {backLabel}
             </button>
           </div>
         </section>
@@ -317,7 +319,7 @@ export default function VideoLessonPage({
   // Main video player view
   return (
     <div className="video-lesson-page material-detail-page">
-      <button type="button" className="control text-button material-back" onClick={onBack}><i className="ph ph-arrow-left" aria-hidden="true" />{t.back}</button>
+      <button type="button" className="control text-button material-back" onClick={onBack}><i className="ph ph-arrow-left" aria-hidden="true" />{backLabel}</button>
       <div className="material-detail-layout">
         <article className="material-detail-content"><header className="material-detail-heading"><span className="class-type-icon"><i className="ph ph-play-circle" aria-hidden="true" /></span><div><h1>{material.title}</h1><p>{t.class_video}</p></div></header>
           <div className="video-container"><VideoPlayer src={videoSrc} title={material.title} /></div>

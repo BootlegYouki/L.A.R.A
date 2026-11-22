@@ -567,3 +567,25 @@ section[aria-labelledby="upload-jobs-title"] progress { display: block; width: m
 .homework-upload .homework-add-file { border: 1px solid var(--color-lara-ink-2); border-radius: 9999px; background: transparent; color: var(--color-lara-primary-dark); }
 .homework-upload .homework-turn-in { border-radius: 9999px; }
 .homework-empty-help { margin-top: 16px; text-align: center; font-size: .8125rem; line-height: 1.5; color: var(--color-lara-ink-2); }
+.auth-pin-boxes { position: relative; width: 100%; }
+.auth-pin-slots { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
+.auth-pin-slots > span { display: flex; align-items: center; justify-content: center; height: 64px; box-sizing: border-box; border: 2px solid var(--color-lara-border); border-radius: 16px; background: white; font-size: 1.75rem; font-weight: 800; color: var(--color-lara-ink); }
+.auth-pin-slots > span[data-active=true] { border: 3px solid var(--color-lara-primary-dark); box-shadow: 0 0 0 2px var(--color-lara-primary-light); }
+.auth-pin-boxes[data-invalid=true] .auth-pin-slots > span { border-color: var(--color-lara-danger-dark); }
+.auth-pin-boxes[data-disabled=true] .auth-pin-slots > span { background: var(--color-lara-subtle); }
+.auth-field .auth-pin-input { position: absolute; inset: 0; box-sizing: border-box; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: text; }
+@media(max-width:420px) { .auth-pin-slots { gap: 6px; } .auth-pin-slots > span { height: 56px; border-radius: 12px; } }
+.auth-shell .content-wrap { width: 100%; max-width: 512px; min-height: 100dvh; box-sizing: border-box; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; justify-content: center; }
+.auth-shell .hub-status-banner { box-sizing: border-box; width: 100%; justify-content: center; text-align: center; margin: 0 0 12px; overflow-wrap: anywhere; }
+.auth-shell .auth-panel { margin: 0; max-width: none; padding: 24px; }
+.auth-shell .auth-heading { align-items: center; gap: 12px; text-align: center; }
+.auth-shell .auth-heading .empty-art { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: var(--color-lara-primary-light); color: var(--color-lara-primary-dark); }
+.auth-shell .auth-heading h1 { font-size: 1.75rem; line-height: 1.3; }
+.auth-shell .auth-heading p { line-height: 1.5; }
+.auth-shell .auth-hub { margin: 16px 0; text-align: center; }
+.auth-shell .auth-actions { margin-top: 20px; }
+.auth-shell .auth-help-text { margin: 16px 0 0; text-align: center; font-size: .8125rem; line-height: 1.5; }
+.auth-shell #auth-pin-help { text-align: center; }
+.auth-change-hub { width: 100%; justify-content: center; margin-top: 8px; gap: 8px; }
+.auth-shell .startup-connection { min-height: 0; width: 100%; padding: 0; }
+.auth-shell .startup-connection .discovery-panel { margin: 0; width: 100%; box-sizing: border-box; }

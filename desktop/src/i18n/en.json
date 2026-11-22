@@ -401,5 +401,13 @@
  "homework_mark_done": "Mark as done",
  "homework_attachment_required": "This Hub requires an attachment. Marking work done without a file is not supported yet.",
  "homework_image": "Image",
- "homework_document": "Document"
+ "homework_document": "Document",
+  "auth_change_hub": "Change Hub",
+ "authoring_chosen_file": "Chosen file:",
+ "authoring_chosen_files": "Chosen files:",
+ "authoring_choose_files": "Choose files",
+ "topic_options": "Topic options",
+ "grades_empty_title": "No learners to grade yet",
+ "grades_empty_help": "Approved learners and their scores will appear here.",
+ "grades_view_people": "View People"
 }

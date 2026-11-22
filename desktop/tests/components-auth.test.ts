@@ -8,6 +8,18 @@ import type { AuthUser, Classroom } from '../src/services/auth';
 const user: AuthUser = { id: 'u', lrn_or_id: 'T-0001', full_name: 'Teacher', role: 'TEACHER' };
 const classroom: Classroom = { id: 'c', name: '<script>bad()</script>', section: 'A', class_code: 'SECRET', teacher_id: 'u' };
 const noop = () => {};
+it('keeps sidebar order stable across refreshed snapshots and class selection without mutating data', () => {
+  const rooms = [
+    { ...classroom, id: 'z', name: 'Science', section: 'B' },
+    { ...classroom, id: 'a', name: 'Art', section: 'A' },
+    { ...classroom, id: 's', name: 'Science', section: 'A' },
+  ];
+  const labels = (classes: Classroom[], selectedId: string) => renderToStaticMarkup(createElement(Sidebar, { user, classrooms: classes, selectedId, onHome: noop, onOpen: noop })).match(/<strong>.*?<\/strong><small>.*?<\/small>/g);
+  const expected = ['<strong>Art</strong><small>A</small>', '<strong>Science</strong><small>A</small>', '<strong>Science</strong><small>B</small>'];
+  expect(labels(rooms, 'z')).toEqual(expected);
+  expect(labels([...rooms].reverse(), 'a')).toEqual(expected);
+  expect(rooms.map(room => room.id)).toEqual(['z', 'a', 's']);
+});
 const home = (props = {}) => renderToStaticMarkup(createElement(HomePage, { user, classrooms: [], loading: false, error: null, onRetry: noop, onOpen: noop, ...props }));
 it('preserves escaped cached cards during refresh and error without class codes or fictional progress', () => {
   const html = home({ classrooms: [classroom], loading: true, error: 'Refresh failed' });
