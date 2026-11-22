@@ -21,4 +21,5 @@ data class AnnouncementEntity(
     @ColumnInfo(name = "allow_comments", defaultValue = "1") val allowComments: Boolean = true,
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    @ColumnInfo(name = "author_id") val authorId: String? = null,
 )
