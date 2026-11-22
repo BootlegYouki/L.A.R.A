@@ -36,7 +36,8 @@ internal fun ClassDiscussion(container: AppContainer, userId: String, post: Anno
     var draft by rememberSaveable(post.id) { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().background(LaraColors.Surface).navigationBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(LaraColors.Surface).windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+        .navigationBarsPadding().imePadding()) {
         Surface(color = LaraColors.Surface) {
             Row(Modifier.fillMaxWidth().statusBarsPadding().height(AppBarHeight), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(back, Modifier.size(MinTouchTarget)) {

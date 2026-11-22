@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,7 +81,7 @@ fun AuthScreen(state: AuthState, onSubmit: (String, String) -> Unit, onDiscovery
         }
     }
     Scaffold(Modifier.imePadding(), containerColor = LaraColors.Canvas) { insets ->
-        BoxWithConstraints(Modifier.fillMaxSize().padding(insets).statusBarsPadding()) {
+        BoxWithConstraints(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets)) {
         Column(Modifier.fillMaxWidth().heightIn(min = maxHeight).verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4, Alignment.CenterVertically)) {
             // Placeholder mark until the real L.A.R.A. logo is chosen.

@@ -44,15 +44,7 @@ fun TutorChat(container: AppContainer, material: Material, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     val list = rememberLazyListState()
     var job by remember { mutableStateOf<Job?>(null) }
-    // The app pans the whole window for the keyboard; resize instead so only the message list shrinks.
-    var host = androidx.compose.ui.platform.LocalContext.current
-    while (host is android.content.ContextWrapper && host !is android.app.Activity) host = host.baseContext
-    DisposableEffect(Unit) {
-        val window = (host as? android.app.Activity)?.window
-        val previous = window?.attributes?.softInputMode
-        window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        onDispose { job?.cancel(); previous?.let { window.setSoftInputMode(it) } }
-    }
+    DisposableEffect(Unit) { onDispose { job?.cancel() } }
     LaunchedEffect(messages.lastOrNull()?.text, messages.size) { if (messages.isNotEmpty()) list.animateScrollToItem(messages.lastIndex) }
     val unreachable = stringResource(R.string.tutor_unreachable)
     val notAvailable = stringResource(R.string.tutor_not_available)

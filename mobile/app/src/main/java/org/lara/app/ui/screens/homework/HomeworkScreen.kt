@@ -173,10 +173,15 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
     var note by rememberSaveable(assignment.id) { mutableStateOf("") }
     val due = DateFormat.getDateTimeInstance().format(Date(assignment.dueDate))
     // The sheet is our own so it can shut while the finger is still down, like Classroom's (BottomSheetScaffold can't).
-    BoxWithConstraints(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.White)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.White).imePadding()) {
         val statusBar = androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         // The sheet stops under the status bar when swiped up, leaving it visible like Classroom does.
-        val collapsedPx = with(LocalDensity.current) { (maxHeight - statusBar - (if (draft != null) 248.dp else 176.dp) - androidx.compose.foundation.layout.WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()).toPx() }
+        val collapsedPx = with(LocalDensity.current) {
+            val bottomBar = (WindowInsets.navigationBars.getBottom(this) - WindowInsets.ime.getBottom(this))
+                .coerceAtLeast(0).toDp()
+            val peekHeight = if (draft != null) 248.dp else 176.dp
+            (maxHeight - statusBar - peekHeight - bottomBar).coerceAtLeast(0.dp).toPx()
+        }
         val offset = remember(collapsedPx) { Animatable(if (up) 0f else collapsedPx) }
         // Content appears only once the sheet has settled at the top, so it stays blank while sliding.
         val full = up

@@ -106,7 +106,7 @@ internal fun SubmissionReview(container: AppContainer, userId: String, assignmen
         text = { Text(stringResource(R.string.review_discard_text)) },
         confirmButton = { TextButton(onClick = { discard = false; pending?.invoke(); pending = null }, modifier = Modifier.heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.review_discard)) } },
         dismissButton = { TextButton(onClick = { discard = false; pending = null }, modifier = Modifier.heightIn(min = MinTouchTarget)) { Text(stringResource(R.string.review_keep)) } })
-    Column(Modifier.fillMaxSize().background(LaraColors.Canvas).statusBarsPadding().navigationBarsPadding().padding(LaraSpacing.S4)) {
+    Column(Modifier.fillMaxSize().background(LaraColors.Canvas).safeDrawingPadding().imePadding().padding(LaraSpacing.S4)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (selectedId != null) navigate { selectedId = null } else close() }, modifier = Modifier.size(MinTouchTarget), enabled = !busy) {
                 Icon(painterResource(R.drawable.ic_arrow_left), stringResource(R.string.review_back))

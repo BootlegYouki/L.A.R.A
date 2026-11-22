@@ -67,3 +67,5 @@ Word handouts size-check expanded XML before parsing. The attachment preview dec
 - On the learner phone, attach a file to an assignment and check the attachment icon and label under Your work. Turn it in. On the teacher phone, open the submission to see the same attachment style.
 - As a teacher, open Classwork and select an assignment with a submission. Check its count under **To review**. Grade it, go back, and confirm that it appears under **Reviewed**. A score of zero also counts as reviewed.
 - Disconnect from the Hub and reopen grading. Check the offline notice and verify that cached submissions remain in their respective tabs.
+
+The activity uses `adjustResize` so opening the Android keyboard keeps the discussion header below the status bar. The discussion composer stays above the keyboard while the post and comments share the remaining scrollable space. Check by opening a post with an attachment, focusing a class comment, and opening and dismissing the keyboard at normal and large font sizes. The back button and send control should stay visible.
