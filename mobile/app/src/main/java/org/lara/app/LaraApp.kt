@@ -45,6 +45,8 @@ class AppContainer private constructor(private val services: AppServices, privat
     val discovery get() = services.discovery
     val syncScheduler get() = services.scheduler
     private val database get() = services.accounts.prepared(requireNotNull(accountId))
+    internal fun gradebook(classroomId: String) =
+        org.lara.app.data.repository.observeGradebook(database, classroomId)
     fun reviewSubmissions(assignmentId: String) = database.classworkDao().observeSubmissions(assignmentId)
     suspend fun reviewDenied(assignmentId: String) = database.syncStateDao().get("review_denied:$assignmentId")?.value == "1"
     suspend fun setReviewDenied(assignmentId: String, denied: Boolean) {
@@ -59,6 +61,10 @@ class AppContainer private constructor(private val services: AppServices, privat
     }
     val gradingApi by lazy { org.lara.app.data.remote.GradingApi(enrollmentApi) }
     fun privateComments(assignmentId: String) = database.streamDao().observePrivateComments(assignmentId)
+    internal val teacherPrivateCommentRepository by lazy {
+        org.lara.app.data.repository.TeacherPrivateCommentRepository(database, requireNotNull(accountId),
+            org.lara.app.data.remote.PrivateCommentApi(enrollmentApi))
+    }
     suspend fun addPrivateComment(assignmentId: String, studentId: String, content: String) {
         require(content.isNotBlank())
         val now = System.currentTimeMillis()
@@ -86,13 +92,17 @@ class AppContainer private constructor(private val services: AppServices, privat
         val token = try { sessionTokens.load() } catch (_: Exception) { null } ?: return null
         return services.accounts.prepare(token.userId).authDao().currentUserId()?.takeIf { it == token.userId }
     }
-    val settings by lazy { org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load) }
+    val settings by lazy {
+        org.lara.app.data.repository.SettingsRepository(database.authDao(), sessionTokens, sync, endpoints::load,
+            pendingMaterialUploads = { classworkAuthoring.pendingUploadCount() })
+    }
     val enrollmentApi by lazy { org.lara.app.data.remote.EnrollmentApi(hubClient, sessionTokens, endpoints::load) }
     val announcements by lazy { org.lara.app.data.remote.AnnouncementApi(enrollmentApi, hubClient) }
     val materialAuthoringApi by lazy { org.lara.app.data.remote.ClassworkAuthoringApi(enrollmentApi) }
     val classworkAuthoring: org.lara.app.domain.ClassworkAuthoringRepository by lazy {
         val owner = requireNotNull(accountId)
-        org.lara.app.data.repository.ClassworkAuthoringRepository(services.context, owner, enrollmentApi, materialAuthoringApi) {
+        org.lara.app.data.repository.ClassworkAuthoringRepository(services.context, owner, enrollmentApi, materialAuthoringApi,
+            cachedHubId = { database.syncStateDao().get("hub_id")?.value }) {
             syncScheduler.enqueueNow()
             try { sync.pull(owner) }
             catch (error: kotlinx.coroutines.CancellationException) { throw error }

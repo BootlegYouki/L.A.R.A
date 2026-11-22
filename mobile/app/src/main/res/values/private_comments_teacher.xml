@@ -1,0 +1,14 @@
+<resources>
+    <string name="teacher_private_title">Private comments</string>
+    <string name="teacher_private_open">Open private comments</string>
+    <string name="teacher_private_unread">%1$d unread</string>
+    <string name="teacher_private_empty">No private comments yet.</string>
+    <string name="teacher_private_loading">Loading private comments…</string>
+    <string name="teacher_private_hint">Write a private comment</string>
+    <string name="teacher_private_reply">Send private comment</string>
+    <string name="teacher_private_offline">The Hub is unavailable. Saved comments are shown; reconnect to reply.</string>
+    <string name="teacher_private_failed">Could not load or send this comment. Try again when the Hub is available.</string>
+    <string name="teacher_private_denied">You no longer have access to this private thread.</string>
+    <string name="teacher_private_learner">Learner</string>
+    <string name="teacher_private_teacher">Teacher</string>
+</resources>

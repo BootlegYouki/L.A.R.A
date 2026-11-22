@@ -71,6 +71,12 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
     val selected = classes.find { it.id == (fixedClassId ?: teacherClassId ?: choice) } ?: if (fixedClassId == null) classes.firstOrNull() else null
     if (cached == Cached.Loading) { org.lara.app.ui.components.LoadingSpinner(); return }
     if (selected == null) { ReadingEmpty(R.string.reading_no_classes); return }
+    val unreadByAssignment = if (teacherHubReachable != null && userId in selected.teacherIds()) {
+        val unread by remember(container, selected.id) {
+            container.teacherPrivateCommentRepository.unreadThreads(selected.id)
+        }.collectAsStateWithLifecycle(initialValue = emptyList())
+        unread.groupingBy { it.assignmentId }.fold(0) { total, thread -> total + thread.count }
+    } else emptyMap()
     Column(Modifier.fillMaxSize()) {
         if (fixedClassId == null) {
             var expanded by remember { mutableStateOf(false) }
@@ -88,19 +94,20 @@ fun ClassroomLearningHost(container: AppContainer, userId: String, destination: 
                 }
             }
         }
-        key(selected.id) { ClassFeed(container, userId, selected, destination, teacherHubReachable, hubReachable) }
+        key(selected.id) { ClassFeed(container, userId, selected, destination, teacherHubReachable, hubReachable, unreadByAssignment) }
     }
 }
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun ClassFeed(container: AppContainer, userId: String, classroom: Classroom, destination: ShellDestination,
-    teacherHubReachable: Boolean?, hubReachable: Boolean?) {
+    teacherHubReachable: Boolean?, hubReachable: Boolean?, unreadCommentsByAssignment: Map<String, Int>) {
     val scope = rememberCoroutineScope()
     val streamFlow = remember(classroom.id) { container.stream.stream(classroom.id, scope) }
     val workFlow = remember(classroom.id) { container.classwork.classwork(classroom.id, scope) }
     val posts by streamFlow.collectAsStateWithLifecycle()
     val work by workFlow.collectAsStateWithLifecycle()
+    var topicFilter by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val names by container.commentNames.collectAsStateWithLifecycle(emptyList())
     val reload: suspend () -> Unit = { container.sync.synchronize(userId) }
     if (destination == ShellDestination.PEOPLE) {
@@ -121,19 +128,36 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     var openedAssignment by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val assignments = (work as? Cached.Content)?.value?.assignments.orEmpty()
     val selectedAssignment = assignments.find { it.id == openedAssignment }
+    val materials = (work as? Cached.Content)?.value?.materials.orEmpty()
+    var preparing by remember { mutableStateOf(false) }
+    val openMaterial = { id: String ->
+        val material = materials.find { it.id == id }
+        if (!preparing && material != null) {
+            if (material.fileType == "VIDEO") opened = id
+            else { preparing = true; scope.launch { try { preloadMaterial(container, material) } finally { preparing = false }; opened = id } }
+        }
+    }
     val fullScreen = org.lara.app.ui.components.LocalFullScreenOverlay.current
     val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
     val savedOwner = androidx.compose.ui.platform.LocalSavedStateRegistryOwner.current
     if (selectedAssignment != null && fullScreen != null && storeOwner != null) {
         BackHandler { openedAssignment = null }
         // The overlay is drawn by the scaffold, so hand it this screen's owners or its ViewModel loses the saved-state registry.
-        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment) { openedAssignment = null } } } } }
+        SideEffect { fullScreen.value = { CompositionLocalProvider(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner provides storeOwner, androidx.compose.ui.platform.LocalSavedStateRegistryOwner provides savedOwner) { key(selectedAssignment.id) { org.lara.app.ui.screens.homework.HomeworkScreen(container, userId, selectedAssignment, materials.filter { it.assignmentId == selectedAssignment.id }, { id -> openedAssignment = null; openMaterial(id) }) { openedAssignment = null } } } } }
         DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
     }
     val review = assignments.find { it.id == reviewAssignment }
     if (review != null && teacherHubReachable != null) {
         val page: @Composable () -> Unit = { key(review.id) {
-            org.lara.app.ui.screens.teacher.review.SubmissionReview(container, userId, review, teacherHubReachable, classroom.archivedAt != null) { reviewAssignment = null }
+            org.lara.app.ui.screens.teacher.review.SubmissionReview(container, userId, review, teacherHubReachable,
+                classroom.archivedAt != null, close = { reviewAssignment = null }, assignmentAttachments = {
+                    materials.filter { it.assignmentId == review.id }.forEach { attachment ->
+                        AnnouncementAttachmentPreview(container, userId, attachment) {
+                            reviewAssignment = null
+                            openMaterial(attachment.id)
+                        }
+                    }
+                })
         } }
         if (fullScreen != null) {
             val storeOwner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
@@ -142,16 +166,6 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             DisposableEffect(Unit) { onDispose { fullScreen.value = null } }
         } else page()
         return
-    }
-    val materials = (work as? Cached.Content)?.value?.materials.orEmpty()
-    // Fetch the file and draw its preview first, then open the page, so nothing pops in afterwards.
-    var preparing by remember { mutableStateOf(false) }
-    val openMaterial = { id: String ->
-        val m = materials.find { it.id == id }
-        if (!preparing && m != null) {
-            if (m.fileType == "VIDEO") opened = id
-            else { preparing = true; scope.launch { try { preloadMaterial(container, m) } finally { preparing = false }; opened = id } }
-        }
     }
     var openedPost by rememberSaveable(classroom.id) { mutableStateOf<String?>(null) }
     val selectedPost = (posts as? Cached.Content)?.value.orEmpty().find { it.id == openedPost }
@@ -187,7 +201,8 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
     if (destination == ShellDestination.CLASSWORK && teacherHubReachable != null && userId in classroom.teacherIds()) {
         org.lara.app.ui.components.PullRefresh(reload) {
             org.lara.app.ui.screens.teacher.classwork.TeacherClasswork(container.classworkAuthoring, userId, classroom,
-                requireNotNull((work as? Cached.Content)?.value), announcements, teacherHubReachable, openMaterial) { reviewAssignment = it }
+                requireNotNull((work as? Cached.Content)?.value), announcements, teacherHubReachable, openMaterial,
+                unreadCommentsByAssignment = unreadCommentsByAssignment) { reviewAssignment = it }
         }
         return
     }
@@ -199,7 +214,7 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             // Classwork also shows up here as posts, like Classroom. 
             val learner = userId !in classroom.teacherIds()
             val feed = announcements.map { post -> Triple(post.createdAt, post.id, @Composable {
-                AnnouncementCard(post, materials.filter { it.announcementId == post.id }, { openedPost = post.id }) { openMaterial(it.id) }
+                AnnouncementCard(container, userId, post, names.find { it.id == post.authorId }?.name, materials.filter { it.announcementId == post.id }, { openedPost = post.id }) { openMaterial(it.id) }
             }) } + materials.filter { it.announcementId == null && it.assignmentId == null }.map { m ->
                 Triple(m.createdAt, m.id, @Composable {
                     WorkPostCard(if (m.fileType == "VIDEO") R.drawable.ic_play else R.drawable.ic_books_regular,
@@ -219,7 +234,11 @@ private fun ClassFeed(container: AppContainer, userId: String, classroom: Classr
             val topicIds = (handouts.mapNotNull { it.topicId } + allAssignments.mapNotNull { it.topicId }).toSet()
             val ungrouped = handouts.any { it.topicId == null } || allAssignments.any { it.topicId == null }
             val ordered = (topics.map { it.id }.filter { it in topicIds } + topicIds.filter { id -> topics.none { it.id == id } }).map { "t$it" } + if (ungrouped) listOf("none") else emptyList()
-            val shown = ordered
+            val selectedTopic = topicFilter?.takeIf { id -> topics.any { it.id == id } }
+            if (topics.isNotEmpty()) item {
+                org.lara.app.ui.screens.teacher.classwork.TopicFilter(topics, selectedTopic) { topicFilter = it }
+            }
+            val shown = ordered.filter { selectedTopic == null || it == "t$selectedTopic" }
             if (shown.isEmpty()) item { ReadingEmpty(R.string.reading_work_empty) }
             shown.forEach { section ->
                 val isTopic = section.startsWith("t")
@@ -269,7 +288,7 @@ private fun WorkPostCard(icon: Int, title: String, createdAt: Long, open: () -> 
 }
 
 @Composable
-private fun AnnouncementCard(post: Announcement, attachments: List<Material>, openPost: () -> Unit, onOpen: (Material) -> Unit) {
+private fun AnnouncementCard(container: AppContainer, userId: String, post: Announcement, author: String?, attachments: List<Material>, openPost: () -> Unit, onOpen: (Material) -> Unit) {
     Surface(onClick = openPost, color = LaraColors.Surface, contentColor = LaraColors.TextPrimary, shape = LaraShapes.medium,
         border = BorderStroke(1.dp, LaraColors.Border)) {
         Column(Modifier.fillMaxWidth().padding(LaraSpacing.S3), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
@@ -281,13 +300,15 @@ private fun AnnouncementCard(post: Announcement, attachments: List<Material>, op
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LaraSpacing.S1)) {
                     Text(post.title, style = MaterialTheme.typography.bodyLarge)
+                    if (post.authorId != null) Text(author ?: stringResource(R.string.class_comments_member),
+                        style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
                     Text(DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(post.createdAt)),
                         style = MaterialTheme.typography.bodySmall, color = LaraColors.TextSecondary)
                 }
             }
             if (post.content.isNotBlank()) Text(post.content, style = MaterialTheme.typography.bodyLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
             attachments.forEach { attachment ->
-                AnnouncementAttachmentPreview(attachment) { onOpen(attachment) }
+                AnnouncementAttachmentPreview(container, userId, attachment) { onOpen(attachment) }
             }
             HorizontalDivider(color = LaraColors.Border)
             Row(Modifier.fillMaxWidth().heightIn(min = MinTouchTarget).clickable(onClick = openPost)

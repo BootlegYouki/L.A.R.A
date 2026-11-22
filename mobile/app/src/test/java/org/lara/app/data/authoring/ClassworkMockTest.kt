@@ -59,6 +59,10 @@ class ClassworkMockTest {
             repository.saveTopic(classroom.id, null, "Authoring test topic")
             sync.pull(learner.user.id)
             val topic = db.classworkDao().observeTopics(classroom.id).first().first { it.name == "Authoring test topic" }
+            repository.reorderTopic(classroom.id, topic.id, topic.name, 12)
+            sync.pull(learner.user.id)
+            assertEquals(12L, db.classworkDao().observeTopics(classroom.id).first().first { it.id == topic.id }.orderIndex)
+
             val draft = AssignmentDraft("Phone authoring", "Read the lesson", 25, System.currentTimeMillis() + 86_400_000, true, topic.id)
             val id = repository.saveAssignment(classroom.id, null, draft)
             sync.pull(learner.user.id)

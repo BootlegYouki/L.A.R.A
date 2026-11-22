@@ -25,14 +25,21 @@ class ClassworkAuthoringApiTest {
             val file = File.createTempFile("fixture-", ".pdf")
             try {
                 file.writeText("%PDF-1.4 test")
-                server.enqueue(MockResponse().setBody("{}"))
+                server.enqueue(MockResponse().setBody(
+                    """{"id":"material","classroom_id":"class","file_type":"WORKSHEET","file_size_bytes":${file.length()}}"""
+                ))
                 val progress = mutableListOf<Int>()
-                api.upload("teacher", hub.restBase, "class", file, MaterialDraft("Lesson", "DOCUMENT", assignmentId = "assignment"), progress = progress::add)
+                var started = false
+                api.upload("teacher", hub.restBase, "class", file,
+                    MaterialDraft("Lesson", "WORKSHEET", assignmentId = "assignment"),
+                    onSending = { started = true }, validateReceipt = true, progress = progress::add)
+                assertTrue(started)
                 val request = server.takeRequest()
                 assertEquals("Bearer synthetic", request.getHeader("Authorization"))
                 val body = request.body.readUtf8()
                 assertTrue(body.contains("name=\"assignment_id\""))
                 assertTrue(body.contains("%PDF-1.4 test"))
+                assertTrue(body.contains("WORKSHEET"))
                 assertEquals(100, progress.last())
                 server.enqueue(MockResponse().setResponseCode(302).setHeader("Location", "http://127.0.0.1:9/"))
                 try { api.mutate("teacher", "topics", "topic", "DELETE", null); fail("Redirect accepted") }

@@ -4,6 +4,9 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.serialization.json.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -43,7 +46,8 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
     }
 
     suspend fun upload(userId: String, hub: String, classroomId: String, file: File, draft: MaterialDraft,
-        hubId: String? = null, progress: (Int) -> Unit) = withContext(Dispatchers.IO) {
+        hubId: String? = null, onSending: () -> Unit = {}, validateReceipt: Boolean = false,
+        progress: (Int) -> Unit) = withContext(Dispatchers.IO) {
         require(file.length() in 1..MATERIAL_LIMIT)
         require(draft.fileType in setOf("DOCUMENT", "VIDEO", "WORKSHEET"))
         require(draft.assignmentId == null || draft.announcementId == null)
@@ -57,6 +61,7 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
             override fun contentType() = "application/octet-stream".toMediaType()
             override fun contentLength() = file.length()
             override fun writeTo(sink: BufferedSink) {
+                onSending()
                 file.inputStream().use { input ->
                     val buffer = ByteArray(32 * 1024)
                     var sent = 0L
@@ -79,11 +84,34 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
                 draft.assignmentId?.let { addFormDataPart("assignment_id", it) }
                 draft.announcementId?.let { addFormDataPart("announcement_id", it) }
             }.addFormDataPart("file", file.name.substringAfter('-'), streaming).build()
-        execute(Request.Builder().url(url).header("Authorization", "Bearer ${c.session.token}").post(body).build())
+        val receipt = executeUpload(Request.Builder().url(url).header("Authorization", "Bearer ${c.session.token}").post(body).build())
+        if (validateReceipt) {
+            val created = Json.parseToJsonElement(receipt).jsonObject
+            require(!created["id"]?.jsonPrimitive?.contentOrNull.isNullOrBlank())
+            require(created["classroom_id"]?.jsonPrimitive?.contentOrNull == classroomId)
+            require(created["file_type"]?.jsonPrimitive?.contentOrNull == draft.fileType)
+            require(created["file_size_bytes"]?.jsonPrimitive?.longOrNull == file.length())
+        }
         progress(100)
     }
 
-    private fun execute(request: Request): String = client.newCall(request).execute().use { response ->
+    private suspend fun executeUpload(request: Request): String = suspendCancellableCoroutine { continuation ->
+        val call = client.newCall(request)
+        continuation.invokeOnCancellation { call.cancel() }
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, error: java.io.IOException) {
+                continuation.resumeWithException(error)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                runCatching { response.use(::readResponse) }.fold(continuation::resume, continuation::resumeWithException)
+            }
+        })
+    }
+
+    private fun execute(request: Request): String = client.newCall(request).execute().use(::readResponse)
+
+    private fun readResponse(response: Response): String {
         val source = requireNotNull(response.body).source()
         source.request(65_537)
         require(source.buffer.size <= 65_536)
@@ -93,6 +121,6 @@ class ClassworkAuthoringApi(private val sessions: EnrollmentApi) {
                 ?.get("code")?.jsonPrimitive?.content }.getOrNull() ?: "UNKNOWN"
             throw HubFailure(response.code, code)
         }
-        text
+        return text
     }
 }

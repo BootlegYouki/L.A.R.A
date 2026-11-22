@@ -15,11 +15,12 @@ sealed interface SignOutResult {
 
 class SettingsRepository(private val dao: AuthDao, private val tokens: SessionTokenStore,
     private val sync: SyncRepository, private val endpoint: () -> HubEndpoint?,
+    private val pendingMaterialUploads: suspend () -> Int = { 0 },
     private val logout: suspend (HubEndpoint, StoredToken) -> Unit = { hub, token -> AuthApi().logout(hub, token) }) {
     suspend fun signOut(userId: String, confirmedCount: Int? = null): SignOutResult = withContext(Dispatchers.IO) {
         var result: SignOutResult = SignOutResult.SignedOut
         sync.refreshRoster(userId) {
-            val count = dao.queuedCount(userId)
+            val count = dao.queuedCount(userId) + pendingMaterialUploads()
             if (count > 0 && (confirmedCount == null || count > confirmedCount)) {
                 result = SignOutResult.NeedsConfirmation(count)
             } else {

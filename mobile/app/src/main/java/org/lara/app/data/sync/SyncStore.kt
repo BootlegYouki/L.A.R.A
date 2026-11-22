@@ -125,7 +125,7 @@ class SyncStore(private val db: LaraDatabase) {
             db.cacheDao().upsertBatch(batch)
             for (submission in page.submissions) dao.applySubmissionGrade(submission.id, submission.score, submission.teacherFeedback)
             for (grade in page.quizAttempts) {
-                // GradeReceipt lacks quiz/student/start identity. Retain it even when the attempt is not here yet.
+                // Keep grade receipts for the gradebook even when no local attempt row exists.
                 db.syncStateDao().put(SyncStateEntity("grade_receipt:${grade.attemptId}",
                     json.encodeToString(grade), snapshot))
                 dao.applyGrade(grade.attemptId, grade.score, grade.totalPoints)

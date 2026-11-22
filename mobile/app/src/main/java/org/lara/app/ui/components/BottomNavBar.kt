@@ -3,6 +3,8 @@ package org.lara.app.ui.components
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -15,6 +17,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +40,7 @@ fun BottomNavBar(
     selected: ShellDestination?,
     onSelect: (ShellDestination) -> Unit,
     modifier: Modifier = Modifier,
+    unreadComments: Int = 0,
 ) {
     val labelLineHeight = with(LocalDensity.current) { MaterialTheme.typography.labelMedium.lineHeight.toDp() }
     val barHeight = maxOf(68.dp, labelLineHeight + 52.dp)
@@ -59,7 +64,16 @@ fun BottomNavBar(
                 selected = active,
                 onClick = { onSelect(destination) },
                 modifier = Modifier.height(barHeight),
-                icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                icon = {
+                    BadgedBox(badge = {
+                        if (destination == ShellDestination.CLASSWORK && unreadComments > 0) {
+                            val description = stringResource(R.string.parity_unread_badge, unreadComments)
+                            Badge(Modifier.semantics { contentDescription = description }) { Text(unreadComments.toString()) }
+                        }
+                    }) {
+                        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+                    }
+                },
                 label = {
                     val label = stringResource(destination.label)
                     val style = MaterialTheme.typography.labelMedium

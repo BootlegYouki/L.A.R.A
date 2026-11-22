@@ -58,6 +58,7 @@ import org.lara.app.AppContainer
 import org.lara.app.R
 import org.lara.app.ui.components.SubmissionTime
 import org.lara.app.domain.model.Assignment
+import org.lara.app.domain.model.Material
 import org.lara.app.domain.Cached
 import org.lara.app.data.repository.HomeworkAttachment
 import org.lara.app.data.local.entities.LocalSubmissionAttachment
@@ -75,7 +76,7 @@ internal fun privateCommentStatusLabel(status: String, reason: String?): Int? = 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, close: () -> Unit) {
+fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignment, materialAttachments: List<Material> = emptyList(), openAttachment: (String) -> Unit = {}, close: () -> Unit) {
     val model: HomeworkViewModel = viewModel(key = "homework-$userId-${assignment.id}", factory = viewModelFactory {
         initializer { HomeworkViewModel(container, assignment.id, createSavedStateHandle()) }
     })
@@ -265,6 +266,9 @@ fun HomeworkScreen(container: AppContainer, userId: String, assignment: Assignme
                 Text(stringResource(R.string.homework_due, due), style = MaterialTheme.typography.bodyMedium, color = LaraColors.TextSecondary)
                 HorizontalDivider(color = LaraColors.Border)
                 SelectionContainer { Text(assignment.instructions, style = MaterialTheme.typography.bodyLarge) }
+                materialAttachments.forEach { material ->
+                    org.lara.app.ui.screens.stream.AnnouncementAttachmentPreview(container, userId, material) { openAttachment(material.id) }
+                }
                 }
             }
         }

@@ -43,16 +43,34 @@ class SyncRepository(private val db: LaraDatabase, private val transport: SyncTr
     }
 
     suspend fun pull(userId: String) = mutex.withLock { pullPages(userId) }
+
+    internal suspend fun refreshLegacyGradeReceipts(userId: String) = mutex.withLock {
+        store.checkOwner(userId)
+        val state = db.syncStateDao()
+        val hub = state.get("hub_id")?.value ?: return@withLock
+        val marker = "gradebook_receipts:$hub"
+        if (state.get(marker) != null) return@withLock
+        val missingIdentity = state.entries("grade_receipt:").any { receipt ->
+            val grade = json.decodeFromString<org.lara.app.data.remote.dto.GradeReceiptDto>(receipt.value)
+            grade.quizId == null || grade.studentId == null
+        }
+        if (missingIdentity) pullPages(userId, fullSnapshot = true)
+        if (state.get("hub_id")?.value == hub) {
+            state.put(org.lara.app.data.local.entities.SyncStateEntity(marker, "1", System.currentTimeMillis()))
+        }
+    }
     suspend fun pushQueued(userId: String): Int = mutex.withLock { pushBatches(userId) }
     suspend fun synchronize(userId: String) = mutex.withLock {
         pullPages(userId)
         if (pushBatches(userId) > 0) pullPages(userId)
     }
-    private suspend fun pullPages(userId: String) {
-        var rescanning = false
+    private suspend fun pullPages(userId: String, fullSnapshot: Boolean = false) {
+        var firstPage = true
+        var rescanning = fullSnapshot
         do {
             val expected = store.request(userId)
-            var request = expected
+            var request = if (firstPage && fullSnapshot) expected.copy(cursor = 0) else expected
+            firstPage = false
             var page = transport.pull(userId, request) // No transaction or DB changes while the socket is open.
             if (request.cursor == 0L || page.reset) rescanning = true
             if (!rescanning && store.needsFullSnapshot(userId, page)) {

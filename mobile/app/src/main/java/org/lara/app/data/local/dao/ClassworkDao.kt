@@ -6,6 +6,10 @@ import org.lara.app.data.local.entities.*
 
 @Dao
 interface ClassworkDao {
+    @Query("""SELECT s.* FROM assignment_submissions s JOIN assignments a ON a.id = s.assignment_id
+        WHERE a.classroom_id = :classroomId AND s.sync_status = 'SYNCED' AND s.score IS NOT NULL""")
+    fun observeClassGrades(classroomId: String): Flow<List<AssignmentSubmissionEntity>>
+
     @Query("SELECT * FROM assignment_submissions WHERE assignment_id = :assignmentId AND sync_status = 'SYNCED' ORDER BY submitted_at, id")
     fun observeSubmissions(assignmentId: String): Flow<List<AssignmentSubmissionEntity>>
 

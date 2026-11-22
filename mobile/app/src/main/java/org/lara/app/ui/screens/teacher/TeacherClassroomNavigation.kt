@@ -9,7 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import org.lara.app.AppContainer
 import org.lara.app.R
 import org.lara.app.data.sync.SyncSessionViewModel
@@ -30,14 +38,44 @@ fun TeacherClassroomNavigation(container: AppContainer, userId: String, shell: S
     val cached by flow.collectAsStateWithLifecycle()
     val managed = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() && it.managedBy(userId) }.map { it.id }
     val joinRequestCount by remember(managed) { container.pendingJoinCount(managed) }.collectAsStateWithLifecycle(0)
+    val classBadges by remember(container, managed) {
+        if (managed.isEmpty()) flowOf(emptyMap())
+        else combine(managed.map { id ->
+            combine(container.pendingJoinCount(listOf(id)), container.teacherPrivateCommentRepository.unreadThreads(id)) { pending, threads ->
+                id to (pending + threads.sumOf { it.count })
+            }
+        }) { counts -> counts.toMap() }
+    }.collectAsStateWithLifecycle(emptyMap())
     org.lara.app.ui.components.ClassNav { selectedId, open, home ->
     val selected = (cached as? Cached.Content)?.value?.find { it.id == selectedId && userId in it.teacherIds() }
     LaunchedEffect(cached, selectedId) {
         if (selectedId != null && cached is Cached.Content && selected == null) home()
     }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(container, userId, selected?.id, shell.isHubReachable, lifecycle) {
+        if (selected != null && shell.isHubReachable) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            var interval = 5_000L
+            while (isActive) {
+                delay(interval)
+                try {
+                    container.sync.pull(userId)
+                    interval = 5_000L
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    interval = (interval * 2).coerceAtMost(60_000L)
+                }
+            }
+        }
+    }
     if (selected != null) org.lara.app.ui.components.ClassScreen {
+        val unread by remember(container, selected.id) {
+            container.teacherPrivateCommentRepository.unreadThreads(selected.id)
+        }.collectAsStateWithLifecycle(emptyList())
         CompositionLocalProvider(LocalClassChrome provides ClassChrome(selected.name, selected.section, edit = { management = "edit" }, info = { management = "info" }, back = home)) {
             LaraNavigation(container.discovery, shell, sessionKey = "$userId:${selected.id}", content = { destination -> ClassroomLearningHost(container, userId, destination, fixedClassId = selected.id, teacherHubReachable = shell.isHubReachable) },
+                unreadComments = unread.sumOf { it.count },
+                teacherGrades = { org.lara.app.ui.screens.teacher.review.ClassGradebook(container, userId, selected.id, shell.isHubReachable) },
                 teacherPeopleContent = { close ->
                     org.lara.app.ui.screens.teacher.classes.ClassManagementPage(container, userId, session.reachable, expired,
                         initialClassId = selected.id, embedded = true,
@@ -46,7 +84,7 @@ fun TeacherClassroomNavigation(container: AppContainer, userId: String, shell: S
         }
     } else if (selectedId == null) ClassHomeScaffold(
         classes = (cached as? Cached.Content)?.value.orEmpty().filter { userId in it.teacherIds() }
-            .map { HomeClass(it.id, it.name, it.section) },
+            .map { HomeClass(it.id, it.name, it.section, classBadges[it.id] ?: 0) },
         offline = if (cached is Cached.Content) !shell.isHubReachable else null, joinRequestCount = joinRequestCount,
         teacher = true, canAdd = shell.isHubReachable, onAdd = { management = "create" },
         onOpenClass = { open(it); requests = false }, onJoinRequests = { requests = true },
