@@ -2,7 +2,7 @@ import {act,create,type ReactTestRenderer} from 'react-test-renderer';
 import {createElement} from 'react';import {create as store} from 'zustand';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import type {CachedAccount,RosterEntry} from '../src/services/auth';
-const mocks=vi.hoisted(()=>({refresh:vi.fn(),roster:vi.fn(),signIn:vi.fn(),decide:vi.fn(),sync:vi.fn(),restore:vi.fn()}));
+const mocks=vi.hoisted(()=>({refresh:vi.fn(),roster:vi.fn(),signIn:vi.fn(),decide:vi.fn(),sync:vi.fn(),restore:vi.fn(),title:vi.fn()}));
 const hub={name:'Test',ip:'127.0.0.1',http_port:8080,ws_port:8081},uid='11111111-1111-4111-8111-111111111111';
 const rooms=['22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333'].map(id=>({id,name:'Synthetic',section:'A',class_code:'K7M4QX',teacher_id:uid}));
 const account:CachedAccount={hub,user:{id:uid,full_name:'Teacher',lrn_or_id:'test',role:'TEACHER'},classrooms:rooms,persistent:true,expires_at:Date.now()+60000};
@@ -16,10 +16,11 @@ vi.mock('../src/services/sync',async original=>({...await original<typeof import
 vi.mock('../src/services/realtime',()=>({observeJoinUpdates:()=>()=>{}}));
 vi.mock('../src/services/websocket-policy',()=>({ensureWebSocketPolicy:()=>true}));
 vi.mock('../src/components/JoinClassModal',()=>({default:()=>null}));
+vi.mock('@tauri-apps/api/window',()=>({getCurrentWindow:()=>({setTitle:mocks.title})}));
 import App from '../src/App';import LoginPage from '../src/pages/LoginPage';
 import RosterPage from '../src/pages/RosterPage';import HomePage from '../src/pages/HomePage';import {ApiError} from '../src/services/api';
 let renderer:ReactTestRenderer;const releases=new Map<string,(rows:RosterEntry[])=>void>();
-beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('document',{documentElement:{lang:''}});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);useStore.setState({account});mocks.sync.mockReturnValue({stop:vi.fn(),trigger:vi.fn()});mocks.refresh.mockResolvedValue(rooms);releases.clear();mocks.roster.mockImplementation((_a:unknown,id:string)=>new Promise<RosterEntry[]>(resolve=>releases.set(id,resolve)));});
+beforeEach(()=>{vi.useFakeTimers();mocks.title.mockResolvedValue(undefined);vi.stubGlobal('document',{documentElement:{lang:''}});vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);useStore.setState({account});mocks.sync.mockReturnValue({stop:vi.fn(),trigger:vi.fn()});mocks.refresh.mockResolvedValue(rooms);releases.clear();mocks.roster.mockImplementation((_a:unknown,id:string)=>new Promise<RosterEntry[]>(resolve=>releases.set(id,resolve)));});
 afterEach(async()=>{if(renderer)await act(async()=>renderer.unmount());vi.useRealTimers();vi.unstubAllGlobals();vi.clearAllMocks();});
 const rows=(id:string):RosterEntry[]=>[{enrollment_id:id,student_id:uid,full_name:'Synthetic learner',status:'PENDING'}];
 it('retains both classroom rosters when two refreshes resolve in one React batch',async()=>{
@@ -49,4 +50,13 @@ it('reloads committed sync from the native account context but never restores a 
  let release!:(v:CachedAccount)=>void;mocks.restore.mockReturnValue(new Promise<CachedAccount>(resolve=>release=resolve));let pending!:Promise<void>;await act(async()=>{pending=commit()});
  await act(async()=>renderer.root.findByProps({'aria-label':'Switch account'}).props.onClick());mocks.signIn.mockResolvedValue({...account,user:{...account.user,id:rooms[0].id,role:'STUDENT'},classrooms:[],rosters:{}});
  await act(async()=>renderer.root.findByType(LoginPage).props.onSubmit({lrn_or_id:'synthetic',pin:'123456'},false));await act(async()=>{release(account);await pending});expect(useStore.getState().account?.user.role).toBe('STUDENT');
+});
+
+it('updates the native title for Teacher, Student and signed-out accounts',async()=>{
+ await act(async()=>{renderer=create(createElement(App))});
+ expect(document.title).toBe('L.A.R.A. — Teacher');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A. — Teacher');
+ await act(async()=>useStore.setState({account:{...account,user:{...account.user,role:'STUDENT'},classrooms:[],rosters:{}}}));
+ expect(document.title).toBe('L.A.R.A. — Student');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A. — Student');
+ await act(async()=>useStore.setState({account:null}));
+ expect(document.title).toBe('L.A.R.A.');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A.');
 });

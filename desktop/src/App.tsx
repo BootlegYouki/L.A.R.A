@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import {getCurrentWindow} from '@tauri-apps/api/window';
 import { t } from './i18n';
 import appLogo from './assets/branding/lara-logo.png';
 import { flushHomework } from './services/homework';
@@ -88,6 +89,12 @@ export default function App() {
   const hubName = hubs.find(item => item.ip === hub?.ip && item.http_port === hub.http_port)?.name;
   // Hide the previous Hub's account in the same render as an address change.
   const activeAccount = account && hub && account.hub.ip === hub.ip && account.hub.http_port === hub.http_port ? account : null;
+  const signedInRole=activeAccount?.user.role;
+  useEffect(()=>{
+    const title=signedInRole?`${t.app_title} — ${signedInRole==='TEACHER'?t.window_role_teacher:t.window_role_student}`:t.app_title;
+    document.title=title;
+    try{void getCurrentWindow().setTitle(title).catch(()=>{});}catch{/* Browser previews have no native window. */}
+  },[signedInRole]);
   const accountRef = useRef(activeAccount); accountRef.current = activeAccount;
   const publishAccount = useCallback((next: CachedAccount | null) => { accountRef.current = next; setAccount(next); }, [setAccount]);
   const identity = activeAccount ? `${activeAccount.hub.ip}:${activeAccount.hub.http_port}/${activeAccount.user.id}` : '';
