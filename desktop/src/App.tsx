@@ -93,7 +93,7 @@ export default function App() {
   const activeAccount = account && hub && account.hub.ip === hub.ip && account.hub.http_port === hub.http_port ? account : null;
   const signedInRole=activeAccount?.user.role;
   useEffect(()=>{
-    const title=signedInRole?`${t.app_title} — ${signedInRole==='TEACHER'?t.window_role_teacher:t.window_role_student}`:t.app_title;
+    const title=signedInRole?`${t.app_title.replace(/\.$/,'')} ${signedInRole==='TEACHER'?t.window_role_teacher:t.window_role_student}`:t.app_title;
     document.title=title;
     try{void getCurrentWindow().setTitle(title).catch(()=>{});}catch{/* Browser previews have no native window. */}
   },[signedInRole]);

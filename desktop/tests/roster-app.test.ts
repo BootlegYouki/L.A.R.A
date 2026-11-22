@@ -54,9 +54,9 @@ it('reloads committed sync from the native account context but never restores a 
 
 it('updates the native title for Teacher, Student and signed-out accounts',async()=>{
  await act(async()=>{renderer=create(createElement(App))});
- expect(document.title).toBe('L.A.R.A. — Teacher');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A. — Teacher');
+ expect(document.title).toBe('L.A.R.A Teacher');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A Teacher');
  await act(async()=>useStore.setState({account:{...account,user:{...account.user,role:'STUDENT'},classrooms:[],rosters:{}}}));
- expect(document.title).toBe('L.A.R.A. — Student');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A. — Student');
+ expect(document.title).toBe('L.A.R.A Student');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A Student');
  await act(async()=>useStore.setState({account:null}));
  expect(document.title).toBe('L.A.R.A.');expect(mocks.title).toHaveBeenLastCalledWith('L.A.R.A.');
 });
