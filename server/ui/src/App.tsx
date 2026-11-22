@@ -54,7 +54,7 @@ export default function App() {
         {status && <Beacon status={status} t={t} />}
       </header>
 
-      <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 pt-6 pb-8">
+      <main className="hub-main mx-auto max-w-5xl px-6"><AdminUsers overview={<>
         {status && !status.running && (
           <div
             role="alert"
@@ -90,7 +90,7 @@ export default function App() {
             </p>
           )}
         </section>
-        <AdminUsers />
+        </>} />
       </main>
     </div>
   );
