@@ -1,0 +1,369 @@
+{
+ "title": "Text-book of Biology, Vol. II (Wells and Howes) (test fixture)",
+ "chunks": [
+  {
+   "id": 1,
+   "page": 2,
+   "heading": "Introduction",
+   "text": "1",
+   "tokens": 5
+  },
+  {
+   "id": 2,
+   "page": 13,
+   "heading": "§ 2. Such observation as any one might make in the",
+   "text": "course of a walk in the country would show that there was a very close connection between this green colour, light, and the life of the plant. On the greensward, in the sunlight, vegetation grasses, trefoil, buttercups and daisies, for instance, would be abundant, but directly the shadow of trees was reached the herbage would cease more\n\nor less completely. | Any one who has walked through\n\na spinny of fir trees will recall how entirely devoid of vegetable life was the ground beneath their dense shade. In the case of such trees as the beech the shadow is less profound, and we may find ferns, nettles, and other plants growing. And similar results will be noted in a thick hedge. Any one who has ever peered into a hedge will 1",
+   "tokens": 203
+  },
+  {
+   "id": 3,
+   "page": 17,
+   "heading": "§ 6. The cell wall may remain simply a thin wall of",
+   "text": "isolated rings (annular thickening). | Types of all such\n\nthickenings are shown upon Fig. IV., Sh. I.\n\n§ 7. How these various forms of cells are arranged to\n\nco-operate in the life of a plant we will now proceed to consider. But first we may notice one or two facts in the chemical composition of a plant. Evidently (§ 4) carbon, hydrogen, oxygen, nitrogen, and sulphur are necessary for a plant’s nutrition and growth. Chlorophyll, besides all these elements, requires iron as an essential condition to its formation ; so that this must also be added to our list for green plants. Experiment seems to show that sodium,",
+   "tokens": 170
+  },
+  {
+   "id": 4,
+   "page": 21,
+   "heading": "§ 13. The details of the formation of proteids and the",
+   "text": "VEGETATIVE ORGANS OF THE FLOWERING PLANT. | 9\n\nsary for the plant’s nutrition enter by the roots as a weak\n\nsolution of salts, pass up by the wood (xylem) of the stem, and are spread over the leaf by means of the veins. The excess of water evaporates through the stomata, and its passage out of these apertures is called Transpiration, the substances brought up by the water in solution remaining\n\nto be elaborated into organic compounds. | It appears\n\nprobable that the necessary sulphur frequently enters the plant body in combination as sulphate of lime, and that after the decomposition of this compound, the lime being of no great use to the plant combines with organic acids and is precipitated in its substance. Bunches and bundles of neeclle-like crystals of oxalate of lime certainly occur in many leaves and stems, and are called raphides, as in the bluebell. Other more massive crystal groups may be seen in the leaves of the fig (cystoliths). Nitrogen reaches the plant in nitrates and salts of ammonia ; hydrogen and oxygen in water, and the former in ammonia and the latter in salts and other compounds; the other elements occur as phosphates, sulphates, and other salts.",
+   "tokens": 302
+  },
+  {
+   "id": 5,
+   "page": 21,
+   "heading": "sary for the plant’s nutrition enter by the roots as a weak",
+   "text": "probable that the necessary sulphur frequently enters the plant body in combination as sulphate of lime, and that after the decomposition of this compound, the lime being of no great use to the plant combines with organic acids and is precipitated in its substance. Bunches and bundles of neeclle-like crystals of oxalate of lime certainly occur in many leaves and stems, and are called raphides, as in the bluebell. Other more massive crystal groups may be seen in the leaves of the fig (cystoliths). Nitrogen reaches the plant in nitrates and salts of ammonia ; hydrogen and oxygen in water, and the former in ammonia and the latter in salts and other compounds; the other elements occur as phosphates, sulphates, and other salts.\n\n§ 14. Formed protenaceous matters like bodies in the\n\ncarbohydrate and hydrocarbon sections may assume a\n\nconsiderable variety of store forms. | Their final form\n\nand destiny in the plant is typically protoplasm, as that of the starch and oil group is cellulose. Aleurone grains (Fig. XIV., Sh. I.) are roundish granules of variable size —largest in oily seeds. They often contain peculiar bodies, the crystalloids, which would appear to be crystallised",
+   "tokens": 292
+  },
+  {
+   "id": 6,
+   "page": 21,
+   "heading": "§ 14. Formed protenaceous matters like bodies in the",
+   "text": "and destiny in the plant is typically protoplasm, as that of the starch and oil group is cellulose. Aleurone grains (Fig. XIV., Sh. I.) are roundish granules of variable size —largest in oily seeds. They often contain peculiar bodies, the crystalloids, which would appear to be crystallised\n\nor <^/cm-crystallised protenaceous matter. | Globoids are\n\nround concretions of phosphate of lime and magnesia, which almost invariably accompany aleurone grains, but of which the physiological import is not clear. They may have a connection with the fermentative return of the stored\n\nproteids to their transit form. | The transit of formed\n\nproteids is especially the function of the tissue called the phloem, to be presently described.\n\n§ 15. Thus far we have noticed three main categories of\n\nbodies in the plant.",
+   "tokens": 196
+  },
+  {
+   "id": 7,
+   "page": 27,
+   "heading": "5 and 6. Figures to illustrate structure of secondary medullary",
+   "text": "letters t. 1., | and r. I. correspond with the more realistic figures of\n\n5, m which T. L. is a tangential section, T. a transverse, and K. L. a radial section of a stem to show these.\n\n8. Diagrams of the process of nuclear division called Karyokinesis. 1. 2, 3, changes of the chromatin filament culminating in 4, the aster ; G, the chaster and the nuclear spindle ; 7, appearance of the equatorial microsomata, mi., which coalesce to form the dividing cell wall.\n\nTo face page 12.",
+   "tokens": 141
+  },
+  {
+   "id": 8,
+   "page": 32,
+   "heading": "§ 24. After this brief resume of the physiology of the",
+   "text": "II.—On the Structure of the Leaf.\n\n§ 25. We have already considered the microscopic section\n\nof the blade of a typical leaf, and noted its parts : (i) the cuticle, which prevents evaporation, with the stomata, regulating this process and the exchange of gases between the plant and air; (ii) the mesophyll, engaged in assimi¬ lation ; and (iii) the veins, the xylem of which brings up the transpiration current with inorganic nutritive material from the roots, and the phloem of which probably conveys away formed proteids and carbohydrates.* We shall now consider the members of a typical foliage leaf (i.e., a green leaf engaged in assimilation) as they appear to the naked eye, and the most obvious modifications of this typical structure that occur. We have (Fig. 1, Sh. IV.) a blade (bl.) placed upon a leaf stalk, the petiole {pt.). The lower part of the petiole may embrace the stem and form a sheath (sh., Fig. 11), or it may have at its base blade-like expansions, the stipules (st.). When the petiole is absent,\n\nthe leaf is said to be sessile. | In the case of grasses, a",
+   "tokens": 284
+  },
+  {
+   "id": 9,
+   "page": 32,
+   "heading": "§ 25. We have already considered the microscopic section",
+   "text": "the leaf is said to be sessile. | In the case of grasses, a\n\nsingle lozenge-like upgrowth occurs between the leaf-blade and the stem, called the ligule; the leaf is then spoken of as liyulate (Fig. 11). An ochrea is a kind of false sheath, formed by the confluent stipules in the dock, sorrel, and their allies (Fig. 12).\n\n§ 26. The point at which the leaf is attached to the stem\n\nis called a node. The way in which leaves are arranged on a stem is called the phyllotaxis. Where there is one leaf at a node, the leaves are alternate (spiral), where two,\n\n• We may note here, in extension of what has already been given, that in all leaves having a distinct upper or sunny, and under or shadowed, side, the stomata are largely absent from the former surface. But in leaves living in the shadow (as the fern) or inclined to the light, so as to be illuminated on both sides (as in the cabbage), the stomata occur on both sides, and the distinction of pallisade and spongy parenchyma is not marked.",
+   "tokens": 275
+  },
+  {
+   "id": 10,
+   "page": 33,
+   "heading": "10 and 11, down the stem (\"descending sap\") to",
+   "text": "probably the oxygen needed in respiration enters through the yet tender integument, and C02 may be exhaled.\n\n14, Other Katastases perhaps escape at root by exosmose, or as\n\nodoriferous emanations, or remain in | the plant as pigments and\n\nsecretions.\n\nTo face f age 10.",
+   "tokens": 78
+  },
+  {
+   "id": 11,
+   "page": 39,
+   "heading": "§ 34. If the student will obtain a pea (a bean will do",
+   "text": "SHEET IV.\n\nGeneral Forms op Leap.\n\nI. | Simple leaf, | bl., blade. | petiole, | st., stipules.\nCompound Leaf: | 2. Impari-piimate. | 3. palmate.\nMargins-. | 4. Entire. 5. senate. 6. biserrate. 7. erenate. 8. dentate.\n9. sinuate. | 10, lacinate.\nII. Amplexicaul ( = sheathing) leaf of grass with ligule. | lig.;\n\nsh, sheath.\n\n12. Ochreate leaf. 13. Bipiunate leaf. 14. Biternate leaf. 15. Peculiar reduced compound leaf of orange with one leaflet, which it will be noticed articulates with the rachis.\n\nTerms used in describing leaves (and sepals, petals, etc., also) :\n\n1G. Acicular (stiff, erect). | 17. linear (flexible). | 18. lanceolate\n19. Oblong. | 20. ovale (egg-shape). | 21. obovatc ( = 20 reversed).\n22. spatulate. | 23. | elliptical. | 24. | round. | 2^£fcordate. | 2G. | ob-\ncordate. | 27. reniform. | 28. pmnati-fid. | 29. -partite. | 30. -sect.\n31. palmati-paitite. | 32. -sect.\n\nTerms used for apex of leaf, petal, sepal, fyc.:\n\n33. Acute. | 34. obtuse. | 35. acuminate. | 36. truncate. 37. retuse.\n\n38. Peltate round leaf of the garden Nasturtium ( = Tropoeolum).",
+   "tokens": 282
+  },
+  {
+   "id": 12,
+   "page": 41,
+   "heading": "§ 34. If the student will obtain a pea (a bean will do",
+   "text": "VEGETATIVE ORGANS OF THE FLOWERING PLANT. | 21\n\n§ 35. If the very much smaller seed of a buttercup or of\n\na poppy (Fig. 1, Sh. XI.) be now examined, the interior of the testa is found to be occupied with a mass of store material, the albumen, or endosperm. The embryo is very small, and lies embedded in this at one end of the seed. A radicle and two cotyledons can be made out in it, but these latter are small, and no plumule can be distinguished until germination begins. Such a seed as this, with a small embryo embedded in the endosperm, is said to be an albuminous seed. In the pea the embryo has consumed all the endosperm, and its cotyledons are gorged therewith. It has no albumen outside the embryo, and is spoken of as ex-albuminous seed.\n\n§ 36. Both poppy and pea are evidently Dicotyledons. For the purpose of comparison the seed of the date (i.e., the date stone) may be taken as a typical Monocotyledon. This also is albuminous; the whole embryo is very small, and radicle, plumule, and cotyledon can scarcely be distin¬ guished until germination begins (see Fig. XII., 1, 2, 3, 4, Sh. XI.). The embryo is larger in the maize (Indian corn,",
+   "tokens": 317
+  },
+  {
+   "id": 13,
+   "page": 41,
+   "heading": "§ 35. If the very much smaller seed of a buttercup or of",
+   "text": "§ 36. Both poppy and pea are evidently Dicotyledons. For the purpose of comparison the seed of the date (i.e., the date stone) may be taken as a typical Monocotyledon. This also is albuminous; the whole embryo is very small, and radicle, plumule, and cotyledon can scarcely be distin¬ guished until germination begins (see Fig. XII., 1, 2, 3, 4, Sh. XI.). The embryo is larger in the maize (Indian corn,\n\nFig. X.), and its parts may be distinguished. | There is\n\na sheath over the radicle (r.sh.), and a large expansion pressed against the endosperm is called the scutellum (sc.), and in this case does the work of the usual single cotyledon,* since it is very obviously a sucker to absorb the endosperm when the plant is germinating. In the case of the pea, where the cotyledons actually contain the stored material, they always remain below ground, and are called hypogeal. Evidently hypogeal cotyledons are ‘4 scale leaves.” In the sunflower the cotyledons push their way to the surface, become green and assimilate, and are altogether, except in shape, like the ordinary foliage leaves. They are therefore styled epigeal.",
+   "tokens": 287
+  },
+  {
+   "id": 14,
+   "page": 41,
+   "heading": "§ 35. If the very much smaller seed of a buttercup or of",
+   "text": "a sheath over the radicle (r.sh.), and a large expansion pressed against the endosperm is called the scutellum (sc.), and in this case does the work of the usual single cotyledon,* since it is very obviously a sucker to absorb the endosperm when the plant is germinating. In the case of the pea, where the cotyledons actually contain the stored material, they always remain below ground, and are called hypogeal. Evidently hypogeal cotyledons are ‘4 scale leaves.” In the sunflower the cotyledons push their way to the surface, become green and assimilate, and are altogether, except in shape, like the ordinary foliage leaves. They are therefore styled epigeal.\n\n§ 37. The parts of the flower and inflorescence, the petals, sepals, stamens, carpels, and bracts, to be described later,\n\n• It is doubtful whether the scutellum [is really the cotyledon or a special outgrowth beneath it.",
+   "tokens": 224
+  },
+  {
+   "id": 15,
+   "page": 45,
+   "heading": "§ 41. We may now proceed to consider the histology",
+   "text": "VEGETATIVE ORGANS OF THE FLOWERING | PLANT. | 25\n\nthe chief divisions of the higher plants. We may very con¬\n\nveniently give a systematic scheme of the vegetable kingdom based on these distinctions here.\n\n•A.. Cellular Plants have no vascular bundles.\n\nThallopiiyta | (e.g., Spirogyra, Saccharoniyces,\n\nVciucheria, Fucus, Cliara, Mucor, Penicillium). Mosses and Liverworts.\n\nB. Vascular Plants have vascular bundles.\n\n1. Vascular Cryptogams, | as the fern, have the\n\nphloem in each bundle completely surrounded by- the xylem. This type of bundle is called the concentric (Fig. 4, Sh. XIII.). 2. Phanerogams have the phloem and xylem on the same radius of the cross section of the plant, the xylem internal to the phloem. This type of\n\narrangement is called collateral. | In Gymno-\n\nsperms (e.g., the pine) and Dicotyledons the bundles are commonly arranged in a single ring ; in Monocotyledons they are scattered, apparently haphazard, through the stem (Sh. V.).\n\n§ 43. We may perhaps describe types of each of these\n\nlatter. | Fig. I., Sh. V., represents a vascular bundle of\n\nthe maize, a particularly well-developed Monocotyledon",
+   "tokens": 268
+  },
+  {
+   "id": 16,
+   "page": 51,
+   "heading": "4. Commencement of secondary thickening of a. dicotyledon stem",
+   "text": "VEGETATIVE ORGANS OF THE FLOWERING PLANT. | 29\n\nsive phellogens appear, superseding each other year after\n\nyear deeper and deeper in the stem. Wherever the cork appears, however, it cuts off all the tissues external to it from nutrition and the general life of the plant, since it is water-tight. The parts so cut off die and dry up, and the brown layers of disintegrating cells thus formed constitute the bark.\n\n§ 49. The structure of the growing point of the stem\n\nof a flowering plant will be understood from Fig. VI., Sh. V. It is overshadowed by young leaves, which form, together with it, the terminal bud of the stem. There is in the flowering plant no single terminal growing-point cell, the apical cell, as there is in ferns, from which all other cells are derived. Instead there is a mass of cells, the apical meristem. A little way below this three concentric layers are apparent. The outermost never divides by division planes parallel to the surface—never, that is, becomes more than one cell thick—and it gives rise to the epidermis. This is the dermatogen. Internal to this is the periblem, which forms the cortex, and internal to that again the pleurome, the cells of which ultimately differentiate to form the vascular cylinder.",
+   "tokens": 315
+  },
+  {
+   "id": 17,
+   "page": 57,
+   "heading": "7. Rootlet. G.P.I growing part. A.P., assimilating part with root",
+   "text": "Conditions Affecting Growth.\n\n§ 57. Turgidity is essential (§ 21).\n\n§ 58. Temperature affects growth. The maximum tem¬\n\nperature under which a plant can live is about 50° C.; the minimum, zero. For each plant there is a most favourable temperature, or optimum, and this may be, as a rule, the mean temperature of the climate in which the plant naturally occurs.\n\n§ 59. Bright light appears to retard growth in most\n\ninstances, though a fair amount of light is of course in¬ directly necessary for growth, since it is essential to nutri¬ tion-; so that the shoots of “etiolated” plants, that is, plants grown in the dark, are commonly longer and slenderer\n\nthan they would be under normal circumstances. | The\n\nshaded side of an ordinary stem therefore grows more strongly than does the illuminated side, and the stem bends towards the light (sunflower, e.g.). This law does not hold universally. The ivy stem bends away from the light. Stems which bend sunward, as do most stems, are said to be positively heliotropic; stems which follow the ivy are negatively heliotropic.",
+   "tokens": 271
+  },
+  {
+   "id": 18,
+   "page": 57,
+   "heading": "§ 59. Bright light appears to retard growth in most",
+   "text": "shaded side of an ordinary stem therefore grows more strongly than does the illuminated side, and the stem bends towards the light (sunflower, e.g.). This law does not hold universally. The ivy stem bends away from the light. Stems which bend sunward, as do most stems, are said to be positively heliotropic; stems which follow the ivy are negatively heliotropic.\n\n§ 60. The direction of growth is largely determined by\n\ngravitation. | Roots commonly grow towards the centre\n\nof the earth; stems, typically, away from it. These two tendencies are spoken of as positive and negative geotropism. By fastening germinating seeds to the rim of a continually rotating wheel, the action of the earth’s gravitation on them can be eliminated. The stems will then grow centrifugally, the roots centripetally.\n\n3",
+   "tokens": 198
+  },
+  {
+   "id": 19,
+   "page": 63,
+   "heading": "bud these sepals close over and protect the more delicate",
+   "text": "REPRODUCTION OF THE FLOWERING PLANT. | 39\n\narranged is called the receptacle (= thalamus or torus). The successive series of organs follow one another towards the gynaeceum at the apex; the sepals form a whorl of five at the base of the cone; the petals usually a whorl of five, alternating * with the sepals and above them ; the stamens - are in a close spiral and variable in number, as are also the carpels. These organs, as they are seen from above, may be represented in diagrammatic fashion in what is called a floral diagram (Fig. E).\n\n§ 64. We will first notice some points of morphological\n\nimportance, and some of the most important modifications, of this floral structure as a whole, and then we will pass to each of the five series of organs to consider them in detail. We have already called attention to the fact that the dif¬ ferent floral organs are regarded as modified leaves. Like leaves, they may be spirally arranged (as are the buttercup stamens), verticillate (as is its calyx), or opposite, but the whorled form is much the commonest. The whole flower of the white water lily is spiral, and sepals pass into petals and petals into stamens in a very instructive manner. When (as is usual) all parts of the flower are in whorls, it is spoken of as a cyclic flower, hemicyclic when only some parts are verticillate, and acyclic, as in the water lily",
+   "tokens": 361
+  },
+  {
+   "id": 20,
+   "page": 67,
+   "heading": "5. (a) The fruit of the poppy (porous capsule) with its sessile",
+   "text": "8. Violet flower in section ; note the lid-like stigma. | The arrow\n\nshows direction of entry of the insect; nec., nectary in sp., the corolla\n\nspur. | A diagram below the figure.\n9. Lychnis dioica. | A., Female flower. | B., the same in section.\nC., ovary cut to show free central placentation. | D., | Diagram of\n\nmale, and E., of female flowers.\n\n10. Common wayside mallow, with monadelphous stamens and\n\nepicalyx. | (a) Diagram, (b) flower.\n\nTo face, page 42.",
+   "tokens": 135
+  },
+  {
+   "id": 21,
+   "page": 74,
+   "heading": "§ 73. The stigma is commonly a sticky expansion upon",
+   "text": "46 | BIOLOGY.\n\nis not effected by insects, but by the wind, as in the grasses, the stigma is often large, conspicuous, and feathery.\n\n§ 74. There are certain structural abnormalities which\n\nmay perhaps be noticed here. In the daffodil we find, internal to the perianth, a tubular petaloid upgrowth, enclosing the style and stamens, and called the corona (Fig. VI., Sh. IX.). There is also a crown of ligule-like\n\nrays in the passion-flower. | The stamens and ovary of\n\nLychnis dioica and some of its relatives are lifted up on a kind of stalk above the insertions of calyx and corolla. In the orchid the stamens and ovary form a central pillar. What are called double flowen's have either intercalary rows of petals or the stamens become petaloid.\n\n§ 75. The flower stalk is called the 'peduncle. Where it\n\nis absent the flower is sessile. Upon it there may appear small herbaceous or coloured leaves or leaf parts, the bracteoles. Small leaves that come immediately beneath the calyx are called the epicalyx, as in the mallow (Fig. X., Sh. VII.). The peduncle usually springs from the angle between a leaf and the stem. This leaf is the bract; it may be exactly like any other foliage leaf, or it may differ in shape and size, or even be scaly or petaloid (i.e., coloured). When the bract is absent the flower is ebrac- teate (forget-me-not).  Flowers may be solitary, i.e., spring¬ ing by themselves from the general vegetative system; but more often they are gathered together upon a special branching system, the inflorescence. It is in inflorescences that the bracts become most specialised and important. A whorl or whorls of bracts, such as we shall presently describe as occurring in some of the inflorescences of the Umbelliferae and in the Compositae, is called an involucre.",
+   "tokens": 443
+  },
+  {
+   "id": 22,
+   "page": 81,
+   "heading": "5. Diagram to illustrate how the axis A. of an ordinary vegetative",
+   "text": "REPRODUCTION OF THE FLOWERING PLANT. | 51\n\nClassification of Inflorescences. A. Monopodial— I. Racemose or Indefinite— Elongated axis. Pedunculate flowers (Raceme, Panicle). Sessile flowers (Spike, Catkin). Abbreviated axis. Pedunculate flowers (Umbel). Sessile flowers (Capitulum). II. Cymose— One flower at node, false axis (Helicoidal, Scorpioidal).. Two flowers at node (Dichasium). Three or more (Multiparous Cyme). B. Dichotomous— (?) Certainly rare.",
+   "tokens": 102
+  },
+  {
+   "id": 23,
+   "page": 86,
+   "heading": "§ 93. Of Dry Dehiscent Fruits we may notice first those",
+   "text": "56 | BIOLOGY.\n\n(radish) is like a pod, but it is constricted between each\n\nseed, and breaks up into one-seeded joints.\n\n§ 94. The siliqua and silicula are bicarpellary dry\n\ndehiscent fruits almost confined to the Cruciferae (wall¬ flower, e.g.). In the ovary of the wallflower we have two loculi separated by a false dissepiment (Fig. VII., Sh. VII.). The placentation is at the margins of the carpels. In the ripe siliqua the carpels separate like valves from the false dis¬ sepiment, to which, however, the placentae remain attached\n\n(Fig. C). | The silicula (shepherd’s-purse) is essentially\n\nsimilar. The two things differ in that the siliqua is longer than broad, the silicula as broad or broader than long. Other dehiscent fruits are called simply capsules, though\n\nthe term capsule also covers pod, siliqua, and follicle. | If\n\ncapsules split along the midribs of the carpels, they are loculiciclal) if the carpels part from the dissepiment or dis¬ sepiments, septifragal; if the dissepiments rupture, septicidal.\n\n§ 95. A schizocarp is derived from a gynaeceum, which\n\nsplits up into separate indehiscent achenes (merocarps). This occurs in the mallow. The umbelliferae (epigynous, polypetalous flowers in umbels) have a bilocular ovary which splits in this way (Fig. 7, Sh. VIII.). The lomentum (§ 93) is, of course, a schizocarp.",
+   "tokens": 319
+  },
+  {
+   "id": 24,
+   "page": 92,
+   "heading": "§ 105. The young ovule (Fig. I., Sh. XI.) consists of a",
+   "text": "mass of parenchyma, the nucellus. This is surrounded by one or two integuments. The integuments are incomplete at a point called the micropyle. The ovule has a stalk, the funiculus. Usually the nucellus is bent sharply back on the funiculus, and the ovule is then called anatropous; but sometimes nucellus and funiculus are in the same straight line (orthotropous), or the nucellus is bent at the middle (canipylotropous). Within the nucellus is a single cell, the arcliesporium, or embryo-sac mother cell, which divides repeatedly, one of the resultant cells finally enlarg¬ ing to form what is called the embryo sac.\n\n§ 106. The embryo sac is therefore at first a single cell. But it undergoes endogenous * division, and becomes greatly enlarged, feeding the while in a parasitic manner at the\n\nexpense of the nucellus in which it is embedded. | Its\n\noriginal nucleus divides into two, these two into four, and the four to eight; four of these nuclei are at one end of\n\nthe sac, and four at the other. | From either end one\n\nnucleus moves to the centre, and the two coalesce. The three nuclei at one end form cell walls round themselves.",
+   "tokens": 295
+  },
+  {
+   "id": 25,
+   "page": 98,
+   "heading": "§ 113. The branching of the stem is monopodial (§ 50)",
+   "text": "mediately around the terminal bud of unlimited growth (b.t.) these shoots of limited growth are replaced by lateral buds of unlimited growth (b.l.), which will expand into branches next spring. The whole of the system A. to B. was represented in the early spring by a bud at B. l.br., l.br.y which are now branch shoots of unlimited growth resembling A. B., were then lateral buds around B. From B. down¬ ward is evidently the growth of the previous year, and its xylem in cross section would show one complete annual ring and another almost completed. The buds b.l. and the branches l.br. appear to be arranged in whorls, but really their arrangement is a close flattened spiral (= pseudo- whorl).\n\n§ 114. The foliage leaves are “centric ” (§ 31). One is\n\nfigured in transverse section in Fig. XIII., Sh. XII. Two vas¬ cular bundles run the length of the leaf surrounded by colour¬ less parenchyma (pericycle). Around this is a very distinct bundle sheath, and without this again the chlorophyllaceous mesophyll, the cell walls of which are thickened and project internally in a characteristic manner. Immediately beneath the thick epidermis is the hypodermis {hy.) of thickened cells. Resin passages (r.p.) run through the mesophyll. Stomata are small and few and far between. Obviously",
+   "tokens": 319
+  },
+  {
+   "id": 26,
+   "page": 104,
+   "heading": "THE BRACKEN FERN AND ITS LIFE",
+   "text": "THE BRACKEN FERN AND ITS LIFE\n\nHISTORY.\n\n§ 124. The bracken fern is our type of the Vascular\n\nCryptogams (§ 42). It has no flowers and no ovule-like\n\nstructures. | It therefore forms no seed. | Leaves which\n\nscarcely differ at all from the ordinary foliage leaves bear on their under sides groups of “ sporangia,” small cases in which are formed spores. These spores give rise to small green and quite independent plants, altogether unlike the\n\nparent, and called prothallia. | These bear the sexual\n\norgans, from which are produced the familiar frond-bearing\n\nplants again. | The frond-bearing, spore-producing plant\n\nis commonly spoken of as the sporophore (= sporophyte) generation; the prothallium, as the oophore (= gametophyte, oophyte). This alternation of sporophore with oophore is spoken of as alternation of generations. It occurs in all vascular cryptogams. The sporophore, we shall see as we go on, answers to the plant of the phanerogam, and we will therefore describe its chief features first.\n\n§ 125. In the bracken fern the stem | this is a rhizome\n\n(§ 38), throwing up one very large and greatly divided leaf, the frond, yearly. It is covered, especially at the node, with reddish hairs. The vascular bundles are not collateral, but concentric (§ 42). Besides the vascular bundles, tracts of prosenchyma, with a very characteristic brown thickening (sclerenchyma), play an important part in the stem. These elements are arranged in the following way (Fig. 2, Sli. XIII.). Externally there is an epidermis, and beneath this a continuous layer of sclerenchyma ; then comes a zone of small vascular bundles, two great patches of sclerenchyma forming an incomplete ringing, and then large vascular bundles (usually two). The bundles are elliptical in shape.",
+   "tokens": 413
+  },
+  {
+   "id": 27,
+   "page": 109,
+   "heading": "7. A sorus in section (the male fern has an indusinm, like a parasol",
+   "text": "9. Sporangia, | a., unbroken, | b.. ruptured, | an., the annulus. lc., a\n\nspore enlarged.\n\n10. Spore germinating\n\n11 | The prothallus. | a. c.. position of apical cell, | cu., the cushion.\nar„ archegonia. | an., antheridinm.\n12. Antheridinm. | 1, immature ; 2, dehiscing to liberate the antlic-\n\nrozooids, am.; 3, empty.\n\n13. Archegonium with its neck, n. canal, c. canal cell, c. c. ventral\n\ncanal cell, r c. c., and ovum ov.\n\n14. Development of embryo. | /., the foot absorbing nourishment\n\nfrom prothallus.\n\nTo pice page 72.",
+   "tokens": 151
+  },
+  {
+   "id": 28,
+   "page": 116,
+   "heading": "§ 1. The various flowering plants and the pine and the",
+   "text": "fern—in fact, all the vascular plants—are forms which, however much they may appear to differ at first, reveal upon analysis a remarkable family resemblance. They all present an alternation of generations, obvious or marked, and their stems and leaves are primarily adapted, by the posses¬ sion of a distinct epidermis, to the needs of a life out of water. To this alone, too, is the presence of vascular tissue —transpiring tissue, that is—in their stems and the special¬ isation of the leaves ascribable. Some of them have, it is true, reverted to the water again, like the water lily, and then we observe a tendency to soften the epidermis and reduce the vascular bundles. The gradual reduction of the oospliere generation in these plants is also doubtless connected with the same tendency. The antherozoids of a fern can reach the ova only through the medium of water, and the prothallium must necessarily develop in a wet situation. But the process of pollination is relatively independent of moisture, and may occur in the driest position in which a plant can live. It is a process especially adapted to a life in air. In the life history of fern, pine, and sunflower we have in all probability the record of three stages in the conquest of the dry land, of its hillsides, and once arid tablelands by the vegetable kingdom.\n\n§ 2. Fucus, the bladder-wrack, is a seaweed, and only\n\nvery remotely related to these forms we have been studying. It has no alternation of generations, complete or reduced. Its vegetative body is without vascular tissue, and presents no differentiation into leaf and stem. Such a plant body is called a thallus, whence Thallophyta, the name of the great",
+   "tokens": 420
+  },
+  {
+   "id": 29,
+   "page": 121,
+   "heading": "the vegetative method. Besides this there is a process",
+   "text": "TYPES OF ALGAE. | 83\n\nexplanation or to amplify the subject here, we may per¬\n\nhaps call the attention of the student to the universality of a sexual process among multicellular organisms, whether plants or animals. Every higher plant * and higher animal is at first a single cell comparable to the amoeba, but passive, with which another smaller and more active cell coalesces. This agreement must mark a common necessity, or a common ancestry, or both, or it is inexplicable.\n\n• In some cases it is possible that fertilisation does not occur, e.g., in Traub’s Chalozopliyta, and that the ovum develops by itself. In some cultivated varieties of fern it would seem that the sporo- phore generation arises as a shoot from the prothallium.",
+   "tokens": 190
+  },
+  {
+   "id": 30,
+   "page": 128,
+   "heading": "§ 2. There are certain physiological consequences of this",
+   "text": "absence of chlorophyll. The Fungi apparently do not need iron, which is necessary to the formation of chlorophyll. Oil commonly takes the place of starch in their economy, and they are of course unable to use carbon dioxide as food. They need organic compounds. Apparently, however, they do not resemble animals in finding proteids indispensable. They can manage with much less complex organic compounds than these—anmonium tartrate, for instance. Fungus cellu¬ lose stains blue with iodine, without the previous action of sulphuric acid.\n\n§ 3. Penicillium is the common blue mould. It is a mesh-\n\nwork of strings of cells or hyphae. Its network is figured\n\n• A parasite preys on living organisms, a saprophyte on their excreta or decaying remains. The term holophytic indicates a capacity, such as most plants possess, of living on entirely inorganic food.",
+   "tokens": 208
+  },
+  {
+   "id": 31,
+   "page": 135,
+   "heading": "§ 15. On Sh. XVI. are figured stages in the life circle",
+   "text": "of Bacillus anthracis, the disease germ of the disease called anthrax. B. a. are forms such as occur in the blood of the affected animal, simply filaments of short rod-like cells. This may be called the parasitic stage of this species. If shed by the host in any way, spores are formed, as at sp., in successive cells. These spores may remain for a con¬ siderable period unaltered, until they obtain a footing in a host again, e.g., by being eaten with herbage by cattle. The disease then develops rapidly, and consists essentially of fermentative changes set up through the presence of the parasite. Most of the great epidemic diseases—cholera and the various fevers—are the consequences of bacterial by-products. Consumption and hydrophobia are also among their beneficent activities. \\ 1 T\n\n§ 16. The phagocytes, which occur so abundantly in the\n\nPeyer’s patches, vermiform appendix, tonsils, and in botry- oidal and connective tissue generally in animals, will attack, ingest, and destroy bacteria that have invaded the organism. No doubt the activity of these remarkable cells is the reason of the general immunity from the ever-present contagion floating in the air; and any weakening of the",
+   "tokens": 292
+  },
+  {
+   "id": 32,
+   "page": 142,
+   "heading": "§ 6. The nucleus is entirely exceptional among the cell",
+   "text": "§ 7. Vorticella, like Amoeba, may undergo encystment. An encysted vorticella is represented in Fig9(. 8, 6, Sh. XVI. The stalk is thrown into a close spiral, and the peristome is retracted. A similar but more temporary retraction of the peristome is seen when cell division occurs, or when the vorticella is alarmed.\n\n§ 8. A process called conjugation occurs in Vorticella, but the word here hardly has the same reproductive import that it has in Spirogyra (§ 11). Two of the ordinary vorticellae become approximated and fuse. What occurs between the two in the case of Vorticella is unknown; but in the con¬ jugation of related forms the endoplasts would appear to coalesce and break up, and the endoplastules to unite and constitute new endoplasts; while the vestiges of the old endoplasts become the endoplastules of the reconstituted zooids. After some time—whatever may happen—the vor¬ ticellae separate again. The physiological advantage of this to the animal is quite unknown.\n\n§ 9. Reproduction is by cell division. | This may be either",
+   "tokens": 257
+  },
+  {
+   "id": 33,
+   "page": 149,
+   "heading": "§ 5. The endoderm consists of much larger cells than",
+   "text": "HYDRA. | 105\n\nand the variety of their movement. Food is actively ingested\n\nby the endoderm cells. They often contain, and especially in the neighbourhood of the mesoglaea, chlorophyll grains exactly like those of the higher plants, and they further resemble the typical plant cell in having extensive permanent vacuoles.* They also function in diminishing the calibre of the body cavity. The endoderm in the hypostome is of a more columnar form, and probably secretes a digestive fluid.\n\n§ 6. It has been suggested that the chlorophyll grains\n\nare not an integral part of the hydra at all, but uni¬ cellular algae which are parasitic upon the hydra, not preying upon it, however, but assisting it by forming organic compounds in return for its C02. Such mutual help unions certainly do occur—in the case of the lichens, for instance, where a fungus and alga co-operate—and the term sym¬ biosis is used to indicate the connection, but it is extremely doubtful whether the green grains of hydra are to be\n\nregarded as symbiotic unicellular plants. | They resemble\n\nin all respects typical chlorophyll grains, and it is hard to say, if they are to be regarded here as separate organisms, lodgers as it were, why they should not be so regarded when they occur in a leaf.",
+   "tokens": 319
+  },
+  {
+   "id": 34,
+   "page": 156,
+   "heading": "§ 2. The shell of the mussel displays a straight hinge line",
+   "text": "110 | BIOLOGY.\n\nmantle that the shell grows. The edge of the mantle, where\n\ngrowth is most active, is thickened. There are right and left flaps, corresponding to the valves of the shell. They do not unite posteriorly or along the mid-ventral line.\n\n§ 4. By cutting away the mantle as in Fig. 4, the actual\n\nventral portion of the body is seen. Antero-ventrally is the muscular foot, and postero-dorsally to this the soft visceral mass containing the alimentary canal. The latter is largely hidden by the two (inner and outer) gill plates\n\n(of the left side in the figure). | Traced back, the two gill\n\nplates of the left side are found to coalesce behind the visceral mass with those of the right, dividing the posterior opening into an upper exhalent opening or cloaca, and a lower inhalent. We shall consider the minute structure of these gill plates below. It will suffice now to state that each plate is a bag-like lattice work, and consists of two layers, or lamellae. The external lamella of the outer gill on either side coalesces with the base of the mantle on that side. The inner lamella of the outer gill and the outer lamella of the inner unite dorsally in the gill-axis, and this is attached to the body in front and floats freely posteriorly. This will be understood better with the help of Figs. II)",
+   "tokens": 347
+  },
+  {
+   "id": 35,
+   "page": 161,
+   "heading": "§ 11. The central organ of the circulatory system is the",
+   "text": "heart. This has a baggy ventricle wrapped closely round the rectum, and receiving blood through a pair of auriculo- ventricular valves from the two triangular membranous auricles. Two main arteries run out of the ventricle, an anterior aorta dorsal to the intestine, and a posterior aorta ventral to the rectum. The blood, after circulating through the system, returns by a series of lacunar spaces to a central vena ca>va between the kidneys \\ thence it flows through the kidneys to the gills, and thence to the auricles again, the bases of which are applied to the gill axes. The respiratory activity of the gills is perhaps not so important as it would appear. The blood must also be aerated very considerably in the mantle, and it returns thence by a special vessel direct to the auricle, without passing to vena cava, kidney, or gill (cp. Fig. IX., Sh. XVIII.).\n\n§ 12. The nervous system consists of three pairs of\n\nganglia, in all cases conspicuous reddish-orange bodies con¬ nected by nervous threads, the commissures. The cerebral ganglia (c. g.) lie at either side of the oesophagus, are widely separated, and communicate by means of a supra-oesophageal",
+   "tokens": 291
+  },
+  {
+   "id": 36,
+   "page": 169,
+   "heading": "§ 2. The anterior portion of the body is distended by the",
+   "text": "THE EARTHWORM. | 119\n\nthough not self-fertilising. The male apertures occur—\n\nthey are usually rendered conspicuous by tumid lips—on Somite XV., the female on XIV.; two other pairs of aper¬ tures, the anterior and posterior spermathecae, come between IX. and X. and X. and XI. respectively. Their function will be understood later. A secreted chitinous cuticle is easily removed from the dead worm ; it is opalescent and\n\nsemi-transparent. | It is formed by the underlying liypo-\n\ndermis, a layer of imperfectly separated cells, one cell only in thickness. In the hypodermis there also occur unicellular glands resembling goblet cells. If the reader compares this epidermis with that of the vertebrate, he will see that in the two precisely the same ends are served by very different means. We have in both cases— (i) An insensitive, dead, protective layer ; (ii) A living layer underneath. But in the Vertebrata (i) consists of successive strata of dead cells, the stratum corneum, while in the worm it is a secre¬ tion ; and (ii) the living, active layer in the Vertebrata is stratified.",
+   "tokens": 273
+  },
+  {
+   "id": 37,
+   "page": 174,
+   "heading": "§ 7. The nervous system of the earthworm consists of",
+   "text": "earthworm, like Hydra, is hermaphrodite; but, unlike Hydra, is not self-fertilising. The essential male organs are the testes, very small paired bodies attached to the posterior sides of the septa between Segments 9, 10, and 10, 11. They are covered over by the seminal vesicles in the adult, very large and conspicuous white organs, which receive the sperm cells, and in which the sj^ermatozoa develop. (See stages in this, Fig. II., Sh. XXI.) Ciliated funnels attached to the septa between Segments 10, 11, and 11, 12, receive the spermatozoa, and ducts from these, after convolutions, unite in Segment 12 to form the vas defen'ens, which carries them to the external opening (with tumid lips) upon Segment 15. The essential female organs are the ovaries, attached to the posterior face of Septum 12, 13, and which (like the chordate ovaries) shed their ova into the body cavity to be caught up (as in chordata) by the open funnels of the\n\noviducts. | A receptacidum ovarum stores the ova. | The\n\nspermathecae are blind sacs belonging to the female organs, and open in the grooves between Segments 9, 10, and 10, 11.",
+   "tokens": 282
+  },
+  {
+   "id": 38,
+   "page": 181,
+   "heading": "§ 2. In its having limbs, a fairly distinct head, and",
+   "text": "THE CRAYFISH. | 127\n\nrivers—in the Thames, for instance—and also in those of\n\nFrance. | The English crayfish, however, are usually a\n\nuniform brown colour, while the French are often remark¬ ably variegated, being grey, French grey, sea green, and\n\npale golden-brown. | Seen from the dorsal side (Fig. I.,\n\nSh. XXII.), we observe in front a continuous cephalo-thoracic shield the “ head ” part of which is marked off from the\n\n“ thorax ” by a cervical groove (cv. g.).* | Two longitudinal\n\ngrooves, posterior to this, mark off the tergum (tg.) from the gill covers, or branchiostegites (hr.). Behind the cephalo¬ thoracic shield come six somites and a tail fin, forming the abdomen.\n\n§ 4. The branchiostegites cover over the gills in a gill\n\nchamber. The relation of this chamber (G.C.) to the body\n\nis seen in Fig. III. | The gills are highly vascular out¬\n\ngrowths of the body wall, covered with epiblast, as are the gills of the mussel and the external gills of the tadpole, not hypoblastic, like the gills of a fish or the tadpole’s internal gills. In Fig. III. ap. is the base of a leg, st. the sternum or skeletal part below the limbs, and end the endophragmal vesicles, ingrowths from the external skeleton to which muscles are attached ; tg. is the tergum or roof part, br. the branchiostegite, and ep. the epimeron or inner wall of the gill chamber. Fig. IV. is a section of one of",
+   "tokens": 364
+  },
+  {
+   "id": 39,
+   "page": 184,
+   "heading": "§ 9. In the male the genital aperture is on the coxopodite",
+   "text": "of the last walking limb, in the female on that of the last but two. The renal organ (green gland) opens on a veiy distinct papilla on the base of the antenna. On the dorsal aspect of the basal joint of the protopodite of the antennule after removal a soft area can be felt, indicating the position of the auditory sac. This sac is filled with setae connected with ganglion cells, and small grains of sand, which perhaps intensify vibration, called the otoliths. The protopodite of the antennule consists of three joints.\n\n§ 10. The young crayfish, like the earthworm, is covered\n\nat first by a chitinous cuticle secreted by the epidermis; but this becomes loaded in places with calcareous matter as de¬ velopment proceeds to form the various plates of the armour which constitute the exo-skeleton of this form. Since it is a secretion and not cellular, it obviously has no possibilities",
+   "tokens": 233
+  },
+  {
+   "id": 40,
+   "page": 189,
+   "heading": "§ 19. The eye is seated upon a two-jointed stalk, which",
+   "text": "SHEET XXII.\n\nCbayfish.\n\n1. Dorsal view of Crayfish (post oral appendages not shown).\n\n2. Ventral view, showing appendages.\n\n3. Section thi'ough 1 along the line indicated.\n\n4. Section through an abdominal appendage.\n\n5. Type limb of Astacus.\n\n6. Modification | of this type in various | appendages; | vertical\n\nshading the protoprodite ; slanting, the endopodite, crosshatched, the epipodite, and unshaded the exopodite.\n\n7. Single Pleurobranch. «V G~ | ,..\n8. Astkrerbnrnch. | ^ < &'■■\n\n9. The eye stalk in section.\n\n10. Single element of eye.\n\n11. First antennO&to show position of auditory sac.\n\nap., base of appendage, ant., antenna, | an”., antennule. amb., am¬\nbulatory. | ab., abdominal appendage, | and., auditory sac. | hr., bran-\nchiostegite. | cv. g., cervical groove, | co., cornea, | c. c., crystalline\ncones, | d., dactylopodite. | end.g., endophragmal arches, e., eye. en.\nendopodite. | ex., exopodite. | ep., epimeron. | epip.J | epipodite. | E.,\nendopodite. | G. C., gill chamber, | gas., gastrolith. | g.g.p., green\ngland (renal) opening. | I, lamella, | lb., labium, | mb. mandible, | mx.,\nmaxilla, | mxpd., maxilliped. | pi. b., pleurobranch. | p., propodite,\nin fig. 8, plume, | pr., protopodite. | st., sternum, | s. sp.r striated\nspindle, | sc., scaphognathite. | tg., tergum. | tel., telson.",
+   "tokens": 320
+  },
+  {
+   "id": 41,
+   "page": 196,
+   "heading": "B. Organisms which never display cellulose cell walls",
+   "text": "140 | BIOLOGY.\n\nB. II. Multicellular. Metazoa.\n\nB. II. 1. | Diploblastic, i.e., of epiblast and\n\nprimitive hypoblast. No separate mesoblast or coelom. Coelenterata—Hydra.\n\nB. II. 2. | Mesoblast and body cavity.\n\nCoelomata.\n\nB. II. 2. (a) The ventral surface is a\n\nmuscular foot, there are nephridia, and a mantle. f Anodon. Mollusca -< Snail. I. Slug. B. II. 2.  (/?) Metameric segmentation, nephridia, large coelom, progression by setae. Chaetopoda—W orm.\n\nB. II. 2. | (y) Metameric segmentation, re¬\n\nduced body cavity, no evident nephridia,* jointed limbs, centrolecithal ova. Arthropoda. (a?) Crustacea—Crayfish. (y) Tracheata—Fly, Beetle. (:) Araclin Ida—Spider.\n\nB. II. 5. | (S) A dorsal, tubular, nervous\n\ncord, embryonic or persistent hypoblastic “ notochord,” embryonic or persistent gill-slits, myotonies. Chordata. See Part I.\n\nB. II. 2. | {v) Echinodermata—Starfish, e.<j.\nB. II. 2. | (0) Brachiopoda.\nB. II. 2. | (£) Polyzoa,\n\netc., etc.\n\n• Peripatvs, a tracheate arthropod, has nephridia.",
+   "tokens": 225
+  },
+  {
+   "id": 42,
+   "page": 203,
+   "heading": "[Material: carrot, cabbage leaf (fresh), pine leaf, which has",
+   "text": "SYLLABUS OF PRACTICAL WORK. | 145\n\nobliquely and towards you, shave off a thin slice of the\n\ncarrot. Do not attempt to cut across the whole surface; endeavour simply to get a thin shaving of a part of it. Slide or remove by means of a brush the shaving from the blade on to a glass slide. Do not allow it to get dry, or it is ruined. Examine with low power. At the first attempt you will probably see a dark reddish mass of cells. Repeat this a great number of times, until the section is transparent and colourless, and evidently only one or two cells in thick¬ ness. Now put a drop of glycerine gently upon a section, and notice how much more transparent it seems. Try now to put a cover glass over this section. In doing this there is a great risk of getting air into the material. Bubbles of air appear as black spots and circles in the field, and if abundant completely spoil a section. Put on the cover glass with forceps, not dropping it flat, but at first standing it up vertically near the section to be covered, and then letting it slant down upon it. After the cover glass is on, examine with the high power. In using the fine adjustment at first, never screw down towards the cover glass in focussing. Focus roughly first with the coarse adjustment, go a little below the proper focus, and screw up. Take the cabbage leaf, which has been soaking while the above work was proceeding in alcohol or water. Try a cross section. A difficulty arises from the flexibility of the leaf; it bends instead of being cut. The leaf may be held in a slit on a piece of carrot, and the whole mass cut trans¬ versely. Mount a good section in glycerine and examine. Cut similar transverse sections of pine leaf. All sections not intended for permanent preservation should be mounted in glycerine, which mixes equally wrell with spirit and with water. Water and spirit evaporate rapidly, and a section, even a thin one, once dried up, is altogether ruined.",
+   "tokens": 516
+  },
+  {
+   "id": 43,
+   "page": 208,
+   "heading": "Here is another familiar plant:—",
+   "text": "Roots ; adventitious, fibrous. Stem ; woody, perennial, subterranean, short, scaly, sending out long weak runners which root at the nodes. Leaves ; verticillate, ternate, with long petioles, and membranous, lanceolate, acuminate stipules; the leaflets nearly sessile, roundish, oblong, with pinnate reticulate venation, and coarsely serrate margin. Flowers; perigynous, actinomorphic, in corymbose in¬ florescences, with bifid herbaceous bracts. Calyx ; herbaceous, flat; sepals, free, in two whorls of five each (or rather five sepals and an epicalyx). Corolla ; polypetalous, white, larger than calyx, with five round petals. Stamens ; indefinite, filaments short and stiff, anthers cordate. Gynaeceum ; apocarpous, on a central elevation of the receptacle, with filiform styles and simple stigmas ; ovules, solitary, ascending. Fruit; a pseudocarp, the conical succulent receptacle bearing the true fruits as achenes; seed, ex- albuminous.\n\nAfter drawings have been made of these from these de¬\n\nscriptions, the student may very well attempt to write one",
+   "tokens": 224
+  },
+  {
+   "id": 44,
+   "page": 213,
+   "heading": "carefully, the muscle that lies below them, to expose the",
+   "text": "The Earthworm. Dissection.—Kill by chloroform, and transfer to alcohol, or drown in alcohol. Open along mid-dorsal line, and make out all the chief organs. Examine fragments of nephridia, cuticle, and setae in water, under low power. From a good- sized specimen, having the clitellum and spermatliecae well marked, get out the ovary. To do this, count back (the spermathecae form a convenient landmark) to segment thir¬ teen. Push intestine to one side, and pin the segment out to stretch it widely open. Remove the dissection from the water, and wash repeatedly with alcohol. The ovary becomes\n\nwhite and much more distinct. | It is about a twelfth or\n\nfifteenth of an inch long, and attached to the anterior wall of the segment. Transfer it by means of forceps to a glass slip, and examine under the low power. Its appearance should be exactly like our figure. Do not deceive yourself with coiling bits of nephridium. Look for the distinct round eggs, and see that you get them. Look also for oviduct and for funnels of vasa deferentia.\n\nThe Mussel. Dissection I.—Kill by momentary immersion in boiling water. Mussels, it is said, are occasionally dissected alive, and the heart, arteries, and auriculo-ventricular valve are then more easily seen. Open by removing the left shell, and",
+   "tokens": 316
+  },
+  {
+   "id": 45,
+   "page": 220,
+   "heading": "Ulniversltt) Correspondence College",
+   "text": "English History Papers, Matriculation 24 | Havelok the Dane . 22\n,, | ,, | and Geography, Ma¬ | Heat and Light, Elementary Text-\ntriculation Model Answers in. 24 | Book of . 29\nEnglish History and Literature, Ques¬ | Heat and Light Problems. 29\ntions on. 14 Series... 24 | ,, | ,, | Magnetism and Elec¬\nEnglish Language, Matriculation Model | tricity, Matriculation Model An¬\nAnswers in. 24 | swers in . 30\nEnglish Language Papers, Matricula¬ | Heat, Text-Book of . 28, 29\ntion . 24 | Herodotus, Book VI. 11\nEnglish Language, The. 24 | ,, | Book VII. 11\nEnglisliLiterature, History of, 1485-1580 23 | ,, | Book VIII. 11\n1620-1670 23 | Higher Greek Reader. 19\nn | 11\n1660-1714 23 | Homer—Iliad, Book VI. 12\nll* | il\n1714-1798 23 | ,, | ,, | Book XXIV. 12\nn | ii\n,, | ,, | ,,  The Inter¬ | ,, | Odyssey, Book IV. 12\nmediate Text-Book of, in 3 vols.... 23 | ,, | ,, | Books IX.-X. 12\nEthics, Manual of . | 25 | ,, | ,, | Books XI.-XII. ... 12\nExamination Papers, B.A. 31 | „ | „ | Books XIII.-XIV.. 12\nB.A. Greek . 20 | ,, | ,, | Book XVII. 12\nII | II\nB.A. Latin . 20 | Horace—Epistles. 12\nII | II\nIntermediateArts | 31 | ,, | Odes, Book I. 12\nII | II\nMatriculation  ... 31 | „ | ,, | Book II. 12\nII | II\n,, | ,, | Science. 31 | ,, | ,, | Book III. 12\nEuripides, Heraclidae. 11 | ,, | ,, | Book IV. 13\nHercules Furens. 11 | ,, | Satires . 13\n\nII",
+   "tokens": 414
+  },
+  {
+   "id": 46,
+   "page": 224,
+   "heading": "Two series of Test Papers are, as a rule, provided, of which the",
+   "text": "GRADUATION SERIES.\n\ns. d. | s. d.\nAeschylus | — Prometheus | Horace—Satires | . | 3 6\nVinctus | . | 2 6 | Juvenal—Satires, 8, 10,13 | 2 6\nAristophanes—Plutus. | 2 6 | Livy—Bk. 3+. | 3 6\nCicero—AdAtticum, Bk.4 | 3 6 | Livy—Bk. 5 | . | 2 6\nCicero—De Finibus, Bk. 1 | 2 6 | Ovid—Fasti, Bks. 3, 4 | . | 2 6\nCicero—ProPlancio. | 2 6 | Plato—Phaedo. | 3 6\nHerodotus—Bk. 6 | . 2 6 | Sophocles—Electraf | . | 3 6\nHerodotus—Bk. 8 . | 3 6 | Tacitus—Annals, Bk. | 1 | ... | 2 6\nHomer—Odyssey, Bks. 9,10 | 2 6 | Tacitus—Annals, | Bk. 2 ... | 2 6\nHomer—Odyssey, Bks. 11,12 2 6 | Tacitus—Histories, Bk. 1.. | 3 6\nHomer—Odyssey, Bks.13,14 | 2 6 | Thucydides—Bk. 7 | . | 3 6\nHorace—Epistles | . | 3 6",
+   "tokens": 237
+  },
+  {
+   "id": 47,
+   "page": 229,
+   "heading": "Two series of Test Papers are, as a rule, provided, of which the",
+   "text": "--     Ion.      A Vocabulary (in order of the Text), with Test\n\nPapers. | Interleaved, Is.\n\n• Iphigenia in Tauris.     A Translation.                         By   G.   F. H. Sykes, B.A. Lond. Is. 6d. (See also p. 21.)\n\nHerodotus.—Book VI. | Edited by W. F. Masom, M.A. Lond., and\n\nC. S. Fearenside, M.A. Oxon. Second Edition. Introduction, Text, and Notes, with a Chapter on the Ionic Dialect. 2s. 6d. A Vocabulary (in order of the Text), with Test Papers. Inter¬ leaved, Is. Translation, Is. 6d. In one vol., 4s. 6d.\n\n• Book VII.          A Translation.      By J. Thompson, M.A. Camb.\n\n3s. 6d. | (See also p. 20.)\n\n• Book VIII.             Edited by J.    Thompson,        M.A. Camb., and\n\nR. M. | Thomas, M.A. Lond. | Introduction, Text, and Notes,\n3s. 6d. | Vocabulary (in order of the Text), with Test Papers.\nInterleaved, Is. | Translation, Is. 6d. | In one vol., 5s. 6d.\n\n“ The notes are just such as a student wants.”—The Schoolmaster.",
+   "tokens": 243
+  },
+  {
+   "id": 48,
+   "page": 234,
+   "heading": "Two series of Test Papers are, as a rule, provided, of which the",
+   "text": "16 | UN1V. CORR. COLL. TUTORIAL SERIES.\nTerence.—Adelphi, A Translation. | By A. F. | Burnet, | M.A.\n\nLond. 2s. (See also p. 20.)\n\n— ■ | Phormio. | A Translation, with Test Papers. | By F. G.\nPlaistowe, M.A. Camb. | 2s. 6d. | Notabilia, Is.\nTlxucydicles.—Book IV. A Translation. | By G. F. H. | Sykes,\n\nB.A. Loud. Is. 6d. (See also p. 20.) “ The rendering is as close as possible, consistent with due regard to idiom.” —Educational Times.\n\n• Book VII.    Edited, with Introduction, Notes and a List of the harder Verbal Forms, by J. F. Stout, B.A. Camb., and\n\nF. G. Plaistowe, M.A. Camb. 3s. 6d. | A Translation, with\nTest Papers. | 2s. 6d.\n\nVergil.—Aeneid, Book I. Edited by A. H. Allcroft, M.A. Oxon., and W. F. Masom, M.A. Lond. Introduction, Text, and Notes, Is. 6d. A Vocabulary (in order of the Text), with Test Papers.\n\nInterleaved, Is. The Two Parts in one vol., 2s. | A Close\nTranslation. | By A. A. Irwin Nesbitt, M.A. Is.\n\n-Aeneid, Books I.-IV.                  A Close    Translation.       By A. A.",
+   "tokens": 275
+  },
+  {
+   "id": 49,
+   "page": 238,
+   "heading": "Higher Greek Header : A Course of 132 Extracts from the best",
+   "text": "20 | UNIV. CORR. COLL. TUTORIAL SERIES.\n\nUatin an!> ©reek. Examination Questions, Notabilia, &c.\n\nB.A. Latin Examination Papers : being the Questions set at\n\nLondon B.A. for 18 years, with full Solutions to the last. 2s.\n\nB.A. Greek Examination Papers : Being the Questions Bet at\n\nthe London B.A, Examinations for 17 years. | 2s.\n\nLatin Honours Papers : A Reprint of the Papers in Grammar\n\nand History set at the London Intermediate Examination in Arts (Hons.) for 15 years ; together with B.A. (Hons.) and M.A. papers in Latin Grammar. 3s. 6d.\n\nLondon B.A. Latin Unseens : Being all the unprescribed Pas¬\n\nsages set for Translation at the London B.A. Exam. Is. London Undergraduate Unseens : A Reprint of all the Latin and Greek Passages set for Unprepared Translation at Matricn- lation and Intermediate Arts, 1875-1890. Second Edit ion. Is. 6d. Matriculation Greek Papers : The Examination Papers in Greek set at Matriculation for 15 years, with Model Answers to the last. Is.; cloth gilt, Is. 6d,\n\nMatriculation | Model Answers in Greek, together with\n\nthe Examination Papers, from June 1888 to January 1891. Is.; cloth gilt, Is. od.",
+   "tokens": 285
+  },
+  {
+   "id": 50,
+   "page": 242,
+   "heading": "Matriculation Model Answers in English Language, together",
+   "text": "8e?'ies : 1660-1714, 2s. Seventh Series : 1760-1815,2s. 6d. Questions on English Literatrire. Twelfth Series: 1360-1400, 2s. 6d. Second Series : 1558-1603, 2s. Eighth Series : 15S0-\n\n1620, 2s. 6d. | Fourth Series: 1625-1660, ‘2s. Sixth Series:\n\n1714—1744, 2s. Fourteenth Scries : 1740—1770, 2s. 6d. (In pre¬ paration.)  Tenth Series : 1815-1850, 2s. 6d. Matriculation English History Papers : A Reprint of the last thirty-two Examination Papers ; with Model Answer's to the last, by C. S. Fearenside, M.A. Oxon. Is.; cloth gilt, Is. 6d. Matriculation Model Answers in English History and Geography, together with the Examination Papers from June 1888 to January 1891. Is.; cloth gilt, Is. 6d.",
+   "tokens": 165
+  },
+  {
+   "id": 51,
+   "page": 246,
+   "heading": "Intermediate Science Mixed Mathematics Papers, 1877 to",
+   "text": "28 | UNIT. CORK. COLL. TUTORIAL SERIES.\n\nSciences.\n\nTHE | TUTORIAL | PHYSICS. | By R. Wallace Stewart,\n\nD.Sc. Lond., First in First Class Honours in Physics at B.Sc., and E. Catchpool, B.Sc. Lond., qualified for (he University Scholarship in Physics. In Four Volumes :—\n\nT. Sound, Text-Book of. | By E. Catchpool, B.Sc. Lond. 3s. 6d»\n\n[Ready Sept-\n\nII. Heat, Text-Book of. | With 81 Diagrams and numerous\n\nCalculations. By R. W. Stewart, D.Sc. Lond. Second Edition. 3s. 6d. “Clear, concise, well arranged, and well illustrated, and, as far as we have tested, accurate.”—Journal of Education. “ The diagrams are numerous and well executed.”—Educational Times.\n\nill. Light, Text-Book of (uniform with the Text-Book of Heat).\n\nWith 111 Diagrams and numerous Calculations. | By R. W.\n\nStewart, D.Sc. Lond. 3s. 6d. “ The diagrams are neat and accurate, the printing excellent, and the arrange¬ ment of the matter clear and precise.”—Practical Teacher. “ The text has been adapted to the requirements of the Intermediate Science and Preliminary Scientific Examinations of London University, and a large number of questions set at the University during recent years are included ; but the volumes (Light and Heat) will be found equally well adapted for general use by those students who have already mastered the first principles of physics. The subjects are treated both mathematically and experimentally, and the most important theorems are illustrated by diagrams and figures.”—School Guardian.",
+   "tokens": 341
+  },
+  {
+   "id": 52,
+   "page": 250,
+   "heading": "Intermediate Science and Preliminary Scientific Exami¬",
+   "text": "32 | UNIV. CORR. COLL. TUTORIAL SERIES.\n\nDirectories. B.A. DIRECTORY, with FULL ANSWERS to the Examination Papers. (No. IV. will be piiblished (hiring the fortnight following the Examination of October 1893.) No. I.\n\n1889; II., 1890; HI., 1891. | 2s. 6d. each, net.\n\nContents : Introductory Hints—University Regulations—Advice on the Choice of Text-hooks (including Special Subjects for the two following years) —the Examination Papers - Full Solutions (except in Special Subjects for the year) by Tutors of University Correspondence College. INTERMEDIATE ARTS DIRECTORY, with FULL ANSWERS to the Examination Papers. (No. VII. will be published during the fortnight following the Examination of July 1895.) No. I., 1888, 2s. 6d. net.; No. II., 1889 (with the French Honours Papers) ; No. III., 1890; No. IV., 1891 ; No. V., 1892 ; No. VI., 1893, Is. 6d. each, net. Contents: Introductory Hints—University Regulations—Advice on the Choice of Text-Books (including Special Subjects for the following year—The Pass Examination Papers—Full Solutions (except in Special Subjects for the year) by Tutors of University Correspondence College. INTER. SCIENCE AND PRELIM. SCI. DIRECTORY. (No. V. will be published during the fortnight following the Examination of July 1895.) No. I., 1890; No. II., 1891; No. III., 1892; No. IV., 1893, 2s. 6d. each, net. Contents: Introductory Hints—Advice on the Choice of Text-Books—The University Regulations—The Examination Papers—Full Solutions to all the Papers by Tutors of University Correspondence College. MATRICULATION DIRECTORY, with FULL AN¬ SWERS to the Examination Papers. (Published during the week following each Examination.) Nos. IV., VI., VII., IX., X., XI., XII., XIII., XIV. (June 1888, and June 1889, Jan. 1890, and Jan. 1891 to June 1893), Is. each, net. Contents: Introductory Hints — University Regulations—Advice on the Choice of Text-Books (including Special Subjects for the next two Examina¬ tions)—The Examination Papers—Full Solutions by Tutors of University Cor¬ respondence College. “ These solutions are uniformly accurate.”—Journal of Education. “ No candidate could desire a more reliable guide.”—The Schoolmaster. “ Books, method of study, and other matteis cf importance are treated with a fulness of knowledge that only experts can possess.”—Educational News. Matriculation Directory. No. I. (containing the Examination Papers of Jan. 1887, with Answers to the Mathematical Ques¬ tions). 6d. Nos. II., III., V., VIII. are out of print.",
+   "tokens": 530
+  }
+ ]
+}
