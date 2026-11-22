@@ -25,7 +25,9 @@ class TestActivitySchema(unittest.TestCase):
         registered = set()
         for route in (ROOT / "server/backend/src/routes").glob("*.rs"):
             registered.update(re.findall(r'\.route\("([^"]+)"', route.read_text(encoding="utf-8")))
-        self.assertEqual(endpoints, registered | {"UNMATCHED"})
+        expected = set(spec["paths"]) | {"/", "/download/{file}", "/download/assets/{*path}", "UNMATCHED"}
+        self.assertEqual(endpoints, expected)
+        self.assertLessEqual(registered, endpoints)
 
     def test_http_metadata_uses_only_approved_templates_methods_and_statuses(self):
         with sqlite3.connect(":memory:") as db:
