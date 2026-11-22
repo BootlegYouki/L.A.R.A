@@ -2,8 +2,8 @@ import {createElement} from 'react';
 import {act,create,type ReactTestRenderer} from 'react-test-renderer';
 import {afterEach,expect,it,vi} from 'vitest';
 import type {CachedAccount} from '../src/services/auth';
-const {readThread,sendComment}=vi.hoisted(()=>({readThread:vi.fn(),sendComment:vi.fn()}));
-vi.mock('../src/services/comments',()=>({readThread,sendComment}));
+const {readThread,sendComment,markPrivateCommentsRead}=vi.hoisted(()=>({readThread:vi.fn(),sendComment:vi.fn(),markPrivateCommentsRead:vi.fn().mockResolvedValue(undefined)}));
+vi.mock('../src/services/comments',()=>({readThread,sendComment,markPrivateCommentsRead}));
 import CommentThread from '../src/components/CommentThread';
 const account:CachedAccount={hub:{name:'QA',ip:'127.0.0.1',http_port:8080,ws_port:8081},user:{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',lrn_or_id:'synthetic',full_name:'QA',role:'STUDENT'},classrooms:[],persistent:false,expires_at:1};
 const id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';let renderer:ReactTestRenderer;
@@ -47,4 +47,22 @@ it('discards a teacher draft and aborts its request when the private recipient c
  await act(async()=>renderer.update(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'},offline:false,onRefresh:changed})));
  expect(signal.aborted).toBe(true);expect(renderer.root.findByType('textarea').props.value).toBe('');
  await act(async()=>finish(null));expect(changed).not.toHaveBeenCalled();
+});
+
+it('marks only rendered learner comments read in the visible private thread without refreshing the page',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('document',{visibilityState:'visible'});
+ const teacher={...account,user:{...account.user,role:'TEACHER' as const}},student='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ readThread.mockResolvedValue({write_mode:'online',items:[{id,author_id:student,content:'Question',created_at:1,sync_status:'SYNCED'},{id:'reply',author_id:teacher.user.id,content:'Teacher reply',created_at:2,sync_status:'SYNCED'}]});
+ const onRead=vi.fn(),refresh=vi.fn();
+ await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:student},offline:false,onRefresh:refresh,onRead}))});
+ expect(markPrivateCommentsRead).toHaveBeenCalledWith(teacher,{kind:'assignment',id,student_id:student},[id]);expect(onRead).toHaveBeenCalledOnce();expect(refresh).not.toHaveBeenCalled();
+});
+it('does not mark a hidden private thread read or deliver an old read callback after unmount',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('document',{visibilityState:'hidden'});
+ const teacher={...account,user:{...account.user,role:'TEACHER' as const}},student='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ const data={write_mode:'online',items:[{id,author_id:student,content:'Unread',created_at:1,sync_status:'SYNCED'}]};readThread.mockResolvedValue(data);
+ let finish!:()=>void;markPrivateCommentsRead.mockImplementation(()=>new Promise<void>(resolve=>{finish=resolve}));const onRead=vi.fn();
+ await act(async()=>{renderer=create(createElement(CommentThread,{account:teacher,target:{kind:'assignment',id,student_id:student},offline:false,onRefresh:async()=>{},onRead}))});expect(markPrivateCommentsRead).not.toHaveBeenCalled();
+ vi.stubGlobal('document',{visibilityState:'visible'});readThread.mockResolvedValue({...data});await act(async()=>renderer.root.findByProps({'aria-label':'Refresh comments'}).props.onClick());expect(markPrivateCommentsRead).toHaveBeenCalledOnce();
+ await act(async()=>renderer.unmount());await act(async()=>finish());expect(onRead).not.toHaveBeenCalled();
 });

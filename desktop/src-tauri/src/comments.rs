@@ -2,7 +2,8 @@ use crate::account::{self, Accounts, Role, User};
 use crate::discovery::HubInfo;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use sqlx::{Row, SqliteConnection};
+use sqlx::{Connection, Row, SqliteConnection};
+use std::collections::{BTreeMap, BTreeSet};
 
 const ERROR: &str = "comment_unavailable";
 #[derive(Clone, Debug, Deserialize)]
@@ -11,7 +12,7 @@ pub enum ThreadTarget {
     Announcement { id: String },
     Assignment { id: String, student_id: Option<String> },
 }
-struct Scope { id: String, student: Option<String>, mode: &'static str }
+struct Scope { id: String, classroom: String, student: Option<String>, mode: &'static str }
 async fn scope(db: &mut SqliteConnection, user: &User, target: &ThreadTarget) -> Result<Scope, &'static str> {
     let id = match target { ThreadTarget::Announcement{id} | ThreadTarget::Assignment{id,..} => id.to_ascii_lowercase() };
     if !account::uuid(&id) { return Err(ERROR); }
@@ -41,7 +42,7 @@ async fn scope(db: &mut SqliteConnection, user: &User, target: &ThreadTarget) ->
         }
     };
     let mode = if !writable {"readonly"} else if student.is_some() && user.role == Role::TEACHER {"online"} else {"queue"};
-    Ok(Scope{id,student,mode})
+    Ok(Scope{id,classroom:class_id,student,mode})
 }
 async fn read_thread_db(db: &mut SqliteConnection, user: &User, target: &ThreadTarget) -> Result<Value, &'static str> {
     let scope=scope(db,user,target).await?;
@@ -92,6 +93,45 @@ async fn read_counts_db(db:&mut SqliteConnection,user:&User,classroom:&str)->Res
     let rows=sqlx::query("SELECT a.id,COUNT(c.id) AS count FROM announcements a LEFT JOIN announcement_comments c ON c.announcement_id=a.id WHERE a.classroom_id=? GROUP BY a.id").bind(classroom).fetch_all(db).await.map_err(|_|ERROR)?;
     Ok(Value::Object(rows.into_iter().map(|row|(row.get::<String,_>("id"),json!(row.get::<i64,_>("count")))).collect()))
 }
+fn private_read_key(classroom:&str)->String {format!("desktop:private_comment_read:{classroom}")}
+async fn private_seen(db:&mut SqliteConnection,classroom:&str)->Result<BTreeSet<String>,&'static str>{
+    match account::state(db,&private_read_key(classroom)).await? {
+        Some(value)=>serde_json::from_str(&value).map_err(|_|ERROR),None=>Ok(BTreeSet::new())
+    }
+}
+async fn private_unread_db(db:&mut SqliteConnection,user:&User,classroom:&str)->Result<Value,&'static str>{
+    if user.role!=Role::TEACHER||!account::uuid(classroom)||!account::classes(db,user).await?.iter().any(|room|room.id==classroom){return Err(ERROR)}
+    let seen=private_seen(db,classroom).await?;
+    let rows=sqlx::query("SELECT c.id,c.assignment_id,c.student_id FROM private_comments c JOIN assignments a ON a.id=c.assignment_id JOIN enrollments e ON e.classroom_id=a.classroom_id AND e.student_id=c.student_id WHERE a.classroom_id=? AND e.status='ACTIVE' AND c.author_id=c.student_id AND c.sync_status!='REJECTED'").bind(classroom).fetch_all(db).await.map_err(|_|ERROR)?;
+    let mut counts:BTreeMap<String,BTreeMap<String,u64>>=BTreeMap::new();
+    for row in rows {if !seen.contains(&row.get::<String,_>("id")){*counts.entry(row.get("assignment_id")).or_default().entry(row.get("student_id")).or_default()+=1;}}
+    Ok(json!(counts))
+}
+async fn mark_private_read_db(db:&mut SqliteConnection,user:&User,target:&ThreadTarget,ids:&[String])->Result<bool,&'static str>{
+    if user.role!=Role::TEACHER||ids.len()>10000{return Err(ERROR)}
+    let scope=scope(db,user,target).await?;let student=scope.student.ok_or(ERROR)?;
+    let mut tx=db.begin().await.map_err(|_|ERROR)?;
+    let rows=sqlx::query("SELECT c.id,c.assignment_id,c.student_id FROM private_comments c JOIN assignments a ON a.id=c.assignment_id WHERE a.classroom_id=? AND c.author_id=c.student_id AND c.sync_status!='REJECTED'").bind(&scope.classroom).fetch_all(&mut *tx).await.map_err(|_|ERROR)?;
+    let live:BTreeSet<String>=rows.iter().map(|row|row.get("id")).collect();
+    let allowed:BTreeSet<String>=rows.iter().filter(|row|row.get::<String,_>("assignment_id")==scope.id&&row.get::<String,_>("student_id")==student).map(|row|row.get("id")).collect();
+    if ids.iter().any(|id|!account::uuid(id)||!allowed.contains(&id.to_ascii_lowercase())){return Err(ERROR)}
+    let mut seen=private_seen(&mut tx,&scope.classroom).await?;let before=seen.clone();
+    // Exact IDs keep a delayed offline message unread even when its timestamp is older.
+    seen.extend(ids.iter().map(|id|id.to_ascii_lowercase()));seen.retain(|id|live.contains(id));
+    let changed=seen!=before;
+    if changed {account::put(&mut tx,&private_read_key(&scope.classroom),&serde_json::to_string(&seen).map_err(|_|ERROR)?).await?;}
+    tx.commit().await.map_err(|_|ERROR)?;Ok(changed)
+}
+#[tauri::command]
+pub async fn read_private_comment_unread(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,classroom_id:String)->Result<Value,&'static str>{
+    let _guard=accounts.0.lock().await;let(mut db,user)=selected_context(&app,&accounts,&hub,&user_id.to_ascii_lowercase()).await?;
+    private_unread_db(&mut db,&user,&classroom_id.to_ascii_lowercase()).await
+}
+#[tauri::command]
+pub async fn mark_private_comments_read(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,target:ThreadTarget,comment_ids:Vec<String>)->Result<bool,&'static str>{
+    let _guard=accounts.0.lock().await;let(mut db,user)=selected_context(&app,&accounts,&hub,&user_id.to_ascii_lowercase()).await?;
+    mark_private_read_db(&mut db,&user,&target,&comment_ids).await
+}
 #[tauri::command]
 pub async fn read_class_comment_counts(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,classroom_id:String)->Result<Value,&'static str>{
     let _guard=accounts.0.lock().await;
@@ -140,6 +180,28 @@ mod tests {
         db
     }
     #[tokio::test]
+    async fn private_unread_is_thread_scoped_and_tracks_ids_instead_of_timestamps(){
+        let mut db=db().await;let teacher=user(TEACHER,Role::TEACHER);let learner=user(LEARNER,Role::STUDENT);
+        let other_id="44444444-4444-4444-8444-444444444444";let late="55555555-5555-4555-8555-555555555555";
+        queue_comment_db(&mut db,&learner,&private(LEARNER),MESSAGE,"First learner message").await.unwrap();
+        queue_comment_db(&mut db,&user(OTHER,Role::STUDENT),&private(OTHER),other_id,"Other learner message").await.unwrap();
+        sqlx::query("INSERT INTO private_comments(id,assignment_id,student_id,author_id,content,created_at,updated_at,sync_status) VALUES('66666666-6666-4666-8666-666666666666',?,?,?,'Teacher reply',1,1,'SYNCED')").bind(ASSIGN).bind(LEARNER).bind(TEACHER).execute(&mut db).await.unwrap();
+        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert_eq!(counts[ASSIGN][LEARNER],1);assert_eq!(counts[ASSIGN][OTHER],1);
+        assert!(mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[MESSAGE.into()]).await.unwrap());
+        assert!(!mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[MESSAGE.into()]).await.unwrap());
+        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert!(counts[ASSIGN].get(LEARNER).is_none());assert_eq!(counts[ASSIGN][OTHER],1);
+        queue_comment_db(&mut db,&learner,&private(LEARNER),late,"Late offline message").await.unwrap();
+        sqlx::query("UPDATE private_comments SET created_at=0 WHERE id=?").bind(late).execute(&mut db).await.unwrap();
+        assert_eq!(private_unread_db(&mut db,&teacher,CLASS).await.unwrap()[ASSIGN][LEARNER],1);
+        assert!(mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[other_id.into()]).await.is_err());
+        assert!(private_unread_db(&mut db,&learner,CLASS).await.is_err());
+        assert!(private_unread_db(&mut db,&user(OTHER,Role::TEACHER),CLASS).await.is_err());
+        assert!(private_unread_db(&mut db,&teacher,ASSIGN).await.is_err());
+        assert!(mark_private_read_db(&mut db,&learner,&private(LEARNER),&[MESSAGE.into()]).await.is_err());
+        assert!(mark_private_read_db(&mut db,&teacher,&public(),&[MESSAGE.into()]).await.is_err());
+        sqlx::query("UPDATE enrollments SET status='REMOVED' WHERE student_id=?").bind(OTHER).execute(&mut db).await.unwrap();
+        assert!(private_unread_db(&mut db,&teacher,CLASS).await.unwrap()[ASSIGN].get(OTHER).is_none());
+    }    #[tokio::test]
     async fn comment_counts_are_scoped_to_an_active_visible_class(){
         let mut db=db().await;let learner=user(LEARNER,Role::STUDENT);
         queue_comment_db(&mut db,&learner,&public(),MESSAGE,"Counted comment").await.unwrap();

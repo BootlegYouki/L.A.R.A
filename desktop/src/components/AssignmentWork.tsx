@@ -6,11 +6,11 @@ import CommentThread from './CommentThread';
 import SubmissionPreview from './SubmissionPreview';
 import HomeworkUpload from './HomeworkUpload';
 import {t} from '../i18n';
-interface Props {account:CachedAccount;classroom:Classroom;assignment:Assignment;offline:boolean;attachments?:ReactNode;onBack:()=>void;onChanged:()=>void;onRefreshComments?:()=>Promise<void>}
+interface Props {account:CachedAccount;classroom:Classroom;assignment:Assignment;offline:boolean;attachments?:ReactNode;onBack:()=>void;onChanged:()=>void;onRefreshComments?:()=>Promise<void>;unreadCounts?:Record<string,number>;onPrivateRead?:()=>void}
 export default function AssignmentWork(props:Props) {
  return <Work key={`${props.account.hub.ip}:${props.account.hub.http_port}/${props.account.user.id}/${props.assignment.id}`} {...props}/>;
 }
-function Work({account,classroom,assignment,offline,attachments,onBack,onChanged,onRefreshComments}:Props) {
+function Work({account,classroom,assignment,offline,attachments,onBack,onChanged,onRefreshComments,unreadCounts={},onPrivateRead}:Props) {
  const teacher=account.user.role==='TEACHER';
  const [rows,setRows]=useState<Submission[]>([]),[selected,setSelected]=useState(teacher?'':account.user.id),[loading,setLoading]=useState(true),[error,setError]=useState(false),[denied,setDenied]=useState(false),[refresh,setRefresh]=useState(0);
  const loaded=useRef(false);
@@ -42,7 +42,7 @@ function Work({account,classroom,assignment,offline,attachments,onBack,onChanged
   {!denied&&<div className={teacher?'work-review-grid':'work-learner-grid'}>
    {teacher&&<aside className="work-roster"><h2>{t.work_learner_work}</h2><label>{t.work_filter}<select value={filter} onChange={event=>setFilter(event.target.value)}><option value="all">{t.work_all}</option><option value="assigned">{t.work_assigned}</option><option value="turned">{t.work_turned}</option><option value="graded">{t.work_graded}</option></select></label>
     {!roster.length&&<p>{t.work_no_learners}</p>}
-    {roster.filter(row=>filter==='all'||status(rows.find(s=>s.student_id===row.student_id))===filter).map(row=><button type="button" className="work-learner control" aria-pressed={selected===row.student_id} key={row.student_id} onClick={()=>navigate(row.student_id)}><strong>{row.full_name}</strong><small>{label(rows.find(s=>s.student_id===row.student_id))}</small></button>)}
+    {roster.filter(row=>filter==='all'||status(rows.find(s=>s.student_id===row.student_id))===filter).map(row=><button type="button" className="work-learner control" aria-pressed={selected===row.student_id} key={row.student_id} onClick={()=>navigate(row.student_id)}><strong className="work-learner-name">{row.full_name}{unreadCounts[row.student_id]>0&&<span className="pending-count private-unread-count" title={t.comments_unread_private.replace('{count}',String(unreadCounts[row.student_id]))} aria-label={t.comments_unread_private.replace('{count}',String(unreadCounts[row.student_id]))}>{unreadCounts[row.student_id]}</span>}</strong><small>{label(rows.find(s=>s.student_id===row.student_id))}</small></button>)}
    </aside>}
    {selected?<section className="work-selected" key={selected}><h2>{teacher?roster.find(row=>row.student_id===selected)?.full_name:t.work_your_work}</h2>
     <p className="work-status">{label(submission)}</p>
@@ -51,7 +51,7 @@ function Work({account,classroom,assignment,offline,attachments,onBack,onChanged
       {teacher&&<GradeEditor key={submission.id} account={account} classroom={classroom} submission={submission} maxPoints={assignment.max_points} offline={offline} onChanged={update} onDirty={setDirty}/>}
     </>:teacher?<p>{t.work_no_submission}</p>:null}
     {!teacher&&<HomeworkUpload account={account} assignmentId={assignment.id} offline={offline} archived={classroom.archived_at!=null} onChanged={update}/>}
-    <CommentThread account={account} target={{kind:'assignment',id:assignment.id,...(teacher?{student_id:selected}:{})}} offline={offline} onRefresh={async()=>{await onRefreshComments?.()}}/>
+    <CommentThread account={account} target={{kind:'assignment',id:assignment.id,...(teacher?{student_id:selected}:{})}} offline={offline} onRefresh={async()=>{await onRefreshComments?.()}} onRead={onPrivateRead}/>
    </section>:<p>{t.work_select_learner}</p>}
   </div>}
   </div><Dialog.Root open={leave!==null} onOpenChange={open=>{if(!open)setLeave(null)}}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-content"><Dialog.Title>{t.work_unsaved}</Dialog.Title><Dialog.Description>{t.work_unsaved_help}</Dialog.Description><button className="control tonal-button" onClick={()=>setLeave(null)}>{t.work_keep_editing}</button><button className="control text-button" onClick={()=>{const target=leave;setLeave(null);setDirty(false);if(target==='back')onBack();else if(target)setSelected(target)}}>{t.work_discard}</button></Dialog.Content></Dialog.Portal></Dialog.Root>

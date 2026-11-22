@@ -1,8 +1,8 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { createElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
-const { invoke,counts } = vi.hoisted(() => ({ invoke: vi.fn(),counts:vi.fn().mockResolvedValue({}) }));
-vi.mock('@tauri-apps/api/core', () => ({ invoke: (command:string,...args:unknown[]) => command==='list_uploads'?Promise.resolve([]):command==='read_class_comment_counts'?counts(...args):invoke(command,...args) }));
+const { invoke,counts,unread } = vi.hoisted(() => ({ invoke: vi.fn(),counts:vi.fn().mockResolvedValue({}),unread:vi.fn().mockResolvedValue({}) }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (command:string,...args:unknown[]) => command==='list_uploads'?Promise.resolve([]):command==='read_private_comment_unread'?unread(...args):command==='read_class_comment_counts'?counts(...args):invoke(command,...args) }));
 import ClassPage from '../src/pages/ClassPage';
 import type { CachedAccount } from '../src/services/auth';
 const room = {id:'class',name:'Science',section:'A',class_code:'ABC234',teacher_id:'teacher'};
@@ -191,4 +191,17 @@ it('shows pending join requests on People only and clears the count as requests 
  for(const status of ['ACTIVE','REJECTED'] as const){await act(async()=>renderer.update(createElement(ClassPage,{...props,account:{...pending,rosters:{...pending.rosters,[room.id]:[{...row,status}]}}})));expect(renderer.root.findAllByProps({className:'pending-count'})).toHaveLength(0);}
  await act(async()=>renderer.update(createElement(ClassPage,{...props,account:{...pending,user:{...pending.user,role:'STUDENT'}}})));
  expect(renderer.root.findAllByProps({className:'pending-count'})).toHaveLength(0);
+});
+it('flags Classwork and the affected assignment for unread learner private comments only',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);counts.mockResolvedValue({});unread.mockResolvedValue({assignment:{learner:2,other:1}});
+ invoke.mockResolvedValue({announcements:[],materials:[],assignments:[{id:'assignment',title:'Private QA',instructions:'Read',due_date:1,max_points:10}]});
+ const props={account,classroom:room,offline:true,onVideo:vi.fn(),commentsVersion:0};
+ await act(async()=>{renderer=create(createElement(ClassPage,props))});
+ expect(renderer.root.findByProps({id:'tab-classwork'}).findByProps({className:'pending-count private-unread-count'}).children).toEqual(['3']);
+ await act(async()=>renderer.root.findByProps({id:'tab-classwork'}).props.onClick());
+ expect(renderer.root.findByProps({className:'material-item assignment-preview'}).findByProps({className:'pending-count private-unread-count'}).children).toEqual(['3']);
+ unread.mockResolvedValue({});await act(async()=>renderer.update(createElement(ClassPage,{...props,commentsVersion:1})));
+ expect(renderer.root.findAllByProps({className:'pending-count private-unread-count'})).toHaveLength(0);
+ unread.mockResolvedValue({assignment:{learner:3}});await act(async()=>renderer.update(createElement(ClassPage,{...props,account:{...account,user:{...account.user,role:'STUDENT'}}})));
+ expect(renderer.root.findAllByProps({className:'pending-count private-unread-count'})).toHaveLength(0);
 });

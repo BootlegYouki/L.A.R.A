@@ -5,6 +5,7 @@ import {withDatabaseTimeout} from './db';
 export type ThreadTarget={kind:'announcement';id:string}|{kind:'assignment';id:string;student_id?:string};
 export interface Comment {id:string;author_id:string;author_name:string|null;content:string;created_at:number;sync_status:'SYNCED'|'QUEUED_FOR_SYNC'|'REJECTED';sync_reject_reason:string|null}
 export interface ThreadData {items:Comment[];write_mode:'queue'|'online'|'readonly'}
+export type PrivateUnread=Record<string,Record<string,number>>;
 const object=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
 const uuid=(v:unknown):v is string=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)&&v!=='00000000-0000-0000-0000-000000000000';
 export function parseThread(value:unknown):ThreadData {
@@ -21,6 +22,17 @@ function validateTarget(account:CachedAccount,target:ThreadTarget) {
 export async function readThread(account:CachedAccount,target:ThreadTarget):Promise<ThreadData> {
  validateTarget(account,target);
  return parseThread(await withDatabaseTimeout(invoke('read_comment_thread',{hub:account.hub,userId:account.user.id,target})));
+}
+export async function readPrivateUnread(account:CachedAccount,classroomId:string):Promise<PrivateUnread>{
+ if(account.user.role!=='TEACHER')return {};
+ const value:unknown=await withDatabaseTimeout(invoke('read_private_comment_unread',{hub:account.hub,userId:account.user.id,classroomId}));
+ if(!object(value)||Object.values(value).some(rows=>!object(rows)||Object.values(rows).some(count=>!Number.isSafeInteger(count)||Number(count)<0)))throw new ApiError('invalid_response');
+ return value as PrivateUnread;
+}
+export async function markPrivateCommentsRead(account:CachedAccount,target:ThreadTarget,commentIds:string[]):Promise<void>{
+ validateTarget(account,target);
+ if(account.user.role!=='TEACHER'||target.kind!=='assignment'||!target.student_id||!commentIds.every(uuid))throw new ApiError('comment_invalid');
+ for(let offset=0;offset<commentIds.length;offset+=10000)await withDatabaseTimeout(invoke('mark_private_comments_read',{hub:account.hub,userId:account.user.id,target,commentIds:commentIds.slice(offset,offset+10000)}));
 }
 export async function sendComment(account:CachedAccount,target:ThreadTarget,id:string,input:string,offline:boolean,signal?:AbortSignal):Promise<ThreadData|null> {
  validateTarget(account,target);const content=input.trim();

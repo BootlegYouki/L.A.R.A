@@ -321,6 +321,7 @@
   "assignment_parent_saved": "This assignment is already saved. Closing this form will not undo it; retrying resumes its attachments.",
   "comments_class": "Class comments",
   "comments_private": "Private comments",
+  "comments_unread_private": "{count} unread learner private comments",
   "comments_private_help": "Private comments are visible only to this learner and the class teachers.",
   "comments_placeholder": "Add a class comment...",
   "comments_private_placeholder": "Add a private comment...",
