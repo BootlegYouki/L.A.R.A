@@ -88,6 +88,8 @@ impl Event {
     }
 }
 
+type EventKey = (Code, Service, Option<Reason>);
+
 pub struct Recorder {
     sender: mpsc::Sender<Event>,
     stop: watch::Sender<bool>,
@@ -96,7 +98,7 @@ pub struct Recorder {
     dropped: AtomicU64,
     write_failed: AtomicU64,
     repeated: AtomicU64,
-    recent: Mutex<HashMap<(Code, Service, Option<Reason>), Instant>>,
+    recent: Mutex<HashMap<EventKey, Instant>>,
     clock: Arc<dyn Clock>,
 }
 impl Recorder {
