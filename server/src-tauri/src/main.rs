@@ -3,13 +3,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use lara_hub::{HubConfig, HubHandle};
 use serde::Serialize;
 use tauri::{Manager, RunEvent};
 use tokio::runtime::Runtime;
 use tracing_subscriber::EnvFilter;
+mod import_files;
+mod monitoring;
 
 /// The backend runs on its own Tokio runtime so the window's event loop never waits on it.
 struct Hub {
@@ -40,6 +42,7 @@ fn main() {
                 Some(dir) => PathBuf::from(dir),
                 None => app.path().app_data_dir()?,
             };
+            app.manage(Arc::new(Mutex::new(monitoring::Monitor::new(data_dir.clone()))));
             let runtime = Runtime::new()?;
             // A Hub that cannot start (port taken) still opens the window, which says so.
             let handle = match runtime.block_on(lara_hub::serve(HubConfig::new(data_dir))) {
@@ -52,7 +55,7 @@ fn main() {
             app.manage(Hub { runtime, handle: Mutex::new(handle) });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![lan_address])
+        .invoke_handler(tauri::generate_handler![lan_address, import_files::save_import_file, monitoring::hub_metrics])
         .build(tauri::generate_context!());
 
     let app = match built {
