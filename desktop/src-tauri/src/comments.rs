@@ -101,10 +101,23 @@ async fn private_seen(db:&mut SqliteConnection,classroom:&str)->Result<BTreeSet<
 }
 async fn private_unread_db(db:&mut SqliteConnection,user:&User,classroom:&str)->Result<Value,&'static str>{
     if user.role!=Role::TEACHER||!account::uuid(classroom)||!account::classes(db,user).await?.iter().any(|room|room.id==classroom){return Err(ERROR)}
+    Ok(json!(unread_in_class(db,classroom).await?))
+}
+async fn unread_in_class(db:&mut SqliteConnection,classroom:&str)->Result<BTreeMap<String,BTreeMap<String,u64>>,&'static str>{
     let seen=private_seen(db,classroom).await?;
     let rows=sqlx::query("SELECT c.id,c.assignment_id,c.student_id FROM private_comments c JOIN assignments a ON a.id=c.assignment_id JOIN enrollments e ON e.classroom_id=a.classroom_id AND e.student_id=c.student_id WHERE a.classroom_id=? AND e.status='ACTIVE' AND c.author_id=c.student_id AND c.sync_status!='REJECTED'").bind(classroom).fetch_all(db).await.map_err(|_|ERROR)?;
     let mut counts:BTreeMap<String,BTreeMap<String,u64>>=BTreeMap::new();
     for row in rows {if !seen.contains(&row.get::<String,_>("id")){*counts.entry(row.get("assignment_id")).or_default().entry(row.get("student_id")).or_default()+=1;}}
+    Ok(counts)
+}
+async fn private_unread_classes_db(db:&mut SqliteConnection,user:&User)->Result<Value,&'static str>{
+    if user.role!=Role::TEACHER{return Err(ERROR)}
+    let rooms=account::classes(db,user).await?;let mut counts=BTreeMap::new();
+    for room in rooms.into_iter().filter(|room|room.archived_at.is_none()) {
+        let unread=unread_in_class(db,&room.id).await?;
+        let count:u64=unread.values().flat_map(|students|students.values()).sum();
+        if count>0{counts.insert(room.id,count);}
+    }
     Ok(json!(counts))
 }
 async fn mark_private_read_db(db:&mut SqliteConnection,user:&User,target:&ThreadTarget,ids:&[String])->Result<bool,&'static str>{
@@ -121,6 +134,11 @@ async fn mark_private_read_db(db:&mut SqliteConnection,user:&User,target:&Thread
     let changed=seen!=before;
     if changed {account::put(&mut tx,&private_read_key(&scope.classroom),&serde_json::to_string(&seen).map_err(|_|ERROR)?).await?;}
     tx.commit().await.map_err(|_|ERROR)?;Ok(changed)
+}
+#[tauri::command]
+pub async fn read_private_unread_class_counts(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String)->Result<Value,&'static str>{
+    let _guard=accounts.0.lock().await;let(mut db,user)=selected_context(&app,&accounts,&hub,&user_id.to_ascii_lowercase()).await?;
+    private_unread_classes_db(&mut db,&user).await
 }
 #[tauri::command]
 pub async fn read_private_comment_unread(app:tauri::AppHandle,accounts:tauri::State<'_,Accounts>,hub:HubInfo,user_id:String,classroom_id:String)->Result<Value,&'static str>{
@@ -186,15 +204,17 @@ mod tests {
         queue_comment_db(&mut db,&learner,&private(LEARNER),MESSAGE,"First learner message").await.unwrap();
         queue_comment_db(&mut db,&user(OTHER,Role::STUDENT),&private(OTHER),other_id,"Other learner message").await.unwrap();
         sqlx::query("INSERT INTO private_comments(id,assignment_id,student_id,author_id,content,created_at,updated_at,sync_status) VALUES('66666666-6666-4666-8666-666666666666',?,?,?,'Teacher reply',1,1,'SYNCED')").bind(ASSIGN).bind(LEARNER).bind(TEACHER).execute(&mut db).await.unwrap();
-        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert_eq!(counts[ASSIGN][LEARNER],1);assert_eq!(counts[ASSIGN][OTHER],1);
+        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert_eq!(counts[ASSIGN][LEARNER],1);assert_eq!(counts[ASSIGN][OTHER],1);assert_eq!(private_unread_classes_db(&mut db,&teacher).await.unwrap()[CLASS],2);
         assert!(mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[MESSAGE.into()]).await.unwrap());
         assert!(!mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[MESSAGE.into()]).await.unwrap());
-        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert!(counts[ASSIGN].get(LEARNER).is_none());assert_eq!(counts[ASSIGN][OTHER],1);
+        let counts=private_unread_db(&mut db,&teacher,CLASS).await.unwrap();assert!(counts[ASSIGN].get(LEARNER).is_none());assert_eq!(counts[ASSIGN][OTHER],1);assert_eq!(private_unread_classes_db(&mut db,&teacher).await.unwrap()[CLASS],1);
         queue_comment_db(&mut db,&learner,&private(LEARNER),late,"Late offline message").await.unwrap();
         sqlx::query("UPDATE private_comments SET created_at=0 WHERE id=?").bind(late).execute(&mut db).await.unwrap();
         assert_eq!(private_unread_db(&mut db,&teacher,CLASS).await.unwrap()[ASSIGN][LEARNER],1);
         assert!(mark_private_read_db(&mut db,&teacher,&private(LEARNER),&[other_id.into()]).await.is_err());
         assert!(private_unread_db(&mut db,&learner,CLASS).await.is_err());
+        assert!(private_unread_classes_db(&mut db,&learner).await.is_err());
+        assert!(private_unread_classes_db(&mut db,&user(OTHER,Role::TEACHER)).await.is_err());
         assert!(private_unread_db(&mut db,&user(OTHER,Role::TEACHER),CLASS).await.is_err());
         assert!(private_unread_db(&mut db,&teacher,ASSIGN).await.is_err());
         assert!(mark_private_read_db(&mut db,&learner,&private(LEARNER),&[MESSAGE.into()]).await.is_err());

@@ -50,6 +50,7 @@ pub fn run() {
             comments::read_comment_thread,
             comments::read_class_comment_counts,
               comments::read_private_comment_unread,
+            comments::read_private_unread_class_counts,
               comments::mark_private_comments_read,
             comments::queue_comment,
             account::save_roster_snapshot,
