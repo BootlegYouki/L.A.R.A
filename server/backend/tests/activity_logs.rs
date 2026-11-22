@@ -79,7 +79,7 @@ async fn catchup_drains_oldest_unseen_without_skipping_a_burst() {
     let mut snapshot = None;
     let mut seen = std::collections::BTreeSet::new();
     loop {
-        let mut path = format!("/api/admin/activity-logs?history_id={history}&after_seq={after}");
+        let mut path = format!("/api/admin/activity-logs?q=account%20created&history_id={history}&after_seq={after}");
         if let Some(high) = snapshot {
             path.push_str(&format!("&snapshot_seq={high}"));
         }
@@ -98,7 +98,9 @@ async fn catchup_drains_oldest_unseen_without_skipping_a_burst() {
         }
     }
     assert_eq!(seen.len(), 350);
-    assert_eq!(seen.into_iter().collect::<Vec<_>>(), (start + 1..=start + 350).collect::<Vec<_>>());
+    let expected: Vec<i64> = sqlx::query_scalar("SELECT seq FROM hub_activity_events WHERE event_code='ACCOUNT_CREATED' ORDER BY seq")
+        .fetch_all(&hub.state().db).await.unwrap();
+    assert_eq!(seen.into_iter().collect::<Vec<_>>(), expected);
     let (_, literal) = hub.get("/api/admin/activity-logs?q=%25", Some(&token)).await;
     assert!(literal["entries"].as_array().unwrap().is_empty());
     let (_, filtered) =

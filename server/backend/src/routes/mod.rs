@@ -56,7 +56,7 @@ pub fn router(app: AppState) -> Router {
         .layer(axum::middleware::from_fn_with_state(app.clone(), record_failed_operation))
         // Path only: media routes will carry `?token=`, which must never reach a log.
         .layer(TraceLayer::new_for_http().make_span_with(
-            |req: &Request| tracing::info_span!("http", method = %req.method(), path = %req.uri().path()),
+            |req: &Request| tracing::info_span!("http", method = crate::services::request_activity::method(req.method()), endpoint = crate::services::request_activity::endpoint(req)),
         ))
         // The bundled Hub window calls REST on loopback. Other web origins get no CORS access.
         .layer(
@@ -65,6 +65,8 @@ pub fn router(app: AppState) -> Router {
                 .allow_methods([Method::GET, Method::POST])
                 .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]),
         )
+        // Outside CORS so preflight and all rejected requests also receive one safe entry.
+        .layer(axum::middleware::from_fn_with_state(app.clone(), crate::services::request_activity::record))
         .with_state(app)
 }
 

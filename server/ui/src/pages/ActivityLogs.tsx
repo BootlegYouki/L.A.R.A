@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { HubError, request } from '../admin';
 import { useStrings } from '../i18n';
 
-export type ActivityEntry = { seq: number; occurred_at: number; event_code: string; severity: string; result: string; service: string; details: { reason?: string; item_count?: number; duration_ms?: number } };
+export type ActivityEntry = { seq: number; occurred_at: number; event_code: string; severity: string; result: string; service: string; details: { reason?: string; item_count?: number; duration_ms?: number; http_method?: string; endpoint?: string; status_code?: number } };
 type Page = { history_id: string; entries: ActivityEntry[]; high_water_seq: number; next_before_seq: number | null; next_after_seq: number | null; pruned_through_seq: number; dropped_total: number; recording_state: string; server_time: number };
 
 export default function ActivityLogs({ token, active, expired }: { token: string; active: boolean; expired: () => void }) {
@@ -20,6 +20,7 @@ export default function ActivityLogs({ token, active, expired }: { token: string
   const [to, setTo] = useState('');
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [reset, setReset] = useState(false);
+  const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
   const cursor = useRef<{ history: string; high: number; snapshot: number; older: number | null } | null>(null);
   const busy = useRef(false);
   const generation = useRef(0);
@@ -68,7 +69,7 @@ export default function ActivityLogs({ token, active, expired }: { token: string
     } catch (cause) {
       if (current !== generation.current || abort.signal.aborted) return;
       if (cause instanceof HubError && cause.code === 'UNAUTHORIZED') onExpired.current();
-      else if (cause instanceof HubError && cause.code === 'ACTIVITY_LOG_RESET') { cursor.current = null; setRows([]); setPage(null); setReset(true); }
+      else if (cause instanceof HubError && cause.code === 'ACTIVITY_LOG_RESET') { cursor.current = null; setRows([]); setPage(null); setExpanded(new Set()); setReset(true); }
       else if (cause instanceof HubError && cause.code === 'HUB_UNREACHABLE') setOffline(true);
       else setFailed(true);
     } finally {
@@ -90,7 +91,7 @@ export default function ActivityLogs({ token, active, expired }: { token: string
   }, [active, paused, load]);
 
   const events: Record<string, string> = {
-    HUB_STARTED: t.log_hub_started, HUB_STOPPING: t.log_hub_stopping, UNCLEAN_RESTART: t.log_unclean_restart,
+    HTTP_REQUEST: t.log_http_request, HUB_STARTED: t.log_hub_started, HUB_STOPPING: t.log_hub_stopping, UNCLEAN_RESTART: t.log_unclean_restart,
     SERVICE_UNAVAILABLE: t.log_service_unavailable, SERVICE_RECOVERED: t.log_service_recovered, CONNECTION_PROBLEM: t.log_connection_problem,
     DOCUMENT_UPLOADED: t.log_document_uploaded, DOCUMENT_UPLOAD_FAILED: t.log_document_upload_failed, DOCUMENT_PROCESSED: t.log_document_processed, DOCUMENT_PROCESSING_FAILED: t.log_document_processing_failed,
     QUIZ_STARTED: t.log_quiz_started, QUIZ_START_FAILED: t.log_quiz_start_failed, QUIZ_CLOSED: t.log_quiz_closed, QUIZ_CLOSE_FAILED: t.log_quiz_close_failed,
@@ -103,25 +104,76 @@ export default function ActivityLogs({ token, active, expired }: { token: string
   function time(value: number) { const date = new Date(value); return Number.isNaN(date.getTime()) ? t.activity_unknown : date.toLocaleString('en', { dateStyle: 'medium', timeStyle: 'medium' }); }
   function isoTime(value: number) { const date = new Date(value); return Number.isNaN(date.getTime()) ? undefined : date.toISOString(); }
 
-  return <section className="flex min-w-0 flex-col gap-4" aria-labelledby="activity-title">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 id="activity-title" className="text-2xl font-black">{t.activity_title}</h1><p className="mt-1 text-sm text-lara-ink-2">{t.activity_help}</p></div>
-      <button type="button" className="admin-secondary" aria-pressed={paused} onClick={() => setPaused(value => !value)}><i className={`ph ${paused ? 'ph-play' : 'ph-pause'}`} aria-hidden="true" />{paused ? t.activity_resume : t.activity_pause}</button></div>
-    <div className="grid gap-3 rounded-lg border border-lara-border bg-white p-4 sm:grid-cols-2">
-      <label className="admin-label">{t.activity_search}<input type="search" maxLength={64} value={search} onChange={event => setSearch(event.target.value)} /></label>
-      <label className="admin-label">{t.activity_severity}<select value={severity} onChange={event => setSeverity(event.target.value)}><option value="">{t.activity_all_levels}</option>{Object.entries(levels).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
-      <label className="admin-label">{t.activity_from}<input type="date" value={from} onChange={event => setFrom(event.target.value)} /></label>
-      <label className="admin-label">{t.activity_to}<input type="date" value={to} onChange={event => setTo(event.target.value)} /></label>
+  const filtered = Boolean(query.trim() || severity || from || to);
+  function toggleDetails(seq: number) {
+    setExpanded(previous => { const next = new Set(previous); if (next.has(seq)) next.delete(seq); else next.add(seq); return next; });
+  }
+  function clearFilters() { setSearch(''); setQuery(''); setSeverity(''); setFrom(''); setTo(''); }
+  function title(entry: ActivityEntry) {
+    return entry.event_code === 'HTTP_REQUEST' ? entry.details.endpoint === 'UNMATCHED' ? t.activity_unmatched : entry.details.endpoint ?? t.activity_unknown
+      : events[entry.event_code] ?? t.activity_unknown;
+  }
+  function clock(value: number) { const date = new Date(value); return Number.isNaN(date.getTime()) ? t.activity_unknown : date.toLocaleTimeString('en', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+  function day(value: number) { const date = new Date(value); return Number.isNaN(date.getTime()) ? t.activity_unknown : date.toLocaleDateString('en', { month: 'short', day: 'numeric' }); }
+  function levelIcon(severity: string) { return severity === 'ERROR' ? 'ph-warning-circle' : severity === 'WARNING' ? 'ph-warning' : 'ph-info'; }
+
+  return <section className="activity-page" aria-labelledby="activity-title">
+    <header className="flex flex-wrap items-center justify-between gap-4">
+      <div><div className="flex flex-wrap items-center gap-3"><h1 id="activity-title" className="text-2xl font-black">{t.activity_title}</h1>
+        <span className={`activity-feed-state ${offline || failed ? 'text-lara-warning-dark' : paused ? 'text-lara-ink-2' : 'text-lara-primary-dark'}`}>
+          <i className={`ph ${offline || failed ? 'ph-cloud-slash' : paused ? 'ph-pause-circle' : 'ph-broadcast'}`} aria-hidden="true" />
+          {offline || failed ? t.activity_connection_lost : paused ? t.activity_paused : t.activity_live}
+        </span></div><p className="mt-1 text-sm text-lara-ink-2">{t.activity_help}</p></div>
+      <div className="flex items-center gap-2">
+        <button type="button" className="activity-action" onClick={() => { setLoading(true); void load(); }}><i className="ph ph-arrow-clockwise" aria-hidden="true" />{t.activity_refresh}</button>
+        <button type="button" className="activity-action" aria-pressed={paused} onClick={() => setPaused(value => !value)}><i className={`ph ${paused ? 'ph-play' : 'ph-pause'}`} aria-hidden="true" />{paused ? t.activity_resume : t.activity_pause}</button>
+      </div>
+    </header>
+
+    <div className="activity-console">
+      <div className="activity-filters">
+        <label className="admin-label text-sm">{t.activity_search}<span className="relative"><i className="ph ph-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-lara-ink-2" aria-hidden="true" /><input className="activity-search-input" type="search" maxLength={64} value={search} onChange={event => setSearch(event.target.value)} /></span></label>
+        <label className="admin-label text-sm">{t.activity_severity}<select value={severity} onChange={event => setSeverity(event.target.value)}><option value="">{t.activity_all_levels}</option>{Object.entries(levels).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
+        <label className="admin-label text-sm">{t.activity_from}<input type="date" value={from} onChange={event => setFrom(event.target.value)} /></label>
+        <label className="admin-label text-sm">{t.activity_to}<input type="date" value={to} onChange={event => setTo(event.target.value)} /></label>
+      </div>
+      {invalidRange && <p className="admin-error mx-4 mb-4" role="alert">{t.activity_invalid_dates}</p>}
+      {(offline || failed || reset) && <div className="activity-notice" role="status"><i className="ph ph-cloud-slash mt-0.5" aria-hidden="true" /><div className="flex-1"><strong>{reset ? t.activity_reset : offline ? t.admin_offline_title : t.activity_unavailable}</strong><p>{t.activity_stale}</p></div><button className="activity-action shrink-0" type="button" onClick={() => void load()}>{t.activity_retry}</button></div>}
+      {page && (page.pruned_through_seq > 0 || page.dropped_total > 0 || page.recording_state !== 'ACTIVE') && <p className="activity-notice" role="status"><i className="ph ph-warning" aria-hidden="true" />{t.activity_incomplete}</p>}
+      <div className="activity-meta"><p>{(rows.length === 1 ? t.activity_loaded_single : t.activity_loaded).replace('{count}', rows.length.toLocaleString('en'))}</p><div className="flex items-center gap-3">{filtered && <button type="button" className="activity-clear" onClick={clearFilters}>{t.activity_clear}</button>}<p>{t.activity_newest}</p></div></div>
+
+      <div className="activity-table-scroll" role="region" aria-label={t.activity_title} tabIndex={0}>
+        <table className="activity-table"><caption className="sr-only">{t.activity_help}</caption>
+          <thead><tr><th scope="col">{t.activity_time}</th><th scope="col">{t.activity_severity}</th><th scope="col">{t.activity_event}</th><th scope="col">{t.activity_status_code}</th><th scope="col" className="text-right">{t.activity_duration}</th><th scope="col"><span className="sr-only">{t.activity_details}</span></th></tr></thead>
+          <tbody>
+            {loading && rows.length === 0 && !invalidRange ? <tr><td colSpan={6}><div role="status" aria-label={t.activity_loading} className="flex flex-col gap-4 py-2">{[0, 1, 2, 3].map(index => <div key={index} className="skeleton h-10 rounded-md bg-lara-border" />)}</div></td></tr>
+              : rows.length === 0 ? <tr><td colSpan={6}><div className="activity-empty"><span className="flex h-20 w-20 items-center justify-center rounded-full bg-lara-primary-light"><i className="ph ph-list-dashes text-4xl text-lara-primary-dark" aria-hidden="true" /></span><h2 className="text-lg font-extrabold">{filtered ? t.activity_no_matches : t.activity_empty}</h2><p className="text-sm text-lara-ink-2">{filtered ? t.activity_no_matches_help : t.activity_empty_help}</p>{filtered && <button type="button" className="activity-action" onClick={clearFilters}>{t.activity_clear}</button>}</div></td></tr>
+              : rows.map(entry => <Fragment key={`${page?.history_id}:${entry.seq}`}>
+                <tr data-entry="true" className={expanded.has(entry.seq) ? 'activity-row-open' : undefined}>
+                  <td className="whitespace-nowrap"><time dateTime={isoTime(entry.occurred_at)} title={time(entry.occurred_at)} className="tabular-nums"><span className="block font-bold">{clock(entry.occurred_at)}</span><span className="text-lara-ink-2">{day(entry.occurred_at)}</span></time></td>
+                  <td><span className={`activity-level ${entry.severity === 'ERROR' ? 'activity-level-error' : entry.severity === 'WARNING' ? 'activity-level-warning' : 'activity-level-info'}`}><i className={`ph ${levelIcon(entry.severity)}`} aria-hidden="true" />{levels[entry.severity] ?? t.activity_unknown}</span></td>
+                  <td className="activity-event-cell"><div className="flex flex-wrap items-start gap-x-2 gap-y-1">{entry.details.http_method && <span className="activity-method">{entry.details.http_method}</span>}<span className="min-w-0 break-all font-bold">{title(entry)}</span></div><p className="mt-1 text-xs text-lara-ink-2">{services[entry.service] ?? t.activity_unknown}</p></td>
+                  <td className="whitespace-nowrap tabular-nums">{entry.details.status_code ?? results[entry.result] ?? t.activity_unknown}</td>
+                  <td className="whitespace-nowrap text-right tabular-nums text-lara-ink-2">{entry.details.duration_ms === undefined ? t.activity_no_value : t.activity_milliseconds.replace('{count}', String(entry.details.duration_ms))}</td>
+                  <td><button type="button" className="activity-expand" aria-expanded={expanded.has(entry.seq)} aria-controls={`activity-details-${entry.seq}`} aria-label={t.activity_entry_details.replace('{count}', String(entry.seq))} onClick={() => toggleDetails(entry.seq)}><i className={`ph ${expanded.has(entry.seq) ? 'ph-caret-up' : 'ph-caret-down'}`} aria-hidden="true" /></button></td>
+                </tr>
+                {expanded.has(entry.seq) && <tr className="activity-detail-row" id={`activity-details-${entry.seq}`}><td colSpan={6}><dl className="activity-details-grid">
+                  <div><dt>{t.activity_time}</dt><dd>{time(entry.occurred_at)}</dd></div>
+                  <div><dt>{t.activity_service}</dt><dd>{services[entry.service] ?? t.activity_unknown}</dd></div>
+                  <div><dt>{t.activity_result}</dt><dd>{results[entry.result] ?? t.activity_unknown}</dd></div>
+                  {entry.details.http_method && <div><dt>{t.activity_http_method}</dt><dd>{entry.details.http_method}</dd></div>}
+                  {entry.details.endpoint && <div className="sm:col-span-2"><dt>{t.activity_endpoint}</dt><dd className="break-all">{title(entry)}</dd></div>}
+                  {entry.details.status_code !== undefined && <div><dt>{t.activity_status_code}</dt><dd>{entry.details.status_code}</dd></div>}
+                  {entry.details.reason && <div className="sm:col-span-2"><dt>{t.activity_reason}</dt><dd>{reasons[entry.details.reason] ?? t.activity_unknown}</dd></div>}
+                  {entry.details.item_count !== undefined && <div><dt>{t.activity_count}</dt><dd>{entry.details.item_count}</dd></div>}
+                  {entry.details.duration_ms !== undefined && <div><dt>{t.activity_duration}</dt><dd>{t.activity_milliseconds.replace('{count}', String(entry.details.duration_ms))}</dd></div>}
+                </dl></td></tr>}
+              </Fragment>)}
+          </tbody>
+        </table>
+      </div>
+      <footer className="activity-footer"><p>{lastUpdated === null ? t.activity_not_loaded : `${t.activity_updated} ${clock(lastUpdated)}`}</p><p>{t.activity_retention}</p></footer>
     </div>
-    {invalidRange && <p className="admin-error" role="alert">{t.activity_invalid_dates}</p>}
-    {(offline || failed || reset) && <div className="admin-offline" role="status"><i className="ph ph-warning-circle" aria-hidden="true" /><div><strong>{reset ? t.activity_reset : offline ? t.admin_offline_title : t.activity_unavailable}</strong><p>{t.activity_stale}</p><button className="admin-secondary mt-3" type="button" onClick={() => void load()}>{t.activity_retry}</button></div></div>}
-    {page && (page.pruned_through_seq > 0 || page.dropped_total > 0 || page.recording_state !== 'ACTIVE') && <p className="admin-offline" role="status"><i className="ph ph-info" aria-hidden="true" />{t.activity_incomplete}</p>}
-    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-lara-ink-2"><p>{paused ? t.activity_paused : t.activity_live}</p><p>{lastUpdated === null ? t.activity_not_loaded : `${t.activity_updated} ${time(lastUpdated)}`}</p></div>
-    {loading && rows.length === 0 && !invalidRange ? <div role="status" aria-label={t.activity_loading} className="flex flex-col gap-3">{[0, 1, 2].map(index => <div key={index} className="skeleton h-16 rounded-lg bg-lara-border" />)}</div>
-      : rows.length === 0 ? <div className="rounded-lg border border-lara-border bg-white p-8"><i className="ph ph-list-dashes text-2xl text-lara-ink-2" aria-hidden="true" /><h2 className="mt-3 text-lg font-extrabold">{t.activity_empty}</h2><p className="mt-1 text-sm text-lara-ink-2">{t.activity_empty_help}</p></div>
-      : <ol className="divide-y divide-lara-border overflow-hidden rounded-lg border border-lara-border bg-white">{rows.map(entry => <li key={`${page?.history_id}:${entry.seq}`} className="p-4">
-        <div className="flex items-start gap-3"><i className={`ph ${entry.severity === 'INFO' ? 'ph-check-circle text-lara-success' : entry.severity === 'ERROR' ? 'ph-warning-circle text-lara-danger' : 'ph-warning text-lara-warning-dark'} mt-1 text-xl`} aria-hidden="true" /><div className="min-w-0 flex-1"><div className="flex flex-wrap justify-between gap-2"><p className="font-extrabold">{events[entry.event_code] ?? t.activity_unknown}</p><time className="text-xs text-lara-ink-2" dateTime={isoTime(entry.occurred_at)}>{time(entry.occurred_at)}</time></div><p className="mt-1 text-xs text-lara-ink-2">{levels[entry.severity] ?? t.activity_unknown} · {results[entry.result] ?? t.activity_unknown}</p>
-          <details className="mt-2"><summary className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-bold text-lara-primary-dark">{t.activity_details}<i className="ph ph-caret-down" aria-hidden="true" /></summary><dl className="grid gap-2 rounded-md bg-lara-subtle p-3 text-sm"><div><dt className="font-bold">{t.activity_service}</dt><dd>{services[entry.service] ?? t.activity_unknown}</dd></div>{entry.details.reason && <div><dt className="font-bold">{t.activity_reason}</dt><dd>{reasons[entry.details.reason] ?? t.activity_unknown}</dd></div>}{entry.details.item_count !== undefined && <div><dt className="font-bold">{t.activity_count}</dt><dd>{entry.details.item_count}</dd></div>}{entry.details.duration_ms !== undefined && <div><dt className="font-bold">{t.activity_duration}</dt><dd>{t.activity_milliseconds.replace('{count}', String(entry.details.duration_ms))}</dd></div>}</dl></details>
-        </div></div></li>)}</ol>}
-    {cursor.current?.older != null && <button type="button" className="admin-secondary self-start" disabled={loading || offline || invalidRange} onClick={() => { setLoading(true); void load(true); }}>{t.activity_older}</button>}
+    {cursor.current?.older != null && <button type="button" className="activity-action self-center" disabled={loading || offline || invalidRange} onClick={() => { setLoading(true); void load(true); }}><i className="ph ph-clock-counter-clockwise" aria-hidden="true" />{t.activity_older}</button>}
   </section>;
 }

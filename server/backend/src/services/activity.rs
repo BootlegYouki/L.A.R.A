@@ -20,6 +20,7 @@ macro_rules! catalog {
     };
 }
 catalog!(Code {
+    HttpRequest => "HTTP_REQUEST",
     HubStarted => "HUB_STARTED", HubStopping => "HUB_STOPPING", UncleanRestart => "UNCLEAN_RESTART",
     ServiceUnavailable => "SERVICE_UNAVAILABLE", ServiceRecovered => "SERVICE_RECOVERED", ConnectionProblem => "CONNECTION_PROBLEM",
     DocumentUploaded => "DOCUMENT_UPLOADED", DocumentUploadFailed => "DOCUMENT_UPLOAD_FAILED",
@@ -31,6 +32,13 @@ catalog!(Service { Hub => "HUB", Database => "DATABASE", Http => "HTTP", Websock
 catalog!(Reason { PortInUse => "PORT_IN_USE", NetworkUnavailable => "NETWORK_UNAVAILABLE", Timeout => "TIMEOUT", StorageUnavailable => "STORAGE_UNAVAILABLE", DatabaseUnavailable => "DATABASE_UNAVAILABLE", UnreadableDocument => "UNREADABLE_DOCUMENT", NoTextLayer => "NO_TEXT_LAYER", SizeLimit => "SIZE_LIMIT", InvalidInput => "INVALID_INPUT", NotAllowed => "NOT_ALLOWED", Conflict => "CONFLICT", QueueFull => "QUEUE_FULL", WriteFailed => "WRITE_FAILED", RepeatedEvent => "REPEATED_EVENT", UncleanExit => "UNCLEAN_EXIT", InternalFailure => "INTERNAL_FAILURE" });
 
 #[derive(Clone, Debug)]
+pub struct RequestDetails {
+    method: &'static str,
+    endpoint: &'static str,
+    status: u16,
+}
+
+#[derive(Clone, Debug)]
 pub struct Event {
     pub code: Code,
     pub service: Service,
@@ -38,10 +46,17 @@ pub struct Event {
     pub item_count: Option<i64>,
     pub duration_ms: Option<i64>,
     pub occurred_at: i64,
+    request: Option<RequestDetails>,
 }
 impl Event {
     pub fn new(code: Code, service: Service) -> Self {
-        Self { code, service, reason: None, item_count: None, duration_ms: None, occurred_at: 0 }
+        Self { code, service, reason: None, item_count: None, duration_ms: None, occurred_at: 0, request: None }
+    }
+    pub(crate) fn http_request(method: &'static str, endpoint: &'static str, status: u16, duration: Duration) -> Self {
+        let mut event = Self::new(Code::HttpRequest, Service::Http);
+        event.request = Some(RequestDetails { method, endpoint, status });
+        event.duration_ms = Some(duration.as_millis().min(86_400_000) as i64);
+        event
     }
     pub fn reason(mut self, reason: Reason) -> Self {
         self.reason = Some(reason);
@@ -53,6 +68,13 @@ impl Event {
         self
     }
     pub fn status(&self) -> (&'static str, &'static str) {
+        if let Some(request) = &self.request {
+            return match request.status {
+                500..=599 => ("ERROR", "FAILED"),
+                400..=499 => ("WARNING", "FAILED"),
+                _ => ("INFO", "SUCCEEDED"),
+            };
+        }
         match self.code {
             Code::UncleanRestart | Code::ConnectionProblem | Code::DocumentProcessingFailed | Code::LogGap => {
                 ("WARNING", "DEGRADED")
@@ -107,7 +129,7 @@ impl Recorder {
 
     pub fn record(&self, mut event: Event) {
         event.occurred_at = self.clock.now_ms().clamp(0, 9_007_199_254_740_991);
-        if event.status().0 != "INFO" && event.code != Code::LogGap {
+        if event.status().0 != "INFO" && !matches!(event.code, Code::LogGap | Code::HttpRequest) {
             if let Ok(mut recent) = self.recent.lock() {
                 let key = (event.code, event.service, event.reason);
                 let now = Instant::now();
@@ -273,9 +295,13 @@ async fn persist(db: &SqlitePool, batch: &[Event], now: i64, dropped: u64) -> Re
         .await?;
     for event in batch {
         let (severity, result) = event.status();
-        sqlx::query("INSERT INTO hub_activity_events (occurred_at,event_code,severity,result,service,reason,item_count,duration_ms) VALUES (?,?,?,?,?,?,?,?)")
+        sqlx::query("INSERT INTO hub_activity_events (occurred_at,event_code,severity,result,service,reason,item_count,duration_ms,http_method,endpoint,status_code) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
             .bind(event.occurred_at).bind(event.code.as_str()).bind(severity).bind(result).bind(event.service.as_str())
-            .bind(event.reason.map(Reason::as_str)).bind(event.item_count).bind(event.duration_ms).execute(&mut *tx).await?;
+            .bind(event.reason.map(Reason::as_str)).bind(event.item_count).bind(event.duration_ms)
+            .bind(event.request.as_ref().map(|request| request.method))
+            .bind(event.request.as_ref().map(|request| request.endpoint))
+            .bind(event.request.as_ref().map(|request| i64::from(request.status)))
+            .execute(&mut *tx).await?;
     }
     let expired: Vec<i64> = sqlx::query_scalar("DELETE FROM hub_activity_events WHERE occurred_at < ? RETURNING seq")
         .bind(now.saturating_sub(7 * 86_400_000))
@@ -290,6 +316,12 @@ async fn persist(db: &SqlitePool, batch: &[Event], now: i64, dropped: u64) -> Re
 
 #[derive(Serialize)]
 pub struct Details {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub http_method: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub endpoint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status_code: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -44,3 +44,40 @@
   [hidden] { display: none !important; }
   summary:focus-visible, .hub-nav:focus-visible { @apply outline-2 outline-offset-2 outline-lara-primary-dark; }
 }
+
+@layer components {
+  .activity-page { @apply flex min-w-0 flex-col gap-5; }
+  .activity-feed-state { @apply inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide; }
+  .activity-action { @apply inline-flex min-h-control items-center justify-center gap-2 rounded-full border border-lara-border bg-white px-4 text-sm font-extrabold text-lara-primary-dark hover:bg-lara-subtle; }
+  .activity-console { @apply min-w-0 overflow-hidden rounded-lg border border-lara-border bg-white; }
+  .activity-filters { @apply grid gap-3 border-b border-lara-border p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_128px_144px_144px]; }
+  .activity-filters .admin-label input, .activity-filters .admin-label select { @apply text-sm; }
+  .activity-filters .admin-label .activity-search-input { @apply pl-11; }
+  .activity-meta { @apply flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-lara-border px-4 text-xs text-lara-ink-2; }
+  .activity-clear { @apply inline-flex min-h-control items-center text-sm font-bold text-lara-primary-dark underline underline-offset-4; }
+  .activity-notice { @apply flex items-start gap-3 border-b border-lara-warning-border bg-lara-warning-light px-4 py-3 text-sm text-lara-warning-dark; }
+  .activity-table-scroll { @apply max-h-[60vh] min-w-0 overflow-auto; }
+  .activity-table { @apply w-full min-w-[720px] table-fixed text-left text-sm; }
+  .activity-table th { @apply sticky top-0 z-10 border-b border-lara-border bg-lara-subtle px-3 py-3 text-xs font-extrabold uppercase tracking-wide text-lara-ink-2; }
+  .activity-table td { @apply border-b border-lara-border px-3 py-3 align-middle; }
+  .activity-table th:nth-child(1) { @apply w-24; }
+  .activity-table th:nth-child(2) { @apply w-28; }
+  .activity-table th:nth-child(4) { @apply w-24; }
+  .activity-table th:nth-child(5) { @apply w-24; }
+  .activity-table th:nth-child(6) { @apply w-14; }
+  .activity-table tr[data-entry] { @apply h-16 hover:bg-lara-canvas; }
+  .activity-table .activity-row-open { @apply bg-lara-canvas; }
+  .activity-event-cell { @apply min-w-0; }
+  .activity-method { @apply rounded border border-lara-border bg-lara-subtle px-1.5 py-0.5 text-xs font-extrabold; }
+  .activity-level { @apply inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-extrabold uppercase; }
+  .activity-level-info { @apply border-lara-border bg-white text-lara-ink-2; }
+  .activity-level-warning { @apply border-lara-warning-border bg-lara-warning-light text-lara-warning-dark; }
+  .activity-level-error { @apply border-lara-danger-border bg-lara-danger-light text-lara-danger-dark; }
+  .activity-expand { @apply flex h-10 w-10 items-center justify-center rounded-md text-lara-ink-2 hover:bg-lara-subtle hover:text-lara-primary-dark; }
+  .activity-table .activity-detail-row td { @apply bg-lara-subtle p-5; }
+  .activity-details-grid { @apply grid gap-x-6 gap-y-4 text-sm sm:grid-cols-3; }
+  .activity-details-grid dt { @apply mb-1 text-xs font-extrabold uppercase tracking-wide text-lara-ink-2; }
+  .activity-details-grid dd { @apply tabular-nums; }
+  .activity-empty { @apply flex flex-col items-center gap-3 px-4 py-10 text-center; }
+  .activity-footer { @apply flex flex-wrap items-center justify-between gap-2 bg-lara-canvas px-4 py-3 text-xs text-lara-ink-2; }
+}

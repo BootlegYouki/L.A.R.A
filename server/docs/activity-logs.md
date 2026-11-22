@@ -3,8 +3,9 @@
 Implements the local admin console and operational history described in
 [`contracts/activity_logs.md`](../../contracts/activity_logs.md), issue #368.
 The implementation is local on `contract/hub-activity-logs` at the owner's request.
-The published contract PR remains draft and post-defense; these runtime changes
-have not been pushed or deployed to the existing Hub.
+The published contract PR remains draft and post-defense. The local development
+Hub has been rebuilt and reopened with the user-approved request logging extension;
+these changes have not been pushed or deployed to other Hubs.
 
 ## Finding the page
 
@@ -15,8 +16,17 @@ catalog search, severity, inclusive local date filters, expandable safe details,
 pause/resume and loading older entries. Pausing stops display polling; recording
 continues. Navigation away stops activity polling. Sign-out discards loaded history.
 
+The page uses a compact table with Time, Severity, Request / event, Status and
+Duration columns. Each row has a keyboard-accessible details button. Expanded
+details stay open during polling. Search, severity and dates share one toolbar;
+Clear filters resets them together. Refresh updates immediately, and the header
+shows Live, Paused or Offline. A scroll wrapper keeps the table inside narrow
+windows. Wording is brief and describes the current state without extra guidance.
+
 ## Key files and data flow
 
+* `backend/src/services/request_activity.rs`: safe request middleware and approved endpoint/method catalogs.
+* `backend/src/db/migrations/007_http_request_activity.sql`: preserves history and the sequence high-water mark while adding constrained request details.
 * `backend/src/services/activity.rs`: typed producer catalog, nonblocking bounded
   queue, SQLite writer, retention, gap accounting and clean shutdown marker.
 * `backend/src/db/migrations/006_activity_history.sql`: private event/state tables
@@ -56,6 +66,8 @@ It does not add OCR: an uploaded scan may have no extracted lesson text.
 An empty PDF/DOCX extraction currently uses the generic `NO_TEXT_LAYER` reason;
 the existing parser does not expose a richer typed failure result.
 
+The GUI now also shows every REST/portal HTTP request using method, allowlisted endpoint template, response status and time to response headers. Request recording wraps CORS, authentication, routing and handlers, so preflight, rejected requests and activity-page polling are covered. Request details never include raw URL parameters, bodies or credentials. Request events bypass repeated-warning suppression but retain bounded queue/gap behavior.
+
 The GUI observes events emitted by implemented services; it is not a general
 collector of every tracing line. Discovery recovery refers to UDP beacon delivery.
 Activity-log database recovery also emits a fixed service recovery event.
@@ -80,3 +92,7 @@ installed Playwright package (optionally `LARA_CHROMIUM_EXECUTABLE`), then run t
 test with Node. It redirects loopback API calls to that real test Hub and blocks
 external requests. Write a `stop` file in the preview directory to shut it down.
 Screenshots and verification notes are in [`evidence/368`](evidence/368/verification.md).
+
+HTTP request verification uses `ui/tests/request-activity.cjs` with the same preview
+environment variables. Current request-log screenshots and results are in
+[`evidence/request-activity`](evidence/request-activity/verification.md).

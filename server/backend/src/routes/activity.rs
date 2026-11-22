@@ -114,7 +114,7 @@ async fn read(
         return Err(ApiError::bad_request("Activity snapshot is ahead of history"));
     }
     let now = app.clock.now_ms();
-    let mut query = QueryBuilder::<Sqlite>::new("SELECT seq,occurred_at,event_code,severity,result,service,reason,item_count,duration_ms FROM hub_activity_events WHERE seq <= ");
+    let mut query = QueryBuilder::<Sqlite>::new("SELECT seq,occurred_at,event_code,severity,result,service,reason,item_count,duration_ms,http_method,endpoint,status_code FROM hub_activity_events WHERE seq <= ");
     query.push_bind(high_water).push(" AND occurred_at >= ").push_bind(now.saturating_sub(7 * 86_400_000));
     for (column, operator, value) in [
         ("seq", " < ", filters.before_seq),
@@ -132,7 +132,7 @@ async fn read(
     if let Some(search) =
         filters.q.as_ref().map(|q| q.trim().replace('_', " ").to_lowercase()).filter(|q| !q.is_empty())
     {
-        query.push(" AND instr(lower(replace(event_code || ' ' || service || ' ' || result || ' ' || COALESCE(reason,''),'_',' ')),").push_bind(search).push(") > 0");
+        query.push(" AND instr(lower(replace(event_code || ' ' || service || ' ' || result || ' ' || COALESCE(reason,'') || ' ' || COALESCE(http_method,'') || ' ' || COALESCE(endpoint,'') || ' ' || COALESCE(status_code,''),'_',' ')),").push_bind(search).push(") > 0");
     }
     let newer = filters.after_seq.is_some();
     let limit = filters.limit.unwrap_or(100) as usize;
@@ -151,6 +151,9 @@ async fn read(
             result: row.try_get("result").map_err(unavailable)?,
             service: row.try_get("service").map_err(unavailable)?,
             details: Details {
+                http_method: row.try_get("http_method").map_err(unavailable)?,
+                endpoint: row.try_get("endpoint").map_err(unavailable)?,
+                status_code: row.try_get("status_code").map_err(unavailable)?,
                 reason: row.try_get("reason").map_err(unavailable)?,
                 item_count: row.try_get("item_count").map_err(unavailable)?,
                 duration_ms: row.try_get("duration_ms").map_err(unavailable)?,

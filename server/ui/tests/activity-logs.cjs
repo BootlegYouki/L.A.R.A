@@ -38,9 +38,9 @@ async function main() {
     await page.getByRole('button', { name: 'Activity logs', exact: true }).click();
     await visible(page.getByText('Account created', { exact: true }).first());
     await page.getByRole('button', { name: 'Load older', exact: true }).click();
-    await page.waitForFunction(() => document.querySelectorAll('ol > li').length > 100);
-    assert((await page.locator('ol > li').count()) >= 122);
-    await page.locator('summary').first().click();
+    await page.waitForFunction(() => document.querySelectorAll('tr[data-entry]').length > 100);
+    assert((await page.locator('tr[data-entry]').count()) >= 122);
+    await page.getByRole('button', { name: /^Details for entry/ }).first().click();
     await visible(page.getByText('Service', { exact: true }).first());
     await page.getByRole('button', { name: 'Pause updates', exact: true }).click();
     const pausedReads = reads;
@@ -55,11 +55,11 @@ async function main() {
     const smallTargets = await page.locator('button:visible, select:visible, summary:visible').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height < 39).map(node => node.textContent));
     assert.deepEqual(smallTargets, []);
     await page.getByLabel('Search activity', { exact: true }).fill('nevermatchingevent');
-    await visible(page.getByRole('heading', { name: 'No activity to show' }));
+    await visible(page.getByRole('heading', { name: 'No matching entries' }));
     await page.getByLabel('Search activity', { exact: true }).fill('');
     await visible(page.getByText('Account created', { exact: true }).first());
     await page.getByRole('combobox', { name: /^Severity/ }).selectOption('WARNING');
-    await visible(page.getByText('Document has no extracted lesson text', { exact: true }));
+    await visible(page.getByText('Document text extraction failed', { exact: true }));
     assert.equal(await page.getByText('Hub started', { exact: true }).count(), 0);
     await page.getByRole('combobox', { name: /^Severity/ }).selectOption('');
     await visible(page.getByText('Account created', { exact: true }).first());
@@ -69,7 +69,7 @@ async function main() {
     await page.screenshot({ path: path.join(evidence, 'activity-offline.png'), fullPage: false });
     offline = false;
     await page.getByRole('button', { name: 'Retry', exact: true }).click();
-    await page.getByText('Showing the last loaded activity, if available. Retry to refresh this page.').waitFor({ state: 'hidden' });
+    await page.getByText('Showing the last loaded entries.').waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Accounts', exact: true }).click();
     const hiddenReads = reads;
     await page.waitForTimeout(5500);
@@ -79,7 +79,7 @@ async function main() {
     assert.equal(await page.getByRole('cell', { name: 'ADMIN-0001', exact: true }).count(), 0);
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await visible(page.getByRole('button', { name: 'Sign in', exact: true }));
-    assert.equal(await page.locator('ol > li').count(), 0, 'logout clears activity DOM');
+    assert.equal(await page.locator('tr[data-entry]').count(), 0, 'logout clears activity DOM');
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     console.log('PASS real Hub: login, activity paging/details, pause/resume, filtering, offline/retry, hidden polling, account search, logout, 720/960/1280 layouts, 40px controls, no external requests.');
