@@ -35,14 +35,13 @@ class EnrollmentApiTest {
         assertEquals(setOf("class_code"), body.keys)
         assertEquals("K7M4QX", body["class_code"]?.jsonPrimitive?.content)
     }
-    @Test fun joinRejectsMissingRequiredMetadata() = runBlocking {
-        for (body in listOf(
-            """{"status":"PENDING","classroom_id":"class","section":"A"}""",
-            """{"status":"PENDING","classroom_id":"class","teacher_name":"Teacher"}""")) {
-            server.enqueue(MockResponse().setBody(body))
-            try { api.join("learner", "K7M4QX"); fail("Required metadata must not be fabricated") }
-            catch (_: kotlinx.serialization.SerializationException) { }
-        }
+    @Test fun joinAcceptsProductionHubReceiptAndKeepsPendingStatus() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"status":"PENDING","classroom_id":"class"}"""))
+        val receipt = api.join("learner", "K7M4QX")
+        assertEquals("class", receipt.classroomId)
+        assertEquals("PENDING", receipt.status.name)
+        assertNull(receipt.section)
+        assertNull(receipt.teacherName)
     }
     @Test fun invalidCodePreservesServerErrorCode() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":{"code":"CLASS_CODE_INVALID","message":"synthetic"}}"""))

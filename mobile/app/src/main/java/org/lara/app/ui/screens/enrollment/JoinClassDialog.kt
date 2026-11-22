@@ -14,6 +14,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -48,7 +50,7 @@ fun JoinClassDialog(
         if (code == null) invalid = true else onSubmit(code)
     }
     ModalBottomSheet(onDismissRequest = { if (!busy) onDismiss() }, containerColor = LaraColors.Surface) {
-      Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S6),
+      Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S6),
         verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4)) {
         Text(stringResource(R.string.enrollment_join_title), style = MaterialTheme.typography.titleLarge)
         Column(verticalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {

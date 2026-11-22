@@ -152,12 +152,21 @@ pub struct Assignment {
     pub updated_at: i64,
 }
 
+#[derive(Serialize, Clone)]
+pub struct SubmissionAttachment {
+    pub name: String,
+    pub file_type: String,
+}
+
 #[derive(Serialize, FromRow)]
 pub struct Submission {
     pub id: String,
     pub assignment_id: String,
     pub student_id: String,
     pub file_type: String,
+    #[sqlx(skip)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub attachments: Vec<SubmissionAttachment>,
     /// When the learner pressed Turn in, never later than `received_at` (contract #257).
     pub submitted_at: i64,
     /// When the Hub stored the file.

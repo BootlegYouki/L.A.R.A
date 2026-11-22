@@ -18,8 +18,8 @@ interface HomeworkDao {
     @Query("UPDATE assignment_submissions SET id=:canonicalId WHERE id=:localId")
     suspend fun adoptId(localId: String, canonicalId: String)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM assignment_submissions WHERE file_path=:path)")
-    suspend fun referencesFile(path: String): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM assignment_submissions WHERE file_path=:path OR instr(attachments_json, :encodedPath)>0)")
+    suspend fun referencesFile(path: String, encodedPath: String): Boolean
 
     @Upsert
     suspend fun save(row: AssignmentSubmissionEntity)

@@ -251,6 +251,15 @@ async fn teacher_on_admin_routes_is_403() {
     let hub = TestHub::start().await;
     let (status, body) = hub.get("/api/admin/users", Some(hub.teacher_token())).await;
     assert_eq!((status, code(&body), message(&body)), (403, Some("FORBIDDEN"), Some("Hub admin only")));
+    let account = json!({"lrn_or_id": "123456789019", "full_name": "New learner", "pin": "123456", "role": "STUDENT"});
+    for path in ["/api/admin/users", "/api/auth/register"] {
+        let (status, body) = hub.post_json(path, &account, Some(hub.teacher_token())).await;
+        assert_eq!((status, code(&body)), (403, Some("FORBIDDEN")));
+    }
+    let mut teacher_signup = account;
+    teacher_signup["role"] = json!("TEACHER");
+    let (status, body) = hub.post_json("/api/auth/register", &teacher_signup, None).await;
+    assert_eq!((status, code(&body)), (403, Some("FORBIDDEN")));
     hub.stop().await;
 }
 

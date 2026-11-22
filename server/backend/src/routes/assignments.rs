@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/assignments/{id}/submissions", get(list_submissions))
         .route("/api/submissions/{id}", patch(grade_submission))
         .route("/api/submissions/{id}/file", get(submission_file))
+        .route("/api/submissions/{id}/grade-edit", patch(edit_grade))
 }
 
 fn assignment_not_found() -> ApiError {
@@ -128,6 +129,22 @@ async fn list_submissions(
     Ok(Json(submissions::for_assignment(&mut conn, &id).await?))
 }
 
+async fn edit_grade(
+    state: State<AppState>,
+    user: AuthUser,
+    path: Path<String>,
+    body: JsonBody,
+) -> Result<Json<Submission>, ApiError> {
+    require_role(&user, Role::Teacher)?;
+    body.need(&["score", "teacher_feedback", "expected_updated_at"])?;
+    if body.optional_int_from("score", 0)?.is_none() ||
+        body.optional_text("teacher_feedback")?.is_none() ||
+        body.optional_int_from("expected_updated_at", 0)?.is_none() {
+        return Err(ApiError::bad_request("Score, feedback and submission version are required"));
+    }
+    grade_submission(state, user, path, body).await
+}
+
 /// Score and feedback (PRD FR-3.5). As in Google Classroom, the score may go above `max_points`; it
 /// may not be negative (schema CHECK), past `MAX_SAFE_INT` or null: there is no un-grade or return action.
 async fn grade_submission(
@@ -139,6 +156,7 @@ async fn grade_submission(
     require_role(&user, Role::Teacher)?;
     let score = body.optional_int_from("score", 0)?;
     let teacher_feedback = body.optional_text("teacher_feedback")?;
+    let expected = body.optional_int_from("expected_updated_at", 0)?;
     if score.is_none() && teacher_feedback.is_none() {
         return Err(ApiError::bad_request("Missing: score or teacher_feedback"));
     }
@@ -146,7 +164,23 @@ async fn grade_submission(
     let (row, classroom_id) =
         submissions::grading_target(&mut tx, &id).await?.ok_or_else(|| ApiError::not_found("Submission not found"))?;
     class_access::require_teacher_writable(&mut tx, &user, &classroom_id).await?;
-    let graded = submissions::grade(&mut tx, &row, &classroom_id, score, teacher_feedback, app.clock.now_ms()).await?;
+    if expected.is_some() {
+        if score.is_none_or(|value| Some(value) == row.score) &&
+            teacher_feedback.as_ref().is_none_or(|value| Some(value) == row.teacher_feedback.as_ref()) {
+            return Ok(Json(row.public()));
+        }
+        if expected != Some(row.updated_at) {
+            return Err(ApiError::new(axum::http::StatusCode::CONFLICT, crate::error::ErrorCode::GradeChanged,
+                "The grade changed on the Hub"));
+        }
+        let maximum: i64 = sqlx::query_scalar("SELECT max_points FROM assignments WHERE id = ?")
+            .bind(&row.assignment_id).fetch_one(&mut *tx).await?;
+        if score.is_some_and(|points| points > maximum) {
+            return Err(ApiError::bad_request("Score exceeds assignment maximum"));
+        }
+    }
+    let version = app.clock.now_ms().max(row.updated_at.saturating_add(1));
+    let graded = submissions::grade(&mut tx, &row, &classroom_id, score, teacher_feedback, version).await?;
     tx.commit().await?;
     Ok(Json(graded))
 }
@@ -186,7 +220,7 @@ async fn submit(
             return Err(ApiError::forbidden("This class is archived"));
         }
     }
-    let mut form = read_form(&app.storage, &headers, multipart, &["submission_id", "turned_in_at"]).await?;
+    let form = read_form(&app.storage, &headers, multipart, &["submission_id", "turned_in_at"], 5).await?;
     let Some(submission_id) = form.field("submission_id").map(str::to_owned) else {
         return Err(ApiError::bad_request("Missing: submission_id"));
     };
@@ -194,7 +228,6 @@ async fn submit(
     if !is_client_uuid(&submission_id) {
         return Err(ApiError::bad_request("submission_id must be a UUID"));
     }
-    let file = form.take_file()?;
     let turned_in_at = match form.field("turned_in_at") {
         None => None,
         Some(value) => Some(
@@ -208,22 +241,42 @@ async fn submit(
     if turned_in_at.is_some_and(|pressed| !(0..=MAX_SAFE_INT).contains(&pressed)) {
         return Err(ApiError::bad_request(format!("turned_in_at must be from 0 to {MAX_SAFE_INT}")));
     }
-    let Some(file_type) = file.format.and_then(|f| f.submission_type()) else {
-        return Err(ApiError::bad_request("File must be a photo (JPEG or PNG), PDF or Word document"));
-    };
-    let (size, sha256) = (file.size, file.sha256);
-    let stored = app.storage.commit(file, StorageKind::Submission).await.map_err(storage_error)?;
-    // A retry is told by comparing with the stored file, read back only when the size matches.
-    // That file I/O happens here, not under the write lock; the transaction checks the row still
-    // names the file compared.
+    if form.files.is_empty() {
+        return Err(ApiError::bad_request("Missing file"));
+    }
+    let mut stored_files = Vec::with_capacity(form.files.len());
+    let mut attachments = Vec::with_capacity(form.files.len());
+    let mut fingerprints = Vec::with_capacity(form.files.len());
+    for (_, name, file) in form.files {
+        let Some(file_type) = file.format.and_then(|format| format.submission_type()) else {
+            return Err(ApiError::bad_request("File must be a photo (JPEG or PNG), PDF or Word document"));
+        };
+        fingerprints.push((file.size, file.sha256));
+        let stored = app.storage.commit(file, StorageKind::Submission).await.map_err(storage_error)?;
+        attachments.push(submissions::StoredAttachment {
+            path: stored.relative.clone(),
+            name: if name.is_empty() { "attachment".to_owned() } else { name },
+            file_type: file_type.to_owned(),
+        });
+        stored_files.push(stored);
+    }
+    let first = &attachments[0];
+    let attachments_json = serde_json::to_string(&attachments)
+        .map_err(|_| ApiError::internal("Could not record attachments"))?;
     let retry_of = {
         let mut conn = app.db.acquire().await?;
-        match submissions::for_learner(&mut conn, &assignment_id, &user.id).await? {
-            Some(row) if row.id == submission_id => {
-                drop(conn);
-                app.storage.holds(&row.file_path, size, &sha256).await.map_err(storage_error)?.then_some(row.file_path)
+        let candidate = submissions::for_learner(&mut conn, &assignment_id, &user.id).await?;
+        drop(conn);
+        if let Some(row) = candidate.filter(|row| row.id == submission_id) {
+            let existing = submission_paths(&row);
+            let mut identical = existing.len() == fingerprints.len();
+            for (path, (size, sha)) in existing.iter().zip(&fingerprints) {
+                identical &= app.storage.holds(path, *size, sha).await.map_err(storage_error)?;
             }
-            _ => None,
+            identical.then_some(row.attachments_json)
+                .map(|json| (row.file_path, json))
+        } else {
+            None
         }
     };
 
@@ -244,7 +297,7 @@ async fn submit(
         };
     }
     if let Some(row) = &current {
-        if row.id == submission_id && retry_of.as_deref() == Some(row.file_path.as_str()) {
+        if row.id == submission_id && retry_of.as_ref().is_some_and(|(path, json)| *path == row.file_path && *json == row.attachments_json) {
             return Ok(Json(row.public()));
         }
         if row.is_graded() {
@@ -259,7 +312,7 @@ async fn submit(
     if new_id && submissions::by_id(&mut tx, &submission_id).await?.is_some() {
         return Err(ApiError::forbidden("This submission id belongs to other work"));
     }
-    let replaced = current.as_ref().map(|row| row.file_path.clone());
+    let replaced = current.as_ref().map(submission_paths).unwrap_or_default();
     let row = match current {
         Some(old) => {
             if old.id != submission_id {
@@ -268,8 +321,9 @@ async fn submit(
             }
             StoredSubmission {
                 id: submission_id,
-                file_path: stored.relative.clone(),
-                file_type: file_type.to_owned(),
+                file_path: first.path.clone(),
+                file_type: first.file_type.clone(),
+                attachments_json,
                 submitted_at,
                 received_at,
                 updated_at: received_at,
@@ -280,8 +334,9 @@ async fn submit(
             id: submission_id,
             assignment_id,
             student_id: user.id.clone(),
-            file_path: stored.relative.clone(),
-            file_type: file_type.to_owned(),
+            file_path: first.path.clone(),
+            file_type: first.file_type.clone(),
+            attachments_json,
             submitted_at,
             created_at: received_at,
             received_at,
@@ -292,11 +347,23 @@ async fn submit(
     };
     let submission = submissions::save(&mut tx, &row, &classroom_id).await?;
     tx.commit().await?;
-    stored.keep();
-    if let Some(old) = replaced {
-        app.storage.remove(&old).await;
-    }
+    for stored in stored_files { stored.keep(); }
+    for old in replaced { app.storage.remove(&old).await; }
     Ok(Json(submission))
+}
+
+fn submission_paths(row: &StoredSubmission) -> Vec<String> {
+    let files = row.attachments();
+    if files.is_empty() {
+        return vec![row.file_path.clone()];
+    }
+    files.into_iter().map(|file| file.path).collect()
+}
+
+#[derive(serde::Deserialize)]
+struct AttachmentQuery {
+    #[serde(default)]
+    attachment: usize,
 }
 
 /// The owning learner and the class's teachers (PRD FR-3.5). Sent with its real content type
@@ -305,6 +372,7 @@ async fn submission_file(
     State(app): State<AppState>,
     MediaUser(user): MediaUser,
     Path(id): Path<String>,
+    query: Result<axum::extract::Query<AttachmentQuery>, axum::extract::rejection::QueryRejection>,
     request: Request,
 ) -> Result<Response, ApiError> {
     let mut conn = app.db.acquire().await?;
@@ -315,7 +383,12 @@ async fn submission_file(
     class_access::require_member(&mut conn, &user, &file.classroom_id).await?;
     drop(conn);
     let missing = || ApiError::not_found("File not found");
-    let format = format_of(&file.file_path).ok_or_else(missing)?;
-    let path = app.storage.path(&file.file_path).ok_or_else(missing)?;
+    let index = query.map_err(|_| ApiError::bad_request("Invalid attachment index"))?.0.attachment;
+    if index >= 5 { return Err(ApiError::bad_request("Invalid attachment index")); }
+    let attachments: Vec<submissions::StoredAttachment> = serde_json::from_str(&file.attachments_json).unwrap_or_default();
+    let relative = if attachments.is_empty() && index == 0 { &file.file_path }
+        else { &attachments.get(index).ok_or_else(missing)?.path };
+    let format = format_of(relative).ok_or_else(missing)?;
+    let path = app.storage.path(relative).ok_or_else(missing)?;
     serve_stored(path, format.mime(), request, &id, Ranges::AsServed, app.bandwidth.user(&user.id)).await
 }

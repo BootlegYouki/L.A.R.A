@@ -236,11 +236,16 @@ async fn load_entity(
             ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? { out.private_comments.push(row); }
         }
         "assignment_submissions" => {
-            if let Some(row) = sqlx::query_as::<_, Submission>(
+            if let Some(mut row) = sqlx::query_as::<_, Submission>(
                 "SELECT id, assignment_id, student_id, file_type, submitted_at, received_at, score, teacher_feedback, updated_at
                  FROM assignment_submissions WHERE id = ? AND (? = 'TEACHER' OR student_id = ?)
                  AND assignment_id IN (SELECT id FROM assignments WHERE archived_at IS NULL)",
-            ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? { out.submissions.push(row); }
+            ).bind(id).bind(user.role.as_str()).bind(&user.id).fetch_optional(&mut *conn).await? {
+                if let Some(stored) = super::submissions::by_id(&mut *conn, id).await? {
+                    row.attachments = stored.public().attachments;
+                }
+                out.submissions.push(row);
+            }
         }
         "quizzes" => {
             if let Some(row) = sqlx::query_as::<_, QuizMetadata>(

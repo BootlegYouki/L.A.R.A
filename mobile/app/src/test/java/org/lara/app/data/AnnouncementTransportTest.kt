@@ -18,7 +18,7 @@ class AnnouncementTransportTest {
     @Test fun postsTheContractPayloadWithTheTeachersSession(): Unit = runBlocking {
         MockWebServer().use { server ->
             server.start()
-            server.enqueue(MockResponse().setBody("{}"))
+            server.enqueue(MockResponse().setBody("""{"id":"announcement"}"""))
             val endpoint = requireNotNull(HubEndpoint.lan("127.0.0.1", server.port))
             val tokens = object : SessionTokenStore {
                 override fun load() = StoredToken("synthetic", "teacher", Long.MAX_VALUE, endpoint.restBase)
@@ -28,7 +28,7 @@ class AnnouncementTransportTest {
             val client = HubClient()
             val api = AnnouncementApi(EnrollmentApi(client, tokens, { endpoint }), client)
 
-            api.post("teacher", "classroom", " Reminder ", " Bring your notes ", allowComments = false)
+            assertEquals("announcement", api.post("teacher", "classroom", " Reminder ", " Bring your notes ", allowComments = false))
 
             val request = requireNotNull(server.takeRequest(1, TimeUnit.SECONDS))
             assertEquals("POST", request.method)

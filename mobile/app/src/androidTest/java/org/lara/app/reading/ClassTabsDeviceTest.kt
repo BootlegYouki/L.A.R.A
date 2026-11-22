@@ -102,7 +102,7 @@ class ClassTabsDeviceTest {
             val requestedRole = InstrumentationRegistry.getArguments().getString("tabsRole")
             if (requestedRole != null && requestedRole != role) continue
             container.endpoints.save(endpoint, "Synthetic Group 3 Hub")
-            val user = container.auth.authenticate(endpoint, id, "123456", null)
+            val user = container.auth.authenticate(endpoint, id, "123456")
             container.forUser(user.id).sync.pull(user.id)
             ActivityScenario.launch(MainActivity::class.java).use {
                 waitFor("Science 4"); click("Science 4"); waitFor("Stream")

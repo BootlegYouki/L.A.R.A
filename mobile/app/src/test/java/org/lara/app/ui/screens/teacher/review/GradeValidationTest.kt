@@ -11,7 +11,7 @@ class GradeValidationTest {
     }
 
     @Test fun rejectsInvalidScores() {
-        listOf("", "-1", "51", "1.5", "abc", "9223372036854775808").forEach {
+        listOf("", "-1", "51", "1.5", "abc", " 9", "1e1", "+1", "9223372036854775808").forEach {
             assertNull(validatedScore(it, 50))
         }
         assertNull(validatedScore("0", -1))

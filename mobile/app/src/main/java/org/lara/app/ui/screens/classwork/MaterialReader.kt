@@ -162,7 +162,7 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
     BackHandler(enabled = viewing) { viewing = false }
     if (viewing && material.mimeType == "application/pdf" && first != null && file != null) { PageViewer(requireNotNull(file), material, first.pages, onAi) { viewing = false }; return }
     val blocks = docBlocks
-    if (viewing && docx && !blocks.isNullOrEmpty()) { DocxViewer(material, blocks, onAi) { viewing = false }; return }
+    if (viewing && docx && file != null && !blocks.isNullOrEmpty()) { DocxViewer(requireNotNull(file), material, blocks, onAi) { viewing = false }; return }
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(LaraColors.Surface)) {
         org.lara.app.ui.components.ClassroomBackBar(close, onAi = onAi)
@@ -184,20 +184,16 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
                 // Reserve the card while the preview renders so the buttons below do not jump.
                 Column {
                 if (visual || docx) {
-                    val docPic = blocks?.filterIsInstance<DocBlock.Pic>()?.firstOrNull()?.bitmap
+                    val docPic = rememberDocxPicture(file, blocks?.firstOrNull { it is DocBlock.Pic } as? DocBlock.Pic)
                     AttachmentThumb(bitmap ?: docPic, R.drawable.ic_books_regular,
                         text = if (bitmap == null && docPic == null) blocks?.filterIsInstance<DocBlock.Para>()?.firstOrNull()?.text else null, onClick = open)
                 }
-                if (visual && bitmap != null) Row(Modifier.fillMaxWidth().clickable(onClick = open).heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp), tint = LaraColors.DangerDark)
-                    Text(material.title, Modifier.weight(1f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                }
-                if (docx && file != null) Row(Modifier.fillMaxWidth().clickable(onClick = open).heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LaraSpacing.S2)) {
-                    Icon(painterResource(R.drawable.ic_books_regular), null, Modifier.size(24.dp), tint = LaraColors.Primary)
-                    Text(material.title, Modifier.weight(1f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                }
+                if (visual && bitmap != null) AttachmentTitleRow(
+                    material.title, R.drawable.ic_books_regular, LaraColors.DangerDark, open,
+                )
+                if (docx && file != null) AttachmentTitleRow(
+                    material.title, R.drawable.ic_books_regular, LaraColors.Primary, open,
+                )
                 }
                 if (file != null && !removed) OutlinedButton(onClick = { confirmRemove = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryTouchTarget)) { Text(stringResource(R.string.video_remove)) }
@@ -231,44 +227,92 @@ fun MaterialReader(container: AppContainer, material: Material, close: () -> Uni
 
 internal sealed interface DocBlock {
     data class Para(val text: String) : DocBlock
-    class Pic(val bitmap: Bitmap) : DocBlock
+    data class Pic(val entry: String) : DocBlock
 }
 
 /** A .docx is a zip; the body is word/document.xml. shortcut: paragraphs and inline pictures only (no tables, fonts or layout), upgrade if handouts need them. */
 internal fun docxBlocks(file: File): List<DocBlock> = java.util.zip.ZipFile(file).use { zip ->
-    fun read(name: String) = zip.getEntry(name)?.let { zip.getInputStream(it).readBytes() }
-    val xml = String(requireNotNull(read("word/document.xml")))
-    val targets = read("word/_rels/document.xml.rels")?.let { String(it) }
+    fun read(name: String) = zip.getEntry(name)?.let { entry ->
+        zip.getInputStream(entry).use { readDocxXml(it) }
+    }
+    val xml = requireNotNull(read("word/document.xml"))
+    val targets = read("word/_rels/document.xml.rels")
         ?.let { rels -> Regex("""<Relationship [^>]*?Id="([^"]+)"[^>]*?Target="([^"]+)"""").findAll(rels).associate { it.groupValues[1] to it.groupValues[2] } }.orEmpty()
     Regex("<w:p[ >].*?</w:p>", RegexOption.DOT_MATCHES_ALL).findAll(xml).flatMap { match ->
         val paragraph = match.value
         val text = paragraph.replace("<w:tab/>", "\t").replace(Regex("<[^>]+>"), "")
             .replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").trim()
         val pictures = Regex("""r:embed="([^"]+)"""").findAll(paragraph).mapNotNull { embed ->
-            val bytes = targets[embed.groupValues[1]]?.let { read("word/$it") } ?: return@mapNotNull null
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-            var sample = 1
-            while (bounds.outWidth / sample > 2048 || bounds.outHeight / sample > 2048) sample *= 2
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })?.let { DocBlock.Pic(it) }
+            val target = targets[embed.groupValues[1]] ?: return@mapNotNull null
+            val entry = "word/$target"
+            if (zip.getEntry(entry) != null) DocBlock.Pic(entry) else null
         }
         listOfNotNull(text.takeIf { it.isNotEmpty() }?.let { DocBlock.Para(it) }).asSequence() + pictures
     }.toList()
 }
 
+internal fun readDocxXml(input: java.io.InputStream, maxBytes: Int = 4 * 1024 * 1024): String {
+    val output = java.io.ByteArrayOutputStream()
+    val buffer = ByteArray(8192)
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        require(count <= maxBytes - output.size()) { "DOCX XML exceeds the reader limit" }
+        output.write(buffer, 0, count)
+    }
+    return output.toString(Charsets.UTF_8.name())
+}
+
+@Composable
+internal fun rememberDocxPicture(file: File?, picture: DocBlock.Pic?): Bitmap? {
+    var bitmap by remember(file, picture) { mutableStateOf<Bitmap?>(null) }
+    LaunchedEffect(file, picture) {
+        if (file == null || picture == null) return@LaunchedEffect
+        var decoded: Bitmap? = null
+        try {
+            withContext(Dispatchers.IO) {
+                decoded = java.util.zip.ZipFile(file).use { zip ->
+                    val entry = zip.getEntry(picture.entry) ?: return@use null
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    zip.getInputStream(entry).use { BitmapFactory.decodeStream(it, null, bounds) }
+                    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@use null
+                    var sample = 1
+                    while (bounds.outWidth / sample > 1024 || bounds.outHeight / sample > 1024) sample *= 2
+                    zip.getInputStream(entry).use {
+                        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+                    }
+                }
+            }
+            bitmap = decoded
+            decoded = null
+        } catch (error: CancellationException) { throw error }
+        catch (_: java.io.IOException) { }
+        finally { decoded?.recycle() }
+    }
+    val current = bitmap
+    DisposableEffect(current) { onDispose { current?.recycle() } }
+    return current
+}
+
 /** The text and pictures of a Word file on a page of their own, like the PDF viewer. */
 @Composable
-private fun DocxViewer(material: Material, blocks: List<DocBlock>, onAi: (() -> Unit)?, close: () -> Unit) {
+private fun DocxViewer(file: File, material: Material, blocks: List<DocBlock>, onAi: (() -> Unit)?, close: () -> Unit) {
     BackHandler(onBack = close)
     Column(Modifier.fillMaxSize().background(LaraColors.Surface)) {
         org.lara.app.ui.components.ClassroomBackBar(close, title = material.title, onAi = onAi)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(LaraSpacing.S4),
-            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3)) {
-            blocks.forEach { block ->
-                when (block) {
+        androidx.compose.foundation.lazy.LazyColumn(
+            Modifier.fillMaxSize(), contentPadding = PaddingValues(LaraSpacing.S4),
+            verticalArrangement = Arrangement.spacedBy(LaraSpacing.S3),
+        ) {
+            items(blocks.size) { index ->
+                when (val block = blocks[index]) {
                     is DocBlock.Para -> Text(block.text, style = MaterialTheme.typography.bodyLarge)
-                    is DocBlock.Pic -> Image(block.bitmap.asImageBitmap(), null, Modifier.fillMaxWidth(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.FillWidth)
+                    is DocBlock.Pic -> {
+                        val bitmap = rememberDocxPicture(file, block)
+                        if (bitmap == null) Spacer(Modifier.fillMaxWidth().aspectRatio(1f))
+                        else Image(bitmap.asImageBitmap(), null, Modifier.fillMaxWidth(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth)
+                    }
                 }
             }
         }

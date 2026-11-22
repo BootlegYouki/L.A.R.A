@@ -17,6 +17,9 @@ import org.lara.app.data.local.entities.*
 import org.lara.app.data.remote.HubFailure
 import org.lara.app.data.remote.dto.SubmissionDto
 import org.lara.app.data.repository.HomeworkRepository
+import org.lara.app.data.repository.HomeworkAttachment
+import org.lara.app.data.local.entities.attachments
+import org.lara.app.data.remote.dto.SubmissionAttachmentDto
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = Application::class)
@@ -40,11 +43,14 @@ class HomeworkRepositoryTest {
             enrollments = listOf(EnrollmentEntity("enrollment", "class", "learner", "ACTIVE", 1, 1)),
             assignments = listOf(AssignmentEntity("assignment", "class", "Notebook", dueDate = Long.MAX_VALUE, createdAt = 1, updatedAt = 1))))
         db.syncStateDao().put(SyncStateEntity("hub_id", "hub-a", 1))
-        repository = HomeworkRepository(db, root, "learner", { assignment, id, _, turnedInAt ->
+        repository = HomeworkRepository(db, root, "learner", { assignment, id, files, turnedInAt ->
             calls.add(id)
             sentTimes.add(turnedInAt)
             failure?.let { throw it }
-            SubmissionDto(canonicalId ?: id, assignment, "learner", "IMAGE", 2, updatedAt = 2, receivedAt = 3)
+            SubmissionDto(canonicalId ?: id, assignment, "learner", requireNotNull(HomeworkAttachment.type(files.first())),
+                2, updatedAt = 2, receivedAt = 3, attachments = files.map {
+                    SubmissionAttachmentDto(HomeworkAttachment.displayName(it), requireNotNull(HomeworkAttachment.type(it)))
+                })
         }, { queued++ })
     }
 
@@ -113,7 +119,7 @@ class HomeworkRepositoryTest {
         val replacement = photo()
         repository.turnIn("assignment", replacement)
         assertEquals(id, db.homeworkDao().find("assignment", "learner")?.id)
-        assertEquals(replacement.path, db.homeworkDao().find("assignment", "learner")?.filePath)
+        assertEquals(replacement.canonicalPath, db.homeworkDao().find("assignment", "learner")?.filePath)
         assertEquals(createdAt, db.homeworkDao().find("assignment", "learner")?.createdAt)
     }
 
@@ -123,12 +129,12 @@ class HomeworkRepositoryTest {
         canonicalId = "canonical"
         db.cacheDao().upsertBatch(CacheBatch(assignmentSubmissions = listOf(
             AssignmentSubmissionEntity("canonical", "assignment", "learner", "", submittedAt = 2, updatedAt = 2, syncStatus = "SYNCED"))))
-        assertEquals(photo.path, db.homeworkDao().find("assignment", "learner")?.filePath)
+        assertEquals(photo.canonicalPath, db.homeworkDao().find("assignment", "learner")?.filePath)
         repository.uploadQueued()
         val saved = requireNotNull(db.homeworkDao().find("assignment", "learner"))
         assertEquals("canonical", saved.id)
         assertEquals("SYNCED", saved.syncStatus)
-        assertEquals(photo.path, saved.filePath)
+        assertEquals(photo.canonicalPath, saved.filePath)
     }
 
     @Test fun refusesUnownedFilesAndRemovedLearners(): Unit = runBlocking {
@@ -152,6 +158,28 @@ class HomeworkRepositoryTest {
         try { repository.uploadQueued(); fail() } catch (_: IOException) { }
         assertEquals("QUEUED_FOR_SYNC", db.homeworkDao().find("assignment", "learner")?.syncStatus)
         assertEquals("SYNCED", db.homeworkDao().find("second", "learner")?.syncStatus)
+    }
+
+    @Test fun mixedAttachmentsSurviveOfflineRetryAndRemovalKeepsOtherFiles(): Unit = runBlocking {
+        val image = photo()
+        val document = File(root, "submission-test_worksheet.pdf").apply { writeText("%PDF-1.4") }
+        val removed = photo()
+        repository.discardDraft(removed.path)
+        assertFalse(removed.exists())
+        repository.turnIn("assignment", listOf(image, document))
+        val queued = requireNotNull(db.homeworkDao().find("assignment", "learner"))
+        assertEquals(listOf("IMAGE", "DOCUMENT"), queued.attachments().map { it.fileType })
+        repository.discardDraft(document.path)
+        assertTrue(document.isFile)
+        failure = IOException("Synthetic dropped connection")
+        try { repository.uploadQueued(); fail() } catch (_: IOException) { }
+        assertEquals(queued, db.homeworkDao().find("assignment", "learner"))
+        failure = null
+        repository.uploadQueued()
+        val synced = requireNotNull(db.homeworkDao().find("assignment", "learner"))
+        assertEquals("SYNCED", synced.syncStatus)
+        assertEquals(queued.attachments(), synced.attachments())
+        assertEquals(listOf(queued.id, queued.id), calls)
     }
 
     @Test fun discardingAnOldDraftCannotDeleteAQueuedAttachment(): Unit = runBlocking {

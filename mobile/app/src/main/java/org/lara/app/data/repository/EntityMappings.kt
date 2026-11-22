@@ -41,6 +41,7 @@ fun AnnouncementEntity.toDomain() = Announcement(
     allowComments = allowComments,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    authorId = authorId,
 )
 
 fun AnnouncementCommentEntity.toDomain() = AnnouncementComment(

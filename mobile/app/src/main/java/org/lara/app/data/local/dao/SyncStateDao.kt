@@ -14,6 +14,12 @@ interface SyncStateDao {
     @Query("SELECT * FROM sync_state WHERE `key` = :key")
     suspend fun get(key: String): SyncStateEntity?
 
+    @Query("SELECT * FROM sync_state WHERE substr(`key`,1,length(:prefix))=:prefix ORDER BY updated_at, `key`")
+    suspend fun entries(prefix: String): List<SyncStateEntity>
+
+    @Query("DELETE FROM sync_state WHERE `key` = :key")
+    suspend fun remove(key: String)
+
     @Upsert
     suspend fun put(row: SyncStateEntity)
 }

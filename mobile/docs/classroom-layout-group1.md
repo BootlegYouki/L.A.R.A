@@ -1,5 +1,7 @@
 # Classroom layout: Group 1 — Home and navigation
 
+> Historical record. The Hub admin account creation pivot supersedes the client registration behavior recorded here.
+
 Part of #266. The user approved publishing the Group 1 PR after review. Group 2 remains outside this change.
 
 ## Prerequisites and ownership

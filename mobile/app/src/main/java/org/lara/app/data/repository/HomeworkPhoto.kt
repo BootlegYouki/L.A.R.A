@@ -24,7 +24,7 @@ object HomeworkPhoto {
     private suspend fun convert(source: File, directory: File, format: Bitmap.CompressFormat): File = withContext(Dispatchers.IO) {
         check(directory.isDirectory || directory.mkdirs())
         val output = if (format == Bitmap.CompressFormat.PNG) File.createTempFile("scan-", ".png", directory)
-            else File.createTempFile("homework-", ".jpg", directory)
+            else File.createTempFile("homework_${System.currentTimeMillis()}_", ".jpg", directory)
         var bitmap: Bitmap? = null
         try {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }

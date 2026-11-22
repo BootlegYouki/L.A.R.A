@@ -123,7 +123,7 @@ fun DiscoveryScreen(model: DiscoveryViewModel, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = LaraColors.Canvas,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding()
+            Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState())
                 .padding(horizontal = LaraSpacing.S4).padding(bottom = LaraSpacing.S6),
             verticalArrangement = Arrangement.spacedBy(LaraSpacing.S4),
             horizontalAlignment = Alignment.CenterHorizontally,

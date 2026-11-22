@@ -51,6 +51,12 @@ class AppContainer private constructor(private val services: AppServices, privat
         database.syncStateDao().put(org.lara.app.data.local.entities.SyncStateEntity("review_denied:$assignmentId", if (denied) "1" else "0", System.currentTimeMillis()))
     }
     suspend fun saveReviewGrade(id: String, score: Long?, feedback: String?) = database.syncDao().applySubmissionGrade(id, score, feedback)
+    internal val gradeOutbox by lazy {
+        val owner = requireNotNull(accountId)
+        org.lara.app.data.repository.GradeOutbox(database, { item ->
+            gradingApi.grade(owner, item.submissionId, item.score, item.feedback, item.expectedUpdatedAt)
+        }, owner, syncScheduler::enqueueNow)
+    }
     val gradingApi by lazy { org.lara.app.data.remote.GradingApi(enrollmentApi) }
     fun privateComments(assignmentId: String) = database.streamDao().observePrivateComments(assignmentId)
     suspend fun addPrivateComment(assignmentId: String, studentId: String, content: String) {

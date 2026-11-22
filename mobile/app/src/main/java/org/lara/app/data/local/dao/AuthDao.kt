@@ -26,7 +26,8 @@ abstract class AuthDao {
         (SELECT COUNT(*) FROM announcement_comments WHERE author_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
         (SELECT COUNT(*) FROM private_comments WHERE author_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
         (SELECT COUNT(*) FROM assignment_submissions WHERE student_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
-        (SELECT COUNT(*) FROM quiz_attempts WHERE student_id=:userId AND sync_status='QUEUED_FOR_SYNC')""")
+        (SELECT COUNT(*) FROM quiz_attempts WHERE student_id=:userId AND sync_status='QUEUED_FOR_SYNC') +
+        (SELECT COUNT(*) FROM sync_state WHERE `key` LIKE 'pending_submission_grade:%')""")
     abstract suspend fun queuedCount(userId: String): Int
     @Upsert
     protected abstract suspend fun putUser(user: UserEntity)

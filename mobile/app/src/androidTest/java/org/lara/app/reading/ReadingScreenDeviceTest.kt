@@ -168,6 +168,20 @@ class ReadingScreenDeviceTest {
                         androidx.compose.material3.Text("Synthetic teacher tools")
                     }, content = { destination -> ClassroomLearningHost(active, owner, destination, "fixture-class") })
                 }
+                show {
+                    val overlay = androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf<(@androidx.compose.runtime.Composable () -> Unit)?>(null)
+                    }
+                    CompositionLocalProvider(org.lara.app.ui.components.LocalFullScreenOverlay provides overlay) {
+                        Box {
+                            ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-class")
+                            overlay.value?.invoke()
+                        }
+                    }
+                }
+                scrollTo("Synthetic PDF")
+                click("Synthetic PDF")
+                waitFor("Attachments")
                 show { ClassroomLearningHost(active, owner, ShellDestination.CLASSWORK, "fixture-class") }
                 scrollTo("Synthetic PDF"); shot("classwork")
                 show(font=2f) { ClassroomLearningHost(active, owner, ShellDestination.STREAM, "fixture-class") }
