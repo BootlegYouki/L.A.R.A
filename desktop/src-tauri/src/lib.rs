@@ -1,5 +1,6 @@
 mod account;
 mod assignment_work;
+mod document_viewer;
 mod homework;
 mod comments;
 mod migrations;
@@ -34,8 +35,13 @@ pub fn run() {
             assignment_work::read_assignment_work,
             assignment_work::submission_preview,
             assignment_work::export_submission,
+            document_viewer::prepare_document,
+            document_viewer::read_document,
             assignment_work::read_gradebook,
             homework::begin_homework,
+            homework::begin_homework_batch,
+            homework::append_homework_batch,
+            homework::finish_homework_batch,
             homework::append_homework,
             homework::finish_homework,
             homework::discard_homework_stage,
@@ -138,6 +144,7 @@ mod permissions {
                     "/api/topics",
                     "/api/materials",
                     "/api/quizzes",
+                    "/api/submissions/11111111-1111-4111-8111-111111111111/grade-edit",
                     "/api/assignments/11111111-1111-4111-8111-111111111111",
                     "/api/materials/11111111-1111-4111-8111-111111111111",
                     "/api/topics/11111111-1111-4111-8111-111111111111",

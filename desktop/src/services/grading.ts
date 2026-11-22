@@ -9,9 +9,9 @@ export interface Assignment {id:string;title:string;instructions:string|null;max
 const object=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null;
 const uuid=(v:unknown):v is string=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const integer=(v:unknown):v is number=>Number.isSafeInteger(v)&&Number(v)>=0;
-export function scoreValue(input:string):number|null {
+export function scoreValue(input:string,maxPoints:number):number|null {
  if(input.trim()==='')return null;
- if(!/^\d+$/.test(input)||!integer(Number(input)))throw new ApiError('invalid_fields');
+ if(!integer(maxPoints)||!/^\d+$/.test(input)||!integer(Number(input))||Number(input)>maxPoints)throw new ApiError('invalid_fields');
  return Number(input);
 }
 export function parseSubmissions(value:unknown,assignmentId:string):Submission[] {
@@ -38,8 +38,8 @@ export async function fetchSubmissions(account:CachedAccount,classId:string,assi
  teacher(account,classId,assignmentId);
  return parseSubmissions(await requestHub(account.hub,`/api/assignments/${assignmentId}/submissions`,{token:await accountToken(account),signal}),assignmentId);
 }
-export async function publishGrade(account:CachedAccount,classId:string,id:string,score:number,teacher_feedback:string,signal?:AbortSignal):Promise<unknown> {
+export async function publishGrade(account:CachedAccount,classId:string,id:string,score:number,teacher_feedback:string,maxPoints:number,expectedUpdatedAt:number,signal?:AbortSignal):Promise<unknown> {
  teacher(account,classId,id,true);
- if(!integer(score)||teacher_feedback.length>10000)throw new ApiError('invalid_fields');
- return requestHub(account.hub,`/api/submissions/${id}`,{method:'PATCH',body:{score,teacher_feedback},token:await accountToken(account),signal});
+ if(!integer(maxPoints)||!integer(score)||score>maxPoints||!integer(expectedUpdatedAt)||teacher_feedback.length>10000)throw new ApiError('invalid_fields');
+ return requestHub(account.hub,`/api/submissions/${id}/grade-edit`,{method:'PATCH',body:{score,teacher_feedback,expected_updated_at:expectedUpdatedAt},token:await accountToken(account),signal});
 }
