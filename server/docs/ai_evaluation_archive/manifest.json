@@ -1,0 +1,80 @@
+{
+  "issue": 363,
+  "files": [
+    {
+      "path": "server/ai_eval/results/sim-school-pc/blind_key.json",
+      "bytes": 139323,
+      "sha256": "544d1269cbe211da8242bc5fe65637ca52252e674941fb283d0ac159a950b353"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc/replies.jsonl",
+      "bytes": 451650,
+      "sha256": "cec2c62c56812caf38bad8943342022bd07f1ec6b8313eda89c5b1f44a50ae14"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc/runs.json",
+      "bytes": 14558,
+      "sha256": "253a0d49d49b9f14de708a9040e4fd7b9671957e002ba753bbe946c56daa0904"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc/score_scorer_a.csv",
+      "bytes": 338821,
+      "sha256": "0d3dcc635a538b1929cafecc400c5fbe88875ad55233acde8ecf220fbc41f265"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc/score_scorer_b.csv",
+      "bytes": 338821,
+      "sha256": "0d3dcc635a538b1929cafecc400c5fbe88875ad55233acde8ecf220fbc41f265"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc-cache-ram-0/replies.jsonl",
+      "bytes": 40819,
+      "sha256": "da71dd543bda76121ec4b889c55fb1dcda16b818d15677a7df48b89d3737a235"
+    },
+    {
+      "path": "server/ai_eval/results/sim-school-pc-cache-ram-0/runs.json",
+      "bytes": 2344,
+      "sha256": "ed5fbfe8a01b7c5afe6aeaa3165d20426664ba0d4f4b3244f4ddea1a4196ee0c"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b/prompts_en.json",
+      "bytes": 30404,
+      "sha256": "a765f3b5415d0882c5621f264100b0e1348a6084552bdb664a4335b78e15420e"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b/replies.jsonl",
+      "bytes": 54121,
+      "sha256": "050d245635a12c2bfa54f9688c59a40cad44ac9799125b9f5f13edd93b02b286"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b/run-en-16gb.sh",
+      "bytes": 2038,
+      "sha256": "126a3e0a0637f862a03cf462c834c416817b400b42b7b6c029754292dad05f19"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b/runs.json",
+      "bytes": 3406,
+      "sha256": "4124e0e80c97d129f711d2fa27c2ca502016ea8bd100d36897aebac41589a041"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b/unattended-log.txt",
+      "bytes": 896,
+      "sha256": "3ae047d40b65bf5263e45837ca41195c0cc81b4c3654db578bebdcb4fa7394fd"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b-en-prompt-side-test/prompts_en.json",
+      "bytes": 30404,
+      "sha256": "a765f3b5415d0882c5621f264100b0e1348a6084552bdb664a4335b78e15420e"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b-en-prompt-side-test/replies.jsonl",
+      "bytes": 12990,
+      "sha256": "c67db706e3df9f14fa8ad289f762f387f1cdd30f64eab68ec7df0d02a4687a86"
+    },
+    {
+      "path": "server/ai_eval/results/en-16gb-reap15b-en-prompt-side-test/runs.json",
+      "bytes": 1564,
+      "sha256": "96007e4913c514e9797014f5a233e32a10db65fb5e986133f630a39d8b1c8c61"
+    }
+  ]
+}
