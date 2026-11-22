@@ -129,6 +129,7 @@ private fun RoleNavGraph(
                             modifier = Modifier.heightIn(min = MinTouchTarget),
                             onClick = { expanded = false; info() }) }
                         if (teacher && grades != null) DropdownMenuItem(
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_exam_regular), null, tint = LaraColors.PrimaryDark) },
                             text = { Text(stringResource(R.string.nav_grades)) },
                             modifier = Modifier.heightIn(min = MinTouchTarget),
                             onClick = { expanded = false; controller.navigate(Grades) { launchSingleTop = true } })
@@ -150,10 +151,12 @@ private fun RoleNavGraph(
                 }
                 BottomNavBar(selected, unreadComments = unreadComments, onSelect = { destination ->
                     if (state.allows(destination)) {
+                        if (controller.currentDestination?.hasRoute<Grades>() == true) controller.popBackStack()
                         controller.navigate(destination.route) {
                             popUpTo(controller.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
-                            restoreState = true
+                            // Stream is already on the stack. Its saved entry can refer to the tab popped above it.
+                            restoreState = destination != ShellDestination.STREAM
                         }
                     }
                 })
