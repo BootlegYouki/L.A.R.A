@@ -14,6 +14,7 @@ async fn download_returns_the_portal_page_as_html_with_no_token() {
     assert!(content_type.starts_with("text/html"), "content-type was {content_type:?}");
     let html = String::from_utf8(body).unwrap();
     assert!(html.contains("<!DOCTYPE html>"));
+    assert!(html.contains("src=\"/download/assets/lara-logo.png\""));
     hub.stop().await;
 }
 
@@ -58,6 +59,11 @@ async fn portal_assets_are_served_locally_and_name_no_external_host() {
     assert_eq!(status, 200);
     assert_eq!(content_type, "font/woff2");
     assert!(!font.is_empty());
+
+    let (status, content_type, logo) = hub.get_raw("/download/assets/lara-logo.png").await;
+    assert_eq!(status, 200);
+    assert_eq!(content_type, "image/png");
+    assert_eq!(logo, include_bytes!("../../../desktop/src/assets/branding/lara-logo.png"));
 
     let (status, _, _) = hub.get_raw("/download/assets/does-not-exist.css").await;
     assert_eq!(status, 404);

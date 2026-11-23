@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import { type Dictionary, useStrings } from './i18n';
 import AdminUsers from './pages/AdminUsers';
+import appLogo from './assets/lara-logo.png';
 
 /** Answer of the `lan_address` Tauri command (`server/src-tauri/src/main.rs`). */
 type HubStatus = { ip: string | null; running: boolean };
@@ -50,7 +51,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-lara-canvas font-sans text-lara-ink">
       <header className="flex h-16 items-center gap-4 px-6">
-        <span className="text-sm leading-5 font-extrabold">{t.app_title}</span>
+        <div className="flex items-center gap-3">
+          <img src={appLogo} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
+          <span className="text-sm leading-5 font-extrabold">{t.app_title}</span>
+        </div>
         {status && <Beacon status={status} t={t} />}
       </header>
 

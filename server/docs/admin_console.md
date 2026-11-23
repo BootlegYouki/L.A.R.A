@@ -2,6 +2,8 @@
 
 The Hub window lets the school admin set up `ADMIN-0001`, sign in, list accounts, create teachers and learners, and reset their PINs. The Lead approved these five flows on #43. Deactivation is deferred to a contract-change and follow-up issue. The console is English only and uses desktop targets.
 
+The header and setup/sign-in panel use `ui/src/assets/lara-logo.png`, copied from the desktop app's official logo. The sign-in mark sits on a white tile to keep it visible against the dark panel. The window and installer icons in `src-tauri/icons/` also match desktop's official icons. All assets are bundled locally; rebuild the UI and native window after changing them.
+
 ## Key files and data flow
 
 - `ui/src/pages/AdminUsers.tsx`: setup/login, account table, create/reset dialogs, one-time PIN receipt, and connection states.

@@ -10,11 +10,13 @@ The page a learner or teacher opens right after joining the classroom Wi-Fi, bef
 | `backend/static/portal/index.html` | The English guide. Compiled into the binary with `include_bytes!`, so it renders with no files on disk |
 | `backend/static/portal/assets/fonts.css` | `@font-face` for Nunito (400/700/800/900) and the Phosphor icon glyphs the page uses, all pointing at `/download/assets/web/*`. Bundled |
 | `backend/static/portal/assets/tokens.css` | A copy of `design-system/tokens.css` (design tokens as CSS variables). Bundled |
+| `backend/static/portal/assets/lara-logo.png` | Official green book logo, copied byte for byte from `desktop/src/assets/branding/lara-logo.png`; mobile uses the same mark at a larger resolution. Bundled and served as `image/png` |
 | `backend/static/portal/assets/web/*.woff2` | Nunito and Phosphor web fonts, copied from `design-system/assets`. Bundled |
 | `AppState.releases_dir` (`backend/src/lib.rs`) | `<data_dir>/releases`: where the installer binaries are served from |
 
 ## Data flow and state
 * **The page and its assets are bundled**, never read from disk at runtime. `routes/portal.rs` holds them with `include_bytes!`, so the portal works on a fresh machine and cannot 404 its own CSS or fonts. No database, no token.
+* **The header uses the official logo** at 64 by 64 pixels with its proportions preserved. Its empty alt text avoids repeating the adjacent L.A.R.A heading. Rebuild and restart the Hub after changing bundled portal assets.
 * **Installers are streamed from disk:** `GET /download/{file}` serves `<data_dir>/releases/<file>` (the `releases/` directory named in issue #3) with `tower_http::services::ServeFile`, which streams the file off disk (never into memory, so 40 learners downloading at once cost one file handle each, not GBs of RAM) and honours `Range` for a resumable download (`206` with `Content-Range`, `416` on a bad range). The APK is served as `application/vnd.android.package-archive` so the browser offers to install it; `.exe`/`.deb` keep their inferred type. The packages are large and are not committed (`.gitignore` ignores `*.apk`, `*.msi`, `*.deb`, `*.AppImage`); the build or the installer step (1.4) places them in `releases/`. The page links `lara-student.apk`, `lara-desktop-setup.exe` and `lara-desktop-setup.deb`.
 * **No events, no writes.** The portal is read-only and emits nothing.
 
