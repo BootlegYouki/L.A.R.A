@@ -3,6 +3,7 @@ import { HubError, request, setupCompleted, type AuthSession, type User } from '
 import { useStrings } from '../i18n';
 import ActivityLogs from './ActivityLogs';
 import Monitoring from './Monitoring';
+import appLogo from '../assets/lara-logo.png';
 const ImportLearners = lazy(() => import('./ImportLearners'));
 
 function Dialog({ title, close, children, busy = false }: {
@@ -213,7 +214,7 @@ export default function AdminUsers({ overview }: { overview: ReactNode }) {
 
   if (!session) return <section className="admin-auth" aria-labelledby="admin-title">
     <aside className="auth-intro" aria-label={t.admin_console_identity}>
-      <div><i className="ph ph-buildings auth-hub-mark" aria-hidden="true" /><p className="auth-brand">{t.app_title}</p>
+      <div><img src={appLogo} className="auth-hub-mark" alt="" width={64} height={64} /><p className="auth-brand">{t.app_title}</p>
         <p className="auth-intro-copy">{t.admin_console_identity}</p></div>
       <dl className="auth-capabilities">{([
         ['ph-users', t.admin_accounts, t.admin_signin_accounts],

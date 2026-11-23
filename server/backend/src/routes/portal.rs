@@ -40,6 +40,10 @@ const INDEX_HTML: Asset = Asset {
 /// The page's own CSS and web fonts. The map is tiny and fixed, so a match is clearer than a loader.
 fn bundled_asset(path: &str) -> Option<Asset> {
     let asset = match path {
+        "lara-logo.png" => Asset {
+            bytes: include_bytes!("../../static/portal/assets/lara-logo.png"),
+            content_type: "image/png",
+        },
         "fonts.css" => Asset {
             bytes: include_bytes!("../../static/portal/assets/fonts.css"),
             content_type: "text/css; charset=utf-8",

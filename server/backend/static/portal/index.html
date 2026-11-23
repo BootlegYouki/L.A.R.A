@@ -22,10 +22,8 @@
     .shell { max-width: 560px; margin: 0 auto; }
     header { text-align: center; margin-bottom: var(--space-8); }
     .logo {
-      display: inline-flex; align-items: center; justify-content: center;
       width: 64px; height: 64px; margin-bottom: var(--space-4);
-      background: var(--color-primary-green); color: var(--color-surface-white);
-      border-radius: var(--radius-lg); font-size: 28px; font-weight: 900;
+      object-fit: contain;
     }
     h1 { font-size: 28px; font-weight: 900; margin: 0 0 var(--space-2); }
     .tagline { color: var(--color-text-secondary); margin: 0; font-weight: 700; }
@@ -100,7 +98,7 @@
 <body>
   <main class="shell">
     <header>
-      <div class="logo" aria-hidden="true">L</div>
+      <img class="logo" src="/download/assets/lara-logo.png" alt="" width="64" height="64" />
       <h1>L.A.R.A</h1>
       <p class="tagline">Your classroom, on your phone.</p>
     </header>

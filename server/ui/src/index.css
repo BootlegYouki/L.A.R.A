@@ -167,7 +167,7 @@
   .hub-main:has(.admin-auth) { @apply flex min-h-[calc(100dvh-4rem)] items-center justify-center py-6; }
   .admin-auth { @apply mx-auto grid w-full max-w-4xl min-w-0 grid-cols-[2fr_3fr] overflow-hidden rounded-lg border border-lara-border bg-white; }
   .auth-intro { @apply flex min-w-0 flex-col justify-between gap-8 bg-lara-ink p-6 text-white min-[900px]:p-8; }
-  .auth-hub-mark { @apply mb-4 block text-[40px] leading-[48px] text-lara-primary-light; }
+  .auth-hub-mark { @apply mb-4 block h-16 w-16 rounded-md bg-white object-contain p-2; }
   .auth-brand { @apply text-[28px] leading-9 font-extrabold; }
   .auth-intro-copy { @apply mt-2 text-base leading-6 text-lara-primary-light; }
   .auth-capabilities { @apply flex flex-col gap-6; }
